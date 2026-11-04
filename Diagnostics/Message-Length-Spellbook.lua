@@ -11,9 +11,10 @@ local ShownText = ns.DiagnosticShownText
 	Every macro the page lists for this class, built through the add-on's own builder with every option it
 	offers turned on and every equipped Use: item ticked, the longest each can get, and its byte length
 	against the macro limit. The builder reads the options through ns.IsOptionOn and ns.UseItemSlots, so the
-	report stands in for those two (and for ns.WarnOnce, so a macro too long to write prints nothing) for one
-	build, then puts them and the
-	page's list back as they were. Nothing is written to the saved settings or to any WoW macro.
+	report stands in for those two (and for ns.WarnOnce, so a macro too long to write prints nothing, and for
+	ns.HandOverMacro, which would otherwise move a replaced spell's saved settings and rename its WoW macro)
+	for one build, then puts them and the page's list back as they were. Nothing is written to the saved
+	settings or to any WoW macro.
 ]]
 local function OfferedOption(macro, key)
 	return ns.OffersOption(macro, key)
@@ -24,7 +25,8 @@ local function BuildLongestMacros()
 	for index, macro in ipairs(ns.macros) do
 		saved[index] = macro
 	end
-	local isOptionOn, useItemSlots, warnOnce = ns.IsOptionOn, ns.UseItemSlots, ns.WarnOnce
+	local isOptionOn, useItemSlots, warnOnce, handOverMacro =
+		ns.IsOptionOn, ns.UseItemSlots, ns.WarnOnce, ns.HandOverMacro
 	local slots = {}
 	for _, entry in ipairs(ns.UsableSlots()) do
 		slots[#slots + 1] = entry.slot
@@ -34,12 +36,13 @@ local function BuildLongestMacros()
 		return ns.OffersUseItems(macro) and slots or {}
 	end
 	ns.WarnOnce = function() end
+	ns.HandOverMacro = function() end
 	local ok, problem = pcall(ns.CollectMacros)
 	local built = {}
 	for index, macro in ipairs(ns.macros) do
 		built[index] = macro
 	end
-	ns.IsOptionOn, ns.UseItemSlots, ns.WarnOnce = isOptionOn, useItemSlots, warnOnce
+	ns.IsOptionOn, ns.UseItemSlots, ns.WarnOnce, ns.HandOverMacro = isOptionOn, useItemSlots, warnOnce, handOverMacro
 	wipe(ns.macros)
 	for index, macro in ipairs(saved) do
 		ns.macros[index] = macro

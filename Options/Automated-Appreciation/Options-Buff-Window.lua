@@ -108,6 +108,40 @@ function ns.BuildBuffWindowOptions()
 	local keyMacro = MacroLine(ns.BUFF_KEY_MACRO, 22.2)
 
 	--[[
+	    The Example lines for the ask the title row's clicks send, for the
+	    Mage's raid buff where this client has one, else the first raid buff in
+	    its data, linked at its top rank the way the window links it.
+	]]
+	local function AskExample()
+		local pick
+		for _, entry in ipairs(ns.BuffWindow.entries) do
+			if entry.row.group and not entry.row.exclusive then
+				if entry.row.class == "MAGE" then
+					pick = entry
+					break
+				end
+				pick = pick or entry
+			end
+		end
+		if not pick then
+			return {}
+		end
+		local id = pick.ids[#pick.ids]
+		local class, link = pick.row.class, ns.GetSpellLink(id) or C_Spell.GetSpellName(id) or ""
+		local message = ns:BuildBuffRequestMessage(class, link)
+		--[[
+		    Left-Click's ask as the group reads it, Right-Click's as the class's
+		    player reads it, and the line Right-Click prints for you, naming
+		    the house roster's player of that class.
+		]]
+		return {
+			ns.BuildPartyExampleLine(message),
+			ns.BuildWhisperExampleLine(message),
+			ns.BuildPrintLine(L["BUFF_WINDOW_OTHERS_SENT"]:format(ns.SAMPLE_NAMES[class] or class, link)),
+		}
+	end
+
+	--[[
 	    The right half of a Solo or In Group row: where the window shows, Always
 	    or In Instance. Like Return the Favor's, it appears only while the
 	    toggle beside it is on.
@@ -265,6 +299,16 @@ function ns.BuildBuffWindowOptions()
 				L["BUFF_WINDOW_TARGET_ENABLE_DESCRIPTION"],
 				12
 			),
+			spaceAsk = ns.OptionsSpacer(12.3, Hidden),
+			askOtherClasses = Toggle(
+				"askOtherClasses",
+				L["BUFF_WINDOW_ASK_OTHERS"],
+				L["BUFF_WINDOW_ASK_OTHERS_DESCRIPTION"],
+				12.5
+			),
+			askExample = ns.OptionsChatExample(12.7, AskExample, function()
+				return Hidden() or not Settings().askOtherClasses
+			end),
 			space5 = ns.OptionsSpacer(13, Hidden),
 
 			headerWindow = ns.OptionsHeader(L["BUFF_WINDOW_HEADER"], 14, Hidden),

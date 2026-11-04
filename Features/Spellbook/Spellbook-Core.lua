@@ -4,10 +4,14 @@ local _, ns = ...
 -- Profile Changes
 --------------------------------------------------------------------------------
 
--- A profile switch, reset or copy changes every macro option, so the page and the macros it made follow it.
+--[[
+	A profile switch, reset or copy changes every macro option and the What's Next? sort, so the page, the
+	macros it made and an open What's Next? tab follow it.
+]]
 function ns.ApplySpellbookProfile()
 	if ns.IsSpellbookEnabled() then
 		ns:RefreshMacros()
+		ns.RefreshWhatsNext()
 	end
 end
 
@@ -15,17 +19,20 @@ end
 -- Master Switch
 --------------------------------------------------------------------------------
 
+local SubscribeSpellbookEvents -- defined with the events below
+
 function ns.IsSpellbookEnabled()
 	return ns.db ~= nil and ns.db.global.spellbookEnabled
 end
 
 --[[
-	Off closes the window and hides its tab in the game's spellbook, and the events below stop reaching the
-	page, so nothing rewrites its macros: they stay as they last were. On brings the macros up to date at once,
+	Off closes the window and hides its tab in the game's spellbook, and the events below are dropped, so
+	nothing rewrites its macros: they stay as they last were. On brings the macros up to date at once,
 	as the events missed while off would have.
 ]]
 function ns.SetSpellbookEnabled(value)
 	ns.db.global.spellbookEnabled = value
+	SubscribeSpellbookEvents(value)
 	if value then
 		-- the gear worn may have changed while PLAYER_EQUIPMENT_CHANGED went unheard
 		ns:InvalidateUsableSlots()
@@ -62,6 +69,11 @@ local EVENT_HANDLERS = {
 	UPDATE_BINDINGS = "OnUpdateBindings",
 	TRAINER_SHOW = "OnTrainerShow",
 	TRAINER_UPDATE = "OnTrainerUpdate",
+	PLAYER_LEVEL_UP = "OnPlayerLevelUp",
+	UNIT_PET = "OnPetChanged",
+	UNIT_LEVEL = "OnPetChanged",
+	PET_BAR_UPDATE = "OnPetChanged",
+	BAG_UPDATE_DELAYED = "OnPetChanged",
 }
 
 local LOGIN_REGISTERED_EVENTS = { TRAINER_SHOW = true, TRAINER_UPDATE = true }
@@ -73,7 +85,27 @@ local OWNER_REGISTERED_EVENTS = { ADDON_LOADED = true }
 ]]
 local WHILE_OFF_EVENTS = { UPDATE_BINDINGS = true, ADDON_LOADED = true }
 
+-- Unit events the page only ever needs for these units: the player's pet, and the player's or the pet's level.
+local EVENT_UNITS = {
+	UNIT_PET = { "player" },
+	UNIT_LEVEL = { "player", "pet" },
+}
+
 local MODULE = "Spellbook"
+
+--[[
+	Subscribes the page's events while the Spellbook is on and drops them while it is off, all but the ones
+	heard either way. The trainer events wait for login to show Trainer-Recording.lua loaded.
+]]
+function SubscribeSpellbookEvents(on)
+	for event in pairs(EVENT_HANDLERS) do
+		local owned = OWNER_REGISTERED_EVENTS[event] or WHILE_OFF_EVENTS[event]
+		local ready = not LOGIN_REGISTERED_EVENTS[event] or ns[EVENT_HANDLERS[event]] ~= nil
+		if not owned and ready then
+			ns.SetModuleEvent(MODULE, event, on, unpack(EVENT_UNITS[event] or {}))
+		end
+	end
+end
 
 local function OnPlayerLogin()
 	-- MIGRATION (remove after 2026-11-26): the retired Custom Macros feature's lists, in every profile.
@@ -131,11 +163,9 @@ local function OnPlayerLogin()
 			end
 		end
 	end
-	for event in pairs(LOGIN_REGISTERED_EVENTS) do
-		if ns[EVENT_HANDLERS[event]] then
-			ns.SetModuleEvent(MODULE, event, true)
-		end
-	end
+	-- MIGRATION (remove after 2026-12-03)
+	ns.MigrateSpellbookBinding()
+	SubscribeSpellbookEvents(ns.IsSpellbookEnabled())
 end
 
 ns.RegisterEventModule(MODULE, function(event, ...)
@@ -153,9 +183,10 @@ ns.RegisterEventModule(MODULE, function(event, ...)
 	end
 end)
 
+-- The rest wait for login, when the saved switch is known.
 ns.SetModuleEvent(MODULE, "PLAYER_LOGIN", true)
-for event in pairs(EVENT_HANDLERS) do
-	if not LOGIN_REGISTERED_EVENTS[event] and not OWNER_REGISTERED_EVENTS[event] then
+for event in pairs(WHILE_OFF_EVENTS) do
+	if not OWNER_REGISTERED_EVENTS[event] then
 		ns.SetModuleEvent(MODULE, event, true)
 	end
 end

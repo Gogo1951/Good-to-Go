@@ -1,4 +1,4 @@
-local L = LibStub("AceLocale-3.0"):NewLocale("Bags-Buffs-Buttons", "enUS", true)
+local L = LibStub("AceLocale-3.0"):NewLocale("Good-to-Go", "enUS", true)
 if not L then
 	return
 end
@@ -9,18 +9,19 @@ end
 
 --[[
     The add-on has two names. ADDON_TITLE, the full name, is for window
-    titles and anywhere the add-on is talked about; ADDON_SHORT_NAME is for
-    tooltips and the chat prints ("BBB // ..."). Both are proper nouns and
+    titles, the front of every chat print ("Good to Go // ..."),
+    and anywhere the add-on is talked about; ADDON_SHORT_NAME is for tooltip
+    lines and the end of every sent message ("... // GtG"). Both are proper nouns and
     stay as written in every locale, as does the full name inside any
     sentence below.
 ]]
-L["ADDON_TITLE"] = "Bags Buffs & Buttons"
-L["ADDON_SHORT_NAME"] = "BBB"
+L["ADDON_TITLE"] = "Good to Go"
+L["ADDON_SHORT_NAME"] = "GtG"
 
 L["CHAT_LOADED"] =
-	"Version %s. Settings (including the option to disable this message) are under Options > AddOns > Bags Buffs & Buttons. Enjoying this add-on? Tell a friend, Favorite it on CurseForge, or Star it on GitHub. (="
-L["OPTIONS_LEVEL_UP_TITLE"] = "Help Bags Buffs & Buttons Level Up"
-L["OPTIONS_LEVEL_UP_THANKS"] = "Thanks for choosing Bags Buffs & Buttons!"
+	"Version %s. Settings (including the option to disable this message) are under Options > AddOns > Good to Go. Enjoying this add-on? Tell a friend, Favorite it on CurseForge, or Star it on GitHub. (="
+L["OPTIONS_LEVEL_UP_TITLE"] = "Help Good to Go Level Up"
+L["OPTIONS_LEVEL_UP_THANKS"] = "Thanks for choosing Good to Go!"
 
 --------------------------------------------------------------------------------
 -- Connoisseur & Restocker
@@ -93,17 +94,17 @@ L["MESSAGE_BUG_REPORT"] =
 	"Looks like you found a bug! %s (%s) can't be used in %s > %s (%s). Please report this so we can get it fixed. Thanks! %s"
 L["MESSAGE_NO_ITEM"] = "No suitable %s found in your bags."
 L["MESSAGE_MACRO_SLOTS_FULL"] =
-	"Some Bags Buffs & Buttons macros couldn't be created because your macro slots are full. Free up a slot by deleting macros you no longer use, or turn off any Bags Buffs & Buttons macros you don't need under Options > AddOns > Bags Buffs & Buttons > Connoisseur > Macros."
+	"Some Good to Go macros couldn't be created because your macro slots are full. Free up a slot by deleting macros you no longer use, or turn off any Good to Go macros you don't need under Options > AddOns > Good to Go > Connoisseur > Macros."
 --[[
     Printed once after the add-on creates one or more of its macros, so a new
-    player learns they exist. %s is "/m", the game's own macro command, colored
-    at the call site. "General" is the macro window's tab for account-wide
-    macros; use the client's own name for that tab. The macro names are this
-    locale's own MACRO_FOOD and MACRO_WATER values, written exactly as this
-    locale ships them.
+    player learns they exist. The first %s is "/m", the game's own macro
+    command, colored at the call site; the second is the client's own name for
+    the macro window's tab of account-wide macros (GENERAL_MACROS). The macro
+    names are this locale's own MACRO_FOOD and MACRO_WATER values, written
+    exactly as this locale ships them.
 ]]
-L["MESSAGE_MACROS_READY"] =
-	"Your macros are ready. Type %s, open the General tab, and drag - Food, - Water, and the rest onto your action bars."
+L["MESSAGE_MACROS_READY_TAB"] =
+	"Your macros are ready. Type %s, open the %s tab, and drag - Food, - Water, and the rest onto your action bars."
 -- The mini-map button's Right-Click and Middle-Click. %s is the item's link.
 L["MESSAGE_IGNORE_ADDED"] = "%s is now on this character's Ignore List."
 -- %d is how many items the Middle-Click took off the list: exactly one, or two or more.
@@ -178,10 +179,10 @@ L["READINESS_UNSPENT_TALENTS_ONE"] = "1 Unspent Talent Point"
 L["READINESS_UNSPENT_TALENTS_MANY"] = "%d Unspent Talent Points"
 
 --------------------------------------------------------------------------------
--- BBBTip Messages
+-- GtGTip Messages
 --------------------------------------------------------------------------------
 
--- Printed in chat by macro bodies via /run BBBTip("key") or BBBTipIf, and TIP_EMPTY_* via BBBNoItem. See Features/Macros-for-Consumables/Macros/Runtime.lua.
+-- Printed in chat by macro bodies via /run GtGTip("key") or GtGTipIf, and TIP_EMPTY_* via GtGNoItem. See Features/Macros-for-Consumables/Macros/Runtime.lua.
 
 L["TIP_PET_NO_FOOD"] = "You don't currently have any food that is useful for your pet."
 -- The four %s are the client's names for Call Pet, Dismiss Pet, Feed Pet and Revive Pet, in that order.
@@ -278,7 +279,7 @@ L["MINIMAP_RESTOCKER_EMPTY"] = "Your list is empty."
 L["MENU_RESTOCKER"] = "Restocker List"
 L["MENU_RESTOCKER_DESCRIPTION"] = "Buys and banks the items on your list."
 L["MENU_RESTOCKER_KEYBIND"] = "Shift + Right-Click"
-L["MENU_OPTIONS"] = "BBB Options"
+L["MENU_OPTIONS"] = "GtG Options"
 L["MENU_OPTIONS_KEYBIND"] = "Shift + Middle-Click"
 
 --------------------------------------------------------------------------------
@@ -341,7 +342,7 @@ L["NOTE_POISONS_REPLACED"] = "Replaces old poisons automatically."
 
 --[[
     One label per macro type, dropped as-is into MESSAGE_NO_ITEM ("No suitable
-    %s found...") from BBBNoItem and the mini-map tooltip. LABEL_WATER
+    %s found...") from GtGNoItem and the mini-map tooltip. LABEL_WATER
     is also the staples pop-up's Water checkbox.
 ]]
 
@@ -404,8 +405,8 @@ L["MODE_MAX_LEVEL"] = "When at Max Level"
 --------------------------------------------------------------------------------
 
 --[[
-    The block Features/Inventory-Restocker/Inventory-Report.lua adds under an item's own tooltip
-    lines. Its header is "BBB // Inventory Report": ADDON_SHORT_NAME, then the
+    The block Features/Inventory-Report/Inventory-Report-Tooltip.lua adds under an item's own tooltip
+    lines. Its header is "GtG // Inventory Report": ADDON_SHORT_NAME, then the
     title, in the chat prints' branded colors, with the total at its right
     edge. Under it, one line per character, this one first: the name on the
     left (the client's own character names, so no keys here), its counts at
@@ -443,7 +444,7 @@ L["OPTIONS_SPELLBOOK_DESCRIPTION"] =
 L["SPELLBOOK_ENABLE"] = "Enable Spellbook"
 L["SPELLBOOK_ENABLE_DESCRIPTION"] =
 	"Adds the Spellbook tab to your spellbook and keeps the macros it made up to date. Off hides it and leaves every macro as it last was."
-L["SPELLBOOK_DISABLED"] = "The Spellbook is off. Turn it on under Options > AddOns > Bags Buffs & Buttons > Spellbook."
+L["SPELLBOOK_DISABLED"] = "The Spellbook is off. Turn it on under Options > AddOns > Good to Go > Spellbook."
 
 -- Welcome Message
 L["OPTIONS_WELCOME_MESSAGE"] = "Enable Welcome Message"
@@ -456,7 +457,7 @@ L["OPTIONS_MINIMAP_BUTTON_DESCRIPTION"] = "Shows the mini-map button."
 -- Features: each feature's master switch, also on the panel that configures it.
 L["OPTIONS_MACROS_ENABLE"] = "Enable Macro Updates"
 L["OPTIONS_MACROS_ENABLE_DESCRIPTION"] =
-	"Keeps your Bags Buffs & Buttons macros pointed at your best items as your bags change. Off leaves every macro as it last was."
+	"Keeps your Good to Go macros pointed at your best items as your bags change. Off leaves every macro as it last was."
 L["OPTIONS_RESTOCKER_ENABLE"] = "Enable Restocker"
 L["OPTIONS_RESTOCKER_ENABLE_DESCRIPTION"] =
 	"Buys and banks from your Restock List and reminds you when you run low. Off turns all of it off, the Restock List window included."
@@ -470,7 +471,7 @@ L["SAMPLE_EXAMPLE"] = "Example: %s"
     translate, and its description.
 ]]
 L["OPTIONS_COMMANDS_HEADER"] = "/Commands"
-L["OPTIONS_COMMAND"] = "/bbb"
+L["OPTIONS_COMMAND"] = "/gtg"
 L["OPTIONS_COMMAND_DESCRIPTION"] = "Opens the Options Interface for this add-on."
 L["RESTOCKER_COMMAND"] = "/restock"
 L["RESTOCKER_COMMAND_DESCRIPTION"] = "Opens your Restock List."
@@ -506,12 +507,12 @@ L["OPTIONS_VERSION"] = "Version %s"
 ]]
 L["TAB_MACROS"] = "Macros"
 L["OPTIONS_MACROS_DESCRIPTION"] =
-	"Bags Buffs & Buttons builds one macro per consumable and keeps it current as your bags change, so the button on your bar always reaches for the best item you're carrying. Choose which macros to create below, then set how each one picks its item."
+	"Good to Go builds one macro per consumable and keeps it current as your bags change, so the button on your bar always reaches for the best item you're carrying. Choose which macros to create below, then set how each one picks its item."
 
 -- Macro Names on Buttons
 L["OPTIONS_MACRO_NAMES"] = "Enable Macro Names on Buttons"
 L["OPTIONS_MACRO_NAMES_DESCRIPTION"] =
-	"Shows the macro name text on your action bar buttons, which Bags Buffs & Buttons hides by default."
+	"Shows the macro name text on your action bar buttons, which Good to Go hides by default."
 
 --[[
     Which Macros to Create. "General" in the description is the Macros
@@ -520,7 +521,7 @@ L["OPTIONS_MACRO_NAMES_DESCRIPTION"] =
 ]]
 L["OPTIONS_MACROS_TO_CREATE_HEADER"] = "Which Macros to Create"
 L["OPTIONS_ENABLE_MACROS_DESCRIPTION"] =
-	"Choose which macros Bags Buffs & Buttons creates and maintains. Turning one off also removes it. They're in the General tab of the Macros window, ready to drag onto your action bars."
+	"Choose which macros Good to Go creates and maintains. Turning one off also removes it. They're in the General tab of the Macros window, ready to drag onto your action bars."
 L["OPTIONS_OPEN_MACRO_WINDOW"] = "Open Macros Window"
 L["OPTIONS_OPEN_MACRO_WINDOW_DESCRIPTION"] =
 	"Opens the game's Macros window on its General tab, where these macros live."
@@ -779,14 +780,20 @@ L["OPTIONS_RESTOCKER_WINDOW_HEADER"] = "Restock List Window"
 L["OPTIONS_RESTOCKER_WINDOW_DESCRIPTION"] = "Choose when your Restock List opens on its own."
 
 --[[
-    The Inventory Report's switch, under a header that is the report's own
-    title (INVENTORY_REPORT_TITLE, in the Inventory Report section above).
+    The Inventory Report's page, named by the report's own title
+    (INVENTORY_REPORT_TITLE, in the Inventory Report section above): its
+    description and its switch.
 ]]
 L["OPTIONS_INVENTORY_REPORT_SECTION_DESCRIPTION"] =
 	"Shows how many of an item you own, across your characters on this realm, in its tooltip."
 L["OPTIONS_INVENTORY_REPORT"] = "Enable Inventory Report in Item Tooltips"
 L["OPTIONS_INVENTORY_REPORT_DESCRIPTION"] =
 	"Adds how many of an item you have in your bags, in your bank, and on your other characters to its tooltip. Turn it off if another add-on already shows these counts."
+-- The other characters the Inventory Report remembers, each with a remove icon. %s is the character's name.
+L["RESTOCKER_RECORDED_CHARACTERS_HEADER"] = "Recorded Characters"
+L["RESTOCKER_FORGET_CHARACTER"] = "Forget"
+L["RESTOCKER_FORGET_CHARACTER_CONFIRM"] =
+	"Forget %s? Their bags and bank leave every item tooltip, and their Restock List choice is cleared. Logging in on them records them again."
 
 -- Readiness Report
 L["TAB_READINESS_REPORT"] = "Readiness Report"
@@ -857,7 +864,7 @@ L["OPTIONS_READINESS_OFF_HAND_DESCRIPTION"] =
 ]]
 L["OPTIONS_READINESS_EXPIRING"] = "Buffs Expiring Within"
 L["OPTIONS_READINESS_EXPIRING_DESCRIPTION"] =
-	"Names every buff on you that is about to expire, not just the ones Bags Buffs & Buttons applies, and is separate from Buff Re-Application under Macros."
+	"Names every buff on you that is about to expire, not just the ones Good to Go applies, and is separate from Buff Re-Application under Macros."
 -- %s is a whole or half number of minutes.
 L["OPTIONS_READINESS_EXPIRING_MINUTES"] = "%s Minutes"
 -- The one-minute entry alone; one plural template cannot render it grammatically.
@@ -906,8 +913,7 @@ L["RESTOCKER_PROFILE_EXISTS"] = 'A list named "%s" already exists.'
     window is closed.
 ]]
 L["RESTOCKER_UNKNOWN_ITEM"] = "No item has ID %d."
-L["RESTOCKER_BANK_NOT_OPEN"] = "The bank is not open."
-L["RESTOCKER_DISABLED"] = "The Restocker is off. Turn it on under Options > AddOns > Bags Buffs & Buttons > Restocker."
+L["RESTOCKER_DISABLED"] = "The Restocker is off. Turn it on under Options > AddOns > Good to Go > Restocker."
 --[[
     %s is the /restock slash command, colored at the call site. Only the bank flow
     prints this, so the Shift hint names the bank; Shift is read as the window
@@ -1082,7 +1088,7 @@ L["STARTER_POPUP_REAGENTS_HEADER"] = "Reagents & Tools"
 L["STARTER_POPUP_POISONS_HEADER"] = "Poisons"
 -- %s is the client's name for the Rogue class, rogue-colored; the spaced colon is deliberate.
 L["STARTER_POPUP_POISONS_NOTE"] =
-	"%s : Add the finished poison to your list, and Bags Buffs & Buttons buys the ingredients automatically at any merchant that stocks them all."
+	"%s : Add the finished poison to your list, and Good to Go buys the ingredients automatically at any merchant that stocks them all."
 --[[
     Checkbox tooltips: { item name, amount }. The first is for ladder items;
     the second for single-tier reagents, which never upgrade.
@@ -1177,6 +1183,9 @@ L["RESTOCKER_RENAME_PROFILE"] = "Rename This List"
 L["RESTOCKER_MANAGE_DELETE"] = "Delete This List"
 -- %s becomes "<list name> Copy"; numbered if that name is taken.
 L["RESTOCKER_PROFILE_COPY_NAME"] = "%s Copy"
+-- A list name already taken, numbered: a new list's class name ("Warrior (2)"), and a copy's name ("Fishing Copy 2").
+L["RESTOCKER_LIST_NAME_NUMBERED"] = "%s (%d)"
+L["RESTOCKER_LIST_NAME_COPY"] = "%s %d"
 -- The button that commits a rename, beside the field Rename This List opens, and that button's tooltip.
 L["RESTOCKER_RENAME_LABEL"] = "Rename"
 L["RESTOCKER_RENAME_TOOLTIP"] = "Renames this list for every character using it."
@@ -1213,7 +1222,7 @@ L["RESTOCKER_DELETE_LIST_FINAL"] = "This can't be undone."
 ]]
 L["RESTOCKER_UPGRADE_TOOLTIP_TITLE"] = "Upgrade as You Level"
 L["RESTOCKER_UPGRADE_TOOLTIP_BODY"] =
-	"Lets Bags Buffs & Buttons upgrade food, water, ammo, poisons, potions, and class reagents to better items as you level."
+	"Lets Good to Go upgrade food, water, ammo, poisons, potions, and class reagents to better items as you level."
 
 --[[
     The band labels drawn over the Bank and Merchant column groups, and the
@@ -1364,7 +1373,7 @@ L["RESTOCKER_REPUTATION_TOOLTIP_TITLE"] = "Required Merchant Reputation"
     last sentence names the dash; "Any" is still the menu's first entry.
 ]]
 L["RESTOCKER_REPUTATION_TOOLTIP_DISCOUNTS"] =
-	"Click to set the standing a merchant needs before Bags Buffs & Buttons buys from it, which also cuts the price: %s 5%%, %s 10%%, %s 15%%, %s 20%%. A dash buys from any merchant."
+	"Click to set the standing a merchant needs before Good to Go buys from it, which also cuts the price: %s 5%%, %s 10%%, %s 15%%, %s 20%%. A dash buys from any merchant."
 
 --[[
     Why a cell cannot be set on its row: the tooltip a dimmed cell shows under
@@ -1380,15 +1389,15 @@ L["RESTOCKER_UPGRADE_NOT_APPLICABLE"] = "This item has no better version to upgr
 L["CHAT_LEGACY_IMPORTED"] = "Copied your %s settings."
 
 L["POPUP_LEGACY_RELOAD_COPIED"] =
-	"Bags Buffs & Buttons copied your settings from %s and turned off %s, which it replaces. Reload now so the old copy stops running?"
+	"Good to Go copied your settings from %s and turned off %s, which it replaces. Reload now so the old copy stops running?"
 L["POPUP_LEGACY_RELOAD_TURNED_OFF"] =
-	"Bags Buffs & Buttons turned off %s, which it replaces. Reload now so the old copy stops running?"
+	"Good to Go turned off %s, which it replaces. Reload now so the old copy stops running?"
 L["POPUP_LEGACY_RELOAD_ACCEPT"] = "Reload Now"
 L["POPUP_LEGACY_LATER"] = "Later"
 L["POPUP_LEGACY_IMPORT_SETTINGS"] =
-	"Bags Buffs & Buttons found %s installed but turned off. Bring the settings over? This turns the old add-ons back on and reloads your UI, then offers one more reload to turn them off again."
+	"Good to Go found %s installed but turned off. Bring the settings over? This turns the old add-ons back on and reloads your UI, then offers one more reload to turn them off again."
 L["POPUP_LEGACY_IMPORT_LISTS"] =
-	"Bags Buffs & Buttons found %s installed but turned off. Bring the settings and Restock Lists over? This turns the old add-ons back on and reloads your UI, then offers one more reload to turn them off again."
+	"Good to Go found %s installed but turned off. Bring the settings and Restock Lists over? This turns the old add-ons back on and reloads your UI, then offers one more reload to turn them off again."
 L["POPUP_LEGACY_IMPORT_ACCEPT"] = "Bring Them Over"
 L["POPUP_LEGACY_IMPORT_DECLINE"] = "No Thanks"
 
@@ -1577,6 +1586,9 @@ L["BUFF_WINDOW_FAVOR_SECONDS_DESCRIPTION"] = "Sets how long a stranger stays on 
 L["BUFF_WINDOW_TARGET_ENABLE"] = "Your Target"
 L["BUFF_WINDOW_TARGET_ENABLE_DESCRIPTION"] =
 	"Lists your target when they are a player outside your group missing a buff you can give."
+L["BUFF_WINDOW_ASK_OTHERS"] = "Ask Other Classes for Buffs"
+L["BUFF_WINDOW_ASK_OTHERS_DESCRIPTION"] =
+	"Shows the raid buffs your group is missing on the window's title row, with how many need each. Left-Click one to ask your group for it, or Right-Click to whisper the players who can cast it."
 L["BUFF_WINDOW_REFRESH"] = "Refresh Under"
 L["BUFF_WINDOW_REFRESH_DESCRIPTION"] =
 	"Sets how little time a buff can have left before it counts as missing, so you can top it up before it drops. A buff that lasts no longer than this only counts once it's gone."
@@ -1657,6 +1669,18 @@ L["BUFF_WINDOW_TOOLTIP_CREATE"] = "Nobody in your group has a Soulstone. Click t
 L["BUFF_WINDOW_TOOLTIP_GROUP"] = "Click to cast on %s and their party."
 L["BUFF_WINDOW_TOOLTIP_FAVOR"] = "Click to target %s and cast."
 L["BUFF_WINDOW_TOOLTIP_DISMISS"] = "Right-Click to take %s off the list."
+-- The title row: a raid buff your group is missing, its count and click.
+L["BUFF_WINDOW_OTHERS_TOOLTIP_COUNT"] = "Missing or running low: %d"
+-- The title row's clicks: a Left-Click asks the party or raid; a Right-Click whispers the players named by %s.
+L["BUFF_WINDOW_OTHERS_TOOLTIP_ASK_GROUP"] = "Left-Click to ask your group for it."
+L["BUFF_WINDOW_OTHERS_TOOLTIP_ASK_WHISPER"] = "Right-Click to ask %s for it."
+--[[
+    The ask either click sends, signed off like every sent message ({star} ... // GtG):
+    the client's class name, then the buff's link.
+]]
+L["BUFF_WINDOW_OTHERS_ASK"] = "Some players are missing %s Buffs (%s), can you help them out?"
+-- Your own chat, after a Right-Click: who was whispered, then the buff's link.
+L["BUFF_WINDOW_OTHERS_SENT"] = "Whispered %s about %s."
 -- The window's close button: the class name in its color, then the options command.
 L["BUFF_WINDOW_CLOSED"] =
 	"Buff Duty is off for the %s class. To turn it back on, Shift + Left-Click the mini-map button or type %s."
@@ -1704,7 +1728,7 @@ L["BUTTON_WHISPER_DESCRIPTION"] = "Sets what this button whispers to your target
 
 L["DEFAULT_WHISPER"] = "Thanks, you're the best! (="
 --[[
-    The star marker (left off on WoW Forever) and " // BBB" sign-off are added
+    The star marker (left off on WoW Forever) and " // GtG" sign-off are added
     by the builder, which also drops the closing punctuation; neither is part of
     the editable text.
 ]]
@@ -1733,12 +1757,12 @@ L["EMOTE_YES_DESCRIPTION"] = "You nod at <Target>."
 
 -- Every string from here to the end is the Spellbook's.
 
--- the window's title after "Bags Buffs & Buttons //"
+-- the window's title after "Good to Go //"
 L["WINDOW_TITLE"] = "Spell Book"
 
 -- Page: Sections
 L["SECTION_UNLEARNED"] = "Unlearned"
-L["SECTION_CONSUMABLES"] = "BBB Consumables"
+L["SECTION_CONSUMABLES"] = "GtG Consumables"
 
 -- Page: Macro Menu
 L["MACRO_TEXT"] = "Macro Text"
@@ -1841,6 +1865,126 @@ L["MENU_MAKE_DEFAULT_DESCRIPTION"] =
 	"Every macro under %s that you haven't set yourself starts with this macro's options."
 L["MENU_DEFAULT_SET"] = "%s now start with these options."
 
+-- Page: Conditionals
+L["MENU_GROUP_CONDITIONALS"] = "Conditionals"
+L["MENU_CONDITIONALS_DESCRIPTION"] =
+	"Opens the Conditionals panel beside the Spell Book, where the macro can cast a different spell when a condition matches, like Shift held or Spec 2."
+L["MENU_RIGHT_CLICK_TAKEN"] = "A Conditional uses Right-Click. Remove it to turn this on."
+-- TRANSLATORS: the panel's title after the spell's name and "//" ("Fireball // Conditionals").
+L["CONDITIONALS_TITLE"] = "Conditionals"
+L["CONDITIONALS_HINT"] = "Checked top to bottom; the first that matches casts."
+L["CONDITIONALS_OTHERWISE"] = "Otherwise"
+-- TRANSLATORS: joins a row's two conditions ("Spec 2 and Alt Held").
+L["CONDITIONALS_AND"] = "and"
+L["CONDITIONALS_AND_MENU"] = "Add Second Condition"
+L["CONDITIONALS_AND_DESCRIPTION"] = "Adds a second condition. The row casts only when both match."
+L["CONDITIONALS_DROP_SECOND"] = "Remove This Condition"
+L["CONDITIONALS_DROP_SECOND_DESCRIPTION"] = "The row checks its first condition alone again."
+L["CONDITIONALS_ADD"] = "+ Add Condition"
+L["CONDITIONALS_ADD_DESCRIPTION"] = "Adds a row at the bottom. Pick its condition, then the spell it casts."
+L["CONDITIONALS_ADD_LIMIT"] = "Up to %d rows. Each one adds to the macro text, which holds 255 bytes."
+L["CONDITIONALS_PICK_SPELL"] = "Pick A Spell"
+L["CONDITIONALS_PICKING"] = "Click A Spell On The Page"
+L["CONDITIONALS_SLOT_DESCRIPTION"] =
+	"Click here, then click a spell on the page to cast it in this row. Or drag a spell from the page onto this slot."
+L["CONDITIONALS_PICK_BANNER"] = "Click a spell to use it. Esc or right-click cancels."
+L["CONDITIONALS_CANNOT_PICK"] = "Only a learned spell can be cast by a conditional."
+L["CONDITIONALS_EMPTY"] = "No conditions yet. Add one to cast another spell while Shift is held, in combat, and more."
+L["CONDITIONALS_SHADOWED"] = "Never casts: row %d above matches whenever this one does, and casts first."
+L["CONDITIONALS_KEY_DRAG"] = "Drag A Spell Here"
+L["CONDITIONALS_ACTION_DROP"] = "Cast It In This Row"
+L["CONDITIONALS_ACTION_PICK"] = "Pick From The Page"
+L["CONDITIONALS_ACTION_USE"] = "Use In Conditional"
+L["CONDITIONALS_ACTION_CANCEL"] = "Cancel Picking"
+L["CONDITIONALS_REMOVE"] = "Remove"
+L["CONDITIONALS_REMOVE_DESCRIPTION"] = "Removes this row."
+L["CONDITIONALS_REORDER"] = "Reorder"
+L["CONDITIONALS_REORDER_DESCRIPTION"] =
+	"Drag onto another row to move this one there. The first row that matches casts."
+-- TRANSLATORS: a row in short, for the macro menu's value and the spell's tooltip ("Shift: Frost Nova").
+L["CONDITIONALS_SUMMARY"] = "%s: %s"
+-- TRANSLATORS: a row's two conditions in short ("Spec 2 + Alt").
+L["CONDITIONALS_JOIN"] = "%s + %s"
+L["CONDITION_SHIFT"] = "Shift Held"
+L["CONDITION_SHIFT_SHORT"] = "Shift"
+L["CONDITION_SHIFT_DESCRIPTION"] = "Matches while you hold Shift as you press the macro."
+L["CONDITION_CTRL"] = "Ctrl Held"
+L["CONDITION_CTRL_SHORT"] = "Ctrl"
+L["CONDITION_CTRL_DESCRIPTION"] = "Matches while you hold Ctrl as you press the macro."
+L["CONDITION_ALT"] = "Alt Held"
+L["CONDITION_ALT_SHORT"] = "Alt"
+L["CONDITION_ALT_DESCRIPTION"] = "Matches while you hold Alt as you press the macro."
+L["CONDITION_RIGHT_CLICK"] = "Right-Click"
+L["CONDITION_RIGHT_CLICK_DESCRIPTION"] = "Matches when you right-click the macro on your action bar."
+L["CONDITION_IN_COMBAT"] = "In Combat"
+L["CONDITION_IN_COMBAT_DESCRIPTION"] = "Matches while you're in combat."
+L["CONDITION_OUT_OF_COMBAT"] = "Out Of Combat"
+L["CONDITION_OUT_OF_COMBAT_DESCRIPTION"] = "Matches while you're out of combat."
+L["CONDITION_SPEC_1"] = "Spec 1"
+L["CONDITION_SPEC_1_DESCRIPTION"] = "Matches while your first talent spec is active."
+L["CONDITION_SPEC_2"] = "Spec 2"
+L["CONDITION_SPEC_2_DESCRIPTION"] = "Matches while your second talent spec is active."
+-- TRANSLATORS: %s is "Spec 1" or "Spec 2", marking the talent spec active now in a condition's menu.
+L["CONDITION_SPEC_CURRENT"] = "%s (Current)"
+L["CONDITION_COMBAT_BLOCKED"] =
+	"Not available while When is set to In Combat or Out Of Combat. The macro already does nothing on the other side, so this would always match, or never."
+L["CONDITION_RIGHT_CLICK_BLOCKED"] =
+	"Not available while Grouped Spells has Right-Click For %s on, which already takes the right-click. Turn that off to use Right-Click here."
+L["SUBTEXT_CONDITIONALS_ONE"] = "1 Conditional"
+L["SUBTEXT_CONDITIONALS"] = "%d Conditionals"
+
+-- Page: Cast Sequence
+L["MENU_GROUP_CAST_SEQUENCE"] = "Cast Sequence"
+L["MENU_CAST_SEQUENCE_DESCRIPTION"] =
+	"Opens the Cast Sequence panel beside the Spell Book, where each press of the macro casts the next spell in order, like Corruption, then Curse of Agony, then Immolate."
+-- TRANSLATORS: how many spells a Cast Sequence casts in turn, the macro's own included ("3 Steps").
+L["MENU_CAST_SEQUENCE_STEPS"] = "%d Steps"
+-- TRANSLATORS: the panel's title after the spell's name and "//" ("Corruption // Cast Sequence").
+L["CAST_SEQUENCE_TITLE"] = "Cast Sequence"
+L["CAST_SEQUENCE_HINT"] = "Each press casts the next step. A step that fails is tried again on the next press."
+L["CAST_SEQUENCE_FIRST"] = "First"
+L["CAST_SEQUENCE_FIRST_DESCRIPTION"] = "The macro's own spell always comes first."
+L["CAST_SEQUENCE_ADD"] = "+ Add Step"
+L["CAST_SEQUENCE_ADD_DESCRIPTION"] = "Adds a step at the end. Then pick the spell it casts."
+L["CAST_SEQUENCE_ADD_LIMIT"] =
+	"Up to %d steps after the macro's own. Each one adds to the macro text, which holds 255 bytes."
+L["CAST_SEQUENCE_CANNOT_PICK"] = "Only a learned spell, and not Shoot, can be a step in a cast sequence."
+L["CAST_SEQUENCE_ACTION_DROP"] = "Cast It In This Step"
+L["CAST_SEQUENCE_ACTION_USE"] = "Use In Cast Sequence"
+L["CAST_SEQUENCE_REMOVE_DESCRIPTION"] = "Removes this step."
+L["CAST_SEQUENCE_REORDER_DESCRIPTION"] = "Drag onto another step to move this one there."
+L["CAST_SEQUENCE_END"] = "After The Last Step"
+L["CAST_SEQUENCE_END_LOOP"] = "Start Over"
+L["CAST_SEQUENCE_END_LOOP_DESCRIPTION"] =
+	"The next press casts the macro's own spell again, and the sequence goes round."
+L["CAST_SEQUENCE_END_STOP"] = "Stop (NULL)"
+L["CAST_SEQUENCE_END_STOP_DESCRIPTION"] =
+	"Ends on NULL, a spell no one knows, so more presses cast nothing until a reset starts the sequence over."
+L["CAST_SEQUENCE_END_STOP_SHORT"] = "Stop"
+L["CAST_SEQUENCE_RESET"] = "Start Over When"
+L["CAST_SEQUENCE_RESET_NEVER"] = "Never"
+L["CAST_SEQUENCE_RESET_TARGET"] = "Target Changes"
+L["CAST_SEQUENCE_RESET_TARGET_DESCRIPTION"] = "Starts the sequence over at its first step when you change targets."
+L["CAST_SEQUENCE_RESET_COMBAT"] = "Combat Ends"
+L["CAST_SEQUENCE_RESET_COMBAT_DESCRIPTION"] = "Starts the sequence over at its first step when you leave combat."
+L["CAST_SEQUENCE_RESET_SHIFT"] = "Shift Held"
+L["CAST_SEQUENCE_RESET_CTRL"] = "Ctrl Held"
+L["CAST_SEQUENCE_RESET_ALT"] = "Alt Held"
+L["CAST_SEQUENCE_RESET_MODIFIER_DESCRIPTION"] =
+	"Pressing the macro with this key held starts the sequence over, casting its first step."
+L["CAST_SEQUENCE_RESET_SECONDS_MENU"] = "Seconds Idle"
+L["CAST_SEQUENCE_RESET_SECONDS_MENU_DESCRIPTION"] =
+	"Starts the sequence over when the macro hasn't been pressed for this long."
+L["CAST_SEQUENCE_RESET_SECONDS_OFF"] = "Off"
+-- TRANSLATORS: a Cast Sequence reset after this many seconds without a press ("5 Seconds Idle").
+L["CAST_SEQUENCE_RESET_SECONDS"] = "%d Seconds Idle"
+L["CAST_SEQUENCE_STOP_NO_RESET"] =
+	"Stops for good: with nothing to start it over, the sequence stays on NULL until the macro changes or you reload your UI. Pick a reset under Start Over When."
+L["CAST_SEQUENCE_PET_BLOCKED"] =
+	"Waits while Cast If Summoned casts %s, which writes a cast line of its own. Turn that off to use the sequence."
+-- TRANSLATORS: the spell's note on the page, counting the spells its Cast Sequence casts in turn ("3-Step Sequence").
+L["SUBTEXT_CAST_SEQUENCE"] = "%d-Step Sequence"
+
 -- Page: Settings Menu
 L["SETTINGS_SHOW_ALL_RANKS"] = "Show All Spell Ranks"
 L["SETTINGS_SHOW_GROUPED_SPELLS"] = "Show Grouped Spells"
@@ -1939,10 +2083,13 @@ L["MENU_RESET_CATEGORY_DESCRIPTION"] =
 L["MENU_RESET_CATEGORY_CONFIRM"] =
 	"Reset the options you set on every spell in %s? Each one follows its defaults again."
 
+-- TRANSLATORS: %s is a spell's name, heading its macro's part of a tile's tooltip after "GtG //" ("Immolate Macro").
+L["TOOLTIP_MACRO_HEADING"] = "%s Macro"
+
 -- Spellbook Tab Tooltip
 L["SPELLBOOK_TAB_DESCRIPTION"] = "Your class's spells as one-click macros."
 L["TOOLTIP_KEY_CLICK"] = "Click"
-L["TOOLTIP_ACTION_OPEN_PAGE"] = "Open BBB Spellbook"
+L["TOOLTIP_ACTION_OPEN_PAGE"] = "Open GtG Spellbook"
 
 -- Page: Layout
 L["PAGE_EMPTY"] = "No macros yet. Visit your class trainer to learn your first spells."
@@ -1963,24 +2110,150 @@ L["PAGE_CATEGORY_SETTINGS_DESCRIPTION"] =
 -- after a category's count, where it carries on from the column before
 L["PAGE_CONTINUED"] = "(Continued)"
 
+-- What's Next? Tab: the window's second tab and its title before "// Good to Go"
+L["WHATS_NEXT_TITLE"] = "What's Next?"
+L["WHATS_NEXT_EMPTY"] = "No spells to list."
+L["WHATS_NEXT_ALL_SOURCES"] = "All Sources"
+L["WHATS_NEXT_ANY_LEVEL"] = "Any Level"
+-- TRANSLATORS: %s is a spell's rank or "Passive", after its name ("Rend (Rank 2)").
+L["WHATS_NEXT_SUBTEXT"] = "(%s)"
+
+-- What's Next? Tab: section headers, and the counts in the footer
+L["WHATS_NEXT_STATUS_AVAILABLE"] = "Available Now"
+L["WHATS_NEXT_STATUS_SOON"] = "Coming Soon"
+L["WHATS_NEXT_STATUS_LATER"] = "Not Yet Available"
+L["WHATS_NEXT_STATUS_MISSING"] = "Missing Requirements"
+L["WHATS_NEXT_STATUS_TALENT"] = "Talents Not Taken"
+L["WHATS_NEXT_STATUS_TALENT_RUNE"] = "Talents And Runes Not Taken"
+L["WHATS_NEXT_STATUS_KNOWN"] = "Known"
+
+-- What's Next? Tab: each row's status at its right under Sort By Level
+L["WHATS_NEXT_SHORT_AVAILABLE"] = "Available Now"
+L["WHATS_NEXT_SHORT_SOON"] = "Coming Soon"
+L["WHATS_NEXT_SHORT_LATER"] = "Not Yet"
+L["WHATS_NEXT_SHORT_MISSING"] = "Needs Another Spell"
+L["WHATS_NEXT_SHORT_TALENT"] = "Not Taken"
+L["WHATS_NEXT_SHORT_KNOWN"] = "Known"
+
+-- What's Next? Tab: where a spell is learned
+L["WHATS_NEXT_SOURCE_START"] = "Starting Spell"
+L["WHATS_NEXT_SOURCE_TRAINER"] = "Trainer"
+L["WHATS_NEXT_SOURCE_BOOK"] = "Book"
+L["WHATS_NEXT_SOURCE_QUEST"] = "Quest"
+L["WHATS_NEXT_SOURCE_TALENT"] = "Talent"
+L["WHATS_NEXT_SOURCE_RUNE"] = "Rune"
+
+-- What's Next? Tab: a row's tooltip, under the spell's own
+L["WHATS_NEXT_TOOLTIP_SOURCE"] = "Learned From"
+L["WHATS_NEXT_TOOLTIP_LEVEL"] = "Required Level"
+L["WHATS_NEXT_TOOLTIP_HOW_START"] = "Your class starts with it."
+L["WHATS_NEXT_TOOLTIP_HOW_TRAINER"] = "Your class trainer teaches it."
+L["WHATS_NEXT_TOOLTIP_HOW_BOOK"] = "An item teaches it, such as a book from a dungeon or raid."
+L["WHATS_NEXT_TOOLTIP_HOW_QUEST"] = "A class quest teaches it. Your class trainer can point you to it."
+L["WHATS_NEXT_TOOLTIP_HOW_TALENT"] = "Spend a talent point on it to learn it."
+L["WHATS_NEXT_TOOLTIP_HOW_RUNE"] = "Engrave its rune to learn it."
+-- TRANSLATORS: %s is a spell's name, with its rank where it has one ("Learn Rend (Rank 1) first.").
+L["WHATS_NEXT_TOOLTIP_NEEDS"] = "Learn %s first."
+-- TRANSLATORS: %s is a spell's name, heading the list of its ranks after "GtG //" ("Immolate Ranks").
+L["WHATS_NEXT_TOOLTIP_RANKS"] = "%s Ranks"
+L["TOOLTIP_KEY_SHIFT_CLICK"] = "Shift-Click"
+L["TOOLTIP_ACTION_LINK_IN_CHAT"] = "Link In Chat"
+
+-- What's Next? Tab: the sort dropdown and the settings menu
+L["WHATS_NEXT_SORT_AVAILABILITY"] = "Sort By Availability"
+L["WHATS_NEXT_SORT_LEVEL"] = "Sort By Level"
+L["WHATS_NEXT_SORT_DESCRIPTION"] =
+	"Sort By Availability lists the spells you can learn now first and the ones you know last. Sort By Level lists every spell under the level it's learned at."
+L["WHATS_NEXT_SHOW_KNOWN"] = "Show Known Spells"
+L["WHATS_NEXT_SHOW_KNOWN_DESCRIPTION"] = "Also lists the spells you've already learned, after the rest."
+L["WHATS_NEXT_SHOW_TALENTS"] = "Show Talents Not Taken"
+L["WHATS_NEXT_SHOW_TALENTS_RUNES"] = "Show Talents And Runes Not Taken"
+L["WHATS_NEXT_SHOW_TALENTS_DESCRIPTION"] =
+	"Also lists the talent spells you haven't taken. You learn those by spending talent points, not from a trainer."
+
+-- Pet Spell Book Tab: a pet class's third tab and its title before "// Good to Go"
+L["PET_SPELLBOOK_TITLE"] = "Pet Spell Book"
+L["PET_SPELLBOOK_EMPTY"] = "Your pet has no spells to list."
+L["PET_SPELLBOOK_NO_PET"] = "No pet out. Summon your pet to see its spells."
+-- its section headers
+L["PET_SPELLBOOK_STATUS_ABILITY"] = "Abilities"
+L["PET_SPELLBOOK_STATUS_PASSIVE"] = "Passive"
+-- at an ability's right: whether the pet casts it on its own
+L["PET_SPELLBOOK_AUTOCAST_ON"] = "Autocast On"
+L["PET_SPELLBOOK_AUTOCAST_OFF"] = "Autocast Off"
+
+-- Pet What's Next? Tab: a hunter's or warlock's fourth tab and its title before "// Good to Go"
+L["WHATS_NEXT_PET_TITLE"] = "Pet What's Next?"
+L["WHATS_NEXT_PET_EMPTY"] = "No pet abilities to list."
+-- the footer's right: the pet out, or that there's none
+-- TRANSLATORS: %1$s is the pet's name, %2$d its level, %3$s its family ("Fang, Level 23 Wolf").
+L["WHATS_NEXT_PET_FOOTER"] = "%1$s, Level %2$d %3$s"
+-- TRANSLATORS: %1$d is the training points the pet has left, %2$d its total.
+L["WHATS_NEXT_PET_FOOTER_TRAINING_POINTS"] = "Training Points: %1$d of %2$d"
+L["WHATS_NEXT_PET_NO_PET"] = "No pet out: showing what you've learned with Beast Training."
+L["WHATS_NEXT_PET_NO_DEMON"] = "No demon out: summon one to see what it already knows."
+
+-- Pet What's Next? Tab: the pet's own section headers (the rest are the What's Next? tab's)
+L["WHATS_NEXT_PET_STATUS_TEACH"] = "Ready to Teach"
+L["WHATS_NEXT_PET_STATUS_OTHER"] = "Other Families' Abilities"
+L["WHATS_NEXT_PET_SHORT_TEACH"] = "Ready to Teach"
+L["WHATS_NEXT_PET_SHORT_OTHER"] = "Other Family"
+
+-- Pet What's Next? Tab: where the hunter learns an ability
+L["WHATS_NEXT_PET_SOURCE_TRAINER"] = "Pet Trainer"
+L["WHATS_NEXT_PET_SOURCE_TAMING"] = "Taming"
+L["WHATS_NEXT_PET_SOURCE_DEMON_TRAINER"] = "Demon Trainer"
+
+-- Pet What's Next? Tab: a row's tooltip, under the ability's own
+L["WHATS_NEXT_PET_TOOLTIP_LEVEL"] = "Required Pet Level"
+L["WHATS_NEXT_PET_TOOLTIP_TRAINING_POINTS"] = "Training Points"
+L["WHATS_NEXT_PET_TOOLTIP_HOW_TRAINER"] =
+	"A pet trainer teaches it to you. Then teach it to your pet with Beast Training."
+L["WHATS_NEXT_PET_TOOLTIP_HOW_TAMING"] =
+	"Tame a beast that knows it and fight alongside it until you learn it. Then teach it to any pet that can learn it with Beast Training."
+L["WHATS_NEXT_PET_TOOLTIP_HUNTER_KNOWS"] = "You know it. Teach it to your pet with Beast Training."
+L["WHATS_NEXT_PET_TOOLTIP_HOW_DEMON_TRAINER"] =
+	"Buy its grimoire from a demon trainer, then use it while the demon that learns it is summoned."
+L["WHATS_NEXT_PET_TOOLTIP_GRIMOIRE"] = "Grimoire"
+L["WHATS_NEXT_PET_TOOLTIP_GRIMOIRE_IN_BAGS"] = "Its grimoire is in your bags. Use it while this demon is summoned."
+L["WHATS_NEXT_PET_TOOLTIP_OTHER"] = "Your pet can't learn it."
+L["WHATS_NEXT_PET_TOOLTIP_BEASTS"] = "Beasts That Know It"
+-- TRANSLATORS: %1$s is a beast's name, %2$s its level or level range ("Forest Spider (5-6)").
+L["WHATS_NEXT_PET_TOOLTIP_BEAST"] = "%1$s (%2$s)"
+-- TRANSLATORS: %d is how many more beasts know the ability than the tooltip names.
+L["WHATS_NEXT_PET_TOOLTIP_MORE"] = "And %d more."
+
+-- Pet What's Next? Tab: the sort's tooltip and the settings menu
+L["WHATS_NEXT_PET_SORT_DESCRIPTION"] =
+	"Sort By Availability lists the abilities your pet can learn now first and the ones it knows last. Sort By Level lists every ability under the pet level it needs."
+L["WHATS_NEXT_PET_SHOW_KNOWN"] = "Show Known Abilities"
+L["WHATS_NEXT_PET_SHOW_KNOWN_DESCRIPTION"] =
+	"Also lists the abilities your pet already knows, after the rest. A hunter with no pet out sees the ones they've learned."
+L["WHATS_NEXT_PET_SHOW_OTHER"] = "Show Other Families' Abilities"
+L["WHATS_NEXT_PET_SHOW_OTHER_DESCRIPTION"] =
+	"Also lists the abilities your pet can't learn, such as a cat's Prowl for a wolf, or another demon's."
+
 L["OPTIONS_KEY_BINDINGS_HEADER"] = "Key Bindings"
 L["OPTIONS_KEY_SET"] = "Set Key"
-L["OPTIONS_KEY_SET_DESCRIPTION"] = "Opens the game's key binding list, where Bags Buffs & Buttons has its own section."
+L["OPTIONS_KEY_SET_DESCRIPTION"] = "Opens the game's key binding list, where Good to Go has its own section."
 L["OPTIONS_KEY_BINDING_TOGGLE_DESCRIPTION"] =
-	"Opens and closes BBB Spellbook. It also has its own tab in your spellbook."
+	"Opens and closes GtG Spellbook. It also has its own tab in your spellbook."
+L["OPTIONS_ABILITY_TOOLTIPS_HEADER"] = "What's Next Ability Tooltips"
+L["OPTIONS_ABILITY_TOOLTIPS_DESCRIPTION"] =
+	"Every ability's tooltip lists its ranks and the level each one needs: green for ranks you know, red for ranks you could train now but haven't, and yellow for ranks still to come. It's a quick self-check that you're always using your best rank, so you can always play at your best. The ranks don't show during combat, so your tooltips stay short when it counts."
 L["OPTIONS_DELETE_MACROS_HEADER"] = "Delete Macros"
 L["OPTIONS_DELETE_MACROS_DESCRIPTION"] =
-	"Deletes the macros BBB Spellbook made, which also takes them off your action bars. Your own macros are never touched, and the page makes any of them again when you click or drag it."
+	"Deletes the macros GtG Spellbook made, which also takes them off your action bars. Your own macros are never touched, and the page makes any of them again when you click or drag it."
 L["OPTIONS_DELETE_CHARACTER_MACROS"] = "Delete Character Macros"
 L["OPTIONS_DELETE_CHARACTER_MACROS_DESCRIPTION"] =
-	"Deletes BBB Spellbook's macros from this character's macro tab. Your other characters keep theirs until you do the same on them."
+	"Deletes GtG Spellbook's macros from this character's macro tab. Your other characters keep theirs until you do the same on them."
 L["OPTIONS_DELETE_CHARACTER_MACROS_CONFIRM"] =
-	"Delete all of BBB Spellbook's macros on this character? They come off your action bars too."
+	"Delete all of GtG Spellbook's macros on this character? They come off your action bars too."
 L["OPTIONS_DELETE_GENERAL_MACROS"] = "Delete General Macros"
 L["OPTIONS_DELETE_GENERAL_MACROS_DESCRIPTION"] =
-	"Deletes BBB Spellbook's macros from the General macro tab, which every character on your account shares, so your other characters lose theirs there too."
+	"Deletes GtG Spellbook's macros from the General macro tab, which every character on your account shares, so your other characters lose theirs there too."
 L["OPTIONS_DELETE_GENERAL_MACROS_CONFIRM"] =
-	"Delete all of BBB Spellbook's General macros? Every character on your account loses them, and they come off your action bars too."
+	"Delete all of GtG Spellbook's General macros? Every character on your account loses them, and they come off your action bars too."
 
 -- Options: Spellbook Page Panel
 L["OPTIONS_SHOW_ALL_RANKS_DESCRIPTION"] =
@@ -2032,10 +2305,10 @@ L["KIND_SELF"] = "Self And Area Spells"
 L["KIND_SELF_DESCRIPTION"] = "Spells with no target, cast on yourself or around you."
 
 -- Key Bindings
-L["BINDING_TOGGLE_PAGE"] = "Toggle BBB Spellbook"
+L["BINDING_TOGGLE_PAGE"] = "Toggle GtG Spellbook"
 
 L["CHAT_KEY_BINDINGS_IN_COMBAT"] = "As a safety precaution, the key binding list cannot be opened during combat."
-L["KEY_BINDINGS_LOCATION"] = "Open the game menu, then %s, then %s, and find the Bags Buffs & Buttons section."
+L["KEY_BINDINGS_LOCATION"] = "Open the game menu, then %s, then %s, and find the Good to Go section."
 L["ERROR_MACRO_SLOTS_FULL"] = "No free macro slots. Delete a macro in /macro to make room."
 L["CHAT_MACROS_DELETED"] = "Macros deleted: %d"
 L["CHAT_MACRO_TOO_LONG"] =

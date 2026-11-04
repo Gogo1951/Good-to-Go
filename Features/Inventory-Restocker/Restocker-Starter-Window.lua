@@ -552,7 +552,7 @@ local function CreateFooter(frame)
 end
 
 local function CreateWindow()
-	local frame = ns.CreateRestockerPortraitFrame("BagsBuffsButtonsStaplesFrame", L["STARTER_POPUP_TITLE"])
+	local frame = ns.CreateRestockerPortraitFrame("GoodToGoStaplesFrame", L["STARTER_POPUP_TITLE"])
 	frame:SetSize(WINDOW_WIDTH, WINDOW_MAX_HEIGHT)
 	frame:SetPoint("CENTER")
 	-- Over the Restock List, which stays open behind it.

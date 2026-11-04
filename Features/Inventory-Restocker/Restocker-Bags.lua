@@ -41,56 +41,37 @@ local function CreateBag(bag)
 	return NewBagDefinition("bag", bag)
 end
 
-local function CreateBankMainBag()
-	return NewBagDefinition("bank", BANK_CONTAINER)
-end
-
-local function CreateBankBag(bag)
-	--[[
-	    Bank bag ids follow the player's own, offset by NUM_BAG_SLOTS. Seven are built (5..11), TBC's count;
-	    Classic Era has six, and its seventh id holds no slots, so it is passed over.
-	]]
-	return NewBagDefinition("bank", bag + NUM_BAG_SLOTS)
-end
+-- Bank bag ids follow the player's own, offset by NUM_BAG_SLOTS: 5..10 on Classic Era (six slots), 5..11 on TBC.
+local BANK_BAG_COUNT = 7
 
 --[[
-    Forever has no BANK_CONTAINER and no bank bags: its character bank is the
-    C_Bank tabs the player has bought, which can change at any visit, so the
-    bank open handler calls this again. Era and TBC rebuild the same fixed
-    layout each time.
+    The character bank's container IDs, the main bank first: Forever's is the
+    C_Bank tabs the player has bought, which can change at any visit; Era and
+    TBC have BANK_CONTAINER and seven bank bag IDs, TBC's count, whose seventh
+    holds no slots on Era and so reads as empty. The Inventory Report reads the
+    bank through the same list.
 ]]
-function ns.LoadRestockBankBags()
+function ns.BankBagIDs()
 	local tabIDs = ns.FetchPurchasedBankTabIDs()
 	if tabIDs then
-		bankBags = {}
-		bankBagsReversed = {}
-		for index, bagID in ipairs(tabIDs) do
-			bankBags[index] = NewBagDefinition("bank", bagID)
-			bankBagsReversed[#tabIDs - index + 1] = bankBags[index]
-		end
-		return
+		return tabIDs
 	end
+	local bagIDs = { BANK_CONTAINER }
+	for index = 1, BANK_BAG_COUNT do
+		bagIDs[#bagIDs + 1] = NUM_BAG_SLOTS + index
+	end
+	return bagIDs
+end
 
-	bankBags = {
-		CreateBankMainBag(),
-		CreateBankBag(1),
-		CreateBankBag(2),
-		CreateBankBag(3),
-		CreateBankBag(4),
-		CreateBankBag(5),
-		CreateBankBag(6),
-		CreateBankBag(7),
-	}
-	bankBagsReversed = {
-		CreateBankBag(7),
-		CreateBankBag(6),
-		CreateBankBag(5),
-		CreateBankBag(4),
-		CreateBankBag(3),
-		CreateBankBag(2),
-		CreateBankBag(1),
-		CreateBankMainBag(),
-	}
+-- Read afresh at every bank visit, since Forever's tabs can change between them.
+function ns.LoadRestockBankBags()
+	local bagIDs = ns.BankBagIDs()
+	bankBags = {}
+	bankBagsReversed = {}
+	for index, bagID in ipairs(bagIDs) do
+		bankBags[index] = NewBagDefinition("bank", bagID)
+		bankBagsReversed[#bagIDs - index + 1] = NewBagDefinition("bank", bagID)
+	end
 end
 
 function ns.InitializeRestockBagDefinitions()
@@ -209,7 +190,6 @@ function ns.GetRestockItemsInBags(predicate)
 			if itemInfo and itemInfo.itemID then
 				local id = itemInfo.itemID
 
-				-- Allow filtering by predicate
 				if predicate == nil or predicate(id) == true then
 					result.summary[id] = (result.summary[id] or 0) + itemInfo.stackCount
 
@@ -251,11 +231,9 @@ function ns.GetRestockItemsInBank(predicate)
 	for _, bag in ipairs(bankBagsReversed) do
 		for slot = 1, C_Container.GetContainerNumSlots(bag.bagID) do
 			local itemInfo = C_Container.GetContainerItemInfo(bag.bagID, slot)
-			-- Keyed by itemID (no hyperlink/name parsing needed)
 			if itemInfo and itemInfo.itemID then
 				local id = itemInfo.itemID
 
-				-- Allow filtering by predicate
 				if predicate == nil or predicate(id) == true then
 					result.summary[id] = (result.summary[id] or 0) + itemInfo.stackCount
 
@@ -367,7 +345,7 @@ local function PutItemInPlayerBag(playerInventory, itemInfo, amount)
 end
 
 -- generalOnly counts only general-purpose bags: a herb, enchanting or soul bag takes only its own kind.
-function ns.HasFreeBagSlot(bags, generalOnly)
+local function HasFreeBagSlot(bags, generalOnly)
 	for _, bag in ipairs(bags) do
 		local numberOfFreeSlots, bagType = C_Container.GetContainerNumFreeSlots(bag.bagID)
 		if numberOfFreeSlots > 0 and (not generalOnly or bagType == 0) then
@@ -525,12 +503,12 @@ function ns.MoveRestockItemToBank(bankInventory, moveItemID, moveAmount)
 end
 
 --[[
-    Where a restock still has room, as (bags, bank). The bank counts only a free
-    general-purpose slot: a free slot in a profession bag cannot take what the
-    run stashes. The caller decides what an answer means; this only reports it.
+    Whether the bank still has room for a stash: only a free general-purpose
+    slot counts, since a free slot in a profession bag cannot take what the run
+    stashes. The caller decides what an answer means; this only reports it.
 ]]
-function ns.GetRestockSpace()
-	return ns.HasFreeBagSlot(ns.restockPlayerBags), ns.HasFreeBagSlot(bankBags, true)
+function ns.BankHasRestockSpace()
+	return HasFreeBagSlot(bankBags, true)
 end
 
 function GetRestockContainerItemInfo(bagID, slot)

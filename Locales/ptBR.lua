@@ -1,4 +1,4 @@
-local L = LibStub("AceLocale-3.0"):NewLocale("Bags-Buffs-Buttons", "ptBR")
+local L = LibStub("AceLocale-3.0"):NewLocale("Good-to-Go", "ptBR")
 if not L then
 	return
 end
@@ -10,17 +10,17 @@ end
 --[[
     The add-on has two names. ADDON_TITLE, the full name, is for window
     titles and anywhere the add-on is talked about; ADDON_SHORT_NAME is for
-    tooltips and the chat prints ("BBB // ..."). Both are proper nouns and
+    tooltips and the chat prints ("GtG // ..."). Both are proper nouns and
     stay as written in every locale, as does the full name inside any
     sentence below.
 ]]
-L["ADDON_TITLE"] = "Bags Buffs & Buttons"
-L["ADDON_SHORT_NAME"] = "BBB"
+L["ADDON_TITLE"] = "Good to Go"
+L["ADDON_SHORT_NAME"] = "GtG"
 
 L["CHAT_LOADED"] =
-	"Versão %s. As configurações (incluindo a opção de desativar esta mensagem) ficam em Opções > AddOns > Bags Buffs & Buttons. Gostando deste addon? Conte para um amigo, favorite-o no CurseForge ou clique em Star na página dele no GitHub. (="
-L["OPTIONS_LEVEL_UP_TITLE"] = "Ajude o Bags Buffs & Buttons a subir de nível"
-L["OPTIONS_LEVEL_UP_THANKS"] = "Obrigado por escolher o Bags Buffs & Buttons!"
+	"Versão %s. As configurações (incluindo a opção de desativar esta mensagem) ficam em Opções > AddOns > Good to Go. Gostando deste addon? Conte para um amigo, favorite-o no CurseForge ou clique em Star na página dele no GitHub. (="
+L["OPTIONS_LEVEL_UP_TITLE"] = "Ajude o Good to Go a subir de nível"
+L["OPTIONS_LEVEL_UP_THANKS"] = "Obrigado por escolher o Good to Go!"
 
 --------------------------------------------------------------------------------
 -- Connoisseur & Restocker
@@ -94,16 +94,6 @@ L["MESSAGE_BUG_REPORT"] =
 L["MESSAGE_NO_ITEM"] = "Nenhum item adequado do tipo %s encontrado nas suas bolsas."
 L["MESSAGE_MACRO_SLOTS_FULL"] =
 	"Algumas macros do Connoisseur & Restocker não puderam ser criadas porque seus espaços de macro estão cheios. Libere um espaço excluindo as macros que você não usa mais, ou desative as macros do Connoisseur & Restocker de que você não precisa em Opções > AddOns > Connoisseur & Restocker > Macros."
---[[
-    Printed once after the add-on creates one or more of its macros, so a new
-    player learns they exist. %s is "/m", the game's own macro command, colored
-    at the call site. "General" is the macro window's tab for account-wide
-    macros; use the client's own name for that tab. The macro names are this
-    locale's own MACRO_FOOD and MACRO_WATER values, written exactly as this
-    locale ships them.
-]]
-L["MESSAGE_MACROS_READY"] =
-	"Suas macros estão prontas. Digite %s, abra a aba Macros gerais e arraste - Comida, - Água e as demais para suas barras de ações."
 -- The mini-map button's Right-Click and Middle-Click. %s is the item's link.
 L["MESSAGE_IGNORE_ADDED"] = "%s agora está na Lista de Ignorados deste personagem."
 -- %d is how many items the Middle-Click took off the list: exactly one, or two or more.
@@ -280,7 +270,7 @@ L["MINIMAP_RESTOCKER_EMPTY"] = "Sua lista está vazia."
 L["MENU_RESTOCKER"] = "Lista do Restocker"
 L["MENU_RESTOCKER_DESCRIPTION"] = "Compra e guarda no banco os itens da sua lista."
 L["MENU_RESTOCKER_KEYBIND"] = "Shift + clique direito"
-L["MENU_OPTIONS"] = "Opções do BBB"
+L["MENU_OPTIONS"] = "Opções do GtG"
 L["MENU_OPTIONS_KEYBIND"] = "Shift + clique do meio"
 
 --------------------------------------------------------------------------------
@@ -461,7 +451,7 @@ L["SAMPLE_EXAMPLE"] = "Exemplo: %s"
     translate, and its description.
 ]]
 L["OPTIONS_COMMANDS_HEADER"] = "/Commands"
-L["OPTIONS_COMMAND"] = "/bbb"
+L["OPTIONS_COMMAND"] = "/gtg"
 L["OPTIONS_COMMAND_DESCRIPTION"] = "Abre a interface de opções deste addon."
 L["RESTOCKER_COMMAND"] = "/restock"
 L["RESTOCKER_COMMAND_DESCRIPTION"] = "Abre sua lista de reabastecimento."
@@ -1670,6 +1660,22 @@ L["BUFF_WINDOW_TOOLTIP_CREATE"] = "Ninguém no seu grupo tem uma Pedra da Alma. 
 L["BUFF_WINDOW_TOOLTIP_GROUP"] = "Clique para lançar em %s e no grupo dele."
 L["BUFF_WINDOW_TOOLTIP_FAVOR"] = "Clique para selecionar %s como alvo e lançar."
 L["BUFF_WINDOW_TOOLTIP_DISMISS"] = "Clique com o botão direito para tirar %s da lista."
+-- The title row: a raid buff your group is missing, its count and click.
+L["BUFF_WINDOW_OTHERS_TOOLTIP_COUNT"] = "Faltando ou acabando: %d"
+-- %s is the names of the players the click whispers.
+L["BUFF_WINDOW_OTHERS_TOOLTIP_WHISPER"] = "Clique para sussurrar a lista para %s."
+--[[
+    The whisper a click sends, signed off like every sent message ({star} ... // GtG):
+    the class addressed (BUFF_WINDOW_OTHERS_PLURAL_*), the count, then the buff's link.
+]]
+L["BUFF_WINDOW_OTHERS_REQUEST_ONE"] = "Olá, %s! 1 pessoa está sem %s ou precisa renovar em breve. Obrigado!"
+L["BUFF_WINDOW_OTHERS_REQUEST"] = "Olá, %s! %d pessoas estão sem %s ou precisam renovar em breve. Obrigado!"
+-- Your own chat, after a click: who was whispered, then the buff's link.
+L["BUFF_WINDOW_OTHERS_SENT"] = "Sussurrado para %s sobre %s."
+-- The classes with a raid-wide buff, addressed as a group.
+L["BUFF_WINDOW_OTHERS_PLURAL_DRUID"] = "druidas"
+L["BUFF_WINDOW_OTHERS_PLURAL_MAGE"] = "magos"
+L["BUFF_WINDOW_OTHERS_PLURAL_PRIEST"] = "sacerdotes"
 -- The window's close button: the class name in its color, then the options command.
 L["BUFF_WINDOW_CLOSED"] =
 	"Plantão de buffs está desligado para a classe %s. Para ligá-lo de novo, use Shift + Clique direito no botão do minimapa ou digite %s."
@@ -1856,7 +1862,7 @@ L["TOOLTIP_ACTION_MACRO_OPTIONS"] = "Opções da macro"
 -- Spellbook Tab Tooltip
 L["SPELLBOOK_TAB_DESCRIPTION"] = "Os feitiços da sua classe como macros de um clique."
 L["TOOLTIP_KEY_CLICK"] = "Clicar"
-L["TOOLTIP_ACTION_OPEN_PAGE"] = "Abrir o BBB Spellbook"
+L["TOOLTIP_ACTION_OPEN_PAGE"] = "Abrir o GtG Spellbook"
 
 -- Page: Layout
 L["PAGE_EMPTY"] = "Ainda não há macros. Visite seu instrutor de classe para aprender seus primeiros feitiços."
@@ -1869,22 +1875,22 @@ L["PAGE_MACRO_CHARACTER"] = "Personagem"
 L["OPTIONS_KEY_BINDINGS_HEADER"] = "Teclas de atalho"
 L["OPTIONS_KEY_SET"] = "Definir tecla"
 L["OPTIONS_KEY_SET_DESCRIPTION"] =
-	"Abre a lista de teclas de atalho do jogo, onde o Bags Buffs & Buttons tem sua própria seção."
+	"Abre a lista de teclas de atalho do jogo, onde o Good to Go tem sua própria seção."
 L["OPTIONS_KEY_BINDING_TOGGLE_DESCRIPTION"] =
-	"Abre e fecha o BBB Spellbook. Ele também tem sua própria aba no seu grimório."
+	"Abre e fecha o GtG Spellbook. Ele também tem sua própria aba no seu grimório."
 L["OPTIONS_DELETE_MACROS_HEADER"] = "Excluir macros"
 L["OPTIONS_DELETE_MACROS_DESCRIPTION"] =
-	"Exclui as macros que o BBB Spellbook criou, o que também as tira das suas barras de ação. Suas próprias macros nunca são tocadas, e a página recria qualquer uma delas quando você clica nela ou a arrasta."
+	"Exclui as macros que o GtG Spellbook criou, o que também as tira das suas barras de ação. Suas próprias macros nunca são tocadas, e a página recria qualquer uma delas quando você clica nela ou a arrasta."
 L["OPTIONS_DELETE_CHARACTER_MACROS"] = "Excluir macros do personagem"
 L["OPTIONS_DELETE_CHARACTER_MACROS_DESCRIPTION"] =
-	"Exclui as macros do BBB Spellbook da aba de macros deste personagem. Seus outros personagens mantêm as deles até você fazer o mesmo neles."
+	"Exclui as macros do GtG Spellbook da aba de macros deste personagem. Seus outros personagens mantêm as deles até você fazer o mesmo neles."
 L["OPTIONS_DELETE_CHARACTER_MACROS_CONFIRM"] =
-	"Excluir todas as macros do BBB Spellbook deste personagem? Elas também saem das suas barras de ação."
+	"Excluir todas as macros do GtG Spellbook deste personagem? Elas também saem das suas barras de ação."
 L["OPTIONS_DELETE_GENERAL_MACROS"] = "Excluir macros gerais"
 L["OPTIONS_DELETE_GENERAL_MACROS_DESCRIPTION"] =
-	"Exclui as macros do BBB Spellbook da aba Macros gerais, compartilhada por todos os personagens da sua conta, então seus outros personagens também perdem as deles ali."
+	"Exclui as macros do GtG Spellbook da aba Macros gerais, compartilhada por todos os personagens da sua conta, então seus outros personagens também perdem as deles ali."
 L["OPTIONS_DELETE_GENERAL_MACROS_CONFIRM"] =
-	"Excluir todas as macros gerais do BBB Spellbook? Todos os personagens da sua conta as perdem, e elas também saem das suas barras de ação."
+	"Excluir todas as macros gerais do GtG Spellbook? Todos os personagens da sua conta as perdem, e elas também saem das suas barras de ação."
 
 -- Options: Spellbook Page Panel
 L["OPTIONS_SHOW_UNLEARNED_DESCRIPTION"] =
@@ -1931,10 +1937,10 @@ L["KIND_SELF"] = "Feitiços pessoais e de área"
 L["KIND_SELF_DESCRIPTION"] = "Feitiços sem alvo, lançados em você ou ao seu redor."
 
 -- Key Bindings
-L["BINDING_TOGGLE_PAGE"] = "Mostrar/ocultar o BBB Spellbook"
+L["BINDING_TOGGLE_PAGE"] = "Mostrar/ocultar o GtG Spellbook"
 
 L["CHAT_KEY_BINDINGS_IN_COMBAT"] = "Por segurança, a lista de teclas de atalho não pode ser aberta durante o combate."
-L["KEY_BINDINGS_LOCATION"] = "Abra o menu do jogo, depois %s, depois %s, e procure a seção Bags Buffs & Buttons."
+L["KEY_BINDINGS_LOCATION"] = "Abra o menu do jogo, depois %s, depois %s, e procure a seção Good to Go."
 L["ERROR_MACRO_SLOTS_FULL"] = "Não há espaços de macro livres. Apague uma macro em /macro para abrir espaço."
 L["CHAT_MACROS_DELETED"] = "Macros excluídas: %d"
 L["CHAT_MACRO_TOO_LONG"] =

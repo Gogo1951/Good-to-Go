@@ -39,7 +39,7 @@ local BANDS = ns.RESTOCK_WINDOW_BANDS
 ns.RESTOCK_HEADER_CENTER_Y = -(BANDS.TITLE_HEIGHT + BANDS.CONTROLS_HEIGHT / 2)
 
 --[[
-    A portrait frame named name, titled "<title> // Bags Buffs & Buttons": the
+    A portrait frame named name, titled "<title> // Good to Go": the
     window's own name white, the slashes grey, the add-on's name blue, as the
     Spell Book's title is. A client without the portrait template gets the
     plain frame and no portrait.

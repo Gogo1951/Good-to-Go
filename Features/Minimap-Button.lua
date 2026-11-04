@@ -201,8 +201,7 @@ local function AddRestockerReport(tooltip)
 	elseif #groceries <= LIST_MAX_ROWS then
 		tooltip:AddLine(GetColor("TITLE") .. L["MINIMAP_RESTOCKER_REPORT"] .. "|r")
 		for _, entry in ipairs(groceries) do
-			local icon = entry.itemID and C_Item.GetItemIconByID(entry.itemID)
-				or "Interface\\ICONS\\INV_Misc_QuestionMark"
+			local icon = entry.itemID and C_Item.GetItemIconByID(entry.itemID) or ns.QUESTION_MARK_ICON
 			tooltip:AddDoubleLine(
 				format("|T%s:14:14|t %s", icon, ns.GetItemLabel(entry.itemID, entry.itemName)),
 				GetColor("BODY") .. format(L["MINIMAP_RESTOCKER_ITEM_COUNT"], entry.have, entry.wanted) .. "|r"

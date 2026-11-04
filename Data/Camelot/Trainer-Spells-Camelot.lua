@@ -185,7 +185,7 @@ ns.TRAINER_SPELLS = {
 		{ level = 6, id = 1130 }, -- Hunter's Mark
 		{ level = 8, id = 5116 }, -- Concussive Shot
 		{ level = 8, id = 3127 }, -- Parry
-		{ level = 8, id = 14260 }, -- Raptor Strike
+		{ level = 8, id = 14260, requires = { 2973 } }, -- Raptor Strike
 		{ level = 10, id = 13165 }, -- Aspect of the Hawk
 		{ level = 10, id = 13549, requires = { 1978 } }, -- Serpent Sting
 		{ level = 10, id = 19883 }, -- Track Humanoids

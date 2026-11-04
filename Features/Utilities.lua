@@ -3,8 +3,9 @@ local _, ns = ...
 --[[
     Utilities -- stateless, cross-cutting helpers used by multiple files: the
     color accessor, cross-client API shims, and the secret-value checks. No
-    SavedVariables, and no module state beyond the hidden tooltip Era and TBC
-    read tooltip text through. Each feature's own helpers live beside it, in
+    module state beyond the hidden tooltip Era and TBC read tooltip text
+    through; the one saved-data read is ns.GetClassesByProfileName's, of
+    ns.db.global.inventory. Each feature's own helpers live beside it, in
     Features/<Feature>/<Feature>-Utilities.lua.
 ]]
 
@@ -121,6 +122,23 @@ end
       ns.GetMerchantItemInfo(index)  A merchant slot, in the legacy return
                                      order as far as the eighth value, whether
                                      the slot costs something besides gold.
+      ns.GetMerchantItemID(index)    The item a merchant slot sells; nil where
+                                     the client has no such reader.
+      ns.GetPartyAssignment(...),    The group's Main Tank mark, assigned
+      ns.UnitGroupRolesAssigned(u),  role, your own group-finder roles, and a
+      ns.GetLFGRoles(),              resurrection on its way to a unit; each
+      ns.UnitHasIncomingResurrection nil where the client lacks the call.
+      ns.AddItemTooltipPostCall(     Runs a function with each item tooltip of
+        tooltips, func)              those given and its item ID: Retail's
+                                     TooltipDataProcessor on Forever, the
+                                     OnTooltipSetItem script on Era and TBC.
+      ns.AddSpellTooltipPostCall(    The same for every spell tooltip, with
+        func)                        its spell ID.
+      ns.GetPetSpellBookSlot(slot),  The pet's spellbook: a slot's spell, how
+      ns.GetNumPetSpells(),          many slots it has, and the pickup that
+      ns.PickupPetSpellBookItem(s)   puts a slot's spell on the cursor.
+      ns.GetNumSpecGroups(),         Dual spec's talent groups and the active
+      ns.GetActiveSpecGroup()        one; nil where the client can't say.
 
     Forever runs on the Retail client, which has dropped the legacy quest,
     skill, pet and merchant readers for namespaced ones that return a table;
@@ -265,6 +283,133 @@ else
 	ns.GetMerchantItemInfo = GetMerchantItemInfo
 end
 
+local function Missing()
+	return nil
+end
+
+ns.GetMerchantItemID = GetMerchantItemID or Missing
+ns.GetPartyAssignment = GetPartyAssignment or Missing
+ns.UnitGroupRolesAssigned = UnitGroupRolesAssigned or Missing
+ns.GetLFGRoles = GetLFGRoles or Missing
+ns.UnitHasIncomingResurrection = UnitHasIncomingResurrection or Missing
+
+local MASK_SPELL_ID = 0xFFFFFF -- the old API packs a pet spellbook entry's flags above its spell ID
+
+--[[
+    A pet spellbook slot as { id, name, subtext, icon, passive, autocastAllowed,
+    autocastOn }, or nil for a command or an empty slot: through C_SpellBook
+    where the client has its item calls, else the old globals. With how many
+    slots the pet has, and the pickup that puts a slot's spell on the cursor.
+]]
+if C_SpellBook.GetSpellBookItemInfo then
+	function ns.GetPetSpellBookSlot(slot)
+		local bank = Enum.SpellBookSpellBank.Pet
+		local item = C_SpellBook.GetSpellBookItemInfo(slot, bank)
+		if not item or not item.spellID or item.itemType == Enum.SpellBookItemType.None then
+			return nil
+		end
+		local allowed, on = false, false
+		if C_SpellBook.GetSpellBookItemAutoCast then
+			allowed, on = C_SpellBook.GetSpellBookItemAutoCast(slot, bank)
+		end
+		return {
+			id = item.spellID,
+			name = item.name,
+			subtext = item.subName,
+			icon = item.iconID,
+			passive = item.isPassive,
+			autocastAllowed = allowed,
+			autocastOn = on,
+		}
+	end
+else
+	function ns.GetPetSpellBookSlot(slot)
+		local book = BOOKTYPE_PET or "pet"
+		local _, id = GetSpellBookItemInfo(slot, book)
+		local name, subtext = GetSpellBookItemName(slot, book)
+		id = id and bit.band(id, MASK_SPELL_ID)
+		-- a command's ID isn't a spell's, so its name doesn't match the one the client gives that ID
+		if not id or not name or C_Spell.GetSpellName(id) ~= name then
+			return nil
+		end
+		local allowed, on = GetSpellAutocast(slot, book)
+		return {
+			id = id,
+			name = name,
+			subtext = subtext,
+			icon = GetSpellBookItemTexture(slot, book),
+			passive = IsPassiveSpell(slot, book),
+			autocastAllowed = allowed,
+			autocastOn = on,
+		}
+	end
+end
+
+ns.GetNumPetSpells = C_SpellBook.HasPetSpells or HasPetSpells
+
+if C_SpellBook.PickupSpellBookItem then
+	function ns.PickupPetSpellBookItem(slot)
+		C_SpellBook.PickupSpellBookItem(slot, Enum.SpellBookSpellBank.Pet)
+	end
+else
+	function ns.PickupPetSpellBookItem(slot)
+		PickupSpellBookItem(slot, BOOKTYPE_PET or "pet")
+	end
+end
+
+--[[
+    Dual spec: how many talent groups the character has and which is active,
+    nil where the client can't say.
+]]
+ns.GetNumSpecGroups = C_SpecializationInfo and C_SpecializationInfo.GetNumSpecGroups or GetNumTalentGroups or Missing
+ns.GetActiveSpecGroup = C_SpecializationInfo and C_SpecializationInfo.GetActiveSpecGroup
+	or GetActiveTalentGroup
+	or Missing
+
+if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum.TooltipDataType then
+	function ns.AddItemTooltipPostCall(tooltips, func)
+		local wanted = {}
+		for _, tooltip in ipairs(tooltips) do
+			wanted[tooltip] = true
+		end
+		TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, function(tooltip, data)
+			if wanted[tooltip] then
+				func(tooltip, data and data.id)
+			end
+		end)
+	end
+else
+	function ns.AddItemTooltipPostCall(tooltips, func)
+		local function OnTooltipSetItem(tooltip)
+			local _, link = tooltip:GetItem()
+			func(tooltip, link and tonumber(link:match("item:(%d+)")))
+		end
+		for _, tooltip in ipairs(tooltips) do
+			tooltip:HookScript("OnTooltipSetItem", OnTooltipSetItem)
+		end
+	end
+end
+
+--[[
+    The same for spell tooltips: func(tooltip, spellID) after the game fills
+    any tooltip with a spell. A client with neither route hooks nothing.
+]]
+if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum.TooltipDataType then
+	function ns.AddSpellTooltipPostCall(func)
+		TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Spell, function(tooltip, data)
+			func(tooltip, data and data.id)
+		end)
+	end
+elseif GameTooltip:HasScript("OnTooltipSetSpell") then
+	function ns.AddSpellTooltipPostCall(func)
+		GameTooltip:HookScript("OnTooltipSetSpell", function(tooltip)
+			func(tooltip, select(2, tooltip:GetSpell()))
+		end)
+	end
+else
+	function ns.AddSpellTooltipPostCall() end
+end
+
 --------------------------------------------------------------------------------
 -- Secret Values
 --------------------------------------------------------------------------------
@@ -275,8 +420,9 @@ function ns.IsPlain(value)
 end
 
 --[[
-    On WoW Forever, unit identity and aura data go secret in combat. Ask these
-    before reading either; both are always false on the other flavors.
+    On WoW Forever, unit identity, aura data and cooldowns go secret in
+    combat. Ask these before reading any of them; each is always false on the
+    other flavors.
 ]]
 function ns.IsUnitIdentitySecret(unit)
 	return ns.FLAVOR == "Camelot" and C_Secrets.ShouldUnitIdentityBeSecret(unit)
@@ -284,6 +430,19 @@ end
 
 function ns.AreAurasSecret()
 	return ns.FLAVOR == "Camelot" and C_Secrets.ShouldAurasBeSecret()
+end
+
+function ns.AreCooldownsSecret()
+	return ns.FLAVOR == "Camelot" and C_Secrets.ShouldCooldownsBeSecret()
+end
+
+function ns.IsSpellCooldownSecret(spellID)
+	return ns.FLAVOR == "Camelot" and C_Secrets.ShouldSpellCooldownBeSecret(spellID)
+end
+
+-- Whether two unit tokens can be compared (UnitIsUnit) without a secret answer; always on the other flavors.
+function ns.CanCompareUnitTokens(unit, otherUnit)
+	return ns.FLAVOR ~= "Camelot" or C_Secrets.CanCompareUnitTokens(unit, otherUnit)
 end
 
 --------------------------------------------------------------------------------
@@ -311,7 +470,7 @@ ns.GetItemStats = C_Item.GetItemStats or GetItemStats
     reads as its words. Resolved once at load. A read can throw on an odd id, so
     callers protect it.
 ]]
-local SCAN_TOOLTIP_NAME = "BagsBuffsButtonsScanTooltip"
+local SCAN_TOOLTIP_NAME = "GoodToGoScanTooltip"
 local TOOLTIP_DATA_GETTERS = C_TooltipInfo
 	and C_TooltipInfo.GetItemByID
 	and C_TooltipInfo.GetSpellByID
@@ -437,7 +596,7 @@ end
     Every recorded character's class token, by the name AceDB keys the
     character under (ns.ProfileNameForCharacter). Read off the records the
     Inventory Report keeps (ns.db.global.inventory, refreshed at every login
-    by Features/Inventory-Restocker/Inventory-Report-Recording.lua), so a character's class is known from its
+    by Features/Inventory-Report/Inventory-Report-Recording.lua), so a character's class is known from its
     first login on a build that keeps that record. The Restock List and the
     Ignore List color their character names by it.
 ]]

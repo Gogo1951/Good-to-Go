@@ -270,8 +270,8 @@ end
 --[[
     Widget factories shared by the three buff panels (Stranger Buffs, Teammate
     Buffs, Service Alerts). Each panel file owns its own layout and order
-    numbers, and draws its controls from here. Every factory takes a `settings` accessor returning the profile
-    subtable the control binds to (ns.db.global.strangers / .teammates /
+    numbers, and draws its controls from here. Every factory takes a `settings` accessor returning the account-wide
+    table the control binds to (ns.db.global.strangers / .teammates /
     .services), so one definition serves every panel. The watched-buff list is
     shared between Teammates and Services (ns.db.global.watchedBuffs); a given id
     only ever appears on one of the two panels.

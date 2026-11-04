@@ -31,17 +31,22 @@ function ns.BarMacroNames()
 end
 
 --[[
-	What is on the action bars: {macros = {[macro name] = true}, spells = {[spell name] = true}}, macros
-	matched by name (see ns.ActionMacroName).
+	What is on the action bars: {macros = {[macro name] = true}, spells = {[spell name] = true},
+	tags = {[tag] = true}}, macros matched by name (see ns.ActionMacroName) and by the tag their body carries.
 ]]
 function ns.ScanActionBars()
-	local bars = { macros = {}, spells = {} }
+	local bars = { macros = {}, spells = {}, tags = {} }
 	for slot = 1, MAX_ACTION_SLOTS do
 		local actionType, id = GetActionInfo(slot)
 		if actionType == "macro" then
 			local name = ns.ActionMacroName(slot)
 			if name then
 				bars.macros[name] = true
+				-- by its tag too, so a macro the player renamed is still found
+				local tag = ns.BodyTag(GetMacroBody(name))
+				if tag then
+					bars.tags[tag] = true
+				end
 			end
 		elseif actionType == "spell" and id then
 			-- by name, not ID: the bar can hold any rank of a spell, and every rank has its own ID
@@ -76,7 +81,7 @@ end
 	is any of the ranged attacks it stands for.
 ]]
 function ns.IsOnActionBars(macro, bars)
-	if bars.macros[ns.WowMacroName(macro)] then
+	if bars.macros[ns.WowMacroName(macro)] or bars.tags[ns.MacroTag(macro)] then
 		return true
 	end
 	-- a consumable is placed only as its macro: Feed Pet the spell on a bar is not the Feed Pet macro

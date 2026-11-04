@@ -5,26 +5,14 @@ local HideTooltip = ns.HideTooltip
 local SizedFontString = ns.SizedFontString
 local PixelInset = ns.PixelInset
 
--- A solid line texture on parent, one screen pixel thick along the given axis ("HORIZONTAL" or "VERTICAL").
-local function PixelLine(parent, layer, color, axis)
-	local line = parent:CreateTexture(nil, layer)
-	line:SetColorTexture(color[1], color[2], color[3], color[4] or 1)
-	local setter = axis == "VERTICAL" and "SetWidth" or "SetHeight"
-	if PixelUtil then
-		PixelUtil[setter](line, 1, 1)
-	else
-		line[setter](line, 1)
-	end
-	return line
-end
-
 --[[
 	Lays ns.macros (built by Features/Spellbook/Macro-Builder.lua) out in the page's window (Features/Spellbook/Spellbook-Window.lua):
 	the parchment with two columns and the page strip, between the controls along its top and the legend and macro
 	slot counts along its bottom, which Features/Spellbook/Spellbook-Controls.lua builds. Each category is a block under its header; its spells flow two to a row into the
 	very next free slot, a form's run labelled above its own tiles. Features/Spellbook/Macro-Button.lua owns each tile,
 	Features/Spellbook/Macro-Menu.lua the right-click menu, Features/Spellbook/Category-Menu.lua the category menu, and Features/Spellbook/Spellbook-Paging.lua the page strip.
-	Features/Spellbook/Spellbook-Events.lua redraws the page as the game changes.
+	Features/Spellbook/Spellbook-Events.lua redraws the page as the game changes. Features/Spellbook/Spellbook-Page-Parchment.lua
+	draws the parchment, and Features/Spellbook/Spellbook-Page-Layout.lua packs the rows and fills the columns.
 ]]
 
 -- The window's bands, in UI units from its edges, inside the portrait frame's border.
@@ -34,7 +22,7 @@ local PARCHMENT_SIDE = 8
 local PAGER_HEIGHT = 30
 local COLUMN_TOP, COLUMN_SIDE = 14, 20 -- each column's padding inside the parchment
 
--- The flow inside a column (see PackRows and Paginate).
+-- The flow inside a column (see PackRows and Paginate, in Features/Spellbook/Spellbook-Page-Layout.lua).
 local SLOTS, GAP_X = 2, 12
 local TILE_WIDTH, TILE_HEIGHT = ns.TILE_WIDTH, ns.TILE_HEIGHT
 --[[
@@ -46,21 +34,19 @@ local TILE_WIDTH, TILE_HEIGHT = ns.TILE_WIDTH, ns.TILE_HEIGHT
 local ROW_STRIP_HEIGHT = 28
 local LABEL_HEIGHT, LABEL_GAP = 13, 3
 local LABEL_TOP_GAP = ROW_STRIP_HEIGHT - LABEL_HEIGHT - LABEL_GAP
---[[
-	CATEGORY_GAP is the clear space over a category's header, from the tiles of the one before. A header's name
-	sits about 30 above its first tiles (the header's lower half and a row strip), so the gap is wider than that:
-	more air above a header than below it, so each name reads with the spells under it.
-]]
-local HEADER_HEIGHT, CATEGORY_GAP = 20, 34
+local HEADER_HEIGHT = 20
 local COLUMN_WIDTH = SLOTS * TILE_WIDTH + (SLOTS - 1) * GAP_X
+
+--[[
+	Every row is the same height: a label strip over its tiles, holding a form's label where the row has one and
+	left empty otherwise, so rows step down evenly whether or not they're labelled. The strip is also the space
+	between rows and under the header.
+]]
+local ROW_HEIGHT = LABEL_TOP_GAP + LABEL_HEIGHT + LABEL_GAP + TILE_HEIGHT
 
 local HEADER_SIZE, CONTINUED_SIZE, LABEL_SIZE = 16, 12, 10
 
--- The parchment and its ink. Every category shares the same ink, as the game's own book does.
-local PARCHMENT_COLOR = { 0.847, 0.765, 0.6 }
-local VIGNETTE_COLOR = { 0.36, 0.235, 0.086 } -- the aged edges, darker toward the border
-local EDGE_COLOR = { 0.043, 0.043, 0.043 }
-local INNER_EDGE_COLOR = { 0.42, 0.353, 0.243 }
+-- The ink on the parchment. Every category shares the same ink, as the game's own book does.
 local HEADER_INK = ns.INK_COLOR
 local LABEL_INK = { 0.42, 0.29, 0.137 }
 local CONTINUED_INK = { 0.42, 0.353, 0.243 }
@@ -69,10 +55,6 @@ local DIVIDER_COLOR = { 0.651, 0.545, 0.376 }
 -- the small dark buttons that hold the gold gear
 local GEAR_FILL = { 0.165, 0.145, 0.125 }
 local GEAR_EDGE = { 0.549, 0.478, 0.322 }
-
--- Forever's parchment, where this build has it; otherwise the parchment colour with darkened edges
-local ATLAS_PAGE_LEFT, ATLAS_PAGE_RIGHT = "spellbook-Page-Left-C60", "spellbook-Page-Right-C60"
-local VIGNETTE_WIDTH, VIGNETTE_ALPHA = 46, 0.24
 
 -- Acquire hands out pooled frames in order; ReleaseAll hides the ones from the last layout.
 local function FramePool(create)
@@ -108,7 +90,7 @@ end
 ]]
 local function PassesFilters(page, macro)
 	local text = page.filterText
-	if text and text ~= "" and not (macro.label or macro.name):lower():find(text:lower(), 1, true) then
+	if text and text ~= "" and not ns.FilterLower(macro.label or macro.name):find(ns.FilterLower(text), 1, true) then
 		return false
 	end
 	local picked = page.groupFilter
@@ -127,7 +109,7 @@ local CONSUMABLES_RANK = 1000000
 	The macros in page order as { macro, header, sub } entries. Sorted by school, that is ns.macros under its
 	spellbook tabs. Sorted by category, the spell macros go under their page category (ns.PageCategory), in
 	ns.PAGE_CATEGORIES' order and alphabetically within each, any macro without a page category after them
-	under its own section, then BBB Consumables (Connoisseur's macros, see ns.ConsumablePageMacros), and the
+	under its own section, then GtG Consumables (Connoisseur's macros, see ns.ConsumablePageMacros), and the
 	Unlearned section last, those keeping ns.macros' order; a focus, Duplicate or
 	rank copy still follows its spell. Within a page category, the spells needing a form (sub, from
 	ns.PageSubCategory) follow its own, a run for each form, the forms alphabetically, then the basic attacks. A macro the page hides (a
@@ -138,7 +120,7 @@ local function PageOrder(page)
 	local entries = {}
 	local consumables = ns.ConsumablePageMacros()
 	if ns.PageSort() ~= "category" then
-		-- BBB Consumables goes in ahead of the Unlearned section, which ns.macros ends with
+		-- GtG Consumables goes in ahead of the Unlearned section, which ns.macros ends with
 		local function addConsumables()
 			for _, macro in ipairs(consumables) do
 				if PassesFilters(page, macro) then
@@ -232,146 +214,6 @@ local function Categories(entries)
 	return categories
 end
 
---[[
-	A category's runs packed into rows of SLOTS tiles, each { segments }. A run starts in the very next free
-	slot, so two runs can share a row; a run that wraps carries on as a segment marked continued at the start of
-	the next row.
-]]
-local function PackRows(groups)
-	local rows, row, used = {}, nil, 0
-	for _, group in ipairs(groups) do
-		local i, continued = 1, false
-		while i <= #group.macros do
-			if not row or used == SLOTS then
-				row = { segments = {} }
-				rows[#rows + 1] = row
-				used = 0
-			end
-			local take = math.min(SLOTS - used, #group.macros - i + 1)
-			local segment = { group = group, sub = group.sub, continued = continued, macros = {} }
-			for k = i, i + take - 1 do
-				segment.macros[#segment.macros + 1] = group.macros[k]
-			end
-			row.segments[#row.segments + 1] = segment
-			used, i, continued = used + take, i + take, true
-		end
-	end
-	return rows
-end
-
---[[
-	Every row is the same height: a label strip over its tiles, holding a form's label where the row has one and
-	left empty otherwise, so rows step down evenly whether or not they're labelled. The strip is also the space
-	between rows and under the header.
-]]
-local ROW_HEIGHT = LABEL_TOP_GAP + LABEL_HEIGHT + LABEL_GAP + TILE_HEIGHT
-
--- The height of a category's header and its rows first to last.
-local function BlockHeight(first, last)
-	return HEADER_HEIGHT + (last - first + 1) * ROW_HEIGHT
-end
-
---[[
-	Fills columns in order (page 1 left, page 1 right, page 2 left, ...) with category blocks, each
-	{ category, first, last, continued, y }. A category starts right under the one before and takes as many
-	of its rows as the column has room for; the rest carry on at the top of the next column, under its header
-	again, marked continued. It moves whole to the next column only when not even its header and first row fit,
-	so a category never leaves a header alone at a column's foot, and one more row above only pushes the last
-	row on.
-]]
-local function Paginate(categories, height)
-	local columns = { {} }
-	local column, y = columns[1], 0
-	local function nextColumn()
-		column, y = {}, 0
-		columns[#columns + 1] = column
-	end
-	for _, category in ipairs(categories) do
-		local rows = category.rows
-		local first, continued = 1, false
-		while first <= #rows do
-			local gap = #column > 0 and CATEGORY_GAP or 0
-			local room = height - y - gap
-			local last = first - 1
-			while last < #rows and BlockHeight(first, last + 1) <= room do
-				last = last + 1
-			end
-			-- an empty column always takes at least one row, so a category can never stall
-			if last < first and #column == 0 then
-				last = first
-			end
-			if last < first then
-				nextColumn()
-			else
-				column[#column + 1] =
-					{ category = category, first = first, last = last, continued = continued, y = y + gap }
-				y = y + gap + BlockHeight(first, last)
-				first = last + 1
-				if first <= #rows then
-					continued = true
-					nextColumn()
-				end
-			end
-		end
-	end
-	if #column == 0 and #columns > 1 then
-		columns[#columns] = nil
-	end
-	return columns
-end
-
---[[
-	The parchment: a black edge and a thin brown line inside it, then Forever's page art where the build has
-	it, else the parchment colour with its edges darkened.
-]]
-local function DrawParchment(parchment)
-	local edge = parchment:CreateTexture(nil, "BACKGROUND", nil, -8)
-	edge:SetAllPoints()
-	edge:SetColorTexture(unpack(EDGE_COLOR))
-	local inner = parchment:CreateTexture(nil, "BACKGROUND", nil, -7)
-	inner:SetColorTexture(unpack(INNER_EDGE_COLOR))
-	PixelInset(inner, parchment, 2)
-	local paper = CreateFrame("Frame", nil, parchment)
-	PixelInset(paper, parchment, 3)
-	parchment.paper = paper
-	if C_Texture.GetAtlasInfo(ATLAS_PAGE_LEFT) and C_Texture.GetAtlasInfo(ATLAS_PAGE_RIGHT) then
-		local left = parchment:CreateTexture(nil, "BACKGROUND", nil, -6)
-		left:SetAtlas(ATLAS_PAGE_LEFT)
-		left:SetPoint("TOPLEFT", paper)
-		left:SetPoint("BOTTOMRIGHT", paper, "BOTTOM")
-		local right = parchment:CreateTexture(nil, "BACKGROUND", nil, -6)
-		right:SetAtlas(ATLAS_PAGE_RIGHT)
-		right:SetPoint("TOPLEFT", paper, "TOP")
-		right:SetPoint("BOTTOMRIGHT", paper)
-		return
-	end
-	local base = parchment:CreateTexture(nil, "BACKGROUND", nil, -6)
-	base:SetAllPoints(paper)
-	base:SetColorTexture(unpack(PARCHMENT_COLOR))
-	-- a strip down each edge, the aged colour fading to clear toward the middle
-	if not CreateColor then
-		return
-	end
-	local dark = CreateColor(VIGNETTE_COLOR[1], VIGNETTE_COLOR[2], VIGNETTE_COLOR[3], VIGNETTE_ALPHA)
-	local clear = CreateColor(VIGNETTE_COLOR[1], VIGNETTE_COLOR[2], VIGNETTE_COLOR[3], 0)
-	local function strip(point, relative, horizontal, from, to)
-		local texture = parchment:CreateTexture(nil, "BACKGROUND", nil, -5)
-		texture:SetColorTexture(1, 1, 1)
-		texture:SetPoint(point, paper, point)
-		texture:SetPoint(relative, paper, relative)
-		if horizontal then
-			texture:SetWidth(VIGNETTE_WIDTH)
-		else
-			texture:SetHeight(VIGNETTE_WIDTH)
-		end
-		pcall(texture.SetGradient, texture, horizontal and "HORIZONTAL" or "VERTICAL", from, to)
-	end
-	strip("TOPLEFT", "BOTTOMLEFT", true, dark, clear)
-	strip("TOPRIGHT", "BOTTOMRIGHT", true, clear, dark)
-	strip("BOTTOMLEFT", "BOTTOMRIGHT", false, dark, clear)
-	strip("TOPLEFT", "TOPRIGHT", false, clear, dark)
-end
-
 -- A small dark square button with the gold gear: a category's settings, or the page's.
 local function CreateGearButton(parent, size)
 	local button = CreateFrame("Button", nil, parent)
@@ -420,7 +262,7 @@ local function CreateHeader(page)
 	local gear = CreateGearButton(header, 18)
 	header.gear = gear
 	gear:SetPoint("RIGHT")
-	local rule = PixelLine(header, "ARTWORK", RULE_COLOR)
+	local rule = ns.SpellbookPixelLine(header, "ARTWORK", RULE_COLOR)
 	rule:SetPoint("LEFT", header.Continued, "RIGHT", 8, 0)
 	rule:SetPoint("RIGHT", gear, "LEFT", -8, 0)
 	gear:SetScript("OnEnter", function(self)
@@ -453,44 +295,13 @@ local function CreateSubLabel(page)
 	label.Text:SetTextColor(unpack(LABEL_INK))
 	label.Text:SetShadowOffset(0, 0)
 	label.Text:SetPoint("LEFT")
-	local rule = PixelLine(label, "ARTWORK", RULE_COLOR)
+	local rule = ns.SpellbookPixelLine(label, "ARTWORK", RULE_COLOR)
 	rule:SetPoint("LEFT", label.Text, "RIGHT", 6, 0)
 	rule:SetPoint("RIGHT")
-	local tick = PixelLine(label, "ARTWORK", RULE_COLOR, "VERTICAL")
+	local tick = ns.SpellbookPixelLine(label, "ARTWORK", RULE_COLOR, "VERTICAL")
 	tick:SetHeight(4)
 	tick:SetPoint("TOPRIGHT", rule, "TOPRIGHT")
 	return label
-end
-
--- The width of a run of n tiles.
-local function RunWidth(n)
-	return n * TILE_WIDTH + (n - 1) * GAP_X
-end
-
--- The segment of a row that holds a slot (0 for the first), or nil past its last tile.
-local function SegmentAt(row, slot)
-	local start = 0
-	for _, segment in ipairs(row.segments) do
-		if slot < start + #segment.macros then
-			return segment
-		end
-		start = start + #segment.macros
-	end
-	return nil
-end
-
---[[
-	Whether a form's run shows its label at this row, starting at slot: always where the run starts, and where
-	it carries on only when that isn't plain from the tile above its first slot, which belongs to another run
-	or isn't there (the first row of a column, under the header again). So "BASIC ATTACKS" shows again over a
-	row whose first tile sits under a Defensive Stance spell, but not over the next row, under its own.
-]]
-local function NeedsLabel(segment, above, slot)
-	if not segment.continued or not above then
-		return true
-	end
-	local over = SegmentAt(above, slot)
-	return over == nil or over.group ~= segment.group
 end
 
 -- Draws one column's blocks, x and y its top left inside the paper.
@@ -518,10 +329,10 @@ local function DrawColumn(page, column, x, y, bars)
 			local slot = 0
 			for _, segment in ipairs(row.segments) do
 				local left = x + slot * (TILE_WIDTH + GAP_X)
-				if segment.sub and NeedsLabel(segment, above, slot) then
+				if segment.sub and ns.SpellbookNeedsLabel(segment, above, slot) then
 					local label = page.subheaders:Acquire()
 					label:SetPoint("TOPLEFT", page.parchment.paper, "TOPLEFT", left, -(top + LABEL_TOP_GAP))
-					label:SetWidth(RunWidth(#segment.macros))
+					label:SetWidth(ns.SpellbookRunWidth(#segment.macros))
 					label.Text:SetText(segment.sub:upper())
 				end
 				local tileTop = top + LABEL_TOP_GAP + LABEL_HEIGHT + LABEL_GAP
@@ -566,10 +377,10 @@ local function Layout(page)
 	page.empty:Hide()
 
 	for _, category in ipairs(categories) do
-		category.rows = PackRows(category.groups)
+		category.rows = ns.PackSpellbookRows(category.groups)
 	end
 	local paper = page.parchment.paper
-	local columns = Paginate(categories, paper:GetHeight() - COLUMN_TOP - PAGER_HEIGHT)
+	local columns = ns.PaginateSpellbook(categories, paper:GetHeight() - COLUMN_TOP - PAGER_HEIGHT)
 	local maxPages = math.ceil(#columns / 2)
 	controls:SetMaxPages(maxPages)
 	controls:Show()
@@ -585,6 +396,17 @@ local function Layout(page)
 	end
 end
 
+local refreshListeners = {}
+
+--[[
+	Calls fn(page) after each refresh, so the Conditionals and Cast Sequence panels docked beside the window
+	(Features/Spellbook/Macro-Builder/Conditionals-Panel.lua, Cast-Sequence-Panel.lua) follow the macros the
+	refresh rebuilt.
+]]
+function ns.OnSpellbookPageRefreshed(fn)
+	refreshListeners[#refreshListeners + 1] = fn
+end
+
 -- Rebuilds the list from the spellbook and the class lists, updates changed macros, then redraws.
 local function Refresh(page)
 	ns.CollectMacros()
@@ -598,6 +420,9 @@ local function Refresh(page)
 	end
 	page.UpdateFilterButton() -- the schools or categories on offer follow the new list
 	Layout(page)
+	for _, fn in ipairs(refreshListeners) do
+		fn(page)
+	end
 end
 
 local pages = {} -- every page built, so a settings change can redraw the open one
@@ -616,8 +441,8 @@ local function BuildPage(page)
 	parchment:SetPoint("TOPLEFT", PARCHMENT_SIDE, -(TITLE_HEIGHT + CONTROLS_HEIGHT))
 	parchment:SetPoint("BOTTOMRIGHT", -PARCHMENT_SIDE, FRAME_BORDER + FOOTER_HEIGHT)
 	parchment:SetClipsChildren(true)
-	DrawParchment(parchment)
-	local divider = PixelLine(parchment.paper, "BORDER", DIVIDER_COLOR, "VERTICAL")
+	ns.DrawSpellbookParchment(parchment)
+	local divider = ns.SpellbookPixelLine(parchment.paper, "BORDER", DIVIDER_COLOR, "VERTICAL")
 	divider:SetPoint("TOP", 0, -COLUMN_TOP / 2)
 	divider:SetPoint("BOTTOM", 0, PAGER_HEIGHT)
 
@@ -663,7 +488,18 @@ ns.BuildSpellbookPage = BuildPage
 ns.RefreshSpellbookPage = Refresh
 ns.LayoutSpellbookPage = Layout
 ns.CreateSpellbookGearButton = CreateGearButton
+-- the What's Next? tab's page (Features/Spellbook/Whats-Next-Page.lua) shares the frame pool and the name order
+ns.SpellbookFramePool = FramePool
+ns.SpellNameBefore = NameBefore
 
 -- The window's bands, which Features/Spellbook/Spellbook-Controls.lua builds the controls row and the footer in.
 ns.SPELLBOOK_TITLE_HEIGHT, ns.SPELLBOOK_CONTROLS_HEIGHT = TITLE_HEIGHT, CONTROLS_HEIGHT
 ns.SPELLBOOK_FOOTER_HEIGHT, ns.SPELLBOOK_FRAME_BORDER = FOOTER_HEIGHT, FRAME_BORDER
+-- the parchment's place in the window, and the padding and page strip inside it
+ns.SPELLBOOK_PARCHMENT_SIDE, ns.SPELLBOOK_PAGER_HEIGHT = PARCHMENT_SIDE, PAGER_HEIGHT
+ns.SPELLBOOK_COLUMN_TOP, ns.SPELLBOOK_COLUMN_SIDE = COLUMN_TOP, COLUMN_SIDE
+ns.SPELLBOOK_HEADER_INK, ns.SPELLBOOK_RULE_COLOR = HEADER_INK, RULE_COLOR
+ns.SPELLBOOK_CONTINUED_INK, ns.SPELLBOOK_DIVIDER_COLOR = CONTINUED_INK, DIVIDER_COLOR
+-- the flow inside a column, which Features/Spellbook/Spellbook-Page-Layout.lua packs and paginates by
+ns.SPELLBOOK_SLOTS, ns.SPELLBOOK_GAP_X = SLOTS, GAP_X
+ns.SPELLBOOK_HEADER_HEIGHT, ns.SPELLBOOK_ROW_HEIGHT = HEADER_HEIGHT, ROW_HEIGHT

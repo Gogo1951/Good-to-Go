@@ -147,16 +147,31 @@ function ns.OptionsExample(order, linesFunction, hidden)
 	}
 end
 
+-- The character's AceDB profile, the Connoisseur panels' settings table, or nil before the database is open.
+function ns.OptionsProfileSettings()
+	return ns.db and ns.db.profile
+end
+
+-- A label or hover text that names a spell, formatKey's %s, read from the client when it shows.
+function ns.OptionsSpellDescription(formatKey, spellID)
+	return function()
+		return string.format(L[formatKey], C_Spell.GetSpellName(spellID) or "")
+	end
+end
+
 -- A sent line's {rtN} target markers as the icons the receiving client draws; panel text needs the texture itself.
 function ns.MarkersAsTextures(message)
 	return (message:gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:14|t"))
 end
 
--- The whisper color the player chose, with chat's own default for a client that hasn't filled ChatTypeInfo in.
-local function WhisperColor()
-	local info = ChatTypeInfo and ChatTypeInfo.WHISPER
+--[[
+    A chat type's color as the player chose it (ChatTypeInfo's PARTY, WHISPER), with chat's own default hex
+    for a client that hasn't filled ChatTypeInfo in.
+]]
+local function ChatColor(chatType, defaultHex)
+	local info = ChatTypeInfo and ChatTypeInfo[chatType]
 	if not info then
-		return "|cffFF80FF"
+		return "|cff" .. defaultHex
 	end
 	return string.format(
 		"|cff%02x%02x%02x",
@@ -167,18 +182,28 @@ local function WhisperColor()
 end
 
 --[[
-    A whisper as the player receiving it sees it: "[Name] whispers: message",
-    from the client's own CHAT_WHISPER_GET, the sender being the character the
+    A sent line as the players reading it see it, in the chat type's color:
+    the client's own line opener (CHAT_WHISPER_GET's "[Name] whispers: ",
+    CHAT_PARTY_GET's "[Party] [Name]: "), the sender being the character the
     player is on, in its class color and read when the line is drawn. A chat
-    frame falls back to the whisper color after a link's |r and a panel falls
+    frame falls back to the chat color after a link's |r and a panel falls
     back to white, so the color is opened again after every |r.
 ]]
-function ns.BuildWhisperExampleLine(message)
-	local color = WhisperColor()
+local function BuildChatExampleLine(message, chatType, defaultHex, opener)
+	local color = ChatColor(chatType, defaultHex)
 	local _, class = UnitClass("player")
 	local sender = "[" .. (ns.GetClassColor(class) or GetColor("TEXT")) .. (GetUnitName("player") or "") .. "|r]"
-	local line = (CHAT_WHISPER_GET or "%s whispers: "):format(sender) .. ns.MarkersAsTextures(message)
+	local line = opener:format(sender) .. ns.MarkersAsTextures(message)
 	return color .. (line:gsub("|r", "|r" .. color)) .. "|r"
+end
+
+function ns.BuildWhisperExampleLine(message)
+	return BuildChatExampleLine(message, "WHISPER", "FF80FF", CHAT_WHISPER_GET or "%s whispers: ")
+end
+
+-- Party rather than raid: both are drawn the same way, and party is the one every group has.
+function ns.BuildPartyExampleLine(message)
+	return BuildChatExampleLine(message, "PARTY", "AAAAFF", CHAT_PARTY_GET or "[Party] %s: ")
 end
 
 -- An Example line for a whisper; getMessage returns the message exactly as it is sent.
@@ -188,6 +213,25 @@ function ns.OptionsWhisperExample(order, getMessage, hidden)
 		name = function()
 			return GetColor("HELP")
 				.. format(L["SAMPLE_EXAMPLE"], ns.BuildWhisperExampleLine(getMessage()) .. GetColor("HELP"))
+				.. "|r"
+		end,
+		fontSize = "medium",
+		order = order,
+		hidden = hidden,
+	}
+end
+
+--[[
+    An Example of lines already drawn the way they arrive (ns.BuildPartyExampleLine,
+    ns.BuildWhisperExampleLine, ns.BuildPrintLine), a blank line between them;
+    linesFunction runs at every draw.
+]]
+function ns.OptionsChatExample(order, linesFunction, hidden)
+	return {
+		type = "description",
+		name = function()
+			return GetColor("HELP")
+				.. format(L["SAMPLE_EXAMPLE"], table.concat(linesFunction(), "\n\n") .. GetColor("HELP"))
 				.. "|r"
 		end,
 		fontSize = "medium",
@@ -297,7 +341,10 @@ local FEATURE_SWITCHES = {
 		key = "inventoryReport",
 		name = "OPTIONS_INVENTORY_REPORT",
 		desc = "OPTIONS_INVENTORY_REPORT_DESCRIPTION",
-		registry = "Restocker",
+		registry = "InventoryReport",
+		set = function(value)
+			ns.SetInventoryReportEnabled(value)
+		end,
 	},
 }
 
@@ -357,14 +404,15 @@ ns.MODE_VALUES = {
 
     Each id is requested from the server, and the panel's registry name holds a
     GET_ITEM_INFO_RECEIVED waiter (ns.RequestItemInfoEvents) while any id it
-    handed in is still outstanding. The consumable macros' dispatcher
-    (Features/Macros-for-Consumables/Macros-for-Consumables-Core.lua) passes every answer to
+    handed in is still outstanding. The shared item-info dispatcher
+    (Features/Item-Info.lua) passes every answer to
     ns.OnOptionsItemInfoReceived below, which repaints the panels waiting on
     that id and releases a panel's waiter once nothing it asked about is left.
     A repaint that re-enters with still-cold ids, or a row added mid-load, just
-    adds to the panel's pending set. An id the client has no item for, or one
-    whose answer already failed, is never requested: its answer never comes, so
-    a wait on it would hold the event for the rest of the session.
+    adds to the panel's pending set. An id the client has no item for, one
+    whose answer already failed, or one already cached is never requested: no
+    answer may come for it, so a wait on it could hold the event for the rest
+    of the session.
 
     A window that is not an AceConfig panel (the Staples window) passes its own
     key and an onArrive to call in place of the repaint.
@@ -392,7 +440,8 @@ function ns.WarmItemCache(itemIDs, registryName, onArrive)
 	local pending = warming[registryName] or {}
 	local requested = false
 	for _, itemID in ipairs(itemIDs) do
-		if not failedItemIDs[itemID] and C_Item.DoesItemExistByID(itemID) then
+		local cold = not C_Item.IsItemDataCachedByID(itemID)
+		if cold and not failedItemIDs[itemID] and C_Item.DoesItemExistByID(itemID) then
 			pending[itemID] = true
 			C_Item.RequestLoadItemDataByID(itemID)
 			requested = true
@@ -405,7 +454,7 @@ function ns.WarmItemCache(itemIDs, registryName, onArrive)
 end
 
 --[[
-    One GET_ITEM_INFO_RECEIVED answer, handed on by the consumable macros' dispatcher
+    One GET_ITEM_INFO_RECEIVED answer, handed on by Features/Item-Info.lua's dispatcher
     after the Restocker has forgotten the item's remembered miss. A failed answer settles
     the wait too, and is remembered so the repaint that follows does not ask
     again: its row keeps its loading text.
@@ -543,6 +592,23 @@ end
 ]]
 local REMOVE_ICON = "Interface/Buttons/UI-GroupLoot-Pass-Up"
 local REMOVE_ICON_SIZE = 16
+
+-- A row's remove icon; confirmText, when given, asks first.
+function ns.OptionsRemoveIcon(desc, order, func, confirmText)
+	return {
+		type = "execute",
+		name = "",
+		desc = desc,
+		image = REMOVE_ICON,
+		imageWidth = REMOVE_ICON_SIZE,
+		imageHeight = REMOVE_ICON_SIZE,
+		width = ns.OPTIONS_REMOVE_ICON_WIDTH,
+		order = order,
+		confirm = confirmText ~= nil,
+		confirmText = confirmText,
+		func = func,
+	}
+end
 
 --[[
     The Add from Bags picker's choices: one entry per distinct item in the
@@ -736,20 +802,10 @@ function ns.BuildItemListOptions(spec)
 		end
 
 		-- Removing one row takes one click and no confirm.
-		cells.remove = {
-			type = "execute",
-			name = "",
-			desc = labels.removeDesc,
-			image = REMOVE_ICON,
-			imageWidth = REMOVE_ICON_SIZE,
-			imageHeight = REMOVE_ICON_SIZE,
-			width = ns.OPTIONS_REMOVE_ICON_WIDTH,
-			order = 3,
-			func = function()
-				spec.onRemove(capturedID)
-				AceConfigRegistry:NotifyChange(spec.notifyKey)
-			end,
-		}
+		cells.remove = ns.OptionsRemoveIcon(labels.removeDesc, 3, function()
+			spec.onRemove(capturedID)
+			AceConfigRegistry:NotifyChange(spec.notifyKey)
+		end)
 
 		args["item_" .. tostring(capturedID)] = {
 			type = "group",

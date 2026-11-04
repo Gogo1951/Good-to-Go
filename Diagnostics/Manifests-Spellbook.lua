@@ -94,9 +94,10 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 	Method("C_Spell", "IsSpellPassive"),
 	Method("C_Spell", "RequestLoadSpellData"),
 	Method("C_Spell", "GetSpellLevelLearned", "C_Spell.GetSpellLevelLearned (guarded)"),
-	Method("C_Spell", "GetSpellDescription"),
 	Method("C_Spell", "IsSpellDataCached"),
-	Global("IsPlayerSpell"),
+	-- ns.IsSpellKnown and ns.IsPlayerSpell (Features/Utilities.lua) read these, never the deprecated globals.
+	Method("C_SpellBook", "IsSpellInSpellBook"),
+	Method("C_SpellBook", "IsSpellKnown"),
 	Method("C_CreatureInfo", "GetCreatureFamilyInfo"),
 	Method("C_Item", "GetItemSpell"),
 	Global("GetShapeshiftFormInfo"),
@@ -157,13 +158,35 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 
 	-- The Retail-engine spellbook and Features/Spellbook/Spellbook-Tabs.lua, whose tab hides under the gamepad UI.
 	Global("PlayerSpellsFrame"),
-	Method("EventUtil", "ContinueOnAddOnLoaded"),
 	Method("EventRegistry", "RegisterCallback"),
 	Global("RunNextFrame"),
 	Method("InputUtil", "IsGamepadUIEnabled", "InputUtil.IsGamepadUIEnabled (guarded)"),
 	Global("HideUIPanel"),
-	Template("SpellBookHeaderTemplate"),
-	Template("SpellBookSettingsDropdownTemplate"),
+	-- The tab art Spellbook-Tabs.lua draws (its SKIN atlases).
+	{
+		"Atlases spellbook-Tab-Frame (tab, active, glow)",
+		function()
+			return type(C_Texture) == "table"
+				and type(C_Texture.GetAtlasInfo) == "function"
+				and C_Texture.GetAtlasInfo("spellbook-Tab-Frame-glow-gradient-C60") ~= nil
+		end,
+	},
+	-- The page's controls (Spellbook-Controls.lua), each modern template guarded with a fallback.
+	Template("WowStyle1DropdownTemplate"),
+	Template("SearchBoxTemplate"),
+	Template("InputBoxTemplate"),
+	Global("PixelUtil"),
+	Global("StaticPopup_Show"),
+	-- The macro list's item macros (Consumable-Macros.lua) and What's Next?'s grimoire names.
+	Global("GetMacroItem"),
+	Method("C_Item", "GetItemNameByID"),
+	-- The spell-ranks tooltip (Spell-Ranks-Tooltip.lua) adds its lines per showing and resets on clear.
+	{
+		"GameTooltip OnTooltipCleared",
+		function()
+			return type(GameTooltip) == "table" and GameTooltip:HasScript("OnTooltipCleared")
+		end,
+	},
 	-- The Classic-engine spellbook.
 	Global("SpellBookFrame"),
 	Global("SpellBookSkillLineTab1"),
@@ -189,15 +212,102 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(MenuResponse) == "table" and MenuResponse.Refresh ~= nil
 		end,
 	},
+	--[[
+		The Conditionals (Features/Spellbook/Macro-Builder/Conditionals.lua and Features/Spellbook/Macro-Builder/Conditionals-Panel.lua,
+		with the shared Docked-Panel.lua and Panel-Widgets.lua): the
+		Spec conditions are offered only where a talent group count says the character has two specs, the
+		Retail-engine count first, then the Classic-engine one, and the menu marks the spec active now, read the
+		same two ways; a spell dropped on a slot is read off the cursor;
+		the panel docks with its own close and Add Condition buttons.
+	]]
+	Method("C_SpecializationInfo", "GetNumSpecGroups", "C_SpecializationInfo.GetNumSpecGroups (guarded)"),
+	Global("GetNumTalentGroups"),
+	Method("C_SpecializationInfo", "GetActiveSpecGroup", "C_SpecializationInfo.GetActiveSpecGroup (guarded)"),
+	Global("GetActiveTalentGroup"),
+	Global("GetCursorInfo"),
+	Global("ClearCursor"),
+	Global("GetMacroSpell"),
+	Template("UIPanelCloseButton"),
+	Template("UIPanelButtonTemplate"),
+	--[[
+		The What's Next? tab (Features/Spellbook/Whats-Next.lua and Features/Spellbook/Whats-Next-Page.lua): a
+		talent's level is read off its tier in the Classic-engine talent tree; shift-click links a row's spell
+		in chat; the window's tabs under its bottom edge, the Classic tab first, then the shared panel tab.
+	]]
+	Global("GetNumTalents"),
+	Global("GetTalentInfo"),
+	Method("C_Spell", "GetSpellLink", "C_Spell.GetSpellLink (guarded)"),
+	Global("IsModifiedClick"),
+	Global("ChatEdit_InsertLink"),
+	Template("CharacterFrameTabButtonTemplate"),
+	Template("PanelTabButtonTemplate"),
+	Global("PanelTemplates_SelectTab"),
+	Global("PanelTemplates_DeselectTab"),
+	Global("PanelTemplates_TabResize"),
+	--[[
+		The Pet What's Next? tab (Features/Spellbook/Whats-Next-Pet.lua): the hunter's pet out, its family's ID
+		(UnitCreatureFamily's second return, read where the client gives it), the abilities the pet knows from
+		its spellbook, its training points where the client has them, and the zones the tooltip names for the
+		beasts that teach an ability.
+	]]
+	{
+		"HasPetUI (guarded)",
+		function()
+			return type(HasPetUI) == "function"
+		end,
+	},
+	Global("UnitCreatureFamily"),
+	Method("C_SpellBook", "IsSpellKnown"),
+	{
+		"Enum.SpellBookSpellBank.Pet",
+		function()
+			return type(Enum) == "table"
+				and type(Enum.SpellBookSpellBank) == "table"
+				and Enum.SpellBookSpellBank.Pet ~= nil
+		end,
+	},
+	{
+		"GetPetTrainingPoints (guarded)",
+		function()
+			return type(GetPetTrainingPoints) == "function"
+		end,
+	},
+	Method("C_Map", "GetAreaInfo"),
+	--[[
+		The Pet Spell Book tab (Features/Spellbook/Pet-Spellbook.lua): how many spells the pet's book holds, then
+		each slot read, its autocast read and the slot picked up through C_SpellBook where the client has its
+		item calls (the Retail engine), else through the older globals (Era and TBC). One route passing whole is
+		enough; the report says which one this client has.
+	]]
+	{
+		"C_SpellBook.HasPetSpells or HasPetSpells",
+		function()
+			return type(C_SpellBook.HasPetSpells) == "function" or type(HasPetSpells) == "function"
+		end,
+	},
+	{
+		"Pet spellbook slots (C_SpellBook item calls or the older globals)",
+		function()
+			local modern = type(C_SpellBook.GetSpellBookItemInfo) == "function"
+				and type(C_SpellBook.PickupSpellBookItem) == "function"
+			local older = type(GetSpellBookItemInfo) == "function"
+				and type(GetSpellBookItemName) == "function"
+				and type(GetSpellBookItemTexture) == "function"
+				and type(IsPassiveSpell) == "function"
+				and type(GetSpellAutocast) == "function"
+				and type(PickupSpellBookItem) == "function"
+				and type(bit) == "table"
+			return modern or older
+		end,
+	},
 
 	Method("Settings", "OpenToCategory"),
 	--[[
-		The key binding: its toggle opens the Retail-engine book through PlayerSpellsUtil where the client has
-		it, and the Spellbook panel shows the bound key. Then the three routes ns:OpenKeyBindings tries for the
+		The key binding: its toggle (GoodToGo_ToggleSpellbook) opens the add-on's own page, and the
+		Spellbook panel shows the bound key. Then the three routes ns:OpenKeyBindings tries for the
 		Set Key button, in its order; one route passing whole is enough, and the report says which one this
 		client has.
 	]]
-	Method("PlayerSpellsUtil", "OpenToSpellBookTab", "PlayerSpellsUtil.OpenToSpellBookTab (guarded)"),
 	Global("GetBindingKey"),
 	{
 		"GetBindingText (guarded)",
@@ -381,6 +491,7 @@ local PER_SPELL_OPTIONS = {
 	"useItems",
 	"groupedSpells",
 	"targetPriority",
+	"conditionals",
 }
 
 --------------------------------------------------------------------------------
@@ -414,8 +525,8 @@ local function SpellLine(spell)
 		spell.label,
 		spell.id,
 		tostring(C_Spell.GetSpellName(spell.id) or "NIL"),
-		tostring(IsPlayerSpell(spell.id)),
-		tostring(IsSpellKnown(spell.id))
+		tostring(ns.IsPlayerSpell(spell.id)),
+		tostring(ns.IsSpellKnown(spell.id))
 	)
 end
 
@@ -435,10 +546,9 @@ local function RetailBookLine(lines, spellbookTabs)
 	end
 	local nativeTabs = book.CategoryTabSystem
 	lines[#lines + 1] = string.format(
-		"  book shown %s; native tab %s, the page opened over %s; search focused %s, search preview shown %s; gamepad UI %s; other add-ons' tabs and pages watched %d",
+		"  book shown %s; native tab %s; search focused %s, search preview shown %s; gamepad UI %s; other add-ons' tabs and pages watched %d",
 		YesNo(book:IsVisible()),
 		tostring(nativeTabs and nativeTabs.selectedTabID),
-		tostring(spellbookTabs.shownTab),
 		YesNo(book.SearchBox and book.SearchBox:HasFocus()),
 		YesNo(book.SearchPreviewContainer and book.SearchPreviewContainer:IsShown()),
 		YesNo(InputUtil and InputUtil.IsGamepadUIEnabled and InputUtil.IsGamepadUIEnabled()),
@@ -455,8 +565,8 @@ local function HostLines(lines)
 			YesNo(C_AddOns.IsAddOnLoaded("Blizzard_PlayerSpells")),
 			YesNo(spellbookTabs.book ~= nil),
 			YesNo(tab ~= nil),
-			YesNo(_G.BagsBuffsButtonsSpellbookFrame ~= nil),
-			YesNo(_G.BagsBuffsButtonsSpellbookFrame and _G.BagsBuffsButtonsSpellbookFrame:IsShown())
+			YesNo(_G.GoodToGoSpellbookFrame ~= nil),
+			YesNo(_G.GoodToGoSpellbookFrame and _G.GoodToGoSpellbookFrame:IsShown())
 		)
 		RetailBookLine(lines, spellbookTabs)
 	else
@@ -465,8 +575,8 @@ local function HostLines(lines)
 			YesNo(SpellBookFrame ~= nil),
 			YesNo(SpellBookFrame and SpellBookFrame:IsShown()),
 			tostring(SpellBookFrame and SpellBookFrame.bookType),
-			YesNo(_G.BagsBuffsButtonsSpellbookFrame ~= nil),
-			YesNo(_G.BagsBuffsButtonsSpellbookFrame and _G.BagsBuffsButtonsSpellbookFrame:IsShown())
+			YesNo(_G.GoodToGoSpellbookFrame ~= nil),
+			YesNo(_G.GoodToGoSpellbookFrame and _G.GoodToGoSpellbookFrame:IsShown())
 		)
 	end
 end
@@ -591,7 +701,7 @@ local function SpellbookLines(lines)
 end
 
 --[[
-	The Call Pet flyout (flyout 9, as Features/Utilities.lua names it), which the Classic-engine read lists as
+	The Call Pet flyout (flyout 9, as Data/Game-IDs names it), which the Classic-engine read lists as
 	one macro under its book name, cast as the first of its spells the player knows, and leaves its spells
 	out; with none known, the flyout is left out too. MoP Classic's book holds it; Era and TBC have none.
 ]]
@@ -665,6 +775,10 @@ local function PageListLines(lines)
 		kinds.focus,
 		kinds.copy
 	)
+	if #(ns.macros or {}) == 0 then
+		lines[#lines + 1] =
+			"  (empty: the page fills its list when it first opens, so open the Spellbook page and run this again)"
+	end
 	for _, category in ipairs(order) do
 		lines[#lines + 1] = string.format("  %s: %d", category, byCategory[category])
 	end
@@ -720,14 +834,16 @@ function ns:BuildPageContextReport()
 		YesNo(InCombatLockdown()),
 		tostring(ns.EXPANSION)
 	)
+	lines[#lines + 1] = "Spellbook enabled (the add-on's switch for this feature): "
+		.. YesNo(ns.IsSpellbookEnabled and ns.IsSpellbookEnabled())
 	HostLines(lines)
 	lines[#lines + 1] = ""
 	ClassListLines(lines)
 	lines[#lines + 1] = "Spells the options gate on:"
-	if #ns.DIAGNOSTIC_SPELLS == 0 then
+	if #ns.DIAGNOSTIC_SPELL_ROWS == 0 then
 		lines[#lines + 1] = "  (none for this class)"
 	end
-	for _, spell in ipairs(ns.DIAGNOSTIC_SPELLS) do
+	for _, spell in ipairs(ns.DIAGNOSTIC_SPELL_ROWS) do
 		lines[#lines + 1] = SpellLine(spell)
 	end
 	StanceFormLines(lines)
@@ -782,11 +898,12 @@ function ns:BuildPageContextReport()
 		lines[#lines + 1] = "Per-spell settings saved: "
 			.. table.concat(counts, ", ")
 			.. string.format("; Duplicate copies %d, of %d spells", copies, CountKeys(profile.macroCopies))
+		lines[#lines + 1] = "Conditionals: Spec conditions offered (dual spec) " .. tostring(ns.HasDualSpec())
 		lines[#lines + 1] = string.format(
 			"Unlearned sources: bundled trainer rows %d (%d for your faction and race), recorded by this character %d, class list extra spells %d",
 			#((ns.TRAINER_SPELLS or {})[PlayerClass()] or {}),
 			TrainerRowsForPlayer(),
-			CountKeys(profile.trainerSpells),
+			CountKeys((profile.trainerSpells or {})[PlayerClass()]),
 			#ns.ClassExtraSpells()
 		)
 	else
@@ -797,13 +914,13 @@ function ns:BuildPageContextReport()
 		and ns.optionsFrames
 		and ns.optionsFrames.categoryID
 	lines[#lines + 1] = string.format(
-		"Options panel: category id %s, /msb opens it through %s",
+		"Options panel: category id %s, /gtg opens it through %s",
 		tostring(ns.optionsFrames and ns.optionsFrames.categoryID),
 		settingsRoute and "Settings.OpenToCategory" or "AceConfigDialog:Open"
 	)
 	lines[#lines + 1] = string.format(
-		"Key binding: MACROSPELLBOOK_TOGGLE %s; it opens %s",
-		tostring(GetBindingKey("MACROSPELLBOOK_TOGGLE") or "not bound"),
+		"Key binding: GOODTOGO_TOGGLE_SPELLBOOK %s; it opens %s",
+		tostring(GetBindingKey("GOODTOGO_TOGGLE_SPELLBOOK") or "not bound"),
 		not ns.ToggleSpellbookPage and "nothing, no spellbook host loaded" or "the page's window"
 	)
 
@@ -825,10 +942,10 @@ local function MuteErrorsLine(lines)
 		values[#values + 1] = string.format("%s %s", cvar, tostring(C_CVar.GetCVar(cvar)))
 	end
 	lines[#lines + 1] = string.format(
-		"Mute Errors: %d macros use it; %s; BBBMute global present %s",
+		"Mute Errors: %d macros use it; %s; GtGMute global present %s",
 		CountKeys(ns.db.profile.muteErrors),
 		table.concat(values, ", "),
-		YesNo(type(BBBMute) == "function")
+		YesNo(type(GtGMute) == "function")
 	)
 end
 
@@ -949,7 +1066,7 @@ function ns:BuildMacroContextReport()
 	lines[#lines + 1] = string.format(
 		"Trainer recording: file loaded %s, %d spells recorded on this character",
 		YesNo(ns.OnTrainerShow ~= nil),
-		CountKeys(ns.db.profile.trainerSpells)
+		CountKeys((ns.db.profile.trainerSpells or {})[PlayerClass()])
 	)
 	return table.concat(lines, "\n")
 end
@@ -1197,6 +1314,94 @@ local function CollectRangedAttacks(rows)
 	return entries
 end
 
+-- SPELL_GROUPS lists each class's groups of IDs; every ID answers once, naming the rest of its group.
+local function CollectSpellGroupSpells(groupsByClass)
+	local entries = {}
+	for classToken, groups in pairs(groupsByClass) do
+		for _, ids in ipairs(groups) do
+			for _, id in ipairs(ids) do
+				local others = {}
+				for _, other in ipairs(ids) do
+					if other ~= id then
+						others[#others + 1] = other
+					end
+				end
+				entries[#entries + 1] = { id = id, key = classToken, row = { group = others } }
+			end
+		end
+	end
+	return entries
+end
+
+-- SHARED_PAGE_SPELLS is keyed by page section; an entry with several IDs answers once per ID.
+local function CollectSharedPageSpells(spellsBySection)
+	local entries = {}
+	for section, list in pairs(spellsBySection) do
+		for _, entry in ipairs(list) do
+			for _, id in ipairs(EntryIds(entry)) do
+				entries[#entries + 1] = { id = id, key = section }
+			end
+		end
+	end
+	return entries
+end
+
+-- PROFESSION_SPECIALIZATIONS rows open on the profession; each specialization answers naming it.
+local function CollectSpecializations(rows)
+	local entries = {}
+	for _, row in ipairs(rows) do
+		for index, id in ipairs(row) do
+			entries[#entries + 1] = { id = id, row = { profession = index > 1 and row[1] or nil } }
+		end
+	end
+	return entries
+end
+
+-- PET_ABILITIES and DEMON_ABILITIES rows carry the pet's spell as id; field reads the hunter's teach spell or the grimoire.
+local function CollectAbilityField(field)
+	return function(rows)
+		local entries = {}
+		for _, row in ipairs(rows) do
+			if row[field] then
+				entries[#entries + 1] = { id = row[field], row = row }
+			end
+		end
+		return entries
+	end
+end
+
+-- PET_ABILITY_BEASTS is keyed by the pet's spell, holding the beasts that know it.
+local function CollectAbilityBeasts(beastsBySpell)
+	local entries = {}
+	for spellId, beasts in pairs(beastsBySpell) do
+		entries[#entries + 1] = { id = spellId, row = { beasts = #beasts } }
+	end
+	return entries
+end
+
+-- TAMEABLE_BEASTS rows end on the beast's zone; each zone answers once, with how many beasts live there.
+local function CollectBeastZones(beastsByNpc)
+	local counts = {}
+	for _, beast in pairs(beastsByNpc) do
+		local zone = beast[4]
+		if zone then
+			counts[zone] = (counts[zone] or 0) + 1
+		end
+	end
+	local entries = {}
+	for zone, count in pairs(counts) do
+		entries[#entries + 1] = { id = zone, row = { beasts = count } }
+	end
+	return entries
+end
+
+-- EXTRA_SPELL_SOURCES rows are { source, level }.
+local function RowIndex(index)
+	return function(_, row)
+		return type(row) == "table" and row[index] or nil
+	end
+end
+
 ns.AppendDiagnosticRows(ns.DIAGNOSTIC_DATA_SOURCES, {
 	-- { label, sources = { { table, kind, rowId or collect, dataColumns } } }
 	{
@@ -1244,6 +1449,93 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_DATA_SOURCES, {
 				collect = CollectGroupVersionSpells,
 				dataColumns = { { "DATA_HALF", RowField("half") }, { "DATA_PAIR", RowField("pair") } },
 			},
+			{
+				table = "SPELL_GROUPS",
+				kind = "spell",
+				collect = CollectSpellGroupSpells,
+				dataColumns = { { "DATA_CLASS", KeyValue }, { "DATA_GROUP", RowField("group") } },
+			},
+		},
+	},
+	{
+		label = "Shared-Page-Spells",
+		sources = {
+			{
+				table = "SHARED_PAGE_SPELLS",
+				kind = "spell",
+				collect = CollectSharedPageSpells,
+				dataColumns = { { "DATA_SECTION", KeyValue } },
+			},
+			{
+				table = "PROFESSION_SPECIALIZATIONS",
+				kind = "spell",
+				collect = CollectSpecializations,
+				dataColumns = { { "DATA_PROFESSION", RowField("profession") } },
+			},
+		},
+	},
+	{
+		label = "Spell-Sources",
+		sources = {
+			{
+				table = "EXTRA_SPELL_SOURCES",
+				kind = "spell",
+				rowId = KeyValue,
+				dataColumns = { { "DATA_SOURCE", RowIndex(1) }, { "DATA_LEVEL", RowIndex(2) } },
+			},
+		},
+	},
+	{
+		label = "Pet-Abilities",
+		sources = {
+			{
+				table = "PET_ABILITIES",
+				kind = "spell",
+				collect = CollectAbilityField("id"),
+				dataColumns = {
+					{ "DATA_LEVEL", RowField("level") },
+					{ "DATA_SOURCE", RowField("source") },
+					{ "DATA_TEACH", RowField("teach") },
+					{ "DATA_TP", RowField("tp") },
+					{ "DATA_FAMILIES", RowField("families") },
+				},
+			},
+			{
+				table = "PET_ABILITIES",
+				kind = "spell",
+				collect = CollectAbilityField("teach"),
+				dataColumns = { { "DATA_LEVEL", RowField("level") }, { "DATA_PET_SPELL", RowField("id") } },
+			},
+			{
+				table = "DEMON_ABILITIES",
+				kind = "spell",
+				collect = CollectAbilityField("id"),
+				dataColumns = {
+					{ "DATA_LEVEL", RowField("level") },
+					{ "DATA_GRIMOIRE", RowField("item") },
+					{ "DATA_FAMILIES", RowField("families") },
+				},
+			},
+			{
+				table = "DEMON_ABILITIES",
+				kind = "item",
+				collect = CollectAbilityField("item"),
+				dataColumns = { { "DATA_LEVEL", RowField("level") }, { "DATA_PET_SPELL", RowField("id") } },
+			},
+			{
+				table = "PET_ABILITY_BEASTS",
+				kind = "spell",
+				collect = CollectAbilityBeasts,
+				dataColumns = { { "DATA_BEASTS", RowField("beasts") } },
+			},
+			{
+				table = "TAMEABLE_BEASTS",
+				kind = "area",
+				collect = CollectBeastZones,
+				dataColumns = { { "DATA_BEASTS", RowField("beasts") } },
+			},
+			-- The beasts' NPC IDs: no client call names an NPC from its ID, so the table reports its size.
+			{ table = "TAMEABLE_BEASTS", kind = "other" },
 		},
 	},
 })

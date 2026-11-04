@@ -83,7 +83,7 @@ function ns.BuildGoodNewsOptions()
 			messageLabel = ns.OptionsRowLabel(L["WHISPER_MESSAGE"], 8, MESSAGE_LABEL_WIDTH, GoodNewsHidden),
 			--[[
                 The editable body only. The star marker (left off on WoW Forever)
-                and the " // BBB" sign-off are added by ns:BuildGoodNewsMessage and
+                and the " // GtG" sign-off are added by ns:BuildGoodNewsMessage and
                 are deliberately out of reach: they are how a recipient recognizes
                 where the whisper came from.
 

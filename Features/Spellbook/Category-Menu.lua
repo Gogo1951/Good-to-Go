@@ -14,7 +14,7 @@ local COMBAT, REPEAT, FIRST, ERRORS = ns.MENU_COMBAT, ns.MENU_REPEAT, ns.MENU_FI
 ]]
 
 -- The category menu's reset, asked first; data is the reset itself, run on Yes.
-StaticPopupDialogs.BAGSBUFFSBUTTONS_RESET_CATEGORY = {
+StaticPopupDialogs.GOODTOGO_RESET_CATEGORY = {
 	text = L["MENU_RESET_CATEGORY_CONFIRM"],
 	button1 = YES,
 	button2 = NO,
@@ -92,9 +92,12 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 			return button
 		end
 
-		-- an option on every macro offering it, or nothing when none does; returns whether it was added
-		local function checkbox(menu, key, label)
-			local targets = offeringOption(key)
+		--[[
+			an option on every macro offering it, or on targets when given, or nothing when there are none; returns
+			whether it was added
+		]]
+		local function checkbox(menu, key, label, targets)
+			targets = targets or offeringOption(key)
 			if #targets == 0 then
 				return false
 			end
@@ -175,12 +178,17 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 			end
 		end
 
-		-- Grouped: the right-click for each spell's group or single version
-		local rightClick = offeringOption("groupVersion")
+		--[[
+			Grouped: the right-click for each spell's group or single version, on every macro but those with a
+			Conditional on Right-Click, which the single-spell menu won't turn it on for either
+		]]
+		local rightClick = offering(function(macro)
+			return ns.OffersOption(macro, "groupVersion") and not ns.ConditionalsUseRightClick(macro)
+		end)
 		if #rightClick > 0 then
 			section()
 			local groupedMenu = submenu(root, L["MENU_GROUP_GROUPED"])
-			checkbox(groupedMenu, "groupVersion", L["MENU_RIGHT_CLICK_GROUP"])
+			checkbox(groupedMenu, "groupVersion", L["MENU_RIGHT_CLICK_GROUP"], rightClick)
 		end
 
 		-- Rank: the highest each spell knows, or Dynamic where the spell takes it
@@ -292,7 +300,7 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 		root:CreateDivider()
 		-- a whole category's hand-set options take real effort to set again, so it asks first
 		local reset = root:CreateButton(L["TOOLTIP_ACTION_RESET_CATEGORY"]:format(name), function()
-			StaticPopup_Show("BAGSBUFFSBUTTONS_RESET_CATEGORY", name, nil, function()
+			StaticPopup_Show("GOODTOGO_RESET_CATEGORY", name, nil, function()
 				for _, macro in ipairs(list) do
 					ns.ResetMacroSettings(macro)
 				end

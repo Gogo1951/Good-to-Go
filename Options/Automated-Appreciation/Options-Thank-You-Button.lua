@@ -116,6 +116,11 @@ local function AddButtonSection(args, button, index)
 			return config().createMacro
 		end,
 		set = function(_, value)
+			-- With no free slot the macro can't be made, so the box stays clear and says why.
+			if value and GetMacroIndexByName(button.macroName) == 0 and GetNumMacros() >= Data.MAX_GLOBAL_MACROS then
+				ns:PrintMessage(L["ERROR_MACRO_SLOTS_FULL"])
+				return
+			end
 			config().createMacro = value
 			--[[
 			    The toggle owns the macro's existence in both directions: ticking it

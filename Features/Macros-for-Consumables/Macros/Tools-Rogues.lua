@@ -15,11 +15,11 @@ local MACRO_CONFIG = ns.MACRO_CONFIG
       Middle-Click → open the Poisons crafting window (if known)
 
     The body applies in two steps — /use the poison item, then /use the
-    inventory slot number — and then clicks StaticPopup1Button1 to confirm
-    the client's "replace your current enchant/poison" popup, so pressing the
-    macro overwrites whatever poison is already on the weapon. The click
-    accepts whichever confirmation box is on top, and stays all the same: it
-    is the only way a macro can confirm the replace. The trailing
+    inventory slot number — and then calls GtGReplace() (Macros/Runtime.lua)
+    to confirm the client's "replace your current enchant/poison" popup, so
+    pressing the macro overwrites whatever poison is already on the weapon.
+    GtGReplace answers only that popup, never another confirmation box that
+    happens to be open, such as Delete Item. The trailing
     UIErrorsFrame:Clear() swallows the noise from clicking with no off-hand
     weapon equipped or a poison already pending.
 
@@ -148,7 +148,7 @@ end
       no Poisons skill → tip-only stub ("You don't currently know Poisons.")
       neither hand     → crafting middle-click + "no suitable Poison found"
       one hand missing → working hand keeps its branch; the missing hand's
-                         click prints TIP_NO_HAND_POISON via BBBTipIf and halts
+                         click prints TIP_NO_HAND_POISON via GtGTipIf and halts
       both hands       → the full dual-apply body
 
     [btn:2] is the Main Hand branch; everything that isn't btn:2/btn:3 —
@@ -160,7 +160,7 @@ local function BuildPoisonsBody(knows, mainID, offID)
 	local lines = { "#showtooltip item:" .. tooltipID }
 
 	if not knows then
-		lines[#lines + 1] = '/run BBBTip("noPoisonsSkill")'
+		lines[#lines + 1] = '/run GtGTip("noPoisonsSkill")'
 		return table.concat(lines, "\n")
 	end
 
@@ -171,15 +171,15 @@ local function BuildPoisonsBody(knows, mainID, offID)
 	end
 
 	if not mainID and not offID then
-		lines[#lines + 1] = '/run BBBNoItem("Poisons")'
+		lines[#lines + 1] = '/run GtGNoItem("Poisons")'
 		return table.concat(lines, "\n")
 	end
 
 	if not mainID then
-		lines[#lines + 1] = '/run BBBTipIf("[btn:2]","noHandPoison")'
+		lines[#lines + 1] = '/run GtGTipIf("[btn:2]","noHandPoison")'
 		lines[#lines + 1] = "/stopmacro [btn:2]"
 	elseif not offID then
-		lines[#lines + 1] = '/run BBBTipIf("[btn:1]","noHandPoison")'
+		lines[#lines + 1] = '/run GtGTipIf("[btn:1]","noHandPoison")'
 		lines[#lines + 1] = "/stopmacro [btn:1]"
 	end
 
@@ -194,7 +194,7 @@ local function BuildPoisonsBody(knows, mainID, offID)
 		lines[#lines + 1] = "/use 17"
 	end
 
-	lines[#lines + 1] = "/click StaticPopup1Button1"
+	lines[#lines + 1] = "/run GtGReplace()"
 	lines[#lines + 1] = "/run UIErrorsFrame:Clear()"
 
 	return table.concat(lines, "\n")

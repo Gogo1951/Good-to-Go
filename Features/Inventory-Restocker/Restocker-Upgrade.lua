@@ -111,6 +111,20 @@ function ns.DropFailedUpgradeTarget(itemID)
 end
 
 --[[
+    An upgrade's prints: the headline, then a line per swap, each
+    { fromLink, fromAmount, toLink, toAmount }. The Restocker panel's Example
+    draws them too.
+]]
+function ns.BuildRestockUpgradeLines(swaps)
+	local lines = { L["RESTOCKER_UPGRADED"] }
+	for _, swap in ipairs(swaps) do
+		lines[#lines + 1] =
+			string.format(L["RESTOCKER_UPGRADED_ITEM"], swap.fromLink, swap.fromAmount, swap.toLink, swap.toAmount)
+	end
+	return lines
+end
+
+--[[
     Bring every eligible entry on the current Restock List up to date.
     Safe to call repeatedly: it is a no-op once nothing is behind.
 
@@ -178,22 +192,19 @@ function ns.UpgradeRestockList(newLevel)
 	    the list: that path merges the rows and sums the amounts rather than
 	    carrying the old one across.
 	]]
-	ns:PrintMessage(L["RESTOCKER_UPGRADED"])
+	local swaps = {}
 	for _, move in ipairs(planned) do
 		local from = list[move.from]
-		local fromLink = ns.GetItemHyperlink(move.from, from and from.itemName)
 		local fromAmount = (from and from.amount) or 0
+		local swap = { fromLink = ns.GetItemHyperlink(move.from, from and from.itemName), fromAmount = fromAmount }
 		MoveToTier(list, move.from, move.to)
 		local moved = list[move.to]
-		ns:PrintMessage(
-			string.format(
-				L["RESTOCKER_UPGRADED_ITEM"],
-				fromLink,
-				fromAmount,
-				ns.GetItemHyperlink(move.to, moved and moved.itemName),
-				(moved and moved.amount) or fromAmount
-			)
-		)
+		swap.toLink = ns.GetItemHyperlink(move.to, moved and moved.itemName)
+		swap.toAmount = (moved and moved.amount) or fromAmount
+		swaps[#swaps + 1] = swap
+	end
+	for _, line in ipairs(ns.BuildRestockUpgradeLines(swaps)) do
+		ns:PrintMessage(line)
 	end
 
 	ns.UpdateRestockList()

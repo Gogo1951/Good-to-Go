@@ -164,13 +164,33 @@ end)
                                    it is on for your class; otherwise, on
                                    Forever, your own auras for Stranger and
                                    Teammate praise.
+
+    and the events only the Buff Duty window reads (BUFF_DUTY_EVENTS), on
+    while it is on for your class. PLAYER_REGEN_DISABLED and
+    PLAYER_REGEN_ENABLED stay on regardless: a change made to the window in
+    combat, switching it off included, waits for combat to end.
 ]]
+local BUFF_DUTY_EVENTS = {
+	GROUP_ROSTER_UPDATE = true,
+	UNIT_PET = true,
+	PLAYER_TARGET_CHANGED = true,
+	SPELLS_CHANGED = true,
+	UNIT_INVENTORY_CHANGED = true,
+	BAG_UPDATE_DELAYED = true,
+	SPELL_UPDATE_COOLDOWN = true,
+	REPLACE_ENCHANT = true,
+	UI_ERROR_MESSAGE = true,
+}
+
 local FEATURE_EVENTS = {
 	COMBAT_LOG_EVENT_UNFILTERED = true,
 	UNIT_SPELLCAST_SENT = true,
 	UNIT_SPELLCAST_SUCCEEDED = true,
 	UNIT_AURA = true,
 }
+for event in pairs(BUFF_DUTY_EVENTS) do
+	FEATURE_EVENTS[event] = true
+end
 
 for _, event in ipairs(EVENTS) do
 	if not FEATURE_EVENTS[event] then
@@ -191,6 +211,9 @@ function ns.UpdateThanksForTheBuffEvents()
 		UNIT_SPELLCAST_SENT = goodNews,
 		UNIT_SPELLCAST_SUCCEEDED = goodNews or services or buffDuty,
 	}
+	for event in pairs(BUFF_DUTY_EVENTS) do
+		wanted[event] = buffDuty
+	end
 	-- EVENTS, not wanted: on Forever the combat log is never in the list.
 	for _, event in ipairs(EVENTS) do
 		if FEATURE_EVENTS[event] and event ~= "UNIT_AURA" then
@@ -199,10 +222,13 @@ function ns.UpdateThanksForTheBuffEvents()
 	end
 	if buffDuty then
 		ns.SetModuleEvent(MODULE, "UNIT_AURA", true)
-	elseif praise and ns.FLAVOR == "Camelot" then
+	elseif praise and ns.OnForeverPlayerAura then
 		ns.SetModuleEvent(MODULE, "UNIT_AURA", true, "player")
 	else
 		ns.SetModuleEvent(MODULE, "UNIT_AURA", false)
+	end
+	if ns.SetBuffWindowWatching then
+		ns.SetBuffWindowWatching(buffDuty)
 	end
 end
 

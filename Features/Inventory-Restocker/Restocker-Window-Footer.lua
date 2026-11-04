@@ -66,7 +66,7 @@ local SHORT = "|cff" .. ns.RESTOCKER_WINDOW_COLORS.KEEP_SHORT
     even while the cache is cold). A name-only row has no ID to look an icon up
     by, so it shows the question mark the list itself uses.
 ]]
-local UNKNOWN_ICON = "Interface\\ICONS\\INV_Misc_QuestionMark"
+local UNKNOWN_ICON = ns.QUESTION_MARK_ICON
 
 local function ItemWithIcon(itemID, itemName)
 	local icon = itemID and C_Item.GetItemIconByID(itemID) or UNKNOWN_ICON

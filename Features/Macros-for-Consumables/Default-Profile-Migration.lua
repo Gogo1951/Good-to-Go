@@ -9,7 +9,7 @@ local _, ns = ...
     One-time upgrade shim. Delete on the first code pass after that date, all
     four pieces together:
       1. this file
-      2. its tagged line in all three flavor TOCs (Bags-Buffs-Buttons_Vanilla.toc,
+      2. its tagged line in all three flavor TOCs (Good-to-Go_Vanilla.toc,
          _TBC.toc and _Camelot.toc)
       3. the ns.MoveCharactersOntoOwnProfiles() call in Features/Core.lua
       4. the tagged noDefaultProfiles argument in Options/Options-Profiles.lua,

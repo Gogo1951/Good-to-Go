@@ -1,18 +1,21 @@
 std = "lua51"
 max_line_length = false -- StyLua owns formatting
 ignore = { "212/self", "611", "612", "613", "614", "621" } -- implicit self (house ns: methods) + whitespace, StyLua owns the latter
-exclude_files = { "Includes/", ".claude/", "Source Add-ons/" } -- vendored or session-local, never linted
+exclude_files = { "Includes/", ".claude/" } -- vendored or session-local, never linted
 read_globals = {
 	"Ambiguate",
 	"BACKPACK_CONTAINER",
 	"BANK_CONTAINER",
 	"bit",
+	"BOOKTYPE_PET",
 	"BOOKTYPE_SPELL",
 	"BuyMerchantItem",
 	"C_AddOns",
 	"C_Bank",
 	"C_ChatInfo",
+	"CHAT_PARTY_GET",
 	"CHAT_WHISPER_GET",
+	"ChatEdit_InsertLink",
 	"ChatTypeInfo",
 	"C_Container",
 	"C_CreatureInfo",
@@ -68,8 +71,10 @@ read_globals = {
 	"format",
 	"GAMEMENU_OPTIONS",
 	"GameTooltip",
+	"GENERAL_MACROS",
 	"GetActionInfo",
 	"GetActionText",
+	"GetActiveTalentGroup",
 	"GetBindingKey",
 	"GetBindingText",
 	"GetBuildInfo",
@@ -91,6 +96,7 @@ read_globals = {
 	"GetMacroItem",
 	"GetMacroIndexByName",
 	"GetMacroInfo",
+	"GetMacroSpell",
 	"GetMaxLevelForPlayerExpansion",
 	"GetMaxPlayerLevel",
 	"GetMerchantItemInfo",
@@ -107,10 +113,13 @@ read_globals = {
 	"GetNumShapeshiftForms",
 	"GetNumSkillLines",
 	"GetNumSpellTabs",
+	"GetNumTalentGroups",
+	"GetNumTalents",
 	"GetNumTalentTabs",
 	"GetNumTrainerServices",
 	"GetPartyAssignment",
 	"GetPetFoodTypes",
+	"GetPetTrainingPoints",
 	"GetPhysicalScreenSize",
 	"GetPlayerInfoByGUID",
 	"GetProfessionInfo",
@@ -120,6 +129,7 @@ read_globals = {
 	"GetRealmName",
 	"GetShapeshiftFormInfo",
 	"GetSkillLineInfo",
+	"GetSpellAutocast",
 	"GetSpellBaseCooldown",
 	"GetSpellBookItemInfo",
 	"GetSpellBookItemName",
@@ -127,6 +137,7 @@ read_globals = {
 	"GetSpellPowerCost",
 	"GetSpellTabInfo",
 	"GetSubZoneText",
+	"GetTalentInfo",
 	"GetText",
 	"GetTime",
 	"GetTrainerServiceLevelReq",
@@ -136,6 +147,8 @@ read_globals = {
 	"GRAY_FONT_COLOR",
 	"GROUP",
 	"GROUP_NUMBER",
+	"HasPetSpells",
+	"HasPetUI",
 	"HideUIPanel",
 	"HIGHLIGHT_FONT_COLOR",
 	"hooksecurefunc",
@@ -146,6 +159,7 @@ read_globals = {
 	"IsInGroup",
 	"IsInInstance",
 	"IsInRaid",
+	"IsModifiedClick",
 	"IsPassiveSpell",
 	"IsPlayerSpell",
 	"IsResting",
@@ -159,6 +173,7 @@ read_globals = {
 	"KEY_BINDINGS",
 	"KeyBindingFrame",
 	"KeyBindingFrame_LoadUI",
+	"LE_PARTY_CATEGORY_INSTANCE",
 	"LibStub",
 	"LOCALIZED_CLASS_NAMES_MALE",
 	"MacroFrame",
@@ -176,7 +191,11 @@ read_globals = {
 	"NOT_BOUND",
 	"NUM_BAG_SLOTS",
 	"PAGE_NUMBER",
+	"PanelTemplates_DeselectTab",
+	"PanelTemplates_SelectTab",
+	"PanelTemplates_TabResize",
 	"PickupMacro",
+	"PickupSpellBookItem",
 	"PixelUtil",
 	"PlayerSpellsFrame",
 	"PlayerSpellsUtil",
@@ -210,6 +229,7 @@ read_globals = {
 	"SpellBookSkillLineTab1",
 	"StaticPopup_Hide",
 	"StaticPopup_Show",
+	"StaticPopup_Visible",
 	"strcmputf8i",
 	"strsplit",
 	"strtrim",
@@ -224,6 +244,7 @@ read_globals = {
 	"UnitCanAssist",
 	"UnitCharacterPoints",
 	"UnitClass",
+	"UnitCreatureFamily",
 	"UnitCreatureType",
 	"UnitExists",
 	"UnitFactionGroup",
@@ -234,6 +255,7 @@ read_globals = {
 	"UnitInRaid",
 	"UnitInRange",
 	"UnitIsAFK",
+	"UnitIsCharmed",
 	"UnitIsConnected",
 	"UnitIsDead",
 	"UnitIsDeadOrGhost",
@@ -262,31 +284,32 @@ read_globals = {
 	"YES",
 }
 globals = {
-	"BagsBuffsButtonsDB",
-	"BINDING_HEADER_BAGSBUFFSBUTTONS",
-	"BINDING_NAME_MACROSPELLBOOK_TOGGLE", -- the Key Bindings list's caption for Bindings.xml's binding
-	"BBBMute", -- called by muteErrors macros through /run
-	"BagsBuffsButtons_ToggleSpellbook", -- called by Bindings.xml
-	"BBBFire", -- called by consumable macros through /run
-	"BBBTip",
-	"BBBTipIf",
-	"BBBNoItem",
-	-- MIGRATION (remove after 2026-11-26): the callbacks' names before the BBB prefix
+	"GoodToGoDB",
+	"BINDING_HEADER_GOODTOGO",
+	"BINDING_NAME_GOODTOGO_TOGGLE_SPELLBOOK", -- the Key Bindings list's caption for Bindings.xml's binding
+	"GtGMute", -- called by muteErrors macros through /run
+	"GoodToGo_ToggleSpellbook", -- called by Bindings.xml
+	"GtGFire", -- called by consumable macros through /run
+	"GtGTip",
+	"GtGTipIf",
+	"GtGNoItem",
+	"GtGReplace",
+	-- MIGRATION (remove after 2026-11-26): the callbacks' names before the GtG prefix
 	"ConnoisseurFire",
 	"ConnoisseurTip",
 	"ConnoisseurTipIf",
 	"ConnoisseurNoItem",
-	"SLASH_BAGSBUFFSBUTTONS1",
-	"SLASH_BAGSBUFFSBUTTONSRESTOCK1",
-	SlashCmdList = { fields = { "BAGSBUFFSBUTTONS", "BAGSBUFFSBUTTONSRESTOCK" } },
+	"SLASH_GOODTOGO1",
+	"SLASH_GOODTOGORESTOCK1",
+	SlashCmdList = { fields = { "GOODTOGO", "GOODTOGORESTOCK" } },
 	-- the add-on's own confirm and import popups
 	StaticPopupDialogs = {
 		fields = {
-			"BAGSBUFFSBUTTONS_DELETE_MACRO",
-			"BAGSBUFFSBUTTONS_RESET_CATEGORY",
-			"BAGSBUFFSBUTTONS_RESTOCKER_DELETE_LIST",
-			"BAGSBUFFSBUTTONS_LEGACY_RELOAD", -- MIGRATION (remove after 2026-11-25)
-			"BAGSBUFFSBUTTONS_LEGACY_IMPORT", -- MIGRATION (remove after 2026-11-25)
+			"GOODTOGO_DELETE_MACRO",
+			"GOODTOGO_RESET_CATEGORY",
+			"GOODTOGO_RESTOCKER_DELETE_LIST",
+			"GOODTOGO_LEGACY_RELOAD", -- MIGRATION (remove after 2026-11-25)
+			"GOODTOGO_LEGACY_IMPORT", -- MIGRATION (remove after 2026-11-25)
 		},
 	},
 }

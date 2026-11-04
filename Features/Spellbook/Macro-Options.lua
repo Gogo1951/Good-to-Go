@@ -29,7 +29,10 @@ local _, ns = ...
 	"useItems" holds a list of equipment slots instead of a flag: the macro uses
 	each slot's item, in that order, before the cast. "groupedSpells" holds a list of spell names too: the
 	spells of the macro's SPELL_GROUPS group ticked in its Grouped Spells submenu (see ns.CastSpellName), and
-	"targetPriority" a list of units, who it casts on in turn (see ns.TargetPriority).
+	"targetPriority" a list of units, who it casts on in turn (see ns.TargetPriority), and "conditionals" a list
+	of rows, each a spell cast in the macro's place when its conditions match (see ns.Conditionals).
+	"castSequence" holds the Cast Sequence's steps after the macro's own, "castSequenceEnd" "stop" where it
+	stops on NULL, and "castSequenceReset" its resets (see Features/Spellbook/Macro-Builder/Cast-Sequence.lua).
 ]]
 local function SpellSettings(key)
 	return ns.db.profile[key]
@@ -322,8 +325,13 @@ local OFFERED = {
 	targetFriend = TargetsHelp,
 	combatOnly = Always,
 	noCombat = Always,
-	oncePerCombat = Always,
-	oncePerTarget = Always,
+	-- a Cast Sequence's end and resets do their work while it's on (Features/Spellbook/Macro-Builder/Cast-Sequence.lua)
+	oncePerCombat = function(macro)
+		return not ns.IsCastSequenceOn(macro)
+	end,
+	oncePerTarget = function(macro)
+		return not ns.IsCastSequenceOn(macro)
+	end,
 	stopAttack = Always,
 	stopIfChanneling = Always,
 	stopIfStealthed = Always,

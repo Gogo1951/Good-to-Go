@@ -16,6 +16,9 @@ ns.TILE_WIDTH, ns.TILE_HEIGHT = TILE_WIDTH, TILE_HEIGHT
 local NAME_SIZE, NOTE_SIZE = 14, 12
 
 local INK_COLOR = ns.INK_COLOR
+local INFO = ns.COLORS_RGB.INFO
+local EDITING_FILL_ALPHA = 0.12 -- the wash inside the outline on the tile the Conditionals panel is open for
+local PICK_DIMMED_ALPHA = 0.35 -- a tile pick mode can't take
 local FADED_INK_COLOR = ns.FADED_INK_COLOR
 
 --[[
@@ -54,14 +57,22 @@ local function SetAtlasOr(texture, atlas, file, scale, icon)
 end
 
 --[[
-	The spell whose own tooltip heads the macro's: a learned spell by name, so its highest known rank, an
-	unlearned one by its ID. Nil when there's none, as for a consumable, which leads with its item's.
+	The spell whose own tooltip heads the macro's: the rank a macro is fixed to (ns.FixedRank: a rank's own
+	macro, or one set to a rank in its options), else a learned spell by name, so its highest known rank, an
+	unlearned one by its ID. Nil when there's none, as for a consumable, which leads with its item's. The ranks
+	the tooltip lists (ns.AddSpellRanksTooltip) mark this one.
 ]]
 local function TooltipSpellID(macro)
 	if macro.consumable then
 		return nil
 	elseif macro.unlearned then
 		return macro.spellID
+	end
+	local fixed = not macro.rangedAttacks and ns.FixedRank(macro)
+	for _, rank in ipairs(fixed and macro.ranks or {}) do
+		if rank.text == fixed and rank.id then
+			return rank.id
+		end
 	end
 	local name = macro.name
 	if macro.rangedAttacks then
@@ -92,10 +103,12 @@ end
 
 --[[
 	The options a macro's note and tooltip can name, most telling first, as { key, note key, full label key }:
-	the note names up to two that are on, or counts them when more are; the tooltip lists them all by their
+	the note names up to MAX_NOTES that are on, or counts them when more are; the tooltip lists them all by their
 	full labels. A row without keys builds its text from the macro.
 ]]
 local OPTION_SUBTEXTS = {
+	{ "conditionals" },
+	{ "castSequence" },
 	{ "pet", "SUBTEXT_PET", "MENU_CAST_IF_SUMMONED" },
 	{ "cursor", "SUBTEXT_CURSOR", "MENU_CAST_AT_CURSOR" },
 	{ "targetPriority", "SUBTEXT_TARGET_PRIORITY", "MENU_GROUP_TARGET" },
@@ -137,6 +150,10 @@ local function ForEachOnOption(macro, fn)
 			on = ns.IsGrouped(macro)
 		elseif key == "targetPriority" then
 			on = ns.HasTargetPriority(macro)
+		elseif key == "conditionals" then
+			on = ns.ConditionalCount(macro) > 0
+		elseif key == "castSequence" then
+			on = ns.IsCastSequenceOn(macro)
 		else
 			on = ns.IsOptionOn(macro, key)
 		end
@@ -166,6 +183,12 @@ local function TargetPrioritySubText(macro)
 	return L["SUBTEXT_TARGET_PRIORITY"]
 end
 
+-- The Conditionals' note and full label: "1 Conditional", "4 Conditionals".
+local function ConditionalsSubText(macro)
+	local count = ns.ConditionalCount(macro)
+	return count == 1 and L["SUBTEXT_CONDITIONALS_ONE"] or L["SUBTEXT_CONDITIONALS"]:format(count)
+end
+
 -- MAX_NOTES names fit on a tile's note line ("Max Rank, Grouped, Hide Errors"); more are counted instead.
 local MAX_NOTES = 3
 
@@ -186,6 +209,10 @@ local function OptionSubText(macro, lead)
 			note = AutoShotSubText()
 		elseif entry[1] == "targetPriority" then
 			note = TargetPrioritySubText(macro)
+		elseif entry[1] == "conditionals" then
+			note = ConditionalsSubText(macro)
+		elseif entry[1] == "castSequence" then
+			note = L["SUBTEXT_CAST_SEQUENCE"]:format(ns.CastSequenceStepCount(macro) + 1)
 		else
 			note = L[entry[2]]
 		end
@@ -232,6 +259,10 @@ local function OptionLabel(macro, entry)
 			end
 		end
 		return L[entry[3]] .. " (" .. table.concat(labels, ", ") .. ")"
+	elseif key == "conditionals" then
+		return ConditionalsSubText(macro) .. " (" .. table.concat(ns.ConditionalSummaries(macro), ", ") .. ")"
+	elseif key == "castSequence" then
+		return L["MENU_GROUP_CAST_SEQUENCE"] .. " (" .. ns.CastSequenceSummary(macro) .. ")"
 	end
 	return L[entry[3]]
 end
@@ -277,6 +308,30 @@ local function CreateMacroButton(parent)
 		button.glow:SetVertexColor(1, 0.82, 0) -- the texture is white; Blizzard tints it per use
 	end
 	button.glow:Hide()
+	--[[
+		the outline and wash on the tile the Conditionals or Cast Sequence panel is open for
+		(Features/Spellbook/Macro-Builder/Conditionals-Panel.lua, Features/Spellbook/Macro-Builder/Cast-Sequence-Panel.lua), as textures of the
+		tile's own, so the wash sits under its icon and name
+	]]
+	button.editing = {}
+	local wash = button:CreateTexture(nil, "BACKGROUND", nil, -8)
+	wash:SetColorTexture(INFO.r, INFO.g, INFO.b, EDITING_FILL_ALPHA)
+	wash:SetPoint("TOPLEFT", -3, 3)
+	wash:SetPoint("BOTTOMRIGHT", 3, -3)
+	button.editing[1] = wash
+	for _, edge in ipairs({
+		{ "TOPLEFT", "TOPRIGHT", "SetHeight" },
+		{ "BOTTOMLEFT", "BOTTOMRIGHT", "SetHeight" },
+		{ "TOPLEFT", "BOTTOMLEFT", "SetWidth" },
+		{ "TOPRIGHT", "BOTTOMRIGHT", "SetWidth" },
+	}) do
+		local line = button:CreateTexture(nil, "OVERLAY", nil, 7)
+		line:SetColorTexture(INFO.r, INFO.g, INFO.b)
+		line:SetPoint(edge[1], wash, edge[1])
+		line:SetPoint(edge[2], wash, edge[2])
+		line[edge[3]](line, 2)
+		button.editing[#button.editing + 1] = line
+	end
 	-- fades in and out like the spellbook's glow on new spells; UpdateGlow starts it
 	button.pulse = button.glow:CreateAnimationGroup()
 	button.pulse:SetLooping("BOUNCE")
@@ -321,6 +376,19 @@ local function CreateMacroButton(parent)
 	end)
 	button:RegisterForClicks("LeftButtonUp", "RightButtonUp", "MiddleButtonUp")
 	button:SetScript("OnClick", function(self, mouseButton)
+		--[[
+			while the Conditionals or Cast Sequence panel waits for a spell (Features/Spellbook/Macro-Builder/Conditionals-Pick.lua),
+			a click gives it this one and any other button cancels; a drag still places the macro
+		]]
+		if ns.IsPickingConditionalSpell() then
+			HideTooltip(self)
+			if mouseButton == "LeftButton" then
+				ns.PickConditionalSpell(self.macro)
+			else
+				ns.CancelConditionalPick()
+			end
+			return
+		end
 		if mouseButton == "RightButton" then
 			HideTooltip(self)
 			ns.ShowMacroMenu(self)
@@ -339,14 +407,24 @@ local function CreateMacroButton(parent)
 			return
 		end
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-		-- the spell's own tooltip (a consumable's item's) comes first, then the macro as a block of our own
+		--[[
+			the spell's own tooltip (a consumable's item's) comes first, then its ranks and the level each needs
+			("GtG // Immolate Ranks", Features/Spellbook/Spell-Ranks-Tooltip.lua), then the macro as a block of our own
+			("GtG // Immolate Macro")
+		]]
 		local spellID = TooltipSpellID(self.macro)
 		if self.macro.itemLink then
 			GameTooltip:SetHyperlink(self.macro.itemLink)
 		elseif spellID then
+			-- the tile adds its own ranks, marking the rank it casts, so the tooltip hook (Spell-Ranks-Tooltip.lua) stays out
+			ns.spellTooltipHasOwnRanks = true
 			GameTooltip:SetSpellByID(spellID)
 			if GameTooltip:NumLines() == 0 then
 				GameTooltip:SetHyperlink("spell:" .. spellID)
+			end
+			ns.spellTooltipHasOwnRanks = nil
+			if not self.macro.consumable and ns.AddSpellRanksTooltip then
+				ns.AddSpellRanksTooltip(spellID, nil, GameTooltip:NumLines() > 0)
 			end
 		end
 		local title = ns.MacroHeading(L["ADDON_SHORT_NAME"], self.macro)
@@ -390,6 +468,18 @@ local function CreateMacroButton(parent)
 		elseif self.glow:IsShown() then
 			GameTooltip:AddLine(GetColor("HELP") .. L["TOOLTIP_NOT_ON_BARS"] .. "|r", nil, nil, nil, true)
 			GameTooltip:AddLine(" ")
+		end
+		-- in pick mode a click picks the spell, or can't, and a right-click cancels
+		if ns.IsPickingConditionalSpell() then
+			if ns.PickSpellOf(self.macro) then
+				AddHint(L["TOOLTIP_KEY_CLICK"], ns.PickActionText())
+			else
+				GameTooltip:AddLine(GetColor("OFF") .. ns.CannotPickText() .. "|r", nil, nil, nil, true)
+			end
+			GameTooltip:AddLine(" ")
+			AddHint(L["TOOLTIP_KEY_RIGHT_CLICK"], L["CONDITIONALS_ACTION_CANCEL"])
+			GameTooltip:Show()
+			return
 		end
 		-- each click on a line of its own, a blank line between
 		AddHint(L["TOOLTIP_KEY_CLICK_DRAG"], L["TOOLTIP_ACTION_PLACE_ON_BAR"])
@@ -482,6 +572,11 @@ local function SetMacro(button, macro, bars)
 	button.name:SetTextColor(unpack(macro.unlearned and FADED_INK_COLOR or INK_COLOR))
 	button.subText:SetText(NoteText(button, macro))
 	button.subText:SetTextColor(unpack(FADED_INK_COLOR))
+	local editing = ns.IsConditionalsPanelFor(macro) or (ns.IsCastSequencePanelFor and ns.IsCastSequencePanelFor(macro))
+	for _, texture in ipairs(button.editing) do
+		texture:SetShown(editing)
+	end
+	button:SetAlpha(ns.IsPickingConditionalSpell() and not ns.PickSpellOf(macro) and PICK_DIMMED_ALPHA or 1)
 end
 
 ns.CreateMacroButton = CreateMacroButton

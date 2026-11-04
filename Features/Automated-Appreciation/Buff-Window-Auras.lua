@@ -115,7 +115,7 @@ function BuffWindow.PruneAuraCache()
 	local keep = {}
 	local function Keep(unit)
 		local guid = unit and UnitGUID(unit)
-		if guid and ns.IsPlain(guid) then
+		if ns.IsPlain(guid) and guid then
 			keep[guid] = true
 		end
 	end
@@ -141,7 +141,7 @@ end
 
 function BuffWindow.MarkAurasDirty(unit)
 	local guid = UnitGUID(unit)
-	if guid and ns.IsPlain(guid) then
+	if ns.IsPlain(guid) and guid then
 		dirtyGUIDs[guid] = true
 	else
 		BuffWindow.MarkAllAurasDirty()
@@ -153,7 +153,7 @@ function BuffWindow.ReadAuras(unit)
 	local guid = UnitGUID(unit)
 	local record = uncachedRecord
 	auraGUID = nil
-	if guid and ns.IsPlain(guid) then
+	if ns.IsPlain(guid) and guid then
 		auraGUID = guid
 		local dead = UnitIsDeadOrGhost(unit) and true or false
 		local connected = UnitIsConnected(unit) and true or false
@@ -285,6 +285,19 @@ local function Has(buff, unit)
 	return false, lowExpires, lowDuration
 end
 BuffWindow.Has = Has
+
+--[[
+    Asked after ReadAuras(unit), like Has: whether the unit carries any
+    version of the buff at all, however little is left or whoever cast it.
+]]
+function BuffWindow.Carries(buff)
+	for id in pairs(buff.auraIds) do
+		if auraExpires[id] then
+			return true
+		end
+	end
+	return false
+end
 
 --[[
     The game refused a cast of the buff with this key on `unit`: record every

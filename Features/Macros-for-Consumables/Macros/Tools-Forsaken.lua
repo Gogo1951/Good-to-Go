@@ -48,7 +48,7 @@ function ns.TargetIsCannibalizable()
 	if not UnitExists("target") then
 		return false
 	end
-	if C_Secrets.ShouldUnitIdentityBeSecret("target") then
+	if ns.IsUnitIdentitySecret("target") then
 		return nil
 	end
 	local _, creatureTypeID = UnitCreatureType("target")
@@ -93,7 +93,7 @@ end
     as on cooldown: the usual body is always safe.
 ]]
 local function CannibalizeReady()
-	if C_Secrets.ShouldSpellCooldownBeSecret(ns.CANNIBALIZE_SPELL_ID) then
+	if ns.IsSpellCooldownSecret(ns.CANNIBALIZE_SPELL_ID) then
 		return false
 	end
 	local cooldown = C_Spell.GetSpellCooldown(ns.CANNIBALIZE_SPELL_ID)

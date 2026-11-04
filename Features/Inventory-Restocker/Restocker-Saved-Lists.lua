@@ -31,11 +31,7 @@ local function OwnCharacterKey()
 	return ns.GetCharacterProfileName() or ns.db.keys.char
 end
 
---[[
-    The list this character has chosen, or nil before its first login has
-    picked one. Read from the database rather than ns.restockSettings, so the
-    Diagnostics report can ask with the Restocker switched off.
-]]
+-- The list this character has chosen, or nil before its first login has picked one.
 function ns.GetChosenRestockList()
 	return ns.db.global.restocker.listChoices[OwnCharacterKey()]
 end
@@ -44,16 +40,20 @@ end
 -- Add List
 --------------------------------------------------------------------------------
 
+local IsListNameTaken
+
 function ns.AddRestockList(newListName)
 	local settings = ns.restockSettings
 
 	--[[
 	    Never overwrite an existing list: an add without this check replaces it with
-	    an empty one, and the items can't be got back. Same refusal ns.RenameCurrentRestockList makes.
-	    ns.CreateRestockList picks a free name before calling in; ns.CloneCurrentRestockList
-	    picks one too and writes its copy itself.
+	    an empty one, and the items can't be got back. Nor take a name another
+	    character still points at (IsListNameTaken). Same refusal
+	    ns.RenameCurrentRestockList makes. ns.CreateRestockList picks a free name
+	    before calling in; ns.CloneCurrentRestockList picks one too and writes its
+	    copy itself.
 	]]
-	if settings.lists[newListName] ~= nil then
+	if IsListNameTaken(settings, newListName) then
 		ns:PrintMessage(string.format(L["RESTOCKER_PROFILE_EXISTS"], newListName))
 		return
 	end
@@ -90,7 +90,7 @@ end
     into it uninvited. The new list takes a numbered variant instead
     ("Warrior (2)"), and whether to reuse the other list stays the player's own
     call (Copy replaces the current list with a copy of it; nothing merges).
-    Login calls this only for a profile that has chosen no list, so nobody's
+    Login calls this only for a character that has chosen no list, so nobody's
     existing setup is renamed or moved. The New List entry calls it
     too, and so does deleting the very last list, which has to leave the
     character on something (see Delete List below).
@@ -103,7 +103,7 @@ end
     so a fresh list that took the name first would be joined by it uninvited --
     the very thing a fresh name exists to prevent, arrived at by the back door.
 ]]
-local function IsListNameTaken(settings, name)
+function IsListNameTaken(settings, name)
 	if settings.lists[name] ~= nil then
 		return true
 	end
@@ -121,7 +121,7 @@ local function FreeClassListName(settings)
 	local name = className
 	local suffix = 2
 	while IsListNameTaken(settings, name) do
-		name = className .. " (" .. suffix .. ")"
+		name = L["RESTOCKER_LIST_NAME_NUMBERED"]:format(className, suffix)
 		suffix = suffix + 1
 	end
 	return name
@@ -284,22 +284,56 @@ end
 -- Rename List
 --------------------------------------------------------------------------------
 
+--[[
+    The list New List or Copy just made, as { name, rows }: its name and a copy
+    of its rows as made, so backing out of its rename can tell whether anything
+    was put on it since (ns.DiscardMadeRestockList). nil once that rename ends.
+]]
+local madeList
+
+local function RememberMadeList(settings)
+	local name = settings.currentList
+	madeList = { name = name, rows = CopyTable(settings.lists[name]) }
+end
+
+-- Whether two saved values hold the same thing, tables compared key by key.
+local function SameValue(a, b)
+	if type(a) ~= "table" or type(b) ~= "table" then
+		return a == b
+	end
+	for key, value in pairs(a) do
+		if not SameValue(value, b[key]) then
+			return false
+		end
+	end
+	for key in pairs(b) do
+		if a[key] == nil then
+			return false
+		end
+	end
+	return true
+end
+
 function ns.RenameCurrentRestockList(newName)
 	local settings = ns.restockSettings
 	local currentListName = settings.currentList
 
-	-- Trim; ignore empty names and no-ops, and never clobber an existing list.
+	--[[
+	    Trim; ignore empty names and no-ops, and never clobber an existing list
+	    or take a name another character still points at.
+	]]
 	newName = (newName or ""):gsub("^%s+", ""):gsub("%s+$", "")
 	if newName == "" or newName == currentListName then
 		ns.UpdateRestockListWidgets()
 		return
 	end
-	if settings.lists[newName] ~= nil then
+	if IsListNameTaken(settings, newName) then
 		ns:PrintMessage(string.format(L["RESTOCKER_PROFILE_EXISTS"], newName))
 		ns.UpdateRestockListWidgets()
 		return
 	end
 
+	madeList = nil
 	settings.lists[newName] = settings.lists[currentListName]
 	settings.lists[currentListName] = nil
 
@@ -334,6 +368,7 @@ end
 function ns.CreateRestockList()
 	local previousList = ns.restockSettings.currentList
 	ns.AddRestockList(FreeClassListName(ns.restockSettings))
+	RememberMadeList(ns.restockSettings)
 	ns.BeginRestockListRename(previousList)
 end
 
@@ -354,8 +389,8 @@ function ns.CloneCurrentRestockList()
 	local base = string.format(L["RESTOCKER_PROFILE_COPY_NAME"], sourceName)
 	local name = base
 	local suffix = 2
-	while settings.lists[name] ~= nil do
-		name = base .. " " .. suffix
+	while IsListNameTaken(settings, name) do
+		name = L["RESTOCKER_LIST_NAME_COPY"]:format(base, suffix)
 		suffix = suffix + 1
 	end
 
@@ -366,6 +401,7 @@ function ns.CloneCurrentRestockList()
 	menu:Show()
 	ns.UpdateRestockList()
 	ns.UpdateRestockListWidgets()
+	RememberMadeList(settings)
 	ns.BeginRestockListRename(sourceName)
 
 	-- A bank run in progress works from the list in use, so it starts over on the new one.
@@ -376,18 +412,24 @@ end
 
 --[[
     Backing out of the name a new list was given (Escape or Cancel in the
-    rename that New List and Copy open): the list they just made goes, with no
-    confirm since nothing was put on it but what Copy took from the list it
-    came from, and the character returns to previousList, which reruns a bank or
-    merchant restock the way any switch does.
+    rename that New List and Copy open). While its rows are still as made, the
+    list goes, with no confirm, and the character returns to previousList,
+    which reruns a bank or merchant restock the way any switch does. Once
+    anything was put on it or taken off, it stays under its generated name and
+    only the rename ends: Escape there is as likely meant for another window.
 ]]
 function ns.DiscardMadeRestockList(previousList)
 	local settings = ns.restockSettings
-	local madeList = settings.currentList
-	if madeList == previousList or settings.lists[previousList] == nil then
+	local made = madeList
+	madeList = nil
+	local name = settings.currentList
+	if not made or made.name ~= name or name == previousList or settings.lists[previousList] == nil then
 		return
 	end
-	settings.lists[madeList] = nil
+	if not SameValue(settings.lists[name], made.rows) then
+		return
+	end
+	settings.lists[name] = nil
 	ns.SwitchRestockList(previousList)
 end
 
@@ -495,18 +537,21 @@ function ns.InitializeCharacterRestockList()
 end
 
 --[[
-    Remove empty lists that no character points at and no character owns (e.g.
-    a leftover "default" from an older version). Two kinds are kept: the list a
-    character has chosen, and any legacy "Name-Realm" list still named for a
-    character AceDB knows -- older versions created one per character, and a
-    player who kept theirs must not lose it to a prune. New characters get
-    class-named lists and no eponymous one (see ns.InitializeCharacterRestockList).
+    Remove empty lists that no character points at: the list each character
+    has chosen is kept, and so is the one in use.
 ]]
 function ns.PruneEmptyOrphanRestockLists(db)
 	local keep = {}
 	for _, listName in pairs(db.listChoices or {}) do
 		keep[listName] = true
 	end
+	--[[
+	    MIGRATION (remove after 2026-11-25): an empty legacy "Name-Realm" list
+	    still named for a character AceDB knows is kept too -- older versions
+	    made one per character, and a player who kept theirs must not lose it to
+	    a prune. A leftover "default" list from those versions goes like any
+	    other empty orphan.
+	]]
 	for profileKey in pairs(ns.db.sv.profileKeys or {}) do
 		local name, realm = ns.SplitCharacterProfileName(profileKey)
 		if name and realm then

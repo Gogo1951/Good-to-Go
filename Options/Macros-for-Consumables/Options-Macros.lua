@@ -26,9 +26,7 @@ local RowLabel = ns.OptionsRowLabel
     stays there).
 ]]
 
-local function GetSettings()
-	return ns.db and ns.db.profile
-end
+local GetSettings = ns.OptionsProfileSettings
 
 local function ConjuredFirstActive()
 	local settings = GetSettings()
@@ -141,12 +139,7 @@ local function ManaRuneText(formatKey)
 	end
 end
 
--- A label or hover text that names a spell, read from the client when it shows.
-local function SpellDescription(formatKey, spellID)
-	return function()
-		return string.format(L[formatKey], C_Spell.GetSpellName(spellID) or "")
-	end
-end
+local SpellDescription = ns.OptionsSpellDescription
 
 -- Toggle for one entry inside a profile settings subtable (scroll/pet types).
 local function SubsetToggle(subtableKey, key, label, order)

@@ -21,7 +21,7 @@ local Spacer = ns.OptionsSpacer
 ]]
 local KEY_BINDINGS = {
 	-- { bindingName, captionKey, descKey }
-	{ "MACROSPELLBOOK_TOGGLE", "BINDING_TOGGLE_PAGE", "OPTIONS_KEY_BINDING_TOGGLE_DESCRIPTION" },
+	{ "GOODTOGO_TOGGLE_SPELLBOOK", "BINDING_TOGGLE_PAGE", "OPTIONS_KEY_BINDING_TOGGLE_DESCRIPTION" },
 }
 
 --[[
@@ -124,7 +124,8 @@ end
 
 --[[
 	The Spellbook's page in the settings tree. Its settings live on the Spellbook itself, so this holds only
-	what can't: the master switch, the key that opens it, and the buttons that delete the macros it made.
+	what can't: the master switch, the key that opens it, what the ability tooltips' ranks are for, and the
+	buttons that delete the macros it made.
 ]]
 function ns.BuildSpellbookOptions()
 	local args = {
@@ -148,6 +149,12 @@ function ns.BuildSpellbookOptions()
 		spacerKeyBindings0 = Spacer(30),
 		headerKeyBindings = Header(L["OPTIONS_KEY_BINDINGS_HEADER"], 31),
 		spacerKeyBindings1 = Spacer(32),
+
+		-- What's Next ability tooltips: the ranks under every spell's tooltip (Features/Spellbook/Spell-Ranks-Tooltip.lua)
+		spacerAbilityTooltips0 = Spacer(50),
+		headerAbilityTooltips = Header(L["OPTIONS_ABILITY_TOOLTIPS_HEADER"], 51),
+		spacerAbilityTooltips1 = Spacer(52),
+		descAbilityTooltips = Desc(L["OPTIONS_ABILITY_TOOLTIPS_DESCRIPTION"], 53),
 
 		-- Delete Macros
 		spacerDeleteMacros0 = Spacer(60),

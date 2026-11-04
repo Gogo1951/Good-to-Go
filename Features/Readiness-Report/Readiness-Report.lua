@@ -1,6 +1,7 @@
 local _, ns = ...
 local L = ns.L
 local GetColor = ns.GetColor
+local GroupHasClass = ns.GroupHasClass
 
 --[[
     Readiness -- the Readiness Report. When a ready check starts, prints a
@@ -15,10 +16,10 @@ local GetColor = ns.GetColor
 
     Shape, one print per line, each dropped when empty:
 
-        BBB // Readiness Report
-        BBB // Missing Buffs : ... . Expiring Soon : ...
-        BBB // Missing Items : ... . Damaged Gear : ...
-        BBB // Character : ... . Non-combat Gear Equipped : ...
+        Good to Go // Readiness Report
+        Good to Go // Missing Buffs : ... . Expiring Soon : ...
+        Good to Go // Missing Items : ... . Damaged Gear : ...
+        Good to Go // Character : ... . Non-combat Gear Equipped : ...
 
     Every line goes through ns.PrintMessage, so every line carries the brand --
     the same shape the Restock List's own reports print in, where a headline is
@@ -38,11 +39,13 @@ local GetColor = ns.GetColor
 -- Line Assembly
 --------------------------------------------------------------------------------
 
+-- Shared with the panel's Example (Readiness-Report-Example.lua), so both read the same.
+
 --[[
-    One "Label : a, b, c" clause. Line joins clauses with
+    One "Label : a, b, c" clause. ns.ReadinessLine joins clauses with
     READINESS_CLAUSE_SEPARATOR, so a clause never carries its own trailing stop.
 ]]
-local function Clause(label, values)
+function ns.ReadinessClause(label, values)
 	if #values == 0 then
 		return nil
 	end
@@ -60,7 +63,7 @@ end
     resets to the default rather than to the enclosing colour, which is why each
     clause re-opens C_TEXT after its label instead of relying on the wrapper's.
 ]]
-local function Line(...)
+function ns.ReadinessLine(...)
 	local clauses = {}
 	for index = 1, select("#", ...) do
 		local clause = select(index, ...)
@@ -74,107 +77,12 @@ local function Line(...)
 	return table.concat(clauses, GetColor("SEPARATOR") .. L["READINESS_CLAUSE_SEPARATOR"] .. "|r")
 end
 
+local Clause = ns.ReadinessClause
+local Line = ns.ReadinessLine
+
 --------------------------------------------------------------------------------
 -- Missing Buffs
 --------------------------------------------------------------------------------
-
---[[
-    Walks every group member, the player included. Raid unit ids already cover
-    the player, party ids do not, so the player is tested up front and the loop
-    length differs between the two.
-]]
-local function AnyGroupMember(test)
-	if test("player") then
-		return true
-	end
-
-	local members = GetNumGroupMembers() or 0
-	local inRaid = IsInRaid()
-	local prefix = inRaid and "raid" or "party"
-	local count = inRaid and members or (members - 1)
-
-	for index = 1, count do
-		if test(prefix .. index) then
-			return true
-		end
-	end
-
-	return false
-end
-
---[[
-    Whether anyone present is of a class, the player included -- AnyGroupMember
-    tests "player" first, so "in the group" always covers "is you".
-
-    Two entries ask this. A Warlock is who produces a Healthstone, so with none
-    present it is not actionable. A Shaman is who makes the weapon-buff line
-    moot; see its caller.
-]]
-local function GroupHasClass(classToken)
-	return AnyGroupMember(function(unit)
-		return select(2, UnitClass(unit)) == classToken
-	end)
-end
-
-local SOULSTONE_BUFF_LOOKUP = {}
-for _, spellID in ipairs(ns.SOULSTONE_BUFF_SPELL_IDS) do
-	SOULSTONE_BUFF_LOOKUP[spellID] = true
-end
-
-local function UnitHasSoulstone(unit)
-	if not UnitExists(unit) then
-		return false
-	end
-
-	for index = 1, 40 do
-		local aura = C_UnitAuras.GetBuffDataByIndex(unit, index, "HELPFUL")
-		if not aura then
-			return false
-		end
-		if SOULSTONE_BUFF_LOOKUP[aura.spellId] then
-			return true
-		end
-	end
-
-	return false
-end
-
---[[
-    Whether a soulstone is UP on anyone in the group, which is the only thing a
-    raid actually cares about. Deliberately NOT "does someone hold a stone":
-    seven unused stones in seven bags resurrect nobody, and one deployed on the
-    healer covers the pull.
-
-    LIMITATION: the aura APIs only answer for members the client can see.
-    Someone in another room or out of range reports no auras at all, so a stone
-    on them reads as absent. That makes the failure a false "missing", never a
-    false "all clear" -- and at a ready check the group is normally stacked up
-    for the pull, which is the one moment this runs.
-]]
-local function GroupHasSoulstone()
-	return AnyGroupMember(UnitHasSoulstone)
-end
-
---[[
-    Whether the stones' shared use cooldown is running, which is when no stone
-    can go up however many the Warlock carries: after a stoned player rose, for
-    the rest of the half hour since the stone was used. The stones share the
-    one cooldown, so any of them on it answers. A cooldown the client keeps
-    secret (Forever) counts as over, and the entry reports as it always has.
-]]
-local function SoulstonesOnCooldown()
-	if C_Secrets.ShouldCooldownsBeSecret() then
-		return false
-	end
-	for itemID in pairs(ns.SOULSTONES) do
-		local _, duration = C_Container.GetItemCooldown(itemID)
-		-- A stone on the global cooldown alone reads as on cooldown too: close enough, as it is ready by the next check.
-		if duration and duration > 0 then
-			return true
-		end
-	end
-	return false
-end
 
 --[[
     Every buff answers to TWO switches: the profile's macro switch saying
@@ -194,7 +102,7 @@ local function BuildMissingBuffs(settings, reports)
 	    and Forever have flasks and elixirs, but they are not what an Era raid
 	    runs on, so the line would be wrong for most of the people it fired at.
 	    The option hides itself on Era and Forever to match
-	    (Options/Macros-for-Consumables/Options-Readiness-Report.lua).
+	    (Options/Readiness-Report/Options-Readiness-Report.lua).
 	]]
 	if reports.readinessFlask and ns.EXPANSION >= 2 and not ns.HasFlaskOrElixirs() then
 		missing[#missing + 1] = L["READINESS_FLASK"]
@@ -248,8 +156,8 @@ local function BuildMissingBuffs(settings, reports)
 		reports.readinessSoulstone
 		and ns.isWarlock
 		and ns.KnowsAny(ns.CONJURE_SPELLS.WarlockCreateSoulstone)
-		and not GroupHasSoulstone()
-		and not SoulstonesOnCooldown()
+		and not ns.GroupHasSoulstone()
+		and not ns.SoulstonesOnCooldown()
 	then
 		missing[#missing + 1] = L["READINESS_SOULSTONE"]
 	end
@@ -489,93 +397,6 @@ function ns.BuildReadinessLines(inArena)
 end
 
 --[[
-    The Readiness Report panel's Example: the title, then the report's lines as
-    they would read with something wrong for every switch that is on, built
-    with the same clauses and keys as ns.BuildReadinessLines. A switch the
-    panel hides on this client (flask, pet, spec) never shows here either.
-]]
-local LAST_EQUIPMENT_SLOT = 19
-
-local function FirstEquippedLink()
-	for slot = 1, LAST_EQUIPMENT_SLOT do
-		local link = GetInventoryItemLink("player", slot)
-		if link then
-			return link
-		end
-	end
-end
-
-local function FirstQuestionableLink()
-	local lowest
-	for itemID in pairs(ns.QUESTIONABLE_EQUIPMENT) do
-		if not lowest or itemID < lowest then
-			lowest = itemID
-		end
-	end
-	return lowest and ns.GetItemHyperlink(lowest)
-end
-
-local function AddIf(values, enabled, value)
-	if enabled and value then
-		values[#values + 1] = value
-	end
-end
-
-function ns.BuildReadinessSampleLines()
-	local reports = ns.db and ns.db.global
-	if not reports then
-		return {}
-	end
-
-	local buffs = {}
-	AddIf(buffs, reports.readinessFlask and ns.EXPANSION >= 2, L["READINESS_FLASK"])
-	AddIf(buffs, reports.readinessWellFed, ns.GetWellFedName())
-	AddIf(
-		buffs,
-		reports.readinessPetWellFed and next(ns.PET_BUFF_FOODS) ~= nil,
-		string.format(L["READINESS_PET_FORMAT"], ns.GetWellFedName())
-	)
-	AddIf(buffs, reports.readinessScrolls, L["READINESS_SCROLLS"])
-	AddIf(buffs, reports.readinessSoulstone, L["READINESS_SOULSTONE"])
-	AddIf(buffs, reports.readinessMainHandBuff, MAINHANDSLOT)
-	AddIf(buffs, reports.readinessOffHandBuff, SECONDARYHANDSLOT)
-
-	local expiring = {}
-	local minutes = math.max(1, math.floor((reports.readinessExpiringThreshold or 60) / 60))
-	AddIf(expiring, reports.readinessExpiring, string.format(L["READINESS_TIME_MINUTES"], ns.GetWellFedName(), minutes))
-
-	local items = {}
-	AddIf(items, reports.readinessHealthstone, L["READINESS_HEALTHSTONE"])
-	AddIf(items, reports.readinessManaGem, L["READINESS_MANA_GEM"])
-	AddIf(items, reports.readinessHealingPotion, L["READINESS_HEALING_POTION"])
-	AddIf(items, reports.readinessManaPotion, L["READINESS_MANA_POTION"])
-	AddIf(items, reports.readinessBandages, L["READINESS_BANDAGES"])
-
-	local damaged = {}
-	AddIf(damaged, reports.readinessDurability, FirstEquippedLink())
-
-	local character = {}
-	AddIf(character, reports.readinessSpec and ns.GetNumTalentTabs() ~= nil, ns.GetCurrentSpecializationLabel())
-	AddIf(character, reports.readinessPvP, L["READINESS_PVP_ON"])
-
-	local questionable = {}
-	AddIf(questionable, reports.readinessQuestionableGear, FirstQuestionableLink())
-
-	local lines = { L["READINESS_TITLE"] }
-	for _, line in ipairs({
-		Line(Clause(L["READINESS_MISSING_BUFFS"], buffs), Clause(L["READINESS_EXPIRING"], expiring)) or false,
-		Line(Clause(L["READINESS_MISSING_ITEMS"], items), Clause(L["READINESS_DAMAGED_GEAR"], damaged)) or false,
-		Line(Clause(L["READINESS_CHARACTER"], character), Clause(L["READINESS_QUESTIONABLE_GEAR"], questionable))
-			or false,
-	}) do
-		if line then
-			lines[#lines + 1] = line
-		end
-	end
-	return lines
-end
-
---[[
     Routed from Core's dispatcher on READY_CHECK. Owns the master switch, the
     gate that decides whether the report is allowed to speak at all, and hands
     ns.BuildReadinessLines the live arena test; what it would say is that
@@ -595,7 +416,7 @@ function ns.OnReadyCheck()
 	if not (reports and reports.readinessReportEnabled) then
 		return
 	end
-	if C_Secrets.ShouldAurasBeSecret() then
+	if ns.AreAurasSecret() then
 		return
 	end
 

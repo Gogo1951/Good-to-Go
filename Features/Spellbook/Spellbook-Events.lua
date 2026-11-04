@@ -55,6 +55,9 @@ local spellsPending = false
 
 local function RefreshForSpells()
 	spellsPending = false
+	if ns.RefreshWhatsNext then
+		ns.RefreshWhatsNext()
+	end
 	local groupChanged = ns.GroupSpellLearned()
 	if not ns:RefreshOpenPages() then
 		wipe(ns.macros)
@@ -106,13 +109,53 @@ local refreshPending = false
 function ns:OnSpellDataLoadResult(spellID)
 	local pendingRank = ns.TakePendingRank(spellID)
 	local wasRequested = ns.TakeRequestedSpell(spellID)
-	if not ns.db or not (pendingRank or (wasRequested and ns.ShowsUnlearned())) or refreshPending then
+	if not ns.db or refreshPending then
+		return
+	end
+	-- the What's Next? tab lists unlearned spells whatever Show Unlearned Spells says
+	local listsUnlearned = ns.ShowsUnlearned() or (ns.IsWhatsNextShown and ns.IsWhatsNextShown())
+	if not (pendingRank or (wasRequested and listsUnlearned)) then
 		return
 	end
 	refreshPending = true
 	C_Timer.After(0, function()
 		refreshPending = false
 		ns:RefreshOpenPages()
+		if ns.RefreshWhatsNext then
+			ns.RefreshWhatsNext()
+		end
+	end)
+end
+
+--[[
+	A level gained moves spells from Coming Soon to Available Now on the What's Next? tab. UnitLevel still
+	reports the old level while the event fires, so the tab reads its statuses against the event's.
+]]
+function ns:OnPlayerLevelUp(level)
+	if ns.RefreshWhatsNext then
+		ns.RefreshWhatsNext(level)
+	end
+end
+
+--[[
+	The pet called, dismissed or swapped (UNIT_PET), its level (UNIT_LEVEL), the abilities it knows
+	(PET_BAR_UPDATE) or a grimoire bought or used (BAG_UPDATE_DELAYED) change the pet tabs; redraw the open tab
+	once per burst, since PET_BAR_UPDATE fires several times in a row. Only the player's and the pet's own
+	events count.
+]]
+local petPending = false
+
+function ns:OnPetChanged(unit)
+	if petPending or (unit and unit ~= "player" and unit ~= "pet") then
+		return
+	end
+	if not (ns.IsWhatsNextPetShown and ns.IsWhatsNextPetShown()) then
+		return
+	end
+	petPending = true
+	C_Timer.After(0, function()
+		petPending = false
+		ns.RefreshWhatsNextPet()
 	end)
 end
 
@@ -140,6 +183,15 @@ function ns:OnActionbarSlotChanged(slot)
 		glowsPending = true
 		C_Timer.After(0, RedrawGlows)
 	end
+end
+
+--[[
+	Just before combat locks the macros: the Dynamic Rank macros are written for the units there now, and a
+	Conditionals pick in progress ends, since its slot can't be filled until combat is over.
+]]
+function ns:OnPlayerRegenDisabled()
+	ns.RewriteRanksBeforeCombat()
+	ns.CancelConditionalPick()
 end
 
 --[[

@@ -49,6 +49,14 @@ ns.SPELL_GROUPS = {
 	WARLOCK = {
 		{ 687, 706 }, -- Demon Skin, Demon Armor
 		{ 132, 2970, 11743 }, -- Detect Lesser Invisibility, Detect Invisibility, Detect Greater Invisibility
+		-- Create Healthstone (Minor), (Lesser), Create Healthstone, (Greater), (Major)
+		{ 6201, 6202, 5699, 11729, 11730 },
+		-- Create Soulstone (Minor), (Lesser), Create Soulstone, (Greater), (Major)
+		{ 693, 20752, 20755, 20756, 20757 },
+		-- Create Firestone (Lesser), Create Firestone, (Greater), (Major)
+		{ 6366, 17951, 17952, 17953 },
+		-- Create Spellstone, (Greater), (Major)
+		{ 2362, 17727, 17728 },
 	},
 }
 
@@ -62,7 +70,7 @@ Notes
 	- Each row pairs a single-target spell with its group version, as [singleSpellId] = groupSpellId: Mark of the Wild with Gift of the Wild, Arcane Intellect with Arcane Brilliance, each mage Teleport with its Portal, each paladin Blessing with its Greater Blessing, and the priest buffs with their Prayers.
 	- The "Right-Click For Group Version" option reads it (ResolveClassConfig in Features/Macro-Builder.lua): a learned single spell whose group version is also learned can cast the group version on a right-click.
 	- Both names come from the client, so a pair whose spells this client does not know drops out at runtime until the Data Review prunes it from this folder.
-	- SPELL_GROUPS lists spells with names of their own that one replaces another as the player trains (Demon Skin then Demon Armor, Cure Disease then Abolish Disease), by class, since two classes can share a spell's name (Cure Poison). The Grouped Spells submenu reads it: each spell in a group offers every spell of its group as a checkbox, and the macro casts the last one learned of those ticked.
+	- SPELL_GROUPS lists spells with names of their own that one replaces another as the player trains (Demon Skin then Demon Armor, Cure Disease then Abolish Disease, and each of this client's Create Healthstone, Create Soulstone, Create Firestone and Create Spellstone spells, whose ranks have names of their own), by class, since two classes can share a spell's name (Cure Poison). The Grouped Spells submenu reads it: each spell in a group offers every spell of its group as a checkbox, and the macro casts the last one learned of those ticked.
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query

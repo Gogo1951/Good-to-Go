@@ -59,9 +59,11 @@ local function AppendMinimapLines(lines)
 end
 
 --[[
-    The Buff Window saves its top-left corner in UIParent's coordinates,
-    measured from the bottom-left, so a corner outside UIParent's size was
-    saved on a bigger screen or a smaller UI scale.
+    The Buff Window saves its top-right corner (corner = "TOPRIGHT") in
+    UIParent's coordinates, measured from the bottom-left, so a corner outside
+    UIParent's size was saved on a bigger screen or a smaller UI scale. A save
+    without that tag is a top-left corner from before, which
+    ns.MigrateBuffWindowPosition moves once the window has a size.
 ]]
 local function AppendBuffWindowLines(lines)
 	local uiWidth, uiHeight = UIParent:GetWidth(), UIParent:GetHeight()
@@ -78,14 +80,29 @@ local function AppendBuffWindowLines(lines)
 		local left, top = tonumber(point[1]), tonumber(point[2])
 		local onScreen = left and top and left >= 0 and left <= uiWidth and top >= 0 and top <= uiHeight
 		lines[#lines + 1] = string.format(
-			"Buff Window saved top-left: %s, %s (%s)",
+			"Buff Window saved %s: %s, %s (%s)",
+			point.corner == "TOPRIGHT" and "top-right" or "top-left (not yet migrated)",
 			tostring(point[1]),
 			tostring(point[2]),
 			onScreen and "on screen" or "OFF SCREEN"
 		)
 	else
 		lines[#lines + 1] =
-			"Buff Window saved top-left: (never dragged; default, a little left of and above the middle)"
+			"Buff Window saved top-right: (never dragged; default, a little right of and above the middle)"
+	end
+	local content = ns.buffWindowIconPool and ns.buffWindowIconPool.content
+	if content then
+		lines[#lines + 1] = string.format(
+			"Buff Window now: shown %s, visible %s, left %s, top %s, right %s, bottom %s",
+			tostring(content:IsShown()),
+			tostring(content:IsVisible()),
+			tostring(content:GetLeft()),
+			tostring(content:GetTop()),
+			tostring(content:GetRight()),
+			tostring(content:GetBottom())
+		)
+	else
+		lines[#lines + 1] = "Buff Window now: (not built yet)"
 	end
 	lines[#lines + 1] = string.format(
 		"Buff Window: enabled=%s locked=%s hideInCombat=%s",
@@ -97,7 +114,7 @@ end
 
 --[[
 	The page and the Classic-engine host's tab are kept to themselves, so they are found by shape: the page
-	among its window's children (BagsBuffsButtonsSpellbookFrame, built on the first click of a tab), carrying the geometry
+	among its window's children (GoodToGoSpellbookFrame, built on the first click of a tab), carrying the geometry
 	and frame pools the page builder gives it; the tab among UIParent's, carrying the checked overlay the host
 	draws.
 ]]
@@ -120,7 +137,7 @@ end
 
 local function FindClassicFrames()
 	local page, tab
-	local window = _G.BagsBuffsButtonsSpellbookFrame
+	local window = _G.GoodToGoSpellbookFrame
 	for _, child in ipairs(window and { window:GetChildren() } or {}) do
 		if child.geometry and child.buttons and child.headers then
 			page = child
@@ -173,10 +190,9 @@ local function AppendSpellbookLines(lines)
 		local tab = spellbookTabs.byId[ADDON_NAME]
 		lines[#lines + 1] = FrameLine("PlayerSpellsFrame", PlayerSpellsFrame)
 		lines[#lines + 1] = FrameLine("Spellbook", spellbookTabs.book)
-		lines[#lines + 1] = FrameLine("Page root", spellbookTabs.root)
 		lines[#lines + 1] = FrameLine("Tab", tab and tab.button)
 		local page = FindClassicFrames()
-		lines[#lines + 1] = FrameLine("Window", _G.BagsBuffsButtonsSpellbookFrame)
+		lines[#lines + 1] = FrameLine("Window", _G.GoodToGoSpellbookFrame)
 		lines[#lines + 1] = FrameLine("Page", page)
 		PageLines(lines, page)
 		lines[#lines + 1] = string.format(
@@ -195,7 +211,7 @@ local function AppendSpellbookLines(lines)
 		end
 		lines[#lines + 1] = string.format("Skill line tabs shown: %d of %d", shownTabs, index - 1)
 		lines[#lines + 1] = FrameLine("Tab", tab)
-		lines[#lines + 1] = FrameLine("Window", _G.BagsBuffsButtonsSpellbookFrame)
+		lines[#lines + 1] = FrameLine("Window", _G.GoodToGoSpellbookFrame)
 		lines[#lines + 1] = FrameLine("Page", page)
 		PageLines(lines, page)
 	end
@@ -241,10 +257,17 @@ end
 --[[
     What the add-on fills in itself, counted rather than printed, matched by
     key at any depth since AceDB moves it with the active profile: itemCache,
-    the derived consumable cache.
+    the derived consumable cache; inventory, the Inventory Report's record of
+    every character's bags and bank; selfRefreshMigrated, the Buff Window's
+    record of settings already moved to a new default; and the Spellbook's
+    ownedMacros and macroTags, the WoW macros it created and tagged.
 ]]
 local SUMMARIZED_BY_KEY = {
 	itemCache = "cached items",
+	inventory = "recorded characters",
+	selfRefreshMigrated = "migrated settings",
+	ownedMacros = "macros created",
+	macroTags = "tagged macros",
 }
 
 local function DumpTable(value, indent, depth, lines)

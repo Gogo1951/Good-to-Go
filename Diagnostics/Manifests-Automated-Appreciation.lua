@@ -66,7 +66,6 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 	{ "C_Spell.GetSpellTexture", HasFunction("C_Spell", "GetSpellTexture") },
 	{ "C_Spell.GetSpellLink", HasFunction("C_Spell", "GetSpellLink") },
 	{ "C_Spell.GetSpellSubtext", HasFunction("C_Spell", "GetSpellSubtext") },
-	{ "IsPlayerSpell", HasGlobalFunction("IsPlayerSpell") },
 	{ "C_Item.GetItemInfo", HasFunction("C_Item", "GetItemInfo") },
 	{ "C_Item.GetItemIconByID", HasFunction("C_Item", "GetItemIconByID") },
 	{ "C_UnitAuras.GetBuffDataByIndex", HasFunction("C_UnitAuras", "GetBuffDataByIndex") },
@@ -129,7 +128,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 	{ "GetPartyAssignment (guarded)", HasGlobalFunction("GetPartyAssignment") },
 	{ "UnitGroupRolesAssigned (guarded)", HasGlobalFunction("UnitGroupRolesAssigned") },
 	{ "GetLFGRoles (guarded)", HasGlobalFunction("GetLFGRoles") },
-	{ "C_Spell.IsSpellInRange (guarded)", HasFunction("C_Spell", "IsSpellInRange") },
+	{ "C_Spell.IsSpellInRange", HasFunction("C_Spell", "IsSpellInRange") },
 	{ "UnitPowerType", HasGlobalFunction("UnitPowerType") },
 	{
 		"Enum.PowerType.Mana / Focus",
@@ -160,16 +159,25 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 	{ "C_Container.GetItemCooldown", HasFunction("C_Container", "GetItemCooldown") },
 	-- The game's "replace your enchant?" question, answered when a weapon icon's click asked it.
 	{ "C_Item.ReplaceEnchant", HasFunction("C_Item", "ReplaceEnchant") },
+	-- A Buff Window item icon's tooltip.
+	{
+		"GameTooltip:SetItemByID",
+		function()
+			return type(GameTooltip) == "table" and type(GameTooltip.SetItemByID) == "function"
+		end,
+	},
+	-- Features/Announcements.lua picks the instance channel before party or raid.
+	{
+		"LE_PARTY_CATEGORY_INSTANCE",
+		function()
+			return LE_PARTY_CATEGORY_INSTANCE ~= nil
+		end,
+	},
 	{ "StaticPopup_Hide", HasGlobalFunction("StaticPopup_Hide") },
 	-- The Buff Key: what a press can cast, and the binding Buff Duty sets.
 	{ "C_Spell.IsSpellUsable", HasFunction("C_Spell", "IsSpellUsable") },
 	-- Weighs a group buff's mana against its members' single casts.
-	{
-		"C_Spell.GetSpellPowerCost or GetSpellPowerCost",
-		function()
-			return HasFunction("C_Spell", "GetSpellPowerCost")() or HasGlobalFunction("GetSpellPowerCost")()
-		end,
-	},
+	{ "C_Spell.GetSpellPowerCost (guarded)", HasFunction("C_Spell", "GetSpellPowerCost") },
 	-- Which spells have a cooldown, so the Buff Key passes over them.
 	{ "GetSpellBaseCooldown", HasGlobalFunction("GetSpellBaseCooldown") },
 	{ "UnitHasIncomingResurrection (guarded)", HasGlobalFunction("UnitHasIncomingResurrection") },
@@ -295,7 +303,7 @@ end
 
 local function KnowsAny(ids)
 	for _, id in ipairs(ids or {}) do
-		if IsPlayerSpell(id) then
+		if ns.IsPlayerSpell(id) then
 			return true
 		end
 	end
@@ -377,7 +385,7 @@ end
     of each panel's toggles are on, the praise throttles, the sound settings
     the Master channel answers to, how much of the tracked data is live on this
     client, which tracked spells of their class they know and whether Good
-    News watches each one, where /tftb goes, and what stops
+    News watches each one, where /gtg goes, and what stops
     each Thank You button: its command, its toggle, its macro and the icon it
     wears, its whisper text and its emotes.
 ]]
@@ -400,7 +408,7 @@ function ns:BuildContextReport()
 			tostring(db.showWelcome)
 		)
 	end
-	-- The route ns:OpenOptionsPanel takes for /tftb.
+	-- The route ns:OpenOptionsPanel takes for /gtg.
 	local categoryID = ns.optionsFrames and ns.optionsFrames.categoryID
 	lines[#lines + 1] = string.format(
 		"Options panel: category id %s, opened through %s",
@@ -538,7 +546,7 @@ function ns:BuildContextReport()
 	lines[#lines + 1] = "Thank You buttons:"
 	if db then
 		lines[#lines + 1] = string.format(
-			"  Account macros: %s / %d (TFTB creates a macro only while the list is under the cap, and never in combat)",
+			"  Account macros: %s / %d (Thanks for the Buff creates a macro only while the list is under the cap, and never in combat)",
 			tostring(GetNumMacros()),
 			ns.Data.MAX_GLOBAL_MACROS
 		)
@@ -571,7 +579,7 @@ function ns:BuildContextReport()
 				"  %s (%s): command=%s createMacro=%s macro=%s icon=%s whisper=%s %s",
 				button.command,
 				button.macroName,
-				SlashCmdList["BAGSBUFFSBUTTONS_THANKYOU" .. index] and "registered" or "MISSING",
+				SlashCmdList["GOODTOGO_THANKYOU" .. index] and "registered" or "MISSING",
 				tostring(config.createMacro),
 				macro,
 				tostring(ns.GetThankYouIcon and ns.GetThankYouIcon(config)),
@@ -614,7 +622,7 @@ end
 local function CountKnown(ids)
 	local known = 0
 	for _, id in ipairs(ids or {}) do
-		if IsPlayerSpell(id) then
+		if ns.IsPlayerSpell(id) then
 			known = known + 1
 		end
 	end
@@ -969,7 +977,7 @@ function ns:BuildBuffWindowContextReport()
 			Holds(itemID),
 			ns.IsPlain(expiration) and expiration and (math.floor(expiration / 1000) .. "s") or "none",
 			PlainText(enchant),
-			carried and tostring(carried.key) or "not a TFTB row"
+			carried and tostring(carried.key) or "not a Thanks for the Buff row"
 		)
 	end
 
@@ -1439,6 +1447,10 @@ local CHARACTER_NAME_MAX_LETTERS = 12
     An item link is only as long as its cached name, so items not loaded yet
     are counted into a note.
 
+    The Buff Window's ask for another class's buff, said to the group or
+    whispered, is built for every raid-wide buff the window counts, and the
+    longest is kept.
+
     The Buff Window's Return the Favor buttons cast through a macro naming the
     stranger, one per buff you can give right now, built by ns.BuffWindow's
     own SingleIcon with your top rank's cast text and a 12-letter name on your
@@ -1500,6 +1512,27 @@ ns.DIAGNOSTIC_MESSAGES = function()
 
 	local notes = {}
 	local BW = ns.BuffWindow
+	if BW and BW.entries then
+		local longestAsk
+		for _, entry in ipairs(BW.entries) do
+			local row = entry.row
+			if row.group and not row.exclusive then
+				local linkId = entry.ids[#entry.ids]
+				local link = ns.GetSpellLink(linkId) or C_Spell.GetSpellName(linkId) or ""
+				local ask = ns:BuildBuffRequestMessage(row.class, link)
+				if not longestAsk or #ask > #longestAsk then
+					longestAsk = ask
+				end
+			end
+		end
+		if longestAsk then
+			rows[#rows + 1] = {
+				label = "Buff Window ask for a buff",
+				ceiling = ns.CHAT_MESSAGE_MAX_LENGTH,
+				text = longestAsk,
+			}
+		end
+	end
 	if BW and BW.SingleIcon then
 		local realm = _G.GetNormalizedRealmName and _G.GetNormalizedRealmName() or "Realm"
 		local fullName = string.rep("W", CHARACTER_NAME_MAX_LETTERS) .. "-" .. tostring(realm)

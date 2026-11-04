@@ -123,11 +123,9 @@ end
     The item a merchant slot sells, and its link. The ID is read straight off the slot where the client
     can, since a slot's link is nil until the client has resolved its item; the link can still be nil.
 ]]
-local GetMerchantItemID = GetMerchantItemID
-
 local function MerchantSlotItemID(index)
 	local link = GetMerchantItemLink(index)
-	local itemID = GetMerchantItemID and GetMerchantItemID(index)
+	local itemID = ns.GetMerchantItemID(index)
 	return itemID or (link and tonumber(link:match("item:(%d+)"))), link
 end
 
@@ -328,6 +326,20 @@ function NewPurchaseOrder(amount, itemID)
 end
 
 --[[
+    The line a merchant run prints when gold turned a chunk away. With the
+    Gold Reserve on, it says buying waits on the reserve, naming it, so a
+    player who forgot setting it knows why the vendor was skipped. The
+    Restocker panel's Example draws it too.
+]]
+function ns.BuildOutOfGoldLine(settings)
+	if settings.goldReserve then
+		local reserve = (settings.goldReserveAmount or 0) .. ns.GOLD_ICON
+		return string.format(L["RESTOCKER_OUT_OF_GOLD_RESERVE"], reserve)
+	end
+	return L["RESTOCKER_OUT_OF_GOLD"]
+end
+
+--[[
     What a merchant run prints: filled and partly filled orders, counted apart
     and each silent at zero. The options panel's Example draws through it too.
 ]]
@@ -451,23 +463,57 @@ function ns.RestockFromMerchant()
 		ns:PrintMessage(line)
 	end
 
-	--[[
-	    Silent unless gold actually turned a chunk away, so a vendor that stocks
-	    nothing on the list says nothing however poor the player is. With the
-	    Gold Reserve on, the line goes on to say buying waits on the reserve,
-	    naming it, so a player who forgot setting it knows why the vendor was
-	    skipped.
-	]]
+	-- Silent unless gold actually turned a chunk away, so a vendor that stocks nothing on the list says nothing.
 	if budget.outOfGold then
-		if settings.goldReserve then
-			local reserve = (settings.goldReserveAmount or 0) .. ns.GOLD_ICON
-			ns:PrintMessage(string.format(L["RESTOCKER_OUT_OF_GOLD_RESERVE"], reserve))
-		else
-			ns:PrintMessage(L["RESTOCKER_OUT_OF_GOLD"])
-		end
+		ns:PrintMessage(ns.BuildOutOfGoldLine(settings))
 	end
 
 	if budget.outOfSpace then
 		ns:PrintMessage(L["RESTOCKER_BAGS_FULL_PARTIAL"])
 	end
+end
+
+--------------------------------------------------------------------------------
+-- Merchant Window
+--------------------------------------------------------------------------------
+
+function ns.OnRestockerMerchantShow()
+	ns.merchantIsOpen = true
+
+	if IsShiftKeyDown() then
+		ns.merchantBuyingSkipped = true
+		return
+	end
+
+	ns.merchantBuyingSkipped = false
+	ns.RestockFromMerchant() -- each item can be individually enabled to restock from merchant
+end
+
+--[[
+    The client fires MERCHANT_CLOSED and BANKFRAME_CLOSED on loading-screen
+    teardown (boat crossings included) with no matching open -- and can double-fire
+    them -- so each close handler keys the reminder, and closing the Restock
+    window, off its tracked open flag: a _CLOSED event alone does not mean a
+    window was ever open. The Restock window then closes only if that visit
+    opened it (ns.ShowRestockWindowForVisit).
+]]
+function ns.OnRestockerMerchantClose()
+	local merchantWasOpen = ns.merchantIsOpen
+	ns.merchantIsOpen = false
+	ns.merchantBuyingSkipped = false
+	ns.ResetMerchantRestockThrottle()
+	if merchantWasOpen then
+		ns.HideRestockWindowAfterVisit()
+	end
+
+	local settings = ns.restockSettings
+	if settings and merchantWasOpen then
+		ns.RemindRestockShortfallAfterVisit(settings.merchantReminder, settings.merchantReminderMode)
+	end
+end
+
+-- The Restocker switched off mid-visit: no _CLOSED event will reach the switched-off handlers.
+function ns.EndRestockMerchantVisit()
+	ns.merchantIsOpen = false
+	ns.merchantBuyingSkipped = false
 end

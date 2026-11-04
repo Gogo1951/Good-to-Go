@@ -43,8 +43,9 @@ local favors = {} -- stranger GUID -> { name, short, class, at, given = { [buff 
 --------------------------------------------------------------------------------
 
 --[[
-    Called from Buff-Tracking's stranger path (combat log, or UNIT_AURA on
-    Forever) for every helpful buff a player outside your group puts on you.
+    Called from the stranger path (Buff-Tracking-Combat-Log.lua, or
+    Buff-Tracking-Forever.lua's UNIT_AURA reads on Forever) for every helpful
+    buff a player outside your group puts on you.
     Kept for the player's favorSeconds from their latest buff.
 ]]
 function ns.NoteFavor(guid, name)
@@ -204,47 +205,12 @@ local function OwnerPatterns()
 end
 
 --[[
-    A unit's tooltip as plain left-hand lines, title first. Some facts about a
-    unit reach add-ons only as tooltip text -- whose pet a pet is, above all --
-    so the Buff Window reads them here. C_TooltipInfo hands the lines over as
-    data where the client ships its GetUnit getter (WoW Forever); elsewhere they
-    are read off a hidden tooltip that is never shown (Classic Era and TBC
-    Anniversary), the same split Diagnostics makes for items and spells.
-    Resolved once at load.
-]]
-local UNIT_SCAN_TOOLTIP_NAME = "BagsBuffsButtonsUnitScanTooltip"
-local GetUnitTooltipData = C_TooltipInfo and C_TooltipInfo.GetUnit
-local unitScanTooltip
-
-local function GetUnitTooltipLines(unit)
-	local lines = {}
-	if GetUnitTooltipData then
-		local data = GetUnitTooltipData(unit)
-		for _, line in ipairs(data and data.lines or {}) do
-			lines[#lines + 1] = line.leftText
-		end
-		return lines
-	end
-
-	if not unitScanTooltip then
-		unitScanTooltip = CreateFrame("GameTooltip", UNIT_SCAN_TOOLTIP_NAME, nil, "GameTooltipTemplate")
-	end
-	unitScanTooltip:SetOwner(WorldFrame, "ANCHOR_NONE")
-	unitScanTooltip:SetUnit(unit)
-	for i = 1, unitScanTooltip:NumLines() do
-		local region = _G[UNIT_SCAN_TOOLTIP_NAME .. "TextLeft" .. i]
-		lines[#lines + 1] = region and region:GetText()
-	end
-	unitScanTooltip:Hide()
-	return lines
-end
-
---[[
     The pet's owner as the tooltip names them, and the class that wording gives
     away (or nil); nil, nil when no line matches.
 ]]
 local function PetOwnerName(unit)
-	for _, line in ipairs(GetUnitTooltipLines(unit)) do
+	-- Whose pet a pet is reaches add-ons only as tooltip text.
+	for _, line in ipairs(ns.ReadTooltipLines("GetUnit", "SetUnit", unit)) do
 		if ns.IsPlain(line) and line then
 			for _, pattern in ipairs(OwnerPatterns()) do
 				local owner = line:match(pattern[1])

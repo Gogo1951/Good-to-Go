@@ -8,21 +8,29 @@ local _, ns = ...
 local SpellName = ns.SpellName
 local NO_IDS = {}
 
+-- The class's trainer data rows this character can learn: those for any faction and race, or for its own.
+function ns.ClassTrainerRows()
+	local faction, race = UnitFactionGroup("player"), select(3, UnitRace("player"))
+	local rows = {}
+	for _, row in ipairs(ns.TRAINER_SPELLS and ns.TRAINER_SPELLS[select(2, UnitClass("player"))] or NO_IDS) do
+		if (not row.faction or row.faction == faction) and (not row.race or row.race == race) then
+			rows[#rows + 1] = row
+		end
+	end
+	return rows
+end
+
 --[[
-	Each spell id's learn level: the class's trainer data (the rows for this character's faction and race),
-	then the trainers this character recorded. A rank 1 the class starts with (Frost Armor, Fireball) has no
+	Each spell id's learn level: the class's trainer data (ns.ClassTrainerRows), then the trainers this
+	character recorded. A rank 1 the class starts with (Frost Armor, Fireball) has no
 	trainer row, only its Rank 2's requires, so a required spell of the same name without a level of its own
 	is learned at level 1. The client's own answer (C_Spell.GetSpellLevelLearned, where it has one) fills the
 	rest.
 ]]
 local function LearnLevels()
-	local levels, rows = {}, {}
-	local faction, race = UnitFactionGroup("player"), select(3, UnitRace("player"))
-	for _, row in ipairs(ns.TRAINER_SPELLS and ns.TRAINER_SPELLS[select(2, UnitClass("player"))] or NO_IDS) do
-		if (not row.faction or row.faction == faction) and (not row.race or row.race == race) then
-			levels[row.id] = row.level
-			rows[#rows + 1] = row
-		end
+	local levels, rows = {}, ns.ClassTrainerRows()
+	for _, row in ipairs(rows) do
+		levels[row.id] = row.level
 	end
 	for id, level in pairs(ns.RecordedTrainerSpellLevels()) do
 		levels[id] = levels[id] or level
@@ -55,7 +63,7 @@ end
 
 --[[
 	One pass over the spellbook: the ranks of each learned spell with more than one, as
-	name -> { known = { { text = "Rank 4", level = 38 }, ... }, unknown = { ... } or nil }, each list highest
+	name -> { known = { { text = "Rank 4", level = 38, id = 8417 }, ... }, unknown = { ... } or nil }, each list highest
 	first (a rank whose learn level isn't known is left out), and every learned spell's name, as name -> true.
 	Classic's book lists only each spell's highest rank unless Show All Spell Ranks is ticked, so the known
 	trainer ranks are added from their ids as well, then the trainer ranks not learned yet.
@@ -63,24 +71,24 @@ end
 local function ReadSpellbook()
 	local levels, byName, learned, listed = LearnLevels(), {}, {}, {}
 	local levelLearned = C_Spell.GetSpellLevelLearned
-	local function addRank(name, subName, level, unknown)
+	local function addRank(name, subName, level, id, unknown)
 		if name and subName and subName ~= "" and level and level > 0 and not listed[name .. subName] then
 			listed[name .. subName] = true
 			byName[name] = byName[name] or {}
-			table.insert(byName[name], { text = subName, level = level, unknown = unknown })
+			table.insert(byName[name], { text = subName, level = level, id = id, unknown = unknown })
 		end
 	end
 	ns.ForEachClassSpell(function(name, _, id, _, _, subName)
 		if name then
 			learned[name] = true
 		end
-		addRank(name, subName, id and (levels[id] or (levelLearned and levelLearned(id))))
+		addRank(name, subName, id and (levels[id] or (levelLearned and levelLearned(id))), id)
 	end)
 	for id, level in pairs(levels) do
 		if ns.IsPlayerSpell(id) then
 			local name = SpellName(id)
 			if learned[name] then
-				addRank(name, C_Spell.GetSpellSubtext(id), level)
+				addRank(name, C_Spell.GetSpellSubtext(id), level, id)
 			end
 		end
 	end
@@ -92,7 +100,7 @@ local function ReadSpellbook()
 			if not name then
 				pendingRanks[id] = true
 			elseif learned[name] then
-				addRank(name, C_Spell.GetSpellSubtext(id), level, true)
+				addRank(name, C_Spell.GetSpellSubtext(id), level, id, true)
 			end
 		end
 	end

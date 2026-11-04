@@ -63,7 +63,7 @@ function ns.TargetSignatureChanged()
 	end
 	local isFriendly = HasFriendlyPlayerTarget() and true or false
 	local isSelf = lastTargetIsSelf
-	if C_Secrets.CanCompareUnitTokens("target", "player") then
+	if ns.CanCompareUnitTokens("target", "player") then
 		isSelf = (UnitExists("target") and UnitIsUnit("target", "player")) and true or false
 	end
 	local level = isFriendly and UnitLevel("target") or nil

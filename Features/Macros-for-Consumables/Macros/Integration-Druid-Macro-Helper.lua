@@ -56,7 +56,7 @@ end
 local function BuildDruidMacroHelperBody(typeName, useIDs, stackIDs, formName, outOfCombatID, outOfCombatStealth)
 	local lines = {
 		"#showtooltip item:" .. useIDs[1],
-		"/run BBBFire(" .. useIDs[1] .. ")",
+		"/run GtGFire(" .. useIDs[1] .. ")",
 	}
 	--[[
 	    Food or water out of combat (potionsUseFoodAndWater): the same lines
@@ -67,7 +67,7 @@ local function BuildDruidMacroHelperBody(typeName, useIDs, stackIDs, formName, o
 	]]
 	if outOfCombatID then
 		lines[1] = ns.OutOfCombatTooltipLine(useIDs[1], outOfCombatID)
-		lines[2] = "/run BBBFire(" .. useIDs[1] .. "," .. outOfCombatID .. ")"
+		lines[2] = "/run GtGFire(" .. useIDs[1] .. "," .. outOfCombatID .. ")"
 		lines[3] = "/use [nocombat] item:" .. outOfCombatID
 		if outOfCombatStealth then
 			lines[#lines + 1] = "/cast [nocombat,nostealth] " .. outOfCombatStealth
@@ -109,11 +109,15 @@ local function BuildDruidMacroHelperBody(typeName, useIDs, stackIDs, formName, o
 	    Drop /use lines from the bottom until the body fits — stacked
 	    Healthstone lines go first since they sit lowest, then potion
 	    fallbacks; the rank-1 potion line is never dropped. Mirrors the
-	    trim in Body-Builder.lua.
+	    trim in Body-Builder.lua. Still too long, it returns nil, and
+	    ns.BuildDruidMacroOverride tries again with less.
 	]]
 	while #body > ns.MACRO_BODY_MAX_LENGTH and #lines > firstUse + 2 do
 		table.remove(lines, #lines - 2)
 		body = table.concat(lines, "\n") .. "\n"
+	end
+	if #body > ns.MACRO_BODY_MAX_LENGTH then
+		return nil
 	end
 	return body
 end
@@ -127,7 +131,7 @@ end
     about to write, passing the ranked multi-use id list when one applies
     (best item first; falls back to the single itemID). Returns
     (body, stateID) when the DMH override applies; returns nil to mean
-    "use the standard macro body."
+    "use the standard macro body", which it also does when no DMH body fits.
 
     A druid who hasn't learned the chosen return form yet also gets nil, so
     the standard body wins rather than a "/cast !" line for a form they
@@ -155,7 +159,23 @@ function ns.BuildDruidMacroOverride(typeName, itemID, rankedIDs, stackIDs, outOf
 		useIDs = { itemID }
 	end
 
+	--[[
+	    A body too long even after its /use lines are trimmed (a translated
+	    client's longer names) drops the stealth line, then the out-of-combat
+	    block, and failing that the standard body is written instead.
+	]]
 	local body = BuildDruidMacroHelperBody(typeName, useIDs, stackIDs, formName, outOfCombatID, outOfCombatStealth)
+	if not body and outOfCombatStealth then
+		outOfCombatStealth = nil
+		body = BuildDruidMacroHelperBody(typeName, useIDs, stackIDs, formName, outOfCombatID, nil)
+	end
+	if not body and outOfCombatID then
+		outOfCombatID = nil
+		body = BuildDruidMacroHelperBody(typeName, useIDs, stackIDs, formName, nil, nil)
+	end
+	if not body then
+		return nil
+	end
 	local stateID = "DMH:" .. formKey .. ":" .. formSpellID .. ":" .. table.concat(useIDs, ",")
 	if stackIDs then
 		stateID = stateID .. "+HS:" .. table.concat(stackIDs, ",")

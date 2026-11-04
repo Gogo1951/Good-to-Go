@@ -37,10 +37,10 @@ local AceGUI = LibStub("AceGUI-3.0")
     visit.
 
     The list selector is an InputBoxTemplate field, not an AceGUI Dropdown.
-    Every other control in this window is a Blizzard template, so the one
-    AceGUI widget read as foreign -- and skins that restyle AceGUI globally
-    (ElvUI ships one) restyle it and nothing around it, which made the mismatch
-    worse and moved the geometry its neighbours were positioned against.
+    Every other control in this window is a Blizzard template, so an AceGUI
+    widget reads as foreign -- and skins that restyle AceGUI globally (ElvUI
+    ships one) restyle it and nothing around it, moving the geometry its
+    neighbours are positioned against.
 
     It opens an AceGUI Dropdown-Pullout on click, the same way the reputation
     column's menu in Restocker-Window-Menus.lua does: Blizzard's UIDropDownMenu drives
@@ -222,7 +222,7 @@ end
     List has no undo. ns.DeleteRestockList ignores a nil or already-deleted
     name, and moves the character only when the list deleted is the one in use.
 ]]
-StaticPopupDialogs["BAGSBUFFSBUTTONS_RESTOCKER_DELETE_LIST"] = {
+StaticPopupDialogs["GOODTOGO_RESTOCKER_DELETE_LIST"] = {
 	text = "%s",
 	button1 = YES,
 	button2 = NO,
@@ -276,7 +276,7 @@ local function ConfirmDeleteCurrentList()
 	if not listName then
 		return
 	end
-	StaticPopup_Show("BAGSBUFFSBUTTONS_RESTOCKER_DELETE_LIST", DeleteConfirmText(listName), nil, listName)
+	StaticPopup_Show("GOODTOGO_RESTOCKER_DELETE_LIST", DeleteConfirmText(listName), nil, listName)
 end
 
 --------------------------------------------------------------------------------
@@ -368,7 +368,8 @@ end
     and opens the rename over it, so the real name is one line of typing away.
     They pass the list the character was on, and Escape or Cancel then takes
     the made list back off and returns there, so backing out of a new list
-    leaves nothing behind. Clicking away only ends the rename and keeps the
+    leaves nothing behind -- unless something was put on it meanwhile, which
+    keeps it (ns.DiscardMadeRestockList). Clicking away only ends the rename and keeps the
     list under its generated name, the way it keeps a plain rename's old name.
 ]]
 local isRenaming = false
@@ -395,7 +396,7 @@ end
 
 ns.EndRestockListRename = EndRename
 
--- Escape and Cancel: a list New List or Copy just made goes again, and the character returns to its list.
+-- Escape and Cancel: a list New List or Copy just made, still as made, goes again, and the character returns to its list.
 local function CancelRename()
 	local previousList = madeFromList
 	EndRename()

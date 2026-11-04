@@ -17,8 +17,7 @@ local L = ns.L
       the table           591, which holds the item name at its readable floor
       window chrome       the inset (2 + 4), its padding (8), the scroll bar (26)
 
-    which is where MIN_WIDTH comes from. (The name has 14 pixels over that floor,
-    which stays where players' saved sizes already respect it.) The pane sizes itself to the longest type
+    which is where MIN_WIDTH comes from, with 14 pixels over the name's floor. The pane sizes itself to the longest type
     name it actually has to draw (see ns.ResolveRestockGroupPaneWidth) and is capped so this
     number stays honest: MIN_WIDTH is set against the CAP rather than the usual
     width, so the item name keeps its floor even on a client whose type names run
@@ -73,7 +72,7 @@ local RelayoutFrame
 
 local function CreateAddonFrame()
 	local settings = ns.restockSettings
-	local addonFrame = ns.CreateRestockerPortraitFrame("BagsBuffsButtonsRestockFrame", L["RESTOCKER_WINDOW_TITLE"])
+	local addonFrame = ns.CreateRestockerPortraitFrame("GoodToGoRestockFrame", L["RESTOCKER_WINDOW_TITLE"])
 	addonFrame.width = Clamp(settings.framePosition.width, MIN_WIDTH, MAX_WIDTH, DEFAULT_WIDTH)
 	addonFrame.height = Clamp(settings.framePosition.height, MIN_HEIGHT, MAX_HEIGHT, DEFAULT_HEIGHT)
 	addonFrame:SetSize(addonFrame.width, addonFrame.height)
@@ -372,12 +371,12 @@ end
 ]]
 function ns.SetRestockWindowClosesOnEscape(closes)
 	for index = #UISpecialFrames, 1, -1 do
-		if UISpecialFrames[index] == "BagsBuffsButtonsRestockFrame" then
+		if UISpecialFrames[index] == "GoodToGoRestockFrame" then
 			table.remove(UISpecialFrames, index)
 		end
 	end
 	if closes then
-		table.insert(UISpecialFrames, "BagsBuffsButtonsRestockFrame")
+		table.insert(UISpecialFrames, "GoodToGoRestockFrame")
 	end
 end
 
@@ -406,7 +405,7 @@ function ns.CreateRestockWindow()
 	-- The footer's list controls (Restocker-Window-List-Bar.lua).
 	local bar = ns.CreateRestockListBar(addonFrame)
 	--[[
-	    Settings live in the add-on's options panel (the mini-map tooltip, /bbb);
+	    Settings live in the add-on's options panel (the mini-map tooltip, /gtg);
 	    the frame deliberately has no Settings button.
 	]]
 	ns.CreateRestockWindowFooter(addonFrame)

@@ -3,8 +3,8 @@ local _, ns = ...
 --[[
     Scanner-Auras -- reads live player/pet auras and decides which buffs the
     character still needs: aura probes (Well Fed, scroll, and pet-food buffs),
-    early re-application, the scroll override resolver, and the UNIT_AURA
-    handler.
+    early re-application, and the UNIT_AURA handler. The scroll override
+    resolver is Scanner-Scrolls.lua.
 ]]
 
 --------------------------------------------------------------------------------
@@ -116,7 +116,7 @@ end
 
 --[[
     One walk of the player's helpful auras, shared by the Well Fed and scroll
-    probes below and by the readiness report (Features/Macros-for-Consumables/Readiness-Report.lua).
+    probes below and by the readiness report (Features/Readiness-Report/Readiness-Report.lua).
     The snapshot holds raw expiration times, never a verdict: the probes apply
     BuffCountsAsActive, which owns the early re-application threshold and its
     rebuild timer, while the report reads the same numbers with no side
@@ -165,7 +165,7 @@ local function IsLongerExpiration(candidate, current)
 end
 
 function ns.GetPlayerBuffSnapshot()
-	if C_Secrets.ShouldAurasBeSecret() then
+	if ns.AreAurasSecret() then
 		return snapshot
 	end
 
@@ -264,85 +264,6 @@ function ns.HasScrollBuff(scrollType, scrollAmount, callerSnapshot)
 	return entry.conflictAmount ~= nil and entry.conflictAmount >= (scrollAmount or 0)
 end
 
---[[
-    Finds the best available scroll for a type from bag contents.
-    Scroll entries: {[1] itemID, [2] buffID, [3] requiredLevel, [4] amount,
-    [5] class token or nil}; a scroll with a class token is skipped for every
-    other class, since anyone can carry one but only that class can read it.
-    Returns itemID, amount (or nil, nil if nothing usable is found).
-]]
-local function FindBestScroll(scrollType, bagItemCounts)
-	if not ns.SCROLL_DATA[scrollType] then
-		return nil, nil
-	end
-
-	local playerLevel = ns.cachedPlayerLevel or 1
-	local _, playerClass = UnitClass("player")
-	local items = ns.SCROLL_DATA[scrollType].items
-	for _, entry in ipairs(items) do
-		--[[
-		    The scroll override path never passes the scanner's ignore filter
-		    (it reads the raw bag counts), so it honors the Ignore List itself.
-		]]
-		if entry[3] <= playerLevel and (entry[5] == nil or entry[5] == playerClass) and not ns.IsIgnored(entry[1]) then
-			if bagItemCounts[entry[1]] and bagItemCounts[entry[1]] > 0 then
-				return entry[1], entry[4]
-			end
-		end
-	end
-
-	return nil, nil
-end
-
---[[
-    Written by ScanBags on every rescan (forced nil in a PvP Arena); the Food
-    macro's scroll-only mode, the Readiness Report and Diagnostics read it.
-]]
-ns.scrollOverrideIDs = nil
-
---[[
-    Returns an ordered list of scroll item IDs the player should use, or nil
-    if none apply. Order follows ns.SCROLL_CHECK_ORDER, which is the order the
-    scroll-only body fires them in. currentSnapshot is the player snapshot the
-    caller already took this pass, when it has one.
-]]
-function ns.FindScrollOverrides(bagItemCounts, currentSnapshot)
-	local settings = ns.db and ns.db.profile
-	if not settings or not settings.useScrolls then
-		return nil
-	end
-	if not ns.IsModeActive(settings.scrollsMode) then
-		return nil
-	end
-
-	local scrollTypes = settings.scrollTypes
-	if not scrollTypes then
-		return nil
-	end
-
-	local results
-
-	--[[
-	    One aura walk for the whole set, and none at all when the bag scan
-	    already took one. Letting each ns.HasScrollBuff call take its own
-	    snapshot re-reads the player's 40 aura slots once per enabled scroll
-	    type, on a path that re-runs with every bag scan.
-	]]
-	currentSnapshot = currentSnapshot or ns.GetPlayerBuffSnapshot()
-
-	for _, scrollType in ipairs(ns.SCROLL_CHECK_ORDER) do
-		if scrollTypes[scrollType] then
-			local scrollItemID, scrollAmount = FindBestScroll(scrollType, bagItemCounts)
-			if scrollItemID and not ns.HasScrollBuff(scrollType, scrollAmount, currentSnapshot) then
-				results = results or {}
-				results[#results + 1] = scrollItemID
-			end
-		end
-	end
-
-	return results
-end
-
 --------------------------------------------------------------------------------
 -- Pet Food Buffs
 --------------------------------------------------------------------------------
@@ -371,7 +292,7 @@ local HAS_PET_BUFF_FOODS = next(ns.PET_BUFF_FOODS) ~= nil
 
     Single source of truth on purpose. Both ns.FindPetBuffOverride
     (Macros/Tools-Hunters-Pet-Food.lua), which decides whether to splice the feed line
-    into the Food macro, and the readiness report (Features/Macros-for-Consumables/Readiness-Report.lua)
+    into the Food macro, and the readiness report (Features/Readiness-Report/Readiness-Report.lua)
     have to agree: apart, the report can ask a level-30 Hunter for a buff its
     own macro will never apply, with no way to satisfy it.
 ]]
@@ -411,7 +332,7 @@ function ns.GetPetFoodBuffExpiration()
 		lastPetFoodBuffExpiration = nil
 		return nil
 	end
-	if C_Secrets.ShouldAurasBeSecret() then
+	if ns.AreAurasSecret() then
 		return lastPetFoodBuffExpiration
 	end
 	local best

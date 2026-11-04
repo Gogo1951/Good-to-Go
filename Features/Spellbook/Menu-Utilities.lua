@@ -3,8 +3,8 @@ local TITLE, BODY, HELP = ns.COLORS_RGB.TITLE, ns.COLORS_RGB.BODY, ns.COLORS_RGB
 local L = ns.L
 
 --[[
-	What a macro's menu (Features/Spellbook/Macro-Menu.lua) and a category's menu (Features/Spellbook/Category-Menu.lua)
-	share: the options' explanations and tooltips, the submenu buttons' label-and-value layout, and the option
+	What a macro's menu (Features/Spellbook/Macro-Menu.lua, with Macro-Menu-Sections.lua and Macro-Menu-Helpers.lua)
+	and a category's menu (Features/Spellbook/Category-Menu.lua) share: the options' explanations and tooltips, the submenu buttons' label-and-value layout, and the option
 	tables of the When, First and Error Messages groups.
 ]]
 

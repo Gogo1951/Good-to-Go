@@ -151,7 +151,11 @@ local function NextFreeColumnSlot(obstacles, y, height, left, right, gap)
 	return y
 end
 
-function SpellbookTabs:Layout()
+--[[
+	reuse keeps the launchers found by the last full look, for a page turn or a search keystroke, which move
+	nothing around the book; every show, resize and launcher appearing looks again.
+]]
+function SpellbookTabs:Layout(reuse)
 	local book = self.book
 	local nativeTabs = book.CategoryTabSystem
 	local scale = book:GetEffectiveScale()
@@ -162,7 +166,8 @@ function SpellbookTabs:Layout()
 	end
 	local searchLeft = ScreenRect(book.SearchBox)
 	local width, height, gap = TAB_WIDTH * scale, TAB_HEIGHT * scale, GAP * scale
-	local obstacles = CollectObstacles(width, height)
+	local obstacles = reuse and self.obstacles or CollectObstacles(width, height)
+	self.obstacles = obstacles
 
 	local centerY = (tabsBottom + tabsTop) / 2
 	local rowBottom, rowTop = centerY - height / 2, centerY + height / 2
@@ -207,7 +212,7 @@ function SpellbookTabs:Layout()
 	end
 end
 
-function SpellbookTabs:Sync()
+function SpellbookTabs:Sync(reuse)
 	local book = self.book
 	if not book then
 		return
@@ -232,17 +237,22 @@ function SpellbookTabs:Sync()
 		SelectTab(button, tab.isSelected ~= nil and tab.isSelected())
 		button:Show()
 	end
-	self:Layout()
+	self:Layout(reuse)
 end
 
-function SpellbookTabs:RequestSync()
+-- One sync next frame however many ask; it looks for launchers afresh unless every request said reuse.
+function SpellbookTabs:RequestSync(reuse)
+	if not reuse then
+		self.lookAgain = true
+	end
 	if self.queued then
 		return
 	end
 	self.queued = true
 	RunNextFrame(function()
-		SpellbookTabs.queued = false
-		SpellbookTabs:Sync()
+		local lookAgain = SpellbookTabs.lookAgain
+		SpellbookTabs.queued, SpellbookTabs.lookAgain = false, false
+		SpellbookTabs:Sync(not lookAgain)
 	end)
 end
 
@@ -299,9 +309,12 @@ function SpellbookTabs:Attach()
 	local function Request()
 		SpellbookTabs:RequestSync()
 	end
-	for _, event in ipairs({ "SpellBookFrame.Show", "SpellBookFrame.Hide", "SpellBookFrame.DisplayedSpellsChanged" }) do
+	for _, event in ipairs({ "SpellBookFrame.Show", "SpellBookFrame.Hide" }) do
 		EventRegistry:RegisterCallback("PlayerSpellsFrame." .. event, Request, SpellbookTabs)
 	end
+	EventRegistry:RegisterCallback("PlayerSpellsFrame.SpellBookFrame.DisplayedSpellsChanged", function()
+		SpellbookTabs:RequestSync(true)
+	end, SpellbookTabs)
 	book:HookScript("OnSizeChanged", Relayout)
 	book:HookScript("OnShow", Relayout)
 	book:HookScript("OnHide", function()
@@ -340,14 +353,17 @@ end
 --[[
 	The game's book (Blizzard_PlayerSpells) loads on demand, often only when it first opens, so the tab attaches
 	when it loads, through the Spellbook's dispatcher (Spellbook-Core.lua), or at once if it already has.
+	Attached, nothing else here needs ADDON_LOADED, so it is dropped.
 ]]
 function ns:OnAddonLoaded(addonName)
 	if addonName == "Blizzard_PlayerSpells" then
 		SpellbookTabs:Attach()
+		ns.SetModuleEvent("Spellbook", "ADDON_LOADED", false)
 	end
 end
 
-ns.SetModuleEvent("Spellbook", "ADDON_LOADED", true)
 if C_AddOns.IsAddOnLoaded("Blizzard_PlayerSpells") then
 	SpellbookTabs:Attach()
+else
+	ns.SetModuleEvent("Spellbook", "ADDON_LOADED", true)
 end

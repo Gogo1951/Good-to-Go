@@ -50,7 +50,8 @@ end
 
 --[[
 	Deletes the add-on's WoW macros from one list, which takes them off the action bars too; a player's own
-	macro is never touched. A sync first tags the page's macros from before the tags, so they go as well.
+	macro is never touched. While the Spellbook is on, a sync first tags the page's macros from before the tags,
+	so they go as well; while it is off, nothing is rewritten, and only the macros already tagged go.
 	Indexes shift down as macros go, so they are deleted highest first. The deleted names' ownership records
 	go too, so a player's own macro later given one of those names is never taken for the add-on's. The page
 	macros keep their tags, so one placed again gets its old tag back. Macros can't be deleted in combat.
@@ -60,7 +61,9 @@ function ns.DeleteAddonMacros(general)
 		UIErrorsFrame:AddMessage(ERR_NOT_IN_COMBAT, 1, 0.1, 0.1)
 		return
 	end
-	ns:RefreshMacros()
+	if ns.IsSpellbookEnabled() then
+		ns:RefreshMacros()
+	end
 	local indexes, owned = AddonMacroIndexes(general)
 	for _, index in ipairs(indexes) do
 		owned[GetMacroInfo(index)] = nil
@@ -102,7 +105,7 @@ function ns.DeletePageMacro(macro)
 	end
 end
 
-StaticPopupDialogs.BAGSBUFFSBUTTONS_DELETE_MACRO = {
+StaticPopupDialogs.GOODTOGO_DELETE_MACRO = {
 	text = L["MENU_DELETE_CONFIRM"],
 	button1 = YES,
 	button2 = NO,
@@ -117,5 +120,5 @@ StaticPopupDialogs.BAGSBUFFSBUTTONS_DELETE_MACRO = {
 
 -- Asks before deleting a macro that is on the bars, by name; delete runs on Yes.
 function ns.ConfirmDelete(name, delete)
-	StaticPopup_Show("BAGSBUFFSBUTTONS_DELETE_MACRO", name, nil, delete)
+	StaticPopup_Show("GOODTOGO_DELETE_MACRO", name, nil, delete)
 end

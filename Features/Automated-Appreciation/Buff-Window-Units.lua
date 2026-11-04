@@ -62,23 +62,21 @@ end
     In a raid only the Main Tank mark makes a tank: a Tank role or box there is
     one a player ticked for themselves in the group finder, not the raid's
     call. The mark is asked for exactly -- without that, GetPartyAssignment
-    also says yes to anyone whose role is Tank. Every group call is asked for
-    by name, so a client without one simply skips to the next answer.
+    also says yes to anyone whose role is Tank. A client without one of the
+    group calls answers nil from its accessor, so it simply skips to the next.
 ]]
 function BuffWindow.RoleOf(unit, class)
 	if unit then
-		if GetPartyAssignment and GetPartyAssignment("MAINTANK", unit, true) then
+		if ns.GetPartyAssignment("MAINTANK", unit, true) then
 			return "TANK"
 		end
 		local inRaid = IsInRaid()
-		if UnitGroupRolesAssigned then
-			local role = UnitGroupRolesAssigned(unit)
-			if ns.IsPlain(role) and ((role == "TANK" and not inRaid) or role == "HEALER" or role == "DAMAGER") then
-				return role
-			end
+		local role = ns.UnitGroupRolesAssigned(unit)
+		if ns.IsPlain(role) and ((role == "TANK" and not inRaid) or role == "HEALER" or role == "DAMAGER") then
+			return role
 		end
-		if GetLFGRoles and UnitIsUnit(unit, "player") then
-			local _, tank, healer = GetLFGRoles()
+		if UnitIsUnit(unit, "player") then
+			local _, tank, healer = ns.GetLFGRoles()
 			if tank and not inRaid then
 				return "TANK"
 			elseif healer then
@@ -324,10 +322,10 @@ local RESURRECT_PENDING_SECONDS = 60
 local pendingResurrects = {} -- GUID -> GetTime() the offer runs out
 
 --[[
-    Called from Buff-Tracking's combat log handler on every SPELL_RESURRECT,
-    which fires as the cast lands, before the dead player accepts, and on
-    Forever, which has no combat log, from your own resurrection going off
-    (ns.OnResurrectCastSucceeded). Without it
+    Called from Buff-Tracking-Combat-Log.lua on every SPELL_RESURRECT, which
+    fires as the cast lands, before the dead player accepts, and on Forever,
+    which has no combat log, from your own resurrection going off
+    (ns.OnResurrectCastSucceeded, in Buff-Window-Cast-Results.lua). Without it
     the icon would stay up through that minute and invite a second healer to
     spend ten seconds on a resurrection already waiting.
 ]]
@@ -359,11 +357,9 @@ local function CanResurrect(unit)
 	if not UnitIsDead(unit) or UnitIsGhost(unit) or not UnitIsConnected(unit) then
 		return false
 	end
-	if UnitHasIncomingResurrection then
-		local incoming = UnitHasIncomingResurrection(unit)
-		if ns.IsPlain(incoming) and incoming then
-			return false
-		end
+	local incoming = ns.UnitHasIncomingResurrection(unit)
+	if ns.IsPlain(incoming) and incoming then
+		return false
 	end
 	local guid = UnitGUID(unit)
 	local expires = ns.IsPlain(guid) and guid and pendingResurrects[guid]
@@ -420,9 +416,27 @@ local function PetWants(buff, unit)
 	return true
 end
 
+--[[
+    A mob that only borrows the pet slot -- a priest's Mind Control, a warlock's
+    Enslave Demon -- until it breaks free. UnitIsCharmed alone misses a mind-
+    controlled mob on Classic Era, so a pet that is neither a known demon nor a
+    Focus beast (PetOwnerClass) and has no pet family is taken for one too: a
+    humanoid has none, while a real pet's family names it ("Imp", "Cat").
+]]
+local function IsCharmedPet(unit)
+	if UnitIsCharmed(unit) then
+		return true
+	end
+	return not BuffWindow.PetOwnerClass(unit) and not UnitCreatureFamily(unit)
+end
+
 -- A phase-shifted imp drops off the list: nothing can reach it until it phases back in.
 local function CanBuffPet(unit)
-	return UnitExists(unit) and not UnitIsPlayer(unit) and not UnitIsDeadOrGhost(unit) and not IsPhaseShifted(unit)
+	return UnitExists(unit)
+		and not UnitIsPlayer(unit)
+		and not UnitIsDeadOrGhost(unit)
+		and not IsPhaseShifted(unit)
+		and not IsCharmedPet(unit)
 end
 BuffWindow.CanBuffPet = CanBuffPet
 
