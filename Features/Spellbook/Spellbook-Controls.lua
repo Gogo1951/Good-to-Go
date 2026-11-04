@@ -104,6 +104,48 @@ local function CreateDropdown(parent, width, setup)
 	return dropdown
 end
 
+--[[
+	The filter box at the controls row's left, with hint as its hint, calling onChange(text) with the trimmed
+	text as it is typed. Its hint is white, readable on the dark box ElvUI or the default art gives it, and
+	clears as soon as the box takes the cursor rather than once something is typed.
+]]
+local function CreateFilterBox(page, hint, onChange)
+	local filterBox
+	if HasTemplate("SearchBoxTemplate") then
+		filterBox = CreateFrame("EditBox", nil, page, "SearchBoxTemplate")
+	else
+		filterBox = CreateFrame("EditBox", nil, page, "InputBoxTemplate")
+	end
+	filterBox:SetAutoFocus(false)
+	filterBox:SetSize(170, 20)
+	filterBox:SetPoint("LEFT", page, "TOPLEFT", CONTROLS_LEFT + 6, -(TITLE_HEIGHT + CONTROLS_HEIGHT / 2))
+	local instructions = filterBox.Instructions
+	if instructions then
+		instructions:SetText(hint)
+		instructions:SetTextColor(1, 1, 1)
+		filterBox:HookScript("OnEditFocusGained", function()
+			instructions:Hide()
+		end)
+		filterBox:HookScript("OnEditFocusLost", function(self)
+			instructions:SetShown(self:GetText() == "")
+		end)
+	end
+	filterBox:HookScript("OnTextChanged", function(self)
+		-- the template shows the hint again whenever the box empties, even with the cursor in it
+		if instructions and self:HasFocus() then
+			instructions:Hide()
+		end
+		onChange(self:GetText():match("^%s*(.-)%s*$"))
+	end)
+	return filterBox
+end
+
+-- for the What's Next? tab's own controls row (Features/Spellbook/Whats-Next-Page.lua)
+ns.CreateSpellbookFilterBox = CreateFilterBox
+ns.CreateSpellbookDropdown = CreateDropdown
+ns.AddSpellbookMenuTooltip = AddMenuTooltip
+ns.ApplySpellbookElvUISkin = ApplyElvUISkin
+
 -- The footer's legend at its left: a dark square ringed in the glow's gold, for a spell not on the bars yet.
 local function BuildLegend(page)
 	local glow = CreateFrame("Frame", nil, page)
@@ -202,37 +244,8 @@ function ns.BuildSpellbookControls(page)
 		MenuUtil.CreateContextMenu(self, SetupSettingsMenu)
 	end)
 
-	--[[
-		The filter box: the page lists only the macros whose names hold its text, as it is typed. Its hint is
-		white, readable on the dark box ElvUI or the default art gives it, and clears as soon as the box takes the
-		cursor rather than once something is typed.
-	]]
-	local filterBox
-	if HasTemplate("SearchBoxTemplate") then
-		filterBox = CreateFrame("EditBox", nil, page, "SearchBoxTemplate")
-	else
-		filterBox = CreateFrame("EditBox", nil, page, "InputBoxTemplate")
-	end
-	filterBox:SetAutoFocus(false)
-	filterBox:SetSize(170, 20)
-	filterBox:SetPoint("LEFT", page, "TOPLEFT", CONTROLS_LEFT + 6, rowY)
-	local hint = filterBox.Instructions
-	if hint then
-		hint:SetText(L["PAGE_FILTER"])
-		hint:SetTextColor(1, 1, 1)
-		filterBox:HookScript("OnEditFocusGained", function()
-			hint:Hide()
-		end)
-		filterBox:HookScript("OnEditFocusLost", function(self)
-			hint:SetShown(self:GetText() == "")
-		end)
-	end
-	filterBox:HookScript("OnTextChanged", function(self)
-		-- the template shows the hint again whenever the box empties, even with the cursor in it
-		if hint and self:HasFocus() then
-			hint:Hide()
-		end
-		local text = self:GetText():match("^%s*(.-)%s*$")
+	-- the filter box: the page lists only the macros whose names hold its text, as it is typed
+	local filterBox = CreateFilterBox(page, L["PAGE_FILTER"], function(text)
 		if text ~= (page.filterText or "") then
 			page.filterText = text
 			page.pagingControls:SetCurrentPage(1)

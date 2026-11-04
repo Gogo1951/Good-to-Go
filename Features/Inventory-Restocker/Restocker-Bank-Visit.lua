@@ -1,12 +1,17 @@
 local _, ns = ...
 local L = ns.L
 local GetColor = ns.GetColor
+local CountPartialStacks = ns.CountRestockPartialStacks
+local ConsolidateOne = ns.ConsolidateRestockStacks
+local MAX_STUCK_STEPS = ns.RESTOCK_MAX_STUCK_STEPS
 
 --[[
-    Read across files as the "a bank window is open" gate; everything else about a
-    restock run is private to this file.
+    Restocker-Bank-Visit -- the bank restock run itself: one stash or pull per
+    tick, the watchdogs that end it, the tidy phase once every item is at
+    target, and the OnUpdate timer that paces the moves to the connection.
+    What the run knows about the bags and bank, and the bank window's open and
+    close, are Restocker-Bank-State.lua.
 ]]
-ns.bankIsOpen = false
 
 local currentlyRestocking = false
 local restockState = nil
@@ -20,14 +25,6 @@ local updateTimer = 0
 local updateInterval = 0.140
 
 --[[
-    After this many consecutive steps that fail to reduce the outstanding work (a move that
-    keeps being rejected, or an item stuck locked), stop and report what's still short --
-    instead of retrying forever. Retrying a handful of times first rides out transient
-    "Couldn't split those items" races without ever bothering the user.
-]]
-local MAX_STUCK_STEPS = 5
-
---[[
     A maintained item's bag+bank TOTAL can only drop while a move is in transit: the source
     slot is already empty but the destination hasn't been credited yet, and NOTHING is locked
     in that window, so the lock gate in OnBankRestockUpdate can't see it. A scan taken there
@@ -37,255 +34,8 @@ local MAX_STUCK_STEPS = 5
 local MAX_INFLIGHT_STEPS = 3
 
 --------------------------------------------------------------------------------
--- Restock State
+-- Restock Steps
 --------------------------------------------------------------------------------
-
-local RestockState = {}
-RestockState.__index = RestockState
-
-local function NewRestockState()
-	local state = {}
-	state.lastRemainingWork = math.huge
-	state.stuckSteps = 0
-	state.consolidating = false
-	state.lastStackCount = math.huge
-	state.tidySteps = 0
-	state.lastTotals = nil
-	state.suspectSteps = 0
-	state.cursorSteps = 0
-	state.lockedTicks = 0
-	state.overshotItems = {}
-	state.amounts = {}
-	-- Set by the first stash or pull; a run that moved nothing finishes without a word (CompletionMessage).
-	state.movedAny = false
-
-	setmetatable(state, RestockState)
-
-	state:Rescan()
-	for itemID, eachItem in pairs(state.currentList) do
-		state:Wanted(itemID, eachItem)
-	end
-
-	return state
-end
-
---[[
-    The Keep amount this run works to, read once per row: as the run starts, or
-    when a row added since first turns up. The Keep box saves every keystroke,
-    so a live read would act on a number half typed (clearing the box reads 0,
-    which stores the whole stack); Enter restarts the run with the new number
-    (Restocker-Window-Rows.lua).
-
-    A hand-edited save can leave amount nil; comparing that against a count
-    throws inside the coroutine and kills the whole run, so it reads as 0.
-]]
-function RestockState:Wanted(itemID, eachItem)
-	local wanted = self.amounts[itemID]
-	if wanted == nil then
-		wanted = eachItem.amount or 0
-		self.amounts[itemID] = wanted
-	end
-	return wanted
-end
-
---[[
-    Whether the cursor is clear enough to snapshot over, clearing it where that is ours to do.
-
-    An item on the cursor is uncounted, so a scan taken across one reads short and moves
-    things that are already fine. Only OUR strays are cleared outright: every move this file
-    issues is of a maintained item, so a cursor holding anything else belongs to the player --
-    picked up to move it by hand -- and clearing it would snap their drag back within a tick.
-    A foreign item is waited out for the same MAX_STUCK_STEPS budget the watchdog spends, then
-    cleared anyway, so a parked cursor can never hold a run open forever.
-]]
-function RestockState:ClearCursorForScan()
-	if not CursorHasItem() then
-		self.cursorSteps = 0
-		return true
-	end
-
-	local infoType, cursorItemID = GetCursorInfo()
-	local isOurs = infoType == "item"
-		and cursorItemID ~= nil
-		and self.currentList ~= nil
-		and self.currentList[cursorItemID] ~= nil
-
-	if not isOurs and self.cursorSteps < MAX_STUCK_STEPS then
-		self.cursorSteps = self.cursorSteps + 1
-		ns.RestockerDebug("TRACE_CURSOR_FOREIGN_ITEM", self.cursorSteps, MAX_STUCK_STEPS)
-		return false
-	end
-
-	self.cursorSteps = 0
-	ClearCursor()
-	return true
-end
-
---[[
-    Refresh the list and re-scan bags + bank. Called at the START OF EVERY restock step,
-    so the plan is always derived from what is actually in the containers right now. That way
-    a move the server rejected or only partially placed shows up as "still short" on the
-    next step and gets retried, instead of being assumed done. Never
-    deduct from a plan optimistically: a move that does not fully land leaves the item short
-    in silence. Recomputing every step is safe only because the watchdog in RunRestockLogic
-    stops the run once it stops making progress; without that guard it spins on "Couldn't
-    split those items" forever.
-
-    Returns false when the cursor made this step unsafe to read, which is the caller's cue to
-    do nothing this tick. The list is resolved before that test, because deciding whose
-    item is on the cursor needs it -- and it leaves the inventories from the previous scan
-    untouched rather than half-updated.
-]]
-function RestockState:Rescan()
-	local settings = ns.restockSettings
-	self.currentList = settings.lists[settings.currentList]
-
-	if not self:ClearCursorForScan() then
-		return false
-	end
-
-	self:UpdateInventory()
-	return true
-end
-
---[[
-    How much moving is still owed: shortfalls the bank can supply, plus excesses to stash.
-    Zero means done -- either everything is at target, or the only gaps left are items the
-    bank has none of (nothing more we can do).
-]]
-function RestockState:RemainingWork()
-	local work = 0
-	for itemID, eachItem in pairs(self.currentList) do
-		local haveInBag = self.playerInventory.summary[itemID] or 0
-		local haveInBank = self.bankInventory.summary[itemID] or 0
-		local wanted = self:Wanted(itemID, eachItem)
-
-		if eachItem.restockFromBank and wanted > haveInBag and haveInBank > 0 then
-			work = work + math.min(wanted - haveInBag, haveInBank)
-		end
-		--[[
-		    Overshoot excess counts as stash work even without stashToBank: the add-on created it
-		    (whole-stack fallback pull), so the add-on returns it.
-		]]
-		if (eachItem.stashToBank or self.overshotItems[itemID]) and haveInBag > wanted then
-			work = work + (haveInBag - wanted)
-		end
-	end
-	return work
-end
-
---[[
-    Bag+bank total for each maintained item, from this step's scan. Used by the in-flight
-    gate in RunRestockLogic: a DROP versus the last accepted scan means an item is mid-move.
-]]
-function RestockState:ComputeTotals()
-	local totals = {}
-	for itemID in pairs(self.currentList) do
-		totals[itemID] = (self.playerInventory.summary[itemID] or 0) + (self.bankInventory.summary[itemID] or 0)
-	end
-	return totals
-end
-
---[[
-    The largest stack an item allows, or nil when it doesn't stack (or isn't cached yet),
-    which the tidy phase reads as "leave it alone".
-]]
-local function MaxStackOf(itemID)
-	local info = ns.GetItemData(itemID)
-	local maxStack = info and info.itemStackCount
-	if maxStack and maxStack > 1 then
-		return maxStack
-	end
-	return nil
-end
-
---[[
-    How many PARTIAL stacks of maintained items the bags and the bank hold, used as the
-    tidy-phase progress signal. Every tidy move leaves at least one fewer partial stack
-    behind -- a whole-stack merge empties one, a top-off fills one -- so this strictly
-    decreases while consolidation is making headway and plateaus when done (or if a merge
-    bounces), which the tidy watchdog uses to stop. Counting all stacks would miss a top-off,
-    which fills one stack without removing any.
-]]
-function RestockState:CountPartialStacks()
-	local partials = 0
-	for _, inventory in ipairs({ self.playerInventory, self.bankInventory }) do
-		for itemID, slots in pairs(inventory.slots) do
-			local maxStack = MaxStackOf(itemID)
-			if maxStack then
-				for _, slot in ipairs(slots) do
-					if slot.count < maxStack then
-						partials = partials + 1
-					end
-				end
-			end
-		end
-	end
-	return partials
-end
-
---[[
-    Whether the player's bags have a free slot that can take any of these items: a free
-    slot in a soul bag or quiver is no room for water.
-]]
-local function BagsHaveRoomFor(itemIDs)
-	for _, bag in ipairs(ns.restockPlayerBags) do
-		local numberOfFreeSlots, bagType = C_Container.GetContainerNumFreeSlots(bag.bagID)
-		if numberOfFreeSlots > 0 then
-			for _, itemID in ipairs(itemIDs) do
-				if ns.BagTypeAccepts(bagType, ns.GetItemData(itemID)) then
-					return true
-				end
-			end
-		end
-	end
-	return false
-end
-
---[[
-    A user-facing message for why we stopped when work still remains. Blames a full
-    bag or bank only for a direction that has a stuck row (a withdrawal needs bag
-    room that can take one of the stuck items, a deposit needs bank room); otherwise
-    lists exactly what we couldn't move.
-]]
-function RestockState:StuckMessage()
-	local parts = {}
-	local withdrawStuck, depositStuck = {}, false
-	for itemID, eachItem in pairs(self.currentList) do
-		local haveInBag = self.playerInventory.summary[itemID] or 0
-		local haveInBank = self.bankInventory.summary[itemID] or 0
-		local wanted = self:Wanted(itemID, eachItem)
-
-		if eachItem.restockFromBank and wanted > haveInBag and haveInBank > 0 then
-			withdrawStuck[#withdrawStuck + 1] = itemID
-			parts[#parts + 1] = string.format(
-				L["RESTOCKER_STUCK_ITEM_FORMAT"],
-				math.min(wanted - haveInBag, haveInBank),
-				eachItem.itemName
-			)
-		elseif (eachItem.stashToBank or self.overshotItems[itemID]) and haveInBag > wanted then
-			depositStuck = true
-			parts[#parts + 1] =
-				string.format(L["RESTOCKER_STUCK_ITEM_EXTRA_FORMAT"], haveInBag - wanted, eachItem.itemName)
-		end
-	end
-
-	local _, bankHasSpace = ns.GetRestockSpace()
-	local bagBlocked = #withdrawStuck > 0 and not BagsHaveRoomFor(withdrawStuck)
-	local bankBlocked = depositStuck and not bankHasSpace
-	if bagBlocked and bankBlocked then
-		return L["RESTOCKER_STOPPED_BOTH_FULL"]
-	elseif bankBlocked then
-		return L["RESTOCKER_STOPPED_BANK_FULL"]
-	elseif bagBlocked then
-		return L["RESTOCKER_STOPPED_BAG_FULL"]
-	end
-
-	if #parts == 0 then
-		return L["RESTOCKER_STOPPED_NO_PROGRESS"]
-	end
-	return string.format(L["RESTOCKER_STOPPED_COULD_NOT_MOVE"], table.concat(parts, L["LIST_SEPARATOR"]))
-end
 
 --[[
     Issue one stash move: find the first over-stocked item and send some to the bank. The
@@ -354,99 +104,6 @@ local function RestockFromBank()
 	return false
 end
 
---[[
-    Merge one pair of partial stacks of a maintained item within one inventory (the player
-    bags or the bank, never across), to undo the fragmentation that free-slot-first placement
-    and exact splits leave behind -- in the bags 10 + 9 + 1 -> 20, and in the bank the
-    5 + 5 + 4 + 2 a run of small pulls carves out of full stacks.
-
-    The smallest partial stack is the source. A whole-stack merge comes first: pick it all up
-    and drop it onto the largest partial that has room for ALL of it, no split involved --
-    the reliable manual consolidation move. Only when no stack can take it whole (4 + 2 with
-    a stack size of 5) does it top off the largest partial with an exact split, which the
-    server can bounce; a bounce is caught by the tidy watchdog, and the cursor is never left
-    holding the split.
-]]
-local function ConsolidateOne(inventory)
-	for itemID, slots in pairs(inventory.slots) do
-		local maxStack = MaxStackOf(itemID)
-		if maxStack then
-			-- slots are sorted smallest-first (SortSlots), so partials are too
-			local partials = {}
-			for _, slot in ipairs(slots) do
-				if slot.count < maxStack then
-					partials[#partials + 1] = slot
-				end
-			end
-
-			if #partials >= 2 then
-				local source = partials[1]
-				for i = #partials, 2, -1 do
-					local destination = partials[i]
-					if source.count + destination.count <= maxStack then
-						ns.RestockerDebug(
-							"TRACE_CONSOLIDATE",
-							tostring(itemID),
-							source.count,
-							source.bag,
-							source.slot,
-							destination.bag,
-							destination.slot
-						)
-						C_Container.PickupContainerItem(source.bag, source.slot) -- pick up whole stack
-						C_Container.PickupContainerItem(destination.bag, destination.slot) -- drop onto it -> merges
-						return true
-					end
-				end
-
-				local destination = partials[#partials]
-				local room = maxStack - destination.count
-				ns.RestockerDebug(
-					"TRACE_TOP_OFF",
-					tostring(itemID),
-					room,
-					source.bag,
-					source.slot,
-					destination.bag,
-					destination.slot
-				)
-				C_Container.SplitContainerItem(source.bag, source.slot, room)
-				C_Container.PickupContainerItem(destination.bag, destination.slot)
-				if CursorHasItem() then
-					ClearCursor() -- a bounced drop must not strand the split for the next move
-				end
-				return true
-			end
-		end
-	end
-
-	return false
-end
-
---[[
-    Is this bag/bank item one we maintain? Lists are keyed by itemID, so this is
-    an O(1) lookup instead of scanning the whole list by name for every bag
-    slot. Hoisted out of UpdateInventory, which runs on every restock step: it
-    reads the list off this upvalue rather than closing over a fresh one each time.
-]]
-local maintainedList
-
-local function IsMaintainedItem(itemID)
-	return maintainedList[itemID] ~= nil
-end
-
-function RestockState:UpdateInventory()
-	local settings = ns.restockSettings
-	maintainedList = settings.lists[settings.currentList]
-
-	self.playerInventory = ns.GetRestockItemsInBags(IsMaintainedItem)
-	self.bankInventory = ns.GetRestockItemsInBank(IsMaintainedItem)
-end
-
---------------------------------------------------------------------------------
--- Restock Steps
---------------------------------------------------------------------------------
-
 -- The finished run's line itself; the options panel's Example draws through it too.
 function ns.BuildBankRestockCompleteLine()
 	return string.format(
@@ -490,11 +147,6 @@ end
 ]]
 local function RunRestockLogic()
 	local state = restockState
-
-	if not ns.bankIsOpen then
-		FinishRestocking(L["RESTOCKER_BANK_NOT_OPEN"])
-		return true
-	end
 
 	--[[
 	    HARD SAFETY INVARIANT: never sell at a merchant. The moves below use
@@ -588,7 +240,7 @@ local function RunRestockLogic()
 		    starve every pull, so restocking runs first, and a whole stack taken out frees the
 		    slot the stash needs.
 		]]
-		local _, bankHasSpace = ns.GetRestockSpace()
+		local bankHasSpace = ns.BankHasRestockSpace()
 		if bankHasSpace then
 			if not StashToBank() then
 				RestockFromBank()
@@ -604,6 +256,7 @@ local function RunRestockLogic()
 	    free-slot-first placement and exact splits leave behind, in the bags and then the bank. This can never leave an item short (totals are
 	    already correct) -- the worst case is that a merge doesn't take and we simply stop.
 	]]
+	-- Tidies every item on the list, whatever its Take and Store settings: the maintainer's choice.
 	if not state.consolidating then
 		state.consolidating = true -- entering tidy phase; start its watchdog fresh
 		state.lastStackCount = math.huge
@@ -616,7 +269,7 @@ local function RunRestockLogic()
 	    consolidated, or a merge got bounced), finish cleanly -- restocking already succeeded,
 	    so this is a normal "Finished", not a problem to report.
 	]]
-	local stacks = state:CountPartialStacks()
+	local stacks = CountPartialStacks(state.playerInventory, state.bankInventory)
 	if stacks < state.lastStackCount then
 		state.tidySteps = 0
 	else
@@ -649,11 +302,6 @@ local function MaintainAndResumeCoroutine()
 	if restockCoroutine == nil or coroutine.status(restockCoroutine) == "dead" then
 		ns.RestockerDebug("TRACE_CREATE_COROUTINE")
 		restockCoroutine = coroutine.create(RunRestockCoroutine)
-	end
-
-	if coroutine.status(restockCoroutine) == "running" then
-		ns.RestockerDebug("TRACE_COROUTINE_RUNNING")
-		return
 	end
 
 	local ok, errorMessage = coroutine.resume(restockCoroutine)
@@ -725,7 +373,7 @@ local function OnBankRestockUpdate(_frame, elapsed)
 end
 
 function ns.RestartBankRestock()
-	restockState = NewRestockState()
+	restockState = ns.NewRestockState()
 	currentlyRestocking = true
 	updateInterval = ComputeUpdateInterval() -- pace the first tick off a fresh reading
 	restockCoroutine = coroutine.create(RunRestockCoroutine) -- fresh run for this bank visit

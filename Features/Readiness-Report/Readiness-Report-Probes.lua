@@ -2,14 +2,117 @@ local _, ns = ...
 
 --[[
     Readiness-Report-Probes -- the live reads behind the Readiness Report's
-    newer lines: what is about to lapse, what the weapons are carrying, what the
-    character is wearing and specced into.
+    lines: who is in the group and whether a soulstone is up, what is about to
+    lapse, what the weapons are carrying, what the character is wearing and
+    specced into.
 
-    Every function here answers about the player right now and nothing else. No
-    state, no settings: which of these the report asks for is
+    Every function here answers about the player or the group right now and
+    nothing else. No state, no settings: which of these the report asks for is
     Readiness-Report.lua's business, and each of these only has to answer
     honestly when asked.
 ]]
+
+--------------------------------------------------------------------------------
+-- Group
+--------------------------------------------------------------------------------
+
+--[[
+    Walks every group member, the player included. Raid unit ids already cover
+    the player, party ids do not, so the player is tested up front and the loop
+    length differs between the two.
+]]
+local function AnyGroupMember(test)
+	if test("player") then
+		return true
+	end
+
+	local members = GetNumGroupMembers() or 0
+	local inRaid = IsInRaid()
+	local prefix = inRaid and "raid" or "party"
+	local count = inRaid and members or (members - 1)
+
+	for index = 1, count do
+		if test(prefix .. index) then
+			return true
+		end
+	end
+
+	return false
+end
+
+--[[
+    Whether anyone present is of a class, the player included -- AnyGroupMember
+    tests "player" first, so "in the group" always covers "is you".
+
+    Two report entries ask this. A Warlock is who produces a Healthstone, so
+    with none present it is not actionable. A Shaman is who makes the
+    weapon-buff line moot; see its caller in Readiness-Report.lua.
+]]
+function ns.GroupHasClass(classToken)
+	return AnyGroupMember(function(unit)
+		return select(2, UnitClass(unit)) == classToken
+	end)
+end
+
+local SOULSTONE_BUFF_LOOKUP = {}
+for _, spellID in ipairs(ns.SOULSTONE_BUFF_SPELL_IDS) do
+	SOULSTONE_BUFF_LOOKUP[spellID] = true
+end
+
+local function UnitHasSoulstone(unit)
+	if not UnitExists(unit) then
+		return false
+	end
+
+	for index = 1, 40 do
+		local aura = C_UnitAuras.GetBuffDataByIndex(unit, index, "HELPFUL")
+		if not aura then
+			return false
+		end
+		if SOULSTONE_BUFF_LOOKUP[aura.spellId] then
+			return true
+		end
+	end
+
+	return false
+end
+
+--[[
+    Whether a soulstone is UP on anyone in the group, which is the only thing a
+    raid actually cares about. Deliberately NOT "does someone hold a stone":
+    seven unused stones in seven bags resurrect nobody, and one deployed on the
+    healer covers the pull.
+
+    LIMITATION: the aura APIs only answer for members the client can see.
+    Someone in another room or out of range reports no auras at all, so a stone
+    on them reads as absent. That makes the failure a false "missing", never a
+    false "all clear" -- and at a ready check the group is normally stacked up
+    for the pull, which is the one moment this runs.
+]]
+function ns.GroupHasSoulstone()
+	return AnyGroupMember(UnitHasSoulstone)
+end
+
+--[[
+    Whether the stones' shared use cooldown is running, which is when no stone
+    can go up however many the Warlock carries: after a stoned player rose, for
+    the rest of the half hour since the stone was used. The stones share the
+    one cooldown, so any of them on it answers. A cooldown the client keeps
+    secret (Forever) counts as over, and the entry reports as it always has.
+]]
+function ns.SoulstonesOnCooldown()
+	if ns.AreCooldownsSecret() then
+		return false
+	end
+	for itemID in pairs(ns.SOULSTONES) do
+		local _, duration = C_Container.GetItemCooldown(itemID)
+		-- A stone on the global cooldown alone reads as on cooldown too: close enough, as it is ready by the next check.
+		if duration and duration > 0 then
+			return true
+		end
+	end
+	return false
+end
 
 --------------------------------------------------------------------------------
 -- Expiring Buffs
@@ -187,6 +290,16 @@ function ns.GetDamagedGear(percent)
 	return damaged
 end
 
+-- The first item worn, in slot order: the Readiness Report panel's Example names it as the damaged gear.
+function ns.FirstEquippedLink()
+	for slot = 1, LAST_EQUIPMENT_SLOT do
+		local link = GetInventoryItemLink("player", slot)
+		if link then
+			return link
+		end
+	end
+end
+
 --[[
     Two weapon subclasses are non-combat gear in their entirety, so the check
     reads them off the item rather than off a list: nothing in either belongs in
@@ -243,8 +356,17 @@ end
     Returns nil before the talent data is available, which is normal early in a
     login -- the caller drops the line rather than printing a half-answer. Always
     nil on Forever, whose Retail-style talents have no GetNumTalentTabs.
+
+    From MoP on there are no points in trees: the character picks one
+    specialization, so the label is its name alone. MoP Classic still answers
+    GetNumTalentTabs, but its trees report no points spent.
 ]]
 function ns.GetCurrentSpecializationLabel()
+	if ns.EXPANSION >= 5 then
+		local index = C_SpecializationInfo.GetSpecialization()
+		return index and select(2, C_SpecializationInfo.GetSpecializationInfo(index)) or nil
+	end
+
 	local tabs = ns.GetNumTalentTabs()
 	if not tabs or tabs == 0 then
 		return nil

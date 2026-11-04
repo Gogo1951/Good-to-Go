@@ -16,9 +16,7 @@ local Spacer = ns.OptionsSpacer
     InitializeDatabase in Features/Core.lua guarantees.
 ]]
 
-local function GetSettings()
-	return ns.db and ns.db.profile
-end
+local GetSettings = ns.OptionsProfileSettings
 
 local function DruidMacroHelperActive()
 	local settings = GetSettings()
@@ -34,12 +32,7 @@ end
 -- Shared Widget Factories
 --------------------------------------------------------------------------------
 
--- A label or hover text that names a spell, read from the client when it shows.
-local function SpellDescription(formatKey, spellID)
-	return function()
-		return string.format(L[formatKey], C_Spell.GetSpellName(spellID) or "")
-	end
-end
+local SpellDescription = ns.OptionsSpellDescription
 
 -- A checkbox for one profile setting the macros read, written through ns.ToggleMacroSetting.
 local function MacroSettingToggle(settingKey, label, description, order, hidden)

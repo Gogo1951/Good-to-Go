@@ -53,7 +53,8 @@ ns.scannedIgnoredTypes = ignoredTypes
 function ns.ScanBags()
 	--[[
 	    Refresh the zone at scan time. A zone change during combat is gated out
-	    by the lockdown guard in Core's dispatcher, so ZONE_CHANGED_NEW_AREA
+	    by the lockdown guard in the module's dispatcher
+	    (Macros-for-Consumables-Core.lua), so ZONE_CHANGED_NEW_AREA
 	    never updates the cache mid-fight; reading it here keeps zone-restricted
 	    item filtering from running against a stale map after combat drops.
 	]]
@@ -97,7 +98,7 @@ function ns.ScanBags()
 	    Forever the comparison can come back secret, so C_Secrets is asked first
 	    and a restricted read counts as not targeting yourself.
 	]]
-	local targetingSelf = C_Secrets.CanCompareUnitTokens("target", "player")
+	local targetingSelf = ns.CanCompareUnitTokens("target", "player")
 		and UnitExists("target")
 		and UnitIsUnit("target", "player")
 
@@ -203,11 +204,11 @@ function ns.ScanBags()
 		if not (ns.SCROLL_ITEM_LOOKUP and ns.SCROLL_ITEM_LOOKUP[id]) then
 			local data = itemCache[id]
 			--[[
-			    The cache holds consumables only, so a stored "IGNORE" is
-			    stale: clear it and let ns.CacheItemData answer from the
-			    consumable tables. Version-stamp invalidation only wipes the
-			    cache on a release bump, never on a dev copy, whose version
-			    is always "Dev".
+			    MIGRATION (remove after 2026-11-25): the cache holds
+			    consumables only, so a stored "IGNORE" is stale: clear it and
+			    let ns.CacheItemData answer from the consumable tables.
+			    Version-stamp invalidation only wipes the cache on a release
+			    bump, never on a dev copy, whose version is always "Dev".
 			]]
 			if data == "IGNORE" then
 				data = nil
@@ -220,21 +221,9 @@ function ns.ScanBags()
 			    bump, so a same-version update (dev edit) that adds a field
 			    would otherwise keep stale entries missing it. The newest
 			    field is itemID (CacheItemData always writes it, so == nil
-			    only ever means "older schema"); the older fields are kept
-			    in the test to also catch pre-maxStack/-arenaUsable/
-			    -isConjured/-damageValue/-isSoulbound entries.
+			    only ever means "older schema").
 			]]
-			if
-				data
-				and (
-					data.maxStack == nil
-					or data.arenaUsable == nil
-					or data.isConjured == nil
-					or data.damageValue == nil
-					or data.isSoulbound == nil
-					or data.itemID == nil
-				)
-			then
+			if data and data.itemID == nil then
 				data = nil
 				itemCache[id] = nil
 			end

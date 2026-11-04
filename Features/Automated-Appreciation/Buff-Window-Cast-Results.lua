@@ -27,7 +27,7 @@ local RESURRECT_CAST_SECONDS = 15 -- a resurrection's cast time, with room for l
 local lastResurrect -- { guid, ids, expires }: the last resurrection the window or key cast, on Forever
 
 function ns.OnResurrectCastSucceeded(unit, spellID)
-	if not lastResurrect or unit ~= "player" or not ns.IsPlain(spellID) then
+	if not lastResurrect or not ns.IsPlain(unit) or unit ~= "player" or not ns.IsPlain(spellID) then
 		return
 	end
 	if GetTime() > lastResurrect.expires then
@@ -43,7 +43,7 @@ function ns.NoteBuffCastAttempt(spec)
 	lastAttempt = nil
 	if ns.FLAVOR == "Camelot" and spec and spec.isResurrection and spec.unit then
 		local guid = UnitGUID(spec.unit)
-		if guid and ns.IsPlain(guid) then
+		if ns.IsPlain(guid) and guid then
 			local ids = {}
 			for _, id in ipairs(spec.castIds or { spec.spellId }) do
 				ids[id] = true
@@ -55,7 +55,7 @@ function ns.NoteBuffCastAttempt(spec)
 		return
 	end
 	local guid = spec.favorGUID or (spec.unit and UnitGUID(spec.unit))
-	if guid and ns.IsPlain(guid) then
+	if ns.IsPlain(guid) and guid then
 		lastAttempt = { guid = guid, unit = spec.unit, key = spec.buffKey, at = GetTime() }
 	end
 end
@@ -85,6 +85,10 @@ local function OnUIErrorMessage(errorType, message)
 	local attempt = lastAttempt
 	lastAttempt = nil
 	if GetTime() - attempt.at > BOUNCE_WINDOW then
+		return
+	end
+	-- On Forever in combat the group's GUIDs are secret, and comparing one errors.
+	if ns.AreAurasSecret() then
 		return
 	end
 	local unit = attempt.unit

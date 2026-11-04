@@ -13,13 +13,17 @@ local L = ns.L
     missing something, and a party only while one of its members is, so a fully
     buffed raid shows no window at all.
 
-    The work is split nine ways, sharing state through ns.BuffWindow:
-    Buff-Window-Castable.lua (what you can cast), Buff-Window-Auras.lua (what
+    The work is split twelve ways, sharing state through ns.BuffWindow:
+    Buff-Window-Castable.lua (what you can cast), Buff-Window-Lookups.lua (the
+    spell and item lookups built from it), Buff-Window-Settings.lua (each
+    buff's audience and weapon settings), Buff-Window-Auras.lua (what
     each player has on), Buff-Window-Units.lua (reading one unit and building
     its icons), Buff-Window-Weapons.lua (your weapons' row), Buff-Window-Self.lua
     (your own buffs, weapons and Soulstone, pinned on top),
     Buff-Window-Outsiders.lua (your target, and strangers who just buffed you,
-    listed above the parties), this file (your group's sections, the refresh,
+    listed above the parties), Buff-Window-Other-Classes.lua (the raid
+    buffs your group is missing, any class's, counted on the title row and
+    asked of the group or their casters), this file (your group's sections, the refresh,
     events and setup), Buff-Window-Cast-Results.lua (a buff refused for a
     stronger one, and resurrections), and Buff-Window-Keys.lua (the key binding
     that casts from the same list).
@@ -273,7 +277,8 @@ local function Refresh()
 	if #sections == 0 then
 		ns.HideBuffWindow()
 	else
-		ns.RenderBuffWindow(sections)
+		-- The raid buffs the group is missing ride along on the title row (Buff-Window-Other-Classes.lua).
+		ns.RenderBuffWindow(sections, BuffWindow.BuildOtherClassBuffs())
 	end
 end
 
@@ -360,22 +365,25 @@ end
     turning it on and PLAYER_REGEN_ENABLED each request a fresh read.
 ]]
 function ns.OnBuffWindowAura(unit)
-	if not BuffWindow.isSetUp or inCombat or not ns.IsBuffDutyOnForClass() then
+	if not BuffWindow.isSetUp or inCombat or not ns.IsPlain(unit) or not unit then
 		return
 	end
-	if not HasAnythingToOffer() or not ns.IsPlain(unit) or not unit then
-		return
-	end
+	-- The unit first: nameplates make most of these, and the string tests are cheaper than the class check.
 	if
-		unit == "player"
-		or unit == "target"
-		or unit == "targetpet"
-		or unit == "pet"
-		or unit:find("^party%d")
-		or unit:find("^raid%d")
-		or unit:find("^partypet%d")
-		or unit:find("^raidpet%d")
+		not (
+			unit == "player"
+			or unit == "target"
+			or unit == "targetpet"
+			or unit == "pet"
+			or unit:find("^party%d")
+			or unit:find("^raid%d")
+			or unit:find("^partypet%d")
+			or unit:find("^raidpet%d")
+		)
 	then
+		return
+	end
+	if ns.IsBuffDutyOnForClass() and HasAnythingToOffer() then
 		MarkAurasDirty(unit)
 		ns.RequestBuffWindowRefresh()
 	end
@@ -394,10 +402,11 @@ end
     The aura cache is keyed by GUID, so a roster change or a new target needs no
     re-read of anyone already read: a token that now names someone else finds
     that player's own record. A player the window hasn't read yet is read
-    fresh anyway.
+    fresh anyway. In combat these wait: PLAYER_REGEN_ENABLED prunes the cache
+    and reads everyone fresh.
 ]]
 local function OnGroupRosterUpdate()
-	if not IsWatching() then
+	if not IsWatching() or inCombat then
 		return
 	end
 	BuffWindow.PruneAuraCache()
@@ -405,7 +414,7 @@ local function OnGroupRosterUpdate()
 end
 
 local function OnUnitPet(unit)
-	if not IsWatching() then
+	if not IsWatching() or inCombat then
 		return
 	end
 	local pet = ns.IsPlain(unit) and unit and PetUnitOf(unit)
@@ -416,7 +425,7 @@ local function OnUnitPet(unit)
 end
 
 local function OnPlayerTargetChanged()
-	if not IsWatching() then
+	if not IsWatching() or inCombat then
 		return
 	end
 	for _, unit in ipairs({ "target", "targetpet" }) do
@@ -466,6 +475,7 @@ local function OnPlayerRegenEnabled()
 	if settingsPending then
 		ApplySettings()
 	end
+	BuffWindow.PruneAuraCache()
 	RequestFullRefresh()
 end
 
@@ -482,6 +492,27 @@ end
 -- Setup
 --------------------------------------------------------------------------------
 
+local backstop
+
+--[[
+    Starts the backstop while Buff Duty is on for your class and stops it while
+    it is off, for ns.UpdateThanksForTheBuffEvents, which drops the window's
+    events along with it. Coming back on, the window re-reads your spells,
+    since SPELLS_CHANGED was not heard while it was off.
+]]
+function ns.SetBuffWindowWatching(on)
+	if not BuffWindow.isSetUp then
+		return
+	end
+	if on and not backstop then
+		backstop = C_Timer.NewTicker(BACKSTOP_INTERVAL, OnBackstopTick)
+		OnSpellsChanged()
+	elseif not on and backstop then
+		backstop:Cancel()
+		backstop = nil
+	end
+end
+
 -- Run once from Core's login sequence, after the saved variables are live.
 function ns.SetupBuffWindow()
 	inCombat = InCombatLockdown() and true or false
@@ -495,11 +526,11 @@ function ns.SetupBuffWindow()
 	BuffWindow.BuildBuffs()
 	ns.CreateBuffWindowFrame()
 	ApplySettings()
-	-- MIGRATION (remove after 2026-11-21): the old Group Buff key's binding moves to the Buff Key.
+	-- MIGRATION (remove after 2026-12-03): keys bound to the Buff Key's old commands move to its current one.
 	ns.MigrateBuffKeys()
 	BuffWindow.isSetUp = true
 	ns.RequestBuffWindowRefresh()
-	C_Timer.NewTicker(BACKSTOP_INTERVAL, OnBackstopTick)
+	ns.SetBuffWindowWatching(ns.IsBuffDutyOnForClass())
 end
 
 ns.SetEventHandler("GROUP_ROSTER_UPDATE", OnGroupRosterUpdate)

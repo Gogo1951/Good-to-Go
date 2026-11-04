@@ -175,7 +175,7 @@ ns.DiagnosticsStrings = {
 		.. TITLE
 		.. " writes at its longest, with your client's spell names, and checks each against the 255-byte limit. Nothing is written.",
 	MESSAGES_BUFFS_TITLE = "Message Length: Buff Whispers",
-	MESSAGES_BUFFS_DESCRIPTION = "Builds every whisper and Thank You macro "
+	MESSAGES_BUFFS_DESCRIPTION = "Builds every whisper, buff request and buff macro "
 		.. TITLE
 		.. " sends or writes, with the longest names in your language, and checks each one fits. Nothing is sent.",
 	MESSAGES_SPELLBOOK_TITLE = "Message Length: Spellbook Macros",
@@ -216,7 +216,6 @@ ns.DiagnosticsStrings = {
 	TRACE_MERCHANT_OPEN = "Merchant open -- aborting bank restock so UseContainerItem can never sell",
 	TRACE_IN_TRANSIT = "%s in transit (bag+bank %d, was %d), waiting",
 	TRACE_CREATE_COROUTINE = "Maintain: create coro",
-	TRACE_COROUTINE_RUNNING = "Maintain: coro running",
 }
 
 --------------------------------------------------------------------------------

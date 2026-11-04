@@ -8,7 +8,7 @@ local SHAMAN_SHIELD, WARLOCK_ARMOR, WARLOCK_DEMON = "SHAMAN_SHIELD", "WARLOCK_AR
 local MISSING = Data.SELF_REFRESH_MISSING
 local MAIN, OFF_HAND = "MAIN", "OFF"
 
--- { class, single = { { spell id, level learned } }, group = { spell ids }, greater = { spell ids }, exclusive, manaOnly, noCasters, default }, -- Name
+-- { class, single = { { spell id, level learned } }, group = { spell ids }, greater = { spell ids }, exclusive, manaOnly, noCasters, talent, default }, -- Name
 ns.BUFF_WINDOW_SPELLS = {
 	-- Druid ---------------------------------------------------------------------
 	{
@@ -98,6 +98,7 @@ ns.BUFF_WINDOW_SPELLS = {
 		single = { { 14752, 30 }, { 14818, 40 }, { 14819, 50 }, { 27841, 60 } },
 		group = { 27681 },
 		manaOnly = true,
+		talent = true,
 		default = ALL,
 	}, -- Divine Spirit
 	{

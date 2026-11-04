@@ -21,6 +21,14 @@ local _, ns = ...
 ]]
 ns.DIAGNOSTIC_API_CHECKS = {}
 ns.DIAGNOSTIC_SPELLS = {}
+--[[
+    The same spell rows, held under a second name the probes read: Thanks for
+    the Buff's Features/Automated-Appreciation/Tracked-Lookups.lua replaces
+    ns.DIAGNOSTIC_SPELLS at login with its own per-class table, which Buff
+    Reactions Context reads by class, so the rows appended here at load would
+    otherwise be gone by the time a report runs.
+]]
+ns.DIAGNOSTIC_SPELL_ROWS = ns.DIAGNOSTIC_SPELLS
 ns.DIAGNOSTIC_NAME_LOOKUPS = {}
 ns.DIAGNOSTIC_DATA_SOURCES = {}
 

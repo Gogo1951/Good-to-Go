@@ -36,6 +36,26 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(C_AddOns) == "table" and type(C_AddOns.GetNumAddOns) == "function"
 		end,
 	},
+	-- The legacy import (Features/Core.lua) turns the add-ons this one replaces off, or on for one character to read them.
+	{
+		"C_AddOns.DisableAddOn",
+		function()
+			return type(C_AddOns) == "table" and type(C_AddOns.DisableAddOn) == "function"
+		end,
+	},
+	{
+		"C_AddOns.EnableAddOn",
+		function()
+			return type(C_AddOns) == "table" and type(C_AddOns.EnableAddOn) == "function"
+		end,
+	},
+	-- The options' item lists ask whether a row's item is cached before naming it (Options/Options-Utilities.lua).
+	{
+		"C_Item.IsItemDataCachedByID",
+		function()
+			return type(C_Item) == "table" and type(C_Item.IsItemDataCachedByID) == "function"
+		end,
+	},
 	-- Decides Season of Discovery's data folder (Data/Flavor.lua), which is only ever asked on Classic Era.
 	{
 		"C_Seasons.GetActiveSeason (Classic Era only)",
@@ -697,7 +717,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(C_Secrets) == "table" and type(C_Secrets.ShouldSpellCooldownBeSecret) == "function"
 		end,
 	},
-	-- The Macros panel's Night Elf header names the race through this.
+	-- The Class & Race panel's Night Elf header names the race through this.
 	{
 		"C_CreatureInfo.GetRaceInfo",
 		function()
@@ -722,6 +742,19 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(GameTooltip) == "table"
 				and type(GameTooltip.HasScript) == "function"
 				and GameTooltip:HasScript("OnTooltipSetItem") == true
+		end,
+	},
+	--[[
+	    The same two ways into spell tooltips (ns.AddSpellTooltipPostCall in
+	    Features/Utilities.lua): the post-call above where the client has it,
+	    else OnTooltipSetSpell. Where both FAIL, no spell tooltip line shows.
+	]]
+	{
+		"GameTooltip OnTooltipSetSpell (legacy)",
+		function()
+			return type(GameTooltip) == "table"
+				and type(GameTooltip.HasScript) == "function"
+				and GameTooltip:HasScript("OnTooltipSetSpell") == true
 		end,
 	},
 	-- The standing labels in the Restock List's reputation column (ns.GetStandingLabel).
@@ -861,6 +894,8 @@ local function AppendCharacter(lines)
 		YesNo(ns.isNightElf),
 		YesNo(ns.isForsaken)
 	)
+	-- Until the login setup runs, every flag above reads "no" and no macro knows its spells.
+	lines[#lines + 1] = string.format("Character setup run: %s", YesNo(ns.spellCache ~= nil))
 
 	-- Zone-locked and arena-only items read the cached map and the instance type.
 	lines[#lines + 1] = string.format(
@@ -901,7 +936,7 @@ end
 ]]
 local CLASS_ONLY_MACROS = {
 	["Feed Pet"] = " (Hunters only)",
-	["Poisons"] = " (Rogues who know Poisons only)",
+	["Poisons"] = " (Rogues only)",
 }
 
 local function AppendMacroWriting(lines)
@@ -915,6 +950,49 @@ local function AppendMacroWriting(lines)
 		string.format("In combat lockdown: %s (writes wait until combat ends)", YesNo(InCombatLockdown()))
 	lines[#lines + 1] =
 		string.format("Macro window open: %s (writes wait until it closes)", YesNo(MacroFrame and MacroFrame:IsShown()))
+	-- The writes held for the macro window resume when it closes, a hook set once its add-on loads (Engine.lua).
+	lines[#lines + 1] =
+		string.format("Macro window add-on loaded: %s", YesNo(C_AddOns.IsAddOnLoaded("Blizzard_MacroUI")))
+	-- An old add-on this one replaces, still running, rewrites the same macros (ns.LEGACY_ADDONS).
+	local legacyRunning = {}
+	for _, legacy in ipairs(ns.LEGACY_ADDONS or {}) do
+		if C_AddOns.IsAddOnLoaded(legacy.folder) then
+			legacyRunning[#legacyRunning + 1] = legacy.folder
+		end
+	end
+	lines[#lines + 1] = string.format(
+		"Replaced add-ons still running: %s",
+		#legacyRunning > 0 and table.concat(legacyRunning, ", ") or "(none)"
+	)
+	--[[
+	    Macro names on action buttons are hidden by fading each button's name
+	    text (Action-Button-Text.lua); a bar add-on that removes those texts
+	    leaves nothing to fade.
+	]]
+	local nameTexts = 0
+	for _, prefix in ipairs({
+		"ActionButton",
+		"MultiBarLeftButton",
+		"MultiBarRightButton",
+		"MultiBarBottomLeftButton",
+		"MultiBarBottomRightButton",
+		"MultiBar5Button",
+		"MultiBar6Button",
+		"MultiBar7Button",
+	}) do
+		for index = 1, 12 do
+			if _G[prefix .. index .. "Name"] then
+				nameTexts = nameTexts + 1
+			end
+		end
+	end
+	local firstName = _G.ActionButton1Name
+	lines[#lines + 1] = string.format(
+		"Macro names on buttons: %s // name texts found: %d of 96 // first button's text alpha: %s",
+		OnOff(global and global.showMacroNames),
+		nameTexts,
+		tostring(firstName and firstName:GetAlpha())
+	)
 	lines[#lines + 1] = string.format(
 		"General macros: %d of %d used, %d kept free (a full book stops new macros)",
 		GetNumMacros() or 0,
@@ -959,7 +1037,7 @@ local function AppendChoices(lines)
 	)
 
 	-- What holds buff food back while it is on (Scanner-Inventory.lua), as the last scan read it.
-	local targetingSelf = C_Secrets.CanCompareUnitTokens("target", "player")
+	local targetingSelf = ns.CanCompareUnitTokens("target", "player")
 		and UnitExists("target")
 		and UnitIsUnit("target", "player")
 	lines[#lines + 1] = string.format(
@@ -967,7 +1045,7 @@ local function AppendChoices(lines)
 		YesNo(ns.wellFedState),
 		YesNo(targetingSelf),
 		YesNo(select(2, IsInInstance()) == "arena"),
-		YesNo(C_Secrets.ShouldAurasBeSecret())
+		YesNo(ns.AreAurasSecret())
 	)
 	lines[#lines + 1] = string.format(
 		"Conjured first: %s (%s) // in force now: %s",
@@ -975,10 +1053,12 @@ local function AppendChoices(lines)
 		tostring(profile.conjuredFirstMode),
 		YesNo(ns.allowConjuredFirst)
 	)
+	-- Restock List last reads the list the Restocker has loaded, so it does nothing until that list is in.
 	lines[#lines + 1] = string.format(
-		"Restock List last: %s // in force now: %s",
+		"Restock List last: %s // in force now: %s // list it reads: %s",
 		OnOff(profile.useRestockLast),
-		YesNo(ns.allowRestockLast)
+		YesNo(ns.allowRestockLast),
+		tostring(ns.restockSettings and ns.restockSettings.currentList)
 	)
 	lines[#lines + 1] = string.format(
 		"Scrolls: %s (%s) // types: %s // picked now: %s",
@@ -1009,9 +1089,10 @@ local function AppendChoices(lines)
 	)
 	lines[#lines + 1] = string.format("Explosive clicks: %s", tostring(profile.explosivesClickMode))
 	lines[#lines + 1] = string.format(
-		"Ignore List: %d on this character, %d on Global",
+		"Ignore List: %d on this character, %d on Global // categories with an ignored item in bags: %s",
 		CountKeys(profile.ignoreList),
-		CountKeys(global.ignoreList)
+		CountKeys(global.ignoreList),
+		EnabledKeys(ns.scannedIgnoredTypes)
 	)
 
 	-- A stamp that differs from this load's means the cache is rebuilt at the next scan.
@@ -1030,7 +1111,7 @@ local function CannibalizeCooldownText()
 	if not spellID then
 		return "(no spell on this client)"
 	end
-	if C_Secrets.ShouldSpellCooldownBeSecret(spellID) then
+	if ns.IsSpellCooldownSecret(spellID) then
 		return "restricted right now"
 	end
 	local cooldown = C_Spell.GetSpellCooldown(spellID)
@@ -1104,6 +1185,9 @@ local function AppendClassAndRace(lines)
 	else
 		lines[#lines + 1] = "Cannibalize now: Tools-Forsaken.lua not loaded (restart the client)"
 	end
+	-- A buff-food pick takes Cannibalize's place in the eating macro (Tools-Forsaken.lua).
+	local foodPick = ns.bestSelection and ns.bestSelection.Food
+	lines[#lines + 1] = string.format("Food pick is buff food: %s", YesNo(foodPick and foodPick.isBuffFood))
 	lines[#lines + 1] = string.format(
 		"Druid Macro Helper: %s // return form: %s // /dmh command present: %s",
 		OnOff(profile.enableDruidMacroHelper),
@@ -1120,6 +1204,13 @@ local function AppendClassAndRace(lines)
 		YesNo(ns.mendPetSpellName),
 		YesNo(ns.revivePetSpellName),
 		YesNo(ns.dismissPetSpellName)
+	)
+	-- Feed Pet offers food by the pet's level, and the pet food buff decides whether buff food is wanted.
+	local petBuffExpires = UnitExists("pet") and ns.GetPetFoodBuffExpiration()
+	lines[#lines + 1] = string.format(
+		"Pet level: %s // pet food buff: %s",
+		tostring(UnitExists("pet") and UnitLevel("pet") or nil),
+		petBuffExpires and string.format("on, %.0f s left", petBuffExpires - GetTime()) or "off"
 	)
 	lines[#lines + 1] = "Pet diets: " .. PetDietText()
 	lines[#lines + 1] = "Feed Pet pick: " .. ItemText(ns.bestPetFoodID)
@@ -1147,7 +1238,7 @@ local function AppendSelection(lines)
 	    alone can reveal.
 	]]
 	local selection = ns.bestSelection
-	if not selection then
+	if next(selection or {}) == nil then
 		lines[#lines + 1] = "No scan has completed yet."
 		return
 	end
@@ -1172,9 +1263,23 @@ local function AppendSelection(lines)
 	end
 end
 
+--[[
+    The ignoreTarget and checkUnique flags each macro's resolver hands
+    ns.GetSmartSpell (Tools-Mages.lua, Tools-Warlocks.lua), so the "casts:"
+    line names what the macro would cast. A list not named here, like the
+    food and water conjures, takes the defaults.
+]]
+local CONJURE_CAST_FLAGS = {
+	MageCreateTable = { true },
+	MageCreateManaGem = { true, true },
+	WarlockCreateHealthstone = { false, true },
+	WarlockCreateSoulwell = { true },
+	WarlockCreateSoulstone = { true, false },
+}
+
 local function AppendSpells(lines)
 	lines[#lines + 1] = "-- Spell knowledge --"
-	for _, entry in ipairs(ns.DIAGNOSTIC_SPELLS) do
+	for _, entry in ipairs(ns.DIAGNOSTIC_SPELL_ROWS) do
 		local spellID, label = entry[1], entry[2]
 		if spellID then
 			local known = ns.IsSpellKnown(spellID) or ns.IsPlayerSpell(spellID)
@@ -1205,10 +1310,17 @@ local function AppendSpells(lines)
 				known = known + 1
 			end
 		end
-		local castName = ns.GetSmartSpell(list)
+		local flags = CONJURE_CAST_FLAGS[listName] or {}
+		local castName = ns.GetSmartSpell(list, flags[1], flags[2])
 		lines[#lines + 1] =
 			string.format("%s: %d of %d ranks known // casts: %s", listName, known, #list, tostring(castName))
 	end
+	-- A friendly player target below your level caps the rank of what you conjure for them (Smart-Spell.lua).
+	lines[#lines + 1] = string.format(
+		"Friendly player target: %s // target level: %s",
+		YesNo(ns.HasFriendlyPlayerTarget()),
+		tostring(UnitLevel("target"))
+	)
 end
 
 function ns:BuildConnoisseurContextReport()
@@ -1290,7 +1402,7 @@ function ns:BuildSelectionReport()
 	local selection = ns.bestSelection
 	local candidates = ns.diagnosticCandidates
 
-	if not selection then
+	if next(selection or {}) == nil then
 		lines[#lines + 1] = "No scan has completed yet. Trigger one by looting an item or changing zone."
 		return table.concat(lines, "\n")
 	end
@@ -1410,7 +1522,7 @@ function ns:BuildReadinessDiagnosticReport()
 	lines[#lines + 1] = "-- What it would print now --"
 
 	-- The report walks auras, and on Forever a restricted aura read throws.
-	if C_Secrets.ShouldAurasBeSecret() then
+	if ns.AreAurasSecret() then
 		lines[#lines + 1] = "(aura data is restricted right now -- run this report again out of combat)"
 	else
 		-- A probe that throws must still leave a report, or this button shows nothing at all.
@@ -1424,6 +1536,66 @@ function ns:BuildReadinessDiagnosticReport()
 			for _, line in ipairs(body) do
 				lines[#lines + 1] = line
 			end
+		end
+
+		--[[
+		    The gates behind each line besides its own switch
+		    (Readiness-Report.lua): a line whose gate is closed stays silent
+		    even while what it checks is missing. Item lines stay silent before
+		    the first bag scan, and count an ignored item as carried.
+		]]
+		local profile = ns.db.profile
+		local okGates, gates = pcall(function()
+			local mainHandMissing, offHandMissing = ns.GetMissingWeaponBuffs()
+			return {
+				string.format(
+					"Well Fed: buff food %s, mode active %s // Scrolls: %s, mode active %s",
+					OnOff(profile.useBuffFood),
+					YesNo(ns.IsModeActive(profile.buffFoodMode)),
+					OnOff(profile.useScrolls),
+					YesNo(ns.IsModeActive(profile.scrollsMode))
+				),
+				string.format(
+					"Flask: TBC or later %s, has one %s // Pet Well Fed: tracked %s",
+					YesNo(ns.EXPANSION >= 2),
+					YesNo(ns.HasFlaskOrElixirs()),
+					YesNo(ns.ShouldTrackPetFood())
+				),
+				string.format(
+					"Soulstone: Warlock %s, knows Create Soulstone %s, one up in the group %s, stones on cooldown %s",
+					YesNo(ns.isWarlock),
+					YesNo(ns.KnowsAny(ns.CONJURE_SPELLS.WarlockCreateSoulstone)),
+					YesNo(ns.GroupHasSoulstone()),
+					YesNo(ns.SoulstonesOnCooldown())
+				),
+				string.format(
+					"Weapon buffs missing: main hand %s, off hand %s // Shaman in group (covers the main hand) %s",
+					YesNo(mainHandMissing),
+					YesNo(offHandMissing),
+					YesNo(ns.GroupHasClass("SHAMAN"))
+				),
+				string.format(
+					"Warlock in group (Healthstone) %s // knows Conjure Mana Gem %s // uses mana %s // talent tabs %s",
+					YesNo(ns.GroupHasClass("WARLOCK")),
+					YesNo(ns.KnowsAny(ns.CONJURE_SPELLS.MageCreateManaGem)),
+					YesNo(ns.PlayerUsesMana()),
+					tostring(ns.GetNumTalentTabs and ns.GetNumTalentTabs())
+				),
+				string.format(
+					"Bags scanned: %s // categories with an ignored item: %s",
+					YesNo(next(ns.bestSelection or {}) ~= nil),
+					EnabledKeys(ns.scannedIgnoredTypes)
+				),
+			}
+		end)
+		lines[#lines + 1] = ""
+		lines[#lines + 1] = "-- Each line's other gates --"
+		if okGates then
+			for _, line in ipairs(gates) do
+				lines[#lines + 1] = line
+			end
+		else
+			lines[#lines + 1] = "ERROR: " .. tostring(gates)
 		end
 	end
 
@@ -1598,20 +1770,32 @@ end
     names the row follows the character's level and list, so every tier item of
     the category's ladder gets a row, each once, and the report checks every name
     the window can show for any character. A ladder this client carries no tiers
-    for adds nothing.
+    for adds nothing. Every other ladder's tiers follow, each item once: the
+    staples tooltip, the upgrade chat lines and the Upgrade Example name them.
+    So does the reminders' Example, by ns.SAMPLE_RESTOCK_ITEM_ID.
 ]]
+local tierSeen = {}
 for _, category in ipairs(ns.GetStarterCategories()) do
 	if not category.label then
-		local seen = {}
 		for index, tier in ipairs(category.chain.tiers) do
 			local itemID = tier[2]
-			if not seen[itemID] then
-				seen[itemID] = true
+			if not tierSeen[itemID] then
+				tierSeen[itemID] = true
 				AddItemLookup(string.format("STARTER_LIST_CATEGORIES.%s[%d]", category.key, index), itemID)
 			end
 		end
 	end
 end
+for chainIndex, chain in ipairs(ns.CONSUMABLE_UPGRADE_CHAINS or {}) do
+	for tierIndex, tier in ipairs(chain.tiers) do
+		local itemID = tier[2]
+		if not tierSeen[itemID] then
+			tierSeen[itemID] = true
+			AddItemLookup(string.format("CONSUMABLE_UPGRADE_CHAINS[%d].tiers[%d]", chainIndex, tierIndex), itemID)
+		end
+	end
+end
+AddItemLookup("SAMPLE_RESTOCK_ITEM_ID", ns.SAMPLE_RESTOCK_ITEM_ID)
 
 --[[
     Blizzard UI labels the add-on shows (the weapon slots, the scroll stats, the
@@ -1645,7 +1829,7 @@ end
 
 ns.AppendDiagnosticRows(ns.DIAGNOSTIC_NAME_LOOKUPS, nameLookups)
 
--- Shared with Message Length (Localization-Reports.lua), which writes the same /cast names.
+-- Shared with Message Length (Message-Length-Macros-for-Consumables.lua), which writes the same /cast names.
 ns.DiagnosticConjureCastName = ConjureCastName
 ns.DiagnosticSortedKeys = SortedKeys
 
@@ -1770,11 +1954,13 @@ ns.DIAGNOSTIC_SPELL_ID_CONSTANTS = {
 	"DRUID_CAT_FORM_SPELL_ID",
 	"DRUID_DIRE_BEAR_FORM_SPELL_ID",
 	"FEED_PET_SPELL_ID",
+	"GLOBAL_COOLDOWN_SPELL_ID",
 	"GOBLIN_ENGINEER_SPELL_ID",
 	"MEND_PET_SPELL_ID",
 	"POISONS_SPELL_ID",
 	"REVIVE_PET_SPELL_ID",
 	"SHADOWMELD_SPELL_ID",
+	"SHOOT_SPELL_ID",
 	"STEALTH_SPELL_ID",
 	"WELL_FED_SPELL_ID",
 }
@@ -1785,9 +1971,13 @@ ns.DIAGNOSTIC_ITEM_ID_CONSTANTS = {
 	"SAMPLE_RESTOCK_ITEM_ID",
 }
 
--- The skill line and race IDs no lookup kind reads: Game Names checks each one's name instead.
+--[[
+    The IDs no lookup kind reads: Game Names checks the skill lines' and the
+    race's names instead, and the Call Pet flyout's is counted only.
+]]
 ns.DIAGNOSTIC_OTHER_ID_CONSTANTS = {
 	"ALCHEMY_SKILL_LINE_ID",
+	"CALL_PET_FLYOUT_ID",
 	"ENGINEERING_SKILL_LINE_ID",
 	"FIRST_AID_SKILL_LINE_ID",
 	"NIGHT_ELF_RACE_ID",

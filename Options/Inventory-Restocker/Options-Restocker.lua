@@ -86,6 +86,40 @@ local function RestockExampleLines()
 	return lines
 end
 
+--[[
+    What an upgrade prints, for the first ladder in this client's
+    Consumable-Upgrade-Paths with a second tier: its first tier, twenty of them,
+    moving to its second. The links fill on the redraw once the items load.
+]]
+local function UpgradeExampleLines()
+	for _, chain in ipairs(ns.CONSUMABLE_UPGRADE_CHAINS) do
+		local from, to = chain.tiers[1], chain.tiers[2]
+		if from and to then
+			ns.WarmItemCache({ from[2], to[2] }, ns.OPTIONS_REGISTRY.Restocker)
+			return ns.BuildRestockUpgradeLines({
+				{
+					fromLink = ns.GetItemHyperlink(from[2]),
+					fromAmount = 20,
+					toLink = ns.GetItemHyperlink(to[2]),
+					toAmount = 20,
+				},
+			})
+		end
+	end
+	return {}
+end
+
+-- The Gold Reserve's line, at the amount its dropdown has chosen.
+local function GoldReserveExampleLines()
+	local settings = GetRestockerSettings()
+	return { ns.BuildOutOfGoldLine(settings or {}) }
+end
+
+local function GoldReserveOff()
+	local settings = GetRestockerSettings()
+	return not (settings and settings.goldReserve)
+end
+
 local function TownHeadline()
 	return L["RESTOCKER_TOWN_REMINDER"]
 end
@@ -165,8 +199,9 @@ end
 
 --[[
     Page order: the description, the Restocker's master switch and what a
-    restock prints, the Gold Reserve, the Reminders section, the window's
-    auto-open behavior, then the Inventory Report's switch.
+    restock prints, the Gold Reserve, the Reminders section, then the window's
+    auto-open behavior. The Inventory Report has its own page under this one
+    (Options/Inventory-Report/Options-Inventory-Report.lua).
 
     The three reminders are peers under their header. The merchant and bank
     reminders are a toggle with the dropdown choosing how much it reports on
@@ -174,7 +209,7 @@ end
     indented sub-rows under its toggle.
 ]]
 function ns.BuildRestockerOptions()
-	return {
+	local options = {
 		type = "group",
 		name = L["TAB_RESTOCKER"],
 		args = {
@@ -191,6 +226,8 @@ function ns.BuildRestockerOptions()
 			toggleRestockerEnabled = ns.OptionsFeatureSwitch("Restocker", 1.2),
 			spaceRestockExample = Spacer(1.3),
 			exampleRestock = ns.OptionsExample(1.4, RestockExampleLines),
+			spaceUpgradeExample = Spacer(1.5),
+			exampleUpgrade = ns.OptionsExample(1.6, UpgradeExampleLines),
 
 			--[[
 			    The Gold Reserve: the floor the merchant restock never spends
@@ -229,6 +266,8 @@ function ns.BuildRestockerOptions()
 					end
 				end,
 			},
+			spaceGoldExample = Spacer(6.4, GoldReserveOff),
+			exampleGoldReserve = ns.OptionsExample(6.5, GoldReserveExampleLines, GoldReserveOff),
 
 			-- Reminders
 			spaceReminders0 = Spacer(7),
@@ -369,25 +408,7 @@ function ns.BuildRestockerOptions()
 					end
 				end,
 			},
-
-			--[[
-			    Inventory Report: the counts Features/Inventory-Restocker/Inventory-Report-Tooltip.lua adds to
-			    item tooltips. It sits on this panel because it covers every
-			    item on the Restock List, even one nobody holds; it shows bag and bank counts, never
-			    a keep amount. The header is the block's title, so the panel and
-			    the tooltip cannot name it two ways.
-
-			    Read at every tooltip, so switching it takes effect on the next
-			    one without a reload. Not a Restocker settings key: it sits on
-			    ns.db.global itself (Data/Default-Settings.lua), so it goes
-			    through the database rather than the settings accessor.
-			]]
-			spaceInventory0 = Spacer(30),
-			headerInventory = Header(L["INVENTORY_REPORT_TITLE"], 31),
-			spaceInventory1 = Spacer(32),
-			descInventory = Desc(GetColor("BODY") .. L["OPTIONS_INVENTORY_REPORT_SECTION_DESCRIPTION"] .. "|r", 33),
-			spaceInventory2 = Spacer(34),
-			toggleInventoryReport = ns.OptionsFeatureSwitch("InventoryReport", 35),
 		},
 	}
+	return options
 end

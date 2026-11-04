@@ -18,9 +18,9 @@ local REGISTRY = ns.OPTIONS_REGISTRY
     The tree is split by the add-on each part came from, each under a heading
     page of its own that holds its features' master switches:
 
-      Bags Buffs & Buttons    (General: welcome, mini-map, /commands)
+      Good to Go    (General: welcome, mini-map, /commands)
         Connoisseur           Macros (Class & Race, Ignore List), Readiness Report
-        Restocker
+        Restocker             Inventory Report
         Thanks for the Buff   Stranger Buffs, Teammate Buffs, Send Good News,
                               Service Alerts, Buff Duty, Thank You Button
         Spellbook
@@ -71,7 +71,9 @@ local function RegisterConnoisseurPanels()
 end
 
 local function RegisterRestockerPanels()
-	RegisterChild("Restocker", ns.BuildRestockerOptions, L["TAB_RESTOCKER"])
+	local restockerID = RegisterChild("Restocker", ns.BuildRestockerOptions, L["TAB_RESTOCKER"])
+	-- Named by the tooltip block's own title, so the panel and the tooltip cannot name it two ways.
+	RegisterChild("InventoryReport", ns.BuildInventoryReportOptions, L["INVENTORY_REPORT_TITLE"], restockerID)
 end
 
 local function RegisterThanksForTheBuffPanels()
@@ -173,8 +175,8 @@ end
 -- Slash Commands
 --------------------------------------------------------------------------------
 
-SLASH_BAGSBUFFSBUTTONS1 = "/bbb"
-SlashCmdList["BAGSBUFFSBUTTONS"] = function()
+SLASH_GOODTOGO1 = "/gtg"
+SlashCmdList["GOODTOGO"] = function()
 	ns:OpenOptionsPanel()
 end
 
@@ -183,8 +185,8 @@ end
     rather than inside the feature: slash registration is this file's job, and
     the handler stays with the feature that answers it.
 ]]
-SLASH_BAGSBUFFSBUTTONSRESTOCK1 = "/restock"
-SlashCmdList["BAGSBUFFSBUTTONSRESTOCK"] = function(message)
+SLASH_GOODTOGORESTOCK1 = "/restock"
+SlashCmdList["GOODTOGORESTOCK"] = function(message)
 	ns.HandleRestockerCommand(message)
 end
 
@@ -194,7 +196,7 @@ end
     existing macros type; only the internal SlashCmdList key is namespaced.
 ]]
 for index, button in ipairs(ns.Data.THANK_YOU_BUTTONS) do
-	local key = "BAGSBUFFSBUTTONS_THANKYOU" .. index
+	local key = "GOODTOGO_THANKYOU" .. index
 	_G["SLASH_" .. key .. "1"] = button.command
 	SlashCmdList[key] = function()
 		if ns.RunThankYou then

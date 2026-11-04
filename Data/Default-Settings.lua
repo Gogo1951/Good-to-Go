@@ -226,7 +226,7 @@ ns.DATABASE_DEFAULTS = {
 			goldReserveAmount = 1,
 		},
 		--[[
-		    The Inventory Report in item tooltips (Features/Inventory-Restocker/Inventory-Report-Tooltip.lua).
+		    The Inventory Report in item tooltips (Features/Inventory-Report/Inventory-Report-Tooltip.lua).
 		    Ships ON, unlike the opt-ins above: it only ever adds lines to a
 		    tooltip the player asked for, and never acts. The switch exists
 		    because most auction add-ons print their own counts under the same
@@ -237,7 +237,7 @@ ns.DATABASE_DEFAULTS = {
 		--[[
 		    Every character's last-known bags and bank, keyed by character (the
 		    Restocker's "Name-Realm" key), each place packed into one line of
-		    "itemID:count" pairs by Features/Inventory-Restocker/Inventory-Report-Recording.lua. Account-wide
+		    "itemID:count" pairs by Features/Inventory-Report/Inventory-Report-Recording.lua. Account-wide
 		    because its whole point is showing one character what the others
 		    hold, and never a profile: switching or resetting one must not wipe
 		    what an alt was carrying. Each record also holds the character's
@@ -408,6 +408,13 @@ local SPELLBOOK_DEFAULTS = {
 		showUnlearned = false,
 		countSpellsOnBars = true,
 		pageSort = "category", -- "category" (by kind of macro) or "school" (by spellbook tab); see ns.PageSort
+		-- the What's Next? tab: "availability" (by status) or "level" (by learn level); see ns.WhatsNextSort
+		whatsNextSort = "availability",
+		whatsNextShowKnown = true,
+		whatsNextShowTalents = true,
+		-- the Pet What's Next? tab, which shares whatsNextSort; see ns.WhatsNextPetShowsKnown
+		whatsNextPetShowKnown = true,
+		whatsNextPetShowOtherFamilies = false,
 		markedPlaced = {}, -- macros marked placed from the page's settings menu, by WoW macro name
 		--[[
 			the options each kind of macro starts with (see ns.MACRO_KINDS), as kind -> option -> true or
@@ -450,6 +457,10 @@ local SPELLBOOK_DEFAULTS = {
 		groupVersion = {},
 		groupedSpells = {},
 		targetPriority = {}, -- each spell's own target priority, as a list of units (see ns.TargetPriority)
+		conditionals = {}, -- each spell's Conditionals rows, in order (see ns.Conditionals)
+		castSequence = {}, -- each spell's Cast Sequence steps after its own, in order (see ns.CastSequenceSteps)
+		castSequenceEnd = {}, -- "stop" where a spell's Cast Sequence stops on NULL rather than starting over
+		castSequenceReset = {}, -- each spell's Cast Sequence resets, where not the default (see ns.CastSequenceResetText)
 		useItems = {},
 		macroCopies = {}, -- the Duplicate copies of each spell's macro, by spell name, as a list of copy numbers
 		trainerSpells = {}, -- by class token, then spell id -> required level (see Features/Spellbook/Trainer-Recording.lua)
@@ -579,7 +590,7 @@ local THANKS_FOR_THE_BUFF_DEFAULTS = {
 			    The editable body of the whisper. ONE token, %a, substituted by
 			    ns:BuildGoodNewsMessage with the ability link plus -- for a short
 			    enough buff -- its duration clause. That call also adds the star
-			    marker (left off on WoW Forever) and the " // BBB" sign-off, and
+			    marker (left off on WoW Forever) and the " // GtG" sign-off, and
 			    trims the body's closing punctuation; neither is editable.
 			]]
 		message = ns.L["DEFAULT_GOOD_NEWS"],
@@ -592,8 +603,8 @@ local THANKS_FOR_THE_BUFF_DEFAULTS = {
 		    each buff is offered to (Data.BUFF_AUDIENCE), keyed by the row's first
 		    single-target id, and seeds from the row defaults in this client's
 		    Buff-Window-Spells file. `point` is nil until the window is first
-		    dragged, and until then its top-left corner sits a little left of and
-		    above the middle of the screen.
+		    dragged, and until then its top-right corner sits a little right of
+		    and above the middle of the screen.
 		]]
 	buffWindow = {
 		enabled = true,
@@ -625,7 +636,9 @@ local THANKS_FOR_THE_BUFF_DEFAULTS = {
 			    can fight in melee, and pets, start SOLO.
 			]]
 		tankWhen = {
+			DEATHKNIGHT = "SOLO",
 			DRUID = "SOLO",
+			MONK = "SOLO",
 			PALADIN = "SOLO",
 			ROGUE = "SOLO",
 			SHAMAN = "SOLO",
@@ -660,6 +673,8 @@ local THANKS_FOR_THE_BUFF_DEFAULTS = {
 		-- One of Data.BUFF_WINDOW_FAVOR_CHOICES.
 		favorSeconds = 40,
 		targetEnabled = true,
+		-- The title row's raid buffs, and the asks its clicks send.
+		askOtherClasses = true,
 		audience = {},
 	},
 	watchedBuffs = {},

@@ -11,27 +11,28 @@ local L = ns.L
     These are intentionally GLOBAL — macro bodies invoke them through `/run`,
     which executes in the global environment and cannot see the add-on
     namespace. The names a written macro body reaches through /run are among
-    the globals the house rules allow; each carries the add-on's "BBB"
+    the globals the house rules allow; each carries the add-on's "GtG"
     prefix, short because every byte counts against the macro-body ceiling.
 
     They are the runtime half of the macro system: the macro builders emit
-    `/run BBBFire / BBBTip / BBBTipIf /
-    BBBNoItem` lines, and these functions run when the player presses
-    the macro. This file loads after Announcements (BBBTip and
-    BBBNoItem call ns.PrintMessage) and after Data (reads
+    `/run GtGFire / GtGTip / GtGTipIf /
+    GtGNoItem / GtGReplace` lines, and these functions run when the player presses
+    the macro. This file loads after Announcements (GtGTip and
+    GtGNoItem call ns.PrintMessage) and after Data (reads
     ns.TIP_MESSAGES, ns.MISSING_SPELL_MESSAGE_IDS, ns.MACRO_CONFIG).
 ]]
 
 --[[
     Transport between the /run snippet in consumable macros and
-    ns.OnMacroUiErrorMessage below, which Core routes UI_ERROR_MESSAGE to. The
+    ns.OnMacroUiErrorMessage below, which the module's dispatcher
+    (Macros-for-Consumables-Core.lua) routes UI_ERROR_MESSAGE to. The
     macro writes lastID and lastTime so a zone-restriction error can be
     correlated back to its triggering item.
 ]]
 local macroFireState = {}
 
 --[[
-    Records the firing item with `/run BBBFire(itemID)` instead of inlining a
+    Records the firing item with `/run GtGFire(itemID)` instead of inlining a
     longer snippet: every standard body with an item in bags carries the call, so the
     saved bytes count against the 255 macro-body ceiling in every consumable macro.
 
@@ -40,7 +41,7 @@ local macroFireState = {}
     [combat] test the body's own lines use picks which of the two the press
     fires. With no potion in bags the body passes the food alone.
 ]]
-function BBBFire(itemID, outOfCombatID)
+function GtGFire(itemID, outOfCombatID)
 	if outOfCombatID and not UnitAffectingCombat("player") then
 		itemID = outOfCombatID
 	end
@@ -50,11 +51,11 @@ end
 
 --[[
     Consumer half of the macroFireState transport: when a consumable macro
-    fires, BBBFire() above stamps lastID/lastTime. If ERR_ITEM_WRONG_ZONE
+    fires, GtGFire() above stamps lastID/lastTime. If ERR_ITEM_WRONG_ZONE
     arrives within one second, we know which item to blame and print a bug
-    report naming it. Core's dispatcher routes UI_ERROR_MESSAGE here ahead of
-    its combat-lockdown guard, since a zone-locked potion is usually pressed
-    mid-fight.
+    report naming it. The module's dispatcher (Macros-for-Consumables-Core.lua)
+    routes UI_ERROR_MESSAGE here ahead of its combat-lockdown guard, since a
+    zone-locked potion is usually pressed mid-fight.
 ]]
 function ns.OnMacroUiErrorMessage(message)
 	if not (macroFireState.lastTime and (GetTime() - macroFireState.lastTime) < 1.0) then
@@ -79,12 +80,12 @@ function ns.OnMacroUiErrorMessage(message)
 end
 
 --[[
-    Resolves a BBBTip key to its display text. Static messages come from
+    Resolves a GtGTip key to its display text. Static messages come from
     ns.TIP_MESSAGES; "you don't know <spell>" keys come from
     ns.MISSING_SPELL_MESSAGE_IDS and are rendered with the localized spell name via
     C_Spell.GetSpellName at print time, as is noPetSkills from the four pet spells it
     names. A spell that doesn't exist on the current client returns nil here so
-    BBBTip silently skips rather than naming a spell the player will never see.
+    GtGTip silently skips rather than naming a spell the player will never see.
 ]]
 local PET_SKILL_SPELL_IDS = {
 	ns.CALL_PET_SPELL_ID,
@@ -122,7 +123,7 @@ local function ResolveTipText(key)
 	return nil
 end
 
-function BBBTip(key)
+function GtGTip(key)
 	local text = ResolveTipText(key)
 	if text then
 		ns:PrintMessage(text)
@@ -130,7 +131,7 @@ function BBBTip(key)
 end
 
 --[[
-    Conditional sibling of BBBTip — fires the tip only when the macro
+    Conditional sibling of GtGTip — fires the tip only when the macro
     conditional `condition` matches. The conjure block uses it for a click whose
     spell is not learned yet, the Poisons macro for a hand with no poison, and
     the Feed Pet macro for level-10/11 hunters who don't know Mend Pet yet, so
@@ -139,15 +140,15 @@ end
     clean truthy/falsy semantics regardless of how the API treats an empty
     action body.
 ]]
-function BBBTipIf(condition, key)
+function GtGTipIf(condition, key)
 	if SecureCmdOptionParse(condition .. " 1") then
-		BBBTip(key)
+		GtGTip(key)
 	end
 end
 
 --[[
     Prints the standardized "no suitable <type> found" chat line. Macro bodies
-    call this with the internal type key (`/run BBBNoItem("Food")`). The key
+    call this with the internal type key (`/run GtGNoItem("Food")`). The key
     stays English inside the macro body (keeps bodies and state keys
     locale-independent) and resolves to the localized LABEL_* string via
     ns.MACRO_CONFIG at print time. Unknown keys fall back to the raw key so a stale
@@ -158,7 +159,7 @@ end
     Healthstone and Soulstone), so the line names the Right-Click that makes
     more instead. Mages conjure and warlocks create, the verbs their spells use.
 ]]
-function BBBNoItem(typeName, canMake)
+function GtGNoItem(typeName, canMake)
 	local config = ns.MACRO_CONFIG[typeName]
 	local label = config and config.label or typeName
 	if canMake and config then
@@ -170,11 +171,23 @@ function BBBNoItem(typeName, canMake)
 end
 
 --[[
+    Confirms the client's "replace your current enchant/poison" popup for the
+    Poisons macro (`/run GtGReplace()`), and only that popup: a Delete Item or
+    any other confirmation that happens to be open is left alone.
+]]
+function GtGReplace()
+	if StaticPopup_Visible("REPLACE_ENCHANT") then
+		C_Item.ReplaceEnchant()
+		StaticPopup_Hide("REPLACE_ENCHANT")
+	end
+end
+
+--[[
     MIGRATION (remove after 2026-11-26): the names these callbacks had before
-    the BBB prefix. A macro body written under them can still be pressed before
+    the GtG prefix. A macro body written under them can still be pressed before
     its next rewrite, such as after logging in mid-combat.
 ]]
-ConnoisseurFire = BBBFire
-ConnoisseurTip = BBBTip
-ConnoisseurTipIf = BBBTipIf
-ConnoisseurNoItem = BBBNoItem
+ConnoisseurFire = GtGFire
+ConnoisseurTip = GtGTip
+ConnoisseurTipIf = GtGTipIf
+ConnoisseurNoItem = GtGNoItem

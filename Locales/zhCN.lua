@@ -1,4 +1,4 @@
-local L = LibStub("AceLocale-3.0"):NewLocale("Bags-Buffs-Buttons", "zhCN")
+local L = LibStub("AceLocale-3.0"):NewLocale("Good-to-Go", "zhCN")
 if not L then
 	return
 end
@@ -10,17 +10,17 @@ end
 --[[
     The add-on has two names. ADDON_TITLE, the full name, is for window
     titles and anywhere the add-on is talked about; ADDON_SHORT_NAME is for
-    tooltips and the chat prints ("BBB // ..."). Both are proper nouns and
+    tooltips and the chat prints ("GtG // ..."). Both are proper nouns and
     stay as written in every locale, as does the full name inside any
     sentence below.
 ]]
-L["ADDON_TITLE"] = "Bags Buffs & Buttons"
-L["ADDON_SHORT_NAME"] = "BBB"
+L["ADDON_TITLE"] = "Good to Go"
+L["ADDON_SHORT_NAME"] = "GtG"
 
 L["CHAT_LOADED"] =
-	"版本 %s。设置（包括禁用此消息的选项）位于 设置选项 > 插件 > Bags Buffs & Buttons。喜欢这个插件吗？告诉朋友，在 CurseForge 上收藏它，或在它的 GitHub 页面上点击 Star。(="
-L["OPTIONS_LEVEL_UP_TITLE"] = "帮助 Bags Buffs & Buttons 升级"
-L["OPTIONS_LEVEL_UP_THANKS"] = "感谢你选择 Bags Buffs & Buttons！"
+	"版本 %s。设置（包括禁用此消息的选项）位于 设置选项 > 插件 > Good to Go。喜欢这个插件吗？告诉朋友，在 CurseForge 上收藏它，或在它的 GitHub 页面上点击 Star。(="
+L["OPTIONS_LEVEL_UP_TITLE"] = "帮助 Good to Go 升级"
+L["OPTIONS_LEVEL_UP_THANKS"] = "感谢你选择 Good to Go！"
 
 --------------------------------------------------------------------------------
 -- Connoisseur & Restocker
@@ -94,16 +94,6 @@ L["MESSAGE_BUG_REPORT"] =
 L["MESSAGE_NO_ITEM"] = "背包中未找到合适的%s。"
 L["MESSAGE_MACRO_SLOTS_FULL"] =
 	"由于你的宏栏位已满，部分 Connoisseur & Restocker 宏未能创建。请删除不再使用的宏以腾出栏位，或在 设置选项 > 插件 > Connoisseur & Restocker > 宏 中关闭不需要的 Connoisseur & Restocker 宏。"
---[[
-    Printed once after the add-on creates one or more of its macros, so a new
-    player learns they exist. %s is "/m", the game's own macro command, colored
-    at the call site. "General" is the macro window's tab for account-wide
-    macros; use the client's own name for that tab. The macro names are this
-    locale's own MACRO_FOOD and MACRO_WATER values, written exactly as this
-    locale ships them.
-]]
-L["MESSAGE_MACROS_READY"] =
-	'你的宏已准备就绪。输入 %s，打开"通用宏"标签页，然后把 - 食物、- 水 等宏拖到你的动作条上。'
 -- The mini-map button's Right-Click and Middle-Click. %s is the item's link.
 L["MESSAGE_IGNORE_ADDED"] = "%s 已加入此角色的忽略列表。"
 -- %d is how many items the Middle-Click took off the list: exactly one, or two or more.
@@ -280,7 +270,7 @@ L["MINIMAP_RESTOCKER_EMPTY"] = "你的清单是空的。"
 L["MENU_RESTOCKER"] = "Restocker 清单"
 L["MENU_RESTOCKER_DESCRIPTION"] = "购买你清单上的物品，并在银行存取。"
 L["MENU_RESTOCKER_KEYBIND"] = "Shift + 右键点击"
-L["MENU_OPTIONS"] = "BBB 选项"
+L["MENU_OPTIONS"] = "GtG 选项"
 L["MENU_OPTIONS_KEYBIND"] = "Shift + 中键点击"
 
 --------------------------------------------------------------------------------
@@ -459,7 +449,7 @@ L["SAMPLE_EXAMPLE"] = "示例：%s"
     translate, and its description.
 ]]
 L["OPTIONS_COMMANDS_HEADER"] = "/Commands"
-L["OPTIONS_COMMAND"] = "/bbb"
+L["OPTIONS_COMMAND"] = "/gtg"
 L["OPTIONS_COMMAND_DESCRIPTION"] = "打开此插件的选项界面。"
 L["RESTOCKER_COMMAND"] = "/restock"
 L["RESTOCKER_COMMAND_DESCRIPTION"] = "打开你的补货清单。"
@@ -1649,6 +1639,22 @@ L["BUFF_WINDOW_TOOLTIP_CREATE"] = "你的队伍中没有人有灵魂石。点击
 L["BUFF_WINDOW_TOOLTIP_GROUP"] = "点击对 %s 及其小队施放。"
 L["BUFF_WINDOW_TOOLTIP_FAVOR"] = "点击选中 %s 为目标并施放。"
 L["BUFF_WINDOW_TOOLTIP_DISMISS"] = "右键点击将 %s 从列表中移除。"
+-- The title row: a raid buff your group is missing, its count and click.
+L["BUFF_WINDOW_OTHERS_TOOLTIP_COUNT"] = "缺少或即将消失：%d"
+-- %s is the names of the players the click whispers.
+L["BUFF_WINDOW_OTHERS_TOOLTIP_WHISPER"] = "点击将名单密语给 %s。"
+--[[
+    The whisper a click sends, signed off like every sent message ({star} ... // GtG):
+    the class addressed (BUFF_WINDOW_OTHERS_PLURAL_*), the count, then the buff's link.
+]]
+L["BUFF_WINDOW_OTHERS_REQUEST_ONE"] = "%s们好！有 1 人缺少%s或需要尽快补上。谢谢！"
+L["BUFF_WINDOW_OTHERS_REQUEST"] = "%s们好！有 %d 人缺少%s或需要尽快补上。谢谢！"
+-- Your own chat, after a click: who was whispered, then the buff's link.
+L["BUFF_WINDOW_OTHERS_SENT"] = "已向 %s 发送%s的密语。"
+-- The classes with a raid-wide buff, addressed as a group.
+L["BUFF_WINDOW_OTHERS_PLURAL_DRUID"] = "德鲁伊"
+L["BUFF_WINDOW_OTHERS_PLURAL_MAGE"] = "法师"
+L["BUFF_WINDOW_OTHERS_PLURAL_PRIEST"] = "牧师"
 -- The window's close button: the class name in its color, then the options command.
 L["BUFF_WINDOW_CLOSED"] =
 	"已为%s职业关闭增益值班。要重新开启，请 Shift + 右键点击小地图按钮，或输入 %s。"
@@ -1829,7 +1835,7 @@ L["TOOLTIP_ACTION_MACRO_OPTIONS"] = "宏选项"
 -- Spellbook Tab Tooltip
 L["SPELLBOOK_TAB_DESCRIPTION"] = "把你的职业法术做成一键宏。"
 L["TOOLTIP_KEY_CLICK"] = "点击"
-L["TOOLTIP_ACTION_OPEN_PAGE"] = "打开 BBB Spellbook"
+L["TOOLTIP_ACTION_OPEN_PAGE"] = "打开 GtG Spellbook"
 
 -- Page: Layout
 L["PAGE_EMPTY"] = "还没有宏。去找你的职业训练师学习第一批法术。"
@@ -1841,23 +1847,22 @@ L["PAGE_MACRO_CHARACTER"] = "角色"
 
 L["OPTIONS_KEY_BINDINGS_HEADER"] = "按键设置"
 L["OPTIONS_KEY_SET"] = "设置按键"
-L["OPTIONS_KEY_SET_DESCRIPTION"] =
-	"打开游戏的按键设置列表，Bags Buffs & Buttons 在其中有自己的分类。"
+L["OPTIONS_KEY_SET_DESCRIPTION"] = "打开游戏的按键设置列表，Good to Go 在其中有自己的分类。"
 L["OPTIONS_KEY_BINDING_TOGGLE_DESCRIPTION"] =
-	"打开或关闭 BBB Spellbook。它在你的法术书中也有自己的标签页。"
+	"打开或关闭 GtG Spellbook。它在你的法术书中也有自己的标签页。"
 L["OPTIONS_DELETE_MACROS_HEADER"] = "删除宏"
 L["OPTIONS_DELETE_MACROS_DESCRIPTION"] =
-	"删除 BBB Spellbook 创建的宏，同时会将它们从动作条上移除。你自己的宏绝不会被改动，在页面上点击或拖动任意一个宏即可重新创建。"
+	"删除 GtG Spellbook 创建的宏，同时会将它们从动作条上移除。你自己的宏绝不会被改动，在页面上点击或拖动任意一个宏即可重新创建。"
 L["OPTIONS_DELETE_CHARACTER_MACROS"] = "删除角色宏"
 L["OPTIONS_DELETE_CHARACTER_MACROS_DESCRIPTION"] =
-	"从此角色的宏标签中删除 BBB Spellbook 的宏。你的其他角色会保留各自的宏，直到你在那些角色上也这样做。"
+	"从此角色的宏标签中删除 GtG Spellbook 的宏。你的其他角色会保留各自的宏，直到你在那些角色上也这样做。"
 L["OPTIONS_DELETE_CHARACTER_MACROS_CONFIRM"] =
-	"删除此角色上所有 BBB Spellbook 的宏？它们也会从你的动作条上移除。"
+	"删除此角色上所有 GtG Spellbook 的宏？它们也会从你的动作条上移除。"
 L["OPTIONS_DELETE_GENERAL_MACROS"] = "删除通用宏"
 L["OPTIONS_DELETE_GENERAL_MACROS_DESCRIPTION"] =
-	"从通用宏标签中删除 BBB Spellbook 的宏。该标签由账号内所有角色共享，因此你的其他角色也会失去那里的宏。"
+	"从通用宏标签中删除 GtG Spellbook 的宏。该标签由账号内所有角色共享，因此你的其他角色也会失去那里的宏。"
 L["OPTIONS_DELETE_GENERAL_MACROS_CONFIRM"] =
-	"删除 BBB Spellbook 的所有通用宏？账号内所有角色都会失去它们，并且它们也会从你的动作条上移除。"
+	"删除 GtG Spellbook 的所有通用宏？账号内所有角色都会失去它们，并且它们也会从你的动作条上移除。"
 
 -- Options: Spellbook Page Panel
 L["OPTIONS_SHOW_UNLEARNED_DESCRIPTION"] =
@@ -1901,10 +1906,10 @@ L["KIND_SELF"] = "自身和范围法术"
 L["KIND_SELF_DESCRIPTION"] = "没有目标，对自己或周围施放的法术。"
 
 -- Key Bindings
-L["BINDING_TOGGLE_PAGE"] = "打开/关闭 BBB Spellbook"
+L["BINDING_TOGGLE_PAGE"] = "打开/关闭 GtG Spellbook"
 
 L["CHAT_KEY_BINDINGS_IN_COMBAT"] = "出于安全考虑，战斗中无法打开按键设置列表。"
-L["KEY_BINDINGS_LOCATION"] = "打开游戏菜单，依次进入 %s 和 %s，找到 Bags Buffs & Buttons 分类。"
+L["KEY_BINDINGS_LOCATION"] = "打开游戏菜单，依次进入 %s 和 %s，找到 Good to Go 分类。"
 L["ERROR_MACRO_SLOTS_FULL"] = "没有空余的宏栏位。请在 /macro 中删除一个宏来腾出位置。"
 L["CHAT_MACROS_DELETED"] = "已删除宏：%d"
 L["CHAT_MACRO_TOO_LONG"] =

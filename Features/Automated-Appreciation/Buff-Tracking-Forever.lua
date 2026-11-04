@@ -14,8 +14,9 @@ local GetPetOwnerUnit = ns.GetPetOwnerUnit
 
 --[[
     Who to credit for an aura on you, as creditGUID, creditName, and the unit token
-    we hold for them (nil for a stranger we can only name). Same rule as
-    ResolveSource: a player or nobody, with a pet traded for its owner.
+    we hold for them (nil for a stranger we can only name). Same rule as the
+    combat log's ResolveSource (Buff-Tracking-Combat-Log.lua): a player or
+    nobody, with a pet traded for its owner.
 
     The aura's sourceUnit is the first choice: a group token for a teammate, a
     nameplate token for a stranger. A stranger without a nameplate leaves it nil,

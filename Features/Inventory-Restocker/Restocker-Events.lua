@@ -7,7 +7,7 @@ ns.restockerLoaded = false
     of this file. Each takes the event's own arguments with no leading
     event-name. Filled by ns.InitializeRestockerEvents. GET_ITEM_INFO_RECEIVED
     is the one exception: the item cache's owner hands it on in a fixed order
-    (Features/Macros-for-Consumables/Macros-for-Consumables-Core.lua).
+    (Features/Item-Info.lua).
 ]]
 ns.restockerEventHandlers = {}
 
@@ -48,10 +48,8 @@ function ns.InitializeRestocker()
 	]]
 	ns.InflateSavedRestockItems(ns.restockSettings)
 
-	-- Select the list this character uses (creating one if it has chosen none)
 	ns.InitializeCharacterRestockList()
 
-	-- Drop leftover empty orphan lists (e.g. an old shared "default")
 	ns.PruneEmptyOrphanRestockLists(ns.restockSettings)
 	--[[
 	    (Re-packing into the one-line form happens in ns.OnRestockerLogout, which calls
@@ -72,119 +70,6 @@ function ns.InitializeRestocker()
 	end
 
 	ns.restockerLoaded = true
-end
-
---------------------------------------------------------------------------------
--- Merchant And Bank Windows
---------------------------------------------------------------------------------
-
-function ns.OnRestockerMerchantShow()
-	ns.merchantIsOpen = true
-
-	if IsShiftKeyDown() then
-		ns.merchantBuyingSkipped = true
-		return
-	end
-
-	ns.merchantBuyingSkipped = false
-	ns.RestockFromMerchant() -- each item can be individually enabled to restock from merchant
-end
-
---[[
-    Leaving a merchant or a bank is the last moment you can still do something
-    about a short list, so both report what is left on the way out. Silent when
-    nothing is short -- a report with nothing in it is just noise.
-
-    The short delay is for bag counts. Purchases and bank moves settle on
-    BAG_UPDATE, which can land after the window closes; reading the shortfall on
-    the same frame would count items you are already holding as missing.
-
-    The client fires MERCHANT_CLOSED and BANKFRAME_CLOSED on loading-screen
-    teardown (boat crossings included) with no matching open -- and can double-fire
-    them -- so each close handler keys the reminder, and closing the Restock
-    window, off its tracked open flag: a _CLOSED event alone does not mean a
-    window was ever open. The Restock window then closes only if that visit
-    opened it (ns.ShowRestockWindowForVisit).
-]]
-local SETTLE_DELAY = 0.3
-
-local function RemindOnClose(enabled, mode)
-	if not enabled then
-		return
-	end
-	C_Timer.After(SETTLE_DELAY, function()
-		local groceries = ns.BuildGroceryList()
-		if #groceries == 0 then
-			return
-		end
-		ns.PrintRestockShortfall(ns.RestockShortfallHeadline(#groceries), mode, groceries)
-	end)
-end
-
-function ns.OnRestockerMerchantClose()
-	local merchantWasOpen = ns.merchantIsOpen
-	ns.merchantIsOpen = false
-	ns.merchantBuyingSkipped = false
-	ns.ResetMerchantRestockThrottle()
-	if merchantWasOpen then
-		ns.HideRestockWindowAfterVisit()
-	end
-
-	local settings = ns.restockSettings
-	if settings and merchantWasOpen then
-		RemindOnClose(settings.merchantReminder, settings.merchantReminderMode)
-	end
-end
-
---[[
-    One bank visit: a Shift held as the bank opens skips its run for the whole
-    visit, and the close reminder follows only a visit whose run started.
-]]
-local bankRestockSkipped = false
-local bankRestockStarted = false
-
-function ns.OnRestockerBankFrameOpened()
-	ns.bankIsOpen = true
-	bankRestockSkipped = IsShiftKeyDown()
-	bankRestockStarted = false
-	ns.OnRestockerBankOpen()
-end
-
--- Also run while the bank is open, when the list in use or a Keep amount changes.
-function ns.OnRestockerBankOpen()
-	ns.LoadRestockBankBags()
-
-	local settings = ns.restockSettings
-	local list = settings.lists[settings.currentList]
-
-	-- An empty list has nothing to move, so the run would only announce a restock that never happened.
-	if bankRestockSkipped or list == nil or next(list) == nil then
-		return
-	end
-
-	if settings.autoOpenAtBank then
-		ns.ShowRestockWindowForVisit()
-	end
-
-	bankRestockStarted = true
-	ns.RestartBankRestock()
-end
-
-function ns.OnRestockerBankClose()
-	local bankWasOpen = ns.bankIsOpen
-	local restockStarted = bankRestockStarted
-	ns.bankIsOpen = false
-	bankRestockSkipped = false
-	bankRestockStarted = false
-	ns.StopBankRestock()
-	if bankWasOpen then
-		ns.HideRestockWindowAfterVisit()
-	end
-
-	local settings = ns.restockSettings
-	if settings and restockStarted then
-		RemindOnClose(settings.bankReminder, settings.bankReminderMode)
-	end
 end
 
 --------------------------------------------------------------------------------
@@ -274,6 +159,7 @@ end
 ]]
 function ns.SetRestockerEnabled(value)
 	ns.db.global.restockerEnabled = value
+	ns.SyncRestockerEvents()
 	if value then
 		-- What a loading screen would have done while the switched-off handlers slept.
 		ns.ArmRestockerReminders()
@@ -281,12 +167,8 @@ function ns.SetRestockerEnabled(value)
 		return
 	end
 	ns.CloseStarterListPopup()
-	ns.StopBankRestock()
-	ns.bankIsOpen = false
-	bankRestockSkipped = false
-	bankRestockStarted = false
-	ns.merchantIsOpen = false
-	ns.merchantBuyingSkipped = false
+	ns.EndRestockBankVisit()
+	ns.EndRestockMerchantVisit()
 	ns.HideRestockWindow()
 end
 
@@ -332,7 +214,11 @@ end
 
 local MODULE = "Restocker"
 
--- Every event the Restocker and the Inventory Report handle, each subscribed for as long as the add-on runs.
+--[[
+    Every event the Restocker and the Inventory Report handle. Login and logout
+    are heard for as long as the add-on runs; the rest only while a feature
+    that handles them is switched on (ns.SyncRestockerEvents).
+]]
 local EVENTS = {
 	"BAG_UPDATE_DELAYED",
 	"BANKFRAME_CLOSED",
@@ -361,14 +247,16 @@ ns.RegisterEventModule(MODULE, function(event, ...)
 		ns.InitializeRestocker()
 		--[[
 		    After the Restocker, whose settings the report reads for a list
-		    item's Keep amount. Tested for: the client reads a TOC's file list
-		    only at startup, so a player who updates with the game running and
-		    reloads gets this file without Inventory-Report-Recording.lua until the next
-		    restart. The report just stays off until then.
+		    item's Keep amount. MIGRATION (remove after 2026-11-25): tested
+		    for, since the client reads a TOC's file list only at startup, so a
+		    player who updates with the game running and reloads gets this file
+		    without Inventory-Report-Recording.lua until the next restart. The
+		    report just stays off until then.
 		]]
 		if ns.InitializeInventoryReport then
 			ns.InitializeInventoryReport()
 		end
+		ns.SyncRestockerEvents()
 		return
 	end
 
@@ -379,11 +267,29 @@ ns.RegisterEventModule(MODULE, function(event, ...)
 
 	-- The Inventory Report's recorders only read containers and write saved variables.
 	local inventoryHandler = ns.inventoryEventHandlers and ns.inventoryEventHandlers[event]
-	if inventoryHandler then
+	if inventoryHandler and ns.db.global.inventoryReport then
 		inventoryHandler(...)
 	end
 end)
 
-for _, event in ipairs(EVENTS) do
+local ALWAYS_EVENTS = { PLAYER_LOGIN = true, PLAYER_LOGOUT = true }
+
+--[[
+    Subscribes each event while the Restocker or the Inventory Report handles
+    it and is switched on, so neither reads the bags while it is off. Called at
+    login, once both have built their handler tables, and by each switch.
+]]
+function ns.SyncRestockerEvents()
+	local restocker = ns.IsRestockerEnabled() and ns.restockerEventHandlers
+	local report = ns.db and ns.db.global.inventoryReport and ns.inventoryEventHandlers
+	for _, event in ipairs(EVENTS) do
+		local wanted = ALWAYS_EVENTS[event]
+			or (restocker and restocker[event] ~= nil)
+			or (report and report[event] ~= nil)
+		ns.SetModuleEvent(MODULE, event, wanted and true or false)
+	end
+end
+
+for event in pairs(ALWAYS_EVENTS) do
 	ns.SetModuleEvent(MODULE, event, true)
 end

@@ -13,10 +13,17 @@ local Data = ns.Data
 ns.ADDON_TITLE = L["ADDON_TITLE"]
 
 -- Must match every TOC's ## SavedVariables line.
-ns.SAVED_VARIABLES_NAME = "BagsBuffsButtonsDB"
+ns.SAVED_VARIABLES_NAME = "GoodToGoDB"
 
 --[[
-    MIGRATION (remove after 2026-11-25): the add-ons Bags Buffs & Buttons
+    MIGRATION (remove after 2026-12-03): the table's name before the rename to
+    Good to Go, listed second on every TOC's ## SavedVariables line.
+    Features/Core.lua (MoveRenamedSettings) moves it over at login and empties it.
+]]
+ns.OLD_SAVED_VARIABLES_NAME = "BagsBuffsButtonsDB"
+
+--[[
+    MIGRATION (remove after 2026-11-25): the add-ons Good to Go
     replaces, by installed folder. Features/Core.lua copies the settings of the
     ones with a saved-variables table here from their own table, which the
     client loads only while that add-on is enabled, then turns every one of
@@ -59,6 +66,7 @@ ns.CLASS_COLORS = {
 	DRUID = "FF7C0A",
 	HUNTER = "AAD372",
 	MAGE = "3FC7EB",
+	MONK = "00FF96",
 	PALADIN = "F48CBA",
 	PRIEST = "FFFFFF",
 	ROGUE = "FFF468",
@@ -94,7 +102,7 @@ ns.SAMPLE_NAMES = {
 -- TODO: The CurseForge, Wago and GitHub links once the projects exist.
 ns.LINKS = {
 	CURSEFORGE = "TBD",
-	GITHUB = "https://github.com/Gogo1951/Bags-Buffs-Buttons",
+	GITHUB = "https://github.com/Gogo1951/Good-to-Go",
 	DISCORD = "https://discord.gg/eh8hKq992Q",
 	WAGO = "TBD",
 }
@@ -145,8 +153,9 @@ ns.OPTIONS_REGISTRY = {
 	IgnoreList = ADDON_NAME .. "_IgnoreList",
 	ReadinessReport = ADDON_NAME .. "_ReadinessReport",
 
-	-- Restocker
+	-- Restocker, then the Inventory Report under it
 	Restocker = ADDON_NAME .. "_Restocker",
+	InventoryReport = ADDON_NAME .. "_InventoryReport",
 
 	-- Thanks for the Buff: its heading page, then its panels under it
 	ThanksForTheBuff = ADDON_NAME .. "_ThanksForTheBuff",
@@ -313,7 +322,7 @@ ns.IGNORE_SCOPE_GLOBAL = "**global**"
 -- Macro Configuration
 --------------------------------------------------------------------------------
 
--- label: localized display name plugged into MESSAGE_NO_ITEM by BBBNoItem.
+-- label: localized display name plugged into MESSAGE_NO_ITEM by GtGNoItem.
 ns.MACRO_CONFIG = {
 	["Bandage"] = { macro = ns.L["MACRO_BANDAGE"], label = ns.L["LABEL_BANDAGE"] },
 	["Explosive"] = { macro = ns.L["MACRO_EXPLOSIVES"], label = ns.L["LABEL_EXPLOSIVE"] },
@@ -378,19 +387,19 @@ ns.DRUID_MACRO_HELPER_GUARDS = {
 }
 
 --------------------------------------------------------------------------------
--- BBBTip Messages
+-- GtGTip Messages
 --------------------------------------------------------------------------------
 
 --[[
-    Canned chat messages the macro bodies can fire via `/run BBBTip("key")`.
-    BBBTip (in Features/Macros-for-Consumables/Macros/Runtime.lua) consults two tables:
+    Canned chat messages the macro bodies can fire via `/run GtGTip("key")`.
+    GtGTip (in Features/Macros-for-Consumables/Macros/Runtime.lua) consults two tables:
       ns.TIP_MESSAGES        → static message text
       ns.MISSING_SPELL_MESSAGE_IDS → spell IDs (the flavor folder's Conjure-Spells file) that
-                                   BBBTip resolves at print time
+                                   GtGTip resolves at print time
                                    via C_Spell.GetSpellName, producing "You don't
                                    currently know <Localized Spell Name>."
     A key the flavor folder leaves out, or a spell ID the current client
-    doesn't know, resolves to nil, so BBBTip silently skips the print
+    doesn't know, resolves to nil, so GtGTip silently skips the print
     rather than naming a spell the player will never see. The noPetSkills tip
     names four pet spells, so Runtime.lua builds it at print time too.
 ]]
@@ -1011,6 +1020,69 @@ ns.INK_COLOR = { 0.169, 0.106, 0.043 }
 -- faded ink for a tile's options note on the parchment: dark ink at 60% over the parchment, opaque so it also works as a |c code
 ns.FADED_INK_COLOR = { 0.44, 0.37, 0.28 }
 
+--[[
+    The What's Next? tabs' status inks, by status (ns.WHATS_NEXT_STATUSES and
+    ns.WHATS_NEXT_PET_STATUSES): the game's green, blue, red and orange
+    darkened until they read on the parchment, a muted purple for talents not
+    taken, teal for a pet ability ready to teach, and Known and another pet
+    family's abilities in faded ink. The Pet Spell Book's abilities are in
+    plain ink and its passives faded (ns.PET_SPELLBOOK_STATUSES).
+]]
+ns.WHATS_NEXT_INKS = {
+	AVAILABLE = { 0.05, 0.42, 0.05 },
+	SOON = { 0.08, 0.28, 0.6 },
+	LATER = { 0.62, 0.09, 0.05 },
+	MISSING = { 0.62, 0.33, 0 },
+	TALENT = { 0.4, 0.2, 0.55 },
+	TEACH = { 0, 0.4, 0.42 },
+	OTHER = ns.FADED_INK_COLOR,
+	ABILITY = ns.INK_COLOR,
+	PASSIVE = ns.FADED_INK_COLOR,
+	KNOWN = ns.FADED_INK_COLOR,
+}
+
+-- The same statuses at full brightness, for the tooltip and the footer's counts on the dark frame.
+ns.WHATS_NEXT_BRIGHT = {
+	AVAILABLE = "1EFF00",
+	SOON = "71C4FF",
+	LATER = "FF3B30",
+	MISSING = "FF9A1F",
+	TALENT = "C59BFF",
+	TEACH = "33E6D9",
+	OTHER = "9D9D9D",
+	ABILITY = "FFFFFF",
+	PASSIVE = "9D9D9D",
+	KNOWN = "9D9D9D",
+}
+
+--[[
+    The ranks section of a spell's tooltip ("GtG // Fear Ranks"), each rank in
+    the add-ons' shared palette: green (ON) once known, red (OFF) where its
+    level is reached and it isn't trained, gold (TITLE) for a rank whose level
+    is still to come.
+]]
+ns.SPELL_RANK_COLORS = { KNOWN = "ON", LEARNABLE = "OFF", NOT_YET = "TITLE" }
+
+--[[
+    The Conditionals panel's own dark leather beside the parchment, so it reads
+    as part of the window: its fill and edge, each row's, each dropdown's and
+    spell slot's field, the footer's edge, the muted and arrow inks, and the
+    length meter's track. Raw hex like ns.PALETTE, converted with ns.HexToRGB
+    for both docked panels in Features/Spellbook/Macro-Builder/Panel-Widgets.lua.
+]]
+ns.CONDITIONALS_COLORS = {
+	PANEL_FILL = "2A241C",
+	PANEL_EDGE = "4D4232",
+	ROW_FILL = "1F1B15",
+	ROW_EDGE = "3D3428",
+	FIELD_FILL = "0C0C0E",
+	FIELD_EDGE = "5A4D38",
+	FOOTER_EDGE = "4A4A4F",
+	MUTED_INK = "B8AB8E",
+	ARROW_INK = "8A7D64",
+	METER_TRACK = "2A2A2E",
+}
+
 --------------------------------------------------------------------------------
 -- Thanks for the Buff
 --------------------------------------------------------------------------------
@@ -1076,10 +1148,10 @@ Data.THANK_YOU_BUTTONS = {
 	    random emote from its checklist.
 	]]
 	{ profileKey = "slash", macroName = "- Thank", command = "/thankyou" },
-	{ profileKey = "slash2", macroName = "- BBB 2", command = "/thankyou2", singleEmote = true },
-	{ profileKey = "slash3", macroName = "- BBB 3", command = "/thankyou3", singleEmote = true },
-	{ profileKey = "slash4", macroName = "- BBB 4", command = "/thankyou4", singleEmote = true },
-	{ profileKey = "slash5", macroName = "- BBB 5", command = "/thankyou5", singleEmote = true },
+	{ profileKey = "slash2", macroName = "- GtG 2", command = "/thankyou2", singleEmote = true },
+	{ profileKey = "slash3", macroName = "- GtG 3", command = "/thankyou3", singleEmote = true },
+	{ profileKey = "slash4", macroName = "- GtG 4", command = "/thankyou4", singleEmote = true },
+	{ profileKey = "slash5", macroName = "- GtG 5", command = "/thankyou5", singleEmote = true },
 }
 
 -- The account-wide macro cap; the add-on stops creating Thank You macros once the list holds this many.
@@ -1166,6 +1238,14 @@ Data.BUFF_WINDOW_FAVOR_MAX = 5
 
 -- The Buff Window's buff buttons, and the role icon in front of each name.
 Data.BUFF_WINDOW_ICON_SIZE = 20
+
+-- The Buff Window's frame, and the title row's hover list of who needs a buff.
+Data.BUFF_WINDOW_BACKDROP = {
+	bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+	edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+	edgeSize = 12,
+	insets = { left = 3, right = 3, top = 3, bottom = 3 },
+}
 
 --[[
     Praise Delay lengths, in seconds. Doubles as the dropdown's display order; the

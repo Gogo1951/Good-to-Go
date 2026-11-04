@@ -1,4 +1,4 @@
-local L = LibStub("AceLocale-3.0"):NewLocale("Bags-Buffs-Buttons", "koKR")
+local L = LibStub("AceLocale-3.0"):NewLocale("Good-to-Go", "koKR")
 if not L then
 	return
 end
@@ -10,17 +10,17 @@ end
 --[[
     The add-on has two names. ADDON_TITLE, the full name, is for window
     titles and anywhere the add-on is talked about; ADDON_SHORT_NAME is for
-    tooltips and the chat prints ("BBB // ..."). Both are proper nouns and
+    tooltips and the chat prints ("GtG // ..."). Both are proper nouns and
     stay as written in every locale, as does the full name inside any
     sentence below.
 ]]
-L["ADDON_TITLE"] = "Bags Buffs & Buttons"
-L["ADDON_SHORT_NAME"] = "BBB"
+L["ADDON_TITLE"] = "Good to Go"
+L["ADDON_SHORT_NAME"] = "GtG"
 
 L["CHAT_LOADED"] =
-	"버전 %s. 설정(이 메시지 비활성화 옵션 포함)은 설정 > 애드온 > Bags Buffs & Buttons에 있습니다. 이 애드온이 마음에 드시나요? 친구에게 알려 주거나, CurseForge에서 즐겨찾기에 추가하거나, GitHub 페이지에서 Star를 눌러 주세요. (="
-L["OPTIONS_LEVEL_UP_TITLE"] = "Bags Buffs & Buttons의 레벨 업을 도와주세요"
-L["OPTIONS_LEVEL_UP_THANKS"] = "Bags Buffs & Buttons를 선택해 주셔서 감사합니다!"
+	"버전 %s. 설정(이 메시지 비활성화 옵션 포함)은 설정 > 애드온 > Good to Go에 있습니다. 이 애드온이 마음에 드시나요? 친구에게 알려 주거나, CurseForge에서 즐겨찾기에 추가하거나, GitHub 페이지에서 Star를 눌러 주세요. (="
+L["OPTIONS_LEVEL_UP_TITLE"] = "Good to Go의 레벨 업을 도와주세요"
+L["OPTIONS_LEVEL_UP_THANKS"] = "Good to Go를 선택해 주셔서 감사합니다!"
 
 --------------------------------------------------------------------------------
 -- Connoisseur & Restocker
@@ -94,16 +94,6 @@ L["MESSAGE_BUG_REPORT"] =
 L["MESSAGE_NO_ITEM"] = "가방에서 적합한 %s 아이템을 찾지 못했습니다."
 L["MESSAGE_MACRO_SLOTS_FULL"] =
 	"매크로 슬롯이 가득 차서 일부 Connoisseur & Restocker 매크로를 만들지 못했습니다. 더 이상 사용하지 않는 매크로를 삭제해 슬롯을 비우거나, 설정 > 애드온 > Connoisseur & Restocker > 매크로에서 필요 없는 Connoisseur & Restocker 매크로를 끄세요."
---[[
-    Printed once after the add-on creates one or more of its macros, so a new
-    player learns they exist. %s is "/m", the game's own macro command, colored
-    at the call site. "General" is the macro window's tab for account-wide
-    macros; use the client's own name for that tab. The macro names are this
-    locale's own MACRO_FOOD and MACRO_WATER values, written exactly as this
-    locale ships them.
-]]
-L["MESSAGE_MACROS_READY"] =
-	"매크로가 준비되었습니다. %s 명령어를 입력하고 공통 매크로 탭을 연 다음, - 음식, - 물 등을 행동 단축바로 끌어다 놓으세요."
 -- The mini-map button's Right-Click and Middle-Click. %s is the item's link.
 L["MESSAGE_IGNORE_ADDED"] = "%s 아이템이 이 캐릭터의 차단 목록에 추가되었습니다."
 -- %d is how many items the Middle-Click took off the list: exactly one, or two or more.
@@ -280,7 +270,7 @@ L["MINIMAP_RESTOCKER_EMPTY"] = "목록이 비어 있습니다."
 L["MENU_RESTOCKER"] = "Restocker 목록"
 L["MENU_RESTOCKER_DESCRIPTION"] = "목록에 있는 아이템을 구매하고 은행에 보관합니다."
 L["MENU_RESTOCKER_KEYBIND"] = "Shift + 우클릭"
-L["MENU_OPTIONS"] = "BBB 설정"
+L["MENU_OPTIONS"] = "GtG 설정"
 L["MENU_OPTIONS_KEYBIND"] = "Shift + 휠클릭"
 
 --------------------------------------------------------------------------------
@@ -461,7 +451,7 @@ L["SAMPLE_EXAMPLE"] = "예시: %s"
     translate, and its description.
 ]]
 L["OPTIONS_COMMANDS_HEADER"] = "/Commands"
-L["OPTIONS_COMMAND"] = "/bbb"
+L["OPTIONS_COMMAND"] = "/gtg"
 L["OPTIONS_COMMAND_DESCRIPTION"] = "이 애드온의 설정 인터페이스를 엽니다."
 L["RESTOCKER_COMMAND"] = "/restock"
 L["RESTOCKER_COMMAND_DESCRIPTION"] = "보충 목록을 엽니다."
@@ -1695,6 +1685,24 @@ L["BUFF_WINDOW_TOOLTIP_CREATE"] =
 L["BUFF_WINDOW_TOOLTIP_GROUP"] = "클릭하면 %s와(과) 그 파티에게 시전합니다."
 L["BUFF_WINDOW_TOOLTIP_FAVOR"] = "클릭하면 %s을(를) 대상으로 지정하고 시전합니다."
 L["BUFF_WINDOW_TOOLTIP_DISMISS"] = "우클릭하면 목록에서 %s을(를) 제외합니다."
+-- The title row: a raid buff your group is missing, its count and click.
+L["BUFF_WINDOW_OTHERS_TOOLTIP_COUNT"] = "없거나 곧 사라짐: %d"
+-- %s is the names of the players the click whispers.
+L["BUFF_WINDOW_OTHERS_TOOLTIP_WHISPER"] = "클릭하면 %s에게 목록을 귓속말합니다."
+--[[
+    The whisper a click sends, signed off like every sent message ({star} ... // GtG):
+    the class addressed (BUFF_WINDOW_OTHERS_PLURAL_*), the count, then the buff's link.
+]]
+L["BUFF_WINDOW_OTHERS_REQUEST_ONE"] =
+	"%s 여러분, 안녕하세요! 1명이 %s 버프가 없거나 곧 갱신이 필요합니다. 감사합니다!"
+L["BUFF_WINDOW_OTHERS_REQUEST"] =
+	"%s 여러분, 안녕하세요! %d명이 %s 버프가 없거나 곧 갱신이 필요합니다. 감사합니다!"
+-- Your own chat, after a click: who was whispered, then the buff's link.
+L["BUFF_WINDOW_OTHERS_SENT"] = "%s에게 %s 관련 귓속말을 보냈습니다."
+-- The classes with a raid-wide buff, addressed as a group.
+L["BUFF_WINDOW_OTHERS_PLURAL_DRUID"] = "드루이드"
+L["BUFF_WINDOW_OTHERS_PLURAL_MAGE"] = "마법사"
+L["BUFF_WINDOW_OTHERS_PLURAL_PRIEST"] = "사제"
 -- The window's close button: the class name in its color, then the options command.
 L["BUFF_WINDOW_CLOSED"] =
 	"%s 직업의 버프 당번이 꺼졌습니다. 다시 켜려면 미니맵 버튼을 Shift + 우클릭하거나 %s 명령어를 입력하세요."
@@ -1882,7 +1890,7 @@ L["TOOLTIP_ACTION_MACRO_OPTIONS"] = "매크로 옵션"
 -- Spellbook Tab Tooltip
 L["SPELLBOOK_TAB_DESCRIPTION"] = "직업 주문을 원클릭 매크로로 제공합니다."
 L["TOOLTIP_KEY_CLICK"] = "클릭"
-L["TOOLTIP_ACTION_OPEN_PAGE"] = "BBB Spellbook 열기"
+L["TOOLTIP_ACTION_OPEN_PAGE"] = "GtG Spellbook 열기"
 
 -- Page: Layout
 L["PAGE_EMPTY"] = "아직 매크로가 없습니다. 직업 상급자를 찾아가 첫 주문을 배우세요."
@@ -1894,23 +1902,22 @@ L["PAGE_MACRO_CHARACTER"] = "캐릭터"
 
 L["OPTIONS_KEY_BINDINGS_HEADER"] = "단축키 설정"
 L["OPTIONS_KEY_SET"] = "단축키 지정"
-L["OPTIONS_KEY_SET_DESCRIPTION"] =
-	"Bags Buffs & Buttons 전용 항목이 있는 게임의 단축키 설정 목록을 엽니다."
+L["OPTIONS_KEY_SET_DESCRIPTION"] = "Good to Go 전용 항목이 있는 게임의 단축키 설정 목록을 엽니다."
 L["OPTIONS_KEY_BINDING_TOGGLE_DESCRIPTION"] =
-	"BBB Spellbook을 열고 닫습니다. 마법책에도 전용 탭이 있습니다."
+	"GtG Spellbook을 열고 닫습니다. 마법책에도 전용 탭이 있습니다."
 L["OPTIONS_DELETE_MACROS_HEADER"] = "매크로 삭제"
 L["OPTIONS_DELETE_MACROS_DESCRIPTION"] =
-	"BBB Spellbook이 만든 매크로를 삭제하며, 행동 단축바에서도 사라집니다. 직접 만든 매크로는 절대 건드리지 않으며, 페이지에서 클릭하거나 끌어 놓으면 다시 만들어집니다."
+	"GtG Spellbook이 만든 매크로를 삭제하며, 행동 단축바에서도 사라집니다. 직접 만든 매크로는 절대 건드리지 않으며, 페이지에서 클릭하거나 끌어 놓으면 다시 만들어집니다."
 L["OPTIONS_DELETE_CHARACTER_MACROS"] = "캐릭터 매크로 삭제"
 L["OPTIONS_DELETE_CHARACTER_MACROS_DESCRIPTION"] =
-	"이 캐릭터의 매크로 탭에서 BBB Spellbook의 매크로를 삭제합니다. 다른 캐릭터는 그 캐릭터에서 같은 작업을 할 때까지 매크로를 유지합니다."
+	"이 캐릭터의 매크로 탭에서 GtG Spellbook의 매크로를 삭제합니다. 다른 캐릭터는 그 캐릭터에서 같은 작업을 할 때까지 매크로를 유지합니다."
 L["OPTIONS_DELETE_CHARACTER_MACROS_CONFIRM"] =
-	"이 캐릭터의 BBB Spellbook 매크로를 모두 삭제할까요? 행동 단축바에서도 사라집니다."
+	"이 캐릭터의 GtG Spellbook 매크로를 모두 삭제할까요? 행동 단축바에서도 사라집니다."
 L["OPTIONS_DELETE_GENERAL_MACROS"] = "일반 매크로 삭제"
 L["OPTIONS_DELETE_GENERAL_MACROS_DESCRIPTION"] =
-	"계정의 모든 캐릭터가 공유하는 일반 매크로 탭에서 BBB Spellbook의 매크로를 삭제하므로, 다른 캐릭터도 그곳의 매크로를 잃습니다."
+	"계정의 모든 캐릭터가 공유하는 일반 매크로 탭에서 GtG Spellbook의 매크로를 삭제하므로, 다른 캐릭터도 그곳의 매크로를 잃습니다."
 L["OPTIONS_DELETE_GENERAL_MACROS_CONFIRM"] =
-	"BBB Spellbook의 일반 매크로를 모두 삭제할까요? 계정의 모든 캐릭터가 잃게 되며, 행동 단축바에서도 사라집니다."
+	"GtG Spellbook의 일반 매크로를 모두 삭제할까요? 계정의 모든 캐릭터가 잃게 되며, 행동 단축바에서도 사라집니다."
 
 -- Options: Spellbook Page Panel
 L["OPTIONS_SHOW_UNLEARNED_DESCRIPTION"] =
@@ -1961,11 +1968,10 @@ L["KIND_SELF"] = "자신 및 광역 주문"
 L["KIND_SELF_DESCRIPTION"] = "대상 없이 자신이나 주변에 시전하는 주문입니다."
 
 -- Key Bindings
-L["BINDING_TOGGLE_PAGE"] = "BBB Spellbook 열기/닫기"
+L["BINDING_TOGGLE_PAGE"] = "GtG Spellbook 열기/닫기"
 
 L["CHAT_KEY_BINDINGS_IN_COMBAT"] = "안전을 위해 전투 중에는 단축키 설정 목록을 열 수 없습니다."
-L["KEY_BINDINGS_LOCATION"] =
-	"게임 메뉴를 열고 %s, %s 순으로 들어가 Bags Buffs & Buttons 항목을 찾으세요."
+L["KEY_BINDINGS_LOCATION"] = "게임 메뉴를 열고 %s, %s 순으로 들어가 Good to Go 항목을 찾으세요."
 L["ERROR_MACRO_SLOTS_FULL"] =
 	"빈 매크로 칸이 없습니다. /macro에서 매크로를 삭제해 자리를 만드세요."
 L["CHAT_MACROS_DELETED"] = "삭제한 매크로: %d"

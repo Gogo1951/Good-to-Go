@@ -1,4 +1,4 @@
-package-as: Bags-Buffs-Buttons
+package-as: Good-to-Go
 enable-nolib-creation: no
 
 externals:
@@ -36,7 +36,5 @@ ignore:
   - README-Technical.md
   - README-Testing.md
   - Tests
-  - Source Add-ons
   - Data/Wrath
-  - Data/Mists
   - Data/Mainline

@@ -1,8 +1,8 @@
-## Title: Bags Buffs & Buttons
+## Title: Good to Go
 ## Notes: Play at your best level. Stay buffed, use your best abilities, eat your best food, and keep your bags stocked so you can keep pushing those buttons. Quality of life, performance, and a side of kindness.
 ## Author: Gogo1951
 
-## IconTexture: Interface/AddOns/Bags-Buffs-Buttons/Includes/Images/Connoisseur.tga
+## IconTexture: Interface/AddOns/Good-to-Go/Includes/Images/Connoisseur.tga
 ## X-License: MIT
 
 ## Category-enUS: Buffs & Debuffs
@@ -17,13 +17,14 @@
 ## Category-zhCN: 增益和减益
 ## Category-zhTW: 增益與減益
 
-## Interface: 20506
-## X-Flavor: TBC
+## Interface: 11509
+## X-Flavor: Vanilla
 ## Version: @project-version@
 ## X-Curse-Project-ID: TBD
 ## X-Wago-ID: TBD
 
-## SavedVariables: BagsBuffsButtonsDB
+## SavedVariables: GoodToGoDB, BagsBuffsButtonsDB
+# MIGRATION (remove after 2026-12-03): BagsBuffsButtonsDB is the table from before the rename to Good to Go (Features/Core.lua MoveRenamedSettings).
 
 # Includes
 Includes/Libraries/LibStub/LibStub.lua
@@ -55,34 +56,63 @@ Locales/zhTW.lua
 # Data
 Data/Flavor.lua
 Data/Data.lua
-Data/TBC/Scrolls-TBC.lua
-Data/TBC/Bandages-TBC.lua
-Data/TBC/Food-and-Water-TBC.lua
-Data/TBC/Healthstones-TBC.lua
-Data/TBC/Soulstones-TBC.lua
-Data/TBC/Mana-Gems-TBC.lua
-Data/TBC/Conjured-Items-TBC.lua
-Data/TBC/Potions-TBC.lua
-Data/TBC/Pet-Foods-TBC.lua
-Data/TBC/Poisons-TBC.lua
-Data/TBC/Explosives-TBC.lua
-Data/TBC/Consumable-Upgrade-Paths-TBC.lua
-Data/TBC/Poison-Recipes-TBC.lua
-Data/TBC/Elixirs-TBC.lua
-Data/TBC/Questionable-Equipment-TBC.lua
-Data/TBC/Game-IDs-TBC.lua
-Data/TBC/Macro-Default-Items-TBC.lua
-Data/TBC/Conjure-Spells-TBC.lua
-Data/TBC/Well-Fed-Buffs-TBC.lua
-Data/TBC/Tracked-Abilities-TBC.lua
-Data/TBC/Buff-Window-Spells-TBC.lua
-Data/TBC/Class-Spell-Lists-TBC.lua
-Data/TBC/Trainer-Spells-TBC.lua
-Data/TBC/Group-Versions-TBC.lua
-Data/TBC/Shared-Page-Spells-TBC.lua
+Data/Vanilla/Scrolls-Vanilla.lua
+Data/Vanilla/Bandages-Vanilla.lua
+Data/Vanilla/Food-and-Water-Vanilla.lua
+Data/Vanilla/Healthstones-Vanilla.lua
+Data/Vanilla/Soulstones-Vanilla.lua
+Data/Vanilla/Mana-Gems-Vanilla.lua
+Data/Vanilla/Conjured-Items-Vanilla.lua
+Data/Vanilla/Potions-Vanilla.lua
+Data/Vanilla/Pet-Foods-Vanilla.lua
+Data/Vanilla/Poisons-Vanilla.lua
+Data/Vanilla/Explosives-Vanilla.lua
+Data/Vanilla/Consumable-Upgrade-Paths-Vanilla.lua
+Data/Vanilla/Poison-Recipes-Vanilla.lua
+Data/Vanilla/Elixirs-Vanilla.lua
+Data/Vanilla/Questionable-Equipment-Vanilla.lua
+Data/Vanilla/Game-IDs-Vanilla.lua
+Data/Vanilla/Macro-Default-Items-Vanilla.lua
+Data/Vanilla/Conjure-Spells-Vanilla.lua
+Data/Vanilla/Well-Fed-Buffs-Vanilla.lua
+Data/Vanilla/Tracked-Abilities-Vanilla.lua
+Data/Vanilla/Buff-Window-Spells-Vanilla.lua
+Data/Vanilla/Class-Spell-Lists-Vanilla.lua
+Data/Vanilla/Trainer-Spells-Vanilla.lua
+Data/Vanilla/Spell-Sources-Vanilla.lua
+Data/Vanilla/Pet-Abilities-Vanilla.lua
+Data/Vanilla/Group-Versions-Vanilla.lua
+Data/Vanilla/Shared-Page-Spells-Vanilla.lua
+Data/Discovery/Scrolls-Discovery.lua
+Data/Discovery/Bandages-Discovery.lua
+Data/Discovery/Food-and-Water-Discovery.lua
+Data/Discovery/Healthstones-Discovery.lua
+Data/Discovery/Soulstones-Discovery.lua
+Data/Discovery/Mana-Gems-Discovery.lua
+Data/Discovery/Conjured-Items-Discovery.lua
+Data/Discovery/Potions-Discovery.lua
+Data/Discovery/Pet-Foods-Discovery.lua
+Data/Discovery/Poisons-Discovery.lua
+Data/Discovery/Explosives-Discovery.lua
+Data/Discovery/Consumable-Upgrade-Paths-Discovery.lua
+Data/Discovery/Poison-Recipes-Discovery.lua
+Data/Discovery/Elixirs-Discovery.lua
+Data/Discovery/Questionable-Equipment-Discovery.lua
+Data/Discovery/Game-IDs-Discovery.lua
+Data/Discovery/Macro-Default-Items-Discovery.lua
+Data/Discovery/Conjure-Spells-Discovery.lua
+Data/Discovery/Well-Fed-Buffs-Discovery.lua
+Data/Discovery/Tracked-Abilities-Discovery.lua
+Data/Discovery/Buff-Window-Spells-Discovery.lua
+Data/Discovery/Class-Spell-Lists-Discovery.lua
+Data/Discovery/Trainer-Spells-Discovery.lua
+Data/Discovery/Spell-Sources-Discovery.lua
+Data/Discovery/Pet-Abilities-Discovery.lua
+Data/Discovery/Group-Versions-Discovery.lua
+Data/Discovery/Shared-Page-Spells-Discovery.lua
 Data/Default-Settings.lua
 
-# Bags Buffs & Buttons
+# Good to Go
 Features/Core.lua
 Features/Utilities.lua
 Features/Announcements.lua
@@ -98,6 +128,7 @@ Features/Macros-for-Consumables/Character-Key-Migration.lua
 Features/Macros-for-Consumables/Item-Cache.lua
 Features/Macros-for-Consumables/Scanner-Character.lua
 Features/Macros-for-Consumables/Scanner-Auras.lua
+Features/Macros-for-Consumables/Scanner-Scrolls.lua
 Features/Macros-for-Consumables/Scanner-Ranking.lua
 Features/Macros-for-Consumables/Scanner-Inventory.lua
 Features/Macros-for-Consumables/Macros/Signatures.lua
@@ -123,8 +154,9 @@ Features/Macros-for-Consumables/Macros/Soulstone.lua
 Features/Macros-for-Consumables/Macros/Water.lua
 Features/Macros-for-Consumables/Macros/Integration-Druid-Macro-Helper.lua
 Features/Macros-for-Consumables/Action-Button-Text.lua
-Features/Macros-for-Consumables/Readiness-Report-Probes.lua
-Features/Macros-for-Consumables/Readiness-Report.lua
+Features/Readiness-Report/Readiness-Report-Probes.lua
+Features/Readiness-Report/Readiness-Report.lua
+Features/Readiness-Report/Readiness-Report-Example.lua
 Features/Macros-for-Consumables/Ignore-List.lua
 
 # Inventory Restocker
@@ -135,7 +167,9 @@ Features/Inventory-Restocker/Restocker-Trace.lua
 Features/Inventory-Restocker/Restocker-Inventory-Model.lua
 Features/Inventory-Restocker/Restocker-Bags.lua
 Features/Inventory-Restocker/Restocker-Purchase-Space.lua
-Features/Inventory-Restocker/Restocker-Bank.lua
+Features/Inventory-Restocker/Restocker-Bank-Tidy.lua
+Features/Inventory-Restocker/Restocker-Bank-State.lua
+Features/Inventory-Restocker/Restocker-Bank-Visit.lua
 Features/Inventory-Restocker/Restocker-Merchant.lua
 Features/Inventory-Restocker/Restocker-Shortfall.lua
 Features/Inventory-Restocker/Restocker-Crafting-Reagents.lua
@@ -144,7 +178,9 @@ Features/Inventory-Restocker/Restocker-Window-Frame.lua
 Features/Inventory-Restocker/Restocker-Window-Widgets.lua
 Features/Inventory-Restocker/Restocker-Window.lua
 Features/Inventory-Restocker/Restocker-Window-Header.lua
+Features/Inventory-Restocker/Restocker-Window-Reputation.lua
 Features/Inventory-Restocker/Restocker-Window-Columns.lua
+Features/Inventory-Restocker/Restocker-Window-Column-Header.lua
 Features/Inventory-Restocker/Restocker-Window-Filter.lua
 Features/Inventory-Restocker/Restocker-Window-Rows.lua
 Features/Inventory-Restocker/Restocker-Window-Menus.lua
@@ -157,8 +193,8 @@ Features/Inventory-Restocker/Restocker-Starter-List.lua
 Features/Inventory-Restocker/Restocker-Starter-Window.lua
 Features/Inventory-Restocker/Restocker-Reminders.lua
 Features/Inventory-Restocker/Restocker-Events.lua
-Features/Inventory-Restocker/Inventory-Report-Recording.lua
-Features/Inventory-Restocker/Inventory-Report-Tooltip.lua
+Features/Inventory-Report/Inventory-Report-Recording.lua
+Features/Inventory-Report/Inventory-Report-Tooltip.lua
 Features/Inventory-Restocker/Restocker-Slash-Command.lua
 
 # Automated Appreciation
@@ -167,16 +203,23 @@ Features/Automated-Appreciation/Automated-Appreciation-Utilities.lua
 Features/Automated-Appreciation/Tracked-Lookups.lua
 Features/Automated-Appreciation/Praise.lua
 Features/Automated-Appreciation/Buff-Tracking.lua
-Features/Automated-Appreciation/Buff-Tracking-Forever.lua
+Features/Automated-Appreciation/Buff-Tracking-Combat-Log.lua
 Features/Automated-Appreciation/Good-News.lua
 Features/Automated-Appreciation/Thank-You-Button.lua
+Features/Automated-Appreciation/Buff-Window-Icon-State.lua
+Features/Automated-Appreciation/Buff-Window-Title-Row.lua
 Features/Automated-Appreciation/Buff-Window-Frame.lua
+Features/Automated-Appreciation/Buff-Window-Button-Attributes.lua
+Features/Automated-Appreciation/Buff-Window-Position.lua
 Features/Automated-Appreciation/Buff-Window-Castable.lua
+Features/Automated-Appreciation/Buff-Window-Lookups.lua
+Features/Automated-Appreciation/Buff-Window-Settings.lua
 Features/Automated-Appreciation/Buff-Window-Auras.lua
 Features/Automated-Appreciation/Buff-Window-Units.lua
 Features/Automated-Appreciation/Buff-Window-Weapons.lua
 Features/Automated-Appreciation/Buff-Window-Self.lua
 Features/Automated-Appreciation/Buff-Window-Outsiders.lua
+Features/Automated-Appreciation/Buff-Window-Other-Classes.lua
 Features/Automated-Appreciation/Buff-Window.lua
 Features/Automated-Appreciation/Buff-Window-Cast-Results.lua
 Features/Automated-Appreciation/Buff-Window-Keys.lua
@@ -184,11 +227,15 @@ Features/Automated-Appreciation/Buff-Window-Keys.lua
 # Spellbook
 Features/Spellbook/Spellbook-Core.lua
 Features/Spellbook/Spellbook-Utilities.lua
+Features/Spellbook/Class-Spells.lua
+Features/Spellbook/Trainer-Lookup.lua
 Features/Spellbook/Macro-Options.lua
 Features/Spellbook/Page-Settings.lua
 Features/Spellbook/Grouped-Spells.lua
 Features/Spellbook/Page-Categories.lua
 Features/Spellbook/Target-Priority.lua
+Features/Spellbook/Macro-Builder/Conditionals.lua
+Features/Spellbook/Macro-Builder/Cast-Sequence.lua
 Features/Spellbook/Macro-Copies.lua
 Features/Spellbook/Macro-Body.lua
 Features/Spellbook/Mute-Errors.lua
@@ -208,13 +255,29 @@ Features/Spellbook/Consumable-Macros.lua
 Features/Spellbook/Dynamic-Rank.lua
 Features/Spellbook/Menu-Utilities.lua
 Features/Spellbook/Macro-Menu.lua
+Features/Spellbook/Macro-Menu-Helpers.lua
+Features/Spellbook/Macro-Menu-Sections.lua
 Features/Spellbook/Category-Menu.lua
 Features/Spellbook/Spellbook-Paging.lua
 Features/Spellbook/Macro-Button.lua
 Features/Spellbook/Spellbook-Page.lua
+Features/Spellbook/Spellbook-Page-Parchment.lua
+Features/Spellbook/Spellbook-Page-Layout.lua
 Features/Spellbook/Spellbook-Controls.lua
 Features/Spellbook/Spellbook-Events.lua
+Features/Spellbook/Whats-Next.lua
+Features/Spellbook/Whats-Next-Pet.lua
+Features/Spellbook/Pet-Spellbook.lua
+Features/Spellbook/Whats-Next-Models.lua
+Features/Spellbook/Whats-Next-Page.lua
+Features/Spellbook/Spell-Ranks-Tooltip.lua
 Features/Spellbook/Spellbook-Window.lua
+Features/Spellbook/Macro-Builder/Panel-Widgets.lua
+Features/Spellbook/Macro-Builder/Docked-Panel.lua
+Features/Spellbook/Macro-Builder/Conditionals-Panel.lua
+Features/Spellbook/Macro-Builder/Conditionals-Pick.lua
+Features/Spellbook/Macro-Builder/Conditionals-Rows.lua
+Features/Spellbook/Macro-Builder/Cast-Sequence-Panel.lua
 Features/Spellbook/Spellbook-Host-Classic.lua
 Features/Spellbook/Key-Bindings.lua
 
@@ -246,8 +309,9 @@ Options/Macros-for-Consumables/Options-Connoisseur.lua
 Options/Macros-for-Consumables/Options-Macros.lua
 Options/Macros-for-Consumables/Options-Class-Race.lua
 Options/Macros-for-Consumables/Options-Ignore-List.lua
-Options/Macros-for-Consumables/Options-Readiness-Report.lua
+Options/Readiness-Report/Options-Readiness-Report.lua
 Options/Inventory-Restocker/Options-Restocker.lua
+Options/Inventory-Report/Options-Inventory-Report.lua
 Options/Automated-Appreciation/Options-Thanks-for-the-Buff.lua
 Options/Automated-Appreciation/Options-Stranger-Buffs.lua
 Options/Automated-Appreciation/Options-Teammate-Buffs.lua
@@ -268,5 +332,5 @@ Diagnostics/Options-Diagnostics.lua
 Options/Options.lua
 
 # Feedback Welcome! (=
-# Bags Buffs & Buttons on GitHub // https://github.com/Gogo1951/Bags-Buffs-Buttons
-# Bags Buffs & Buttons on Discord // https://discord.gg/eh8hKq992Q
+# Good to Go on GitHub // https://github.com/Gogo1951/Good-to-Go
+# Good to Go on Discord // https://discord.gg/eh8hKq992Q

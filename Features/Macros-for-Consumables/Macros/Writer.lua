@@ -57,7 +57,9 @@ local function AnnounceMacrosReady()
 	readyMessagePending = true
 	C_Timer.After(1, function()
 		readyMessagePending = false
-		ns:PrintMessage(string.format(L["MESSAGE_MACROS_READY"], GetColor("INFO") .. "/m|r" .. GetColor("TEXT")))
+		ns:PrintMessage(
+			string.format(L["MESSAGE_MACROS_READY_TAB"], GetColor("INFO") .. "/m|r" .. GetColor("TEXT"), GENERAL_MACROS)
+		)
 	end)
 end
 

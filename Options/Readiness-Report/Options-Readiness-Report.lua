@@ -12,7 +12,7 @@ local Spacer = ns.OptionsSpacer
 --------------------------------------------------------------------------------
 
 --[[
-    What Bags Buffs & Buttons says when a ready check starts. One master switch, then
+    What Good to Go says when a ready check starts. One master switch, then
     three sections matching the three lines the report prints, so the panel and
     the chat output read as the same feature: Missing Buffs, Missing Items,
     Character.
@@ -20,9 +20,9 @@ local Spacer = ns.OptionsSpacer
     Every switch here can only ever ADD a line about something that is wrong.
     The report says nothing when a character is ready, and that silence is what
     lets it cover this much without becoming noise -- see
-    Features/Macros-for-Consumables/Readiness-Report.lua.
+    Features/Readiness-Report/Readiness-Report.lua.
 
-    The report itself is built in Features/Macros-for-Consumables/Readiness-Report.lua; this only owns
+    The report itself is built in Features/Readiness-Report/Readiness-Report.lua; this only owns
     the switches. All of them are account-wide (ns.db.global) -- see
     Data/Default-Settings.lua for why, and for the defaults.
 
@@ -46,7 +46,7 @@ end
     Hidden on Classic Era and Forever on top of the standard gate, matching the
     check itself: Era raids have flasks and elixirs but do not run on them, so
     the switch would only offer a line that is wrong for most of the characters
-    it fired at. See ns.HasFlaskOrElixirs' caller in Features/Macros-for-Consumables/Readiness-Report.lua.
+    it fired at. See ns.HasFlaskOrElixirs' caller in Features/Readiness-Report/Readiness-Report.lua.
 ]]
 local function FlaskHidden()
 	return ReportsHidden() or ns.EXPANSION < 2

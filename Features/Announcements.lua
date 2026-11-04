@@ -9,12 +9,12 @@ local GetColor = ns.GetColor
 --------------------------------------------------------------------------------
 
 --[[
-    The "BBB // " brand that opens every print: the Short Name, never the Full
-    Name. Exposed so options panels can render pipeline-true sample messages
-    that always match the real thing.
+    The "Good to Go // " brand that opens every print: the Full Name,
+    never the Short Name. Exposed so options panels can render pipeline-true
+    sample messages that always match the real thing.
 ]]
 function ns.GetPrintPrefix()
-	return GetColor("INFO") .. L["ADDON_SHORT_NAME"] .. "|r " .. GetColor("SEPARATOR") .. "//" .. "|r "
+	return GetColor("INFO") .. L["ADDON_TITLE"] .. "|r " .. GetColor("SEPARATOR") .. "//" .. "|r "
 end
 
 --[[
@@ -26,19 +26,20 @@ function ns.BuildPrintLine(text)
 	return ns.GetPrintPrefix() .. GetColor("TEXT") .. text .. "|r"
 end
 
--- Format: |cff[INFO]BBB|r |cff[SEPARATOR]//|r |cff[TEXT]Message|r
+-- Format: |cff[INFO]Good to Go|r |cff[SEPARATOR]//|r |cff[TEXT]Message|r
 function ns:PrintMessage(message)
 	print(ns.BuildPrintLine(message))
 end
 
 local warned = {}
 
--- Prints a config problem once per session.
-function ns.WarnOnce(message)
-	if warned[message] then
+-- Prints a config problem once per session: once per key, or per message when no key is given.
+function ns.WarnOnce(message, key)
+	key = key or message
+	if warned[key] then
 		return
 	end
-	warned[message] = true
+	warned[key] = true
 	ns:PrintMessage(message)
 end
 
@@ -48,7 +49,7 @@ end
 
 --[[
     Branded sent messages for the automated buff/service thank-yous:
-    {rt1} Message // BBB. BuildAnnounceMessage assembles the decorated string and
+    {rt1} Message // GtG. BuildAnnounceMessage assembles the decorated string and
     Announce sends it. The body carries a spell/item link and the leading raid-
     target marker; the chat system renders both on send (the marker becomes the
     Star icon), so the pipes and braces pass through unchanged. WoW Forever blocks
@@ -63,8 +64,8 @@ end
 
 --[[
     The name signs off a sent message, so the body gives up its closing
-    punctuation: "Thanks for the [Arcane Intellect] // BBB", never "...! //
-    BBB". Translations and player-written Good News templates still carry their
+    punctuation: "Thanks for the [Arcane Intellect] // GtG", never "...! //
+    GtG". Translations and player-written Good News templates still carry their
     own (Spanish opens with an inverted mark, CJK closes with a full-width one),
     so the trim covers those too. Marks are matched as whole UTF-8 sequences,
     never as a byte class, so a multi-byte character is never cut in half.
@@ -468,4 +469,51 @@ function ns:AnnounceGoodNews(entry, destName, spellID, duration)
 	if message then
 		QueueWhisper(destName, message)
 	end
+end
+
+--------------------------------------------------------------------------------
+-- Buff Requests
+--------------------------------------------------------------------------------
+
+--[[
+    Buff Duty's ask for a raid buff (an icon on the window's title row):
+    "Some players are missing Mage Buffs ([Arcane Intellect]), can you help
+    them out // GtG", signed off like the thank-yous. The class name is the
+    client's, plain, since color codes don't survive SendChatMessage.
+]]
+function ns:BuildBuffRequestMessage(class, link)
+	return SignOff(L["BUFF_WINDOW_OTHERS_ASK"]:format(LOCALIZED_CLASS_NAMES_MALE[class] or class, link))
+end
+
+--[[
+    The chat the whole group reads: an instance group's own (a battleground's,
+    say) first, since raid and party chat do not reach it, then raid, then
+    party. Nil when the player is in no group.
+]]
+function ns:GetGroupChatChannel()
+	if IsInGroup(LE_PARTY_CATEGORY_INSTANCE) then
+		return "INSTANCE_CHAT"
+	elseif IsInRaid() then
+		return "RAID"
+	elseif IsInGroup() then
+		return "PARTY"
+	end
+	return nil
+end
+
+-- A Left-Click's ask, to the whole group.
+function ns:SayBuffRequest(message)
+	local channel = ns:GetGroupChatChannel()
+	if not channel then
+		return
+	end
+	C_ChatInfo.SendChatMessage(message, channel)
+end
+
+--[[
+    A Right-Click's ask, to one of the class's players. Queued like Good News,
+    since one click whispers every player of the class at once.
+]]
+function ns:WhisperBuffRequest(target, message)
+	QueueWhisper(target, message)
 end

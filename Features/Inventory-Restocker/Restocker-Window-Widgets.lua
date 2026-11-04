@@ -113,8 +113,8 @@ end
 
     The trailing `true` on each line is the textWrap argument. Without it a
     tooltip is exactly as wide as its longest line, and the longer strings here
-    (the reputation control's discount line especially) rendered a tooltip wider
-    than the game window. With it the client breaks each line at its standard
+    (the reputation control's discount line especially) would run wider than
+    the game window. With it the client breaks each line at its standard
     tooltip width -- which is also why we do not hand-measure a pixel budget: the
     client's own break points are correct in locales that don't put spaces
     between words.

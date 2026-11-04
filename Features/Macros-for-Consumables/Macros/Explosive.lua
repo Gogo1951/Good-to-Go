@@ -30,7 +30,7 @@ end
 ns.RegisterMacroType({
 	typeName = "Explosive",
 
-	-- Selection: ranked by minimum damage; ties fall to the standard ladder.
+	-- Selection: best by minimum damage; ties fall to the standard ladder.
 	itemTypes = { explosive = true },
 	score = function(data)
 		return data.damageValue

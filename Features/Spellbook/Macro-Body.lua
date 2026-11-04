@@ -18,32 +18,41 @@ local function Condition(...)
 end
 
 --[[
-	A /cast trying each clause in turn. A clause is { condition, unit, spell }: the condition ("" for none),
-	and the spell the clause casts, or spellFor(unit) without one. Neighbouring clauses that cast the same spell share it
+	A /cast trying each clause in turn. A clause is { condition, unit, spell, own = true }: the condition ("" for
+	none), and the spell the clause casts, or spellFor(unit) without one; own marks the macro's own clauses, as
+	against a Conditionals row's or a right-click's. Neighbouring clauses that cast the same spell share it
 	("[@mouseover,help,nodead][] Name"), and a lone clause with nothing to check drops its brackets, so a plain
 	cast stays "/cast Name". With reset ("combat", "target" or both as "combat/target") the line is a
-	/castsequence of the spell then nothing, so it casts once until that reset.
+	/castsequence of each clause's spell then nothing, so it casts once until that reset. With a sequence
+	({ reset, tail }, see ns.CastSequenceTail) it is a /castsequence whose own clauses go on through the tail
+	from their spell, starting over on the sequence's reset, and whose other clauses each cast their one spell,
+	as a /cast would.
 ]]
-local function CastLine(clauses, spellFor, reset)
+local function CastLine(clauses, spellFor, reset, sequence)
 	local groups = {}
 	for _, clause in ipairs(clauses) do
 		local condition = Condition(clause[1])
 		local spell = clause[3] or spellFor(clause[2])
+		local own = clause.own == true
 		local last = groups[#groups]
-		if last and last.spell == spell then
+		if last and last.spell == spell and last.own == own then
 			last.condition = last.condition .. (condition ~= "" and condition or "[]")
 		else
-			groups[#groups + 1] = { condition = condition, spell = spell }
+			groups[#groups + 1] = { condition = condition, spell = spell, own = own }
 		end
 	end
 	local parts = {}
 	for i, g in ipairs(groups) do
+		local resetText, tail = reset, reset and ", NULL" or ""
+		if sequence then
+			resetText, tail = g.own and sequence.reset or nil, g.own and sequence.tail or ""
+		end
 		parts[i] = (g.condition ~= "" and g.condition .. " " or "")
-			.. (reset and "reset=" .. reset .. " " or "")
+			.. (resetText and "reset=" .. resetText .. " " or "")
 			.. g.spell
-			.. (reset and ", NULL" or "")
+			.. tail
 	end
-	return (reset and "/castsequence " or "/cast ") .. table.concat(parts, "; ")
+	return ((reset or sequence) and "/castsequence " or "/cast ") .. table.concat(parts, "; ")
 end
 
 --[[
@@ -158,7 +167,7 @@ local function CastBody(macro)
 		channel or stealth, and on the wrong side of the combat check does nothing at all, not even its item
 		or attack lines, ahead of the mute so a stopped press never leaves the sounds muted; muteErrors' mute; stopAttack's /stopattack; stopCast's
 		/stopcasting; cancelForm's /cancelform; targetEnemy's /targetenemy, for when there is no living hostile
-		target, and targetFriend's /targetfriend, for when there is no living friendly one; the useItems slots, in the order ticked; the stance switch; then the cast. oncePerCombat makes the
+		target, and targetFriend's /targetfriend, for when there is no living friendly one; the useItems slots, in the order ticked; the stance switch; then the cast, its Conditionals rows first. oncePerCombat makes the
 		cast a /castsequence that casts once until combat ends or the target changes, oncePerTarget one that
 		casts once until the target changes. With items, a stance switch or a cast sequence, #showtooltip
 		names the spell so the button shows the spell.
@@ -193,7 +202,7 @@ local function CastBody(macro)
 		.. (namesSpell and " " .. shown or "")
 		.. "\n"
 		.. (stops ~= "" and "/stopmacro " .. stops .. "\n" or "")
-		.. (ns.IsOptionOn(macro, "muteErrors") and "/run BBBMute(1)\n" or "")
+		.. (ns.IsOptionOn(macro, "muteErrors") and "/run GtGMute(1)\n" or "")
 		.. (ns.IsOptionOn(macro, "stopAttack") and "/stopattack\n" or "")
 		.. (stopCast or "")
 		.. (ns.IsOptionOn(macro, "cancelForm") and "/cancelform\n" or "")
@@ -230,6 +239,10 @@ local function CastBody(macro)
 	end
 	if ns.IsOptionOn(macro, "cursor") then
 		clauses = { { "@cursor" } }
+	end
+	-- the macro's own clauses, which a Cast Sequence carries on from
+	for _, clause in ipairs(clauses) do
+		clause.own = true
 	end
 	--[[
 		the Shoot macro tries each ranged attack it stands for, each only with its weapon worn, on the same units
@@ -280,9 +293,28 @@ local function CastBody(macro)
 	end
 	if ns.IsOptionOn(macro, "pet") then
 		-- [pet:X] matches the pet's creature family, so another demon being out still summons this one
-		return header .. "/cast " .. Condition("pet:" .. macro.petFamily) .. " " .. macro.petAbility .. "; " .. spell
+		clauses = { { "pet:" .. macro.petFamily, nil, macro.petAbility }, { "", nil, spell } }
+		reset = nil
 	end
-	return header .. CastLine(clauses, spellFor, reset)
+	--[[
+		the Conditionals rows (Features/Spellbook/Macro-Builder/Conditionals.lua) come first, in their order, each a plain cast
+		of its own spell, so the first that matches casts and the macro's own clauses are what is left:
+		"[mod:shift] Frost Nova; [spec:2,mod:alt] Blizzard; [@mouseover,harm,nodead][] Fireball". In a cast
+		sequence each row's spell casts once until the same reset, as the macro's own does.
+	]]
+	local rows = ns.ConditionalClauses(macro)
+	for _, clause in ipairs(clauses) do
+		rows[#rows + 1] = clause
+	end
+	--[[
+		a Cast Sequence (Features/Spellbook/Macro-Builder/Cast-Sequence.lua) carries each of the macro's own clauses on through
+		its steps: "[@mouseover,harm,nodead][] reset=target/combat Corruption, Curse of Agony, NULL". Once Per
+		Combat and Once Per Target step aside while it's on (ns.OffersOption), since its end and resets do
+		their work
+	]]
+	local sequence = ns.IsCastSequenceOn(macro)
+		and { reset = ns.CastSequenceResetText(macro), tail = ns.CastSequenceTail(macro) }
+	return header .. CastLine(rows, spellFor, reset, sequence or nil)
 end
 
 --[[
@@ -300,6 +332,6 @@ function ns.MacroBody(macro)
 			.. (ns.IsOptionOn(macro, "startAttack") and "\n/startattack [nostealth]" or "")
 			.. (ns.IsOptionOn(macro, "petAttack") and "\n/petattack" or "")
 			.. (ns.IsOptionOn(macro, "hideErrors") and "\n/run UIErrorsFrame:Clear()" or "")
-			.. (ns.IsOptionOn(macro, "muteErrors") and "\n/run BBBMute()" or "")
+			.. (ns.IsOptionOn(macro, "muteErrors") and "\n/run GtGMute()" or "")
 	)
 end

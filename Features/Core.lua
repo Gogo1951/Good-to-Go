@@ -304,7 +304,7 @@ function ns.IsLegacyImportPending()
 	return #legacyToTurnOn > 0
 end
 
-StaticPopupDialogs.BAGSBUFFSBUTTONS_LEGACY_RELOAD = {
+StaticPopupDialogs.GOODTOGO_LEGACY_RELOAD = {
 	text = L["POPUP_LEGACY_RELOAD_TURNED_OFF"],
 	button1 = L["POPUP_LEGACY_RELOAD_ACCEPT"],
 	button2 = L["POPUP_LEGACY_LATER"],
@@ -317,7 +317,7 @@ StaticPopupDialogs.BAGSBUFFSBUTTONS_LEGACY_RELOAD = {
 	preferredIndex = 3,
 }
 
-StaticPopupDialogs.BAGSBUFFSBUTTONS_LEGACY_IMPORT = {
+StaticPopupDialogs.GOODTOGO_LEGACY_IMPORT = {
 	text = L["POPUP_LEGACY_IMPORT_SETTINGS"],
 	button1 = L["POPUP_LEGACY_IMPORT_ACCEPT"],
 	button2 = L["POPUP_LEGACY_IMPORT_DECLINE"],
@@ -348,13 +348,13 @@ end
 -- Asked once the player is in the world, after the welcome line.
 local function OfferLegacySteps()
 	if #legacyTurnedOff > 0 then
-		local dialog = StaticPopupDialogs.BAGSBUFFSBUTTONS_LEGACY_RELOAD
+		local dialog = StaticPopupDialogs.GOODTOGO_LEGACY_RELOAD
 		if #legacyCopied > 0 then
 			dialog.text = L["POPUP_LEGACY_RELOAD_COPIED"]
-			StaticPopup_Show("BAGSBUFFSBUTTONS_LEGACY_RELOAD", JoinTitles(legacyCopied), JoinTitles(legacyTurnedOff))
+			StaticPopup_Show("GOODTOGO_LEGACY_RELOAD", JoinTitles(legacyCopied), JoinTitles(legacyTurnedOff))
 		else
 			dialog.text = L["POPUP_LEGACY_RELOAD_TURNED_OFF"]
-			StaticPopup_Show("BAGSBUFFSBUTTONS_LEGACY_RELOAD", JoinTitles(legacyTurnedOff))
+			StaticPopup_Show("GOODTOGO_LEGACY_RELOAD", JoinTitles(legacyTurnedOff))
 		end
 	elseif #legacyToTurnOn > 0 then
 		local titles = {}
@@ -363,9 +363,9 @@ local function OfferLegacySteps()
 			titles[index] = LegacyTitle(legacy)
 			bringsLists = bringsLists or legacy.savedVariables == "ConnoisseurDB"
 		end
-		StaticPopupDialogs.BAGSBUFFSBUTTONS_LEGACY_IMPORT.text = bringsLists and L["POPUP_LEGACY_IMPORT_LISTS"]
+		StaticPopupDialogs.GOODTOGO_LEGACY_IMPORT.text = bringsLists and L["POPUP_LEGACY_IMPORT_LISTS"]
 			or L["POPUP_LEGACY_IMPORT_SETTINGS"]
-		StaticPopup_Show("BAGSBUFFSBUTTONS_LEGACY_IMPORT", JoinTitles(titles))
+		StaticPopup_Show("GOODTOGO_LEGACY_IMPORT", JoinTitles(titles))
 	end
 end
 
@@ -415,7 +415,32 @@ end
     macros exist, Thanks for the Buff's settings, presentation -- lives on
     ns.db.global, each with its reason (see Data/Default-Settings.lua).
 ]]
+--[[
+    MIGRATION (remove after 2026-12-03)
+    The settings saved before the rename to Good to Go, under
+    ns.OLD_SAVED_VARIABLES_NAME, become this add-on's table, and the old one is
+    emptied so it is no longer written. They move only while this add-on's own
+    table is missing or empty; when both hold settings, neither is touched.
+    The client reads the old table only from Good-to-Go.lua, so a player's
+    Bags-Buffs-Buttons.lua must be renamed to that first.
+]]
+local function MoveRenamedSettings()
+	local old = _G[ns.OLD_SAVED_VARIABLES_NAME]
+	if type(old) ~= "table" then
+		return
+	end
+	local current = _G[ns.SAVED_VARIABLES_NAME]
+	if current ~= nil and (type(current) ~= "table" or next(current) ~= nil) then
+		return
+	end
+	_G[ns.SAVED_VARIABLES_NAME] = old
+	_G[ns.OLD_SAVED_VARIABLES_NAME] = nil
+end
+
 local function InitializeDatabase()
+	-- MIGRATION (remove after 2026-12-03)
+	MoveRenamedSettings()
+
 	-- MIGRATION (remove after 2026-11-25)
 	ImportLegacySettings()
 

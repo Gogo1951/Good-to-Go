@@ -29,7 +29,8 @@ local MACRO_CONFIG = ns.MACRO_CONFIG
     Resolves each pet spell's name only if the player actually knows the spell.
     C_Spell.GetSpellName returns a name even for unlearned spells, so a level-8 hunter
     without Mend Pet would otherwise get a macro referencing a spell they can't
-    cast. Core re-runs this on PLAYER_LEVEL_UP and SPELLS_CHANGED so a
+    cast. The module's dispatcher (Macros-for-Consumables-Core.lua) re-runs
+    this on PLAYER_LEVEL_UP and SPELLS_CHANGED so a
     newly-learned spell (Mend Pet at 12) starts participating without a /reload.
 ]]
 local function ResolveIfKnown(spellID)
@@ -59,8 +60,9 @@ end
     dead, the client shows the SPELL_FAILED_TARGETS_DEAD text; we match that
     text and flip the flag so the macro rebuilds with Revive Pet on the next
     cycle. A spell aimed at a dead target shows the same text, so the error is
-    ignored while the target is dead. Core's dispatcher routes UI_ERROR_MESSAGE
-    here ahead of its combat-lockdown guard, so this still fires mid-fight.
+    ignored while the target is dead. The module's dispatcher
+    (Macros-for-Consumables-Core.lua) routes UI_ERROR_MESSAGE here ahead of its
+    combat-lockdown guard, so this still fires mid-fight.
 ]]
 function ns.OnHunterUiErrorMessage(message)
 	if not ns.isHunter then
@@ -199,7 +201,7 @@ local function ComposeFeedPetBody(tier, itemID, includeDismiss, includeRevive)
 		    try to /cast Feed Pet in combat (it would fail) or on a
 		    right-click the user expected to mean Mend.
 		]]
-		lines[#lines + 1] = '/run BBBTipIf("[btn:2][combat]","noMendPet")'
+		lines[#lines + 1] = '/run GtGTipIf("[btn:2][combat]","noMendPet")'
 		lines[#lines + 1] = "/stopmacro [btn:2][combat]"
 	end
 
@@ -242,7 +244,7 @@ local function ComposeFeedPetBody(tier, itemID, includeDismiss, includeRevive)
 		    No useful food in bags: clicking Feed Pet should explain that
 		    rather than silently doing nothing on the food line.
 		]]
-		lines[#lines + 1] = '/run BBBTip("noPetFood")'
+		lines[#lines + 1] = '/run GtGTip("noPetFood")'
 	end
 
 	return table.concat(lines, "\n")
@@ -252,7 +254,7 @@ local function BuildFeedPetBody(tier, itemID)
 	if tier == "A" then
 		return table.concat({
 			"#showtooltip",
-			'/run BBBTip("noPetSkills")',
+			'/run GtGTip("noPetSkills")',
 		}, "\n")
 	end
 

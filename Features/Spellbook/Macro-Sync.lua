@@ -51,7 +51,7 @@ end
 local LEGACY_NAME_MAX_LENGTH = 16
 
 --[[
-	MIGRATION (remove after 2026-11-26): the prefix the Spellbook's macros had before Bags Buffs & Buttons gave
+	MIGRATION (remove after 2026-11-26): the prefix the Spellbook's macros had before Good to Go gave
 	every one of its macros a leading "-". A macro still under it is renamed on its next sync.
 ]]
 local OLD_PREFIX = "~"
@@ -182,13 +182,17 @@ end
 
 --[[
 	Whether the macro's body fits the game's limit, measured in bytes, which a translated name reaches sooner.
-	A longer body would be cut off, so it is never written, and the player is told once.
+	A longer body would be cut off, so it is never written, and the player is told once per macro, however its
+	length changes.
 ]]
 local function Fits(macro)
 	if #macro.body <= ns.MACRO_BODY_MAX_LENGTH then
 		return true
 	end
-	ns.WarnOnce(L["CHAT_MACRO_TOO_LONG"]:format(macro.label or macro.name, #macro.body, ns.MACRO_BODY_MAX_LENGTH))
+	ns.WarnOnce(
+		L["CHAT_MACRO_TOO_LONG"]:format(macro.label or macro.name, #macro.body, ns.MACRO_BODY_MAX_LENGTH),
+		"tooLong:" .. ns.WowMacroName(macro)
+	)
 	return false
 end
 
@@ -229,7 +233,8 @@ end
 	from before the prefix (MIGRATION (remove after 2026-11-23)), under the old "~" prefix
 	(MIGRATION (remove after 2026-11-26)), or under the name of a replaced spell whose macro it took
 	over ("-Bear Form", now Dire Bear Form's), is renamed, its ownership record moving with it; a name the
-	player gave it is kept. A new name sorts the macro elsewhere in its list, so this returns the index it
+	player gave it is kept, and recorded as the add-on's while the body carries this macro's tag, so Delete
+	Macros still finds it. A new name sorts the macro elsewhere in its list, so this returns the index it
 	ends up at.
 ]]
 local function SyncAt(macro, index)
@@ -239,6 +244,10 @@ local function SyncAt(macro, index)
 	local name, _, body = GetMacroInfo(index)
 	local newBody = body ~= macro.body and Fits(macro) and macro.body or nil
 	if name ~= LegacyMacroName(macro) and name ~= OldPrefixName(macro) and not IsReplacedSpellsName(macro, name) then
+		local owned = OwnedList(index)
+		if owned[name] == nil and ns.BodyTag(body) == ns.MacroTag(macro) then
+			owned[name] = OwnerRecord(index)
+		end
 		if newBody then
 			EditMacro(index, nil, nil, newBody)
 		end

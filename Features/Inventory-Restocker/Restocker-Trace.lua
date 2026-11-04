@@ -15,7 +15,9 @@ local _, ns = ...
     message is a TRACE_* format in ns.DiagnosticsStrings (Diagnostics/Diagnostics-Core.lua),
     passed here by key and looked up only once the gate is open.
 
-    Restocker-Bags.lua and Restocker-Bank.lua both call it.
+    Called from Restocker-Bags.lua, Restocker-Bank-State.lua,
+    Restocker-Bank-Visit.lua, Restocker-Bank-Tidy.lua and
+    Restocker-Inventory-Model.lua.
 
     Takes the format's arguments rather than a pre-concatenated string, so the
     (potentially expensive) build only happens when the gate is open: prefer

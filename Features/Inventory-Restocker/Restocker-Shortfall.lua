@@ -79,3 +79,32 @@ function ns.IsRestockItemShort(record)
 	local key = record.itemID or record.itemName
 	return key ~= nil and wanted > 0 and (C_Item.GetItemCount(key, false, false) or 0) < wanted
 end
+
+--------------------------------------------------------------------------------
+-- After A Visit
+--------------------------------------------------------------------------------
+
+--[[
+    Leaving a merchant or a bank is the last moment you can still do something
+    about a short list, so both close handlers (Restocker-Merchant.lua and
+    Restocker-Bank-State.lua) report what is left on the way out. Silent when nothing
+    is short -- a report with nothing in it is just noise.
+
+    The short delay is for bag counts. Purchases and bank moves settle on
+    BAG_UPDATE, which can land after the window closes; reading the shortfall on
+    the same frame would count items you are already holding as missing.
+]]
+local SETTLE_DELAY = 0.3
+
+function ns.RemindRestockShortfallAfterVisit(enabled, mode)
+	if not enabled then
+		return
+	end
+	C_Timer.After(SETTLE_DELAY, function()
+		local groceries = ns.BuildGroceryList()
+		if #groceries == 0 then
+			return
+		end
+		ns.PrintRestockShortfall(ns.RestockShortfallHeadline(#groceries), mode, groceries)
+	end)
+end

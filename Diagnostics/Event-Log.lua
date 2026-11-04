@@ -12,19 +12,23 @@ local EVENT_LOG_MAX_ARG_LENGTH = 255
 
 --[[
     Events ns:LogEvent drops before recording. The dispatcher only ever hands
-    LogEvent the events the add-on registers (Core's ns.EVENT_NAMES), and the buff
-    engine writes the signal firings of both entries itself, decoded, through
-    ns:LogEventNow:
+    LogEvent the events the add-on registers (Core's ns.EVENT_NAMES), and the
+    handlers that act on them write their signal firings themselves, decoded,
+    through ns:LogEventNow:
 
     - COMBAT_LOG_EVENT_UNFILTERED, registered on every flavor but Forever: raw
       combat-log traffic would bury the signal, so every aura landing on you
       and every cast or revive Thanks for the Buff tracks is logged in full instead, and every
       other cast is counted by spell id in the summary (see ns:LogCombatCast).
-    - UNIT_AURA, registered on every flavor for every unit (the Buff Window
-      reads the whole group): its update table can't be logged as text, and on
+    - UNIT_AURA, registered for every unit while Buff Duty is on (the Buff
+      Window reads the whole group), for you alone on Forever while praise is
+      on, and by Connoisseur for you and your pet while a macro needs it
+      (ns.UpdateAuraTracking): its update table can't be logged as text, and on
       Forever each added aura on you is logged with the gate that decided it
-      instead (see ns:LogAuraUpdate). The Buff Window's own reads show on the
-      Buff Window Context report.
+      instead (see ns:LogAuraUpdate). Connoisseur logs each firing on you or
+      your pet that changes a macro, with what changed (ns.OnUnitAura in
+      Features/Macros-for-Consumables/Scanner-Auras.lua). The Buff Window's own
+      reads show on the Buff Window Context report.
 
     SPELL_UPDATE_COOLDOWN is dropped outright: it fires on every global
     cooldown and carries no id to classify by, and all it drives is the Buff
@@ -68,17 +72,19 @@ local GATED_ID = -1
     Firehoses that carry no id, each with the test its handler makes before
     acting on a firing. A firing the handler would ignore folds into the
     counters under GATED_ID with the reason; one it acts on logs in full.
-    UPDATE_MOUSEOVER_UNIT fires for every unit the cursor crosses, and Macro
-    Spellbook's Features/Spellbook/Dynamic-Rank.lua queues a rewrite
-    only out of combat while any macro has Dynamic Rank on, by its own setting
-    or its kind's default (its RanksRewritable), so the test makes that same
-    call.
+    UPDATE_MOUSEOVER_UNIT fires for every unit the cursor crosses, and the
+    Spellbook's Features/Spellbook/Dynamic-Rank.lua queues a rewrite only
+    while the Spellbook is on, out of combat, and any macro has Dynamic Rank
+    on, by its own setting or its kind's default (its RanksRewritable), so the
+    test makes those same calls. RanksRewritable's last check, a placed macro
+    that tries the mouseover, is private to that file, so a firing it would
+    still turn away logs in full rather than being lost.
 ]]
 local GATED_EVENTS = {
 	UPDATE_MOUSEOVER_UNIT = {
-		reason = "out of combat with no Dynamic Rank macro, or in combat",
+		reason = "Spellbook off, in combat, or no Dynamic Rank macro",
 		acts = function()
-			return ns.db ~= nil and not InCombatLockdown() and ns.AnyTargetRank()
+			return ns.db ~= nil and ns.IsSpellbookEnabled() and not InCombatLockdown() and ns.AnyTargetRank()
 		end,
 	},
 }

@@ -23,10 +23,16 @@ local ROW_INDENT = " "
 
 --[[
     The other characters on this realm, unpacked once per login. They are
-    logged out, so nothing can change them during this session; a new login
-    binds a new record, which rebuilds the list.
+    logged out, so nothing in game can change them during this session; a new
+    login binds a new record, which rebuilds the list, and the panel's Forget
+    drops it (ns.ResetInventoryReportOthers).
 ]]
 local others, othersRecord
+
+-- Drops the unpacked list, so the next tooltip rebuilds it without a character the panel forgot.
+function ns.ResetInventoryReportOthers()
+	others, othersRecord = nil, nil
+end
 
 local function OtherCharacters()
 	local record = ns.GetInventoryRecord()
@@ -219,19 +225,13 @@ local function OnTooltipCleared(tooltip)
 	reported[tooltip] = nil
 end
 
-local function ItemIDFromLink(link)
-	return link and tonumber(link:match("item:(%d+)"))
-end
-
 -- A hook cannot be removed, so it is installed once however often login runs.
 local tooltipsHooked = false
 
 --[[
-    Forever runs Retail's tooltip pipeline, where OnTooltipSetItem is gone and
-    TooltipDataProcessor hands every item tooltip to a post-call; Era and TBC
-    have no TooltipDataProcessor and still fire OnTooltipSetItem. Only the main
-    tooltip and the clicked-link one are reported on: the comparison tooltips
-    beside them would only repeat the same block.
+    Only the main tooltip and the clicked-link one are reported on: the
+    comparison tooltips beside them would only repeat the same block. How each
+    client hands over an item tooltip is ns.AddItemTooltipPostCall's business.
 ]]
 local function HookTooltips()
 	if tooltipsHooked then
@@ -244,22 +244,7 @@ local function HookTooltips()
 		tooltip:HookScript("OnTooltipCleared", OnTooltipCleared)
 	end
 
-	if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum.TooltipDataType then
-		TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, function(tooltip, data)
-			if tooltip == GameTooltip or tooltip == ItemRefTooltip then
-				AddReport(tooltip, data and data.id)
-			end
-		end)
-		return
-	end
-
-	local function OnTooltipSetItem(tooltip)
-		local _, link = tooltip:GetItem()
-		AddReport(tooltip, ItemIDFromLink(link))
-	end
-	for _, tooltip in ipairs(tooltips) do
-		tooltip:HookScript("OnTooltipSetItem", OnTooltipSetItem)
-	end
+	ns.AddItemTooltipPostCall(tooltips, AddReport)
 end
 
 -- Called at login (ns.InitializeInventoryReport) to hook the tooltips once TOOLTIP_HOOK_DELAY has passed.

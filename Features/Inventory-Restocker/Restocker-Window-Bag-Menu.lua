@@ -30,7 +30,7 @@ local ARROW_SIZE = 16 -- two under the row's 18px fields
 local MENU_WIDTH = 280 -- an icon and an item's whole name
 local MENU_MAX_HEIGHT = 360 -- about twenty items, and the pullout scrolls past that
 local ICON_SIZE = 14
-local UNKNOWN_ICON = "Interface\\ICONS\\INV_Misc_QuestionMark" -- the list's own stand-in for an icon it cannot name
+local UNKNOWN_ICON = ns.QUESTION_MARK_ICON -- the list's own stand-in for an icon it cannot name
 
 --------------------------------------------------------------------------------
 -- Items

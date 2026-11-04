@@ -6,7 +6,7 @@ local AceGUI = LibStub("AceGUI-3.0")
     The Restock List's two menus: the standings menu a row's reputation cell
     opens, and the menu a toggle column's heading opens to set that column on
     every row shown. The cells that open them are Restocker-Window-Rows.lua,
-    the headings Restocker-Window-Columns.lua.
+    the headings Restocker-Window-Column-Header.lua.
 ]]
 local REPUTATION_STANDINGS = ns.REPUTATION_STANDINGS
 local ReputationMenuText = ns.RestockReputationMenuText

@@ -12,9 +12,8 @@ local L = ns.L
 
     The key is a hidden SecureActionButtonTemplate button bound by
     Bindings.xml ("CLICK <button>:LeftButton"), and a macro reaches the same
-    button with "/click TFTBBuffIndividual" -- the way Pally Power's macros
-    click its buttons. The name is the one it had as the first of two keys,
-    so the bindings and macros made then still press it. A slash command of our own
+    button with "/click GtGBuffKey" -- the way Pally Power's macros
+    click its buttons. A slash command of our own
     can't do it: the game only lets its own secure code cast, and an add-on's
     command never is. Casting from a key press is
     protected, so the pick happens in PreClick: it reads the group fresh,
@@ -28,7 +27,7 @@ local L = ns.L
 local BuffWindow = ns.BuffWindow
 
 -- The button's global name, which a macro's /click types.
-local KEY_BUTTON = "TFTBBuffIndividual"
+local KEY_BUTTON = "GtGBuffKey"
 
 -- The binding command, as Bindings.xml names it; the options panel binds keys to it.
 ns.BUFF_KEY_COMMAND = "CLICK " .. KEY_BUTTON .. ":LeftButton"
@@ -42,6 +41,15 @@ ns.BUFF_KEY_MACRO = "/click " .. KEY_BUTTON
     login (ns.MigrateBuffKeys).
 ]]
 local OLD_GROUP_COMMAND = "CLICK TFTBBuffGroup:LeftButton"
+
+--[[
+    MIGRATION (remove after 2026-12-03): the button's name before the GtG name.
+    A key still bound to its command moves over at login (ns.MigrateBuffKeys),
+    and the old name stays an alias for the button, so a player's own macro
+    that still types /click TFTBBuffIndividual keeps pressing it.
+]]
+local OLD_KEY_BUTTON = "TFTBBuffIndividual"
+local OLD_KEY_COMMAND = "CLICK " .. OLD_KEY_BUTTON .. ":LeftButton"
 
 -- The name the game's Key Bindings list shows (the add-on's header is set in Features/Spellbook/Key-Bindings.lua).
 _G["BINDING_NAME_" .. ns.BUFF_KEY_COMMAND] = L["BUFF_KEY"]
@@ -75,7 +83,7 @@ local pending -- { key, ids, seconds, expires }: the last press, until its cast 
 
 local GetItemCooldown = C_Container.GetItemCooldown
 local IsSpellUsable = C_Spell.IsSpellUsable
-local GetSpellPowerCost = C_Spell.GetSpellPowerCost or GetSpellPowerCost
+local GetSpellPowerCost = C_Spell.GetSpellPowerCost
 
 --------------------------------------------------------------------------------
 -- Readiness
@@ -103,7 +111,7 @@ local function SkipKey(spec)
 		return "favor:" .. spec.favorGUID .. ":" .. name
 	end
 	local guid = spec.unit and UnitGUID(spec.unit)
-	if guid and ns.IsPlain(guid) then
+	if ns.IsPlain(guid) and guid then
 		return guid .. ":" .. name
 	end
 	return nil
@@ -514,16 +522,39 @@ end
     would cast nothing. Both halves write the attributes, so a client that
     acted on the other half would still cast; only the up half remembers
     the cast and shows a message.
+
+    A pick reads the whole group, so a press picks once: the up half reuses
+    the down half's pick, nothing having been cast in between, unless the key
+    was held longer than PRESS_REUSE_SECONDS. A /click's lone up picks for
+    itself.
 ]]
+local PRESS_REUSE_SECONDS = 1
+local downPick -- { at, spec, waitingOn }: the down half's pick, until its up half
+
+local function PickForPress(down)
+	local now = GetTime()
+	local earlier = downPick
+	downPick = nil
+	if not down and earlier and now - earlier.at <= PRESS_REUSE_SECONDS then
+		return earlier.spec, earlier.waitingOn
+	end
+	local spec, waitingOn = PickNext()
+	if down then
+		downPick = { at = now, spec = spec, waitingOn = waitingOn }
+	end
+	return spec, waitingOn
+end
+
 local function OnKeyPreClick(self, _, down)
 	local acting = not down
 	if InCombatLockdown() then
+		downPick = nil
 		if acting then
 			UIErrorsFrame:AddMessage(ERR_NOT_IN_COMBAT, 1, 0.1, 0.1)
 		end
 		return
 	end
-	local spec, waitingOn = PickNext()
+	local spec, waitingOn = PickForPress(down)
 	ns.SetBuffButtonAttributes(self, spec)
 	if not acting then
 		return
@@ -551,23 +582,29 @@ keyButton:SetAttribute("useOnKeyDown", false)
 keyButton:SetScript("PreClick", OnKeyPreClick)
 keyButton:SetScript("PostClick", OnKeyPostClick)
 keyButton:Hide()
+-- MIGRATION (remove after 2026-12-03)
+_G[OLD_KEY_BUTTON] = keyButton
 
 --[[
-    MIGRATION (remove after 2026-11-21): Run from the Buff Window's setup at login. A key still bound to the old
-    Group Buff key now presses this one, which picks group buffs itself;
-    once moved, nothing is left to move. Bindings are locked in combat, so a
+    Run from the Buff Window's setup at login. A key still bound to an old
+    command now presses this button: the Group Buff key's (MIGRATION (remove
+    after 2026-11-21)), since this one picks group buffs itself, and this
+    button's own under its old name (MIGRATION (remove after 2026-12-03)).
+    Once moved, nothing is left to move. Bindings are locked in combat, so a
     /reload mid-fight tries again next login.
 ]]
 function ns.MigrateBuffKeys()
 	if InCombatLockdown() then
 		return
 	end
-	local keys = { GetBindingKey(OLD_GROUP_COMMAND) }
-	if not keys[1] then
-		return
+	local moved = false
+	for _, command in ipairs({ OLD_GROUP_COMMAND, OLD_KEY_COMMAND }) do
+		for _, key in ipairs({ GetBindingKey(command) }) do
+			SetBinding(key, ns.BUFF_KEY_COMMAND)
+			moved = true
+		end
 	end
-	for _, key in ipairs(keys) do
-		SetBinding(key, ns.BUFF_KEY_COMMAND)
+	if moved then
+		SaveBindings(GetCurrentBindingSet())
 	end
-	SaveBindings(GetCurrentBindingSet())
 end

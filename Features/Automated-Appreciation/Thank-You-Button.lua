@@ -48,15 +48,29 @@ local LEGACY_MACRO_NAMES = {
 	slash5 = "- TFTB 5",
 }
 
--- MIGRATION (remove after 2026-11-25)
+--[[
+    MIGRATION (remove after 2026-12-03)
+    The names these macros had before the rename to Good to Go, renamed the
+    same way and on the same terms as Thanks for the Buff's above.
+]]
+local RENAMED_MACRO_NAMES = {
+	slash2 = "- BBB 2",
+	slash3 = "- BBB 3",
+	slash4 = "- BBB 4",
+	slash5 = "- BBB 5",
+}
+
+-- MIGRATION (remove after 2026-11-25; RENAMED_MACRO_NAMES after 2026-12-03)
 local function RenameLegacyMacro(button)
 	if ns.IsLegacyImportPending and ns.IsLegacyImportPending() then
 		return
 	end
-	local oldName = LEGACY_MACRO_NAMES[button.profileKey]
-	local oldIndex = oldName and GetMacroIndexByName(oldName) or 0
-	if oldIndex > 0 and GetMacroIndexByName(button.macroName) == 0 then
-		EditMacro(oldIndex, button.macroName)
+	for _, names in ipairs({ RENAMED_MACRO_NAMES, LEGACY_MACRO_NAMES }) do
+		local oldName = names[button.profileKey]
+		local oldIndex = oldName and GetMacroIndexByName(oldName) or 0
+		if oldIndex > 0 and GetMacroIndexByName(button.macroName) == 0 then
+			EditMacro(oldIndex, button.macroName)
+		end
 	end
 end
 
@@ -71,9 +85,24 @@ end
     creates counts against it, so five buttons enabled at once on a nearly-full
     list must stop at the real limit rather than at the count taken before any of
     them existed.
+
+    Macros can't be made in combat, so a reconcile asked for then (a reload
+    mid-fight) waits for combat to end, through a module of its own that
+    hears PLAYER_REGEN_ENABLED only while one is waiting.
 ]]
+local MODULE = "ThankYouMacros"
+
+ns.RegisterEventModule(MODULE, function()
+	ns.SetModuleEvent(MODULE, "PLAYER_REGEN_ENABLED", false)
+	ns.ReconcileMacros()
+end)
+
 function ns.ReconcileMacros()
-	if InCombatLockdown() or not ns.db then
+	if not ns.db then
+		return
+	end
+	if InCombatLockdown() then
+		ns.SetModuleEvent(MODULE, "PLAYER_REGEN_ENABLED", true)
 		return
 	end
 	for _, button in ipairs(Data.THANK_YOU_BUTTONS) do

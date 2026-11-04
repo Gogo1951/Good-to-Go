@@ -49,7 +49,6 @@ function Inventory:FindBestFit(cachedItem, amount)
 	for _, inventorySlot in ipairs(containingSlots) do
 		local remainingAfterMerge = cachedItem.itemStackCount - (inventorySlot.count + amount)
 
-		-- If can merge into this slot
 		if remainingAfterMerge >= 0 then
 			local candidate = ns.NewRestockInventorySlot(inventorySlot.bag, inventorySlot.slot, remainingAfterMerge)
 			table.insert(mergeDestinations, candidate)
@@ -61,7 +60,6 @@ function Inventory:FindBestFit(cachedItem, amount)
 		return nil
 	end
 
-	-- Pick smallest remaining
 	table.sort(mergeDestinations, ns.CompareByStackSizeAscending)
 
 	-- First element should be lowest, i.e. closest to the perfection of a full stack

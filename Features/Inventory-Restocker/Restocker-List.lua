@@ -87,10 +87,18 @@ function ns.OnRestockerItemInfoReceived(itemID, success)
 	]]
 	ns.ForgetItemDataMiss(itemID)
 
-	-- An item the server has none of: the deferred upgrade and Staples tick waiting on it stop waiting.
+	--[[
+	    An item the server has none of: the deferred upgrade and Staples tick
+	    waiting on it stop waiting, and a parked add is told so rather than
+	    retried, since a retry would only park it again.
+	]]
 	if success == false then
 		ns.DropFailedUpgradeTarget(itemID)
 		ns.DropPendingStarterAdd(itemID)
+		if ns.restockItemWait[itemID] then
+			ns.restockItemWait[itemID] = nil
+			ns.ShowRestockAddNotice(string.format(L["RESTOCKER_UNKNOWN_ITEM"], itemID))
+		end
 	end
 
 	if ns.restockColdRows[itemID] then
@@ -98,7 +106,6 @@ function ns.OnRestockerItemInfoReceived(itemID, success)
 		ns.RepaintRestockRows(itemID)
 	end
 
-	-- If this was an item add request for an unknown item
 	if ns.restockItemWait[itemID] then
 		ns.restockItemWait[itemID] = nil
 		ns.AddRestockItem(itemID)
@@ -195,7 +202,6 @@ function ns.AddRestockItem(text)
 	    land at exactly one with no special case.
 	]]
 	buyItem.amount = math.max(1, (itemInfo).itemStackCount or 1)
-	-- New items default to everything ON: buy from merchant, stash to bank, restock from bank
 	buyItem.buyFromMerchant = true
 	buyItem.stashToBank = true
 	buyItem.restockFromBank = true

@@ -6,7 +6,7 @@ local _, ns = ...
     one line per other character holding some, each with its bags and bank
     apart.
 
-        BBB // Inventory Report                 Total 82
+        GtG // Inventory Report                 Total 82
          Gogodruid                         Bag 7, Bank 18
 
          Coinpurse                                Bank 30
@@ -39,9 +39,6 @@ local _, ns = ...
     counts on the same tooltips, and two sets of numbers under one item is
     noise.
 ]]
-
--- Bank bag ids follow the player's own: 5..10 on Classic Era (six slots), 5..11 on TBC, as in Restocker-Bags.lua.
-local BANK_BAG_COUNT = 7
 
 -- The bank's contents can still be arriving when BANKFRAME_OPENED fires; one late look catches them.
 local BANK_SETTLE_DELAY = 0.5
@@ -91,23 +88,8 @@ local function PlayerBagIDs()
 	return bagIDs
 end
 
---[[
-    Forever's character bank is the tabs the player has bought (C_Bank); Era and
-    TBC have BANK_CONTAINER and the bank bags. The seventh bank bag exists only
-    on TBC, and asking Era about it just reads as empty.
-]]
-local function BankBagIDs()
-	local tabIDs = ns.FetchPurchasedBankTabIDs()
-	if tabIDs then
-		return tabIDs
-	end
-
-	local bagIDs = { BANK_CONTAINER }
-	for index = 1, BANK_BAG_COUNT do
-		bagIDs[#bagIDs + 1] = NUM_BAG_SLOTS + index
-	end
-	return bagIDs
-end
+-- The bank's containers, the same list the Restocker reads (ns.BankBagIDs in Restocker-Bags.lua).
+local BankBagIDs = ns.BankBagIDs
 
 local function CountItems(bagIDs)
 	local counts = {}
@@ -205,6 +187,38 @@ function ns.InitializeInventoryReport()
 	bankCounts = record.bank and Unpack(record.bank) or nil
 
 	ns.HookInventoryReportTooltipsLater()
+end
+
+--[[
+    The Restocker panel's switch. Off, the recorders stop hearing the bags
+    (ns.SyncRestockerEvents); back on, the bags are read at once rather than at
+    their next change.
+]]
+function ns.SetInventoryReportEnabled(value)
+	ns.db.global.inventoryReport = value
+	ns.SyncRestockerEvents()
+	if value then
+		ScanBags()
+	end
+end
+
+--[[
+    Drops another character's record, for the Restocker panel's Forget: its
+    bags and bank leave every tooltip, and its Restock List choice goes with
+    it, so its name stops reserving list names. Logging in on it records it
+    again.
+]]
+function ns.ForgetRecordedCharacter(key)
+	local inventory = ns.db.global.inventory
+	local forgotten = inventory[key]
+	if key == ns.GetCharacterKey() or type(forgotten) ~= "table" then
+		return
+	end
+	inventory[key] = nil
+	if forgotten.name and forgotten.realm then
+		ns.db.global.restocker.listChoices[ns.ProfileNameForCharacter(forgotten.name, forgotten.realm)] = nil
+	end
+	ns.ResetInventoryReportOthers()
 end
 
 --[[

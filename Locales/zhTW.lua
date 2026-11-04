@@ -1,4 +1,4 @@
-local L = LibStub("AceLocale-3.0"):NewLocale("Bags-Buffs-Buttons", "zhTW")
+local L = LibStub("AceLocale-3.0"):NewLocale("Good-to-Go", "zhTW")
 if not L then
 	return
 end
@@ -10,17 +10,17 @@ end
 --[[
     The add-on has two names. ADDON_TITLE, the full name, is for window
     titles and anywhere the add-on is talked about; ADDON_SHORT_NAME is for
-    tooltips and the chat prints ("BBB // ..."). Both are proper nouns and
+    tooltips and the chat prints ("GtG // ..."). Both are proper nouns and
     stay as written in every locale, as does the full name inside any
     sentence below.
 ]]
-L["ADDON_TITLE"] = "Bags Buffs & Buttons"
-L["ADDON_SHORT_NAME"] = "BBB"
+L["ADDON_TITLE"] = "Good to Go"
+L["ADDON_SHORT_NAME"] = "GtG"
 
 L["CHAT_LOADED"] =
-	"版本 %s。設定（包括停用此訊息的選項）位於 選項 > 插件 > Bags Buffs & Buttons。喜歡這個插件嗎？告訴朋友，在 CurseForge 上收藏它，或在它的 GitHub 頁面上點擊 Star。(="
-L["OPTIONS_LEVEL_UP_TITLE"] = "幫助 Bags Buffs & Buttons 升級"
-L["OPTIONS_LEVEL_UP_THANKS"] = "感謝你選擇 Bags Buffs & Buttons！"
+	"版本 %s。設定（包括停用此訊息的選項）位於 選項 > 插件 > Good to Go。喜歡這個插件嗎？告訴朋友，在 CurseForge 上收藏它，或在它的 GitHub 頁面上點擊 Star。(="
+L["OPTIONS_LEVEL_UP_TITLE"] = "幫助 Good to Go 升級"
+L["OPTIONS_LEVEL_UP_THANKS"] = "感謝你選擇 Good to Go！"
 
 --------------------------------------------------------------------------------
 -- Connoisseur & Restocker
@@ -94,16 +94,6 @@ L["MESSAGE_BUG_REPORT"] =
 L["MESSAGE_NO_ITEM"] = "背包中未找到合適的%s。"
 L["MESSAGE_MACRO_SLOTS_FULL"] =
 	"由於你的巨集欄位已滿，部分 Connoisseur & Restocker 巨集未能建立。請刪除不再使用的巨集以騰出欄位，或在 選項 > 插件 > Connoisseur & Restocker > 巨集 中關閉不需要的 Connoisseur & Restocker 巨集。"
---[[
-    Printed once after the add-on creates one or more of its macros, so a new
-    player learns they exist. %s is "/m", the game's own macro command, colored
-    at the call site. "General" is the macro window's tab for account-wide
-    macros; use the client's own name for that tab. The macro names are this
-    locale's own MACRO_FOOD and MACRO_WATER values, written exactly as this
-    locale ships them.
-]]
-L["MESSAGE_MACROS_READY"] =
-	'你的巨集已準備就緒。輸入 %s，開啟"一般巨集指令"標籤頁，然後把 - 食物、- 水 等巨集拖到你的快捷列上。'
 -- The mini-map button's Right-Click and Middle-Click. %s is the item's link.
 L["MESSAGE_IGNORE_ADDED"] = "%s 已加入此角色的忽略列表。"
 -- %d is how many items the Middle-Click took off the list: exactly one, or two or more.
@@ -280,7 +270,7 @@ L["MINIMAP_RESTOCKER_EMPTY"] = "你的清單是空的。"
 L["MENU_RESTOCKER"] = "Restocker 清單"
 L["MENU_RESTOCKER_DESCRIPTION"] = "購買你清單上的物品，並在銀行存取。"
 L["MENU_RESTOCKER_KEYBIND"] = "Shift + 右鍵點擊"
-L["MENU_OPTIONS"] = "BBB 選項"
+L["MENU_OPTIONS"] = "GtG 選項"
 L["MENU_OPTIONS_KEYBIND"] = "Shift + 中鍵點擊"
 
 --------------------------------------------------------------------------------
@@ -459,7 +449,7 @@ L["SAMPLE_EXAMPLE"] = "範例：%s"
     translate, and its description.
 ]]
 L["OPTIONS_COMMANDS_HEADER"] = "/Commands"
-L["OPTIONS_COMMAND"] = "/bbb"
+L["OPTIONS_COMMAND"] = "/gtg"
 L["OPTIONS_COMMAND_DESCRIPTION"] = "開啟此插件的選項介面。"
 L["RESTOCKER_COMMAND"] = "/restock"
 L["RESTOCKER_COMMAND_DESCRIPTION"] = "開啟你的補貨清單。"
@@ -1649,6 +1639,22 @@ L["BUFF_WINDOW_TOOLTIP_CREATE"] = "你的隊伍中沒有人有靈魂石。點擊
 L["BUFF_WINDOW_TOOLTIP_GROUP"] = "點擊對 %s 及其隊伍施放。"
 L["BUFF_WINDOW_TOOLTIP_FAVOR"] = "點擊選取 %s 為目標並施放。"
 L["BUFF_WINDOW_TOOLTIP_DISMISS"] = "右鍵點擊將 %s 從列表中移除。"
+-- The title row: a raid buff your group is missing, its count and click.
+L["BUFF_WINDOW_OTHERS_TOOLTIP_COUNT"] = "缺少或即將消失：%d"
+-- %s is the names of the players the click whispers.
+L["BUFF_WINDOW_OTHERS_TOOLTIP_WHISPER"] = "點擊將名單密語給 %s。"
+--[[
+    The whisper a click sends, signed off like every sent message ({star} ... // GtG):
+    the class addressed (BUFF_WINDOW_OTHERS_PLURAL_*), the count, then the buff's link.
+]]
+L["BUFF_WINDOW_OTHERS_REQUEST_ONE"] = "%s們好！有 1 人缺少%s或需要盡快補上。謝謝！"
+L["BUFF_WINDOW_OTHERS_REQUEST"] = "%s們好！有 %d 人缺少%s或需要盡快補上。謝謝！"
+-- Your own chat, after a click: who was whispered, then the buff's link.
+L["BUFF_WINDOW_OTHERS_SENT"] = "已向 %s 發送%s的密語。"
+-- The classes with a raid-wide buff, addressed as a group.
+L["BUFF_WINDOW_OTHERS_PLURAL_DRUID"] = "德魯伊"
+L["BUFF_WINDOW_OTHERS_PLURAL_MAGE"] = "法師"
+L["BUFF_WINDOW_OTHERS_PLURAL_PRIEST"] = "牧師"
 -- The window's close button: the class name in its color, then the options command.
 L["BUFF_WINDOW_CLOSED"] =
 	"已為%s職業關閉增益值班。要重新開啟，請 Shift + 右鍵點擊小地圖按鈕，或輸入 %s。"
@@ -1829,7 +1835,7 @@ L["TOOLTIP_ACTION_MACRO_OPTIONS"] = "巨集選項"
 -- Spellbook Tab Tooltip
 L["SPELLBOOK_TAB_DESCRIPTION"] = "把你的職業法術做成一鍵巨集。"
 L["TOOLTIP_KEY_CLICK"] = "點擊"
-L["TOOLTIP_ACTION_OPEN_PAGE"] = "開啟 BBB Spellbook"
+L["TOOLTIP_ACTION_OPEN_PAGE"] = "開啟 GtG Spellbook"
 
 -- Page: Layout
 L["PAGE_EMPTY"] = "還沒有巨集。去找你的職業訓練師學習第一批法術。"
@@ -1841,23 +1847,22 @@ L["PAGE_MACRO_CHARACTER"] = "角色"
 
 L["OPTIONS_KEY_BINDINGS_HEADER"] = "按鍵設定"
 L["OPTIONS_KEY_SET"] = "設定按鍵"
-L["OPTIONS_KEY_SET_DESCRIPTION"] =
-	"開啟遊戲的按鍵設定清單，Bags Buffs & Buttons 在其中有自己的分類。"
+L["OPTIONS_KEY_SET_DESCRIPTION"] = "開啟遊戲的按鍵設定清單，Good to Go 在其中有自己的分類。"
 L["OPTIONS_KEY_BINDING_TOGGLE_DESCRIPTION"] =
-	"開啟或關閉 BBB Spellbook。它在你的法術書中也有自己的分頁。"
+	"開啟或關閉 GtG Spellbook。它在你的法術書中也有自己的分頁。"
 L["OPTIONS_DELETE_MACROS_HEADER"] = "刪除巨集"
 L["OPTIONS_DELETE_MACROS_DESCRIPTION"] =
-	"刪除 BBB Spellbook 建立的巨集，同時會將它們從快捷列上移除。你自己的巨集絕不會被改動，在頁面上點擊或拖曳任一個巨集即可重新建立。"
+	"刪除 GtG Spellbook 建立的巨集，同時會將它們從快捷列上移除。你自己的巨集絕不會被改動，在頁面上點擊或拖曳任一個巨集即可重新建立。"
 L["OPTIONS_DELETE_CHARACTER_MACROS"] = "刪除角色巨集"
 L["OPTIONS_DELETE_CHARACTER_MACROS_DESCRIPTION"] =
-	"從此角色的巨集分頁中刪除 BBB Spellbook 的巨集。你的其他角色會保留各自的巨集，直到你在那些角色上也這樣做。"
+	"從此角色的巨集分頁中刪除 GtG Spellbook 的巨集。你的其他角色會保留各自的巨集，直到你在那些角色上也這樣做。"
 L["OPTIONS_DELETE_CHARACTER_MACROS_CONFIRM"] =
-	"刪除此角色上所有 BBB Spellbook 的巨集？它們也會從你的快捷列上移除。"
+	"刪除此角色上所有 GtG Spellbook 的巨集？它們也會從你的快捷列上移除。"
 L["OPTIONS_DELETE_GENERAL_MACROS"] = "刪除通用巨集"
 L["OPTIONS_DELETE_GENERAL_MACROS_DESCRIPTION"] =
-	"從通用巨集分頁中刪除 BBB Spellbook 的巨集。該分頁由帳號內所有角色共用，因此你的其他角色也會失去那裡的巨集。"
+	"從通用巨集分頁中刪除 GtG Spellbook 的巨集。該分頁由帳號內所有角色共用，因此你的其他角色也會失去那裡的巨集。"
 L["OPTIONS_DELETE_GENERAL_MACROS_CONFIRM"] =
-	"刪除 BBB Spellbook 的所有通用巨集？帳號內所有角色都會失去它們，並且它們也會從你的快捷列上移除。"
+	"刪除 GtG Spellbook 的所有通用巨集？帳號內所有角色都會失去它們，並且它們也會從你的快捷列上移除。"
 
 -- Options: Spellbook Page Panel
 L["OPTIONS_SHOW_UNLEARNED_DESCRIPTION"] =
@@ -1901,10 +1906,10 @@ L["KIND_SELF"] = "自身和範圍法術"
 L["KIND_SELF_DESCRIPTION"] = "沒有目標，對自己或周圍施放的法術。"
 
 -- Key Bindings
-L["BINDING_TOGGLE_PAGE"] = "開啟/關閉 BBB Spellbook"
+L["BINDING_TOGGLE_PAGE"] = "開啟/關閉 GtG Spellbook"
 
 L["CHAT_KEY_BINDINGS_IN_COMBAT"] = "基於安全考量，戰鬥中無法開啟按鍵設定清單。"
-L["KEY_BINDINGS_LOCATION"] = "開啟遊戲選單，依序進入 %s 和 %s，找到 Bags Buffs & Buttons 分類。"
+L["KEY_BINDINGS_LOCATION"] = "開啟遊戲選單，依序進入 %s 和 %s，找到 Good to Go 分類。"
 L["ERROR_MACRO_SLOTS_FULL"] = "沒有空的巨集欄位。請在 /macro 中刪除一個巨集來騰出位置。"
 L["CHAT_MACROS_DELETED"] = "已刪除巨集：%d"
 L["CHAT_MACRO_TOO_LONG"] =

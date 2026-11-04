@@ -3,16 +3,26 @@ local Data = ns.Data
 local L = ns.L
 
 local GetColor = ns.GetColor
+local AcquireOtherIcon = ns.AcquireBuffWindowOtherIcon
+local SetOtherIcon = ns.SetBuffWindowOtherIcon
+local UpdateCooldowns = ns.UpdateBuffWindowCooldowns
+local UpdateRange = ns.UpdateBuffWindowRange
 
 --[[
     The Buff Window's frames: draws the sections Features/Automated-Appreciation/Buff-Window.lua builds
-    as a click-to-cast list. Every icon is a SecureActionButtonTemplate button,
+    as a click-to-cast list. Every list icon is a SecureActionButtonTemplate button,
     because casting a spell from a click is protected -- and that one fact shapes
     this file. A secure button's attributes, position and visibility can only
     change out of combat, so everything that lays the window out refuses to run
     in combat, and the caller redraws once combat ends. Mid-fight only alpha
     (the range fade), which the client allows on a protected frame, and the
     cooldown swipes, plain children of the buttons, still change.
+
+    The title row's raid-buff icons and their hover list are
+    Buff-Window-Title-Row.lua; the icons' cooldown swipes and range fade are
+    Buff-Window-Icon-State.lua; the icons' secure attributes are
+    Buff-Window-Button-Attributes.lua; the window's saved position is
+    Buff-Window-Position.lua.
 
     Two frames stack so combat visibility and our own never fight: the anchor
     belongs to a secure state driver (Hide in Combat), and the content inside it
@@ -57,59 +67,27 @@ local PADDING = 7
 --[[
     The title bar: one icon-high row for the title and close button, then one
     blank row before the first section so the title doesn't read as one of them.
+    The raid buffs the group is missing sit on the title row, ending one icon
+    column short of the close button.
 ]]
 local TITLE_HEIGHT = ICON_SIZE
 local TITLE_GAP = ROW_HEIGHT + ICON_GAP
 local CLOSE_SIZE = 22
 -- Room between the end of the title and the close button.
 local TITLE_CLOSE_GAP = 8
-local OUT_OF_RANGE_ALPHA = 0.35
-local RANGE_INTERVAL = 0.5
 
---[[
-    Where the window's top-left corner sits until it is first dragged: a little
-    left of and above the middle of the screen.
-]]
-local DEFAULT_X, DEFAULT_Y = -110, 160
-
-local BACKDROP = {
-	bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-	edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-	edgeSize = 12,
-	insets = { left = 3, right = 3, top = 3, bottom = 3 },
-}
+local BACKDROP = Data.BUFF_WINDOW_BACKDROP
 
 --------------------------------------------------------------------------------
 -- State
 --------------------------------------------------------------------------------
 
 local anchor, content, title
-local labels, icons = {}, {}
-local usedLabels, usedIcons = 0, 0
+local labels, usedLabels = {}, 0
+-- The list's icons, shared with the cooldown and range passes (Buff-Window-Icon-State.lua).
+local pool = ns.buffWindowIconPool
+local icons = pool.buttons
 local lastSignature
-local rangeTicker
-
---------------------------------------------------------------------------------
--- Position
---------------------------------------------------------------------------------
-
-local function RestorePosition()
-	local point = ns.db.global.buffWindow.point
-	anchor:ClearAllPoints()
-	if point then
-		anchor:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", point[1], point[2])
-	else
-		anchor:SetPoint("TOPLEFT", UIParent, "CENTER", DEFAULT_X, DEFAULT_Y)
-	end
-end
-
---[[
-    Saved as the top-left corner, so a window that grows or shrinks with the
-    list keeps its top edge where the player put it.
-]]
-local function SavePosition()
-	ns.db.global.buffWindow.point = { anchor:GetLeft(), anchor:GetTop() }
-end
 
 --------------------------------------------------------------------------------
 -- Icons
@@ -179,8 +157,8 @@ local function OnIconPostClick(self, button, down)
 end
 
 local function AcquireIcon()
-	usedIcons = usedIcons + 1
-	local button = icons[usedIcons]
+	pool.used = pool.used + 1
+	local button = icons[pool.used]
 	if not button then
 		button = CreateFrame("Button", nil, content, "SecureActionButtonTemplate")
 		button:SetSize(ICON_SIZE, ICON_SIZE)
@@ -211,57 +189,9 @@ local function AcquireIcon()
 		button:SetScript("OnLeave", OnIconLeave)
 		button:SetScript("PreClick", OnIconPreClick)
 		button:SetScript("PostClick", OnIconPostClick)
-		icons[usedIcons] = button
+		icons[pool.used] = button
 	end
 	return button
-end
-
---[[
-    Left button only ("type1"): a right-click finds no "type2" and no bare
-    "type" to fall back on, so it casts nothing and is free for dismissing a
-    favor. Every attribute is written on every use, nil included, because a
-    pooled button still carries whatever its last spec set; a nil spec clears
-    them all. Shared with the Buff Key, which writes the same attributes.
-]]
-function ns.SetBuffButtonAttributes(button, spec)
-	if not spec then
-		for _, key in ipairs({ "type1", "spell", "item", "unit", "macrotext", "target-slot" }) do
-			button:SetAttribute(key, nil)
-		end
-		return
-	end
-	--[[
-	    The weapon a poison goes on: the template uses this slot once the item
-	    leaves the cursor waiting on one.
-	]]
-	button:SetAttribute("target-slot", spec.targetSlot)
-	if spec.macrotext then
-		button:SetAttribute("type1", "macro")
-		button:SetAttribute("spell", nil)
-		button:SetAttribute("item", nil)
-		button:SetAttribute("unit", nil)
-		button:SetAttribute("macrotext", spec.macrotext)
-	elseif spec.item then
-		-- "item:12345", resolved by the template the way /use resolves it.
-		button:SetAttribute("type1", "item")
-		button:SetAttribute("spell", nil)
-		button:SetAttribute("item", spec.item)
-		button:SetAttribute("unit", spec.unit)
-		button:SetAttribute("macrotext", nil)
-	else
-		button:SetAttribute("type1", "spell")
-		--[[
-		    Rank text ("Name(Rank 2)") casts that exact rank through the secure
-		    template's CastSpellByName; a bare name casts your highest. Not a spell
-		    ID: the template hands a number to CastSpellByID, and on Classic Era a
-		    lower rank's ID cast nothing. Group buffs pass their highest rank's
-		    text too: Prayer of Fortitude's bare name cast Rank 1.
-		]]
-		button:SetAttribute("spell", spec.castSpell or spec.spellName)
-		button:SetAttribute("item", nil)
-		button:SetAttribute("unit", spec.unit)
-		button:SetAttribute("macrotext", nil)
-	end
 end
 
 local function SetIcon(button, spec)
@@ -292,132 +222,6 @@ local function AcquireLabel()
 end
 
 --------------------------------------------------------------------------------
--- Cooldowns
---------------------------------------------------------------------------------
-
-local GetItemCooldown = C_Container.GetItemCooldown
-
--- An item icon (a poison, a Soulstone) shows the item's own cooldown.
--- Each spell's cooldown, read once per pass of UpdateCooldowns: false where the client had none.
-local cooldownsThisPass = {}
-
-local function GetCooldown(spec)
-	if spec.itemId then
-		local start, duration = GetItemCooldown(spec.itemId)
-		return start, duration, 1
-	end
-	local info = cooldownsThisPass[spec.spellId]
-	if info == nil then
-		info = C_Spell.GetSpellCooldown(spec.spellId) or false
-		cooldownsThisPass[spec.spellId] = info
-	end
-	if info then
-		return info.startTime, info.duration, info.modRate
-	end
-	return nil
-end
-
---[[
-    Draws each icon's cooldown the way an action button does, global cooldown
-    included. Every rank shares one cooldown, so the spec's own id is enough. A
-    value the client keeps secret leaves the swipe as it was rather than
-    erroring; the next update after combat corrects it.
-
-    With no cooldown running, an icon for a buff that is running low (not gone)
-    shows how much of it is left as a sliver: reversed, so the bright part is
-    the time remaining and the dark part the time spent. No countdown, ours or
-    a cooldown-count add-on's (noCooldownCount): the sliver alone reads at a
-    glance. It ends whole once the buff runs out.
-]]
-local function UpdateCooldowns()
-	if not content or not content:IsVisible() then
-		return
-	end
-	local now = GetTime()
-	wipe(cooldownsThisPass)
-	for i = 1, usedIcons do
-		local button = icons[i]
-		local spec = button.spec
-		local start, duration, modRate
-		if spec then
-			start, duration, modRate = GetCooldown(spec)
-		end
-		if ns.IsPlain(start) and ns.IsPlain(duration) then
-			local cooldown = button.cooldown
-			if start and duration and duration > 0 then
-				cooldown:SetReverse(false)
-				cooldown:SetHideCountdownNumbers(false)
-				cooldown.noCooldownCount = nil
-				cooldown:SetCooldown(start, duration, modRate or 1)
-			elseif spec.buffExpires and spec.buffExpires > now then
-				cooldown:SetReverse(true)
-				cooldown:SetHideCountdownNumbers(true)
-				cooldown.noCooldownCount = true
-				cooldown:SetCooldown(spec.buffExpires - spec.buffDuration, spec.buffDuration)
-			else
-				cooldown:Clear()
-			end
-		end
-	end
-end
-
-local function OnSpellUpdateCooldown()
-	UpdateCooldowns()
-end
-
-ns.SetEventHandler("SPELL_UPDATE_COOLDOWN", OnSpellUpdateCooldown)
-
---------------------------------------------------------------------------------
--- Range
---------------------------------------------------------------------------------
-
-local IsItemInRange = C_Item.IsItemInRange
-
---[[
-    An item used on someone (a Soulstone) asks the item's own range out of
-    combat only, and falls back on the buffs' check in combat or when the
-    client has no answer. The Buff Key asks it too.
-]]
-local function InRange(spec)
-	if spec.itemId and spec.unit and not InCombatLockdown() then
-		local isPlayer = UnitIsUnit(spec.unit, "player")
-		if ns.IsPlain(isPlayer) and not isPlayer then
-			local inRange = IsItemInRange(spec.itemId, spec.unit)
-			if ns.IsPlain(inRange) and inRange ~= nil then
-				return inRange and true or false
-			end
-		end
-	end
-	return ns.IsBuffInRange(spec.unit, spec.spellName)
-end
-ns.IsBuffSpecInRange = InRange
-
-local function UpdateRange()
-	if not content:IsVisible() then
-		return
-	end
-	for i = 1, usedIcons do
-		local button = icons[i]
-		local spec = button.spec
-		local inRange = not spec or InRange(spec)
-		button:SetAlpha(inRange and 1 or OUT_OF_RANGE_ALPHA)
-	end
-end
-
-local function StartRangeTicker()
-	if not rangeTicker then
-		rangeTicker = C_Timer.NewTicker(RANGE_INTERVAL, UpdateRange)
-	end
-end
-
-local function StopRangeTicker()
-	if rangeTicker then
-		rangeTicker:Cancel()
-		rangeTicker = nil
-	end
-end
-
---------------------------------------------------------------------------------
 -- Render
 --------------------------------------------------------------------------------
 
@@ -425,8 +229,15 @@ end
     Everything a redraw would write, as one string, so an unchanged list (the
     usual result of a raid's constant aura traffic) skips the redraw entirely.
 ]]
-local function Signature(sections)
+local function Signature(sections, otherBuffs)
 	local parts = {}
+	-- The names too: the hover list is read off the spec the last redraw set.
+	for _, spec in ipairs(otherBuffs) do
+		parts[#parts + 1] = "!" .. spec.key .. ":" .. table.concat(spec.recipients, ",")
+		for _, group in ipairs(spec.groups) do
+			parts[#parts + 1] = group.label .. ":" .. table.concat(group.names, ",")
+		end
+	end
 	local function AddIcons(list)
 		for _, spec in ipairs(list) do
 			parts[#parts + 1] = spec.column
@@ -567,19 +378,25 @@ local function ReleaseAll()
 	for i = 1, usedLabels do
 		labels[i]:Hide()
 	end
-	for i = 1, usedIcons do
+	for i = 1, pool.used do
 		icons[i]:Hide()
 		icons[i].spec = nil
 	end
-	usedLabels, usedIcons = 0, 0
+	usedLabels, pool.used = 0, 0
+	ns.ReleaseBuffWindowOtherIcons()
 end
 
-function ns.RenderBuffWindow(sections)
+--[[
+    `otherBuffs` is the title row's icons: the raid buffs your group is
+    missing (Buff-Window-Other-Classes.lua).
+]]
+function ns.RenderBuffWindow(sections, otherBuffs)
 	if InCombatLockdown() or not content then
 		return
 	end
+	otherBuffs = otherBuffs or {}
 
-	local signature = Signature(sections)
+	local signature = Signature(sections, otherBuffs)
 	if signature ~= lastSignature then
 		lastSignature = signature
 		ReleaseAll()
@@ -644,10 +461,39 @@ function ns.RenderBuffWindow(sections)
 		    sits under the close button.
 		]]
 		local minWidth = math.ceil(title:GetStringWidth()) + TITLE_CLOSE_GAP + (CLOSE_SIZE + ICON_SIZE) / 2
+		--[[
+		    The title row's raid-buff icons stand in the icon columns left of
+		    the close button's, so with any showing the title needs room for
+		    them and the close button's own column.
+		]]
+		if #otherBuffs > 0 then
+			minWidth = math.max(
+				minWidth,
+				math.ceil(title:GetStringWidth()) + TITLE_CLOSE_GAP + ICON_SIZE + #otherBuffs * (ICON_SIZE + ICON_GAP)
+			)
+		end
 		local width = ContentWidth()
 		if width < minWidth then
 			nameWidth = nameWidth + (minWidth - width)
 			width = ContentWidth()
+		end
+
+		--[[
+		    Right to left from the icon column next to the close button's, so
+		    each stands over an icon column of the list below.
+		]]
+		local otherMiddle = -(PADDING + TITLE_HEIGHT / 2)
+		for index, spec in ipairs(otherBuffs) do
+			local button = AcquireOtherIcon(content)
+			button:ClearAllPoints()
+			button:SetPoint(
+				"RIGHT",
+				content,
+				"TOPRIGHT",
+				-(PADDING + ICON_SIZE + ICON_GAP + (#otherBuffs - index) * (ICON_SIZE + ICON_GAP)),
+				otherMiddle
+			)
+			SetOtherIcon(button, spec)
 		end
 
 		--[[
@@ -673,12 +519,13 @@ function ns.RenderBuffWindow(sections)
 		end
 
 		anchor:SetSize(PADDING * 2 + width, -bottom + PADDING)
+		ns.MigrateBuffWindowPosition(anchor)
 	end
 
 	content:Show()
 	UpdateCooldowns()
 	UpdateRange()
-	StartRangeTicker()
+	ns.StartBuffWindowRangeTicker()
 end
 
 function ns.HideBuffWindow()
@@ -686,7 +533,8 @@ function ns.HideBuffWindow()
 		return
 	end
 	content:Hide()
-	StopRangeTicker()
+	ns.HideBuffWindowRoster()
+	ns.StopBuffWindowRangeTicker()
 end
 
 --------------------------------------------------------------------------------
@@ -708,7 +556,7 @@ function ns.ApplyBuffWindowSettings()
 		UnregisterStateDriver(anchor, "visibility")
 		anchor:Show()
 	end
-	RestorePosition()
+	ns.RestoreBuffWindowPosition(anchor)
 	-- A profile switch can change the list's settings without changing its rows.
 	lastSignature = nil
 	return true
@@ -726,6 +574,7 @@ function ns.CreateBuffWindowFrame()
 	anchor:SetFrameStrata("MEDIUM")
 
 	content = CreateFrame("Frame", nil, anchor, "BackdropTemplate")
+	pool.content = content
 	content:SetAllPoints(anchor)
 	content:SetBackdrop(BACKDROP)
 	content:SetBackdropColor(0, 0, 0, 0.75)
@@ -740,21 +589,21 @@ function ns.CreateBuffWindowFrame()
 	--[[
 	    StopMovingOrSizing re-anchors the frame to whichever screen point is
 	    nearest (often CENTER), so a resize after a drag would grow from the
-	    middle. Re-applying the saved top-left keeps the title bar fixed. The
+	    middle. Re-applying the saved top-right keeps the close button fixed. The
 	    anchor holds the secure icons, so a drag let go once combat has begun
 	    waits for it to end before re-anchoring.
 	]]
 	content:SetScript("OnDragStop", function()
 		anchor:StopMovingOrSizing()
-		SavePosition()
+		ns.SaveBuffWindowPosition(anchor)
 		if InCombatLockdown() then
 			ns.QueueBuffWindowSettings()
 			return
 		end
-		RestorePosition()
+		ns.RestoreBuffWindowPosition(anchor)
 	end)
 
-	-- Titled like the other windows, the add-on's name last: "Buff Duty // BBB".
+	-- Titled like the other windows, the add-on's name last: "Buff Duty // GtG".
 	title = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	title:SetPoint("LEFT", content, "TOPLEFT", PADDING, -(PADDING + TITLE_HEIGHT / 2))
 	title:SetText(

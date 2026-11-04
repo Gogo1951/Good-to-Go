@@ -1,5 +1,5 @@
 --[[
-	The muteErrors option's macro lines: BBBMute(1) first and BBBMute() last, the one
+	The muteErrors option's macro lines: GtGMute(1) first and GtGMute() last, the one
 	global a macro body reaches through /run. The game plays an error's sound (the "woosh", or the voice when
 	error speech is on) as it shows the error, which for a spell pressed while not ready, short of power or out
 	of range is while the macro's /cast line runs; muting sound effects and error speech around that line
@@ -20,7 +20,7 @@ local function RestoreSounds()
 	mutedValues = nil
 end
 
-function BBBMute(on)
+function GtGMute(on)
 	if not on then
 		RestoreSounds()
 		return

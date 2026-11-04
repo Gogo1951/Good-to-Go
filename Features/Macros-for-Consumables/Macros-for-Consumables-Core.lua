@@ -45,16 +45,15 @@ end
 
 --[[
     Switching, copying, or resetting a profile swaps the consumable settings,
-    so the macro bodies and aura tracking must rebuild. Which macros exist does
-    NOT change -- enabledMacros is account-wide, like the macros themselves --
-    but macro-name text is applied imperatively, so it is pushed again.
-    Features/Core.lua calls this and then redraws every open panel.
+    so the macro bodies and aura tracking must rebuild. Which macros exist, and
+    whether their names show, does NOT change: enabledMacros and showMacroNames
+    are account-wide, like the macros themselves. Features/Core.lua calls this
+    and then redraws every open panel.
 ]]
 function ns.ApplyConnoisseurProfile()
 	ns.EnsureItemCache()
 	ns.ResetMacroState()
 	ns.UpdateAuraTracking()
-	ns.ApplyMacroNameVisibility()
 	ns.RequestUpdate()
 end
 

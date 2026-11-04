@@ -6,8 +6,9 @@ local L = ns.L
     the reputation cell, the remove button and its undo, and the pooled rows
     holding them.
 
-    The grid itself -- column definitions, widths, shared colors and the header --
-    is Restocker-Window-Columns.lua, which loads first. The reputation and column
+    The grid itself -- column definitions, widths and shared colors -- is
+    Restocker-Window-Columns.lua, which loads first, and its header
+    Restocker-Window-Column-Header.lua. The reputation and column
     menus are Restocker-Window-Menus.lua, and the render loop that lays these rows
     out is Restocker-Window-Render.lua.
 ]]
@@ -167,7 +168,6 @@ local function OnDeleteButtonClick(self)
 	local item = self.item
 
 	if item and item.itemID then
-		-- Lists are keyed by itemID, so removal is a direct delete
 		list[item.itemID] = nil
 		lastRemoveTime = now
 		ns.restockLastRemoved = { item = item, listName = settings.currentList }
@@ -601,7 +601,7 @@ function ns.UpdateRestockListRow(row, item)
 			row.text:SetTextColor(WHITE.r, WHITE.g, WHITE.b)
 		end
 	else
-		row.icon:SetTexture("Interface\\ICONS\\INV_Misc_QuestionMark")
+		row.icon:SetTexture(ns.QUESTION_MARK_ICON)
 		row.text:SetTextColor(WHITE.r, WHITE.g, WHITE.b)
 	end
 

@@ -152,8 +152,11 @@ function ns:OnUpdateMouseoverUnit()
 	QueueRankRewrite("mouseover")
 end
 
--- Fires just before combat locks the macros, so the rewrite runs now rather than on the next frame.
-function ns:OnPlayerRegenDisabled()
+--[[
+	Called just before combat locks the macros (ns:OnPlayerRegenDisabled), so the rewrite runs now rather than
+	on the next frame.
+]]
+function ns.RewriteRanksBeforeCombat()
 	if RanksRewritable("all") then
 		pendingRankRewrite = "all"
 		RewriteRankMacros()

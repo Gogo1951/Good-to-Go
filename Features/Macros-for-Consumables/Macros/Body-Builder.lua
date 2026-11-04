@@ -7,20 +7,21 @@ local _, ns = ...
 --[[
     Builds the line that records macro-fire context through the global
     helper defined in Features/Macros-for-Consumables/Macros/Runtime.lua, whose
-    ns.OnMacroUiErrorMessage (Core routes UI_ERROR_MESSAGE to it) reads lastID
+    ns.OnMacroUiErrorMessage (the module's dispatcher in
+    Macros-for-Consumables-Core.lua routes UI_ERROR_MESSAGE to it) reads lastID
     and lastTime to correlate a zone-restriction error with the item that
     triggered it.
 
     Using the global helper instead of an inline /run snippet keeps the line
     short, and every standard body with an item in bags carries it, so the
     saved bytes count against the 255 macro-body ceiling in every consumable
-    macro. The helper name carries the add-on's short BBB prefix.
+    macro. The helper name carries the add-on's short GtG prefix.
 ]]
 local function StateWriteLine(itemID, outOfCombatID)
 	if outOfCombatID then
-		return "/run BBBFire(" .. itemID .. "," .. outOfCombatID .. ")\n"
+		return "/run GtGFire(" .. itemID .. "," .. outOfCombatID .. ")\n"
 	end
-	return "/run BBBFire(" .. itemID .. ")\n"
+	return "/run GtGFire(" .. itemID .. ")\n"
 end
 
 --[[
@@ -98,7 +99,7 @@ end
 --[[
     Composes the conjure portion of a standard macro body. Handles both
     learned and not-yet-learned spells: known spells emit /cast lines, and
-    not-yet-learned spells emit /run BBBTipIf calls that print a "you'll get
+    not-yet-learned spells emit /run GtGTipIf calls that print a "you'll get
     this later" tip when the user actually presses the click that would
     have used the spell.
 
@@ -124,10 +125,10 @@ local function BuildConjureBlock(info)
 	    expected to do something else.
 	]]
 	if rightMiss then
-		lines[#lines + 1] = '/run BBBTipIf("[btn:2]","' .. rightMiss .. '")'
+		lines[#lines + 1] = '/run GtGTipIf("[btn:2]","' .. rightMiss .. '")'
 	end
 	if middleMiss then
-		lines[#lines + 1] = '/run BBBTipIf("[btn:3]","' .. middleMiss .. '")'
+		lines[#lines + 1] = '/run GtGTipIf("[btn:3]","' .. middleMiss .. '")'
 	end
 
 	local missStop = ""
@@ -168,20 +169,20 @@ end
     Connoisseur macro body look like." The canonical emitted macro is:
 
       #showtooltip item:13446
-      /run BBBFire(13446)
+      /run GtGFire(13446)
       /use item:13446
 
     Every other line is contributed by a definition hook:
 
       #showtooltip item:<id>  -- always first; ns.MACRO_DEFAULT_ITEM_IDS when no item;
                                  [dead] <spell>; item:<id> with a corpse cast
-      <conjure block>         -- definition.conjure, via BuildConjureBlock: /run BBBTipIf
+      <conjure block>         -- definition.conjure, via BuildConjureBlock: /run GtGTipIf
                                  miss tips with their /stopmacro guard, then the
                                  /cast [btn:3]/[btn:2] line and its /stopmacro
       /cast [dead] <spell>    -- definition.corpseSpell (Forsaken Cannibalize), below the
                                  conjure clicks so they still work; a press that
                                  cannot cast it falls through to the action
-      /run BBBFire(<id>)     -- StateWriteLine (macro-fire context for the
+      /run GtGFire(<id>)     -- StateWriteLine (macro-fire context for the
                                  zone-error handler); only when an item exists
       /cast [nocombat,dead] <spell>  -- definition.outOfCombatTypeName's best item,
       /use [nocombat] item:<id>  after its macro's Cannibalize and before its
@@ -189,7 +190,7 @@ end
       /stopmacro [nocombat]      stop, above the action (the potion macros'
                                  food or water, behind potionsUseFoodAndWater);
                                  the tooltip line then shows it out of combat
-                                 and BBBFire takes it as a second id
+                                 and GtGFire takes it as a second id
       /use item:<id>          -- the action: definition.buildUseLine's custom line(s)
                                  (Explosive's click layout, Food's [@pet] line),
                                  else one line per ranked id for multi-use
@@ -198,14 +199,15 @@ end
                                  block (Health Potion's healthstone stacking)
       <appended block>        -- definition.appendBlock text (Water's Shadowmeld line)
 
-    With no item in bags the action line becomes /run BBBTip("<noItemMiss>")
-    when the class can learn the conjure, /run BBBNoItem("<typeName>",1)
-    when it already knows it, else /run BBBNoItem("<typeName>");
+    With no item in bags the action line becomes /run GtGTip("<noItemMiss>")
+    when the class can learn the conjure, /run GtGNoItem("<typeName>",1)
+    when it already knows it, else /run GtGNoItem("<typeName>");
     an out-of-combat item still goes above it, so that line is only reached in
     combat.
     Ends with the macro-length trim, which sheds the Cannibalize lines first,
     the one extra that is a convenience rather than a consumable, then stacked
-    healthstone lines, then ranked fallback /use lines from the bottom up.
+    healthstone lines, then ranked fallback /use lines from the bottom up,
+    then the stealth line and the out-of-combat block.
 ]]
 function ns.BuildStandardBody(
 	definition,
@@ -257,14 +259,14 @@ function ns.BuildStandardBody(
 		    level.
 		]]
 		tooltipLine = "#showtooltip item:" .. ns.MACRO_DEFAULT_ITEM_IDS[definition.typeName] .. "\n"
-		actionBlock = actionHead .. NoItemStop(corpseCast) .. '/run BBBTip("' .. conjureInfo.noItemMiss .. '")'
+		actionBlock = actionHead .. NoItemStop(corpseCast) .. '/run GtGTip("' .. conjureInfo.noItemMiss .. '")'
 	else
 		tooltipLine = "#showtooltip item:" .. ns.MACRO_DEFAULT_ITEM_IDS[definition.typeName] .. "\n"
 		-- A class that knows the spell that makes this item is told to Right-Click for more (the ",1").
 		local canMake = conjureInfo and conjureInfo.rightName and ",1" or ""
 		actionBlock = actionHead
 			.. NoItemStop(corpseCast)
-			.. '/run BBBNoItem("'
+			.. '/run GtGNoItem("'
 			.. definition.typeName
 			.. '"'
 			.. canMake
@@ -347,6 +349,17 @@ function ns.BuildStandardBody(
 			end
 			body = tooltipLine .. conjureBlock .. actionBlock .. appendedBlock
 		end
+	end
+
+	--[[
+	    Still too long with every fallback shed: the stealth line goes, then
+	    the out-of-combat food or water, each by building again without it.
+	]]
+	if #body > ns.MACRO_BODY_MAX_LENGTH and outOfCombatStealth then
+		return ns.BuildStandardBody(definition, itemID, useIDs, stackIDs, conjureInfo, appendText, outOfCombatID, nil)
+	end
+	if #body > ns.MACRO_BODY_MAX_LENGTH and outOfCombatID then
+		return ns.BuildStandardBody(definition, itemID, useIDs, stackIDs, conjureInfo, appendText, nil, nil)
 	end
 
 	return body

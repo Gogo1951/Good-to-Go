@@ -41,6 +41,39 @@ end
 ns.EquippedRangedAttack = EquippedRangedAttack
 
 --[[
+	Each ranged attack the player knows, in ns.RANGED_ATTACKS order, as { name, the [worn:] condition's weapon
+	name }. A weapon the client can't name is left out, rather than given an English condition that never
+	matches.
+]]
+function ns.KnownRangedAttacks()
+	local known = {}
+	for _, attack in ipairs(ns.RANGED_ATTACKS) do
+		local name = ns.IsPlayerSpell(attack.id) and SpellName(attack.id)
+		local wornName = ns.RangedWornName(attack)
+		if name and wornName then
+			known[#known + 1] = { name = name, wornName = wornName, id = attack.id }
+		end
+	end
+	return known
+end
+
+-- The attack for the ranged weapon worn now, by spell ID, or the first one known; nil when none is.
+function ns.WornRangedAttackID()
+	local link = GetInventoryItemLink("player", RANGED_SLOT)
+	local subclass = link and select(7, C_Item.GetItemInfoInstant(link))
+	local first
+	for _, attack in ipairs(ns.RANGED_ATTACKS) do
+		if ns.IsPlayerSpell(attack.id) then
+			if attack.subclass == subclass then
+				return attack.id
+			end
+			first = first or attack.id
+		end
+	end
+	return first
+end
+
+--[[
 	Folds the ranged weapon attacks (ns.RANGED_ATTACKS: Throw, Shoot Bow, Shoot Gun, Shoot Crossbow) into one
 	Shoot macro when more than one is learned: only the one for the weapon worn works, so the one macro tries
 	each by the weapon worn ("[worn:Bows] Shoot Bow", see CastBody in Features/Spellbook/Macro-Body.lua), and shows the

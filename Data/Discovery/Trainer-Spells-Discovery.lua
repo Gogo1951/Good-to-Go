@@ -4,7 +4,7 @@ if not ns.IS_DISCOVERY then
 	return
 end
 
--- [classToken] = { { level, id, requires = { spellId }, faction, race = raceId, talent, book }, ... }, sorted by level
+-- [classToken] = { { level, id, requires = { spellId }, faction, race = raceId, talent, book, quest }, ... }, sorted by level
 ns.TRAINER_SPELLS = {
 	DRUID = {
 		{ level = 1, id = 1126 }, -- Mark of the Wild
@@ -17,7 +17,7 @@ ns.TRAINER_SPELLS = {
 		{ level = 10, id = 99, requires = { 5487 } }, -- Demoralizing Roar
 		{ level = 10, id = 5232, requires = { 1126 } }, -- Mark of the Wild
 		{ level = 10, id = 8924, requires = { 8921 } }, -- Moonfire
-		{ level = 10, id = 16689, requires = { 339 } }, -- Nature's Grasp
+		{ level = 10, id = 16689, requires = { 339 }, talent = true }, -- Nature's Grasp
 		{ level = 10, id = 1058, requires = { 774 } }, -- Rejuvenation
 		{ level = 12, id = 5229, requires = { 5487 } }, -- Enrage
 		{ level = 12, id = 8936 }, -- Regrowth
@@ -38,7 +38,7 @@ ns.TRAINER_SPELLS = {
 		{ level = 20, id = 1735, requires = { 99 } }, -- Demoralizing Roar
 		{ level = 20, id = 5188, requires = { 5187 } }, -- Healing Touch
 		{ level = 20, id = 6756, requires = { 5232 } }, -- Mark of the Wild
-		{ level = 20, id = 16864 }, -- Omen of Clarity
+		{ level = 20, id = 16864, talent = true }, -- Omen of Clarity
 		{ level = 20, id = 20484 }, -- Rebirth
 		{ level = 20, id = 2912 }, -- Starfire
 		{ level = 20, id = 1079 }, -- Rip
@@ -198,28 +198,21 @@ ns.TRAINER_SPELLS = {
 		{ level = 1, id = 1494 }, -- Track Beasts
 		{ level = 4, id = 13163 }, -- Aspect of the Monkey
 		{ level = 4, id = 1978 }, -- Serpent Sting
-		{ level = 5, id = 1742 }, -- Cower
 		{ level = 6, id = 3044 }, -- Arcane Shot
 		{ level = 6, id = 1130 }, -- Hunter's Mark
 		{ level = 8, id = 5116 }, -- Concussive Shot
 		{ level = 8, id = 3127 }, -- Parry
-		{ level = 8, id = 14260 }, -- Raptor Strike
+		{ level = 8, id = 14260, requires = { 2973 } }, -- Raptor Strike
 		{ level = 10, id = 13165 }, -- Aspect of the Hawk
 		{ level = 10, id = 13549, requires = { 1978 } }, -- Serpent Sting
 		{ level = 10, id = 19883 }, -- Track Humanoids
-		{ level = 10, id = 4187 }, -- Great Stamina
-		{ level = 10, id = 24545 }, -- Natural Armor
-		{ level = 10, id = 14916 }, -- Growl
 		{ level = 12, id = 14281, requires = { 3044 } }, -- Arcane Shot
 		{ level = 12, id = 20736 }, -- Distracting Shot
 		{ level = 12, id = 136, requires = { 1515 } }, -- Mend Pet
 		{ level = 12, id = 2974 }, -- Wing Clip
-		{ level = 12, id = 4188, requires = { 4187 } }, -- Great Stamina
-		{ level = 12, id = 24549, requires = { 24545 } }, -- Natural Armor
 		{ level = 14, id = 6197 }, -- Eagle Eye
 		{ level = 14, id = 1002 }, -- Eyes of the Beast
 		{ level = 14, id = 1513 }, -- Scare Beast
-		{ level = 15, id = 1753, requires = { 1742 } }, -- Cower
 		{ level = 16, id = 13795 }, -- Immolation Trap
 		{ level = 16, id = 1495 }, -- Mongoose Bite
 		{ level = 16, id = 14261, requires = { 14260 } }, -- Raptor Strike
@@ -227,9 +220,7 @@ ns.TRAINER_SPELLS = {
 		{ level = 18, id = 2643 }, -- Multi-Shot
 		{ level = 18, id = 13550, requires = { 13549 } }, -- Serpent Sting
 		{ level = 18, id = 19884 }, -- Track Undead
-		{ level = 18, id = 4189, requires = { 4188 } }, -- Great Stamina
-		{ level = 18, id = 24550, requires = { 24549 } }, -- Natural Armor
-		{ level = 20, id = 19434 }, -- Aimed Shot
+		{ level = 20, id = 19434, talent = true }, -- Aimed Shot
 		{ level = 20, id = 14282, requires = { 14281 } }, -- Arcane Shot
 		{ level = 20, id = 5118 }, -- Aspect of the Cheetah
 		{ level = 20, id = 781 }, -- Disengage
@@ -237,20 +228,11 @@ ns.TRAINER_SPELLS = {
 		{ level = 20, id = 674 }, -- Dual Wield
 		{ level = 20, id = 1499 }, -- Freezing Trap
 		{ level = 20, id = 3111, requires = { 136 } }, -- Mend Pet
-		{ level = 20, id = 24493 }, -- Arcane Resistance
-		{ level = 20, id = 23992 }, -- Fire Resistance
-		{ level = 20, id = 24446 }, -- Frost Resistance
-		{ level = 20, id = 14917 }, -- Growl
-		{ level = 20, id = 24492 }, -- Nature Resistance
-		{ level = 20, id = 24488 }, -- Shadow Resistance
 		{ level = 22, id = 14323, requires = { 1130 } }, -- Hunter's Mark
 		{ level = 22, id = 3043 }, -- Scorpid Sting
 		{ level = 24, id = 1462 }, -- Beast Lore
 		{ level = 24, id = 14262, requires = { 14261 } }, -- Raptor Strike
 		{ level = 24, id = 19885 }, -- Track Hidden
-		{ level = 24, id = 4190, requires = { 4189 } }, -- Great Stamina
-		{ level = 24, id = 24551, requires = { 24550 } }, -- Natural Armor
-		{ level = 25, id = 1754, requires = { 1753 } }, -- Cower
 		{ level = 26, id = 14302, requires = { 13795 } }, -- Immolation Trap
 		{ level = 26, id = 3045 }, -- Rapid Fire
 		{ level = 26, id = 13551, requires = { 13550 } }, -- Serpent Sting
@@ -266,14 +248,6 @@ ns.TRAINER_SPELLS = {
 		{ level = 30, id = 5384 }, -- Feign Death
 		{ level = 30, id = 14269, requires = { 1495 } }, -- Mongoose Bite
 		{ level = 30, id = 14326, requires = { 1513 } }, -- Scare Beast
-		{ level = 30, id = 24497, requires = { 24493 } }, -- Arcane Resistance
-		{ level = 30, id = 24439, requires = { 23992 } }, -- Fire Resistance
-		{ level = 30, id = 24447, requires = { 24446 } }, -- Frost Resistance
-		{ level = 30, id = 4191, requires = { 4190 } }, -- Great Stamina
-		{ level = 30, id = 14918, requires = { 14917 } }, -- Growl
-		{ level = 30, id = 24552, requires = { 24551 } }, -- Natural Armor
-		{ level = 30, id = 24502, requires = { 24492 } }, -- Nature Resistance
-		{ level = 30, id = 24505, requires = { 24488 } }, -- Shadow Resistance
 		{ level = 30, id = 14288, requires = { 2643 } }, -- Multi-Shot
 		{ level = 32, id = 1543 }, -- Flare
 		{ level = 32, id = 14263, requires = { 14262 } }, -- Raptor Strike
@@ -282,14 +256,11 @@ ns.TRAINER_SPELLS = {
 		{ level = 34, id = 14272, requires = { 781 } }, -- Disengage
 		{ level = 34, id = 13813 }, -- Explosive Trap
 		{ level = 34, id = 13552, requires = { 13551 } }, -- Serpent Sting
-		{ level = 35, id = 1755, requires = { 1754 } }, -- Cower
 		{ level = 36, id = 20901, requires = { 20900 } }, -- Aimed Shot
 		{ level = 36, id = 14284, requires = { 14283 } }, -- Arcane Shot
 		{ level = 36, id = 14303, requires = { 14302 } }, -- Immolation Trap
 		{ level = 36, id = 3662, requires = { 3661 } }, -- Mend Pet
 		{ level = 36, id = 3034 }, -- Viper Sting
-		{ level = 36, id = 4192, requires = { 4191 } }, -- Great Stamina
-		{ level = 36, id = 24553, requires = { 24552 } }, -- Natural Armor
 		{ level = 38, id = 14320, requires = { 14319 } }, -- Aspect of the Hawk
 		{ level = 38, id = 14267, requires = { 2974 } }, -- Wing Clip
 		{ level = 40, id = 13159 }, -- Aspect of the Pack
@@ -300,16 +271,7 @@ ns.TRAINER_SPELLS = {
 		{ level = 40, id = 14264, requires = { 14263 } }, -- Raptor Strike
 		{ level = 40, id = 19882 }, -- Track Giants
 		{ level = 40, id = 1510 }, -- Volley
-		{ level = 40, id = 24500, requires = { 24497 } }, -- Arcane Resistance
-		{ level = 40, id = 24444, requires = { 24439 } }, -- Fire Resistance
-		{ level = 40, id = 24448, requires = { 24447 } }, -- Frost Resistance
-		{ level = 40, id = 14919, requires = { 14918 } }, -- Growl
-		{ level = 40, id = 24503, requires = { 24502 } }, -- Nature Resistance
-		{ level = 40, id = 24506, requires = { 24505 } }, -- Shadow Resistance
-		{ level = 40, id = 24507, requires = { 24506 } }, -- Shadow Resistance
 		{ level = 42, id = 13553, requires = { 13552 } }, -- Serpent Sting
-		{ level = 42, id = 4193, requires = { 4192 } }, -- Great Stamina
-		{ level = 42, id = 24554, requires = { 24553 } }, -- Natural Armor
 		{ level = 42, id = 14276, requires = { 14275 } }, -- Scorpid Sting
 		{ level = 42, id = 14289, requires = { 14288 } }, -- Multi-Shot
 		{ level = 44, id = 20902, requires = { 20901 } }, -- Aimed Shot
@@ -317,7 +279,6 @@ ns.TRAINER_SPELLS = {
 		{ level = 44, id = 14316, requires = { 13813 } }, -- Explosive Trap
 		{ level = 44, id = 13542, requires = { 3662 } }, -- Mend Pet
 		{ level = 44, id = 14270, requires = { 14269 } }, -- Mongoose Bite
-		{ level = 45, id = 1756, requires = { 1755 } }, -- Cower
 		{ level = 46, id = 20043 }, -- Aspect of the Wild
 		{ level = 46, id = 14304, requires = { 14303 } }, -- Immolation Trap
 		{ level = 46, id = 14327, requires = { 14326 } }, -- Scare Beast
@@ -325,27 +286,17 @@ ns.TRAINER_SPELLS = {
 		{ level = 48, id = 14321, requires = { 14320 } }, -- Aspect of the Hawk
 		{ level = 48, id = 14273, requires = { 14272 } }, -- Disengage
 		{ level = 48, id = 14265, requires = { 14264 } }, -- Raptor Strike
-		{ level = 48, id = 4194, requires = { 4193 } }, -- Great Stamina
-		{ level = 48, id = 24555, requires = { 24554 } }, -- Natural Armor
 		{ level = 50, id = 15631, requires = { 15630 } }, -- Distracting Shot
 		{ level = 50, id = 13554, requires = { 13553 } }, -- Serpent Sting
 		{ level = 50, id = 19879 }, -- Track Dragonkin
 		{ level = 50, id = 14294, requires = { 1510 } }, -- Volley
-		{ level = 50, id = 24501, requires = { 24500 } }, -- Arcane Resistance
-		{ level = 50, id = 24445, requires = { 24444 } }, -- Fire Resistance
-		{ level = 50, id = 24449, requires = { 24448 } }, -- Frost Resistance
-		{ level = 50, id = 14920, requires = { 14919 } }, -- Growl
-		{ level = 50, id = 24504, requires = { 24503 } }, -- Nature Resistance
 		{ level = 50, id = 19386, talent = true }, -- Wyvern Sting
 		{ level = 52, id = 20903, requires = { 20902 } }, -- Aimed Shot
 		{ level = 52, id = 14286, requires = { 14285 } }, -- Arcane Shot
 		{ level = 52, id = 13543, requires = { 13542 } }, -- Mend Pet
 		{ level = 52, id = 14277, requires = { 14276 } }, -- Scorpid Sting
 		{ level = 54, id = 14317, requires = { 14316 } }, -- Explosive Trap
-		{ level = 54, id = 5041, requires = { 4194 } }, -- Great Stamina
-		{ level = 54, id = 24629, requires = { 24555 } }, -- Natural Armor
 		{ level = 54, id = 14290, requires = { 14289 } }, -- Multi-Shot
-		{ level = 55, id = 16697, requires = { 1756 } }, -- Cower
 		{ level = 56, id = 20190, requires = { 20043 } }, -- Aspect of the Wild
 		{ level = 56, id = 14305, requires = { 14304 } }, -- Immolation Trap
 		{ level = 56, id = 14266, requires = { 14265 } }, -- Raptor Strike
@@ -361,9 +312,6 @@ ns.TRAINER_SPELLS = {
 		{ level = 60, id = 14311, requires = { 14310 } }, -- Freezing Trap
 		{ level = 60, id = 13544, requires = { 13543 } }, -- Mend Pet
 		{ level = 60, id = 14268, requires = { 14267 } }, -- Wing Clip
-		{ level = 60, id = 5042, requires = { 5041 } }, -- Great Stamina
-		{ level = 60, id = 14921, requires = { 14920 } }, -- Growl
-		{ level = 60, id = 24630, requires = { 24629 } }, -- Natural Armor
 		{ level = 60, id = 25296, requires = { 14322 }, book = true }, -- Aspect of the Hawk
 		{ level = 60, id = 25294, requires = { 14290 }, book = true }, -- Multi-Shot
 		{ level = 60, id = 25295, requires = { 13555 }, book = true }, -- Serpent Sting
@@ -520,7 +468,7 @@ ns.TRAINER_SPELLS = {
 		{ level = 60, id = 10220, requires = { 10219 } }, -- Ice Armor
 		{ level = 60, id = 10193, requires = { 10192 } }, -- Mana Shield
 		{ level = 60, id = 12826, requires = { 12825 } }, -- Polymorph
-		{ level = 60, id = 10140, requires = { 10139 } }, -- Conjure Water
+		{ level = 60, id = 10140, requires = { 10139 }, quest = true }, -- Conjure Water
 		{ level = 60, id = 25345, requires = { 10212 }, book = true }, -- Arcane Missiles
 		{ level = 60, id = 28612, requires = { 10145 }, book = true }, -- Conjure Food
 		{ level = 60, id = 25306, requires = { 10151 }, book = true }, -- Fireball
@@ -550,8 +498,8 @@ ns.TRAINER_SPELLS = {
 		{ level = 18, id = 1044 }, -- Blessing of Freedom
 		{ level = 18, id = 5573, requires = { 498 } }, -- Divine Protection
 		{ level = 18, id = 20288, requires = { 20287 } }, -- Seal of Righteousness
-		{ level = 20, id = 20217 }, -- Blessing of Kings
-		{ level = 20, id = 26573 }, -- Consecration
+		{ level = 20, id = 20217, talent = true }, -- Blessing of Kings
+		{ level = 20, id = 26573, talent = true }, -- Consecration
 		{ level = 20, id = 643, requires = { 10290 } }, -- Devotion Aura
 		{ level = 20, id = 879 }, -- Exorcism
 		{ level = 20, id = 19750 }, -- Flash of Light
@@ -673,11 +621,11 @@ ns.TRAINER_SPELLS = {
 		{ level = 10, id = 8092 }, -- Mind Blast
 		{ level = 10, id = 2006 }, -- Resurrection
 		{ level = 10, id = 594, requires = { 589 } }, -- Shadow Word: Pain
-		{ level = 10, id = 2652, race = 5 }, -- Touch of Weakness
-		{ level = 10, id = 9035, race = 8 }, -- Hex of Weakness
-		{ level = 10, id = 10797, race = 4 }, -- Starshards
-		{ level = 10, id = 13908, race = 1 }, -- Desperate Prayer
-		{ level = 10, id = 13908, race = 3 }, -- Desperate Prayer
+		{ level = 10, id = 2652, race = 5, quest = true }, -- Touch of Weakness
+		{ level = 10, id = 9035, race = 8, quest = true }, -- Hex of Weakness
+		{ level = 10, id = 10797, race = 4, quest = true }, -- Starshards
+		{ level = 10, id = 13908, race = 1, quest = true }, -- Desperate Prayer
+		{ level = 10, id = 13908, race = 3, quest = true }, -- Desperate Prayer
 		{ level = 12, id = 588 }, -- Inner Fire
 		{ level = 12, id = 1244, requires = { 1243 } }, -- Power Word: Fortitude
 		{ level = 12, id = 592, requires = { 17 } }, -- Power Word: Shield
@@ -693,9 +641,9 @@ ns.TRAINER_SPELLS = {
 		{ level = 18, id = 19236, requires = { 13908 }, race = 3 }, -- Desperate Prayer
 		{ level = 18, id = 19296, requires = { 10797 }, race = 4 }, -- Starshards
 		{ level = 18, id = 19236, requires = { 13908 }, race = 1 }, -- Desperate Prayer
-		{ level = 20, id = 2944, race = 5 }, -- Devouring Plague
+		{ level = 20, id = 2944, race = 5, quest = true }, -- Devouring Plague
 		{ level = 20, id = 9578, requires = { 586 } }, -- Fade
-		{ level = 20, id = 6346, race = 3 }, -- Fear Ward
+		{ level = 20, id = 6346, race = 3, quest = true }, -- Fear Ward
 		{ level = 20, id = 2061 }, -- Flash Heal
 		{ level = 20, id = 14914 }, -- Holy Fire
 		{ level = 20, id = 7128, requires = { 588 } }, -- Inner Fire
@@ -704,9 +652,9 @@ ns.TRAINER_SPELLS = {
 		{ level = 20, id = 9484 }, -- Shackle Undead
 		{ level = 20, id = 19261, requires = { 2652 }, race = 5 }, -- Touch of Weakness
 		{ level = 20, id = 19281, requires = { 9035 }, race = 8 }, -- Hex of Weakness
-		{ level = 20, id = 2651, race = 4 }, -- Elune's Grace
-		{ level = 20, id = 13896, race = 1 }, -- Feedback
-		{ level = 20, id = 18137, race = 8 }, -- Shadowguard
+		{ level = 20, id = 2651, race = 4, quest = true }, -- Elune's Grace
+		{ level = 20, id = 13896, race = 1, quest = true }, -- Feedback
+		{ level = 20, id = 18137, race = 8, quest = true }, -- Shadowguard
 		{ level = 22, id = 2055, requires = { 2054 } }, -- Heal
 		{ level = 22, id = 8103, requires = { 8102 } }, -- Mind Blast
 		{ level = 22, id = 2096 }, -- Mind Vision
@@ -729,7 +677,7 @@ ns.TRAINER_SPELLS = {
 		{ level = 28, id = 15407, talent = true }, -- Mind Flay
 		{ level = 28, id = 8124, requires = { 8122 } }, -- Psychic Scream
 		{ level = 28, id = 19308, requires = { 18137 }, race = 8 }, -- Shadowguard
-		{ level = 30, id = 14752 }, -- Divine Spirit
+		{ level = 30, id = 14752, talent = true }, -- Divine Spirit
 		{ level = 30, id = 9579, requires = { 9578 } }, -- Fade
 		{ level = 30, id = 19271, requires = { 13896 }, race = 1 }, -- Feedback
 		{ level = 30, id = 15263, requires = { 15262 } }, -- Holy Fire
@@ -1199,7 +1147,7 @@ ns.TRAINER_SPELLS = {
 		{ level = 40, id = 11733, requires = { 1086 } }, -- Demon Armor
 		{ level = 40, id = 5484 }, -- Howl of Terror
 		{ level = 40, id = 11665, requires = { 2941 } }, -- Immolate
-		{ level = 40, id = 5784 }, -- Summon Felsteed
+		{ level = 40, id = 5784, quest = true }, -- Summon Felsteed
 		{ level = 42, id = 7659, requires = { 7658 } }, -- Curse of Recklessness
 		{ level = 42, id = 11707, requires = { 7646 } }, -- Curse of Weakness
 		{ level = 42, id = 6789 }, -- Death Coil
@@ -1380,7 +1328,7 @@ Notes
 	- requires is the spell the trainer wants first, usually the previous rank. Rows added from the game tables take the rank the tables say it replaces, or else the same spell's previous rank in this table, which agrees with all but 3 of the 852 hand-made rows that follow an earlier rank.
 	- faction and race mark rows only one faction or race can learn. A spell several races of the class learn, but not all of them, gets one row per race (Desperate Prayer: Human and Dwarf).
 	- talent marks the rank 1 of a talent whose higher ranks the trainer teaches, listed at the level of its first trainer rank so it shows until learned. The talent's own trainer ranks are left out. Talents with no trainer ranks are in the class lists' extraSpells instead.
-	- Left out on purpose: starting spells, spells learned by quest or with a form (warrior stances, warlock pets, druid forms, Growl and Maul with Bear Form; the class lists' extraSpells list these), passive and hidden spells, effects other spells fire, pet family abilities learned by taming, rogue poison recipes and the Poisons skill.
+	- Left out on purpose: starting spells, spells learned by quest or with a form (warrior stances, warlock pets, druid forms, Growl and Maul with Bear Form; the class lists' extraSpells list these), passive and hidden spells, effects other spells fire, the hunter pet's abilities, which are the pet's spells rather than the hunter's, from the pet trainer (Cower, Growl, Great Stamina, Natural Armor, the resistances) or by taming (Data/Discovery/Pet-Abilities-Discovery.lua lists them all for the Pet What's Next? tab), rogue poison recipes and the Poisons skill.
 	- The rows began as What's Training's WoW Forever trainer lists (Data/LICENSE-Trainer-Data), made by tools/gen_trainer_data.py and copied from Data/Camelot/. Rows this client doesn't have were pruned, and the trainer spells Forever changed or dropped were added back from this client's game tables.
 	- How the added rows were found: a spell on one of the class's own skill lines, learned at the trainer (SkillLineAbility), at level 1 to 60, taught by a teaching spell that no item uses (SpellEffect, ItemEffect). 1,191 of the 1,212 hand-made rows pass that test. Passive, hidden and fired-by-another-spell spells, talents and their ranks, and extraSpells entries were then removed.
 	- book marks a rank or spell only a book teaches on this client: the Ahn'Qiraj ranks (Heroic Strike rank 9, Greater Heal rank 5 and the like), the later raid ranks (Eviscerate rank 9, Ferocious Bite rank 5, Flame Shock rank 6, Conjure Food rank 7, Frost Ward rank 5, Shadow Ward rank 4), the Dire Maul group buffs (Arcane Brilliance, Gift of the Wild and Prayer of Fortitude ranks 1 and 2, Prayer of Shadow Protection) and Tranquilizing Shot. level is the book's required level; requires is the same spell's previous rank.
@@ -1389,6 +1337,8 @@ Notes
 	- Ruled out by hand: Seal of Righteousness rank 1 and Summon Imp (starting spells), Summon Dreadsteed (a quest, so it's in the warlock's extraSpells), Poisons and Mind-numbing Poison I to III (the rows hold no poison skill or recipes), and pet Growl rank 1 (every pet starts with it).
 	- Likely unobtainable, so not added: Curse of Idiocy (1010) and Black Arrow (3674, 14296), pre-release spells no trainer here teaches, and Mangle (22570), the leftover of TBC's Maim.
 	- Some rows are WoW Forever talents that reuse Season of Discovery rune spells (Arcane Blast, Wild Growth, Lava Burst and others, marked talent). Here they are runes learned by engraving, and the page lists them until learned.
+	- quest marks a rank a class quest teaches and no trainer does on this client: Conjure Water rank 7 (Arcane Refreshment), Summon Felsteed, and rank 1 of the priest's race spells (Desperate Prayer, Fear Ward, Touch of Weakness, Hex of Weakness, Starshards, Devouring Plague, Elune's Grace, Feedback, Shadowguard). Their teaching spells no item uses, so the test above took them for the trainer's. Found by matching CMaNGOS classic-db's quest rewards (quest_template RewSpell and RewSpellCast, followed through spell_template's Learn Spell effect) against its trainer lists (npc_trainer, npc_trainer_template); the What's Next? tab (Features/Spellbook/Whats-Next.lua) shows them as Quest.
+	- Nature's Grasp, Omen of Clarity, Aimed Shot, Blessing of Kings, Consecration and Divine Spirit are talents whose higher ranks the trainer teaches, so their rank 1 rows carry talent too; CMaNGOS has no trainer, quest or item teaching those ranks.
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query
@@ -1400,6 +1350,7 @@ Wowhead
 	https://www.wowhead.com/classic/spell=2855
 	https://www.wowhead.com/classic/spell=25286
 	https://www.wowhead.com/classic/item=21297
+	https://www.wowhead.com/classic/quest=7463
 
 wago.tools
 	https://wago.tools/db2/SkillLineAbility?build=1.15.9.70003

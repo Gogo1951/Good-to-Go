@@ -120,7 +120,8 @@ local function CreateSearchFilterBox(bar)
 	local hint = box.Instructions
 	if hint then
 		hint:SetText(L["RESTOCKER_FILTER_PLACEHOLDER"])
-		hint:SetTextColor(1, 1, 1)
+		local white = ns.COLORS_RGB.TEXT
+		hint:SetTextColor(white.r, white.g, white.b)
 	end
 	box:HookScript("OnTextChanged", function(self)
 		ApplyFilter(self:GetText() or "")

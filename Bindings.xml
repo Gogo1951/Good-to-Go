@@ -1,17 +1,26 @@
 <!--
     Key bindings, loaded by the client on its own and never listed in the TOCs.
-    Each name is what the client saves a player's key against, so a shipped
-    binding keeps its name for good.
+    Each name is what the client saves a player's key against, so a renamed
+    binding needs its keys moved over (ns.MigrateBuffKeys,
+    ns.MigrateSpellbookBinding).
 
-    Toggle BBB Spellbook (Features/Spellbook/Key-Bindings.lua) calls
+    Toggle GtG Spellbook (Features/Spellbook/Key-Bindings.lua) calls
     a global, since Bindings.xml can call nothing else. Buff Duty's Buff Key
     (Features/Automated-Appreciation/Buff-Window-Keys.lua) clicks a hidden secure
     button, which picks the next buff on the list and casts it; a macro clicks
-    the same button: /click TFTBBuffIndividual.
+    the same button: /click GtGBuffKey.
+
+    MIGRATION (remove after 2026-12-03): the two hidden bindings are the names
+    these had before the GtG names, kept so a key still saved against one keeps
+    working until login moves it over.
 -->
 <Bindings>
-	<Binding name="MACROSPELLBOOK_TOGGLE" header="BAGSBUFFSBUTTONS" category="ADDONS">
-		BagsBuffsButtons_ToggleSpellbook()
+	<Binding name="GOODTOGO_TOGGLE_SPELLBOOK" header="GOODTOGO" category="ADDONS">
+		GoodToGo_ToggleSpellbook()
 	</Binding>
-	<Binding name="CLICK TFTBBuffIndividual:LeftButton" category="ADDONS" />
+	<Binding name="CLICK GtGBuffKey:LeftButton" category="ADDONS" />
+	<Binding name="MACROSPELLBOOK_TOGGLE" category="ADDONS" hidden="true">
+		GoodToGo_ToggleSpellbook()
+	</Binding>
+	<Binding name="CLICK TFTBBuffIndividual:LeftButton" category="ADDONS" hidden="true" />
 </Bindings>

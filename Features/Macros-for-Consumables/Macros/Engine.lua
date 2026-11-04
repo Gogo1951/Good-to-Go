@@ -105,10 +105,10 @@ local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
                            routes to the Hunter builder, and Poisons, which
                            routes to the Rogue builder)
 
-    The macro-callback globals (BBBFire, BBBTip,
-    BBBTipIf, BBBNoItem) and the state they share live in
+    The macro-callback globals (GtGFire, GtGTip,
+    GtGTipIf, GtGNoItem) and the state they share live in
     Features/Macros-for-Consumables/Macros/Runtime.lua, which loads immediately after this file.
-    Body-Builder.lua writes the `/run BBB...` lines into macro bodies
+    Body-Builder.lua writes the `/run GtG...` lines into macro bodies
     at update time, long after load, so the later load order is safe --
     nothing calls those globals while the files are being read.
 ]]
@@ -163,11 +163,11 @@ end
       {
         rightName, rightID,    -- /cast spell on [btn:2] (or nil)
         middleName, middleID,  -- /cast spell on [btn:3] (or nil)
-        rightMiss,             -- BBBTip key to fire on [btn:2] when right
+        rightMiss,             -- GtGTip key to fire on [btn:2] when right
                                   is not yet learned (or nil)
-        middleMiss,            -- BBBTip key to fire on [btn:3] when middle
+        middleMiss,            -- GtGTip key to fire on [btn:3] when middle
                                   is not yet learned (or nil)
-        noItemMiss,            -- BBBTip key to fire on left-click when there
+        noItemMiss,            -- GtGTip key to fire on left-click when there
                                   is no item to /use AND the class can learn
                                   the conjure (replaces the generic no-item
                                   message). (or nil)

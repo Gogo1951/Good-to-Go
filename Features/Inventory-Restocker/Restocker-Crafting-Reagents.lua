@@ -50,7 +50,7 @@ function ns.BuildCraftingPurchaseOrder()
 			    the bank must not cancel reagents for crafts you still have to make.
 
 			    Counting it would be self-defeating as well. That bank pile is one this
-			    add-on creates -- Restocker-Bank.lua stashes everything above `amount` -- so a
+			    add-on creates -- Restocker-Bank-Visit.lua stashes everything above `amount` -- so a
 			    full run would bank the excess and then refuse to buy reagents for it. It
 			    would also make the same vendor visit buy different amounts depending on
 			    whether the bank had been opened that session, which is when the client

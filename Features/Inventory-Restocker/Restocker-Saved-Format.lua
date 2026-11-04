@@ -26,8 +26,9 @@ end
     A comma splits the label, so a name containing one reads back cut short; the
     client's own name replaces it at login whenever the client knows the item.
     There is no version stamp, and none is needed: the name is the last of the
-    leading non-numeric fields, so a line saved with a type ahead of it still reads,
-    and the next save rewrites it in the current form.
+    leading non-numeric fields. MIGRATION (remove after 2026-11-25): so a line
+    saved with a type ahead of it still reads, and the next save rewrites it in
+    the current form.
 ]]
 
 local function ItemToString(item)
@@ -59,8 +60,9 @@ local function ItemFromString(line, key)
 
 	--[[
 	    The label is the leading run of non-numeric fields; the numeric data
-	    (amount, flags, [reaction]) follows. The name is the last label field, so
-	    a line saved with a type ahead of it reads the same.
+	    (amount, flags, [reaction]) follows. MIGRATION (remove after
+	    2026-11-25): the name is the last label field, so a line saved with a
+	    type ahead of it reads the same.
 	]]
 	local dataStart
 	for j = 1, #fields do
