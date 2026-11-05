@@ -5,17 +5,17 @@ local _, ns = ...
 	other spell had, and noticing a group spell learned or lost with no page open.
 ]]
 
-local SpellName = ns.SpellName
 local NO_IDS = {}
 
 --[[
 	The spells a learned spell replaced in its SPELL_GROUPS group: those just before it no longer in the
 	spellbook, nearest first, up to the first that still is. Bear Form goes from the book once Dire Bear
 	Form is learned, so its WoW macro, wherever the player placed it, would never be rewritten again; the
-	new spell takes it over instead (see ns.HandOverMacro). members is the group as { name, learned }.
+	new spell takes it over instead (see ns.HandOverMacro). members is the group as { name, id, learned }.
+	Returns their names, then their Rank 1 IDs.
 ]]
 local function ReplacedSpells(name, members)
-	local replaced, at = {}, nil
+	local replaced, ids, at = {}, {}, nil
 	for i, member in ipairs(members) do
 		if member.name == name then
 			at = i
@@ -26,20 +26,21 @@ local function ReplacedSpells(name, members)
 			break
 		end
 		replaced[#replaced + 1] = members[i].name
+		ids[#ids + 1] = members[i].id
 	end
-	return replaced
+	return replaced, ids
 end
 
 --[[
 	Gives a learned spell the WoW macro of the nearest spell it replaced that has one, settings, focus copy and
 	Duplicates included, when it has no macro of its own yet. The sync then finds each of those macros by its
 	tag, rewrites it to cast the new spell and renames it (see SyncAt in Features/Spellbook/Macro-Sync.lua,
-	which reads macro.replaces).
+	which reads macro.replaces). baseID is the learned spell's Rank 1 ID, replacedIds the replaced spells'.
 ]]
-function ns.HandOverMacro(name, replaced)
-	for _, from in ipairs(replaced) do
-		if ns.HandOverMacroTag(from, name, ns.MacroCopies(from)) then
-			ns.MoveSpellSettings(from, name)
+function ns.HandOverMacro(baseID, replacedIds)
+	for _, from in ipairs(replacedIds) do
+		if ns.HandOverMacroTag(from, baseID, ns.MacroCopies(ns.MacroSpellKey({ baseID = from }))) then
+			ns.MoveSpellSettings(from, baseID)
 			return
 		end
 	end
@@ -54,14 +55,12 @@ function ns.HandOverDue()
 	local class = select(2, UnitClass("player"))
 	for _, ids in ipairs((ns.SPELL_GROUPS or NO_IDS)[class] or NO_IDS) do
 		for i = #ids, 2, -1 do
-			local to = ns.IsPlayerSpell(ids[i]) and SpellName(ids[i])
-			if to and not ns.HasSpellMacroTag(to) then
+			if ns.IsPlayerSpell(ids[i]) and not ns.HasSpellMacroTag(ids[i]) then
 				for j = i - 1, 1, -1 do
 					if ns.IsPlayerSpell(ids[j]) then
 						break
 					end
-					local from = SpellName(ids[j])
-					if from and ns.HasSpellMacroTag(from) then
+					if ns.HasSpellMacroTag(ids[j]) then
 						return true
 					end
 				end

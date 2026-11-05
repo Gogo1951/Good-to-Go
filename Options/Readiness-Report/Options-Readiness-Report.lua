@@ -58,12 +58,11 @@ local function PetWellFedHidden()
 end
 
 --[[
-    Hidden where the client has no classic talent tabs (Forever's talents are
-    Retail's), since ns.GetCurrentSpecializationLabel can never answer there and the
-    switch would do nothing.
+    Hidden where ns.GetCurrentSpecializationLabel can never answer (Forever, whose
+    talents are Retail's), since the switch would do nothing.
 ]]
 local function SpecHidden()
-	return ReportsHidden() or ns.GetNumTalentTabs() == nil
+	return ReportsHidden() or not ns.CanReportSpecialization()
 end
 
 -- Repaint the page so a reset shows in the controls without a reopen.
@@ -76,7 +75,8 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Every Readiness Report setting back to what a fresh install ships with.
+    Every Readiness Report category back to what a fresh install ships with.
+    The report's own on/off switch (readinessReportEnabled) is left as it is.
 
     A control of its own, because these settings are account-wide, and nothing
     else reaches that scope -- ns.db:ResetProfile() clears the active profile
@@ -96,6 +96,7 @@ end
     AceDB stays the only owner of that table.
 ]]
 local READINESS_KEY_PATTERN = "^readiness"
+local MASTER_SWITCH_KEY = "readinessReportEnabled"
 
 local function ResetReadinessSettings()
 	local defaults = ns.DATABASE_DEFAULTS and ns.DATABASE_DEFAULTS.global
@@ -104,7 +105,7 @@ local function ResetReadinessSettings()
 	end
 
 	for key, value in pairs(defaults) do
-		if key:find(READINESS_KEY_PATTERN) then
+		if key ~= MASTER_SWITCH_KEY and key:find(READINESS_KEY_PATTERN) then
 			ns.db.global[key] = value
 		end
 	end
@@ -203,21 +204,21 @@ local SECTIONS = {
 			{
 				key = "readinessWellFed",
 				name = ns.GetWellFedName,
-				description = "OPTIONS_READINESS_WELL_FED_DESCRIPTION_FORMAT",
+				description = "OPTIONS_READINESS_BUFF_FOOD_DESCRIPTION_FORMAT",
 				descriptionArg = ns.GetWellFedName,
 			},
 			{
 				key = "readinessPetWellFed",
 				name = "READINESS_PET_FORMAT",
 				nameArg = ns.GetWellFedName,
-				description = "OPTIONS_READINESS_PET_WELL_FED_DESCRIPTION_FORMAT",
+				description = "OPTIONS_READINESS_PET_FOOD_BUFF_DESCRIPTION_FORMAT",
 				descriptionArg = ns.GetWellFedName,
 				hidden = PetWellFedHidden,
 			},
 			{
 				key = "readinessScrolls",
 				name = "FEATURE_SCROLL_BUFFS",
-				description = "OPTIONS_READINESS_SCROLLS_DESCRIPTION",
+				description = "OPTIONS_READINESS_SCROLL_BUFFS_DESCRIPTION",
 			},
 			{
 				key = "readinessSoulstone",
@@ -237,7 +238,7 @@ local SECTIONS = {
 			{
 				key = "readinessExpiring",
 				name = "OPTIONS_READINESS_EXPIRING",
-				description = "OPTIONS_READINESS_EXPIRING_DESCRIPTION",
+				description = "OPTIONS_READINESS_EXPIRING_BUFFS_DESCRIPTION",
 				threshold = EXPIRING_THRESHOLD,
 			},
 		},
@@ -436,7 +437,7 @@ function ns.BuildReadinessReportOptions()
 	-- The report as it prints, following the switches below.
 	args.spaceExample = Spacer(order, ReportsHidden)
 	order = order + 1
-	args.exampleReadiness = ns.OptionsExample(order, ns.BuildReadinessSampleLines, ReportsHidden)
+	args.exampleReadiness = ns.OptionsExample(order, ns.BuildReadinessSampleLine, ReportsHidden)
 	order = order + 1
 
 	for index, section in ipairs(SECTIONS) do

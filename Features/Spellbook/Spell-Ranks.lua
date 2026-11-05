@@ -2,7 +2,7 @@ local _, ns = ...
 
 --[[
 	The spell ranks the player knows and the levels the rest are learned at, read from the spellbook and the
-	trainer data for Features/Spellbook/Macro-Builder.lua.
+	trainer data for Features/Spellbook/Macro-Builder/Macro-Builder.lua.
 ]]
 
 local SpellName = ns.SpellName

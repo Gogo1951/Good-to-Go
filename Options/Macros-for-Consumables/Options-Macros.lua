@@ -258,11 +258,11 @@ local function OpenMacroWindow()
 end
 
 --------------------------------------------------------------------------------
--- Macros Panel
+-- Consumable Macros Panel
 --------------------------------------------------------------------------------
 
 --[[
-    Everything that shapes the macros Connoisseur builds, in one page: which
+    Everything that shapes the macros Consumable Macros builds, in one page: which
     macros exist, then how each behaves. Page order is the Macros master
     switch, Macro Names on Buttons, Which Macros to Create (with the Open Macros Window button),
     Food & Water (Buff Food, Scroll Buffs, and conjured food
@@ -272,9 +272,8 @@ end
     (Options-Ignore-List.lua) have their own panels, nested under this one.
 
     Order values are spaced blocks so a section can be reordered or extended
-    without renumbering its neighbors. The General page keeps the add-on-level
-    behavior: the welcome message, the mini-map button and /Commands; the
-    Macros switch is also on Connoisseur's heading page.
+    without renumbering its neighbors. The switch atop the panel is also in the
+    root panel's Features section, as Enable Consumable Macros.
 
     Registered as this builder function rather than a built table (see
     Options/Options.lua), so AceConfig re-invokes it on every open and every
@@ -336,6 +335,11 @@ function ns.BuildMacrosOptions()
 			width = ns.OPTIONS_CONTROL_WIDTH,
 			func = OpenMacroWindow,
 		},
+		-- What a macro prints when your bags hold nothing it can use, as the Food macro prints it.
+		spaceExample = Spacer(18),
+		exampleNoItem = ns.OptionsExample(19, function()
+			return ns.BuildNoItemLine("Food")
+		end),
 
 		--[[
 		    Food & Water -- what the Food and Water macros put ahead of your
@@ -636,7 +640,7 @@ function ns.BuildMacrosOptions()
 
 	return {
 		type = "group",
-		name = L["TAB_MACROS"],
+		name = L["TAB_CONSUMABLE_MACROS"],
 		args = args,
 	}
 end

@@ -31,7 +31,7 @@ local sessionConstantsInitialized = false
     constants are set up once; the item cache is checked against its stamps
     every time it runs.
 ]]
-local function InitializeConnoisseur()
+local function InitializeConsumableMacros()
 	ns.EnsureItemCache()
 	if not sessionConstantsInitialized then
 		sessionConstantsInitialized = true
@@ -50,7 +50,7 @@ end
     are account-wide, like the macros themselves. Features/Core.lua calls this
     and then redraws every open panel.
 ]]
-function ns.ApplyConnoisseurProfile()
+function ns.ApplyConsumableMacrosProfile()
 	ns.EnsureItemCache()
 	ns.ResetMacroState()
 	ns.UpdateAuraTracking()
@@ -61,10 +61,10 @@ end
     Per-arrival state: refreshed at login AND on every later loading screen,
     because the cached level and zone move as the player levels and travels.
 
-    Kept apart from InitializeConnoisseur, which runs at PLAYER_LOGIN only.
+    Kept apart from InitializeConsumableMacros, which runs at PLAYER_LOGIN only.
     Nothing here touches the database.
 
-    Order matters on the login path: this runs AFTER InitializeConnoisseur, because
+    Order matters on the login path: this runs AFTER InitializeConsumableMacros, because
     ns.InitializeCharacterConstants is what resolves ns.isHunter for the registration
     below.
 ]]
@@ -157,7 +157,7 @@ local function OnEvent(event, ...)
 	    uninitialized until combat dropped.
 	]]
 	if event == "PLAYER_LOGIN" then
-		InitializeConnoisseur()
+		InitializeConsumableMacros()
 		RefreshArrivalState()
 		return
 	end
@@ -224,19 +224,6 @@ local function OnEvent(event, ...)
 	]]
 	if event == "PLAYER_LOGOUT" then
 		ns.OnIgnoreListPlayerLogout()
-		return
-	end
-
-	--[[
-	    READY_CHECK is handled ahead of the lockdown guard for the same reason
-	    as the events above: a ready check routinely fires with the raid
-	    already pulling, and the report only reads auras and the last scan's
-	    results before printing, so it touches nothing protected. Where the
-	    client restricts aura data mid-fight (Forever), ns.OnReadyCheck
-	    stays silent rather than read a secret value.
-	]]
-	if event == "READY_CHECK" then
-		ns.OnReadyCheck()
 		return
 	end
 
@@ -357,12 +344,13 @@ local function OnEvent(event, ...)
 	end
 end
 
-local MODULE = "Connoisseur"
+local MODULE = "ConsumableMacros"
 ns.RegisterEventModule(MODULE, OnEvent)
 
 --[[
-    An item's info arriving (Features/Item-Info.lua hands every answer here while
-    the bag scan waits on one). Only a consumable's answer can change a macro:
+    An item's info arriving (Features/Item-Info.lua hands every answer here
+    while any feature waits on one, not only the bag scan). Only a
+    consumable's answer can change a macro:
     ns.CacheItemData, which covers the consumable tables alone, is the one macro
     input that reads item info. Any other answer rebuilds nothing.
 ]]
@@ -395,7 +383,6 @@ local EVENTS = {
 	"PLAYER_REGEN_ENABLED",
 	"PLAYER_TARGET_CHANGED",
 	"PLAYER_UNGHOST",
-	"READY_CHECK",
 	"UI_ERROR_MESSAGE",
 	"ZONE_CHANGED_NEW_AREA",
 	"SKILL_LINES_CHANGED",

@@ -202,7 +202,7 @@ local function AddButtonSection(args, button, index)
 
 	--[[
 	    A single-emote button gets one dropdown instead of the checklist: there is
-	    nothing to randomise between, so a grid of checkboxes would be the wrong
+	    nothing to randomize between, so a grid of checkboxes would be the wrong
 	    control for the choice being made.
 	]]
 	if button.singleEmote then
@@ -221,7 +221,7 @@ local function AddButtonSection(args, button, index)
 			get = function()
 				--[[
 				    A token this client does not have shows as "none" rather than
-				    blank: profiles travel between flavours, and an emote that only
+				    blank: profiles travel between flavors, and an emote that only
 				    exists on a later one would otherwise leave the box empty and
 				    unexplained.
 				]]

@@ -58,7 +58,7 @@ end
 ]]
 function ns.DeleteAddonMacros(general)
 	if InCombatLockdown() then
-		UIErrorsFrame:AddMessage(ERR_NOT_IN_COMBAT, 1, 0.1, 0.1)
+		ns.ShowUIError(ERR_NOT_IN_COMBAT)
 		return
 	end
 	if ns.IsSpellbookEnabled() then
@@ -81,7 +81,7 @@ end
 ]]
 function ns.DeletePageMacro(macro)
 	if InCombatLockdown() then
-		UIErrorsFrame:AddMessage(ERR_NOT_IN_COMBAT, 1, 0.1, 0.1)
+		ns.ShowUIError(ERR_NOT_IN_COMBAT)
 		return
 	end
 	local function delete(page)

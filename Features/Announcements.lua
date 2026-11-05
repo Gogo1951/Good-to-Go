@@ -8,12 +8,8 @@ local GetColor = ns.GetColor
 -- Print Outs (Player Only)
 --------------------------------------------------------------------------------
 
---[[
-    The "Good to Go // " brand that opens every print: the Full Name,
-    never the Short Name. Exposed so options panels can render pipeline-true
-    sample messages that always match the real thing.
-]]
-function ns.GetPrintPrefix()
+-- The "Good to Go // " brand that opens every print: the Full Name, never the Short Name.
+local function GetPrintPrefix()
 	return GetColor("INFO") .. L["ADDON_TITLE"] .. "|r " .. GetColor("SEPARATOR") .. "//" .. "|r "
 end
 
@@ -23,7 +19,7 @@ end
     white; colors a message embeds (links, class-colored names) sit inside it.
 ]]
 function ns.BuildPrintLine(text)
-	return ns.GetPrintPrefix() .. GetColor("TEXT") .. text .. "|r"
+	return GetPrintPrefix() .. GetColor("TEXT") .. text .. "|r"
 end
 
 -- Format: |cff[INFO]Good to Go|r |cff[SEPARATOR]//|r |cff[TEXT]Message|r
@@ -105,15 +101,19 @@ function ns:BuildAnnounceMessage(formatKey, ...)
 	return SignOff(string.format(template, ...))
 end
 
+-- Every chat line the add-on sends goes through here, which sends nothing without a channel and a message.
+local function Send(message, channel, target)
+	if not channel or not message or message == "" then
+		return
+	end
+	C_ChatInfo.SendChatMessage(message, channel, nil, target)
+end
+
 function ns:Announce(channel, target, formatKey, ...)
 	if not channel then
 		return
 	end
-	local message = ns:BuildAnnounceMessage(formatKey, ...)
-	if not message then
-		return
-	end
-	C_ChatInfo.SendChatMessage(message, channel, nil, target)
+	Send(ns:BuildAnnounceMessage(formatKey, ...), channel, target)
 end
 
 --[[
@@ -122,10 +122,10 @@ end
     add-on name. Links are legal in whispers, so pipes are not stripped.
 ]]
 function ns:Whisper(target, message)
-	if not target or not message or message == "" then
+	if not target then
 		return
 	end
-	C_ChatInfo.SendChatMessage(message, "WHISPER", nil, target)
+	Send(message, "WHISPER", target)
 end
 
 --------------------------------------------------------------------------------
@@ -134,13 +134,10 @@ end
 
 --[[
     The one place an emote reaches the client, through the namespaced call every
-    target client ships. Returns its success flag, or nil when that comes back secret.
+    target client ships.
 ]]
 local function PerformEmote(token, target)
-	local success = C_ChatInfo.PerformEmote(token, target)
-	if ns.IsPlain(success) then
-		return success
-	end
+	C_ChatInfo.PerformEmote(token, target)
 end
 
 --[[
@@ -185,7 +182,7 @@ end
 
 --[[
     Perform ONE specific emote, for the buttons that choose from a dropdown
-    instead of randomising over a checklist.
+    instead of randomizing over a checklist.
 
     Validated against the CLIENT catalog rather than Data.EMOTES: that dropdown
     offers every emote this build has, which is far more than the twelve the
@@ -210,10 +207,8 @@ end
 
 -- Tint a player's name with their class color; an unknown class leaves it plain.
 local function ColorNameByClass(class, name)
-	if class and Data.CLASS_COLORS[class] then
-		return "|cff" .. Data.CLASS_COLORS[class] .. name .. "|r"
-	end
-	return name
+	local color = ns.GetClassColor(class)
+	return color and (color .. name .. "|r") or name
 end
 
 local function ClassOf(guid)
@@ -310,10 +305,10 @@ local function QueueWhisper(target, message)
 	end
 	nextWhisperAt = now + delay + WHISPER_GAP
 	if delay == 0 then
-		C_ChatInfo.SendChatMessage(message, "WHISPER", nil, target)
+		Send(message, "WHISPER", target)
 	else
 		C_Timer.After(delay, function()
-			C_ChatInfo.SendChatMessage(message, "WHISPER", nil, target)
+			Send(message, "WHISPER", target)
 		end)
 	end
 end
@@ -475,15 +470,42 @@ end
 -- Buff Requests
 --------------------------------------------------------------------------------
 
+-- Up to this many players are named in a buff ask; more are counted instead.
+local ASK_MAX_NAMES = 5
+
 --[[
-    Buff Duty's ask for a raid buff (an icon on the window's title row):
-    "Some players are missing Mage Buffs ([Arcane Intellect]), can you help
-    them out // GtG", signed off like the thank-yous. The class name is the
-    client's, plain, since color codes don't survive SendChatMessage.
+    Names joined the way a sentence lists them: "Katz", "Katz and Aero",
+    "Katz, Aero, and Spek".
 ]]
-function ns:BuildBuffRequestMessage(class, link)
-	return SignOff(L["BUFF_WINDOW_OTHERS_ASK"]:format(LOCALIZED_CLASS_NAMES_MALE[class] or class, link))
+local function JoinNames(names)
+	if #names == 1 then
+		return names[1]
+	elseif #names == 2 then
+		return L["LIST_PAIR_FORMAT"]:format(names[1], names[2])
+	end
+	local head = table.concat(names, L["LIST_SEPARATOR"], 1, #names - 1)
+	return L["LIST_LAST_FORMAT"]:format(head, names[#names])
 end
+
+--[[
+    Buff Duty's ask for a raid buff (an icon under the window's Party-Buffs),
+    signed off like the thank-yous: "Katz and Aero are missing [Arcane
+    Intellect] // GtG" while ASK_MAX_NAMES or fewer are missing it, and "7
+    people are missing the [Arcane Intellect] buff // GtG" past that. `names`
+    are the missing players' names without their realms, `count` how many.
+    A statement, not a question, so the sign-off reads cleanly after it.
+]]
+function ns:BuildBuffRequestMessage(names, count, link)
+	names = names or {}
+	if count > ASK_MAX_NAMES or #names ~= count or count == 0 then
+		return SignOff(L["BUFF_DUTY_OTHERS_ASK_COUNT"]:format(count, link))
+	elseif count == 1 then
+		return SignOff(L["BUFF_DUTY_OTHERS_ASK_ONE"]:format(names[1], link))
+	end
+	return SignOff(L["BUFF_DUTY_OTHERS_ASK_NAMES"]:format(JoinNames(names), link))
+end
+
+ns.BUFF_ASK_MAX_NAMES = ASK_MAX_NAMES
 
 --[[
     The chat the whole group reads: an instance group's own (a battleground's,
@@ -503,11 +525,7 @@ end
 
 -- A Left-Click's ask, to the whole group.
 function ns:SayBuffRequest(message)
-	local channel = ns:GetGroupChatChannel()
-	if not channel then
-		return
-	end
-	C_ChatInfo.SendChatMessage(message, channel)
+	Send(message, ns:GetGroupChatChannel())
 end
 
 --[[

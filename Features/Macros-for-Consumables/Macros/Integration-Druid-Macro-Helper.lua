@@ -15,13 +15,23 @@ local _, ns = ...
     Eligible macro types and guard prefixes both live in Data.lua
     (ns.DRUID_MACRO_HELPER_TYPES, ns.DRUID_MACRO_HELPER_GUARDS) so the data is shared and not buried
     here.
+
+    The /dmh lines mean nothing without DruidMacroHelper itself, so with the
+    add-on not loaded the toggle is ignored and the standard body is written.
+    That body's state ID has no "DMH:" prefix, so loading or dropping the
+    add-on rewrites the macros on the next update.
 ]]
+
+local DRUID_MACRO_HELPER_FOLDER = "DruidMacroHelper"
 
 local function ShouldUseDruidMacroHelper(typeName)
 	if not ns.isDruid then
 		return false
 	end
 	if not ns.DRUID_MACRO_HELPER_TYPES[typeName] then
+		return false
+	end
+	if not C_AddOns.IsAddOnLoaded(DRUID_MACRO_HELPER_FOLDER) then
 		return false
 	end
 	local settings = ns.db and ns.db.profile

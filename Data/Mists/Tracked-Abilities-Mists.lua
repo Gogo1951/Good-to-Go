@@ -541,7 +541,7 @@ ns.TRACKED_ABILITIES = {
 How We Got the Data
 
 Last Validated
-	2026-11-03, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-04, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- Built offline from this client's game tables, not yet checked against a Validate Data run from a Mists client. Every spell is in this build's SpellName and every item in its ItemSparse, under the name its comment gives; each item's spell is the one its ItemEffect row casts.

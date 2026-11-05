@@ -34,7 +34,7 @@ local _, ns = ...
     item. Items cannot be mailed across realms, so a count there answers nothing
     the player can act on from here.
 
-    Switched off from the Restocker panel (ns.db.global.inventoryReport):
+    Switched off from the Inventory Report panel (ns.db.global.inventoryReport):
     most auction add-ons put their own
     counts on the same tooltips, and two sets of numbers under one item is
     noise.
@@ -190,7 +190,7 @@ function ns.InitializeInventoryReport()
 end
 
 --[[
-    The Restocker panel's switch. Off, the recorders stop hearing the bags
+    The Inventory Report panel's switch. Off, the recorders stop hearing the bags
     (ns.SyncRestockerEvents); back on, the bags are read at once rather than at
     their next change.
 ]]
@@ -203,7 +203,7 @@ function ns.SetInventoryReportEnabled(value)
 end
 
 --[[
-    Drops another character's record, for the Restocker panel's Forget: its
+    Drops another character's record, for the Inventory Report panel's Forget: its
     bags and bank leave every tooltip, and its Restock List choice goes with
     it, so its name stops reserving list names. Logging in on it records it
     again.

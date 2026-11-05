@@ -7,7 +7,7 @@ local SizedFontString = ns.SizedFontString
 
 --[[
 	One macro's tile on the spellbook page: its icon, its name with its note under it (the rank and the options
-	that are on), the glow while it isn't on the bars, its tooltip, and the click, drag and right-click that
+	that are on, worded by Features/Spellbook/Macro-Button-Notes.lua), the glow while it isn't on the bars, its tooltip, and the click, drag and right-click that
 	place it or open its menu (Features/Spellbook/Macro-Menu.lua). Features/Spellbook/Spellbook-Page.lua lays the tiles out.
 ]]
 
@@ -56,8 +56,20 @@ local function SetAtlasOr(texture, atlas, file, scale, icon)
 	return false
 end
 
+-- "<label> // <macro name> Macro", the heading of the macro's tooltip block
+local function MacroHeading(label, macro)
+	return GetColor("INFO")
+		.. label
+		.. "|r "
+		.. GetColor("SEPARATOR")
+		.. "//|r "
+		.. GetColor("TEXT")
+		.. L["TOOLTIP_MACRO_HEADING"]:format(macro.label or macro.name)
+		.. "|r"
+end
+
 --[[
-	The spell whose own tooltip heads the macro's: the rank a macro is fixed to (ns.FixedRank: a rank's own
+	The spell whose own tooltip heads the macro's: the rank a macro is fixed to (ns.FixedRankID: a rank's own
 	macro, or one set to a rank in its options), else a learned spell by name, so its highest known rank, an
 	unlearned one by its ID. Nil when there's none, as for a consumable, which leads with its item's. The ranks
 	the tooltip lists (ns.AddSpellRanksTooltip) mark this one.
@@ -68,11 +80,9 @@ local function TooltipSpellID(macro)
 	elseif macro.unlearned then
 		return macro.spellID
 	end
-	local fixed = not macro.rangedAttacks and ns.FixedRank(macro)
-	for _, rank in ipairs(fixed and macro.ranks or {}) do
-		if rank.text == fixed and rank.id then
-			return rank.id
-		end
+	local fixedID = not macro.rangedAttacks and ns.FixedRankID(macro)
+	if fixedID then
+		return fixedID
 	end
 	local name = macro.name
 	if macro.rangedAttacks then
@@ -99,186 +109,6 @@ local function ResetOptions(macro)
 	ns.ResetMacroSettings(macro)
 	ns:RefreshMacros()
 	ns:PrintMessage(L["CHAT_MACRO_OPTIONS_RESET"]:format(macro.label or macro.name))
-end
-
---[[
-	The options a macro's note and tooltip can name, most telling first, as { key, note key, full label key }:
-	the note names up to MAX_NOTES that are on, or counts them when more are; the tooltip lists them all by their
-	full labels. A row without keys builds its text from the macro.
-]]
-local OPTION_SUBTEXTS = {
-	{ "conditionals" },
-	{ "castSequence" },
-	{ "pet", "SUBTEXT_PET", "MENU_CAST_IF_SUMMONED" },
-	{ "cursor", "SUBTEXT_CURSOR", "MENU_CAST_AT_CURSOR" },
-	{ "targetPriority", "SUBTEXT_TARGET_PRIORITY", "MENU_GROUP_TARGET" },
-	{ "stance", "SUBTEXT_STANCE", "MENU_SWITCH_TO" },
-	{ "useItems", "SUBTEXT_USE_ITEMS" },
-	{ "petAttack", "SUBTEXT_PET_ATTACK", "MENU_START_PET_ATTACK" },
-	{ "targetRank", "SUBTEXT_DYNAMIC_RANK", "MENU_DYNAMIC_RANK" },
-	{ "fixedRank" },
-	{ "targetEnemy", "SUBTEXT_TARGET_ENEMY", "MENU_TARGET_NEAREST_ENEMY" },
-	{ "targetFriend", "SUBTEXT_TARGET_FRIEND", "MENU_TARGET_NEAREST_FRIEND" },
-	{ "groupVersion", "SUBTEXT_GROUPED_SPELLS", "MENU_RIGHT_CLICK_FOR" },
-	{ "groupedSpells", "SUBTEXT_GROUPED_SPELLS" },
-	{ "oncePerCombat", "SUBTEXT_ONCE_PER_COMBAT", "MENU_ONCE_PER_COMBAT" },
-	{ "oncePerTarget", "SUBTEXT_ONCE_PER_TARGET", "MENU_ONCE_PER_TARGET" },
-	{ "combatOnly", "SUBTEXT_COMBAT_ONLY", "MENU_IN_COMBAT" },
-	{ "noCombat", "SUBTEXT_NO_COMBAT", "SUBTEXT_NO_COMBAT" },
-	{ "cancelForm", "SUBTEXT_LEAVE_FORM", "MENU_LEAVE_FORM_BEFORE" },
-	{ "noToggle", "SUBTEXT_NO_TOGGLE", "MENU_NEVER_TURN_OFF" },
-	{ "autoShot" },
-	{ "startAttack", "SUBTEXT_START_ATTACK", "MENU_START_AUTO_ATTACK" },
-	{ "stopAttack", "SUBTEXT_STOP_ATTACK", "MENU_STOP_ATTACK" },
-	{ "stopCast", "SUBTEXT_STOP_CASTING", "MENU_STOP_CASTING" },
-	{ "stopIfChanneling", "SUBTEXT_STOP_IF_CHANNELING", "MENU_STOP_IF_CHANNELING" },
-	{ "stopIfStealthed", "SUBTEXT_STOP_IF_STEALTHED", "MENU_STOP_IF_STEALTHED" },
-	{ "hideErrors", "SUBTEXT_HIDE_ERRORS", "MENU_HIDE_ERRORS" },
-	{ "muteErrors", "SUBTEXT_MUTE_ERRORS", "MENU_MUTE_ERRORS" },
-}
-
--- Calls fn(entry) for each OPTION_SUBTEXTS row whose option is on for the macro, in order.
-local function ForEachOnOption(macro, fn)
-	for _, entry in ipairs(OPTION_SUBTEXTS) do
-		local key = entry[1]
-		local on
-		if key == "useItems" then
-			on = ns.UseItemSlots(macro)[1] ~= nil
-		elseif key == "fixedRank" then
-			on = ns.FixedRank(macro) ~= nil
-		elseif key == "groupedSpells" then
-			on = ns.IsGrouped(macro)
-		elseif key == "targetPriority" then
-			on = ns.HasTargetPriority(macro)
-		elseif key == "conditionals" then
-			on = ns.ConditionalCount(macro) > 0
-		elseif key == "castSequence" then
-			on = ns.IsCastSequenceOn(macro)
-		else
-			on = ns.IsOptionOn(macro, key)
-		end
-		if on then
-			fn(entry)
-		end
-	end
-end
-
--- The autoShot note: Auto Shot's own name from the client, or "Wand" rather than the wand's "Shoot".
-local function AutoShotSubText()
-	if ns.AutoShotLabelKey() == "MENU_START_WAND" then
-		return L["SUBTEXT_WAND"]
-	end
-	return ns.AutoShotName()
-end
-
--- The target priority's note: the first unit it tries other than the target ("Mouse Over", "Self").
-local function TargetPrioritySubText(macro)
-	for _, unit in ipairs(ns.TargetPriority(macro)) do
-		for _, row in ipairs(ns.TARGET_UNITS) do
-			if row[1] == unit and unit ~= "target" then
-				return L[row[2]]
-			end
-		end
-	end
-	return L["SUBTEXT_TARGET_PRIORITY"]
-end
-
--- The Conditionals' note and full label: "1 Conditional", "4 Conditionals".
-local function ConditionalsSubText(macro)
-	local count = ns.ConditionalCount(macro)
-	return count == 1 and L["SUBTEXT_CONDITIONALS_ONE"] or L["SUBTEXT_CONDITIONALS"]:format(count)
-end
-
--- MAX_NOTES names fit on a tile's note line ("Max Rank, Grouped, Hide Errors"); more are counted instead.
-local MAX_NOTES = 3
-
---[[
-	A spell macro's note: lead (a spell's "Max Rank"), if given, and the options that are on by
-	name ("Dynamic Rank, Grouped"), or "N Options" counting them when there are more than MAX_NOTES names, or
-	nil when there are none. Options with the same note (Right-Click For and the Grouped Spells ticked, both
-	"Grouped") count as one.
-]]
-local function OptionSubText(macro, lead)
-	local notes, count, seen = { lead }, 0, {}
-	ForEachOnOption(macro, function(entry)
-		local note
-		-- a fixed rank's note is the rank's own text ("Rank 3")
-		if entry[1] == "fixedRank" then
-			note = ns.FixedRank(macro)
-		elseif entry[1] == "autoShot" then
-			note = AutoShotSubText()
-		elseif entry[1] == "targetPriority" then
-			note = TargetPrioritySubText(macro)
-		elseif entry[1] == "conditionals" then
-			note = ConditionalsSubText(macro)
-		elseif entry[1] == "castSequence" then
-			note = L["SUBTEXT_CAST_SEQUENCE"]:format(ns.CastSequenceStepCount(macro) + 1)
-		else
-			note = L[entry[2]]
-		end
-		if not seen[note] then
-			seen[note] = true
-			count = count + 1
-			notes[#notes + 1] = note
-		end
-	end)
-	if #notes > MAX_NOTES then
-		return L["SUBTEXT_OPTIONS_COUNT"]:format(count)
-	end
-	return notes[1] and table.concat(notes, ", ") or nil
-end
-
--- An option's full label, as the tooltip's Options On line shows it.
-local function OptionLabel(macro, entry)
-	local key = entry[1]
-	if key == "useItems" then
-		local slots = {}
-		for i, slot in ipairs(ns.UseItemSlots(macro)) do
-			slots[i] = ns.SlotLabel(slot)
-		end
-		return table.concat(slots, ", ")
-	elseif key == "fixedRank" then
-		return ns.FixedRank(macro)
-	elseif key == "autoShot" then
-		return L[ns.AutoShotLabelKey() or "MENU_START_AUTO_SHOT"]
-	elseif key == "pet" then
-		return L[entry[3]]:format(macro.petAbility)
-	elseif key == "stance" then
-		return L[entry[3]]:format(macro.stances[1])
-	elseif key == "groupVersion" then
-		return L[entry[3]]:format(ns.RightClickSpell(macro))
-	elseif key == "groupedSpells" then
-		return table.concat(ns.GroupedSpells(macro), ", ")
-	elseif key == "targetPriority" then
-		local labels = {}
-		for i, unit in ipairs(ns.TargetPriority(macro)) do
-			for _, row in ipairs(ns.TARGET_UNITS) do
-				if row[1] == unit then
-					labels[i] = L[row[2]]
-				end
-			end
-		end
-		return L[entry[3]] .. " (" .. table.concat(labels, ", ") .. ")"
-	elseif key == "conditionals" then
-		return ConditionalsSubText(macro) .. " (" .. table.concat(ns.ConditionalSummaries(macro), ", ") .. ")"
-	elseif key == "castSequence" then
-		return L["MENU_GROUP_CAST_SEQUENCE"] .. " (" .. ns.CastSequenceSummary(macro) .. ")"
-	end
-	return L[entry[3]]
-end
-
--- "Options On: Cast At Cursor, Stop Casting", every option that is on by its menu label, or nil for none.
-local function OptionsOnLine(macro)
-	local labels = {}
-	ForEachOnOption(macro, function(entry)
-		labels[#labels + 1] = OptionLabel(macro, entry)
-	end)
-	if #labels == 0 then
-		return nil
-	end
-	return GetColor("TITLE")
-		.. L["TOOLTIP_OPTIONS_ON"]:format(GetColor("TEXT") .. table.concat(labels, ", ") .. "|r")
-		.. "|r"
 end
 
 -- Tiles are reused across refreshes; SetMacro points one at a macro.
@@ -427,7 +257,7 @@ local function CreateMacroButton(parent)
 				ns.AddSpellRanksTooltip(spellID, nil, GameTooltip:NumLines() > 0)
 			end
 		end
-		local title = ns.MacroHeading(L["ADDON_SHORT_NAME"], self.macro)
+		local title = MacroHeading(L["ADDON_SHORT_NAME"], self.macro)
 		if GameTooltip:NumLines() > 0 then
 			GameTooltip:AddLine(" ")
 			GameTooltip:AddLine(title)
@@ -437,7 +267,7 @@ local function CreateMacroButton(parent)
 		-- what the macro does beyond its text, set off by a blank line above
 		local notes = {}
 		if not self.macro.consumable then
-			notes[#notes + 1] = OptionsOnLine(self.macro)
+			notes[#notes + 1] = ns.MacroOptionsOnLine(self.macro)
 		end
 		if #notes > 0 then
 			GameTooltip:AddLine(" ")
@@ -517,7 +347,7 @@ end
 --[[
 	The note under the name, or nil for none: why the page can't place the macro, in red; else a consumable's
 	Dynamic Item (and Dynamic Rank, when the class also casts it), Focus,
-	the rank and the options that are on (OptionSubText), when an unlearned spell can be learned, or the spell's own subtext as the game's spellbook shows it ("Racial").
+	the rank and the options that are on (ns.MacroOptionSubText in Macro-Button-Notes.lua), when an unlearned spell can be learned, or the spell's own subtext as the game's spellbook shows it ("Racial").
 ]]
 local function NoteText(button, macro)
 	if button.blockReason then
@@ -537,7 +367,8 @@ local function NoteText(button, macro)
 		and spellSubText:match("%d")
 		and not ns.FixedRank(macro)
 		and not ns.IsOptionOn(macro, "targetRank")
-	local subText = OptionSubText(macro, maxRank and L["SUBTEXT_MAX_RANK"] or nil)
+	local lead = maxRank and (ns.LearnableRankNote(macro) or L["SUBTEXT_MAX_RANK"]) or nil
+	local subText = ns.MacroOptionSubText(macro, lead)
 	if subText then
 		return subText
 	elseif macro.unlearned and (macro.learnTalent or macro.learnLevel) then
@@ -554,7 +385,7 @@ end
 	apart by their notes ("Rank 3").
 ]]
 local function SetMacro(button, macro, bars)
-	-- Connoisseur rewrites a consumable's macro as the bags change, so its item is read again at each draw
+	-- Consumable Macros rewrites a consumable's macro as the bags change, so its item is read again at each draw
 	if macro.consumable then
 		ns.ReadConsumableMacro(macro)
 	end

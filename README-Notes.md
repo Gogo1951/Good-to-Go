@@ -4,12 +4,6 @@
 
 ## Exceptions
 
-### Feature switches on each add-on's heading page
-
-- **Departs from:** OPTIONS PANEL → Main Page Layout, the root panel's Features and Key Bindings sections.
-- **Instead:** Each merged add-on (Connoisseur, Restocker, Thanks for the Buff, Spellbook) has a heading page under the root that holds its own on/off switches, each key binding sits on the page of the feature it drives, and the root holds only the welcome and mini-map toggles and /Commands.
-- **Why:** Good to Go is four add-ons in one, and the maintainer keeps each one's settings together under its own name.
-
 ### Buff Duty window title uses the Short Name
 
 - **Departs from:** ADD-ON NAMES, window titles shaped `Title // Full Name`.
@@ -28,17 +22,29 @@
 - **Instead:** The Thank You Button's whisper goes out as written, with no target marker and no Short Name sign-off.
 - **Why:** The button sends the player's own thank-you, which should read as their words, not the add-on's.
 
-### Docked Spell Book panels titled by spell
+### Docked Spellbook panels titled by spell
 
 - **Departs from:** ADD-ON NAMES, window titles shaped `Title // Full Name`.
-- **Instead:** The panels docked beside the Spell Book window are titled with the spell they edit, as `Fireball // Conditionals`.
-- **Why:** They are part of the Spell Book window, whose own title already carries the Full Name.
+- **Instead:** The panels docked beside the Spellbook window are titled with the spell they edit, as `Fireball // Conditionals`.
+- **Why:** They are part of the Spellbook window, whose own title already carries the Full Name.
 
 ### Per-character records kept off the profile
 
 - **Departs from:** SAVED VARIABLES → The Two Models, per-character state in `ns.db.profile`.
 - **Instead:** Each character's chosen Restock List lives in `ns.db.global`, and the record of character macros the Spellbook made lives in AceDB's `char` scope, so Reset Profile leaves both alone.
 - **Why:** A profile reset must not lose which list a character shops from, or forget macros the add-on made and must still be able to clean up.
+
+### Star marker shared with Thanks for the Buff
+
+- **Departs from:** MESSAGES → Target Marker, two add-ons never collide.
+- **Instead:** Messages sent to other players carry the Star, `{rt1}`, the same marker as Thanks for the Buff.
+- **Why:** Good to Go carries on Thanks for the Buff's messages, and the same marker keeps them familiar to the players who receive them.
+
+### Four README infographics
+
+- **Departs from:** README generation → Image Handling, one image under the TL;DR.
+- **Instead:** The README shows an infographic for Consumable Macros under the TL;DR, and one each for Restocker, Automated Appreciation and Enhanced Spellbook atop that feature's own Tips & Tricks section.
+- **Why:** Good to Go merges four add-ons, and each one's story needs its own picture.
 
 ### English beast names in the Pet What's Next? tooltip
 

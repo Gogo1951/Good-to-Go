@@ -32,10 +32,10 @@ ns.HEALTHSTONES = {
 How We Got the Data
 
 Last Validated
-	2026-10-16, Season of Discovery 1.15.9.70003
+	2026-11-04, Season of Discovery 1.15.9.70576
 
 Notes
-	- Every item that heals instantly on the healthstone cooldown, keyed by the cooldown category Charged Crystal Focus (32578) uses, read by the item cache (Features/Item-Cache.lua) for the Healthstone and Health Potion macros. Healthstone Amount is the low end of the heal; Required Level is the level the tooltip requires (0 for none).
+	- Every item that heals instantly on the healthstone cooldown, keyed by the cooldown category Charged Crystal Focus (32578) uses, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Healthstone and Health Potion macros. Healthstone Amount is the low end of the heal; Required Level is the level the tooltip requires (0 for none).
 	- Alexander's Test Healthstone (30347) and Royal Guide of Escape Routes (43657) are left out, as the query below shows.
 	- Mana gems and runes share the category but restore mana; they live in Mana-Gems-Discovery.lua. The Minor and Major Recombobulators restore health as a side effect of dispelling Polymorph and are reusable devices, so they are left out.
 	- Night Dragon's Breath (11952) is left out on purpose, an oddball that shares the cooldown.

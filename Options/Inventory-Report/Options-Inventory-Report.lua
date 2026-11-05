@@ -12,7 +12,7 @@ local Spacer = ns.OptionsSpacer
 
 --[[
     The counts Features/Inventory-Report/Inventory-Report-Tooltip.lua adds to
-    item tooltips, on a page of its own under the Restocker's. Its name is the
+    item tooltips, on a page of its own in the tree. Its name is the
     tooltip block's own title (INVENTORY_REPORT_TITLE), so the panel and the
     tooltip cannot name it two ways.
 
@@ -55,7 +55,7 @@ local function AddRecordedCharacters(args, order)
 	end)
 
 	args.spaceRecorded0 = Spacer(order)
-	args.headerRecorded = Header(L["RESTOCKER_RECORDED_CHARACTERS_HEADER"], order + 0.1)
+	args.headerRecorded = Header(L["INVENTORY_REPORT_RECORDED_CHARACTERS_HEADER"], order + 0.1)
 	args.spaceRecorded1 = Spacer(order + 0.2)
 	for index, key in ipairs(keys) do
 		local record = inventory[key]
@@ -73,10 +73,10 @@ local function AddRecordedCharacters(args, order)
 					width = ns.OPTIONS_ROW_WIDTH - ns.OPTIONS_REMOVE_ICON_WIDTH,
 					order = 1,
 				},
-				forget = ns.OptionsRemoveIcon(L["RESTOCKER_FORGET_CHARACTER"], 2, function()
+				forget = ns.OptionsRemoveIcon(L["INVENTORY_REPORT_FORGET_CHARACTER"], 2, function()
 					ns.ForgetRecordedCharacter(key)
 					Refresh()
-				end, L["RESTOCKER_FORGET_CHARACTER_CONFIRM"]:format(color .. record.name .. "|r")),
+				end, L["INVENTORY_REPORT_FORGET_CHARACTER_CONFIRM"]:format(color .. record.name .. "|r")),
 			},
 		}
 	end

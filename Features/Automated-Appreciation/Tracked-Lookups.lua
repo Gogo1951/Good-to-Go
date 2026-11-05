@@ -169,14 +169,9 @@ end
 
 --[[
     An item that loads while a panel is open repaints it, replacing its "Item #"
-    placeholder. This file owns the event and hands every firing to the Buff
-    Window first, whose Weapon Buffs panel names poisons, oils, stones and
-    lures the same way.
+    placeholder.
 ]]
 local function OnGetItemInfoReceived(itemId)
-	if ns.OnBuffWindowItemInfo then
-		ns.OnBuffWindowItemInfo(itemId)
-	end
 	if not trackedItemIds[itemId] then
 		return
 	end
@@ -226,7 +221,7 @@ end
     Reshape ns.TRACKED_ABILITIES into the products the options panels and the diagnostics
     report consume. Built once at login, when the spell/item APIs are live:
 
-    - ns.TeammateCategories : ordered categories for the Teammate Buffs
+    - ns.TeammateCategories : ordered categories for the Combat Buffs
       panel -- one per class, then a generic Items group.
     - ns.GoodNewsCategories : the same shape for the Good News panel, which also
       lists the `receivable = false` rows the teammate panel leaves out.
@@ -244,7 +239,7 @@ local function BuildDisplayGroups()
 	local GetSpellName = C_Spell.GetSpellName
 	local DoesSpellExist = C_Spell.DoesSpellExist
 
-	local teammateBuckets = { classes = {}, items = {} } -- Teammate Buffs
+	local teammateBuckets = { classes = {}, items = {} } -- Combat Buffs
 	local goodNewsBuckets = { classes = {}, items = {} } -- Good News
 	local serviceEntries = {} -- Service Alerts
 	local diagnostic = {} -- class -> { {name, ids} }

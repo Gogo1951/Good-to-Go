@@ -52,7 +52,7 @@ end
     Per-group candidate lists sorted best-first (highest required level =
     highest rank), precomputed once from ns.POISON_DATA (Data/{Game}/Poisons-{Game}.lua, which
     loads before this file) so the per-update scan is a plain walk. Same pattern
-    as the derived scroll lookups in Features/Macros-for-Consumables/Scanner-Auras.lua. Only
+    as the derived scroll lookups in Features/Macros-for-Consumables/Scanner/Scanner-Auras.lua. Only
     FindBestPoison below reads it.
 ]]
 local POISONS_BY_GROUP = {}
@@ -111,13 +111,12 @@ end
 
 --[[
     The player's group pick for one hand, resolved to its best usable item.
-    hand is "main" or "off"; the group falls back to Instant Poison (4),
-    matching ns.DATABASE_DEFAULTS.
+    hand is "main" or "off".
 ]]
 local function BestPoisonForHand(hand)
 	local settings = ns.db and ns.db.profile
 	local key = (hand == "off") and "offHandPoisonGroup" or "mainHandPoisonGroup"
-	return FindBestPoison((settings and settings[key]) or 4)
+	return FindBestPoison(settings and settings[key])
 end
 
 --[[
@@ -134,8 +133,10 @@ function ns.GetBestPoisonForHand(hand)
 	return id, select(2, C_Item.GetItemInfo(id))
 end
 
+-- False where this client's data folder has no Poisons skill to know.
 local function KnowsPoisons()
-	return ns.IsSpellKnown(ns.POISONS_SPELL_ID) or ns.IsPlayerSpell(ns.POISONS_SPELL_ID)
+	local poisons = ns.POISONS_SPELL_ID
+	return poisons ~= nil and (ns.IsSpellKnown(poisons) or ns.IsPlayerSpell(poisons))
 end
 
 --------------------------------------------------------------------------------
@@ -164,7 +165,7 @@ local function BuildPoisonsBody(knows, mainID, offID)
 		return table.concat(lines, "\n")
 	end
 
-	local poisonsName = C_Spell.GetSpellName(ns.POISONS_SPELL_ID)
+	local poisonsName = ns.POISONS_SPELL_ID and C_Spell.GetSpellName(ns.POISONS_SPELL_ID)
 	if poisonsName then
 		lines[#lines + 1] = "/cast [btn:3] " .. poisonsName
 		lines[#lines + 1] = "/stopmacro [btn:3]"

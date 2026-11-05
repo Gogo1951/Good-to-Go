@@ -3,18 +3,33 @@ local L = ns.L
 
 --[[
 	A spell's ranks and the level each needs, "GtG // Firebolt Ranks" and a line for each (ns.AddSpellRanksTooltip;
-	the What's Next? rows, Features/Spellbook/Whats-Next-Page.lua, use ns.SpellRankRows and ns.AddSpellRankLines),
+	the What's Next? rows, Features/Spellbook/Whats-Next/Whats-Next-Page.lua, use ns.SpellRankRows and ns.AddSpellRankLines),
 	under every spell tooltip the game shows: action bars, the game's own spell book, other add-ons. Tooltips that
 	add the ranks themselves (the Spell Book page's tiles, the What's Next? rows) set ns.spellTooltipHasOwnRanks
 	around their SetSpellByID so the lines aren't doubled.
 ]]
 
 --[[
-	Before the hovered rank in the tooltip's list of ranks, and before every other rank a gap as wide: the same
-	arrow cropped to its clear top-left pixel, so each rank's text starts in the same place.
+	Before the hovered rank in the tooltip's list of ranks, the white arrow (ns.TEXTURE_RANK_ARROW) tinted the
+	selected blue (ns.SPELL_RANK_SELECTED_COLOR); before every other rank a gap as wide: the same arrow cropped
+	to its clear top-left pixel, so each rank's text starts in the same place.
 ]]
-local RANK_MARKER = "|TInterface\\ChatFrame\\ChatFrameExpandArrow:0|t "
-local RANK_SPACER = "|TInterface\\ChatFrame\\ChatFrameExpandArrow:0:0:0:0:16:16:0:1:0:1|t "
+local SELECTED = ns.COLORS_RGB[ns.SPELL_RANK_SELECTED_COLOR]
+local RANK_MARKER = ("|T%s:0:0:0:0:32:32:0:32:0:32:%d:%d:%d|t "):format(
+	ns.TEXTURE_RANK_ARROW,
+	SELECTED.r * 255 + 0.5,
+	SELECTED.g * 255 + 0.5,
+	SELECTED.b * 255 + 0.5
+)
+local RANK_SPACER = ("|T%s:0:0:0:0:32:32:0:1:0:1|t "):format(ns.TEXTURE_RANK_ARROW)
+
+-- Lowest level first, then lowest ID: the order a spell's ranks are listed in.
+local function ByLevel(a, b)
+	if (a.level or 0) ~= (b.level or 0) then
+		return (a.level or 0) < (b.level or 0)
+	end
+	return a.id < b.id
+end
 
 --[[
 	The ranks of row's spell among rows, by level: the rows of the same name (an extraSpells row, Polymorph
@@ -27,102 +42,193 @@ local function RankRows(rows, row)
 			ranks[#ranks + 1] = other
 		end
 	end
-	table.sort(ranks, function(a, b)
-		if (a.level or 0) ~= (b.level or 0) then
-			return (a.level or 0) < (b.level or 0)
-		end
-		return a.id < b.id
-	end)
+	table.sort(ranks, ByLevel)
 	return ranks
 end
 ns.SpellRankRows = RankRows
 
 --[[
-	A rank's colour (ns.SPELL_RANK_COLORS): known; its level reached and not trained; or its level still to
-	come. A pet's rank waits on the pet's level, the rest on the player's.
+	A rank's state, from its What's Next? status (Whats-Next.lua, Whats-Next-Pet.lua), for its color
+	(ns.SPELL_RANK_COLORS): KNOWN; LEARNABLE, one the character could have now and doesn't (a trainer's, a
+	book's or a quest's at its level, or a pet's to teach now); else NOT_YET, a level still to come, a talent
+	not taken (a choice, not something missed), one waiting on another spell, or a pet's its family can't learn.
+	The statuses already read a pet's rank against the pet's level.
 ]]
-local function RankColor(rank, level)
-	local kind
-	if rank.status == "KNOWN" then
-		kind = "KNOWN"
-	elseif rank.status == "SOON" or rank.status == "LATER" or (rank.level or 0) > level then
-		kind = "NOT_YET"
-	else
-		kind = "LEARNABLE"
+local function RankState(status)
+	if status == "KNOWN" then
+		return "KNOWN"
+	elseif status == "AVAILABLE" or status == "TEACH" then
+		return "LEARNABLE"
 	end
-	return ns.GetColor(ns.SPELL_RANK_COLORS[kind])
+	return "NOT_YET"
+end
+ns.RankState = RankState
+
+-- Where a rank is learned, as the What's Next? source filter names it; a pet ability's row has a ready, a class spell's none.
+local function SourceLabel(rank)
+	if not rank.source then
+		return nil
+	end
+	return L[(rank.ready ~= nil and "WHATS_NEXT_PET_SOURCE_" or "WHATS_NEXT_SOURCE_") .. rank.source]
 end
 
 --[[
-	"GtG // Firebolt Ranks", then each rank of row's spell among rows in its ns.SPELL_RANK_COLORS colour, row's own
-	rank marked, with the level it needs in the silver of helper text.
+	The note beside a rank, colored (ns.SPELL_RANK_NOTE_COLORS), or nil: the level a known rank asks for; for one
+	to learn now, where ("Trainer", "Book", "Quest", or teaching the pet); for one not yet, its level, after where
+	it's learned unless that's a trainer ("Talent, Level 40").
 ]]
-local function AddRankLines(rows, row)
+local function RankNote(rank)
+	local state = RankState(rank.status)
+	local level = rank.level and L["SUBTEXT_LEARN_LEVEL"]:format(rank.level)
+	local note
+	if state == "KNOWN" then
+		note = level
+	elseif state == "LEARNABLE" then
+		if rank.status == "TEACH" then
+			note = rank.item and L["WHATS_NEXT_PET_TOOLTIP_GRIMOIRE"] or L["SUBTEXT_TEACH_PET"]
+		else
+			note = SourceLabel(rank) or level
+		end
+	else
+		local source = rank.source ~= "TRAINER" and rank.source ~= "START" and SourceLabel(rank)
+		note = source and level and L["SUBTEXT_SOURCE_LEVEL"]:format(source, level) or source or level
+	end
+	return note and ns.GetColor(ns.SPELL_RANK_NOTE_COLORS[state]) .. note .. "|r"
+end
+ns.RankNote = RankNote
+
+-- A rank's label in its state's color.
+local function RankLabel(rank, text)
+	return ns.GetColor(ns.SPELL_RANK_COLORS[RankState(rank.status)]) .. text .. "|r"
+end
+ns.RankLabel = RankLabel
+
+--[[
+	"GtG // Firebolt Ranks", then each of ranks (RankRows) in its ns.SPELL_RANK_COLORS color, row's own rank
+	marked, with its note (RankNote) on the right.
+]]
+local function AddRankLinesFor(row, ranks)
 	GameTooltip:AddLine(
 		ns.GetColor("INFO")
 			.. L["ADDON_SHORT_NAME"]
 			.. "|r "
 			.. ns.GetColor("SEPARATOR")
 			.. "//|r "
-			.. HIGHLIGHT_FONT_COLOR:WrapTextInColorCode(L["WHATS_NEXT_TOOLTIP_RANKS"]:format(row.name))
+			.. ns.GetColor("TEXT")
+			.. L["WHATS_NEXT_TOOLTIP_RANKS"]:format(row.name)
+			.. "|r"
 	)
-	local pet = ns.WhatsNextPet and ns.WhatsNextPet(true)
-	for _, rank in ipairs(RankRows(rows, row)) do
+	for _, rank in ipairs(ranks) do
 		local label = (rank.subtext and rank.subtext ~= "") and rank.subtext or rank.name
-		-- a pet ability's row says whether it's ready to teach; a class spell's has no ready
-		local level = rank.ready ~= nil and pet and pet.level or UnitLevel("player")
 		GameTooltip:AddDoubleLine(
-			(rank == row and RANK_MARKER or RANK_SPACER) .. RankColor(rank, level) .. label .. "|r",
-			ns.GetColor("HELP") .. (rank.level and L["SUBTEXT_LEARN_LEVEL"]:format(rank.level) or "") .. "|r"
+			rank == row and RANK_MARKER .. ns.GetColor(ns.SPELL_RANK_SELECTED_COLOR) .. label .. "|r"
+				or RANK_SPACER .. RankLabel(rank, label),
+			RankNote(rank) or ""
 		)
 	end
 end
-ns.AddSpellRankLines = AddRankLines
+
+-- The same for row's spell among rows, for the What's Next? rows (Whats-Next-Page.lua).
+function ns.AddSpellRankLines(rows, row)
+	AddRankLinesFor(row, RankRows(rows, row))
+end
+
+--------------------------------------------------------------------------------
+-- Rows Cache
+--------------------------------------------------------------------------------
 
 --[[
-	Adds the ranks of spellID's spell to GameTooltip, for a tooltip outside the What's Next? tabs: the Spell Book
-	page's tiles (Features/Spellbook/Macro-Button.lua) and the Pet Spell Book's rows. pet reads the pet's
-	abilities (ns.WhatsNextPetRows) rather than the class's (ns.WhatsNextRows); blankFirst puts a blank line
-	above them; rows, where given, stands in for either (CachedRows, below).
-	Returns whether it added any: nothing for a spell the rows don't hold or with one rank.
+	An action bar's tooltip refreshes several times a second, so the What's Next? rows behind it are built once
+	and kept, with each spell's row by ID and each spell's ranks by name, until something they read changes.
+	Spellbook-Events.lua, Trainer-Recording.lua and Spellbook-Core.lua call ns.InvalidateSpellRankRows on those
+	changes: a spell learned, a spell's data loading, the pet changing, a trainer's list recorded, a profile
+	change, the Spellbook switched back on after its events went unheard. A level
+	gained is caught here instead, by the level each set was built at, since UnitLevel still reports the old
+	level while PLAYER_LEVEL_UP fires.
 ]]
-function ns.AddSpellRanksTooltip(spellID, pet, blankFirst, rows)
-	rows = rows or (pet and ns.WhatsNextPetRows() or ns.WhatsNextRows())
-	local row
-	for _, candidate in ipairs(rows) do
-		if candidate.id == spellID then
-			row = candidate
-			break
-		end
+local cache = {}
+
+function ns.InvalidateSpellRankRows(petOnly)
+	cache.pet = nil
+	if not petOnly then
+		cache.class = nil
 	end
+end
+
+local function RankKey(name, extra)
+	return (extra and "extra:" or "rank:") .. name
+end
+
+local function BuildIndex(rows)
+	local byId, ranks = {}, {}
+	for _, row in ipairs(rows) do
+		byId[row.id] = byId[row.id] or row
+		local key = RankKey(row.name, row.extra)
+		ranks[key] = ranks[key] or {}
+		table.insert(ranks[key], row)
+	end
+	for _, list in pairs(ranks) do
+		table.sort(list, ByLevel)
+	end
+	return { rows = rows, byId = byId, ranks = ranks }
+end
+
+local function CachedIndex(pet)
+	local key = pet and "pet" or "class"
+	local level = UnitLevel("player")
+	local petLevel = pet and UnitLevel("pet") or nil
+	local entry = cache[key]
+	if not entry or entry.level ~= level or entry.petLevel ~= petLevel then
+		entry = BuildIndex(pet and ns.WhatsNextPetRows() or ns.WhatsNextRows())
+		entry.level, entry.petLevel = level, petLevel
+		cache[key] = entry
+	end
+	return entry
+end
+
+--[[
+	Adds the ranks of spellID's spell to GameTooltip, for a tooltip outside the What's Next? tabs: mostly the
+	game's own spell tooltips (AddRanks, below, hooked onto every one), and also the Spell Book page's tiles
+	(Features/Spellbook/Macro-Button.lua) and the Pet Spell Book's rows. pet reads the pet's
+	abilities (ns.WhatsNextPetRows) rather than the class's (ns.WhatsNextRows); blankFirst puts a blank line
+	above them. Returns whether it added any: nothing for a spell the rows don't hold or with one rank.
+]]
+function ns.AddSpellRanksTooltip(spellID, pet, blankFirst)
+	local index = CachedIndex(pet)
+	local row = index.byId[spellID]
 	-- a spell the rows don't list by this ID (a rank the data leaves out) still finds its namesakes
 	if not row then
 		local name = ns.SpellName(spellID)
 		row = name and { id = spellID, name = name } or nil
 	end
-	if not row or #RankRows(rows, row) < 2 then
+	local ranks = row and index.ranks[RankKey(row.name, row.extra)]
+	if not ranks or #ranks < 2 then
 		return false
 	end
 	if blankFirst then
 		GameTooltip:AddLine(" ")
 	end
-	AddRankLines(rows, row)
+	AddRankLinesFor(row, ranks)
 	return true
 end
 
--- An action bar's tooltip refreshes several times a second; the rows behind it are rebuilt at most once a second.
-local ROWS_LIFETIME = 1
-local cache = {}
-
-local function CachedRows(pet)
-	local key = pet and "pet" or "class"
-	local entry = cache[key]
-	local now = GetTime()
-	if not entry or now - entry.at > ROWS_LIFETIME then
-		entry = { at = now, rows = pet and ns.WhatsNextPetRows() or ns.WhatsNextRows() }
-		cache[key] = entry
+--[[
+	The class's What's Next? row for spellID, else the lowest-level row named name, or nil: what gives a macro
+	menu's ranks and grouped spells (Features/Spellbook/Macro-Menu-Sections.lua) the same status and source as the
+	tooltip's.
+]]
+function ns.ClassRankRow(spellID, name)
+	local index = CachedIndex(false)
+	if spellID and index.byId[spellID] then
+		return index.byId[spellID]
 	end
-	return entry.rows
+	local found
+	for _, row in ipairs(index.rows) do
+		if name and row.name == name and (not found or (row.level or 0) < (found.level or 0)) then
+			found = row
+		end
+	end
+	return found
 end
 
 -- One set of rank lines per showing, though the client may report the same spell more than once.
@@ -132,17 +238,21 @@ local function AddRanks(tooltip, spellID)
 	if tooltip ~= GameTooltip or added or ns.spellTooltipHasOwnRanks or not ns.IsSpellbookEnabled() then
 		return
 	end
+	-- the Enhanced Spellbook panel's What's Next Ability Tooltips switch
+	if not ns.db.global.abilityTooltipRanks then
+		return
+	end
 	-- in combat a spell's tooltip stays the game's own, short
 	if InCombatLockdown() then
 		return
 	end
-	if not spellID or not ns.IsPlain(spellID) or not ns.AddSpellRanksTooltip then
+	if not spellID or not ns.IsPlain(spellID) then
 		return
 	end
 	-- the class's spells first, then a hunter's beast's or a warlock's demon's abilities
 	if
-		ns.AddSpellRanksTooltip(spellID, false, true, CachedRows(false))
-		or (ns.HasWhatsNextPet() and ns.AddSpellRanksTooltip(spellID, true, true, CachedRows(true)))
+		ns.AddSpellRanksTooltip(spellID, false, true)
+		or (ns.HasWhatsNextPet() and ns.AddSpellRanksTooltip(spellID, true, true))
 	then
 		added = true
 		tooltip:Show()

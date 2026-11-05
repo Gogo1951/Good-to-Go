@@ -55,19 +55,29 @@ end
 
 --[[
 	Records the services the trainer window lists (with its current filters: by default the available and
-	unavailable ones, which are the unlearned spells).
+	unavailable ones, which are the unlearned spells). A Hunter trainer also lists the pet abilities it
+	teaches (Growl and the like), which belong to the pet, so those are skipped.
 ]]
+local function IsPetService(index)
+	if not IsTrainerServiceLearnSpell then
+		return false
+	end
+	local _, isPetLearnSpell = IsTrainerServiceLearnSpell(index)
+	return isPetLearnSpell and true or false
+end
+
 local function RecordServices()
 	if not ns.db or not IsClassTrainer() then
 		return
 	end
 	local spells = Recorded(true)
 	for index = 1, GetNumTrainerServices() or 0 do
-		local id = ns.GetTrainerServiceSpellId(index)
+		local id = not IsPetService(index) and ns.GetTrainerServiceSpellId(index)
 		if id then
 			spells[id] = GetTrainerServiceLevelReq(index) or spells[id] or 0
 		end
 	end
+	ns.InvalidateSpellRankRows()
 end
 
 -- TRAINER_UPDATE also fires when the window's filters change.

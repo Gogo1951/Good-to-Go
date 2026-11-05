@@ -15,7 +15,8 @@ local _, ns = ...
 	ever share one, which a hash this short couldn't promise; past 3,843 tags they run to three. A page macro
 	gets its tag only when a WoW macro is written for it (ns.AssignMacroTag); until then its body carries "00",
 	which is never handed out, so its length is already right. The register is keyed by what the macro is
-	for: this character's key with the spell's full name, so a character finds only its own.
+	for: this character's key with the spell's key (ns.MacroSpellKey, its Rank 1 ID), so a character finds
+	only its own, in any game language.
 ]]
 local TAG_PREFIX = "#"
 local TAG_DIGITS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
@@ -34,19 +35,14 @@ end
 local function MacroIdentity(macro)
 	local kind = macro.focus and "focus"
 		or macro.copy and "copy" .. macro.copy
-		or macro.rank and "rank " .. macro.rank
+		or macro.rankID and "rank " .. macro.rankID
 		or "spell"
-	return ns.MacroOwnerKey() .. ":" .. kind .. ":" .. macro.name
+	return ns.MacroOwnerKey() .. ":" .. kind .. ":" .. ns.MacroSpellKey(macro)
 end
 
--- The register key of this character's own macro for a spell, by the spell's name.
-local function SpellIdentity(name)
-	return MacroIdentity({ name = name })
-end
-
--- Whether a WoW macro was ever written for this character's own macro for a spell.
-function ns.HasSpellMacroTag(name)
-	return ns.db.global.macroTags[SpellIdentity(name)] ~= nil
+-- Whether a WoW macro was ever written for this character's own macro for a spell, by its Rank 1 ID.
+function ns.HasSpellMacroTag(baseID)
+	return ns.db.global.macroTags[MacroIdentity({ baseID = baseID })] ~= nil
 end
 
 -- Moves one macro's tag from the first spell's identity to the second's, when the second has none yet.
@@ -63,15 +59,15 @@ end
 	Moves the tag of one spell's macro to another spell's, when that spell has no tag of its own yet, so the
 	WoW macro written for the first is found, rewritten and renamed as the second's (see ns.HandOverMacro).
 	Its focus copy's tag and each Duplicate's (copies, the first spell's copy numbers) move with it. Returns
-	whether the spell's own tag moved.
+	whether the spell's own tag moved. from and to are the spells' Rank 1 IDs.
 ]]
 function ns.HandOverMacroTag(from, to, copies)
-	if not MoveTag({ name = from }, { name = to }) then
+	if not MoveTag({ baseID = from }, { baseID = to }) then
 		return false
 	end
-	MoveTag({ name = from, focus = true }, { name = to, focus = true })
+	MoveTag({ baseID = from, focus = true }, { baseID = to, focus = true })
 	for _, number in ipairs(copies) do
-		MoveTag({ name = from, copy = number }, { name = to, copy = number })
+		MoveTag({ baseID = from, copy = number }, { baseID = to, copy = number })
 	end
 	return true
 end

@@ -1,5 +1,7 @@
 local _, ns = ...
 
+local L = ns.L
+
 --------------------------------------------------------------------------------
 -- Use Lines
 --------------------------------------------------------------------------------
@@ -166,7 +168,7 @@ end
 
 --[[
     Assembles a standard macro body — the single answer to "what does a
-    Connoisseur macro body look like." The canonical emitted macro is:
+    Consumable Macros macro body look like." The canonical emitted macro is:
 
       #showtooltip item:13446
       /run GtGFire(13446)
@@ -246,7 +248,6 @@ function ns.BuildStandardBody(
 			actionBlock = actionHead .. "/use item:" .. itemID
 		end
 
-		-- Append the stacked ranked lines (Health Potion stacking).
 		if stackIDs then
 			actionBlock = actionBlock .. "\n" .. BuildUseBlock(stackIDs)
 		end
@@ -360,6 +361,23 @@ function ns.BuildStandardBody(
 	end
 	if #body > ns.MACRO_BODY_MAX_LENGTH and outOfCombatID then
 		return ns.BuildStandardBody(definition, itemID, useIDs, stackIDs, conjureInfo, appendText, nil, nil)
+	end
+
+	--[[
+	    Then the appended line (Water's Shadowmeld, Food's Stealth Eating).
+	    Past that only the tooltip, conjure and first /use lines are left,
+	    which nothing can shorten: the body is written as it is, the game
+	    cuts off its end, and the player is told once per macro.
+	]]
+	if #body > ns.MACRO_BODY_MAX_LENGTH and appendText and appendText ~= "" then
+		return ns.BuildStandardBody(definition, itemID, useIDs, stackIDs, conjureInfo, nil, nil, nil)
+	end
+	if #body > ns.MACRO_BODY_MAX_LENGTH then
+		local macroName = ns.MACRO_CONFIG[definition.typeName].macro
+		ns.WarnOnce(
+			L["CHAT_CONSUMABLE_MACRO_TOO_LONG"]:format(macroName, #body, ns.MACRO_BODY_MAX_LENGTH),
+			"consumableTooLong:" .. macroName
+		)
 	end
 
 	return body

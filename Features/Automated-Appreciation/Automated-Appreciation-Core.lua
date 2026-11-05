@@ -5,20 +5,20 @@ local _, ns = ...
 --------------------------------------------------------------------------------
 
 --[[
-    Thanks for the Buff's settings are account-wide, so a profile switch, copy
+    Automated Appreciation's settings are account-wide, so a profile switch, copy
     or reset leaves them as they were; this re-seeds the watched-buff lists and
-    brings the Buff Window and the Thank You macros in line anyway, so a Reset
+    brings Buff Duty and the Thank You macros in line anyway, so a Reset
     never leaves them reading a stale table.
     Features/Core.lua calls this and then redraws every open panel.
 ]]
-function ns.ApplyThanksForTheBuffProfile()
-	ns.UpdateThanksForTheBuffEvents()
+function ns.ApplyAutomatedAppreciationProfile()
+	ns.UpdateAutomatedAppreciationEvents()
 	if ns.PopulateWatchedBuffs then
 		ns.PopulateWatchedBuffs()
 	end
-	if ns.PopulateBuffWindowAudience then
-		ns.PopulateBuffWindowAudience()
-		ns.RefreshBuffWindow()
+	if ns.PopulateBuffDutyAudience then
+		ns.PopulateBuffDutyAudience()
+		ns.RefreshBuffDuty()
 	end
 	if ns.ReconcileMacros then
 		ns.ReconcileMacros()
@@ -30,28 +30,25 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Every feature's on/off switch, placed twice by the options panels: at the top
-    of the feature's own panel and on Thanks for the Buff's heading page. Both
-    copies bind the same setting and carry the same caption and tooltip, and
-    flipping either repaints every panel so the other copy and the settings it
-    hides follow at once.
+    The on/off field of each Automated Appreciation feature. Its options toggles,
+    caption and tooltip included, are built with every other feature's in
+    Options/Options-Utilities.lua (ns.OptionsFeatureSwitch); this table is what
+    the feature code needs to read and flip them.
 ]]
 ns.FEATURE_SWITCHES = {
 	--[[
-	    key: the profile subtable, setting: its on/off field, name/desc: locale keys,
-	    onChange: present only for a feature that must react the moment either copy flips.
+	    key: the account-wide subtable, setting: its on/off field,
+	    onChange: present only for a feature that must react the moment it flips.
 	]]
-	{ key = "strangers", setting = "enabled", name = "STRANGERS_ENABLE", desc = "STRANGERS_ENABLE_DESCRIPTION" },
-	{ key = "teammates", setting = "enabled", name = "TEAMMATES_ENABLE", desc = "TEAMMATES_ENABLE_DESCRIPTION" },
-	{ key = "goodNews", setting = "whisperEnabled", name = "GOOD_NEWS_ENABLE", desc = "GOOD_NEWS_ENABLE_DESCRIPTION" },
-	{ key = "services", setting = "enabled", name = "SERVICES_ENABLE", desc = "SERVICES_ENABLE_DESCRIPTION" },
+	{ key = "strangers", setting = "enabled" },
+	{ key = "teammates", setting = "enabled" },
+	{ key = "goodNews", setting = "whisperEnabled" },
+	{ key = "services", setting = "enabled" },
 	{
 		key = "buffWindow",
 		setting = "enabled",
-		name = "BUFF_WINDOW_ENABLE",
-		desc = "BUFF_WINDOW_ENABLE_DESCRIPTION",
 		onChange = function()
-			ns.RefreshBuffWindow()
+			ns.RefreshBuffDuty()
 		end,
 	},
 }
@@ -78,14 +75,14 @@ function ns.IsFeatureOn(key)
 end
 
 --[[
-    Flips a feature from anywhere -- either copy of its toggle, the mini-map
+    Flips a feature from anywhere -- either copy of its options toggle, the mini-map
     button, the Buff Duty window's close button -- so each one reacts and every
     open panel repaints the same way.
 ]]
 function ns.SetFeatureSwitch(key, value)
 	local feature = ns.GetFeatureSwitch(key)
 	ns.db.global[key][feature.setting] = value
-	ns.UpdateThanksForTheBuffEvents()
+	ns.UpdateAutomatedAppreciationEvents()
 	if feature.onChange then
 		feature.onChange()
 	end
@@ -97,29 +94,18 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Every event Thanks for the Buff handles. Each feature file attaches its
+    Every event Automated Appreciation handles. Each feature file attaches its
     handler with ns.SetEventHandler; attaching the same event twice replaces
-    the earlier handler -- one owner per event.
+    the earlier handler -- one owner per event. Buff Duty has a module of its
+    own (Features/Buff-Duty/Buff-Duty-Events.lua).
 ]]
 local EVENTS = {
 	"PLAYER_LOGIN",
-	"PLAYER_ENTERING_WORLD",
 	"UNIT_SPELLCAST_SENT",
 	"UNIT_SPELLCAST_SUCCEEDED",
 	"LOADING_SCREEN_DISABLED",
 	"UNIT_AURA",
-	"GROUP_ROSTER_UPDATE",
-	"SPELLS_CHANGED",
-	"PLAYER_REGEN_DISABLED",
-	"PLAYER_REGEN_ENABLED",
-	"PLAYER_TARGET_CHANGED",
-	"UNIT_PET",
-	"SPELL_UPDATE_COOLDOWN",
 	"GET_ITEM_INFO_RECEIVED",
-	"UNIT_INVENTORY_CHANGED",
-	"BAG_UPDATE_DELAYED",
-	"REPLACE_ENCHANT",
-	"UI_ERROR_MESSAGE",
 }
 
 -- Forever has no combat log, and registering COMBAT_LOG_EVENT_UNFILTERED there errors.
@@ -128,16 +114,15 @@ if ns.FLAVOR ~= "Camelot" then
 end
 
 --[[
-    Unit events Thanks for the Buff only ever needs for these units. Every
-    other event subscribes unfiltered -- UNIT_AURA included, since the Buff
-    Window reads every group member.
+    Unit events Automated Appreciation only ever needs for these units. UNIT_AURA
+    is set in ns.UpdateAutomatedAppreciationEvents instead: the player alone, for
+    Forever's praise. Every other event subscribes unfiltered.
 ]]
 local EVENT_UNITS = {
 	UNIT_SPELLCAST_SENT = { "player", "pet" },
-	UNIT_INVENTORY_CHANGED = { "player" },
 }
 
-local MODULE = "ThanksForTheBuff"
+local MODULE = "AutomatedAppreciation"
 local eventHandlers = {}
 
 function ns.SetEventHandler(event, handler)
@@ -154,43 +139,19 @@ end)
 --[[
     The firehoses, each subscribed only while a feature that reads it is on:
 
-      COMBAT_LOG_EVENT_UNFILTERED  Stranger and Teammate praise, Good News's
-                                   resurrects, and Buff Duty's resurrects and
-                                   Return the Favor. Never on Forever.
+      COMBAT_LOG_EVENT_UNFILTERED  Stranger and Teammate praise, and Good
+                                   News's resurrects. Never on Forever.
       UNIT_SPELLCAST_SENT          Good News, naming who a cast of yours is for.
-      UNIT_SPELLCAST_SUCCEEDED     Good News, Service Alerts, and Buff Duty's
-                                   Buff Key and resurrects.
-      UNIT_AURA                    Buff Duty's group reads, every unit, while
-                                   it is on for your class; otherwise, on
-                                   Forever, your own auras for Stranger and
+      UNIT_SPELLCAST_SUCCEEDED     Good News and Service Alerts.
+      UNIT_AURA                    On Forever, your own auras for Stranger and
                                    Teammate praise.
-
-    and the events only the Buff Duty window reads (BUFF_DUTY_EVENTS), on
-    while it is on for your class. PLAYER_REGEN_DISABLED and
-    PLAYER_REGEN_ENABLED stay on regardless: a change made to the window in
-    combat, switching it off included, waits for combat to end.
 ]]
-local BUFF_DUTY_EVENTS = {
-	GROUP_ROSTER_UPDATE = true,
-	UNIT_PET = true,
-	PLAYER_TARGET_CHANGED = true,
-	SPELLS_CHANGED = true,
-	UNIT_INVENTORY_CHANGED = true,
-	BAG_UPDATE_DELAYED = true,
-	SPELL_UPDATE_COOLDOWN = true,
-	REPLACE_ENCHANT = true,
-	UI_ERROR_MESSAGE = true,
-}
-
 local FEATURE_EVENTS = {
 	COMBAT_LOG_EVENT_UNFILTERED = true,
 	UNIT_SPELLCAST_SENT = true,
 	UNIT_SPELLCAST_SUCCEEDED = true,
 	UNIT_AURA = true,
 }
-for event in pairs(BUFF_DUTY_EVENTS) do
-	FEATURE_EVENTS[event] = true
-end
 
 for _, event in ipairs(EVENTS) do
 	if not FEATURE_EVENTS[event] then
@@ -198,38 +159,25 @@ for _, event in ipairs(EVENTS) do
 	end
 end
 
-function ns.UpdateThanksForTheBuffEvents()
+function ns.UpdateAutomatedAppreciationEvents()
 	if not (ns.db and ns.db.global) then
 		return
 	end
 	local IsOn = ns.IsFeatureOn
 	local praise = IsOn("strangers") or IsOn("teammates")
 	local goodNews, services = IsOn("goodNews"), IsOn("services")
-	local buffDuty = ns.IsBuffDutyOnForClass and ns.IsBuffDutyOnForClass() or false
 	local wanted = {
-		COMBAT_LOG_EVENT_UNFILTERED = praise or goodNews or buffDuty,
+		COMBAT_LOG_EVENT_UNFILTERED = praise or goodNews,
 		UNIT_SPELLCAST_SENT = goodNews,
-		UNIT_SPELLCAST_SUCCEEDED = goodNews or services or buffDuty,
+		UNIT_SPELLCAST_SUCCEEDED = goodNews or services,
 	}
-	for event in pairs(BUFF_DUTY_EVENTS) do
-		wanted[event] = buffDuty
-	end
 	-- EVENTS, not wanted: on Forever the combat log is never in the list.
 	for _, event in ipairs(EVENTS) do
 		if FEATURE_EVENTS[event] and event ~= "UNIT_AURA" then
 			ns.SetModuleEvent(MODULE, event, wanted[event], unpack(EVENT_UNITS[event] or {}))
 		end
 	end
-	if buffDuty then
-		ns.SetModuleEvent(MODULE, "UNIT_AURA", true)
-	elseif praise and ns.OnForeverPlayerAura then
-		ns.SetModuleEvent(MODULE, "UNIT_AURA", true, "player")
-	else
-		ns.SetModuleEvent(MODULE, "UNIT_AURA", false)
-	end
-	if ns.SetBuffWindowWatching then
-		ns.SetBuffWindowWatching(buffDuty)
-	end
+	ns.SetModuleEvent(MODULE, "UNIT_AURA", praise and ns.OnForeverPlayerAura ~= nil, "player")
 end
 
 --------------------------------------------------------------------------------
@@ -239,24 +187,14 @@ end
 --[[
     Login-time setup, once Features/Core.lua has opened the database and
     registered the panels, which draw the display groups on open and so need
-    nothing from here. Core only calls each feature's setup hook, in order.
+    nothing from here. This handler calls each feature's setup hook, in order.
 ]]
 ns.SetEventHandler("PLAYER_LOGIN", function()
-	ns.UpdateThanksForTheBuffEvents()
+	ns.UpdateAutomatedAppreciationEvents()
 	if ns.SetupBuffTracking then
 		ns.SetupBuffTracking()
 	end
-	if ns.SetupBuffWindow then
-		ns.SetupBuffWindow()
-	end
 	if ns.CreateAutoMacro then
 		ns:CreateAutoMacro()
-	end
-end)
-
--- Buff Duty's In Instance: every way into or out of one is a loading screen.
-ns.SetEventHandler("PLAYER_ENTERING_WORLD", function()
-	if ns.db and ns.RequestBuffWindowRefresh then
-		ns.RequestBuffWindowRefresh()
 	end
 end)

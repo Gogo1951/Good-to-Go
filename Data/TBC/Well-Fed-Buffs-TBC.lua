@@ -36,10 +36,10 @@ ns.WELL_FED_ICON_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-10-23, TBC Anniversary 2.5.6.70006
+	2026-11-04, TBC Anniversary 2.5.6.70577
 
 Notes
-	- ns.WELL_FED_BUFF_IDS lists food buffs Features/Scanner-Auras.lua must count as Well Fed although they aren't named "Well Fed" or show another icon, so the buff-food check doesn't nag a player who already has one.
+	- ns.WELL_FED_BUFF_IDS lists food buffs Features/Macros-for-Consumables/Scanner/Scanner-Auras.lua must count as Well Fed although they aren't named "Well Fed" or show another icon, so the buff-food check doesn't nag a player who already has one.
 	- ns.WELL_FED_ICON_IDS lists the icons Well Fed buffs show (136000, and 133943 for the reworked foods), matched on the aura's icon when its spell ID is in no table.
 	- Fizzy Energy Drink's buff (29040) shows icon 132489, which no icon entry matches, so it is listed by ID.
 	- The Brewfest drinks apply a separate buff named "Well Fed" (with quotes) on icon 133696, which "Completely Hammered" also uses, so they are listed by ID rather than matched by icon.

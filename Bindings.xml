@@ -4,9 +4,9 @@
     binding needs its keys moved over (ns.MigrateBuffKeys,
     ns.MigrateSpellbookBinding).
 
-    Toggle GtG Spellbook (Features/Spellbook/Key-Bindings.lua) calls
+    Toggle Enhanced Spellbook (Features/Spellbook/Key-Bindings.lua) calls
     a global, since Bindings.xml can call nothing else. Buff Duty's Buff Key
-    (Features/Automated-Appreciation/Buff-Window-Keys.lua) clicks a hidden secure
+    (Features/Buff-Duty/Buff-Duty-Keys.lua) clicks a hidden secure
     button, which picks the next buff on the list and casts it; a macro clicks
     the same button: /click GtGBuffKey.
 

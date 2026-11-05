@@ -42,7 +42,7 @@ ns.BANDAGES = {
 How We Got the Data
 
 Last Validated
-	2026-11-03, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-04, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- Every First Aid bandage on this client, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) to rank the Bandage macro's picks. The family is the items whose use spell is on the bandage cooldown category (150) and heals over time.

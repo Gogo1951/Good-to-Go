@@ -97,11 +97,11 @@ ns.DIAGNOSTIC_REPORTS = {
 			return ns:BuildContextReport()
 		end,
 	},
-	buffWindow = {
-		title = D.BUFF_WINDOW_TITLE,
-		description = D.BUFF_WINDOW_DESCRIPTION,
+	buffDuty = {
+		title = D.BUFF_DUTY_TITLE,
+		description = D.BUFF_DUTY_DESCRIPTION,
 		build = function()
-			return ns:BuildBuffWindowContextReport()
+			return ns:BuildBuffDutyContextReport()
 		end,
 	},
 	emotes = {
@@ -221,7 +221,7 @@ ns.DIAGNOSTIC_SECTIONS = {
 			"restocker",
 			"readiness",
 			"buffsContext",
-			"buffWindow",
+			"buffDuty",
 			"emotes",
 			"page",
 			"macros",

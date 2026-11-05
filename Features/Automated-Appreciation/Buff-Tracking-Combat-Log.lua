@@ -120,17 +120,22 @@ local function OnCombatLogEventUnfiltered()
 		ns.ClaimPendingResurrect(destGUID, spellID)
 	end
 
-	-- Buff Duty hides a dead player's resurrect icon while anyone's offer waits on them.
-	if isResurrect and ns.BuffWindow and ns.BuffWindow.NoteResurrect then
-		ns.BuffWindow.NoteResurrect(destGUID)
-	end
-
 	--[[
 	    Your own casts are Good News's business, and it runs off the cast events
 	    instead (Features/Automated-Appreciation/Good-News.lua); everything below reacts to what OTHERS
 	    do to you.
 	]]
 	if not sourceGUID or sourceGUID == playerGUID then
+		return
+	end
+
+	--[[
+	    And only what lands on you: HandleTracked (Praise.lua) drops any buff on
+	    someone else, services aside, which are dropped below, and a stranger
+	    buff is one on you. Stopping here spares a raid's every other buff the
+	    lookup.
+	]]
+	if destGUID ~= playerGUID then
 		return
 	end
 
@@ -156,13 +161,12 @@ local function OnCombatLogEventUnfiltered()
         processing stays cheap, using the affiliation flag instead of a UnitIn*
         scan to recognize an outsider.
 
-        Ordered cheapest first, so a cast event or an aura landing on anyone but
-        you stops at a comparison before the GUID check allocates. Only that GUID
+        Ordered cheapest first, so a cast event stops at a comparison before
+        the GUID check allocates. Only that GUID
         check proves the source is a player (a pet's doesn't, whatever its flags
         claim); the flags then say whose side they're on and which group.
     ]]
 	local maybeStranger = isAura
-		and destGUID == playerGUID
 		and ns.IsPlayerGUID(sourceGUID)
 		and bit.band(sourceFlags or 0, COMBATLOG_OBJECT_REACTION_FRIENDLY) > 0
 		and bit.band(sourceFlags or 0, COMBATLOG_OBJECT_AFFILIATION_OUTSIDER) > 0

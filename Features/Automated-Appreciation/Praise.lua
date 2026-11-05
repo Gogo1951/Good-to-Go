@@ -210,7 +210,7 @@ local function HandleTracked(entry, spellID, creditGUID, creditName, destGUID)
 
 	--[[
 	    No-aura raid help reacts with the Service Alerts settings; everything cast
-	    on you (SOLO / GROUP) uses the Teammate Buffs settings.
+	    on you (SOLO / GROUP) uses the Combat Buffs settings.
 	]]
 	local db = (entry.type == Data.BUFF.SERVICE) and ns.db.global.services or ns.db.global.teammates
 	--[[

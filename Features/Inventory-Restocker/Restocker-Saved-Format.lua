@@ -121,19 +121,16 @@ end
 --[[
     Convert every saved item to its in-memory table form (called on login). Tolerates
     tables left behind by a crash/reload and hand-edited entries; keeps itemID synced
-    to the table key. Idempotent.
+    to the table key. Idempotent. The saved name is kept as it is: it goes stale
+    after a language switch or a rename, so whatever shows it asks the client for
+    the current one first (ns.RefreshRestockItemName), the window as it draws a row
+    and the shortfall list as it sorts, and no item is looked up before then.
 ]]
 function ns.InflateSavedRestockItems(db)
 	for _, list in pairs(db.lists or {}) do
 		for key, item in pairs(list) do
 			if type(item) == "string" then
-				local inflated = ItemFromString(item, key)
-				-- The client's name whenever it knows the item: a saved name goes stale after a language switch or a rename.
-				local info = ns.GetItemData(inflated.itemID)
-				if info and info.itemName and info.itemName ~= "" then
-					inflated.itemName = info.itemName
-				end
-				list[key] = inflated
+				list[key] = ItemFromString(item, key)
 			elseif type(item) == "table" then
 				CleanItem(item, tonumber(key) or item.itemID)
 			end

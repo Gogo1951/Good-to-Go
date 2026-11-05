@@ -11,13 +11,15 @@ local L = ns.L
     player across every character and no profile switch can move it.
 
     Both width numbers are set by the LIST, not the rows above and below it, and
-    they are the sum of two things that each have their own floor:
+    they are the sum of three things that each have their own floor:
 
       the category pane   its widest ALLOWED width (180) plus the gap (8)
       the table           591, which holds the item name at its readable floor
-      window chrome       the inset (2 + 4), its padding (8), the scroll bar (26)
+      window chrome       the inset (ns.RESTOCK_WINDOW_BANDS: 4 left, 6 right), its
+                          padding (8), the scroll bar (26)
 
-    which is where MIN_WIDTH comes from, with 14 pixels over the name's floor. The pane sizes itself to the longest type
+    and MIN_WIDTH is that sum, built from the bands' own numbers so a change to
+    the inset carries through. The pane sizes itself to the longest type
     name it actually has to draw (see ns.ResolveRestockGroupPaneWidth) and is capped so this
     number stays honest: MIN_WIDTH is set against the CAP rather than the usual
     width, so the item name keeps its floor even on a client whose type names run
@@ -34,7 +36,8 @@ local L = ns.L
 ]]
 local DEFAULT_WIDTH = 870
 local DEFAULT_HEIGHT = 440
-local MIN_WIDTH = 819
+local BANDS = ns.RESTOCK_WINDOW_BANDS
+local MIN_WIDTH = 180 + 8 + 591 + BANDS.INSET_LEFT + BANDS.INSET_RIGHT + 8 + 26
 local MIN_HEIGHT = 300
 local MAX_WIDTH = 1600
 local MAX_HEIGHT = 1200
@@ -69,6 +72,7 @@ end
     local that is not yet in scope on that line compiles as a nil global instead.
 ]]
 local RelayoutFrame
+local RefitGroupPane
 
 local function CreateAddonFrame()
 	local settings = ns.restockSettings
@@ -114,7 +118,8 @@ local function CreateAddonFrame()
 	    orders under the list are read from the bags, which nothing repaints while
 	    the window is hidden.
 	]]
-	addonFrame:SetScript("OnShow", function()
+	addonFrame:SetScript("OnShow", function(self)
+		RefitGroupPane(self)
 		ns.UpdateRestockList()
 	end)
 
@@ -280,18 +285,18 @@ end
     A bare header over no rows, with "All Items 0" beside it, reads as a window
     that failed to load; this says the list is empty and what to do about it.
 
-    The block is centred on the list area as a stack hung from its title, so a
+    The block is centered on the list area as a stack hung from its title, so a
     body that wraps to another line in another locale pushes the button down
     rather than running under it. The body is capped in width for the same
     reason a paragraph is: a sentence spanning the whole window is hard to read.
     In English it wraps to three lines, which is what the title's offset
-    centres the stack for.
+    centers the stack for.
 
     It takes no mouse, so an item dropped on it falls through to the window's
     own drop handler like a drop on any other bare part of the window.
 ]]
 local EMPTY_BODY_WIDTH = 440
-local EMPTY_TITLE_OFFSET = 48 -- the title's foot above the area's centre, which centres the stack
+local EMPTY_TITLE_OFFSET = 48 -- the title's foot above the area's center, which centers the stack
 local EMPTY_GAP = 10
 local EMPTY_BUTTON_WIDTH = 140
 local EMPTY_BUTTON_HEIGHT = 28
@@ -380,10 +385,27 @@ function ns.SetRestockWindowClosesOnEscape(closes)
 	end
 end
 
+--[[
+    Measured again each time the window opens, not only when it is built: a font
+    can measure as zero at login, and items of a new type may have been added
+    since. A new width moves the table's left edge with the pane's right one.
+]]
+function RefitGroupPane(addonFrame)
+	local before = ns.restockGroupPaneWidth
+	ns.ResolveRestockGroupPaneWidth()
+	if ns.restockGroupPaneWidth == before then
+		return
+	end
+	ns.restockGroupPane:SetWidth(ns.restockGroupPaneWidth)
+	local left = 8 + ns.restockGroupPaneWidth + ns.RESTOCK_GROUP_PANE_GAP
+	addonFrame.scrollFrame:SetPoint("TOPLEFT", addonFrame.listInset, "TOPLEFT", left, -ListTopInset())
+	RelayoutFrame(addonFrame)
+end
+
 function ns.CreateRestockWindow()
 	-- Row and button heights come from the font, so measure before anything is built.
 	ns.RefreshRestockRowMetrics()
-	-- The table's left edge is anchored past the category pane, so size it first.
+	-- The table's left edge is anchored past the category pane, so size it first; each opening sizes it again (RefitGroupPane).
 	ns.ResolveRestockGroupPaneWidth()
 
 	local addonFrame = CreateAddonFrame()

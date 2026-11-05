@@ -9,8 +9,8 @@ local _, ns = ...
     One-time upgrade shim. Delete on the first code pass after that date, all
     three pieces together:
       1. this file
-      2. its tagged line in all three flavor TOCs (Good-to-Go_Vanilla.toc,
-         _TBC.toc and _Camelot.toc)
+      2. its tagged line in all four flavor TOCs (Good-to-Go_Vanilla.toc,
+         _TBC.toc, _Camelot.toc and _Mists.toc)
       3. the ns.RekeyCharactersByFullName() call in Features/Core.lua
 ]]
 

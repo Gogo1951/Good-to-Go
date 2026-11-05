@@ -1,33 +1,34 @@
 local _, ns = ...
 
 --[[
-	The per-spell macro options: which options a page macro offers, which the player turned on, and the
-	defaults each kind of macro starts from. Features/Spellbook/Macro-Body.lua turns them into macro text. The
+	The per-spell macro options: which options a page macro offers and which the player turned on, over the
+	defaults each kind of macro starts from (Features/Spellbook/Macro-Kinds.lua). Features/Spellbook/Macro-Body.lua
+	turns them into macro text. The
 	page categories are Features/Spellbook/Page-Categories.lua, and the target priority
 	Features/Spellbook/Target-Priority.lua.
 ]]
 
 --[[
-	Per-spell settings, on the character's profile, each a table keyed by the spell's name as this client
-	gives it: "cursor" (macro casts a ground-targeted
+	Per-spell settings, on the character's profile, each a table keyed by the macro's settings key
+	(SettingsKey, built from the spell's Rank 1 ID, so the same in every language): "cursor" (macro casts a ground-targeted
 	spell where the cursor points), "focus" (the page also lists a copy of the macro that casts on the focus
 	target), "pet" (a summon macro casts the pet's ability while that pet is out), "stance" (the macro switches to a stance the spell can be cast in first), "petAttack"
 	(the macro also sends the pet to attack), "stopCast" (the macro stops the current cast first),
 	"startAttack" (the macro starts melee auto-attack after the cast), "noToggle" (a form or aspect's macro
 	casts "!Name", which never cancels it when it is already on), "targetRank" (a ranked friendly spell's macro
 	casts the highest rank its target's level can take, rewritten as the target changes), "fixedRank" (a
-	ranked spell's macro always casts this rank, by its text, e.g. "Rank 3"), "targetEnemy" (an enemy spell's
+	ranked spell's macro always casts this rank, by the rank's own spell ID), "targetEnemy" (an enemy spell's
 	macro targets the nearest enemy first when there is no living hostile target), "targetFriend" (a
 	friendly spell's macro targets the nearest friend first when there is no living friendly target), "combatOnly" (the macro
 	casts only in combat), "noCombat" (only out of combat; see ns.CombatCheck), "oncePerCombat" (the macro casts once until combat ends or the target changes),
 	"oncePerTarget" (the macro casts once until the target changes), "stopAttack" (the macro stops melee
-	first), "stopIfChanneling" (the macro does nothing while any spell is channelling), "stopIfStealthed" (the macro does nothing while the player is stealthed), "hideErrors" (the macro clears the error text after), "muteErrors" (the macro mutes error sounds while it runs), "cancelForm" (the macro leaves a form first), "autoShot" (the macro starts Auto Shot,
+	first), "stopIfChanneling" (the macro does nothing while any spell is channeling), "stopIfStealthed" (the macro does nothing while the player is stealthed), "hideErrors" (the macro clears the error text after), "muteErrors" (the macro mutes error sounds while it runs), "cancelForm" (the macro leaves a form first), "autoShot" (the macro starts Auto Shot,
 	or the wand, after the cast) or "groupVersion" (a right-click casts the spell's group version, or a group
 	spell's single version). Each is true
 	or false where the player set it, overriding the macro kind's default (see KindDefault), and nil where the
-	macro follows that default, except "fixedRank", which holds the rank text, or nil for the highest rank.
+	macro follows that default, except "fixedRank", which holds the rank's spell ID, or nil for the highest rank.
 	"useItems" holds a list of equipment slots instead of a flag: the macro uses
-	each slot's item, in that order, before the cast. "groupedSpells" holds a list of spell names too: the
+	each slot's item, in that order, before the cast. "groupedSpells" holds a list of Rank 1 spell IDs: the
 	spells of the macro's SPELL_GROUPS group ticked in its Grouped Spells submenu (see ns.CastSpellName), and
 	"targetPriority" a list of units, who it casts on in turn (see ns.TargetPriority), and "conditionals" a list
 	of rows, each a spell cast in the macro's place when its conditions match (see ns.Conditionals).
@@ -41,17 +42,38 @@ end
 ns.SpellSettings = SpellSettings
 
 --[[
-	The key a macro's own settings sit under: the spell's name, or for a copy made with Duplicate the name and
-	its number ("Drain Soul #2"), and for a rank's macro (Show All Spell Ranks) the name and its rank
-	("Fireball (Rank 3)"), which no spell is called, so a copy's settings are its own.
+	What a macro's saved data is keyed by, the same in every language and through every rank trained: its
+	spell's Rank 1 ID (macro.baseID, see BaseSpellID in Features/Spellbook/Macro-Builder/Macro-Builder.lua), as
+	a string, so it never reads as a list index. A consumable's macro casts no spell, so it goes by its macro
+	type ("consumable:Food").
+]]
+local function MacroSpellKey(macro)
+	if macro.baseID then
+		return tostring(macro.baseID)
+	end
+	return "consumable:" .. tostring(macro.type)
+end
+
+ns.MacroSpellKey = MacroSpellKey
+
+-- A Duplicate's settings key: its spell's key and its number ("1120#2").
+function ns.CopySettingsKey(spellKey, number)
+	return spellKey .. "#" .. number
+end
+
+--[[
+	The key a macro's own settings sit under: its spell's key (MacroSpellKey), or for a copy made with Duplicate
+	that key and its number ("1120#2"), and for a rank's macro (Show All Spell Ranks) that key and the rank's own
+	spell ID ("133@8400"), so a copy's settings are its own.
 ]]
 local function SettingsKey(macro)
+	local key = MacroSpellKey(macro)
 	if macro.copy then
-		return macro.name .. " #" .. macro.copy
-	elseif macro.rank then
-		return macro.name .. " (" .. macro.rank .. ")"
+		return ns.CopySettingsKey(key, macro.copy)
+	elseif macro.rankID then
+		return key .. "@" .. macro.rankID
 	end
-	return macro.name
+	return key
 end
 
 ns.SettingsKey = SettingsKey
@@ -69,101 +91,6 @@ end
 -- Both read by the target priority (Features/Spellbook/Target-Priority.lua), which stores a list the same way.
 ns.GetMacroSetting = GetSetting
 ns.StoreMacroSetting = StoreSetting
-
---[[
-	The kinds of spell macro, in the order the options list them. A spell's kind is what decides most of its
-	menu: who it can be cast on, or where.
-]]
-ns.MACRO_KINDS = {
-	{ key = "enemy", labelKey = "KIND_ENEMY", descKey = "KIND_ENEMY_DESCRIPTION" },
-	{ key = "friendly", labelKey = "KIND_FRIENDLY", descKey = "KIND_FRIENDLY_DESCRIPTION" },
-	{ key = "buff", labelKey = "KIND_BUFF", descKey = "KIND_BUFF_DESCRIPTION" },
-	{ key = "resurrect", labelKey = "KIND_RESURRECT", descKey = "KIND_RESURRECT_DESCRIPTION" },
-	{ key = "anyone", labelKey = "KIND_ANYONE", descKey = "KIND_ANYONE_DESCRIPTION" },
-	{ key = "ground", labelKey = "KIND_GROUND", descKey = "KIND_GROUND_DESCRIPTION" },
-	{ key = "form", labelKey = "KIND_FORM", descKey = "KIND_FORM_DESCRIPTION" },
-	{ key = "self", labelKey = "KIND_SELF", descKey = "KIND_SELF_DESCRIPTION" },
-}
-
--- A kind's row, by its key.
-function ns.KindRow(kind)
-	for _, row in ipairs(ns.MACRO_KINDS) do
-		if row.key == kind then
-			return row
-		end
-	end
-	return nil
-end
-
-local TARGET_KINDS = { harm = "enemy", help = "friendly", exists = "anyone" }
-
---[[
-	A spell macro's kind, from the fields Macro-Builder.lua gives it: a ground-targeted spell, then a buff cast
-	on a friend (the class lists' buffs), then a resurrection cast on a dead friend (the class lists'
-	resurrect), then one cast on an enemy, a friend or either, then a form, stance,
-	aura or aspect (the stance bar's forms and the spells that cancel when cast again), and every other spell,
-	cast on the player or around them.
-]]
-function ns.MacroKind(macro)
-	if macro.cursor then
-		return "ground"
-	end
-	if macro.buff and macro.target == "help" then
-		return "buff"
-	end
-	if macro.resurrect and macro.target == "help" then
-		return "resurrect"
-	end
-	if macro.target then
-		return TARGET_KINDS[macro.target]
-	end
-	if macro.noGlow or macro.toggles then
-		return "form"
-	end
-	return "self"
-end
-
---[[
-	The options a kind can turn on by default. The ones left out belong to one spell rather than a kind: the
-	focus copy, the pet's ability, the stance, a fixed rank and the items used first.
-]]
-ns.DEFAULTABLE_OPTIONS = {
-	"cursor",
-	"groupVersion",
-	"targetRank",
-	"stopAttack",
-	"stopCast",
-	"stopIfChanneling",
-	"stopIfStealthed",
-	"cancelForm",
-	"targetEnemy",
-	"targetFriend",
-	"startAttack",
-	"autoShot",
-	"petAttack",
-	"oncePerTarget",
-	"oncePerCombat",
-	"noToggle",
-	"combatOnly",
-	"noCombat",
-	"hideErrors",
-	"muteErrors",
-}
-
-local DEFAULTABLE = {}
-for _, key in ipairs(ns.DEFAULTABLE_OPTIONS) do
-	DEFAULTABLE[key] = true
-end
-
--- Whether a kind ("enemy", "friendly", ...) turns an option on by default.
-function ns.KindDefault(kind, key)
-	return DEFAULTABLE[key] == true and ns.db.profile.kindDefaults[kind][key] == true
-end
-
--- Stored as true or false, never nil, so turning off a default the add-on ships on (buffs' targetRank) sticks.
-function ns.SetKindDefault(kind, key, on)
-	ns.db.profile.kindDefaults[kind][key] = on == true
-end
 
 -- Drops a macro's own setting for an option, so it follows its kind's default.
 function ns.ClearOwnSetting(macro, key)
@@ -426,7 +353,7 @@ end
 
 --[[
 	Whether a macro has an options menu: every spell macro does, since every one offers stopCast. A
-	consumable's macro is Connoisseur's, set up on its Macros panel, so the page offers it no menu.
+	consumable's macro is Consumable Macros', set up on its Consumable Macros panel, so the page offers it no menu.
 ]]
 function ns.HasOptions(macro)
 	return not macro.consumable
@@ -490,20 +417,32 @@ function ns.SetRepeatRule(macro, rule)
 end
 
 --[[
-	The rank text the macro is fixed to, or nil when it isn't, or that rank isn't among its known ranks. A
-	rank's own macro is always fixed to its rank.
+	The known rank the macro is fixed to, from its saved spell ID, or nil when it isn't, or that rank isn't among
+	its known ranks. A rank's own macro is always fixed to its rank.
 ]]
+local function FixedRankEntry(macro)
+	local id = macro.rankID or (ns.OffersFixedRank(macro) and SpellSettings("fixedRank")[SettingsKey(macro)])
+	for _, rank in ipairs(id and macro.ranks or NO_SLOTS) do
+		if rank.id == id then
+			return rank
+		end
+	end
+	return nil
+end
+
+-- The text of the rank the macro is fixed to ("Rank 3"), as this client words it, or nil.
 function ns.FixedRank(macro)
 	if macro.rank then
 		return macro.rank
 	end
-	local text = ns.OffersFixedRank(macro) and SpellSettings("fixedRank")[SettingsKey(macro)]
-	for _, rank in ipairs(text and macro.ranks or NO_SLOTS) do
-		if rank.text == text then
-			return text
-		end
-	end
-	return nil
+	local rank = FixedRankEntry(macro)
+	return rank and rank.text
+end
+
+-- The spell ID of the rank the macro is fixed to, or nil.
+function ns.FixedRankID(macro)
+	local rank = FixedRankEntry(macro)
+	return rank and rank.id
 end
 
 --[[
@@ -514,9 +453,16 @@ function ns.AbilityRank(macro)
 	return ns.IsOptionOn(macro, "targetRank") and "targetRank" or ns.FixedRank(macro)
 end
 
+-- choice is as ns.AbilityRank gives it; a fixed rank is saved by its spell ID, not its text.
 function ns.SetAbilityRank(macro, choice)
 	SetOption(macro, "targetRank", choice == "targetRank")
-	SpellSettings("fixedRank")[SettingsKey(macro)] = choice ~= "targetRank" and choice or nil
+	local id
+	for _, rank in ipairs(choice and choice ~= "targetRank" and macro.ranks or NO_SLOTS) do
+		if rank.text == choice then
+			id = rank.id
+		end
+	end
+	SpellSettings("fixedRank")[SettingsKey(macro)] = id
 end
 
 -- Adds an equipment slot to the end of the macro's useItems list, or removes it.

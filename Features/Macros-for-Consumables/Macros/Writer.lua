@@ -8,7 +8,7 @@ local L = ns.L
 
 --[[
     CreateMacro wrapper, used by ns.WriteMacroBody. The perCharacter
-    argument is deliberately omitted: Connoisseur macros always live in
+    argument is deliberately omitted: Consumable Macros macros always live in
     the General (account-wide) tab. Every character shares those macros,
     and each character's first update pass after login rewrites the
     shared bodies to its own best items, so the macros self-heal on every
@@ -36,7 +36,7 @@ local macroSlotsWarned = false
 local function WarnMacroSlots()
 	if not macroSlotsWarned then
 		macroSlotsWarned = true
-		ns:PrintMessage(L["MESSAGE_MACRO_SLOTS_FULL"])
+		ns:PrintMessage(L["MESSAGE_MACRO_SLOTS_ARE_FULL"])
 	end
 end
 

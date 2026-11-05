@@ -10,7 +10,7 @@ local L = ns.L
 ]]
 function ns.BuildServicesTrackedOptions()
 	local options = {
-		name = ns.SubPanelTitle(L["TAB_SERVICES"], L["TRACKED_HEADER"]),
+		name = ns.SubPanelTitle(L["TAB_GROUP_SERVICE_ALERTS"], L["TRACKED_HEADER"]),
 		type = "group",
 		args = {},
 	}

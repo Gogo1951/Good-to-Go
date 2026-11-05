@@ -25,20 +25,21 @@ local GLOW_SWATCH = { 1, 0.886, 0.478 }
 local GLOW_SWATCH_FILL = { 0.18, 0.165, 0.141 }
 
 --[[
-	The general and character macro slots used, at the footer's right: "Macro Slots" in gold, the list names in
-	grey, the counts in white, and a full list's count in red.
+	The general and character macro slots used, at the footer's right: "Macro Slots" in TITLE gold, the list
+	names in MUTED gray, the counts in TEXT white, and a full list's count in OFF red.
 ]]
 local function SlotCount(label, used, max)
 	local count = used .. "/" .. max
-	local color = used >= max and RED_FONT_COLOR or HIGHLIGHT_FONT_COLOR
-	return GRAY_FONT_COLOR:WrapTextInColorCode(label) .. " " .. color:WrapTextInColorCode(count)
+	local color = ns.GetColor(used >= max and "OFF" or "TEXT")
+	return ns.GetColor("MUTED") .. label .. "|r " .. color .. count .. "|r"
 end
 
 local function UpdateMacroCount(page)
 	local numAccount, maxAccount, numCharacter, maxCharacter = ns.MacroCounts()
 	page.macroCount:SetText(
-		NORMAL_FONT_COLOR:WrapTextInColorCode(L["PAGE_MACRO_SLOTS"])
-			.. "   "
+		ns.GetColor("TITLE")
+			.. L["PAGE_MACRO_SLOTS"]
+			.. "|r   "
 			.. SlotCount(L["PAGE_MACRO_GENERAL"], numAccount, maxAccount)
 			.. "   "
 			.. SlotCount(L["PAGE_MACRO_CHARACTER"], numCharacter, maxCharacter)
@@ -140,7 +141,7 @@ local function CreateFilterBox(page, hint, onChange)
 	return filterBox
 end
 
--- for the What's Next? tab's own controls row (Features/Spellbook/Whats-Next-Page.lua)
+-- for the What's Next? tab's own controls row (Features/Spellbook/Whats-Next/Whats-Next-Controls.lua)
 ns.CreateSpellbookFilterBox = CreateFilterBox
 ns.CreateSpellbookDropdown = CreateDropdown
 ns.AddSpellbookMenuTooltip = AddMenuTooltip

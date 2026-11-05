@@ -26,11 +26,11 @@ function ns.BuildStrangersOptions()
 
 			--[[
 			    Master switch: everything below it hides when off, and the feature
-			    itself stops -- see the `enabled` gate in Praise. Its twin sits on
-			    Thanks for the Buff's heading page. Fractional orders keep it above
+			    itself stops -- see the `enabled` gate in Praise. Its twin sits in
+			    the root panel's Features section. Fractional orders keep it above
 			    the first header without renumbering the panel.
 			]]
-			enable = ns.OptionsFeatureToggle(ns.GetFeatureSwitch("strangers"), 2.5),
+			enable = ns.OptionsFeatureSwitch("StrangerBuffs", 2.5),
 			enableSpacer = ns.OptionsSpacer(2.6),
 
 			headerPraise = ns.OptionsHeader(L["PRAISE_HEADER"], 3),
@@ -71,8 +71,8 @@ function ns.BuildStrangersOptions()
 			),
 			space6 = ns.OptionsSpacer(16),
 			--[[
-			    Praise Delay closes the section, matching Teammate Buffs and
-			    Service Alerts, where it is already the last praise control.
+			    Praise Delay closes the section, matching Combat Buffs and
+			    Group Service Alerts, where it is already the last praise control.
 			]]
 			praiseDelayStrangers = ns.DefinePraiseDelayToggle(settings, 17),
 			praiseDelayLengthStrangers = ns.DefinePraiseDelaySelect(settings, 18),

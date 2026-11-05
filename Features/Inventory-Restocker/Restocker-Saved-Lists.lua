@@ -496,7 +496,7 @@ end
     settings.currentList directly.
 
     The choice is the character's, not its profile's: profiles carry the
-    Macros panel's settings, and a player who puts a bank alt on their main's
+    Consumable Macros panel's settings, and a player who puts a bank alt on their main's
     profile, or copies one over another, has not asked for the two to shop
     from one list. Switching profiles therefore leaves the list alone.
 ]]

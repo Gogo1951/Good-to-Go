@@ -47,7 +47,7 @@ end
 
 --[[
     The Restocker's and the Inventory Report's own routes; the container,
-    merchant, bank and tooltip calls they share with Connoisseur sit in
+    merchant, bank and tooltip calls they share with the Consumable Macros sit in
     Manifests-Macros-for-Consumables.lua.
 ]]
 ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
@@ -99,6 +99,22 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(fontString) == "table" and type(fontString.GetUnboundedStringWidth) == "function"
 		end,
 	},
+	--[[
+	    The Restock and staples windows' title and portrait, each guarded
+	    (ns.CreateRestockerPortraitFrame). The window is built the first time
+	    it opens, so until then the check asks for the template that brings
+	    both; it creates nothing.
+	]]
+	{
+		"Restock window SetTitle and SetPortraitToAsset (guarded)",
+		function()
+			local frame = _G.GoodToGoRestockFrame
+			if type(frame) ~= "table" then
+				return ns.HasTemplate("PortraitFrameTemplate")
+			end
+			return type(frame.SetTitle) == "function" and type(frame.SetPortraitToAsset) == "function"
+		end,
+	},
 	-- The window's templates; a missing unguarded one stops the window from being built.
 	{ "InsetFrameTemplate3", HasTemplate("InsetFrameTemplate3") },
 	{ "UIPanelScrollFrameTemplate", HasTemplate("UIPanelScrollFrameTemplate") },
@@ -117,8 +133,10 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
     reports: the switches, the list this character shops from, the gold and
     bag space a purchase needs, the windows open now, the open vendor's
     standing, the reagents the list's crafts need, the staples offer's gates,
-    what a merchant would buy now, the reminders and their gates, and the
-    Inventory Report's hook and records. Read-only.
+    what a merchant would buy now, what an open bank could move and what the
+    cursor holds, the reminders, their gates and the sound settings, who
+    claims /restock, and the Inventory Report's hook, records and the block it
+    would add for an item in the bags. Read-only.
 ]]
 local function MoneyText(copper)
 	copper = copper or 0
@@ -135,6 +153,29 @@ local function FreeBagSlots()
 		end
 	end
 	return free
+end
+
+--[[
+    Slots holding a list item whose link the client has not resolved yet: the
+    bank run's scans skip them (GetRestockContainerItemInfo in
+    Restocker-Bags.lua), so it counts those items as 0.
+]]
+local function UnlinkedListSlots(bagIDs, list)
+	local count = 0
+	for _, bag in ipairs(bagIDs) do
+		for slot = 1, C_Container.GetContainerNumSlots(bag) or 0 do
+			local info = C_Container.GetContainerItemInfo(bag, slot)
+			if info and info.itemID and list[info.itemID] ~= nil and not info.hyperlink then
+				count = count + 1
+			end
+		end
+	end
+	return count
+end
+
+local function FrameShown(name)
+	local frame = _G[name]
+	return type(frame) == "table" and type(frame.IsShown) == "function" and frame:IsShown() and true or false
 end
 
 function ns:BuildRestockerContextReport()
@@ -179,12 +220,25 @@ function ns:BuildRestockerContextReport()
 	    match a vendor slot; a row needing a standing waits for a vendor who
 	    grants it.
 	]]
-	local buyOff, noID, takeOn, storeOn, upgradeOff, onLadder, unnamed = 0, 0, 0, 0, 0, 0, 0
+	local buyOff, noID, takeOn, storeOn, upgradeOff, onLadder, unnamed, keepNone = 0, 0, 0, 0, 0, 0, 0, 0
+	local extraOn, notCached = 0, 0
+	-- A row whose item is not cached has no stack size or bag family to go on (Restocker-Merchant.lua, Restocker-Bags.lua).
+	local IsCached = type(C_Item.IsItemDataCachedByID) == "function" and C_Item.IsItemDataCachedByID
 	local needsStanding = {}
 	for id, row in pairs(list or {}) do
 		if type(row) == "table" then
 			if row.buyFromMerchant == false then
 				buyOff = buyOff + 1
+			end
+			-- A Keep of 0 orders nothing unless Extra is on (Restocker-Merchant.lua).
+			if (row.amount or 0) <= 0 then
+				keepNone = keepNone + 1
+			end
+			if row.buyExtra == true then
+				extraOn = extraOn + 1
+			end
+			if IsCached and row.itemID and not IsCached(row.itemID) then
+				notCached = notCached + 1
 			end
 			if not row.itemID then
 				noID = noID + 1
@@ -212,8 +266,10 @@ function ns:BuildRestockerContextReport()
 	end
 	table.sort(needsStanding)
 	lines[#lines + 1] = string.format(
-		"Rows with Buy off: %d // without an item ID: %d // without a name yet: %d // Take from bank on: %d // Store in bank on: %d",
+		"Rows with Buy off: %d // Keep 0: %d // Extra on: %d // without an item ID: %d // without a name yet: %d // Take from bank on: %d // Store in bank on: %d",
 		buyOff,
+		keepNone,
+		extraOn,
 		noID,
 		unnamed,
 		takeOn,
@@ -226,15 +282,25 @@ function ns:BuildRestockerContextReport()
 		#needsStanding > 0 and table.concat(needsStanding, ", ") or "(none)"
 	)
 	lines[#lines + 1] = string.format(
-		"Waiting on item data: adds %d, rows %d, an upgrade %s, staples %s",
+		"Waiting on item data: adds %d, rows %d, an upgrade %s, staples %s // rows not in the item cache: %s",
 		CountKeys(ns.restockItemWait),
 		CountKeys(ns.restockColdRows),
 		YesNo(ns.HasPendingUpgrade and ns.HasPendingUpgrade()),
-		YesNo(ns.HasPendingStarterAdds and ns.HasPendingStarterAdds())
+		YesNo(ns.HasPendingStarterAdds and ns.HasPendingStarterAdds()),
+		IsCached and tostring(notCached) or "(no API)"
 	)
 
 	-- Plain bags take anything; a specialty bag takes only its own kind (Restocker-Purchase-Space.lua).
-	lines[#lines + 1] = string.format("Free bag slots: %d", FreeBagSlots())
+	local carriedBags = {}
+	for bag = BACKPACK_CONTAINER, NUM_BAG_SLOTS do
+		carriedBags[#carriedBags + 1] = bag
+	end
+	lines[#lines + 1] = string.format(
+		"Free bag slots: %d // bags the buy loop reads: %d // list items in the bags without a link yet: %d",
+		FreeBagSlots(),
+		#(ns.restockPlayerBags or {}),
+		list and UnlinkedListSlots(carriedBags, list) or 0
+	)
 	local bagLines = {}
 	for bag = BACKPACK_CONTAINER, NUM_BAG_SLOTS do
 		local slots, family = C_Container.GetContainerNumFreeSlots(bag)
@@ -243,11 +309,18 @@ function ns:BuildRestockerContextReport()
 		end
 	end
 	lines[#lines + 1] = "Bags: " .. table.concat(bagLines, " // ")
+	--[[
+	    A flag that disagrees with the game's window: a stale merchant flag
+	    stops the bank run (Restocker-Bank-Visit.lua), and a flag never set
+	    skips the closing reminder.
+	]]
 	lines[#lines + 1] = string.format(
-		"Merchant open: %s // buying skipped: %s // Bank open: %s",
+		"Merchant open: %s (game's window shown: %s) // buying skipped (Shift held): %s // Bank open: %s (game's window shown: %s)",
 		YesNo(ns.merchantIsOpen),
+		YesNo(FrameShown("MerchantFrame")),
 		YesNo(ns.merchantBuyingSkipped),
-		YesNo(ns.bankIsOpen)
+		YesNo(ns.bankIsOpen),
+		YesNo(FrameShown("BankFrame"))
 	)
 
 	--[[
@@ -331,6 +404,39 @@ function ns:BuildRestockerContextReport()
 			YesNo(ns.BankHasRestockSpace()),
 			YesNo(ns.IsRestockItemLocked(list))
 		)
+		lines[#lines + 1] =
+			string.format("List items in the bank without a link yet: %d", UnlinkedListSlots(bankBags, list))
+		--[[
+		    The work a run finds, read with its own container scans
+		    (RestockState:RemainingWork in Restocker-Bank-State.lua): a Take row
+		    pulls only while the bags hold less than Keep and the bank holds
+		    some, and a Store row stores only above Keep.
+		]]
+		local function OnList(itemID)
+			return list[itemID] ~= nil
+		end
+		local inBags = ns.GetRestockItemsInBags(OnList).summary
+		local inBank = ns.GetRestockItemsInBank(OnList).summary
+		local canTake, canStore = 0, 0
+		for itemID, row in pairs(list) do
+			if type(row) == "table" then
+				local wanted, bagCount = row.amount or 0, inBags[itemID] or 0
+				if row.restockFromBank and wanted > bagCount and (inBank[itemID] or 0) > 0 then
+					canTake = canTake + 1
+				end
+				if row.stashToBank and bagCount > wanted then
+					canStore = canStore + 1
+				end
+			end
+		end
+		-- A run waits out an item on the cursor that is not on the list (RestockState:ClearCursorForScan).
+		local cursorType, cursorID = GetCursorInfo()
+		lines[#lines + 1] = string.format(
+			"Take rows the bank can fill now: %d // Store rows above Keep now: %d // on the cursor: %s",
+			canTake,
+			canStore,
+			CursorHasItem() and string.format("%s %s", tostring(cursorType), tostring(cursorID)) or "(nothing)"
+		)
 	end
 	lines[#lines + 1] = "Bank trace in the Event Log: " .. OnOff(ns.diagnostics and ns.diagnostics.logging)
 
@@ -344,9 +450,11 @@ function ns:BuildRestockerContextReport()
 	)
 	-- The reminder sound plays on the Master channel (Restocker-Reminders.lua).
 	lines[#lines + 1] = string.format(
-		"Sound CVars: Sound_EnableAllSound %s, Sound_MasterVolume %s",
+		"Sound CVars: Sound_EnableAllSound %s, Sound_MasterVolume %s, Sound_EnableSoundWhenGameIsInBG %s // alert sound file set: %s",
 		tostring(GetCVar("Sound_EnableAllSound")),
-		tostring(GetCVar("Sound_MasterVolume"))
+		tostring(GetCVar("Sound_MasterVolume")),
+		tostring(GetCVar("Sound_EnableSoundWhenGameIsInBG")),
+		YesNo(ns.RESTOCK_ALERT_SOUND)
 	)
 	lines[#lines + 1] = string.format(
 		"Merchant reminder: %s, %s // auto-open at merchant: %s",
@@ -395,9 +503,11 @@ function ns:BuildRestockerContextReport()
 	end
 
 	--[[
-	    The staples offer opens once, on a fresh login, only when every gate
-	    below passes (Restocker-Starter-List.lua): no pending legacy import,
-	    level 6 or above, an empty list, a staple offered, and out of combat.
+	    The staples offer opens once, on a fresh login (never a /reload), only
+	    when every gate below passes (Restocker-Starter-List.lua): the
+	    Restocker on and started, no pending legacy import, level 6 or above, a
+	    list that exists and is empty, a staple offered for the class, and out
+	    of combat.
 	]]
 	local offered = 0
 	if ns.restockerLoaded then
@@ -408,12 +518,19 @@ function ns:BuildRestockerContextReport()
 		end
 	end
 	lines[#lines + 1] = string.format(
-		"Staples offer: legacy import pending %s // level %d (needs 6) // list empty %s // staples offered %d // in combat %s",
+		"Staples offer: legacy import pending %s // level %d (needs 6) // list exists %s, empty %s // class %s, staples offered %d // in combat %s",
 		YesNo(ns.IsLegacyImportPending and ns.IsLegacyImportPending()),
 		UnitLevel("player") or 0,
+		YesNo(list),
 		YesNo(ns.restockerLoaded and ns.IsRestockListEmpty()),
+		tostring(select(2, UnitClass("player"))),
 		offered,
 		YesNo(InCombatLockdown())
+	)
+	lines[#lines + 1] = string.format(
+		"Staples window: built this session %s // open now %s",
+		YesNo(_G.GoodToGoStaplesFrame),
+		YesNo(FrameShown("GoodToGoStaplesFrame"))
 	)
 
 	-- /restock profile use, delete and copy do nothing for a name not saved here.
@@ -423,6 +540,25 @@ function ns:BuildRestockerContextReport()
 	end
 	table.sort(listNames)
 	lines[#lines + 1] = "List names: " .. (#listNames > 0 and table.concat(listNames, ", ") or "(none)")
+	-- Another add-on registering /restock can take the command over (Options/Options.lua).
+	local claimants = {}
+	for key, value in pairs(_G) do
+		if
+			type(key) == "string"
+			and string.sub(key, 1, 6) == "SLASH_"
+			and key ~= "SLASH_GOODTOGORESTOCK1"
+			and type(value) == "string"
+			and string.lower(value) == "/restock"
+		then
+			claimants[#claimants + 1] = key
+		end
+	end
+	table.sort(claimants)
+	lines[#lines + 1] = string.format(
+		"/restock registered: %s // other add-ons claiming /restock: %s",
+		YesNo(_G.SLASH_GOODTOGORESTOCK1 == "/restock" and type(SlashCmdList.GOODTOGORESTOCK) == "function"),
+		#claimants > 0 and table.concat(claimants, ", ") or "(none)"
+	)
 
 	-- What a merchant visit would buy now (the rows short of their Keep amount with Buy on), with what the bags hold.
 	local short = {}
@@ -452,15 +588,36 @@ function ns:BuildRestockerContextReport()
 	    the game's own tooltip and the chat-link tooltip get the counts.
 	]]
 	lines[#lines + 1] = string.format(
-		"Tooltip route: %s (GameTooltip and ItemRefTooltip only)",
+		"Tooltip route: %s (GameTooltip and ItemRefTooltip only) // GameTooltip forbidden now: %s",
 		(TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum.TooltipDataType)
 				and "TooltipDataProcessor post-call"
-			or "OnTooltipSetItem"
+			or "OnTooltipSetItem",
+		YesNo(type(GameTooltip.IsForbidden) == "function" and GameTooltip:IsForbidden())
 	)
 	lines[#lines + 1] = string.format(
 		"Record bound this session: %s // bank items held this session: %d",
 		YesNo(ns.GetInventoryRecord and ns.GetInventoryRecord()),
 		CountKeys(ns.GetInventoryBankCounts and ns.GetInventoryBankCounts() or nil)
+	)
+	-- The block the hook would add for the first item in the bags, through its own builder: nil adds nothing.
+	local sampleID
+	for bag = BACKPACK_CONTAINER, NUM_BAG_SLOTS do
+		for slot = 1, C_Container.GetContainerNumSlots(bag) do
+			local info = C_Container.GetContainerItemInfo(bag, slot)
+			if info and info.itemID then
+				sampleID = info.itemID
+				break
+			end
+		end
+		if sampleID then
+			break
+		end
+	end
+	local sampleLines = sampleID and ns.GetInventoryReportLines and ns.GetInventoryReportLines(sampleID)
+	lines[#lines + 1] = string.format(
+		"Tooltip block for %s: %s",
+		ItemText(sampleID),
+		sampleLines and string.format("%d lines", #sampleLines) or "none"
 	)
 	--[[
 	    Only characters on this realm are listed, and a bank never opened yet

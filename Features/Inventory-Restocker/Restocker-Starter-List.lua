@@ -209,7 +209,7 @@ function ns.AddStarterCategory(category)
 end
 
 function ns.RemoveStarterCategory(category)
-	-- A pending add must be cancelled too, or it would land after the untick.
+	-- A pending add must be canceled too, or it would land after the untick.
 	for itemID, pending in pairs(pendingStarterAdds) do
 		if pending == category then
 			pendingStarterAdds[itemID] = nil

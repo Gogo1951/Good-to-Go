@@ -75,15 +75,15 @@ ns.MISSING_SPELL_MESSAGE_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-10-16, Season of Discovery 1.15.9.70003
+	2026-11-04, Season of Discovery 1.15.9.70576
 
 Notes
-	- The mage and warlock conjure spells the macros cast, one list per conjure, read by Features/Macros/Smart-Spell.lua (GetSmartSpell), the Food and Water macros, the class tools, the Readiness Report and the mini-map tooltip. Smart-Spell sorts each list by its level column, highest first, at load, so row order carries no meaning.
+	- The mage and warlock conjure spells the macros cast, one list per conjure, read by Features/Macros-for-Consumables/Macros/Smart-Spell.lua (GetSmartSpell), the Food and Water macros, the class tools, the Readiness Report and the mini-map tooltip. Smart-Spell sorts each list by its level column, highest first, at load, so row order carries no meaning.
 	- The level column is the level needed to use the conjured item, not the level the spell is learned (Create Healthstone rank 1 is learned at 10, but its stone is usable at level 1). GetSmartSpell compares it against the player's level, or a friendly target's, so the macro downranks to an item the recipient can use. For lists that never downrank by target (Mana Gems, Soulstones) and the rituals (Ritual of Refreshment, Ritual of Souls), it is simply the spell's learn level.
 	- The rank column, where present, is the spell's own rank, not its position in the list: the /cast line becomes "Spell Name(Rank N)" with the client's own rank text, pinning that rank. It is left off where every row already has a unique spell name, as each Mana Gem tier does.
 	- RECURRING BUG (WarlockCreateHealthstone and WarlockCreateSoulstone; it has broken Era three times). On the Classic Era client each warlock stone tier is its own distinctly-named spell, so C_Spell.GetSpellName already returns the full name ("Create Healthstone (Minor)"). It must be cast bare: appending "(Rank N)" yields "Create Healthstone (Minor)(Rank 1)", a spell that does not exist, and the /cast silently does nothing. That is why these stone rows carry no rank, while the TBC and WoW Forever folders' rows do. Mage Conjure Water and Food ARE numeric-rank on every client, so their rank column is right everywhere: never "simplify" the two spell families together, and never copy stone rows between folders without adding or dropping the rank.
 	- Soulstone rows name their max target level in the trailing comment: a soulstone can't be used on a player above that level. It needs no selection logic, since the caps rise with rank and casting the best known rank always satisfies the cap. The Soulstone resolver passes ignoreTarget, which is why that list's level column is the learn level.
-	- ns.MISSING_SPELL_MESSAGE_IDS holds the spells ConnoisseurTip names at print time (Features/Macros/Runtime.lua): one per conjure list that has rows, taken from its rank-1 entry, plus the rogue's Poisons skill, which is not a conjure.
+	- ns.MISSING_SPELL_MESSAGE_IDS holds the spells GtGTip names at print time (Features/Macros-for-Consumables/Macros/Runtime.lua): one per conjure list that has rows, taken from its rank-1 entry, plus the rogue's Poisons skill, which is not a conjure.
 	- Conjure Water rank 8 (468766) makes Mountain Spring Water (231778), usable at 55 like Conjured Crystal Water; Smart-Spell breaks the tie by spell ID, so rank 8 is cast first. It came from the Classic Era tables on wago.tools (build 1.15.9.70003, SkillLineAbility and SpellEffect), pending Validate Data.
 
 SQL (CMaNGOS)

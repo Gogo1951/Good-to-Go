@@ -30,10 +30,10 @@ ns.WELL_FED_ICON_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-10-16, Season of Discovery 1.15.9.70003
+	2026-11-04, Season of Discovery 1.15.9.70576
 
 Notes
-	- ns.WELL_FED_BUFF_IDS lists food buffs Features/Scanner-Auras.lua must count as Well Fed although they aren't named "Well Fed" or show another icon, so the buff-food check doesn't nag a player who already has one.
+	- ns.WELL_FED_BUFF_IDS lists food buffs Features/Macros-for-Consumables/Scanner/Scanner-Auras.lua must count as Well Fed although they aren't named "Well Fed" or show another icon, so the buff-food check doesn't nag a player who already has one.
 	- ns.WELL_FED_ICON_IDS lists the icons Well Fed buffs show (136000, and 133943 for the reworked foods), matched on the aura's icon when its spell ID is in no table.
 	- Fizzy Energy Drink's buff (29040) shows icon 132489, which no icon entry matches, so it is listed by ID.
 	- Increased Stamina (25661) and Fizzy Energy Drink (29040) are Classic Era buffs the Classic Era report confirms, copied in. Season of Discovery's own buff foods show icon 136000 or 133943 and need no rows.

@@ -15,15 +15,23 @@ local REGISTRY = ns.OPTIONS_REGISTRY
     Features/Core.lua after AceDB creates ns.db: the Profiles panel's tree label
     is read from the stock AceDBOptions-3.0 table, which needs the database.
 
-    The tree is split by the add-on each part came from, each under a heading
-    page of its own that holds its features' master switches:
+    One panel per feature directly under the root, in the root panel's Features
+    order (ns.FEATURE_GROUPS, left to right then down), each followed by its
+    sub-panels; the Thank You Button, which has no Features switch, follows the
+    features:
 
-      Good to Go    (General: welcome, mini-map, /commands)
-        Connoisseur           Macros (Class & Race, Ignore List), Readiness Report
-        Restocker             Inventory Report
-        Thanks for the Buff   Stranger Buffs, Teammate Buffs, Send Good News,
-                              Service Alerts, Buff Duty, Thank You Button
-        Spellbook
+      Good to Go    (welcome, mini-map, Features, Key Bindings, /Commands)
+        Buff Duty               Tracked Abilities, Self-Buffs, Weapon Buffs
+        Restocker
+        Enhanced Spellbook
+        Consumable Macros       Class & Race, Ignore List
+        Inventory Report
+        Readiness Report
+        Stranger Buffs
+        Sharing Good News       Tracked Abilities
+        Combat Buffs            Tracked Abilities
+        Group Service Alerts    Tracked Abilities
+        Thank You Button
         Profiles, Feedback & Support, Diagnostic Tools
 
     Child-panel order is the order of the AddToBlizOptions calls. The third
@@ -44,16 +52,31 @@ local function RegisterChild(registryKey, builder, displayName, parentID)
 	return categoryID
 end
 
-local function RegisterConnoisseurPanels()
-	local connoisseurID = RegisterChild("Connoisseur", ns.BuildConnoisseurOptions, L["TAB_CONNOISSEUR"])
+--[[
+    Each panel with a tracked list gets it as a "Tracked Abilities" sub-panel.
+    Sub-panels and panels whose lists exist only after login register their
+    builder function, not a built table, so each is rebuilt on open.
+]]
+local function RegisterBuffDutyPanels()
+	local buffDutyID = RegisterChild("BuffDuty", ns.BuildBuffDutyOptions, L["TAB_BUFF_DUTY"])
+	RegisterChild("BuffDutyBuffs", ns.BuildBuffDutyBuffsOptions, L["TRACKED_HEADER"], buffDutyID)
+	RegisterChild("BuffDutySelfBuffs", ns.BuildBuffDutySelfBuffsOptions, L["BUFF_DUTY_SELF_HEADER"], buffDutyID)
+	RegisterChild(
+		"BuffDutyWeaponBuffs",
+		ns.BuildBuffDutyWeaponBuffsOptions,
+		L["BUFF_DUTY_WEAPON_PANEL_HEADER"],
+		buffDutyID
+	)
+end
 
-	--[[
-	    Macros panel -- every macro setting, led by the Macros master switch,
-	    with Class & Race and the Ignore List nested under it: the list only
-	    says what the macros may offer. The Ignore List registers its builder
-	    function, not a built table, so it never renders a stale list.
-	]]
-	local macrosID = RegisterChild("Macros", ns.BuildMacrosOptions, L["TAB_MACROS"], connoisseurID)
+--[[
+    Consumable Macros -- every macro setting, led by its on/off switch, with
+    Class & Race and the Ignore List nested under it: the list only says what
+    the macros may offer. The Ignore List registers its builder function, not
+    a built table, so it never renders a stale list.
+]]
+local function RegisterMacrosPanels()
+	local macrosID = RegisterChild("Macros", ns.BuildMacrosOptions, L["TAB_CONSUMABLE_MACROS"])
 	RegisterChild("ClassRace", ns.BuildClassRaceOptions, L["TAB_CLASS_RACE"], macrosID)
 	RegisterChild("IgnoreList", ns.BuildIgnoreListOptions, L["TAB_IGNORE_LIST"], macrosID)
 
@@ -66,52 +89,19 @@ local function RegisterConnoisseurPanels()
 	local ignoreStatus = AceConfigDialog:GetStatusTable(REGISTRY.IgnoreList)
 	ignoreStatus.groups = ignoreStatus.groups or {}
 	ignoreStatus.groups.treewidth = ns.OPTIONS_TREE_WIDTH
-
-	RegisterChild("ReadinessReport", ns.BuildReadinessReportOptions, L["TAB_READINESS_REPORT"], connoisseurID)
 end
 
-local function RegisterRestockerPanels()
-	local restockerID = RegisterChild("Restocker", ns.BuildRestockerOptions, L["TAB_RESTOCKER"])
-	-- Named by the tooltip block's own title, so the panel and the tooltip cannot name it two ways.
-	RegisterChild("InventoryReport", ns.BuildInventoryReportOptions, L["INVENTORY_REPORT_TITLE"], restockerID)
-end
+local function RegisterAppreciationPanels()
+	RegisterChild("StrangerBuffs", ns.BuildStrangersOptions(), L["TAB_STRANGERS"])
 
-local function RegisterThanksForTheBuffPanels()
-	local tftbID = RegisterChild("ThanksForTheBuff", ns.BuildThanksForTheBuffOptions, L["TAB_THANKS_FOR_THE_BUFF"])
-
-	RegisterChild("StrangerBuffs", ns.BuildStrangersOptions(), L["TAB_STRANGERS"], tftbID)
-
-	--[[
-	    Each panel with a tracked list gets it as a "Tracked Abilities" sub-panel.
-	    The sub-panels register as functions (not prebuilt tables) so the list is
-	    rebuilt and re-sorted on open, once lazily-loaded item names are cached.
-	]]
-	local teammatesID = RegisterChild("TeammateBuffs", ns.BuildTeammatesOptions, L["TAB_TEAMMATES"], tftbID)
-	RegisterChild("TeammateBuffsTracked", ns.BuildTeammatesTrackedOptions, L["TRACKED_HEADER"], teammatesID)
-
-	local goodNewsID = RegisterChild("SendGoodNews", ns.BuildGoodNewsOptions, L["TAB_GOOD_NEWS"], tftbID)
+	local goodNewsID = RegisterChild("SendGoodNews", ns.BuildGoodNewsOptions, L["TAB_SHARING_GOOD_NEWS"])
 	RegisterChild("SendGoodNewsTracked", ns.BuildGoodNewsTrackedOptions, L["TRACKED_HEADER"], goodNewsID)
 
-	local servicesID = RegisterChild("ServiceAlerts", ns.BuildServicesOptions, L["TAB_SERVICES"], tftbID)
+	local combatID = RegisterChild("TeammateBuffs", ns.BuildTeammatesOptions, L["TAB_COMBAT_BUFFS"])
+	RegisterChild("TeammateBuffsTracked", ns.BuildTeammatesTrackedOptions, L["TRACKED_HEADER"], combatID)
+
+	local servicesID = RegisterChild("ServiceAlerts", ns.BuildServicesOptions, L["TAB_GROUP_SERVICE_ALERTS"])
 	RegisterChild("ServiceAlertsTracked", ns.BuildServicesTrackedOptions, L["TRACKED_HEADER"], servicesID)
-
-	-- Builders: the class lists exist only after login.
-	local buffWindowID = RegisterChild("BuffWindow", ns.BuildBuffWindowOptions, L["TAB_BUFF_WINDOW"], tftbID)
-	RegisterChild("BuffWindowBuffs", ns.BuildBuffWindowBuffsOptions, L["TRACKED_HEADER"], buffWindowID)
-	RegisterChild("BuffWindowSelfBuffs", ns.BuildBuffWindowSelfBuffsOptions, L["BUFF_WINDOW_SELF_HEADER"], buffWindowID)
-	RegisterChild(
-		"BuffWindowWeaponBuffs",
-		ns.BuildBuffWindowWeaponBuffsOptions,
-		L["BUFF_WINDOW_WEAPON_PANEL_HEADER"],
-		buffWindowID
-	)
-
-	RegisterChild("ThankYouButton", ns.BuildThankYouButtonOptions(), L["TAB_THANK_YOU_BUTTON"], tftbID)
-end
-
--- A builder, not a built table: the Key Bindings row reads the bound key each time the panel draws.
-local function RegisterSpellbookPanels()
-	RegisterChild("Spellbook", ns.BuildSpellbookOptions, L["TAB_SPELLBOOK"])
 end
 
 function ns.RegisterOptionsPanels()
@@ -119,10 +109,15 @@ function ns.RegisterOptionsPanels()
 	local mainPanel, mainCategoryID = AceConfigDialog:AddToBlizOptions(REGISTRY.General, L["ADDON_TITLE"])
 	ns.optionsFrames = { main = mainPanel, categoryID = mainCategoryID, categories = {} }
 
-	RegisterConnoisseurPanels()
-	RegisterRestockerPanels()
-	RegisterThanksForTheBuffPanels()
-	RegisterSpellbookPanels()
+	RegisterBuffDutyPanels()
+	RegisterChild("Restocker", ns.BuildRestockerOptions, L["TAB_RESTOCKER"])
+	RegisterChild("Spellbook", ns.BuildSpellbookOptions, L["TAB_ENHANCED_SPELLBOOK"])
+	RegisterMacrosPanels()
+	-- Named by the tooltip block's own title, so the panel and the tooltip cannot name it two ways.
+	RegisterChild("InventoryReport", ns.BuildInventoryReportOptions, L["INVENTORY_REPORT_TITLE"])
+	RegisterChild("ReadinessReport", ns.BuildReadinessReportOptions, L["TAB_READINESS_REPORT"])
+	RegisterAppreciationPanels()
+	RegisterChild("ThankYouButton", ns.BuildThankYouButtonOptions(), L["TAB_THANK_YOU_BUTTON"])
 
 	--[[
 	    Profiles panel: the stock AceDBOptions-3.0 table, unmodified. Its display

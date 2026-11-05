@@ -18,8 +18,9 @@ local GetClientHeader = ns.GetDiagnosticClientHeader
     line. The
     longest of three characters wins: a Mage or Warlock (conjures), a Rogue
     (Stealth) and a Night Elf (Shadowmeld), the first two Forsaken
-    (Cannibalize). The builder trims its own body, so a length over the
-    ceiling is one the trim could not fit, and every line it shed is counted.
+    (Cannibalize), with a Night Elf Mage a fourth from Cataclysm on. The
+    builder trims its own body, so a length over the ceiling is one the trim
+    could not fit, and every line it shed is counted.
     Feed Pet, Poisons and the Druid Macro Helper bodies come from builders that
     read the character's own state, so they show only as written.
 ]]
@@ -66,6 +67,12 @@ local LENGTH_CHARACTERS = {
 	{ label = "Rogue, Forsaken", stealth = "STEALTH_SPELL_ID", corpse = true },
 	{ label = "Night Elf", stealth = "SHADOWMELD_SPELL_ID" },
 }
+
+-- Night Elves can be Mages from Cataclysm on, so conjures and Shadowmeld share a body there.
+if ns.EXPANSION >= 4 then
+	LENGTH_CHARACTERS[#LENGTH_CHARACTERS + 1] =
+		{ label = "Night Elf Mage", conjure = true, stealth = "SHADOWMELD_SPELL_ID" }
+end
 
 -- The item ID with the most digits among every item the data folder holds.
 local function LongestItemID()

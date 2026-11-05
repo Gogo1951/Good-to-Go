@@ -31,12 +31,12 @@ local TAB_PADDING, TAB_MIN_WIDTH, TAB_MAX_TEXT_WIDTH = 20, 60, 220
 
 --[[
 	The window's tabs, in order, each { title key, builder, refresh as it shows, shown }: the Spell Book page,
-	the What's Next? page where its file loaded (Features/Spellbook/Whats-Next-Page.lua), which refreshes
+	the What's Next? page where its file loaded (Features/Spellbook/Whats-Next/Whats-Next-Page.lua), which refreshes
 	itself, then for a class with a pet the Pet Spell Book page, and for a hunter or warlock on a client whose
 	pets are trained (Beast Training, grimoires) the Pet What's Next? page. shown, where given, says whether this character gets the tab at all.
 ]]
 local TABS = {
-	{ "WINDOW_TITLE", ns.BuildSpellbookPage, ns.RefreshSpellbookPage },
+	{ "TAB_ENHANCED_SPELLBOOK", ns.BuildSpellbookPage, ns.RefreshSpellbookPage },
 	{ "WHATS_NEXT_TITLE", ns.BuildWhatsNextPage },
 	{ "PET_SPELLBOOK_TITLE", ns.BuildPetSpellbookPage, nil, ns.HasPetSpellbook },
 	{ "WHATS_NEXT_PET_TITLE", ns.BuildWhatsNextPetPage, nil, ns.HasWhatsNextPet },
@@ -72,7 +72,7 @@ local function Notify()
 	end
 end
 
--- "Spell Book // Good to Go" in the add-ons' shared colours: the page white, the slashes grey, the name blue
+-- "Enhanced Spellbook // Good to Go" in the add-ons' shared colors: the page white, the slashes gray, the name blue
 local function SetTitle(titleKey)
 	local title = GetColor("TEXT")
 		.. L[titleKey]
@@ -224,7 +224,7 @@ end
 
 function ns.ToggleSpellbookWindow()
 	if not ns.IsSpellbookEnabled() then
-		ns:PrintMessage(L["SPELLBOOK_DISABLED"])
+		ns:PrintMessage(L["SPELLBOOK_IS_OFF"])
 		return
 	end
 	if not window then

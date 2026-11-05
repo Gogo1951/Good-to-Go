@@ -38,7 +38,7 @@ function ns.MigrateSpellbookBinding()
 	SaveBindings(GetCurrentBindingSet())
 end
 
--- Opens or closes the page through whichever host this client loaded.
+-- Opens or closes the page's own window (ns.ToggleSpellbookPage, Spellbook-Window.lua).
 function GoodToGo_ToggleSpellbook()
 	if ns.ToggleSpellbookPage then
 		ns.ToggleSpellbookPage()
@@ -113,9 +113,9 @@ function ns:OpenKeyBindings()
 end
 
 --[[
-	UPDATE_BINDINGS. The Spellbook panel shows the binding's key or Not Bound, and the player changes it in the
-	game's own Key Bindings list, so repaint the panel when they come back from it.
+	UPDATE_BINDINGS. The root panel's Key Bindings rows show each binding's key or Not Bound, and the player
+	changes it in the game's own Key Bindings list, so repaint the panel when they come back from it.
 ]]
 function ns:OnUpdateBindings()
-	AceConfigRegistry:NotifyChange(ns.OPTIONS_REGISTRY.Spellbook)
+	AceConfigRegistry:NotifyChange(ns.OPTIONS_REGISTRY.General)
 end

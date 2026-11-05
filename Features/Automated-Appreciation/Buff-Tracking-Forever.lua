@@ -32,17 +32,17 @@ local function ResolveAuraCaster(aura)
 			return nil
 		end
 		local sourceGUID = UnitGUID(sourceUnit)
-		if not sourceGUID or not ns.IsPlain(sourceGUID) then
+		if not ns.IsPlain(sourceGUID) or not sourceGUID then
 			return nil
 		end
 		creditUnit = ns.IsPlayerGUID(sourceGUID) and sourceUnit or GetPetOwnerUnit(sourceGUID)
 	else
 		local instanceID = aura.auraInstanceID
-		if not instanceID or not ns.IsPlain(instanceID) then
+		if not ns.IsPlain(instanceID) or not instanceID then
 			return nil
 		end
 		local ok, casterGUID = pcall(C_UnitAuras.GetAuraCasterGUID, "player", instanceID)
-		if not ok or not casterGUID or not ns.IsPlain(casterGUID) then
+		if not ok or not ns.IsPlain(casterGUID) or not casterGUID then
 			return nil
 		end
 		local isPlayer = ns.IsPlayerGUID(casterGUID)
@@ -53,7 +53,7 @@ local function ResolveAuraCaster(aura)
 			end
 			-- A stranger out of nameplate range: name them from the GUID alone.
 			local name, realm = UnitNameFromGUID(casterGUID)
-			if not name or not ns.IsPlain(name) or name == "" then
+			if not ns.IsPlain(name) or not name or name == "" then
 				return nil
 			end
 			-- Whispers need "Name-Realm" across realms, and a realm name has no spaces there.
@@ -66,7 +66,7 @@ local function ResolveAuraCaster(aura)
 
 	local creditGUID = creditUnit and UnitGUID(creditUnit)
 	local creditName = creditUnit and GetUnitName(creditUnit, true)
-	if not (creditGUID and creditName and ns.IsPlain(creditGUID) and ns.IsPlain(creditName)) then
+	if not (ns.IsPlain(creditGUID) and ns.IsPlain(creditName) and creditGUID and creditName) then
 		return nil
 	end
 	return creditGUID, creditName, creditUnit
@@ -147,7 +147,7 @@ function ns.OnForeverPlayerAura(updateInfo)
 		return
 	end
 	local added = updateInfo.addedAuras
-	if not added or not ns.IsPlain(added) then
+	if not ns.IsPlain(added) or not added then
 		return
 	end
 

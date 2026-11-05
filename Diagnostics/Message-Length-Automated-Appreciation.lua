@@ -8,10 +8,11 @@ local ShownText = ns.DiagnosticShownText
 --------------------------------------------------------------------------------
 
 --[[
-    Every whisper and macro TFTB can send or write, built through the add-on's
-    own builders (ns.DIAGNOSTIC_MESSAGES), each with its byte length against its
-    ceiling, OVER past it. It builds strings only: nothing is sent and no macro
-    is written. Any notes the manifest returns follow the list.
+    Every whisper and macro Automated Appreciation can send or write, built
+    through the add-on's own builders (ns.DIAGNOSTIC_MESSAGES), each with its
+    byte length against its ceiling, OVER past it. It builds strings only:
+    nothing is sent and no macro is written. Any notes the manifest returns
+    follow the list.
 ]]
 function ns:BuildBuffsMessageLengthReport()
 	local rows, notes = ns.DIAGNOSTIC_MESSAGES()

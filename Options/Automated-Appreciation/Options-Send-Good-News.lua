@@ -43,12 +43,12 @@ function ns.BuildGoodNewsOptions()
 	end
 
 	local options = {
-		name = L["TAB_GOOD_NEWS"],
+		name = L["TAB_SHARING_GOOD_NEWS"],
 		type = "group",
 		args = {
 			descIntro = ns.OptionsDesc(L["GOOD_NEWS_DESCRIPTION"], 1),
 			space0 = ns.OptionsSpacer(2),
-			enable = ns.OptionsFeatureToggle(ns.GetFeatureSwitch("goodNews"), 3),
+			enable = ns.OptionsFeatureSwitch("GoodNews", 3),
 			spaceScope = ns.OptionsSpacer(3.5, GoodNewsHidden),
 			-- Who gets whispered, on its own label-beside-control row.
 			scopeLabel = ns.OptionsRowLabel(L["GOOD_NEWS_SCOPE"], 3.6, nil, GoodNewsHidden),

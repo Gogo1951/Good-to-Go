@@ -8,7 +8,7 @@ local _, ns = ...
     All mage conjure resolution lives here (the organizing rule: the definition
     files in Features/Macros-for-Consumables/Macros/<Consumable>.lua own what the macro IS; the
     Tools-<Class> files own what the class KNOWS). Each resolver returns the
-    conjure-info table documented in Engine.lua's definition protocol, or nil
+    conjure-info table documented in Definitions.lua's definition protocol, or nil
     to mean "this macro has no conjure semantics for this character" — which is
     how non-mage classes fall through to a plain /use body. The matching
     definition files (Food.lua, Water.lua, Mana-Gem.lua) call these at update

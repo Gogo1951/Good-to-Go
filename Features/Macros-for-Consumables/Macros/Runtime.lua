@@ -158,16 +158,21 @@ end
     body writes it only for a Mage's Food, Water and Mana Gem and a Warlock's
     Healthstone and Soulstone), so the line names the Right-Click that makes
     more instead. Mages conjure and warlocks create, the verbs their spells use.
+    ns.BuildNoItemLine builds the line; the Consumable Macros panel's Example
+    draws it too.
 ]]
-function GtGNoItem(typeName, canMake)
+function ns.BuildNoItemLine(typeName, canMake)
 	local config = ns.MACRO_CONFIG[typeName]
 	local label = config and config.label or typeName
 	if canMake and config then
 		local key = ns.isWarlock and "TIP_EMPTY_CREATE" or "TIP_EMPTY_CONJURE"
-		ns:PrintMessage(string.format(L[key], label, config.macro))
-		return
+		return string.format(L[key], label, config.macro)
 	end
-	ns:PrintMessage(string.format(L["MESSAGE_NO_ITEM"], label))
+	return string.format(L["MESSAGE_NO_ITEM"], label)
+end
+
+function GtGNoItem(typeName, canMake)
+	ns:PrintMessage(ns.BuildNoItemLine(typeName, canMake))
 end
 
 --[[

@@ -1,0 +1,27 @@
+local _, ns = ...
+
+ns.CONJURE_SPELLS = {}
+
+ns.MISSING_SPELL_MESSAGE_IDS = {}
+
+--[[
+How We Got the Data
+
+Last Validated
+	Never.
+
+Notes
+	- Declared empty because Retail ships no TOC yet, so feature code can read the tables without checking which flavor built it. The rows come when this flavor's data is built from a Validate Data report on a Retail client.
+
+SQL (CMaNGOS)
+	TODO: Add SQL Query
+
+Wowhead
+	None.
+
+wago.tools
+	None.
+
+QuestieDB
+	None.
+]]

@@ -21,8 +21,8 @@ Last Validated
 	2026-10-16, WoW Forever 1.60.1.70450
 
 Notes
-	- ns.MANA_GEMS holds the mage's mana gems, read by the item cache (Features/Item-Cache.lua) for the Mana Gem macro and by the Readiness Report. Mana Amount is the low end of the restore.
-	- ns.MANA_RUNES holds the Demonic and Dark Runes, which restore mana at the cost of life and share the mana gems' cooldown. The Mana Gem macro ranks them in with the gems when the player opts in (Features/Macros/Mana-Gem.lua). The mana column is the low end, as for the gems. The two restore the same amount, so the selection ladder's isSoulbound step burns the soulbound Demonic Rune before the tradeable Dark Rune.
+	- ns.MANA_GEMS holds the mage's mana gems, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Mana Gem macro and by the Readiness Report. Mana Amount is the low end of the restore.
+	- ns.MANA_RUNES holds the Demonic and Dark Runes, which restore mana at the cost of life and share the mana gems' cooldown. The Mana Gem macro ranks them in with the gems when the player opts in (Features/Macros-for-Consumables/Macros/Mana-Gem.lua). The mana column is the low end, as for the gems. The two restore the same amount, so the selection ladder's isSoulbound step burns the soulbound Demonic Rune before the tradeable Dark Rune.
 	- WoW Forever raised the gems: Agate 375 to 425, Jade 550 to 650, Citrine 775 to 925, Ruby 1000 to 1200.
 
 SQL (CMaNGOS)

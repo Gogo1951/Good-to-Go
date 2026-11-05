@@ -10,7 +10,7 @@ ns.CONJURED_ITEM_IDS_BY_SPELL = {
 How We Got the Data
 
 Last Validated
-	2026-11-03, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-04, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- Conjure spell ID to the items it makes, read by GetSmartSpell (Features/Macros-for-Consumables/Macros/Smart-Spell.lua) when it is called with checkUnique. A conjure whose item the player already holds is skipped; with one spell per conjure on this client, the fallback then casts the same spell.

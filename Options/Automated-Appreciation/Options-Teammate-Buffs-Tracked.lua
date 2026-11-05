@@ -2,16 +2,16 @@ local _, ns = ...
 local L = ns.L
 
 --[[
-    "Tracked Abilities" panel, under Teammate Buffs: one inline group of toggles
+    "Tracked Abilities" panel, under Combat Buffs: one inline group of toggles
     per class category (each class, then Items), built at login. Not hidden
-    behind the Teammate Buffs switch, like Buff Duty's sub-panels: these are
+    behind the Combat Buffs switch, like Buff Duty's sub-panels: these are
     choices worth making before turning the feature on, and the parent panel
     says whether it is. Registered as a function so the list is rebuilt and
     re-sorted on open, once lazily-loaded item names are cached.
 ]]
 function ns.BuildTeammatesTrackedOptions()
 	local options = {
-		name = ns.SubPanelTitle(L["TAB_TEAMMATES"], L["TRACKED_HEADER"]),
+		name = ns.SubPanelTitle(L["TAB_COMBAT_BUFFS"], L["TRACKED_HEADER"]),
 		type = "group",
 		args = {},
 	}

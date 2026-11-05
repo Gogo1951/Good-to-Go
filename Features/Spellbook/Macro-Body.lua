@@ -20,7 +20,7 @@ end
 --[[
 	A /cast trying each clause in turn. A clause is { condition, unit, spell, own = true }: the condition ("" for
 	none), and the spell the clause casts, or spellFor(unit) without one; own marks the macro's own clauses, as
-	against a Conditionals row's or a right-click's. Neighbouring clauses that cast the same spell share it
+	against a Conditionals row's or a right-click's. Neighboring clauses that cast the same spell share it
 	("[@mouseover,help,nodead][] Name"), and a lone clause with nothing to check drops its brackets, so a plain
 	cast stays "/cast Name". With reset ("combat", "target" or both as "combat/target") the line is a
 	/castsequence of each clause's spell then nothing, so it casts once until that reset. With a sequence
@@ -211,7 +211,7 @@ local function CastBody(macro)
 		.. use
 		.. stance
 	--[[
-		the noToggle option casts "!Name", which refreshes a form or aspect that is on instead of cancelling
+		the noToggle option casts "!Name", which refreshes a form or aspect that is on instead of canceling
 		it; the targetRank option names the highest rank each clause's unit can take, by its level now
 	]]
 	local prefix = ns.IsOptionOn(macro, "noToggle") and "!" or ""

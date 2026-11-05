@@ -167,6 +167,7 @@ read_globals = {
 	"IsShiftKeyDown",
 	"IsSpellKnown",
 	"IsTradeskillTrainer",
+	"IsTrainerServiceLearnSpell",
 	"ITEM_QUALITY_COLORS",
 	"ITEM_SPELL_TRIGGER_ONUSE",
 	"ItemRefTooltip",

@@ -666,7 +666,7 @@ ns.FOOD_AND_WATER = {
 How We Got the Data
 
 Last Validated
-	2026-11-03, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-04, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- Every food and drink this client knows that restores health or mana while seated, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Food and Water macros and the buff-food choices. The family is the items whose use spell is on the food (11) or drink (59) cooldown category, plus the few on no category whose spell says "Must remain seated".

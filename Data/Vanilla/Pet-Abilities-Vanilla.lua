@@ -631,10 +631,10 @@ ns.DEMON_ABILITIES = {
 How We Got the Data
 
 Last Validated
-	2026-11-03, Classic Era 1.15.9.70576
+	2026-11-04, Classic Era 1.15.9.70576
 
 Notes
-	- Every hunter pet ability rank this client's pets can learn, for the Pet What's Next? tab (Features/Spellbook/Whats-Next-Pet.lua): one row per rank, with the beasts that teach the ranks learned by taming.
+	- Every hunter pet ability rank this client's pets can learn, for the Pet What's Next? tab (Features/Spellbook/Whats-Next/Whats-Next-Pet.lua): one row per rank, with the beasts that teach the ranks learned by taming.
 	- id is the pet's own spell, the one its spellbook lists. teach is the hunter's Beast Training spell for that rank: the hunter learns it, from a pet trainer or by taming a beast that knows the rank, and casts it on the pet to teach it. The tab reads the hunter's knowledge from teach and the pet's from id. Found as the spells on the Beast Training skill line (SkillLineAbility 261) whose Learn Spell effect targets the pet (SpellEffect, effect 36, target 5).
 	- level is the pet level the rank needs: the Beast Training spell's level (SpellLevels).
 	- families are the creature families that learn the rank, from the pet spell's skill lines (SkillLineAbility, CreatureFamily SkillLine_0). A rank on the general pet skill line (270) every family learns, so it has none.

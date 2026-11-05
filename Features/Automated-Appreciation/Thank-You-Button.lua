@@ -108,7 +108,7 @@ function ns.ReconcileMacros()
 	for _, button in ipairs(Data.THANK_YOU_BUTTONS) do
 		local config = ns.db.global[button.profileKey]
 		if config and config.createMacro then
-			-- MIGRATION (remove after 2026-11-25)
+			-- MIGRATION (remove after 2026-12-03): LEGACY_MACRO_NAMES leaves on 2026-11-25
 			RenameLegacyMacro(button)
 			local icon = ns.GetThankYouIcon(config)
 			local index = GetMacroIndexByName(button.macroName)
@@ -148,10 +148,16 @@ end
     that isn't there.
 
     Combat-guarded like creation is -- the macro API is unavailable in combat, so
-    a toggle flipped mid-fight simply leaves the macro alone rather than erroring.
+    a toggle flipped mid-fight waits for combat to end the same way a reconcile
+    does. The reconcile that runs then deletes the macro of every button still
+    switched off, so one switched back on before then keeps its macro.
 ]]
 function ns:DeleteAutoMacro(button)
-	if InCombatLockdown() or not button then
+	if not button then
+		return
+	end
+	if InCombatLockdown() then
+		ns.SetModuleEvent(MODULE, "PLAYER_REGEN_ENABLED", true)
 		return
 	end
 	local index = GetMacroIndexByName(button.macroName)

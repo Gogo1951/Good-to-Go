@@ -19,7 +19,7 @@ ns.POTIONS = {
 	[33934] = { 1500, 0 }, -- Crystal Healing Potion
 	[33935] = { 0, 1800 }, -- Crystal Mana Potion
 	[4596] = { 140, 0 }, -- Discolored Healing Potion
-	[67415] = { 22500, 9250 }, -- Draught of War
+	[67415] = { 22500, 9250, { 91, 92, 93, 112, 128, 169, 206, 275, 397, 417, 423, 449, 519 } }, -- Draught of War
 	[43569] = { 1500, 0, nil, 400 }, -- Endless Healing Potion
 	[43570] = { 0, 1800, nil, 400 }, -- Endless Mana Potion
 	[80040] = { 120000, 0, nil, 550 }, -- Endless Master Healing Potion
@@ -83,12 +83,12 @@ ns.POTIONS = {
 How We Got the Data
 
 Last Validated
-	2026-11-03, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-04, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- Every potion this client knows that restores health or mana instantly on the potion cooldown (category 4), read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Health Potion and Mana Potion macros. requiredAlchemy is the Alchemy rank the item requires (the Endless potions and the Alchemist's potions).
 	- Healing Amount and Mana Amount are each effect's low end: the effect's value times one minus half its variance. From Cataclysm on the value is scaled, the coefficient times the SpellScaling game table (gametables/spellscaling.txt, file 1391660) at the spell's MaxScalingLevel, which is at or below the potion's required level; this reproduces the older clients' numbers (Major Healing Potion 1050, Super Healing Potion 1500) and Master Healing Potion's 120000.
-	- Allowed Zones are uiMapIDs. The Tol Barad potions carry a required area (244 Tol Barad, 245 Tol Barad Peninsula). The rest come from their text, as on the other clients. The draughts say PvP Battlegrounds: every battleground map this client has (91 Alterac Valley, 92 Warsong Gulch, 93 Arathi Basin, 112 and 397 Eye of the Storm, 128 Strand of the Ancients, 169 Isle of Conquest, 206 Twin Peaks, 275 The Battle for Gilneas, 417 and 449 Temple of Kotmogu, 423 Silvershard Mines, 519 Deepwind Gorge). Bottled Nethergon Energy and Vapor work inside Tempest Keep's four wings, the Cenarion salves inside Coilfang's four.
+	- Allowed Zones are uiMapIDs. The Tol Barad potions carry a required area (244 Tol Barad, 245 Tol Barad Peninsula). The rest come from their text, as on the other clients. The draughts say PvP Battlegrounds: every battleground map this client has (91 Alterac Valley, 92 Warsong Gulch, 93 Arathi Basin, 112 and 397 Eye of the Storm, 128 Strand of the Ancients, 169 Isle of Conquest, 206 Twin Peaks, 275 The Battle for Gilneas, 417 and 449 Temple of Kotmogu, 423 Silvershard Mines, 519 Deepwind Gorge). Draught of War says non-rated battlegrounds and carries the same list: a rated battleground is played on the same maps, and nothing in the data tells the two apart. Bottled Nethergon Energy and Vapor work inside Tempest Keep's four wings, the Cenarion salves inside Coilfang's four.
 	- The Ogre Brews say only the Blade's Edge Plateaus, which have no map of their own on this client (Classic's 1949 is gone and 105 is all of Blade's Edge Mountains), so they keep only Gruul's Lair (330), where they also work. Outside it the macro never offers them.
 	- Left out: Holy Spring Water (737), an oddball on the potion cooldown, and potions that do something else (rage, speed, protection, invisibility). Items named Deprecated, DEPCREATED or PLACEHOLDER are left out.
 	- Every row has a source: a drop, vendor or quest reward in QuestieDB's MoP item table, or a spell that creates it. Left out for having neither: Full Moonshine (1072), Diet McWeaksauce (23578), The McWeaksauce Classic (23579), the first Healing and Mana Potion Injectors (23822, 23823; the 33092 and 33093 copies are kept), Rulkster's Brain Juice and Secret Sauce (32762, 32763), Runic Battle Potion (39971), Argent Healing and Mana Potion (43531, 43530), Jillian's Genius Juice and Savior Sauce (45276, 45277), Mythical Battle Draught (67416), Adrenaline Shot (88416) and Brawler's Healing Potion (92954).

@@ -40,7 +40,7 @@ local AceGUI = LibStub("AceGUI-3.0")
     Every other control in this window is a Blizzard template, so an AceGUI
     widget reads as foreign -- and skins that restyle AceGUI globally (ElvUI
     ships one) restyle it and nothing around it, moving the geometry its
-    neighbours are positioned against.
+    neighbors are positioned against.
 
     It opens an AceGUI Dropdown-Pullout on click, the same way the reputation
     column's menu in Restocker-Window-Menus.lua does: Blizzard's UIDropDownMenu drives
@@ -212,7 +212,7 @@ end
     Confirmation for the Manage Lists menu's Delete. The whole message is composed at show
     time and handed in as text_arg1, because how much it has to say depends on
     the list: who else is on it, and the list this character lands on
-    afterwards. StaticPopup_Show's fourth argument carries the list's name
+    afterward. StaticPopup_Show's fourth argument carries the list's name
     through as the dialog's data, and OnAccept deletes THAT name rather than
     re-reading currentList.
 
@@ -543,7 +543,7 @@ end
 function ns.CreateRestockListBar(addonFrame)
 	local bands = ns.RESTOCK_WINDOW_BANDS
 
-	-- The footer's left run, centred in its band as the Spell Book's legend is.
+	-- The footer's left run, centered in its band as the Spell Book's legend is.
 	local bottom = bands.FRAME_BORDER + (bands.FOOTER_HEIGHT - BAR_HEIGHT) / 2
 	local bar = CreateFrame("Frame", nil, addonFrame)
 	bar:SetPoint("BOTTOMLEFT", addonFrame, "BOTTOMLEFT", FOOTER_X, bottom)

@@ -10,7 +10,7 @@ local Widgets = ns.PanelWidgets
 local Box, ShowTip = Widgets.Box, Widgets.ShowTip
 
 --[[
-	The Cast Sequence panel, docked against the Spell Book window's right edge where the Conditionals panel docks
+	The Cast Sequence panel, docked against the Spellbook window's right edge where the Conditionals panel docks
 	(one at a time), and opened from a macro's menu (Features/Spellbook/Macro-Menu.lua). It lists the sequence
 	(Features/Spellbook/Macro-Builder/Cast-Sequence.lua) top to bottom: the macro's own spell, fixed as the first step, then
 	each step added, with a grip to drag it up or down, its spell and its remove button. Under them the Add Step
@@ -327,7 +327,9 @@ Update = function()
 	y = y + SETTING_HEIGHT + 4
 	panel.reset:SetPoint("TOPLEFT", PADDING, -y)
 	local labels = ns.CastSequenceResetLabels(macro)
-	panel.reset.dropdown:SetLabel(#labels > 0 and table.concat(labels, ", ") or L["CAST_SEQUENCE_RESET_NEVER"])
+	panel.reset.dropdown:SetLabel(
+		#labels > 0 and table.concat(labels, L["LIST_SEPARATOR"]) or L["CAST_SEQUENCE_RESET_NEVER"]
+	)
 	y = y + SETTING_HEIGHT + 6
 	local warning = blocked
 		or (ns.CastSequenceStops(macro) and not ns.CastSequenceResetText(macro) and L["CAST_SEQUENCE_STOP_NO_RESET"])

@@ -6,10 +6,10 @@ local SizedFontString = ns.SizedFontString
 local PixelInset = ns.PixelInset
 
 --[[
-	Lays ns.macros (built by Features/Spellbook/Macro-Builder.lua) out in the page's window (Features/Spellbook/Spellbook-Window.lua):
+	Lays ns.macros (built by Features/Spellbook/Macro-Builder/Macro-Builder.lua) out in the page's window (Features/Spellbook/Spellbook-Window.lua):
 	the parchment with two columns and the page strip, between the controls along its top and the legend and macro
 	slot counts along its bottom, which Features/Spellbook/Spellbook-Controls.lua builds. Each category is a block under its header; its spells flow two to a row into the
-	very next free slot, a form's run labelled above its own tiles. Features/Spellbook/Macro-Button.lua owns each tile,
+	very next free slot, a form's run labeled above its own tiles. Features/Spellbook/Macro-Button.lua owns each tile,
 	Features/Spellbook/Macro-Menu.lua the right-click menu, Features/Spellbook/Category-Menu.lua the category menu, and Features/Spellbook/Spellbook-Paging.lua the page strip.
 	Features/Spellbook/Spellbook-Events.lua redraws the page as the game changes. Features/Spellbook/Spellbook-Page-Parchment.lua
 	draws the parchment, and Features/Spellbook/Spellbook-Page-Layout.lua packs the rows and fills the columns.
@@ -39,7 +39,7 @@ local COLUMN_WIDTH = SLOTS * TILE_WIDTH + (SLOTS - 1) * GAP_X
 
 --[[
 	Every row is the same height: a label strip over its tiles, holding a form's label where the row has one and
-	left empty otherwise, so rows step down evenly whether or not they're labelled. The strip is also the space
+	left empty otherwise, so rows step down evenly whether or not they're labeled. The strip is also the space
 	between rows and under the header.
 ]]
 local ROW_HEIGHT = LABEL_TOP_GAP + LABEL_HEIGHT + LABEL_GAP + TILE_HEIGHT
@@ -109,7 +109,7 @@ local CONSUMABLES_RANK = 1000000
 	The macros in page order as { macro, header, sub } entries. Sorted by school, that is ns.macros under its
 	spellbook tabs. Sorted by category, the spell macros go under their page category (ns.PageCategory), in
 	ns.PAGE_CATEGORIES' order and alphabetically within each, any macro without a page category after them
-	under its own section, then GtG Consumables (Connoisseur's macros, see ns.ConsumablePageMacros), and the
+	under its own section, then GtG Consumables (Consumable Macros' macros, see ns.ConsumablePageMacros), and the
 	Unlearned section last, those keeping ns.macros' order; a focus, Duplicate or
 	rank copy still follows its spell. Within a page category, the spells needing a form (sub, from
 	ns.PageSubCategory) follow its own, a run for each form, the forms alphabetically, then the basic attacks. A macro the page hides (a
@@ -160,7 +160,7 @@ local function PageOrder(page)
 			entries[#entries + 1] = entry
 		end
 	end
-	-- after every section but Unlearned, in the Macros panel's order
+	-- after every section but Unlearned, in the Consumable Macros panel's order
 	for position, macro in ipairs(consumables) do
 		if PassesFilters(page, macro) then
 			entries[#entries + 1] = {
@@ -226,7 +226,8 @@ local function CreateGearButton(parent, size)
 	PixelInset(fill, button, 1)
 	local gear = button:CreateTexture(nil, "ARTWORK")
 	gear:SetTexture(ns.TEXTURE_GEAR)
-	gear:SetVertexColor(NORMAL_FONT_COLOR:GetRGB())
+	local gold = ns.COLORS_RGB.TITLE
+	gear:SetVertexColor(gold.r, gold.g, gold.b)
 	local glyphSize = math.floor(size * 0.62 + 0.5)
 	gear:SetSize(glyphSize, glyphSize)
 	gear:SetPoint("CENTER")
@@ -388,10 +389,12 @@ local function Layout(page)
 	local current = math.min(controls:GetCurrentPage(), maxPages)
 	local bars = ns.ScanActionBars()
 	local half = paper:GetWidth() / 2
+	local shift = page.parchment.spineShift -- toward the spine: right on the left page, left on the right
 	for side = 1, 2 do
 		local column = columns[(current - 1) * 2 + side]
 		if column then
-			DrawColumn(page, column, (side - 1) * half + COLUMN_SIDE, COLUMN_TOP, bars)
+			local x = (side - 1) * half + COLUMN_SIDE + (side == 1 and shift or -shift)
+			DrawColumn(page, column, x, COLUMN_TOP, bars)
 		end
 	end
 end
@@ -488,7 +491,10 @@ ns.BuildSpellbookPage = BuildPage
 ns.RefreshSpellbookPage = Refresh
 ns.LayoutSpellbookPage = Layout
 ns.CreateSpellbookGearButton = CreateGearButton
--- the What's Next? tab's page (Features/Spellbook/Whats-Next-Page.lua) shares the frame pool and the name order
+--[[
+	the What's Next? tab's page (Features/Spellbook/Whats-Next/Whats-Next-Page.lua) shares the frame pool, and
+	its row order (Whats-Next-Layout.lua) the name order
+]]
 ns.SpellbookFramePool = FramePool
 ns.SpellNameBefore = NameBefore
 

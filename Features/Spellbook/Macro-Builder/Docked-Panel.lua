@@ -39,15 +39,16 @@ Docked.PADDING, Docked.INNER_WIDTH = PADDING, INNER_WIDTH
 --------------------------------------------------------------------------------
 
 --[[
-	The page macro a panel is open for, found again by its settings key, or nil once it has left the page.
-	offers(macro) says whether a macro has the panel's feature.
+	The page macro a panel is open for, found again by its settings key, or nil once it has left the page,
+	hidden ones included (a grouped spell's once a later one is learned). offers(macro) says whether a macro
+	has the panel's feature.
 ]]
 local function CurrentMacro(panel, offers)
 	if not panel or not panel.key then
 		return nil
 	end
 	for _, macro in ipairs(ns.macros) do
-		if not macro.focus and SettingsKey(macro) == panel.key and offers(macro) then
+		if not macro.focus and not macro.hidden and SettingsKey(macro) == panel.key and offers(macro) then
 			return macro
 		end
 	end

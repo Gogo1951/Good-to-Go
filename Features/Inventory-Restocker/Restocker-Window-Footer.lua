@@ -38,7 +38,7 @@ local GetColor = ns.GetColor
     Anchor footer controls to the row, never to the WINDOW: a control anchored
     to the window lands at its middle and disappears behind the list.
 ]]
--- Centred in the window's footer band (ns.RESTOCK_WINDOW_BANDS), as the Spell Book's legend is.
+-- Centered in the window's footer band (ns.RESTOCK_WINDOW_BANDS), as the Spell Book's legend is.
 local FOOTER_X = 12
 local FOOTER_RIGHT_INSET = 26 -- clear of the resize grip
 local FOOTER_ROW_HEIGHT = 22

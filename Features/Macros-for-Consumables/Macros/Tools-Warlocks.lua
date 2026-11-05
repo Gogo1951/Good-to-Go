@@ -6,7 +6,7 @@ local _, ns = ...
 
 --[[
     All warlock conjure resolution lives here (organizing rule and resolver
-    contract: see Tools-Mages.lua and Engine.lua's definition protocol).
+    contract: see Tools-Mages.lua and Definitions.lua's definition protocol).
 
     Both stone families are represented differently per client flavor (Era:
     distinctly-named tiers cast bare; TBC: numeric ranks; WoW Forever: numeric

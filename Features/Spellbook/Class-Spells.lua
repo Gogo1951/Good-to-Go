@@ -2,7 +2,7 @@ local _, ns = ...
 
 --[[
 	The spellbook read: ns.ForEachClassSpell, every learned, castable spell the page builds its macros from
-	(Features/Spellbook/Macro-Builder.lua) and the ranks are read from (Features/Spellbook/Spell-Ranks.lua).
+	(Features/Spellbook/Macro-Builder/Macro-Builder.lua) and the ranks are read from (Features/Spellbook/Spell-Ranks.lua).
 ]]
 
 --[[
@@ -66,27 +66,53 @@ local function IsOtherSeasonSpell(id)
 	return HIDES_SOD_SPELLS and id ~= nil and id >= ns.SOD_FIRST_SPELL_ID
 end
 
+--[[
+	The Retail engine's book keeps professions out of its skill lines: each learned profession (the two
+	primaries, Archaeology, Fishing, Cooking) holds its spells at its own offset in the player's book, read
+	through GetProfessions and GetProfessionInfo. They're read after the skill lines, as one more line named
+	Professions. GetProfessions returns nil for a slot with nothing learned, so its values are walked by count.
+]]
+local function ForEachProfessionSlot(fn, ...)
+	if not GetProfessionInfo then
+		return
+	end
+	for i = 1, select("#", ...) do
+		local index = select(i, ...)
+		if index then
+			local _, _, _, _, numAbilities, spellOffset = GetProfessionInfo(index)
+			for slot = (spellOffset or 0) + 1, (spellOffset or 0) + (numAbilities or 0) do
+				fn(slot)
+			end
+		end
+	end
+end
+
 if C_SpellBook.GetNumSpellBookSkillLines then
 	function ns.ForEachClassSpell(fn)
 		local bank = Enum.SpellBookSpellBank.Player
-		for line = 1, C_SpellBook.GetNumSpellBookSkillLines() do
+		local function visit(slot, lineName, line)
+			local item = C_SpellBook.GetSpellBookItemInfo(slot, bank)
+			if item and item.itemType == Enum.SpellBookItemType.Spell and not item.isPassive and not item.isOffSpec then
+				local id = item.spellID or item.actionID
+				if not IsOtherSeasonSpell(id) then
+					fn(CastName(id, item.name), item.iconID, id, lineName, line, item.subName)
+				end
+			end
+		end
+		local numLines = C_SpellBook.GetNumSpellBookSkillLines()
+		for line = 1, numLines do
 			local info = C_SpellBook.GetSpellBookSkillLineInfo(line)
 			if info and not info.shouldHide and not info.offSpecID then
 				for slot = info.itemIndexOffset + 1, info.itemIndexOffset + info.numSpellBookItems do
-					local item = C_SpellBook.GetSpellBookItemInfo(slot, bank)
-					if
-						item
-						and item.itemType == Enum.SpellBookItemType.Spell
-						and not item.isPassive
-						and not item.isOffSpec
-					then
-						local id = item.spellID or item.actionID
-						if not IsOtherSeasonSpell(id) then
-							fn(CastName(id, item.name), item.iconID, id, info.name, line, item.subName)
-						end
-					end
+					visit(slot, info.name, line)
 				end
 			end
+		end
+		if GetProfessions then
+			local professionsName = ns.L["CATEGORY_PROFESSIONS"]
+			ForEachProfessionSlot(function(slot)
+				visit(slot, professionsName, numLines + 1)
+			end, GetProfessions())
 		end
 	end
 else

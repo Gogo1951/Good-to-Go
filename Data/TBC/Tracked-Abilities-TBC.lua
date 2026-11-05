@@ -443,7 +443,7 @@ ns.TRACKED_ABILITIES = {
 How We Got the Data
 
 Last Validated
-	2026-10-22, TBC Anniversary 2.5.6.70006
+	2026-11-04, TBC Anniversary 2.5.6.70577
 
 Notes
 	- The buffs, cooldowns and services other players spend on you, behind the Buffs from Teammates, Group Services and Good News panels. Buffs from Strangers has no list: any helpful buff from a player outside your group counts.
@@ -457,7 +457,7 @@ Notes
 	- noDuration marks a buff spent by an event rather than by time, so Good News leaves out its duration: Fear Ward lasts until the next fear, Misdirection until the next few attacks. It matters most on short buffs (Misdirection, Intervene), which would otherwise slip under the under-a-minute cap and whisper a countdown that means nothing. A long one like Fear Ward is caught by that cap anyway and carries the flag because it's true.
 	- received is the default for the shared thank-you list (watchedBuffs) behind the Teammates and Group Services panels: 1 starts the checkbox on, 0 off. A player's own choice is never overwritten.
 	- given is the default for the separate Good News list (goodNews.watched), with the same meaning. Services leave it out, since a service has no single recipient and never reaches Good News.
-	- triggers lists the ranks or variants one toggle covers: a spell alone, a spell with an aura where the aura's ID differs from the cast's (Misdirection), or an item with its spell, which shows the item's icon and name and lists every item in the group in the tooltip. Features/Tracked-Lookups.lua builds the lookups from them.
+	- triggers lists the ranks or variants one toggle covers: a spell alone, a spell with an aura where the aura's ID differs from the cast's (Misdirection), or an item with its spell, which shows the item's icon and name and lists every item in the group in the tooltip. Features/Automated-Appreciation/Tracked-Lookups.lua builds the lookups from them.
 	- Jumper Cables takes its label from item 7148's client name (labelItem), because both cables cast a spell named Defibrillate; only the item names differ.
 	- Battle Squawk and Gnomish Battle Chicken are two rows because they're two events for two audiences: using the trinket sets the chicken out, a Group Service, while the squawk is a buff the chicken casts on one person. Battle Squawk carries no item on purpose. Item 10725 would relabel its toggle as a second Gnomish Battle Chicken checkbox and reword the message to "used their Gnomish Battle Chicken on you", which isn't what happened. Its caster is the pet, not the owner: credit reaches the owner through ResolveSource for a received buff, and through the pet branch of OnUnitSpellcastSent for Good News.
 	- Portal: Karazhan exists on this client but no class can learn it, so the Portals group leaves it out.

@@ -18,8 +18,8 @@ local Box, ShowTip = Widgets.Box, Widgets.ShowTip
 
 	A row's spell slot takes a spell two ways: a click puts the page in pick mode, where the next spell clicked
 	on the page fills the slot and Escape or a right-click cancels; or a spell dragged from the page (or the
-	game's own spellbook, or an action bar) is dropped on it. A drag from the page still picks up the macro, so
-	it can go on an action bar as before. Add Condition starts pick mode for the new row straight away. The page
+	game's own spellbook, or an action bar) is dropped on it. A drag from the page picks up the macro, so it can
+	go on an action bar. Add Condition starts pick mode for the new row straight away. The page
 	outlines the tile the panel is open for, and in pick mode dims the ones that can't be picked
 	(Features/Spellbook/Macro-Button.lua asks ns.IsConditionalsPanelFor and ns.IsPickingConditionalSpell).
 	The rows are Features/Spellbook/Macro-Builder/Conditionals-Rows.lua and pick mode Features/Spellbook/Macro-Builder/Conditionals-Pick.lua.
@@ -215,7 +215,8 @@ function ns.ShowConditionalsPanel(macro, page)
 	Update()
 end
 
--- Closes the panel, for the window's switch to a tab other than the Spell Book (Features/Spellbook/Spellbook-Window.lua).
+-- Closes the panel, for the window's switch to a tab other than the Spell Book (Features/Spellbook/Spellbook-Window.lua)
+-- and for the Cast Sequence panel opening in its place (Features/Spellbook/Macro-Builder/Cast-Sequence-Panel.lua).
 function ns.HideConditionalsPanel()
 	if panel then
 		panel:Hide()

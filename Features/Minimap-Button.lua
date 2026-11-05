@@ -404,7 +404,8 @@ local function WarlockNotes()
 end
 
 local function RogueNotes()
-	if not (ns.IsSpellKnown(ns.POISONS_SPELL_ID) or ns.IsPlayerSpell(ns.POISONS_SPELL_ID)) then
+	local poisons = ns.POISONS_SPELL_ID
+	if not (poisons and (ns.IsSpellKnown(poisons) or ns.IsPlayerSpell(poisons))) then
 		return nil
 	end
 
@@ -537,9 +538,9 @@ UpdateTooltip = function(anchor)
 	)
 	AddFeatureBlock(
 		tooltip,
-		L["TAB_BUFF_WINDOW"],
+		L["TAB_BUFF_DUTY"],
 		SwitchState({ { ns.IsBuffDutyOnForClass(), "always" } }),
-		L["BUFF_WINDOW_DESCRIPTION"],
+		L["BUFF_DUTY_DESCRIPTION"],
 		L["MINIMAP_SHIFT_LEFT"],
 		L["MINIMAP_TOGGLE"]
 	)
