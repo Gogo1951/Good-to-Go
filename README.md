@@ -4,6 +4,10 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 
 **TL;DR:** Stop fiddling with your bars and bags between pulls. Your buttons always reach for the best stuff you're carrying, your bags refill themselves in town, and you spend your time playing instead of prepping.
 
+### Buff Duty
+
+-- to do, needs info graphic.
+
 ### Enhanced Spellbook
 
 <img width="800" src="https://github.com/user-attachments/assets/74371525-410a-466e-8777-9beae8e581e5" />
@@ -68,6 +72,23 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 
 Hover it for your current food, notes on your class's macros, and what your Restock List is still short.
 
+-- keep the order and names of this section the same as above, and i'll add graphics. 
+
+
+### Buff Duty
+
+Easy keep your own buffs up, including class buffs and weapon buffs. 
+Provide gentle reminders to others to buff the group.
+
+### Enhanced Spellbook
+
+* talk about dynamic level based on who you target
+* talk about how anyone can make an always up to date macro just by dragging the ability to your bar, and how this teaches you how to do more advanced macros.
+* **Conditionals** // Cast a different spell while holding Shift, Ctrl, or Alt, on a Right-Click, in or out of combat, or by talent spec.
+* Mouseover, target of target, etc. a huge range of options built inn.
+* **Right-Click a spell** on the page to add focus casting, stop casting, auto attack, pet attack, or a trinket to its macro.
+* "What's next" showing when you can learn new abilities and if you need to visit your trainer.
+
 ### Restocker
 
 * **Your list levels with you.** Food, water, ammo, poisons, and reagents climb to the next tier as you level, and every swap is announced in chat.
@@ -75,16 +96,15 @@ Hover it for your current food, notes on your class's macros, and what your Rest
 * **A Gold Reserve** keeps restocking from spending your last gold.
 * **Hold Shift** while opening the bank to skip restocking for that visit.
 
+### Macros for Consumables
+
+Pull in more from Connoisseur. Buttons that just manage themselves. Always prepared.
+
 ### Automated Appreciation
 
 * **Thank You Buttons** // Up to five one-click macros that emote at your target and whisper your own words: thank the healer, ask a mage for water, or heckle a guildie.
 * **Group Service Alerts** // Know the moment someone sets out a feast, soulwell, portal, or repair bot, and thank them for it.
 
-### Enhanced Spellbook
-
-* **Conditionals** // Cast a different spell while holding Shift, Ctrl, or Alt, on a Right-Click, in or out of combat, or by talent spec.
-* **Right-Click a spell** on the page to add focus casting, stop casting, auto attack, pet attack, or a trinket to its macro.
-* **Mute Error Sounds** // This macro option briefly turns off your Sound Effects and Error Speech game settings while the macro runs, so a spell that isn't ready stays quiet, then puts them back within a second.
 
 ## Testing & Localization Status
 
@@ -106,9 +126,9 @@ Hover it for your current food, notes on your class's macros, and what your Rest
 
 🚀 **This add-on stands on the shoulders of those that came before.**
 
+* add https://www.curseforge.com/wow/addons/raidbuffstatus
 * Gogo1951's [Connoisseur & Restocker](https://www.curseforge.com/wow/addons/connoisseur-restocker)
 * Gogo1951's [Thanks for the Buff](https://www.curseforge.com/wow/addons/thanks-for-the-buff-revisited)
-* notstraws's [Macro Action Bar](https://www.curseforge.com/wow/addons/macro-actionbar)
 * targon's [Free Refills](https://www.wowinterface.com/downloads/info7950-FreeRefills.html)
 * kvakvs's [Restocker Classic](https://www.curseforge.com/wow/addons/restocker-classic)
 * guardycmw's [Restocker Kit](https://www.curseforge.com/wow/addons/restocker-kit)
@@ -129,16 +149,7 @@ Hover it for your current food, notes on your class's macros, and what your Rest
 * Gogo1951's [GogoLoot](https://www.curseforge.com/wow/addons/gogoloot)
 * Gogo1951's [Magic Eraser](https://www.curseforge.com/wow/addons/magic-eraser)
 * Gogo1951's [Open Sesame](https://www.curseforge.com/wow/addons/open-sesame)
-* Gogo1951's [Tracking Eye](https://www.curseforge.com/wow/addons/tracking-eye-revisited)
 * Gogo1951's [Water Dispenser](https://www.curseforge.com/wow/addons/water-dispenser-revisited)
-
-### 🟡 Overlaps
-
-* Thaoky's [Altoholic](https://www.curseforge.com/wow/addons/altoholic)
-* plusmouse's [Baganator](https://www.curseforge.com/wow/addons/baganator)
-* jaliborc's [Bagnon](https://www.curseforge.com/wow/addons/bagnon)
-* ykiigor's [Method Raid Tools](https://www.curseforge.com/wow/addons/method-raid-tools)
-* plusmouse's [Syndicator](https://www.curseforge.com/wow/addons/syndicator)
 
 ### 🔴 Alternatives
 
