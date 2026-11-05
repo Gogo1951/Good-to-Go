@@ -10,7 +10,7 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 
 ### Restocker
 
-<img width="700" src="https://github.com/user-attachments/assets/4dbb6911-5a4b-4d0f-bd05-d1312ff70640" />
+<img width="800" src="https://github.com/user-attachments/assets/4dbb6911-5a4b-4d0f-bd05-d1312ff70640" />
 
 ### Macros for Consumables
 
