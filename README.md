@@ -110,13 +110,13 @@ Pull in more from Connoisseur. Buttons that just manage themselves. Always prepa
 
 🔴 World of Warcraft // 12.1.0
 
-🔴 Mists of Pandaria Classic // 5.5.4
+🟢 Mists of Pandaria Classic // 5.5.4
 
 🟢 Burning Crusade Anniversary // 2.5.6
 
 🟢 World of Warcraft: Forever // 1.60.1
 
-🟡 World of Warcraft: Season of Discovery // 1.15.9
+🟢 World of Warcraft: Season of Discovery // 1.15.9
 
 🟢 World of Warcraft: Classic // 1.15.9
 
