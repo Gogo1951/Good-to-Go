@@ -2,7 +2,7 @@
 
 Auto-updating macros for your best food, water, potions, and healthstones, a Restock List that auto-buys and banks reagents and ammo, click-to-cast missing buffs, auto thank-you whispers, and mouseover macros for every spell.
 
-**TL;DR:** Stop fiddling with your bars and bags between pulls. Your buttons always reach for the best stuff you're carrying, your bags refill themselves in town, and you spend your time playing instead of prepping.
+**TL;DR:** Always put your best foot forward. Use the right spells, even after you train or change specs. Reach for the best consumables you're carrying, without thinking about it. Keep your bags full simply by stopping by a vendor or your bank next time you're in town. Spend more time playing instead of prepping.
 
 ### Buff Duty
 
