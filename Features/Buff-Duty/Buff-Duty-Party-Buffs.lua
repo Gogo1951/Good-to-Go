@@ -113,8 +113,9 @@ local function ShowRoster(owner, spec)
 
 	--[[
 	    What each click does, the click on the left and its action against
-	    the right edge, like GameTooltip's double lines. Your own class's
-	    buff, with nobody else of it in the group, has no one to whisper.
+	    the right edge, like GameTooltip's double lines, a blank line
+	    between the two. Your own class's buff, with nobody else of it in
+	    the group, has no one to whisper.
 	]]
 	y = y + ROSTER_LINE_HEIGHT
 	local function PutHint(keybind, action)
@@ -128,6 +129,7 @@ local function ShowRoster(owner, spec)
 	end
 	PutHint(L["MINIMAP_LEFT_CLICK"], L["BUFF_DUTY_OTHERS_TOOLTIP_ASK_GROUP"])
 	if spec.recipientNames[1] then
+		y = y + ROSTER_LINE_HEIGHT
 		PutHint(L["MINIMAP_RIGHT_CLICK"], L["BUFF_DUTY_OTHERS_TOOLTIP_ASK_WHISPER"])
 	end
 
