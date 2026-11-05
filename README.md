@@ -1,6 +1,6 @@
 # Good to Go (GtG)
 
-Auto-updating macros for your best food, water, potions, and healthstones, a Restock List that auto-buys and banks reagents and ammo, click-to-cast missing buffs, auto thank-you whispers, and mouseover macros for every spell.
+Always ready for the next pull. Self-updating macros for your best food, water, potions, an easy macro builder for your spells, a Restock List that auto-buys and banks reagents and ammo, click-to-cast missing buffs, and auto thank-you whispers.
 
 **TL;DR:** Always put your best foot forward. Use the right spells, even after you train or change specs. Reach for the best consumables you're carrying, without thinking about it. Keep your bags full simply by stopping by a vendor or your bank next time you're in town. Spend more time playing instead of prepping.
 
