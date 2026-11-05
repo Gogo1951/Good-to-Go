@@ -305,7 +305,7 @@ local function BuildPage(frame, model)
 	page.rowButtons = FramePool(CreateRow)
 
 	page.empty = parchment.paper:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-	page.empty:SetTextColor(unpack(HEADER_INK))
+	page.empty:SetTextColor(unpack(INK))
 	page.empty:SetShadowOffset(0, 0)
 	page.empty:SetPoint("CENTER", 0, PAGER_HEIGHT / 2)
 	page.empty:SetWidth(EMPTY_WIDTH)

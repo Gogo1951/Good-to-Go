@@ -20,7 +20,12 @@ local TITLE_HEIGHT, CONTROLS_HEIGHT = 24, 36
 local FOOTER_HEIGHT, FRAME_BORDER = 28, 4
 local PARCHMENT_SIDE = 8
 local PAGER_HEIGHT = 30
-local COLUMN_TOP, COLUMN_SIDE = 14, 20 -- each column's padding inside the parchment
+--[[
+	Each column's padding inside the parchment. A page is half the paper (the window's width less its borders);
+	at 1060 wide that leaves about 70 beside each 448-wide column, split so the column has room at the fold as
+	well as at the page's outer edge (with the spine shift: about 30 at the fold, 41 at the edge).
+]]
+local COLUMN_TOP, COLUMN_SIDE = 14, 36
 
 -- The flow inside a column (see PackRows and Paginate, in Features/Spellbook/Spellbook-Page-Layout.lua).
 local SLOTS, GAP_X = 2, 12
@@ -46,10 +51,10 @@ local ROW_HEIGHT = LABEL_TOP_GAP + LABEL_HEIGHT + LABEL_GAP + TILE_HEIGHT
 
 local HEADER_SIZE, CONTINUED_SIZE, LABEL_SIZE = 16, 12, 10
 
--- The ink on the parchment. Every category shares the same ink, as the game's own book does.
-local HEADER_INK = ns.INK_COLOR
-local LABEL_INK = { 0.42, 0.29, 0.137 }
-local CONTINUED_INK = { 0.42, 0.353, 0.243 }
+-- The ink on the parchment: oxblood for the headers and form labels, set apart from the spell names' near-black.
+local HEADER_INK = ns.HEADER_INK_COLOR
+local LABEL_INK = ns.LABEL_INK_COLOR
+local CONTINUED_INK = ns.FADED_INK_COLOR
 local RULE_COLOR = { 0.612, 0.498, 0.333 }
 local DIVIDER_COLOR = { 0.651, 0.545, 0.376 }
 -- the small dark buttons that hold the gold gear
@@ -462,7 +467,7 @@ local function BuildPage(page)
 	end)
 
 	page.empty = parchment.paper:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-	page.empty:SetTextColor(unpack(HEADER_INK))
+	page.empty:SetTextColor(unpack(ns.INK_COLOR))
 	page.empty:SetShadowOffset(0, 0)
 	page.empty:SetPoint("CENTER", 0, PAGER_HEIGHT / 2)
 	page.empty:SetWidth(COLUMN_WIDTH)

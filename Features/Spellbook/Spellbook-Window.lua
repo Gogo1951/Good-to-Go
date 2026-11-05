@@ -16,7 +16,7 @@ local ICON_ADDON = ns.ICON_ADDON
 	A 100% UI is 768 points tall, so this size shows unscaled there with the screen margin to spare; smaller UIs
 	shrink it to fit.
 ]]
-local WINDOW_WIDTH, WINDOW_HEIGHT = 1000, 640
+local WINDOW_WIDTH, WINDOW_HEIGHT = 1060, 640
 local SCREEN_MARGIN = 40 -- kept clear around the window when it is scaled down to fit
 -- the tabs hanging under the window's bottom edge, as the game's character window has them
 local TAB_HEIGHT, TAB_LEFT, TAB_TOP = 32, 11, 2

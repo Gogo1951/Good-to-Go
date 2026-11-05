@@ -34,7 +34,8 @@ local VIGNETTE_WIDTH, VIGNETTE_ALPHA = 46, 0.24
 	where the first headers sit. Its paper also curls in at each page's outer edge and runs flat to the spine, so
 	the columns move this far (UI units) toward the spine to sit evenly between the two.
 ]]
-local ART_TOP_CROP = 0.08
+-- past the band, part of the dark fade under it too, so each page's first header sits on lighter paper
+local ART_TOP_CROP = 0.12
 local ART_SPINE_SHIFT = 6
 
 -- Sets the atlas on texture, then cuts ART_TOP_CROP off the top of it.
