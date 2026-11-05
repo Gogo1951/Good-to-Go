@@ -1587,7 +1587,7 @@ function ns:BuildMacroContextReport()
 				end
 			end
 		end
-		if ns.CastSequenceStepCount(macro) > 0 then
+		if ns.CastSequenceStepCount(macro) > 0 or ns.CastSequenceStops(macro) then
 			sequences = sequences + 1
 			if ns.CastSequenceBlockReason(macro) then
 				sequencesBlocked = sequencesBlocked + 1

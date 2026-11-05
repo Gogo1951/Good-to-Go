@@ -283,7 +283,10 @@ function ns.MacroMenuCastSequence(ctx)
 		end)
 		element:AddInitializer(function(frame)
 			local count = ns.IsCastSequenceOn(ctx.macro) and ns.CastSequenceStepCount(ctx.macro) + 1
-			local value = count and GetColor("INFO") .. L["MENU_CAST_SEQUENCE_STEPS"]:format(count) .. "|r"
+			-- the spell then NULL alone reads "Rend, Stop" rather than a count of one
+			local text = count
+				and (count > 1 and L["MENU_CAST_SEQUENCE_STEPS"]:format(count) or ns.CastSequenceSummary(ctx.macro))
+			local value = text and GetColor("INFO") .. text .. "|r"
 			return LabelAndValue(frame, L["MENU_GROUP_CAST_SEQUENCE"], value)
 		end)
 		SetTip(element, L["MENU_GROUP_CAST_SEQUENCE"], L["MENU_CAST_SEQUENCE_DESCRIPTION"])

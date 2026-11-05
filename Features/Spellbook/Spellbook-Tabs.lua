@@ -7,8 +7,8 @@ local HideTooltip = ns.HideTooltip
 	The page's launcher tab on the Retail-engine spellbook (Blizzard_PlayerSpells), for
 	Features/Spellbook/Spellbook-Host-Modern.lua: a tab that runs its onClick and lights while isSelected says so.
 
-	Placement: tabs line up right of the native tabs and skip over tab-sized frames from other add-ons that sit
-	in that row. Tabs that don't fit before the search box stack down the book's right edge. Only frames that
+	Placement: side tabs in the Classic style, stacked down the window's right edge from the height of the native
+	skill line tabs, skipping over tab-sized frames from other add-ons that sit on that edge. Only frames that
 	overlap the next free slot push it along, so an add-on that places itself after these tabs can't make them
 	leapfrog each other.
 
@@ -17,13 +17,7 @@ local HideTooltip = ns.HideTooltip
 	written to.
 ]]
 
-local TAB_WIDTH, TAB_HEIGHT, GAP = 44, 32, 8
-
-local SKIN = {
-	tab = "spellbook-Tab-Frame-C60",
-	tabActive = "spellbook-Tab-Frame-Glow-C60",
-	tabGlow = "spellbook-Tab-Frame-glow-gradient-C60",
-}
+local TAB_WIDTH, TAB_HEIGHT, GAP = 32, 32, 17 -- the Classic book's skill line tab size and spacing
 
 local SpellbookTabs = {
 	tabs = {},
@@ -42,26 +36,23 @@ end
 local function MakeTab(parent, icon)
 	local button = Own(CreateFrame("Button", nil, parent))
 	button:SetSize(TAB_WIDTH, TAB_HEIGHT)
-	button.icon = button:CreateTexture(nil, "ARTWORK")
-	button.icon:SetSize(34, 33)
-	button.icon:SetPoint("BOTTOM", -1, 0)
-	button.icon:SetTexture(icon)
-	local function FrameArt(atlas, y)
-		local texture = button:CreateTexture(nil, "ARTWORK", nil, 1)
-		texture:SetAtlas(atlas, true)
-		texture:SetPoint("BOTTOM", 0, y)
-		return texture
-	end
-	button.normal = FrameArt(SKIN.tab, 1)
-	button.active = FrameArt(SKIN.tabActive, 1)
-	button.glow = FrameArt(SKIN.tabGlow, 0)
+	-- the same art as the Classic host's side tab (Features/Spellbook/Spellbook-Host-Classic.lua)
+	local background = button:CreateTexture(nil, "BACKGROUND")
+	background:SetTexture("Interface\\SpellBook\\SpellBook-SkillLineTab")
+	background:SetSize(64, 64)
+	background:SetPoint("TOPLEFT", -3, 11)
+	button:SetNormalTexture(icon)
+	button:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+	button.checked = button:CreateTexture(nil, "OVERLAY")
+	button.checked:SetTexture("Interface\\Buttons\\CheckButtonHilight")
+	button.checked:SetBlendMode("ADD")
+	button.checked:SetAllPoints()
+	button.checked:Hide()
 	return button
 end
 
 local function SelectTab(button, selected)
-	button.normal:SetShown(not selected)
-	button.active:SetShown(selected)
-	button.glow:SetShown(selected)
+	button.checked:SetShown(selected)
 end
 
 -- left, bottom, right, top in screen pixels, so frames with different scales compare
@@ -122,21 +113,7 @@ local function BlizzardFrames()
 	return set
 end
 
--- first free spot along one axis, pushed past every obstacle that overlaps the slot
-local function NextFreeRowSlot(obstacles, x, width, bottom, top, gap)
-	local moved = true
-	while moved do
-		moved = false
-		for _, rect in ipairs(obstacles) do
-			if rect.left < x + width and rect.right > x and rect.bottom < top and rect.top > bottom then
-				x = rect.right + gap
-				moved = true
-			end
-		end
-	end
-	return x
-end
-
+-- first free spot down the edge, pushed past every obstacle that overlaps the slot
 local function NextFreeColumnSlot(obstacles, y, height, left, right, gap)
 	local moved = true
 	while moved do
@@ -157,58 +134,37 @@ end
 ]]
 function SpellbookTabs:Layout(reuse)
 	local book = self.book
-	local nativeTabs = book.CategoryTabSystem
+	-- the whole window, so the tabs hang off its border whether it shows the talents too or only the book
+	local window = PlayerSpellsFrame
 	local scale = book:GetEffectiveScale()
-	local tabsLeft, tabsBottom, tabsRight, tabsTop = ScreenRect(nativeTabs)
-	local bookLeft, bookBottom, bookRight, bookTop = ScreenRect(book)
-	if not tabsLeft or not bookRight then
+	local _, windowBottom, windowRight, windowTop = ScreenRect(window)
+	if not windowRight then
 		return
 	end
-	local searchLeft = ScreenRect(book.SearchBox)
 	local width, height, gap = TAB_WIDTH * scale, TAB_HEIGHT * scale, GAP * scale
 	local obstacles = reuse and self.obstacles or CollectObstacles(width, height)
 	self.obstacles = obstacles
 
-	local centerY = (tabsBottom + tabsTop) / 2
-	local rowBottom, rowTop = centerY - height / 2, centerY + height / 2
-	--[[
-		other add-ons' launchers sit where these tabs go: by the native tabs (or hanging below them), or down the
-		book's right edge
-	]]
+	-- other add-ons' launchers sit where these tabs go, down the window's right edge
 	local blizzard = BlizzardFrames()
 	for _, rect in ipairs(obstacles) do
-		local byTabs = rect.bottom < rowTop + height
-			and rect.top > rowBottom - height
-			and rect.right > bookLeft
-			and rect.left < bookRight
-		local byEdge = rect.left > bookRight - width / 2
-			and rect.left < bookRight + width
-			and rect.top < bookTop + height
-			and rect.bottom > bookBottom
-		if (byTabs or byEdge) and not blizzard[rect.frame] then
+		local byEdge = rect.left > windowRight - width / 2
+			and rect.left < windowRight + width
+			and rect.top < windowTop + height
+			and rect.bottom > windowBottom
+		if byEdge and not blizzard[rect.frame] then
 			self:HookLauncher(rect.frame)
 		end
 	end
-	local x = tabsRight + gap
-	local columnTop = tabsTop
-	local inRow = true
+	-- the first tab lines up with the top of the native skill line tabs, the way the Classic book's side tabs start
+	local tabsTop = book.CategoryTabSystem and select(4, ScreenRect(book.CategoryTabSystem))
+	local columnTop = tabsTop or (windowTop - 60 * scale)
 	for _, tab in ipairs(self.tabs) do
 		local button = tab.button
 		button:ClearAllPoints()
-		if inRow then
-			x = NextFreeRowSlot(obstacles, x, width, rowBottom, rowTop, gap)
-			if searchLeft and x + width > searchLeft - gap then
-				inRow = false
-			end
-		end
-		if inRow then
-			button:SetPoint("LEFT", nativeTabs, "RIGHT", (x - tabsRight) / scale, 0)
-			x = x + width + gap
-		else
-			columnTop = NextFreeColumnSlot(obstacles, columnTop, height, bookRight, bookRight + width, gap)
-			button:SetPoint("TOPLEFT", book, "TOPRIGHT", 0, (columnTop - bookTop) / scale)
-			columnTop = columnTop - height - gap
-		end
+		columnTop = NextFreeColumnSlot(obstacles, columnTop, height, windowRight, windowRight + width, gap)
+		button:SetPoint("TOPLEFT", window, "TOPRIGHT", 0, (columnTop - windowTop) / scale)
+		columnTop = columnTop - height - gap
 	end
 end
 

@@ -112,7 +112,21 @@ local function ReadSpellbook()
 			end)
 			local known, unknown = {}, {}
 			for _, rank in ipairs(list) do
-				table.insert(rank.unknown and unknown or known, rank)
+				if not rank.unknown then
+					table.insert(known, rank)
+				end
+			end
+			--[[
+				A rank at or below the highest known one was learned and then replaced: a client whose spellbook
+				keeps only the highest rank (Forever) no longer reports it, so it isn't one still to learn (as
+				What's Next? reads it, Whats-Next.lua SetStatuses). It isn't added to known either, since the
+				client no longer holds it to cast.
+			]]
+			local highestKnown = known[1] and known[1].level or 0
+			for _, rank in ipairs(list) do
+				if rank.unknown and rank.level > highestKnown then
+					table.insert(unknown, rank)
+				end
 			end
 			if #known > 0 then
 				ranks[name] = { known = known, unknown = #unknown > 0 and unknown or nil }

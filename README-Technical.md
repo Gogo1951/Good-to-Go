@@ -587,10 +587,10 @@ A hidden `GtGBuffKey` secure button, bound as `CLICK GtGBuffKey:LeftButton`; a s
 
 ### Hosts and the Window
 
-`GoodToGoSpellbookFrame` (1000 by 640, `UIParent`, in `UISpecialFrames`) replaces the game's spellbook rather than docking to it: showing it closes the game's book with `HideUIPanel`, out of combat only. It only shrinks to fit the screen. Four tabs: Spell Book, What's Next?, Pet Spell Book and Pet What's Next?, the last two only where the class has pet data. The launcher is chosen by the TOC:
+`GoodToGoSpellbookFrame` (1060 by 640, `UIParent`, in `UISpecialFrames`) replaces the game's spellbook rather than docking to it: showing it closes the game's book with `HideUIPanel`, out of combat only. It only shrinks to fit the screen. Four tabs: Spell Book, What's Next?, Pet Spell Book and Pet What's Next?, the last two only where the class has pet data. The launcher is chosen by the TOC:
 
 - **Classic host** (Vanilla, TBC, Mists): a tab parented to `UIParent`, anchored under the class's last skill-line tab so it doesn't land under other add-ons' tabs, hooked with `HookScript` and `hooksecurefunc` only.
-- **Modern host** (Camelot): `Spellbook-Tabs.lua` places tabs right of the native ones on `PlayerSpellsFrame`, stepping past other add-ons' frames of tab size, attaching on `ADDON_LOADED` for `Blizzard_PlayerSpells`.
+- **Modern host** (Camelot): `Spellbook-Tabs.lua` hangs Classic-style side tabs down the right edge of `PlayerSpellsFrame`, starting level with the native skill-line tabs and stepping past other add-ons' frames of tab size, attaching on `ADDON_LOADED` for `Blizzard_PlayerSpells`.
 
 Every launcher and window frame is parented to `UIParent` and only anchored to Blizzard frames, because a frame parented to a Blizzard panel stays protected for good. The page strip is custom: Blizzard's paging template reads a format string the Classic clients don't define.
 
