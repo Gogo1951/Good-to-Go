@@ -4,6 +4,22 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 
 **TL;DR:** Stop fiddling with your bars and bags between pulls. Your buttons always reach for the best stuff you're carrying, your bags refill themselves in town, and you spend your time playing instead of prepping.
 
+### Enhanced Spellbook
+
+<img width="800" src="https://github.com/user-attachments/assets/74371525-410a-466e-8777-9beae8e581e5" />
+
+### Restocker
+
+<img width="700" src="https://github.com/user-attachments/assets/4dbb6911-5a4b-4d0f-bd05-d1312ff70640" />
+
+### Macros for Consumables
+
+<img width="800" src="https://github.com/user-attachments/assets/3483b4de-a308-4ca8-84e3-606c929408c0" />
+
+### Automated Appreciation
+
+<img width="800" src="https://github.com/user-attachments/assets/a009f278-b708-4d3f-a2a0-834a6291c388" />
+
 ### Example Messages
 
 > **Arrive in Town, 🔊 & Self:** Good to Go // Don't forget to restock while you're in town!
@@ -27,15 +43,15 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 
 ## Features
 
+🛡️ **Buff Duty** // One click-to-cast window, or one key, for every buff you owe: your group, yourself, your weapons, and the stranger who just buffed you.
+
+📖 **Enhanced Spellbook** // Mouseover, cursor, and self-cast macros for every class spell, built in one click with no macro syntax, and kept current as you level and train.
+
 🧞‍♂️ **Always the Best Item** // Your food, water, potion, and healthstone buttons rewrite themselves as your bags change, skipping anything you can't use yet.
 
 🛒 **Restocker** // Pick your staples once, and every merchant and bank visit tops up your food, water, ammo, and reagents. Your list even upgrades as you level.
 
-🛡️ **Buff Duty** // One click-to-cast window, or one key, for every buff you owe: your group, yourself, your weapons, and the stranger who just buffed you.
-
 🙌 **Automated Appreciation** // Thank the players who buff you with a whisper or an emote, and tell the ones you buff what they got, without it ever turning into spam.
-
-📖 **Enhanced Spellbook** // Mouseover, cursor, and self-cast macros for every class spell, built in one click with no macro syntax, and kept current as you level and train.
 
 ## Tips & Tricks
 
