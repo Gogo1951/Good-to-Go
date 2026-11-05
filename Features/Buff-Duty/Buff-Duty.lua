@@ -107,6 +107,15 @@ function BuffDuty.ShowsHere()
 	return where ~= Data.BUFF_DUTY_WHERE.INSTANCE or (IsInInstance())
 end
 
+--[[
+    Whether the Party-Buffs row could have anything to count: in a group, with
+    Ask Other Classes for Buffs on. It needs nothing castable of yours, so a
+    class with no buffs to give still sees what the group is missing.
+]]
+local function WatchesPartyBuffs()
+	return IsInGroup() and ns.db.global.buffWindow.askOtherClasses
+end
+
 local function Refresh()
 	if not BuffDuty.isSetUp or not ns.db then
 		return
@@ -117,17 +126,24 @@ local function Refresh()
 	end
 
 	local db = ns.db.global.buffWindow
-	if not db.enabled or not HasAnythingToOffer() or ns.AreAurasSecret() or not BuffDuty.ShowsHere() then
+	if
+		not db.enabled
+		or not (HasAnythingToOffer() or WatchesPartyBuffs())
+		or ns.AreAurasSecret()
+		or not BuffDuty.ShowsHere()
+	then
 		ns.HideBuffDuty()
 		return
 	end
 
 	local sections = BuffDuty.BuildSections()
-	if #sections == 0 then
+	-- The raid buffs the group is missing ride along as Party-Buffs (Buff-Duty-Other-Classes.lua).
+	local otherBuffs = BuffDuty.BuildOtherClassBuffs()
+	-- Either one keeps the window up: Party-Buffs alone still shows it.
+	if #sections == 0 and #otherBuffs == 0 then
 		ns.HideBuffDuty()
 	else
-		-- The raid buffs the group is missing ride along as Party-Buffs (Buff-Duty-Other-Classes.lua).
-		ns.RenderBuffDuty(sections, BuffDuty.BuildOtherClassBuffs())
+		ns.RenderBuffDuty(sections, otherBuffs)
 	end
 end
 
@@ -232,7 +248,7 @@ function ns.OnBuffDutyAura(unit)
 	then
 		return
 	end
-	if ns.IsBuffDutyOnForClass() and HasAnythingToOffer() then
+	if ns.IsBuffDutyOnForClass() and (HasAnythingToOffer() or WatchesPartyBuffs()) then
 		MarkAurasDirty(unit)
 		ns.RequestBuffDutyRefresh()
 	end
