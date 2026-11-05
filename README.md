@@ -39,7 +39,7 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 3. Open your Macros window and drag `- Food`, `- Water`, and the rest from the General tab onto your action bars.
 4. Open your spellbook, click the GtG // Spellbook tab, and drag any spell onto your bars as a ready-made macro.
 5. Pick your staples when the Staples window pops up. From then on, every merchant and bank visit keeps your bags stocked.
-6. _"I love it when a plan comes together."_
+6. _"Luck favors the prepared, darling."_
 
 ## Features
 
