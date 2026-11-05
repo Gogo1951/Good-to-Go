@@ -65,11 +65,23 @@ local function ShowRoster(owner, spec)
 	end
 	usedRosterStrings = 0
 
+	--[[
+	    How far down the lowest text reaches, so the padding under it matches
+	    the padding over the title. A line can stand taller than
+	    ROSTER_LINE_HEIGHT, and sizing by the line count alone let the last one
+	    sink into the bottom padding.
+	]]
+	local bottom = 0
+	local function Track(line, y)
+		bottom = math.max(bottom, y + line:GetStringHeight())
+	end
+
 	-- `x` and `y` measured in from the top-left padding; returns the text's width.
 	local function Put(text, font, x, y)
 		local line = AcquireRosterString(font)
 		line:SetText(text)
 		line:SetPoint("TOPLEFT", roster, "TOPLEFT", ROSTER_PADDING + x, -(ROSTER_PADDING + y))
+		Track(line, y)
 		return x + line:GetStringWidth()
 	end
 
@@ -124,6 +136,7 @@ local function ShowRoster(owner, spec)
 		text:SetJustifyH("RIGHT")
 		text:SetText(GetColor("INFO") .. action .. "|r")
 		text:SetPoint("TOPRIGHT", roster, "TOPRIGHT", -ROSTER_PADDING, -(ROSTER_PADDING + y))
+		Track(text, y)
 		width = math.max(width, right + ROSTER_COLUMN_GAP + text:GetStringWidth())
 		y = y + ROSTER_LINE_HEIGHT
 	end
@@ -133,7 +146,7 @@ local function ShowRoster(owner, spec)
 		PutHint(L["MINIMAP_RIGHT_CLICK"], L["BUFF_DUTY_OTHERS_TOOLTIP_ASK_WHISPER"])
 	end
 
-	roster:SetSize(math.ceil(width) + ROSTER_PADDING * 2, math.ceil(y) + ROSTER_PADDING)
+	roster:SetSize(math.ceil(width) + ROSTER_PADDING * 2, math.ceil(bottom) + ROSTER_PADDING * 2)
 	-- Where GameTooltip's ANCHOR_RIGHT would put it: up and to the right of the icon.
 	roster:ClearAllPoints()
 	roster:SetPoint("BOTTOMLEFT", owner, "TOPRIGHT")
