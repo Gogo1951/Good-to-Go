@@ -1069,8 +1069,7 @@ L["RESTOCKER_OUT_OF_GOLD"] = "Nicht genug Gold, um das Auffüllen abzuschließen
     coin. Nothing waits at this merchant: the next merchant visit buys whatever
     fits above the reserve, which is what the second sentence says.
 ]]
-L["RESTOCKER_OUT_OF_GOLD_RESERVE"] =
-	"Du hast weniger als %s. Das Auffüllen geht weiter, sobald du mehr hast."
+L["RESTOCKER_OUT_OF_GOLD_RESERVE"] = "Du hast weniger als %s. Das Auffüllen geht weiter, sobald du mehr hast."
 
 -- /restock help lines. The command literals stay in code; these are the descriptions, and the show line reuses RESTOCKER_COMMAND_DESCRIPTION.
 

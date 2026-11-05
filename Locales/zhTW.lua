@@ -1049,8 +1049,7 @@ L["RESTOCKER_OUT_OF_GOLD"] = "金幣不足，無法完成補貨。"
     coin. Nothing waits at this merchant: the next merchant visit buys whatever
     fits above the reserve, which is what the second sentence says.
 ]]
-L["RESTOCKER_OUT_OF_GOLD_RESERVE"] =
-	"你的金幣不足%s。金幣增加後將繼續補貨。"
+L["RESTOCKER_OUT_OF_GOLD_RESERVE"] = "你的金幣不足%s。金幣增加後將繼續補貨。"
 
 -- /restock help lines. The command literals stay in code; these are the descriptions, and the show line reuses RESTOCKER_COMMAND_DESCRIPTION.
 
