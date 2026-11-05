@@ -92,9 +92,14 @@ function ns.CastSequenceStepCount(macro)
 	return count
 end
 
--- Whether the macro casts a sequence: it offers one, nothing blocks it, and a step after its own has a spell.
+--[[
+	Whether the macro casts a sequence: it offers one, nothing blocks it, and a step after its own has a spell or
+	it stops on NULL. The macro's own spell then NULL is a sequence of its own: it casts once, then nothing until
+	a reset, "/castsequence reset=target Rend, NULL".
+]]
 function ns.IsCastSequenceOn(macro)
-	return ns.CastSequenceStepCount(macro) > 0 and not ns.CastSequenceBlockReason(macro)
+	return (ns.CastSequenceStepCount(macro) > 0 or ns.CastSequenceStops(macro))
+		and not ns.CastSequenceBlockReason(macro)
 end
 
 -- Whether the sequence stops on NULL when its last step has cast, rather than starting over.

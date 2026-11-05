@@ -1011,8 +1011,21 @@ ns.MACRO_NAME_MAX_LENGTH = 16 - #ns.MACRO_NAME_PREFIX
 
 -- parchment ink: spell names and category headers, near black so they read on the light parchment
 ns.INK_COLOR = { 0.169, 0.106, 0.043 }
--- faded ink for a tile's options note on the parchment: dark ink at 60% over the parchment, opaque so it also works as a |c code
-ns.FADED_INK_COLOR = { 0.44, 0.37, 0.28 }
+--[[
+    faded ink for secondary text on the parchment (a tile's options note, rank and source text, page numbers):
+    dark ink at 75% over the parchment, about 5:1 against it so it reads while staying lighter than the main
+    ink; opaque so it also works as a |c code
+]]
+ns.FADED_INK_COLOR = { 0.34, 0.27, 0.18 }
+--[[
+    header ink for category and section headers and a form's label over its tiles (BATTLE STANCE): a deep
+    oxblood, a manuscript's red heading ink. Forever's page art darkens to orange-brown along its top and outer
+    edges, where the first header of each page sits, and any mid-tone ink (a darkened gold read 1.05:1 there)
+    disappears into it; this stays nearly as dark as the spell ink (about 2:1 on that band, 6:1 mid-page) and
+    sets headers apart from the near-black spell names by hue.
+]]
+ns.HEADER_INK_COLOR = { 0.30, 0.06, 0.03 }
+ns.LABEL_INK_COLOR = ns.HEADER_INK_COLOR
 
 --[[
     The What's Next? tabs' status inks, by status (ns.WHATS_NEXT_STATUSES and
