@@ -6,35 +6,24 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 
 ### Buff Duty
 
--- to do, needs info graphic.
+<img width="800" src="https://github.com/user-attachments/assets/01cbb0ae-c1f1-4fa3-8b6d-5d3c993a6c79" />
 
 ### Enhanced Spellbook
 
-<img width="800" src="https://github.com/user-attachments/assets/74371525-410a-466e-8777-9beae8e581e5" />
+<img width="800" src="https://github.com/user-attachments/assets/e3e65c7c-04df-45c4-8564-f613da0b2746" />
 
 ### Restocker
 
-<img width="800" src="https://github.com/user-attachments/assets/4dbb6911-5a4b-4d0f-bd05-d1312ff70640" />
+<img width="800" src="https://github.com/user-attachments/assets/fa63db86-8638-4483-9f18-f47765ba8a8f" />
 
 ### Macros for Consumables
 
-<img width="800" src="https://github.com/user-attachments/assets/3483b4de-a308-4ca8-84e3-606c929408c0" />
+<img width="800" src="https://github.com/user-attachments/assets/034cffa2-69f5-43dd-91f8-4cee48ec7d72" />
 
 ### Automated Appreciation
 
-<img width="800" src="https://github.com/user-attachments/assets/a009f278-b708-4d3f-a2a0-834a6291c388" />
+<img width="800" src="https://github.com/user-attachments/assets/ecd9839b-4f94-4657-b764-4f25dd24a82e" />
 
-### Example Messages
-
-> **Arrive in Town, 🔊 & Self:** Good to Go // Don't forget to restock while you're in town!
-
-> **Ready Check, Self:** Good to Go // Missing Items : Healthstone, Mana Potion
-
-> **Combat Buff, 🔊 & Message To Katz:** ⭐ Thanks for the [Power Infusion] // GtG
-
-> **You Buff Someone, Message To Aero:** ⭐ You have [Arcane Intellect] // GtG
-
-> **Portal Opened, Self:** Good to Go // Portalrico opened [Portal: Stormwind]!
 
 ## Setup
 
@@ -72,22 +61,20 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 
 Hover it for your current food, notes on your class's macros, and what your Restock List is still short.
 
--- keep the order and names of this section the same as above, and i'll add graphics. 
-
-
 ### Buff Duty
 
-Easy keep your own buffs up, including class buffs and weapon buffs. 
-Provide gentle reminders to others to buff the group.
+* **Keep your own buffs up, easily** // Your class buffs, self-buffs, and weapon buffs show up the moment they're missing or running low, and one click puts them back on.
+* **Gentle reminders for the group** // See which buffs your group is missing, then nudge the group, or quietly whisper the players who can cast them.
 
 ### Enhanced Spellbook
 
-* talk about dynamic level based on who you target
-* talk about how anyone can make an always up to date macro just by dragging the ability to your bar, and how this teaches you how to do more advanced macros.
+* **Drag, drop, done** // Drag any spell from the GtG // Spellbook tab to your bar and it's a macro that stays up to date on its own. Open it in your Macros window to see how it's built, and you'll pick up a few macro tricks along the way.
+* **Dynamic Rank** // Buffing a lower-level player? The macro casts the rank that fits their level.
 * **Conditionals** // Cast a different spell while holding Shift, Ctrl, or Alt, on a Right-Click, in or out of combat, or by talent spec.
-* Mouseover, target of target, etc. a huge range of options built inn.
+* **Any target you like** // Mouseover, target of target, focus, pet, cast at cursor, and more, stacked in the order you want.
 * **Right-Click a spell** on the page to add focus casting, stop casting, auto attack, pet attack, or a trinket to its macro.
-* "What's next" showing when you can learn new abilities and if you need to visit your trainer.
+* **What's Next?** // A second tab shows the spells you can learn now and the ones coming soon, so you know when it's time to visit your trainer.
+* **Mute Error Sounds** // This macro option briefly turns off your Sound Effects and Error Speech game settings while the macro runs, so a spell that isn't ready stays quiet, then puts them back within a second.
 
 ### Restocker
 
@@ -98,13 +85,30 @@ Provide gentle reminders to others to buff the group.
 
 ### Macros for Consumables
 
-Pull in more from Connoisseur. Buttons that just manage themselves. Always prepared.
+Buttons that manage themselves, so you're always prepared. Drag them onto your bars once and forget about them.
+
+| Macro | Uses |
+| --- | --- |
+| `- Food` | Best food, plus optional buff food, scroll buffs, and pet buff food |
+| `- Water` | Best drink |
+| `- Health Potion` | Best healing potion, optionally with your best Healthstone stacked underneath |
+| `- Mana Potion` | Best mana potion |
+| `- Healthstone` | Best Healthstone |
+| `- Mana Gem` | Best Mana Gem |
+| `- Soulstone` | Best Soulstone |
+| `- Bandage` | Best bandage your First Aid skill allows |
+| `- Explosives` | Hardest-hitting bomb, grenade, or sapper your Engineering skill allows |
+| `- Feed Pet` | Call, feed, or revive your pet, or cast Mend Pet (Hunters only) |
+| `- Poisons` | Poisons for both weapons from one button (Rogues only) |
+
+* **Mages and Warlocks** // Right-Click your Food, Water, Mana Gem, Healthstone, or Soulstone macro to conjure or create more. Target a lower-level player first to make food, water, or a Healthstone for their level.
+* **Druids** // With DruidMacroHelper, your potion and Healthstone macros powershift you out of form and back.
+* **Forsaken and Night Elves** // Forsaken can Cannibalize instead of eating, and Night Elves can slip into Shadowmeld before they eat or drink.
 
 ### Automated Appreciation
 
 * **Thank You Buttons** // Up to five one-click macros that emote at your target and whisper your own words: thank the healer, ask a mage for water, or heckle a guildie.
 * **Group Service Alerts** // Know the moment someone sets out a feast, soulwell, portal, or repair bot, and thank them for it.
-
 
 ## Testing & Localization Status
 
@@ -126,9 +130,9 @@ Pull in more from Connoisseur. Buttons that just manage themselves. Always prepa
 
 🚀 **This add-on stands on the shoulders of those that came before.**
 
-* add https://www.curseforge.com/wow/addons/raidbuffstatus
 * Gogo1951's [Connoisseur & Restocker](https://www.curseforge.com/wow/addons/connoisseur-restocker)
 * Gogo1951's [Thanks for the Buff](https://www.curseforge.com/wow/addons/thanks-for-the-buff-revisited)
+* oscarucb's [RaidBuffStatus](https://www.curseforge.com/wow/addons/raidbuffstatus)
 * targon's [Free Refills](https://www.wowinterface.com/downloads/info7950-FreeRefills.html)
 * kvakvs's [Restocker Classic](https://www.curseforge.com/wow/addons/restocker-classic)
 * guardycmw's [Restocker Kit](https://www.curseforge.com/wow/addons/restocker-kit)
@@ -148,7 +152,6 @@ Pull in more from Connoisseur. Buttons that just manage themselves. Always prepa
 
 * Gogo1951's [GogoLoot](https://www.curseforge.com/wow/addons/gogoloot)
 * Gogo1951's [Magic Eraser](https://www.curseforge.com/wow/addons/magic-eraser)
-* Gogo1951's [Open Sesame](https://www.curseforge.com/wow/addons/open-sesame)
 * Gogo1951's [Water Dispenser](https://www.curseforge.com/wow/addons/water-dispenser-revisited)
 
 ### 🔴 Alternatives
