@@ -44,14 +44,32 @@ end
     Whether anyone present is of a class, the player included -- AnyGroupMember
     tests "player" first, so "in the group" always covers "is you".
 
-    Two report entries ask this. A Warlock is who produces a Healthstone, so
-    with none present it is not actionable. A Shaman is who makes the
-    weapon-buff line moot; see its caller in Readiness-Report.lua.
+    A Warlock is who produces a Healthstone, so with none present that entry
+    is not actionable.
 ]]
 function ns.GroupHasClass(classToken)
 	return AnyGroupMember(function(unit)
 		return select(2, UnitClass(unit)) == classToken
 	end)
+end
+
+--[[
+    The same, for the player's own party only: in a raid the party ids are the
+    player's own subgroup. A Shaman's Windfury Totem reaches only that party,
+    which is what makes the Main Hand line moot; see its caller in
+    Readiness-Report.lua.
+]]
+function ns.PartyHasClass(classToken)
+	if select(2, UnitClass("player")) == classToken then
+		return true
+	end
+	for index = 1, 4 do
+		local unit = "party" .. index
+		if UnitExists(unit) and select(2, UnitClass(unit)) == classToken then
+			return true
+		end
+	end
+	return false
 end
 
 local SOULSTONE_BUFF_LOOKUP = {}
@@ -358,8 +376,7 @@ end
     nil on Forever, whose Retail-style talents have no GetNumTalentTabs.
 
     From MoP on there are no points in trees: the character picks one
-    specialization, so the label is its name alone. MoP Classic still answers
-    GetNumTalentTabs, but its trees report no points spent.
+    specialization, so the label is its name alone.
 ]]
 function ns.GetCurrentSpecializationLabel()
 	if ns.EXPANSION >= 5 then
@@ -391,6 +408,15 @@ function ns.GetCurrentSpecializationLabel()
 end
 
 --[[
+    Whether ns.GetCurrentSpecializationLabel can ever answer on this client: the
+    classic talent trees, or MoP's specializations. Never on Forever, whose
+    talents are Retail's.
+]]
+function ns.CanReportSpecialization()
+	return ns.GetNumTalentTabs() ~= nil or ns.FLAVOR == "Mists"
+end
+
+--[[
     Talent points the character has not spent, or nil when there are none to
     spend. Forever has no UnitCharacterPoints, so the line never shows there.
 ]]
@@ -410,7 +436,8 @@ end
     Whether this character has a mana bar worth reporting a Mana Potion for.
     A static class set rather than UnitPowerType, which answers for the CURRENT
     form -- a druid in cat form reads as energy and would drop the line for
-    exactly the character most likely to want it.
+    exactly the character most likely to want it. Hunters count only before
+    Cataclysm, which moved them to Focus.
 ]]
 local MANA_CLASSES = {
 	DRUID = true,
@@ -424,5 +451,8 @@ local MANA_CLASSES = {
 
 function ns.PlayerUsesMana()
 	local _, classToken = UnitClass("player")
+	if classToken == "HUNTER" and ns.EXPANSION >= 4 then
+		return false
+	end
 	return MANA_CLASSES[classToken] == true
 end

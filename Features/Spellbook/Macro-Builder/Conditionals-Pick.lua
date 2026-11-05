@@ -105,7 +105,7 @@ end
 -- Starts pick mode for an owner's slot, or says it can't in combat.
 function ns.StartSpellPick(who, index)
 	if InCombatLockdown() then
-		UIErrorsFrame:AddMessage(ERR_NOT_IN_COMBAT, 1, 0.1, 0.1)
+		ns.ShowUIError(ERR_NOT_IN_COMBAT)
 		return
 	end
 	SetPicking(index, who)
@@ -134,7 +134,7 @@ function ns.PickConditionalSpell(macro)
 	local index, who = picking, owner
 	local pick = who and who.pickOf(macro)
 	if not pick then
-		UIErrorsFrame:AddMessage(L[who and who.cannotPickKey or "CONDITIONALS_CANNOT_PICK"], 1, 0.1, 0.1)
+		ns.ShowUIError(L[who and who.cannotPickKey or "CONDITIONALS_CANNOT_PICK"])
 		return
 	end
 	SetPicking(nil, who)
@@ -199,8 +199,10 @@ local conditionals = {
 	end,
 }
 
--- The owner reads the panel when pick mode starts: Conditionals-Panel.lua loads first, but builds its frame
--- (UI.panel) only when the panel first opens.
+--[[
+	The owner reads the panel when pick mode starts: Conditionals-Panel.lua loads first, but builds its frame
+	(UI.panel) only when the panel first opens.
+]]
 local function Conditionals()
 	conditionals.panel = UI.panel
 	return conditionals

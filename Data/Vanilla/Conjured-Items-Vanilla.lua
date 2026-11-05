@@ -21,10 +21,10 @@ ns.CONJURED_ITEM_IDS_BY_SPELL = {
 How We Got the Data
 
 Last Validated
-	2026-10-23, Classic Era 1.15.9.70003
+	2026-11-04, Classic Era 1.15.9.70576
 
 Notes
-	- Conjure spell ID to the items it makes, read by GetSmartSpell (Features/Macros/Smart-Spell.lua) when it is called with checkUnique. Conjured stones are unique in bags, so a rank whose item the player already holds is skipped and the macro conjures the next rank down instead of failing on a duplicate.
+	- Conjure spell ID to the items it makes, read by GetSmartSpell (Features/Macros-for-Consumables/Macros/Smart-Spell.lua) when it is called with checkUnique. Conjured stones are unique in bags, so a rank whose item the player already holds is skipped and the macro conjures the next rank down instead of failing on a duplicate.
 	- Each Create Healthstone rank makes one of three items, depending on the warlock's Improved Healthstone talent (0, 1 or 2 points), and a tier counts as held when any of them is present. Each Mana Gem spell makes exactly one item.
 	- Soulstones have no rows here on purpose: they share a 30-minute use cooldown that matches the buff duration, so only one stone can ever be deployed at a time, and conjuring a lower rank while holding the best one would just waste a soul shard. The Soulstone resolver runs with checkUnique off and always offers the best known conjure.
 

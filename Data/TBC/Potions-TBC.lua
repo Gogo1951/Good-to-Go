@@ -69,10 +69,10 @@ ns.POTIONS = {
 How We Got the Data
 
 Last Validated
-	2026-10-23, TBC Anniversary 2.5.6.70006
+	2026-11-04, TBC Anniversary 2.5.6.70577
 
 Notes
-	- Every potion this client knows that restores health or mana instantly on the potion cooldown, read by the item cache (Features/Item-Cache.lua) for the Health Potion and Mana Potion macros. Healing Amount and Mana Amount are each effect's low end; requiredAlchemy is the Alchemy rank the tooltip requires.
+	- Every potion this client knows that restores health or mana instantly on the potion cooldown, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Health Potion and Mana Potion macros. Healing Amount and Mana Amount are each effect's low end; requiredAlchemy is the Alchemy rank the tooltip requires.
 	- Allowed Zones are uiMapIDs. The draughts' text says they work only in PvP battlegrounds: 1459 Alterac Valley, 1460 Warsong Gulch, 1461 Arathi Basin, 1956 Eye of the Storm.
 	- Holy Spring Water (737) is left out on purpose, an oddball on the potion cooldown. Potions that do something else (rage, speed, protection, invisibility) are not in this table. Deprecated Potion of Lesser Invulnerability (Fix) (2462) is a placeholder nothing drops, sells or makes.
 	- The TBC zone potions have no area requirement in this client's tables; their zones come from their text. The Ogre Brews say only the Blade's Edge Plateaus (1949), and keep Gruul's Lair (330) too: they work there. Bottled Nethergon Energy and Vapor work inside Tempest Keep's four wings, and the Cenarion salves inside Coilfang's four.

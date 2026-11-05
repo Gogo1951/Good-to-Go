@@ -10,24 +10,13 @@ ns.SHARED_PAGE_SPELLS = {
 		20600, -- Perception
 		20594, -- Stoneform
 		2481, -- Find Treasure
-		{ 20580, 58984 }, -- Shadowmeld
+		20580, -- Shadowmeld
 		20589, -- Escape Artist
-		{ 20572, 33697, 33702 }, -- Blood Fury
+		20572, -- Blood Fury
 		7744, -- Will of the Forsaken
 		20577, -- Cannibalize
 		20549, -- War Stomp
 		{ 20554, 26296, 26297 }, -- Berserking
-		{ 28880, 59542, 59543, 59544, 59545, 59547, 59548, 121093 }, -- Gift of the Naaru
-		{ 28730, 25046, 50613, 80483, 129597 }, -- Arcane Torrent
-		28734, -- Mana Tap
-		59752, -- Every Man for Himself
-		68992, -- Darkflight
-		68996, -- Two Forms
-		87840, -- Running Wild
-		69041, -- Rocket Barrage
-		69070, -- Rocket Jump
-		69046, -- Pack Hobgoblin
-		107079, -- Quaking Palm
 	},
 	professions = {
 		2259, -- Alchemy
@@ -36,8 +25,6 @@ ns.SHARED_PAGE_SPELLS = {
 		4036, -- Engineering
 		2108, -- Leatherworking
 		3908, -- Tailoring
-		25229, -- Jewelcrafting
-		45357, -- Inscription
 		2550, -- Cooking
 		3273, -- First Aid
 		7620, -- Fishing
@@ -46,11 +33,7 @@ ns.SHARED_PAGE_SPELLS = {
 		2656, -- Smelting
 		8613, -- Skinning
 		13262, -- Disenchant
-		31252, -- Prospecting
-		51005, -- Milling
 		818, -- Basic Campfire
-		78670, -- Archaeology
-		80451, -- Survey
 		20219, -- Gnomish Engineer
 		20222, -- Goblin Engineer
 		10656, -- Dragonscale Leatherworking
@@ -61,17 +44,10 @@ ns.SHARED_PAGE_SPELLS = {
 		17039, -- Master Swordsmith
 		17040, -- Master Hammersmith
 		17041, -- Master Axesmith
-		28672, -- Transmutation Master
-		28675, -- Potion Master
-		28677, -- Elixir Master
-		26797, -- Spellfire Tailoring
-		26798, -- Mooncloth Tailoring
-		26801, -- Shadoweave Tailoring
 	},
 	tracking = {
 		2383, -- Find Herbs
 		2580, -- Find Minerals
-		43308, -- Find Fish
 		1494, -- Track Beasts
 		{ 19883, 5225 }, -- Track Humanoids
 		19884, -- Track Undead
@@ -94,21 +70,20 @@ ns.PROFESSION_SPECIALIZATIONS = {
 	{ 4036, 20219, 20222 }, -- Engineering: Gnomish Engineer, Goblin Engineer
 	{ 2018, 9788, 9787, 17039, 17040, 17041 }, -- Blacksmithing: Armorsmith, Weaponsmith, Master Swordsmith, Master Hammersmith, Master Axesmith
 	{ 2108, 10656, 10658, 10660 }, -- Leatherworking: Dragonscale, Elemental, Tribal Leatherworking
-	{ 2259, 28672, 28675, 28677 }, -- Alchemy: Transmutation Master, Potion Master, Elixir Master
-	{ 3908, 26797, 26798, 26801 }, -- Tailoring: Spellfire, Mooncloth, Shadoweave Tailoring
 }
 
 --[[
 How We Got the Data
 
 Last Validated
-	Never.
+	2026-11-04, Classic Era 1.15.9.70576
 
 Notes
-	- SHARED_PAGE_SPELLS holds the spells every class shares, which the Spell Book page files under its own headings whatever their spellbook tab: each race's spells (racials, which Sort By Category gives a Racials section), the profession and tracking spells the General tab lists (professions, tracking), and its Attack (attacks). ns.PageCategory and the page-tag lookup in Features/Spellbook/Macro-Builder.lua read it.
-	- An entry is a spell ID, or a list of the IDs one spell has across clients. Each is matched by name, so an ID this client doesn't have is skipped.
-	- PROFESSION_SPECIALIZATIONS lists each profession's spell, then its specializations: passives the spellbook lists beside the profession that do nothing when cast. When one is learned, the page shows the profession's macro under the specialization's name and icon ("Goblin Engineer", still opening Engineering) and leaves the specialization's own off. A later one in the row wins, so a Master Swordsmith beats the Weaponsmith it builds on. FoldSpecializations in Features/Spellbook/Macro-Builder.lua reads it.
-	- Every folder holds the same rows, copied from the one shared table these came from, until the Data Review validates each folder against its own client.
+	- SHARED_PAGE_SPELLS holds the spells every class shares, which the Spell Book page files under its own headings whatever their spellbook tab: each race's spells (racials, which Sort By Category gives a Racials section), the profession and tracking spells the General tab lists (professions, tracking), and its Attack (attacks). ns.PageCategory and the page-tag lookup in Features/Spellbook/Macro-Builder/Macro-Builder.lua read it.
+	- An entry is a spell ID, or a list of every ID one spell has on this client. Each is matched by name, so an ID the player doesn't know is skipped.
+	- PROFESSION_SPECIALIZATIONS lists each profession's spell, then its specializations: passives the spellbook lists beside the profession that do nothing when cast. When one is learned, the page shows the profession's macro under the specialization's name and icon ("Goblin Engineer", still opening Engineering) and leaves the specialization's own off. A later one in the row wins, so a Master Swordsmith beats the Weaponsmith it builds on. FoldSpecializations in Features/Spellbook/Macro-Builder/Macro-Builder.lua reads it.
+	- Rows began as one table shared by every folder, then each folder was pruned to its own client's Validate Data report. Not on this client, so pruned: Gift of the Naaru, Arcane Torrent, Mana Tap and the later races' racials, the later IDs of Shadowmeld and Blood Fury, Jewelcrafting, Inscription, Prospecting, Milling, Archaeology, Survey, Find Fish, and the TBC Alchemy and Tailoring specializations, which took Alchemy's and Tailoring's rows with them.
+	- The racials were checked against this client's tables: every spell on a racial skill line (SkillLine category 9, named Racial; SkillLineAbility), less the passive and hidden ones (SpellMisc), is a row. Every profession and secondary skill line (categories 11 and 9, leaving out riding, Swimming and Survival) has its spell here, with its gathering and specialization spells.
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query
@@ -117,7 +92,10 @@ Wowhead
 	None.
 
 wago.tools
-	None.
+	https://wago.tools/db2/SkillLine?build=1.15.9.70576
+	https://wago.tools/db2/SkillLineAbility?build=1.15.9.70576
+	https://wago.tools/db2/SpellMisc?build=1.15.9.70576
+	https://wago.tools/db2/SpellName?build=1.15.9.70576
 
 QuestieDB
 	None.

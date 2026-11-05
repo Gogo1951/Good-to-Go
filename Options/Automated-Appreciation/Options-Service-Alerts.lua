@@ -8,7 +8,7 @@ local L = ns.L
     (ns.Define*); the tracked list lives in its own sub-panel
     (Options-Service-Alerts-Tracked.lua).
 
-    Same shape as Teammate Buffs -- the Praise / Notifications split, the
+    Same shape as Combat Buffs -- the Praise / Notifications split, the
     same headers, the same controls -- minus the cooldown dropdowns, which only
     Strangers carries.
 ]]
@@ -19,7 +19,7 @@ function ns.BuildServicesOptions()
 	end
 
 	local options = {
-		name = L["TAB_SERVICES"],
+		name = L["TAB_GROUP_SERVICE_ALERTS"],
 		type = "group",
 		args = {
 			descIntro = ns.OptionsDesc(L["SERVICES_DESCRIPTION"], 1),
@@ -27,11 +27,11 @@ function ns.BuildServicesOptions()
 
 			--[[
 			    Master switch: everything below it hides when off, and the feature
-			    itself stops -- see the `enabled` gate in Praise. Its twin sits on
-			    Thanks for the Buff's heading page. Fractional orders keep it above
+			    itself stops -- see the `enabled` gate in Praise. Its twin sits in
+			    the root panel's Features section. Fractional orders keep it above
 			    the first header without renumbering the panel.
 			]]
-			enable = ns.OptionsFeatureToggle(ns.GetFeatureSwitch("services"), 2.5),
+			enable = ns.OptionsFeatureSwitch("ServiceAlerts", 2.5),
 			enableSpacer = ns.OptionsSpacer(2.6),
 
 			headerPraise = ns.OptionsHeader(L["PRAISE_HEADER"], 3),

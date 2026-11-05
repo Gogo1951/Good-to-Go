@@ -209,17 +209,18 @@ local function ComposeFeedPetBody(tier, itemID, includeDismiss, includeRevive)
 
 	--[[
 	    Halt before /use when /cast dispatched to a non-Feed-Pet branch. Each
-	    guard token is present only while its branch is: [mod] covers both the
-	    ctrl and shift shortcuts, and once a trim drops one, only the survivor's
-	    modifier is named, so the dropped one's click falls through to Feed Pet
-	    and its food; [@pet,dead] the dead-pet auto-revive, and [btn:2]/[combat]
-	    the Mend branch (Tier C). The token order stays fixed: reordering it would
-	    change every written body's text, and so rewrite every Feed Pet macro, for
-	    no change in behavior.
+	    guard token is present only while its branch is: [mod:shift][mod:ctrl]
+	    covers both shortcuts, naming each so an Alt-click (which no branch
+	    takes) still falls through to Feed Pet; once a trim drops one, only the
+	    survivor's modifier is named, so the dropped one's click falls through
+	    to Feed Pet and its food; [@pet,dead] the dead-pet auto-revive, and
+	    [btn:2]/[combat] the Mend branch (Tier C). The token order stays fixed:
+	    reordering it would change every written body's text, and so rewrite
+	    every Feed Pet macro, for no change in behavior.
 	]]
 	local stopTokens = {}
 	if includeDismiss and includeRevive then
-		stopTokens[#stopTokens + 1] = "[mod]"
+		stopTokens[#stopTokens + 1] = "[mod:shift][mod:ctrl]"
 	elseif includeRevive then
 		stopTokens[#stopTokens + 1] = "[mod:shift]"
 	elseif includeDismiss then

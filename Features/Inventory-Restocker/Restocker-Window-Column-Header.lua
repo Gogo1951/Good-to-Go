@@ -29,11 +29,11 @@ local ResolveColumns = ns.ResolveRestockColumns
 --------------------------------------------------------------------------------
 
 --[[
-    Column headings are coloured by the band they belong to, so the eye can see
+    Column headings are colored by the band they belong to, so the eye can see
     where Bank stops and Merchant starts without a rule between them. The three
     columns in no band -- Item, Keep, Upgrade -- take the brand gold every
     other heading in the add-on already uses. Gold on the outside is what lets
-    the two coloured bands read as a pair set into ordinary chrome rather than as
+    the two colored bands read as a pair set into ordinary chrome rather than as
     three groups competing with one another.
 
     Each band carries TWO tones: the brighter `label` for the band's own name,
@@ -41,11 +41,11 @@ local ResolveColumns = ns.ResolveRestockColumns
     makes the label read as the parent of the columns it spans instead of as one
     more heading sitting in the same row as them.
 
-    Neither band uses a brand colour. ns.COLORS_RGB.INFO and .ON already mean
+    Neither band uses a brand color. ns.COLORS_RGB.INFO and .ON already mean
     something everywhere else -- interactive, and on -- and a static heading must
     not borrow it; the brand green directly above a column of on/off ticks reads
     as a state rather than as a label. They stay clear of the item-quality
-    colours the list draws names in (uncommon 1eff00, rare 0070dd) for the same
+    colors the list draws names in (uncommon 1eff00, rare 0070dd) for the same
     reason. These are chrome, and have to look like it.
 ]]
 local HEADER_CAPTION_UNGROUPED = ns.COLORS_RGB.TITLE -- Item, Keep, Upgrade
@@ -66,7 +66,7 @@ local GROUP_TONE = {
     column carrying `group` opens a band and every column after it inherits that
     band's caption tone until the next boundary; `gapBefore` without a `group`
     closes the band and falls back to the ungrouped gold, which is how Upgrade,
-    sitting alone after Merchant, gets its colour.
+    sitting alone after Merchant, gets its color.
 
     BAND_LABEL_TONE is keyed by the column that OPENS each band, because that is
     the key the band-drawing loop below already has in hand.
@@ -74,7 +74,7 @@ local GROUP_TONE = {
     Both are derived from GROUP_TONE rather than declared per column, so the Bank
     columns and the "Bank" label over them read from one entry and cannot drift
     apart. A band added to COLUMNS with no tone comes out gold rather than
-    silently inheriting its neighbour's colour.
+    silently inheriting its neighbor's color.
 ]]
 local COLUMN_TONE = {}
 local BAND_LABEL_TONE = {}
@@ -114,7 +114,7 @@ function ns.CreateRestockColumnHeader(parent, scrollFrame)
 	rule:SetColorTexture(GOLD.r, GOLD.g, GOLD.b, 0.20)
 
 	--[[
-	    The lower tier is its own frame so everything in it centres vertically by
+	    The lower tier is its own frame so everything in it centers vertically by
 	    itself, exactly the way a row does. The group bands then have the whole
 	    remaining height above it and never have to be positioned against a
 	    caption's baseline.
@@ -211,7 +211,7 @@ function ns.CreateRestockColumnHeader(parent, scrollFrame)
 	    GROUP BANDS
 
 	    Each band anchors to the LEFT of its group's first column and the RIGHT of
-	    its last, so it centres itself over exactly the columns it covers and
+	    its last, so it centers itself over exactly the columns it covers and
 	    re-spans on its own whenever those columns are re-measured. No band is ever
 	    told a width.
 
@@ -223,7 +223,7 @@ function ns.CreateRestockColumnHeader(parent, scrollFrame)
 			--[[
 			    A band runs until the next column STARTS one. `gapBefore` is that signal
 			    as much as `group` is -- Upgrade opens its own band and carries no label,
-			    so stopping only at the next labelled column would swallow it into
+			    so stopping only at the next labeled column would swallow it into
 			    Merchant and draw "Merchant" over the Upgrade column.
 			]]
 			local last = column

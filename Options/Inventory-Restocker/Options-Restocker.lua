@@ -68,51 +68,23 @@ local SAMPLE_GROCERIES = { { itemID = ns.SAMPLE_RESTOCK_ITEM_ID, have = 5, wante
 
 --[[
     A reminder's Example, drawn through the same builder the reminder prints
-    with, in the mode its dropdown has chosen: the headline alone in Simple,
-    and a line per short item under it in Verbose.
+    with, in the mode its dropdown has chosen: one line. Simple says only the
+    headline, so that is its Example. Verbose's Example shows the item line
+    under the headline, the part Verbose adds.
 ]]
 local function ReminderExample(order, enabledKey, modeKey, headlineFunction)
 	return ns.OptionsExample(order, function()
 		local settings = GetRestockerSettings()
-		local mode = (settings and settings[modeKey]) or ns.REMINDER_VERBOSE
-		return ns.BuildRestockShortfallLines(headlineFunction(), mode, SAMPLE_GROCERIES)
+		local mode = settings and settings[modeKey]
+		local lines = ns.BuildRestockShortfallLines(headlineFunction(), mode, SAMPLE_GROCERIES)
+		return lines[mode == ns.REMINDER_VERBOSE and 2 or 1]
 	end, ReminderOff(enabledKey))
 end
 
--- What a restock prints: a merchant run's summary and a bank run's finished line.
-local function RestockExampleLines()
-	local lines = ns.BuildRestockSummaryLines(3, 1)
-	lines[#lines + 1] = ns.BuildBankRestockCompleteLine()
-	return lines
-end
-
---[[
-    What an upgrade prints, for the first ladder in this client's
-    Consumable-Upgrade-Paths with a second tier: its first tier, twenty of them,
-    moving to its second. The links fill on the redraw once the items load.
-]]
-local function UpgradeExampleLines()
-	for _, chain in ipairs(ns.CONSUMABLE_UPGRADE_CHAINS) do
-		local from, to = chain.tiers[1], chain.tiers[2]
-		if from and to then
-			ns.WarmItemCache({ from[2], to[2] }, ns.OPTIONS_REGISTRY.Restocker)
-			return ns.BuildRestockUpgradeLines({
-				{
-					fromLink = ns.GetItemHyperlink(from[2]),
-					fromAmount = 20,
-					toLink = ns.GetItemHyperlink(to[2]),
-					toAmount = 20,
-				},
-			})
-		end
-	end
-	return {}
-end
-
 -- The Gold Reserve's line, at the amount its dropdown has chosen.
-local function GoldReserveExampleLines()
+local function GoldReserveExampleLine()
 	local settings = GetRestockerSettings()
-	return { ns.BuildOutOfGoldLine(settings or {}) }
+	return ns.BuildOutOfGoldLine(settings or {})
 end
 
 local function GoldReserveOff()
@@ -181,7 +153,7 @@ local function ReminderModeSelect(settingKey, enabledKey, order, onSubRow)
 		sorting = REMINDER_MODE_ORDER,
 		get = function()
 			local settings = GetRestockerSettings()
-			return (settings and settings[settingKey]) or ns.REMINDER_VERBOSE
+			return settings and settings[settingKey]
 		end,
 		set = function(_, value)
 			local settings = GetRestockerSettings()
@@ -198,9 +170,8 @@ local function ReminderModeSelect(settingKey, enabledKey, order, onSubRow)
 end
 
 --[[
-    Page order: the description, the Restocker's master switch and what a
-    restock prints, the Gold Reserve, the Reminders section, then the window's
-    auto-open behavior. The Inventory Report has its own page under this one
+    Page order: the description, the Restocker's master switch, the Gold Reserve, the Reminders section, then the window's
+    auto-open behavior. The Inventory Report has its own page in the tree
     (Options/Inventory-Report/Options-Inventory-Report.lua).
 
     The three reminders are peers under their header. The merchant and bank
@@ -224,10 +195,6 @@ function ns.BuildRestockerOptions()
 			),
 			spaceEnabled = Spacer(1.1),
 			toggleRestockerEnabled = ns.OptionsFeatureSwitch("Restocker", 1.2),
-			spaceRestockExample = Spacer(1.3),
-			exampleRestock = ns.OptionsExample(1.4, RestockExampleLines),
-			spaceUpgradeExample = Spacer(1.5),
-			exampleUpgrade = ns.OptionsExample(1.6, UpgradeExampleLines),
 
 			--[[
 			    The Gold Reserve: the floor the merchant restock never spends
@@ -257,7 +224,7 @@ function ns.BuildRestockerOptions()
 				sorting = ns.GOLD_RESERVE_AMOUNTS,
 				get = function()
 					local settings = GetRestockerSettings()
-					return (settings and settings.goldReserveAmount) or ns.GOLD_RESERVE_AMOUNTS[1]
+					return settings and settings.goldReserveAmount
 				end,
 				set = function(_, value)
 					local settings = GetRestockerSettings()
@@ -267,7 +234,7 @@ function ns.BuildRestockerOptions()
 				end,
 			},
 			spaceGoldExample = Spacer(6.4, GoldReserveOff),
-			exampleGoldReserve = ns.OptionsExample(6.5, GoldReserveExampleLines, GoldReserveOff),
+			exampleGoldReserve = ns.OptionsExample(6.5, GoldReserveExampleLine, GoldReserveOff),
 
 			-- Reminders
 			spaceReminders0 = Spacer(7),

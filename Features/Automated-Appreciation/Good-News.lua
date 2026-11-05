@@ -28,7 +28,7 @@ local AURA_SETTLE = 0.1 -- the aura lands a moment after the cast succeeds
     UNIT_SPELLCAST_SENT names the recipient but gives neither unit nor GUID. Map
     the name back to a unit we hold, which is what lets us confirm the recipient
     is a player (buffing a pet must stay silent -- it has nobody to read the
-    whisper) and read the buff's duration off them afterwards. Ordered by how
+    whisper) and read the buff's duration off them afterward. Ordered by how
     people actually cast: at your target, a mouseover/focus macro, then a group
     member by unit token.
 ]]
@@ -167,7 +167,7 @@ local function OnUnitSpellcastSent(_, target, castGUID, spellID)
 		return
 	end
 	local fullName = GetUnitName(recipientUnit, true)
-	if not fullName or not ns.IsPlain(fullName) then
+	if not ns.IsPlain(fullName) or not fullName then
 		fullName = target
 	end
 

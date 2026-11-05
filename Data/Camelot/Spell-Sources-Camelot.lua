@@ -78,7 +78,7 @@ Last Validated
 	Never.
 
 Notes
-	- Where each class list's extraSpells entry (Data/Camelot/Class-Spell-Lists-Camelot.lua) is learned, and at what level, for the What's Next? tab (Features/Spellbook/Whats-Next.lua). The trainer rows (Data/Camelot/Trainer-Spells-Camelot.lua) say their own source: a plain row is the trainer, book marks a book and talent a talent. extraSpells entries carry no source, so this table gives one.
+	- Where each class list's extraSpells entry (Data/Camelot/Class-Spell-Lists-Camelot.lua) is learned, and at what level, for the What's Next? tab (Features/Spellbook/Whats-Next/Whats-Next.lua). The trainer rows (Data/Camelot/Trainer-Spells-Camelot.lua) say their own source: a plain row is the trainer, book marks a book and talent a talent. extraSpells entries carry no source, so this table gives one.
 	- Keyed by the entry's first ID, the one the tab lists.
 	- source is QUEST (a class quest teaches it), TRAINER (the class trainer, though the trainer rows leave it out, mostly forms and spells a quest unlocks), BOOK (an item teaches it) or TALENT (a talent with no trainer ranks).
 	- level is the level the quest, trainer or book asks for. A TALENT row has none: the tab reads the talent's tier from the client's talent tree.

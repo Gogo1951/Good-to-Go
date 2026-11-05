@@ -80,10 +80,10 @@ ns.EXTRA_SPELL_SOURCES = {
 How We Got the Data
 
 Last Validated
-	Never.
+	2026-11-04, Season of Discovery 1.15.9.70576
 
 Notes
-	- Where each class list's extraSpells entry (Data/Discovery/Class-Spell-Lists-Discovery.lua) is learned, and at what level, for the What's Next? tab (Features/Spellbook/Whats-Next.lua). The trainer rows (Data/Discovery/Trainer-Spells-Discovery.lua) say their own source: a plain row is the trainer, book marks a book and talent a talent. extraSpells entries carry no source, so this table gives one.
+	- Where each class list's extraSpells entry (Data/Discovery/Class-Spell-Lists-Discovery.lua) is learned, and at what level, for the What's Next? tab (Features/Spellbook/Whats-Next/Whats-Next.lua). The trainer rows (Data/Discovery/Trainer-Spells-Discovery.lua) say their own source: a plain row is the trainer, book marks a book and talent a talent. extraSpells entries carry no source, so this table gives one.
 	- Keyed by the entry's first ID, the one the tab lists.
 	- source is QUEST (a class quest teaches it), TRAINER (the class trainer, though the trainer rows leave it out, mostly forms and spells a quest unlocks), BOOK (an item teaches it) or TALENT (a talent with no trainer ranks).
 	- level is the level the quest, trainer or book asks for. A TALENT row has none: the tab reads the talent's tier from the client's talent tree.

@@ -48,7 +48,7 @@ end
     A normal order asks for the shortfall and stops there. An Extra row asks for
     whatever a LIMITED vendor slot is holding, however much of it the player
     already has: the scarce Classic consumables (Major Mana Potions and the like)
-    sit behind a few-at-a-time slot that trickles back, so the useful behaviour is
+    sit behind a few-at-a-time slot that trickles back, so the useful behavior is
     to clear the slot every time you walk past rather than to top up to a number.
 
     That means an Extra row needs an order even when the shortfall is zero, which
@@ -333,7 +333,7 @@ end
 ]]
 function ns.BuildOutOfGoldLine(settings)
 	if settings.goldReserve then
-		local reserve = (settings.goldReserveAmount or 0) .. ns.GOLD_ICON
+		local reserve = settings.goldReserveAmount .. ns.GOLD_ICON
 		return string.format(L["RESTOCKER_OUT_OF_GOLD_RESERVE"], reserve)
 	end
 	return L["RESTOCKER_OUT_OF_GOLD"]
@@ -341,9 +341,9 @@ end
 
 --[[
     What a merchant run prints: filled and partly filled orders, counted apart
-    and each silent at zero. The options panel's Example draws through it too.
+    and each silent at zero.
 ]]
-function ns.BuildRestockSummaryLines(ordersFilled, ordersPartlyFilled)
+local function BuildRestockSummaryLines(ordersFilled, ordersPartlyFilled)
 	local lines = {}
 	if ordersFilled == 1 then
 		lines[#lines + 1] = L["RESTOCKER_RESTOCKED_ONE"]
@@ -422,7 +422,7 @@ function ns.RestockFromMerchant()
 	    empty purse alike.
 	]]
 	if settings.goldReserve then
-		local reserve = (settings.goldReserveAmount or 0) * COPPER_PER_GOLD
+		local reserve = settings.goldReserveAmount * COPPER_PER_GOLD
 		budget.money = math.max(0, budget.money - reserve)
 	end
 
@@ -459,7 +459,7 @@ function ns.RestockFromMerchant()
 	    needs no combined string and a clean one never mentions partials. Both are
 	    silent at zero, which keeps a vendor that stocked nothing on our list quiet.
 	]]
-	for _, line in ipairs(ns.BuildRestockSummaryLines(ordersFilled, ordersPartlyFilled)) do
+	for _, line in ipairs(BuildRestockSummaryLines(ordersFilled, ordersPartlyFilled)) do
 		ns:PrintMessage(line)
 	end
 

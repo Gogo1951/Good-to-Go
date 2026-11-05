@@ -20,11 +20,11 @@ ns.MANA_RUNES = {
 How We Got the Data
 
 Last Validated
-	2026-10-23, TBC Anniversary 2.5.6.70006
+	2026-11-04, TBC Anniversary 2.5.6.70577
 
 Notes
-	- ns.MANA_GEMS holds the mage's mana gems, read by the item cache (Features/Item-Cache.lua) for the Mana Gem macro and by the Readiness Report. Mana Amount is the low end of the restore.
-	- ns.MANA_RUNES holds the Demonic and Dark Runes, which restore mana at the cost of life and share the mana gems' cooldown. The Mana Gem macro ranks them in with the gems when the player opts in (Features/Macros/Mana-Gem.lua). The mana column is the low end, as for the gems. The two restore the same amount, so the selection ladder's isSoulbound step burns the soulbound Demonic Rune before the tradeable Dark Rune.
+	- ns.MANA_GEMS holds the mage's mana gems, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Mana Gem macro and by the Readiness Report. Mana Amount is the low end of the restore.
+	- ns.MANA_RUNES holds the Demonic and Dark Runes, which restore mana at the cost of life and share the mana gems' cooldown. The Mana Gem macro ranks them in with the gems when the player opts in (Features/Macros-for-Consumables/Macros/Mana-Gem.lua). The mana column is the low end, as for the gems. The two restore the same amount, so the selection ladder's isSoulbound step burns the soulbound Demonic Rune before the tradeable Dark Rune.
 	- Luminous Bluetail shares that cooldown too and costs no life. It rides with the runes rather than the potions so the Mana Potion macro never spends the Mana Gem cooldown on it.
 	- Crystalized Mana Residue (23354), Condensed Mana Powder (23386) and Pure Energy (31451) restore mana on the same cooldown; they were left out as optional in the September 2026 TBC pass.
 

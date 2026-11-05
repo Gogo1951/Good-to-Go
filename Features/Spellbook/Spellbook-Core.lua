@@ -10,6 +10,7 @@ local _, ns = ...
 ]]
 function ns.ApplySpellbookProfile()
 	if ns.IsSpellbookEnabled() then
+		ns.InvalidateSpellRankRows()
 		ns:RefreshMacros()
 		ns.RefreshWhatsNext()
 	end
@@ -34,8 +35,9 @@ function ns.SetSpellbookEnabled(value)
 	ns.db.global.spellbookEnabled = value
 	SubscribeSpellbookEvents(value)
 	if value then
-		-- the gear worn may have changed while PLAYER_EQUIPMENT_CHANGED went unheard
+		-- the gear worn, and the spells known, may have changed while their events went unheard
 		ns:InvalidateUsableSlots()
+		ns.InvalidateSpellRankRows()
 		ns:RefreshMacros()
 	else
 		ns.HideSpellbookWindow()
@@ -70,10 +72,10 @@ local EVENT_HANDLERS = {
 	TRAINER_SHOW = "OnTrainerShow",
 	TRAINER_UPDATE = "OnTrainerUpdate",
 	PLAYER_LEVEL_UP = "OnPlayerLevelUp",
-	UNIT_PET = "OnPetChanged",
-	UNIT_LEVEL = "OnPetChanged",
-	PET_BAR_UPDATE = "OnPetChanged",
-	BAG_UPDATE_DELAYED = "OnPetChanged",
+	UNIT_PET = "OnSpellbookUnitPet",
+	UNIT_LEVEL = "OnSpellbookUnitLevel",
+	PET_BAR_UPDATE = "OnSpellbookPetBarUpdate",
+	BAG_UPDATE_DELAYED = "OnSpellbookBagUpdateDelayed",
 }
 
 local LOGIN_REGISTERED_EVENTS = { TRAINER_SHOW = true, TRAINER_UPDATE = true }

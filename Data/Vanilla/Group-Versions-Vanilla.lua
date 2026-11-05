@@ -64,11 +64,11 @@ ns.SPELL_GROUPS = {
 How We Got the Data
 
 Last Validated
-	2026-10-24, Classic Era 1.15.9.70003
+	2026-11-04, Classic Era 1.15.9.70576
 
 Notes
 	- Each row pairs a single-target spell with its group version, as [singleSpellId] = groupSpellId: Mark of the Wild with Gift of the Wild, Arcane Intellect with Arcane Brilliance, each mage Teleport with its Portal, each paladin Blessing with its Greater Blessing, and the priest buffs with their Prayers.
-	- The "Right-Click For Group Version" option reads it (ResolveClassConfig in Features/Macro-Builder.lua): a learned single spell whose group version is also learned can cast the group version on a right-click.
+	- The "Right-Click For Group Version" option reads it (ResolveClassConfig in Features/Spellbook/Macro-Builder/Macro-Builder.lua): a learned single spell whose group version is also learned can cast the group version on a right-click.
 	- Both names come from the client, so a pair whose spells this client does not know drops out at runtime until the Data Review prunes it from this folder.
 	- SPELL_GROUPS lists spells with names of their own that one replaces another as the player trains (Demon Skin then Demon Armor, Cure Disease then Abolish Disease, and each of this client's Create Healthstone, Create Soulstone, Create Firestone and Create Spellstone spells, whose ranks have names of their own), by class, since two classes can share a spell's name (Cure Poison). The Grouped Spells submenu reads it: each spell in a group offers every spell of its group as a checkbox, and the macro casts the last one learned of those ticked.
 

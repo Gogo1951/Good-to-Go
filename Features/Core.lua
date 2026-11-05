@@ -39,6 +39,7 @@ ns.EVENT_NAMES = {
 	"LOADING_SCREEN_DISABLED",
 	"MERCHANT_CLOSED",
 	"MERCHANT_SHOW",
+	"PET_BAR_UPDATE",
 	"PLAYER_ALIVE",
 	"PLAYER_CONTROL_GAINED",
 	"PLAYER_ENTERING_WORLD",
@@ -63,6 +64,7 @@ ns.EVENT_NAMES = {
 	"UI_ERROR_MESSAGE",
 	"UNIT_AURA",
 	"UNIT_INVENTORY_CHANGED",
+	"UNIT_LEVEL",
 	"UNIT_PET",
 	"UNIT_SPELLCAST_SENT",
 	"UNIT_SPELLCAST_SUCCEEDED",
@@ -407,15 +409,6 @@ local function SaveProfileChoiceWhenUnnamed()
 end
 
 --[[
-    One account-wide SavedVariable managed by AceDB-3.0, Per-Character: every
-    character lands on a profile of its own, named as AceDB names the
-    character (its first name and surname on WoW Forever, "Name - Realm" on
-    Era and TBC). What differs by character rides the profile; what the whole
-    account shares -- the Restock Lists, every character's inventory, which
-    macros exist, Thanks for the Buff's settings, presentation -- lives on
-    ns.db.global, each with its reason (see Data/Default-Settings.lua).
-]]
---[[
     MIGRATION (remove after 2026-12-03)
     The settings saved before the rename to Good to Go, under
     ns.OLD_SAVED_VARIABLES_NAME, become this add-on's table, and the old one is
@@ -437,6 +430,15 @@ local function MoveRenamedSettings()
 	_G[ns.OLD_SAVED_VARIABLES_NAME] = nil
 end
 
+--[[
+    One account-wide SavedVariable managed by AceDB-3.0, Per-Character: every
+    character lands on a profile of its own, named as AceDB names the
+    character (its first name and surname on WoW Forever, "Name - Realm" on
+    every other flavor). What differs by character rides the profile; what the whole
+    account shares -- the Restock Lists, every character's inventory, which
+    macros exist, Automated Appreciation's settings, presentation -- lives on
+    ns.db.global, each with its reason (see Data/Default-Settings.lua).
+]]
 local function InitializeDatabase()
 	-- MIGRATION (remove after 2026-12-03)
 	MoveRenamedSettings()
@@ -474,11 +476,11 @@ end
     character's own choice, not the profile's, so a switch leaves it alone.
 ]]
 function ns:ApplyProfile()
-	if ns.ApplyConnoisseurProfile then
-		ns.ApplyConnoisseurProfile()
+	if ns.ApplyConsumableMacrosProfile then
+		ns.ApplyConsumableMacrosProfile()
 	end
-	if ns.ApplyThanksForTheBuffProfile then
-		ns.ApplyThanksForTheBuffProfile()
+	if ns.ApplyAutomatedAppreciationProfile then
+		ns.ApplyAutomatedAppreciationProfile()
 	end
 	if ns.ApplySpellbookProfile then
 		ns.ApplySpellbookProfile()

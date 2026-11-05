@@ -10,8 +10,8 @@ local CountKeys = ns.CountDiagnosticKeys
 --[[
     Answers "it's gone / off-screen" reports for everything the add-on draws:
     screen size and UI scale, then the mini-map button's saved placement, the
-    Buff Window's, and where the spellbook,
-    the Spellbook's tab and its page sit. Read-only.
+    Buff Duty window's, the Restock List window's and the Staples window's,
+    and where the spellbook, the Spellbook's tab and its page sit. Read-only.
 ]]
 
 -- The main mini-map button, and where a dragged position lives, link by link.
@@ -59,20 +59,20 @@ local function AppendMinimapLines(lines)
 end
 
 --[[
-    The Buff Window saves its top-right corner (corner = "TOPRIGHT") in
+    The Buff Duty window saves its top-right corner (corner = "TOPRIGHT") in
     UIParent's coordinates, measured from the bottom-left, so a corner outside
     UIParent's size was saved on a bigger screen or a smaller UI scale. A save
     without that tag is a top-left corner from before, which
-    ns.MigrateBuffWindowPosition moves once the window has a size.
+    ns.MigrateBuffDutyPosition moves once the window has a size.
 ]]
-local function AppendBuffWindowLines(lines)
+local function AppendBuffDutyLines(lines)
 	local uiWidth, uiHeight = UIParent:GetWidth(), UIParent:GetHeight()
 	lines[#lines + 1] = string.format("UIParent size: %.1f x %.1f", uiWidth, uiHeight)
 
 	lines[#lines + 1] = ""
 	local db = ns.db and ns.db.global.buffWindow
 	if not db then
-		lines[#lines + 1] = "Buff Window: (database not loaded)"
+		lines[#lines + 1] = "Buff Duty window: (database not loaded)"
 		return
 	end
 	local point = db.point
@@ -80,7 +80,7 @@ local function AppendBuffWindowLines(lines)
 		local left, top = tonumber(point[1]), tonumber(point[2])
 		local onScreen = left and top and left >= 0 and left <= uiWidth and top >= 0 and top <= uiHeight
 		lines[#lines + 1] = string.format(
-			"Buff Window saved %s: %s, %s (%s)",
+			"Buff Duty window saved %s: %s, %s (%s)",
 			point.corner == "TOPRIGHT" and "top-right" or "top-left (not yet migrated)",
 			tostring(point[1]),
 			tostring(point[2]),
@@ -88,12 +88,12 @@ local function AppendBuffWindowLines(lines)
 		)
 	else
 		lines[#lines + 1] =
-			"Buff Window saved top-right: (never dragged; default, a little right of and above the middle)"
+			"Buff Duty window saved top-right: (never dragged; default, a little right of and above the middle)"
 	end
-	local content = ns.buffWindowIconPool and ns.buffWindowIconPool.content
+	local content = ns.buffDutyIconPool and ns.buffDutyIconPool.content
 	if content then
 		lines[#lines + 1] = string.format(
-			"Buff Window now: shown %s, visible %s, left %s, top %s, right %s, bottom %s",
+			"Buff Duty window now: shown %s, visible %s, left %s, top %s, right %s, bottom %s",
 			tostring(content:IsShown()),
 			tostring(content:IsVisible()),
 			tostring(content:GetLeft()),
@@ -102,10 +102,10 @@ local function AppendBuffWindowLines(lines)
 			tostring(content:GetBottom())
 		)
 	else
-		lines[#lines + 1] = "Buff Window now: (not built yet)"
+		lines[#lines + 1] = "Buff Duty window now: (not built yet)"
 	end
 	lines[#lines + 1] = string.format(
-		"Buff Window: enabled=%s locked=%s hideInCombat=%s",
+		"Buff Duty window: enabled=%s locked=%s hideInCombat=%s",
 		tostring(db.enabled),
 		tostring(db.locked),
 		tostring(db.hideInCombat)
@@ -183,7 +183,7 @@ local function PageLines(lines, page)
 	end
 end
 
--- The spellbook, the Spellbook's tab, its window and the page.
+-- The spellbook, the Spellbook's tab, its window, the page and its docked panels.
 local function AppendSpellbookLines(lines)
 	local spellbookTabs = ns.SpellbookTabs
 	if spellbookTabs then
@@ -215,6 +215,32 @@ local function AppendSpellbookLines(lines)
 		lines[#lines + 1] = FrameLine("Page", page)
 		PageLines(lines, page)
 	end
+	-- The panels docked against the window's right edge, built on first use.
+	lines[#lines + 1] = FrameLine("Conditionals panel", _G.GoodToGoConditionalsPanel)
+	lines[#lines + 1] = FrameLine("Cast Sequence panel", _G.GoodToGoCastSequencePanel)
+end
+
+--[[
+	The Restock List window saves its last anchor and size (ns.restockSettings.framePosition) when dragged or
+	resized, and opens clamped to the screen; the Staples window always opens centered and saves nothing.
+]]
+local function AppendRestockLines(lines)
+	local position = ns.restockSettings and ns.restockSettings.framePosition
+	if type(position) == "table" and position.point then
+		lines[#lines + 1] = string.format(
+			"Restock List window saved: %s to UIParent %s, offset %s, %s, size %s x %s",
+			tostring(position.point),
+			tostring(position.relativePoint),
+			tostring(position.xOffset),
+			tostring(position.yOffset),
+			tostring(position.width),
+			tostring(position.height)
+		)
+	else
+		lines[#lines + 1] = "Restock List window saved: (never moved; default, beside the right edge)"
+	end
+	lines[#lines + 1] = FrameLine("Restock List window", ns.restockWindow)
+	lines[#lines + 1] = FrameLine("Staples window", _G.GoodToGoStaplesFrame)
 end
 
 function ns:BuildDisplayContextReport()
@@ -228,7 +254,9 @@ function ns:BuildDisplayContextReport()
 
 	AppendMinimapLines(lines)
 	lines[#lines + 1] = ""
-	AppendBuffWindowLines(lines)
+	AppendBuffDutyLines(lines)
+	lines[#lines + 1] = ""
+	AppendRestockLines(lines)
 	lines[#lines + 1] = ""
 	AppendSpellbookLines(lines)
 
@@ -258,9 +286,10 @@ end
     What the add-on fills in itself, counted rather than printed, matched by
     key at any depth since AceDB moves it with the active profile: itemCache,
     the derived consumable cache; inventory, the Inventory Report's record of
-    every character's bags and bank; selfRefreshMigrated, the Buff Window's
+    every character's bags and bank; selfRefreshMigrated, Buff Duty's
     record of settings already moved to a new default; and the Spellbook's
-    ownedMacros and macroTags, the WoW macros it created and tagged.
+    ownedMacros and macroTags, the WoW macros it created and tagged, and
+    trainerSpells, what it recorded at trainers (listed on Macro Context).
 ]]
 local SUMMARIZED_BY_KEY = {
 	itemCache = "cached items",
@@ -268,6 +297,7 @@ local SUMMARIZED_BY_KEY = {
 	selfRefreshMigrated = "migrated settings",
 	ownedMacros = "macros created",
 	macroTags = "tagged macros",
+	trainerSpells = "recorded classes",
 }
 
 local function DumpTable(value, indent, depth, lines)
@@ -301,11 +331,21 @@ end
     Dumps the single AceDB-managed table (profiles, profileKeys, char, global)
     so a player can paste their exact configuration: every setting in each
     profile and every Restock List row, with only the add-on's own caches
-    counted.
+    counted. Then the table saved before the rename, which Core moves over
+    only while this add-on's own table is missing or empty: still holding
+    settings here means they were never moved.
 ]]
 function ns:BuildSavedVariablesReport()
 	local lines = { GetClientHeader(), "", ns.SAVED_VARIABLES_NAME .. " = {" }
 	DumpTable(_G[ns.SAVED_VARIABLES_NAME] or {}, "    ", 1, lines)
 	lines[#lines + 1] = "}"
+	local old = _G[ns.OLD_SAVED_VARIABLES_NAME]
+	lines[#lines + 1] = ""
+	if type(old) == "table" then
+		lines[#lines + 1] =
+			string.format("%s (before the rename) = <%d keys, not moved>", ns.OLD_SAVED_VARIABLES_NAME, CountKeys(old))
+	else
+		lines[#lines + 1] = string.format("%s (before the rename) = %s", ns.OLD_SAVED_VARIABLES_NAME, tostring(old))
+	end
 	return table.concat(lines, "\n")
 end

@@ -112,10 +112,9 @@ end
 
 --[[
     An upgrade's prints: the headline, then a line per swap, each
-    { fromLink, fromAmount, toLink, toAmount }. The Restocker panel's Example
-    draws them too.
+    { fromLink, fromAmount, toLink, toAmount }.
 ]]
-function ns.BuildRestockUpgradeLines(swaps)
+local function BuildRestockUpgradeLines(swaps)
 	local lines = { L["RESTOCKER_UPGRADED"] }
 	for _, swap in ipairs(swaps) do
 		lines[#lines + 1] =
@@ -203,7 +202,7 @@ function ns.UpgradeRestockList(newLevel)
 		swap.toAmount = (moved and moved.amount) or fromAmount
 		swaps[#swaps + 1] = swap
 	end
-	for _, line in ipairs(ns.BuildRestockUpgradeLines(swaps)) do
+	for _, line in ipairs(BuildRestockUpgradeLines(swaps)) do
 		ns:PrintMessage(line)
 	end
 

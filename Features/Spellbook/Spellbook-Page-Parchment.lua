@@ -3,7 +3,7 @@ local PixelInset = ns.PixelInset
 
 --[[
 	The Spell Book page's parchment (Features/Spellbook/Spellbook-Page.lua), which the What's Next? pages
-	(Features/Spellbook/Whats-Next-Page.lua) share, and the one-pixel lines its rules and divider are drawn with.
+	(Features/Spellbook/Whats-Next/Whats-Next-Page.lua) share, and the one-pixel lines its rules and divider are drawn with.
 ]]
 
 -- A solid line texture on parent, one screen pixel thick along the given axis ("HORIZONTAL" or "VERTICAL").
@@ -19,21 +19,38 @@ local function PixelLine(parent, layer, color, axis)
 	return line
 end
 
--- The parchment's colours.
+-- The parchment's colors.
 local PARCHMENT_COLOR = { 0.847, 0.765, 0.6 }
 local VIGNETTE_COLOR = { 0.36, 0.235, 0.086 } -- the aged edges, darker toward the border
 local EDGE_COLOR = { 0.043, 0.043, 0.043 }
 local INNER_EDGE_COLOR = { 0.42, 0.353, 0.243 }
 
--- Forever's parchment, where this build has it; otherwise the parchment colour with darkened edges
+-- Forever's parchment, where this build has it; otherwise the parchment color with darkened edges
 local ATLAS_PAGE_LEFT, ATLAS_PAGE_RIGHT = "spellbook-Page-Left-C60", "spellbook-Page-Right-C60"
 local VIGNETTE_WIDTH, VIGNETTE_ALPHA = 46, 0.24
+--[[
+	Forever's page art is drawn for the game's own book, which hangs its headers over a dark band along the art's
+	top, so that band is cut off here (a share of the art's height) and the paper starts at the parchment's top,
+	where the first headers sit. Its paper also curls in at each page's outer edge and runs flat to the spine, so
+	the columns move this far (UI units) toward the spine to sit evenly between the two.
+]]
+local ART_TOP_CROP = 0.08
+local ART_SPINE_SHIFT = 6
+
+-- Sets the atlas on texture, then cuts ART_TOP_CROP off the top of it.
+local function SetCroppedAtlas(texture, atlas)
+	texture:SetAtlas(atlas)
+	local left, top, _, bottom, right = texture:GetTexCoord()
+	texture:SetTexCoord(left, right, top + (bottom - top) * ART_TOP_CROP, bottom)
+end
 
 --[[
 	The parchment: a black edge and a thin brown line inside it, then Forever's page art where the build has
-	it, else the parchment colour with its edges darkened.
+	it, else the parchment color with its edges darkened. Sets parchment.spineShift, how far each page's columns
+	move toward the spine to suit the art (0 without it).
 ]]
 local function DrawParchment(parchment)
+	parchment.spineShift = 0
 	local edge = parchment:CreateTexture(nil, "BACKGROUND", nil, -8)
 	edge:SetAllPoints()
 	edge:SetColorTexture(unpack(EDGE_COLOR))
@@ -45,19 +62,20 @@ local function DrawParchment(parchment)
 	parchment.paper = paper
 	if C_Texture.GetAtlasInfo(ATLAS_PAGE_LEFT) and C_Texture.GetAtlasInfo(ATLAS_PAGE_RIGHT) then
 		local left = parchment:CreateTexture(nil, "BACKGROUND", nil, -6)
-		left:SetAtlas(ATLAS_PAGE_LEFT)
+		SetCroppedAtlas(left, ATLAS_PAGE_LEFT)
 		left:SetPoint("TOPLEFT", paper)
 		left:SetPoint("BOTTOMRIGHT", paper, "BOTTOM")
 		local right = parchment:CreateTexture(nil, "BACKGROUND", nil, -6)
-		right:SetAtlas(ATLAS_PAGE_RIGHT)
+		SetCroppedAtlas(right, ATLAS_PAGE_RIGHT)
 		right:SetPoint("TOPLEFT", paper, "TOP")
 		right:SetPoint("BOTTOMRIGHT", paper)
+		parchment.spineShift = ART_SPINE_SHIFT
 		return
 	end
 	local base = parchment:CreateTexture(nil, "BACKGROUND", nil, -6)
 	base:SetAllPoints(paper)
 	base:SetColorTexture(unpack(PARCHMENT_COLOR))
-	-- a strip down each edge, the aged colour fading to clear toward the middle
+	-- a strip down each edge, the aged color fading to clear toward the middle
 	if not CreateColor then
 		return
 	end
@@ -81,6 +99,6 @@ local function DrawParchment(parchment)
 	strip("TOPLEFT", "TOPRIGHT", false, clear, dark)
 end
 
--- the What's Next? tab's page (Features/Spellbook/Whats-Next-Page.lua) shares the parchment and its drawing
+-- the What's Next? tab's page (Features/Spellbook/Whats-Next/Whats-Next-Page.lua) shares the parchment and its drawing
 ns.SpellbookPixelLine = PixelLine
 ns.DrawSpellbookParchment = DrawParchment

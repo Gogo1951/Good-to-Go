@@ -37,7 +37,7 @@ function ns.MacroMenuTarget(ctx)
 				for i, unit in ipairs(ns.TargetPriority(ctx.macro)) do
 					labels[i] = unitLabel(unit)
 				end
-				on[1] = table.concat(labels, ", ")
+				on[1] = table.concat(labels, L["LIST_SEPARATOR"])
 			end
 			return on
 		end)
@@ -91,8 +91,36 @@ function ns.MacroMenuTarget(ctx)
 end
 
 --[[
-	Grouped Spells: Right-Click For the group (or single) version, and the spells of its SPELL_GROUPS
-	group, each a checkbox, the ones not learned yet in gray, so they can be ticked ahead of training
+	The ranks a group's spells or a spell's ranks are, for the Grouped Spells and Rank submenus: the class's
+	What's Next? row for id (or the spell named name) when there is one, so each reads as the tooltip's ranks
+	do (ns.RankState, ns.RankLabel, ns.RankNote); else known, or one the trainer teaches at level.
+]]
+local function MenuRank(known, id, name, level)
+	if known then
+		return { status = "KNOWN", level = level }
+	end
+	local row = ns.ClassRankRow and ns.ClassRankRow(id, name)
+	if row then
+		return row
+	end
+	local reached = level and level <= UnitLevel("player")
+	return { status = reached and "AVAILABLE" or "LATER", source = "TRAINER", level = level }
+end
+
+-- Puts a rank's note at the right of its checkbox or radio (ns.MenuChoiceNote), where it has one.
+local function AddRankNote(element, rank)
+	local note = rank.status ~= "KNOWN" and ns.RankNote(rank)
+	if note then
+		element:AddInitializer(function(frame)
+			return ns.MenuChoiceNote(frame, note)
+		end)
+	end
+end
+
+--[[
+	Grouped Spells: Right-Click for the group (or single) version, and the spells of its SPELL_GROUPS
+	group, each a checkbox in its rank color with its note, as a spell's ranks are (MenuRank), so they can be
+	ticked ahead of learning them
 ]]
 function ns.MacroMenuGroupedSpells(ctx)
 	local section, group, change = ctx.section, ctx.group, ctx.change
@@ -131,10 +159,8 @@ function ns.MacroMenuGroupedSpells(ctx)
 			end
 			for _, member in ipairs(ctx.macro.groupMembers) do
 				local name = member.name
-				local icon = C_Spell.GetSpellTexture(name)
-				local label = (icon and "|T" .. icon .. ":16|t " or "")
-					.. (member.learned and name or GetColor("MUTED") .. name .. "|r")
-				local element = groupedMenu:CreateCheckbox(label, function()
+				local rank = MenuRank(member.learned, nil, name)
+				local element = groupedMenu:CreateCheckbox(ns.RankLabel(rank, name), function()
 					return ns.IsGroupedSpellOn(ctx.macro, name)
 				end, function()
 					change(function()
@@ -147,19 +173,24 @@ function ns.MacroMenuGroupedSpells(ctx)
 					L["MENU_GROUPED_SPELL_DESCRIPTION"]:format(name),
 					not member.learned and L["MENU_GROUPED_SPELL_NOT_LEARNED"] or nil
 				)
+				AddRankNote(element, rank)
 			end
 		end
 	end
 end
 
--- Rank: Highest, Dynamic (a friendly spell's Dynamic Rank), or a known rank; the rest in red, unclickable
+--[[
+	Rank: Highest, naming the rank it casts now, Dynamic (a friendly spell's Dynamic Rank), or a known rank; the
+	rest unclickable, each in its rank color with its note (MenuRank): red with where to learn it for one the
+	character could have now, gray with its level for one still to come
+]]
 function ns.MacroMenuRank(ctx)
 	local section, group, radio = ctx.section, ctx.group, ctx.radio
 	if ns.OffersFixedRank(ctx.macro) or ns.OffersTargetRank(ctx.macro) then
 		section()
 		local rankMenu = group("MENU_GROUP_RANK", function()
 			local rank = ns.AbilityRank(ctx.macro)
-			return rank and { rank == "targetRank" and L["MENU_RANK_DYNAMIC"] or rank } or {}
+			return { rank == "targetRank" and L["MENU_RANK_DYNAMIC"] or rank or L["MENU_HIGHEST"] }
 		end)
 		local function isRank(choice)
 			return function()
@@ -171,7 +202,14 @@ function ns.MacroMenuRank(ctx)
 				ns.SetAbilityRank(ctx.macro, choice)
 			end
 		end
-		radio(rankMenu, L["MENU_HIGHEST"], isRank(nil), setRank(nil), L["MENU_HIGHEST_DESCRIPTION"])
+		local highest = radio(rankMenu, L["MENU_HIGHEST"], isRank(nil), setRank(nil), L["MENU_HIGHEST_DESCRIPTION"])
+		-- the rank Highest casts today, so a rank still to learn reads as not in use yet (ranks lists highest first)
+		local casts = ctx.macro.ranks and ctx.macro.ranks[1]
+		if casts then
+			highest:AddInitializer(function(frame)
+				return ns.MenuChoiceNote(frame, GetColor("HELP") .. casts.text .. "|r")
+			end)
+		end
 		if ns.OffersTargetRank(ctx.macro) then
 			radio(
 				rankMenu,
@@ -196,8 +234,10 @@ function ns.MacroMenuRank(ctx)
 		end)
 		for _, rank in ipairs(all) do
 			if rank.unknown then
-				local label = GetColor("OFF") .. L["MENU_RANK_LEARN_LEVEL"]:format(rank.text, rank.level) .. "|r"
-				rankMenu:CreateRadio(label, isRank(rank.text), function() end):SetEnabled(false)
+				local state = MenuRank(false, rank.id, nil, rank.level)
+				local element = rankMenu:CreateRadio(ns.RankLabel(state, rank.text), isRank(rank.text), function() end)
+				element:SetEnabled(false)
+				AddRankNote(element, state)
 			else
 				radio(
 					rankMenu,
@@ -297,7 +337,7 @@ function ns.MacroMenuWhen(ctx)
 end
 
 --[[
-	First: what runs before the cast, the items last, each labelled with its place in the order. The
+	First: what runs before the cast, the items last, each labeled with its place in the order. The
 	slots are the equipped on-use items, plus any slot already ticked so it can be unticked after a gear
 	swap.
 ]]
@@ -355,7 +395,8 @@ function ns.MacroMenuFirst(ctx)
 				local at = ns.IsUsingSlot(ctx.macro, slot)
 				local icon = GetInventoryItemTexture("player", slot)
 				frame.fontString:SetTextToFit(
-					(icon and "|T" .. icon .. ":16|t " or "") .. ns.SlotLabel(slot) .. (at and " (" .. at .. ")" or "")
+					(icon and "|T" .. icon .. ":16|t " or "")
+						.. (at and L["NAME_WITH_DETAIL_FORMAT"]:format(ns.SlotLabel(slot), at) or ns.SlotLabel(slot))
 				)
 			end)
 			SetTip(element, ns.SlotLabel(slot), L["MENU_USE_ITEM_DESCRIPTION"])

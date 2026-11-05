@@ -11,7 +11,7 @@ local GetColor = ns.GetColor
     Spellbook's window (Features/Spellbook/Spellbook-Window.lua
     and Spellbook-Page.lua, the look every window here follows): the Blizzard
     portrait frame with the gold bag in its portrait, the title in the add-ons'
-    shared colours, then the bands below.
+    shared colors, then the bands below.
 
       title     TITLE_HEIGHT across the top, the frame's own title bar
       header    CONTROLS_HEIGHT under it, on the dark frame, from clear of the
@@ -35,12 +35,12 @@ ns.RESTOCK_WINDOW_BANDS = {
 
 local BANDS = ns.RESTOCK_WINDOW_BANDS
 
--- Where a header control centres vertically, from the frame's top edge.
+-- Where a header control centers vertically, from the frame's top edge.
 ns.RESTOCK_HEADER_CENTER_Y = -(BANDS.TITLE_HEIGHT + BANDS.CONTROLS_HEIGHT / 2)
 
 --[[
     A portrait frame named name, titled "<title> // Good to Go": the
-    window's own name white, the slashes grey, the add-on's name blue, as the
+    window's own name white, the slashes gray, the add-on's name blue, as the
     Spell Book's title is. A client without the portrait template gets the
     plain frame and no portrait.
 ]]

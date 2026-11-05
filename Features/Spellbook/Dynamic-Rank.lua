@@ -1,6 +1,6 @@
 local _, ns = ...
 
--- Rewrites the Dynamic Rank macros as the target and the mouseover change (Features/Spellbook/Macro-Builder.lua builds them).
+-- Rewrites the Dynamic Rank macros as the target and the mouseover change (Features/Spellbook/Macro-Builder/Macro-Builder.lua builds them).
 
 local MacroBody = ns.MacroBody
 
@@ -46,13 +46,23 @@ local function PlacedRankMacros()
 		end
 		local tags = ns.ReadMacroIndexes().tags
 		barMacroNames = ns.BarMacroNames()
-		local onBars = {}
+		-- matched by name or by tag, as ns.IsOnActionBars matches, so a macro the player renamed still counts
+		local onBars, tagsOnBars = {}, {}
 		for _, name in pairs(barMacroNames) do
 			onBars[name] = true
+			local tag = ns.MacroNameTag(name)
+			if tag then
+				tagsOnBars[tag] = true
+			end
 		end
 		local placed = { any = false, mouseover = false }
 		for _, macro in ipairs(ns.macros) do
-			if ns.IsOptionOn(macro, "targetRank") and tags[ns.MacroTag(macro)] and onBars[ns.WowMacroName(macro)] then
+			local tag = ns.MacroTag(macro)
+			if
+				ns.IsOptionOn(macro, "targetRank")
+				and tags[tag]
+				and (onBars[ns.WowMacroName(macro)] or tagsOnBars[tag])
+			then
 				placed.any = true
 				if ns.TriesUnit(macro, "mouseover") then
 					placed.mouseover = true

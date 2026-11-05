@@ -47,7 +47,7 @@ function ns.ClearRestockGroupSelection()
 end
 
 --[[
-    The two greys are this pane's own states, not palette roles: an unselected
+    The two grays are this pane's own states, not palette roles: an unselected
     type, and its count, a step quieter than its label.
 ]]
 local GOLD = ns.COLORS_RGB.TITLE
@@ -81,8 +81,9 @@ ns.RESTOCK_GROUP_ROW_INSET = GROUP_ROW_INSET -- where a type name starts; the un
 local measureFontString
 
 --[[
-    Size the pane to the widest label it will draw. Called once before the window
-    is laid out, since the table's left edge is anchored past the pane.
+    Size the pane to the widest label it will draw. Called before the window is
+    laid out, since the table's left edge is anchored past the pane, and again
+    each time it opens (RefitGroupPane in Restocker-Window.lua).
 
     Types come from ns.GetRestockItemTypeName, which needs no item cache, so the
     labels measured here are the strings the pane goes on to display even at

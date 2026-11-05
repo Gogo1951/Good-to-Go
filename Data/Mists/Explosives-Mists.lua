@@ -36,7 +36,7 @@ ns.EXPLOSIVES = {
 How We Got the Data
 
 Last Validated
-	2026-11-03, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-04, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- Every Engineering explosive this client knows that deals damage, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Explosive macro. The family is the items sharing Coarse Dynamite's (4365) use category (24) and its class and subclass (Trade Goods, Explosives).

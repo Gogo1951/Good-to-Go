@@ -1,93 +1,11 @@
 local _, ns = ...
 local L = ns.L
-local GetColor = ns.GetColor
 
 local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
 
 local Header = ns.OptionsHeader
 local Desc = ns.OptionsDesc
 local Spacer = ns.OptionsSpacer
-
---------------------------------------------------------------------------------
--- Key Bindings
---------------------------------------------------------------------------------
-
---[[
-	The row shows the key the player bound, or a muted Not Bound, and a Set Key button that opens the game's
-	Key Bindings list through ns:OpenKeyBindings, so the key is set where the game's own are
-	(Features/Spellbook/Key-Bindings.lua). The binding name comes from Bindings.xml's name attribute; the
-	caption is the same BINDING_* string the Key Bindings list prints. ns:OnUpdateBindings repaints this panel
-	when the player changes a key.
-]]
-local KEY_BINDINGS = {
-	-- { bindingName, captionKey, descKey }
-	{ "GOODTOGO_TOGGLE_SPELLBOOK", "BINDING_TOGGLE_PAGE", "OPTIONS_KEY_BINDING_TOGGLE_DESCRIPTION" },
-}
-
---[[
-	The caption takes the grid's label width, so the key lines up with every other row's control, and the key
-	and Set Key share the control width, less a little slack that keeps the unnamed group's row off the wrap
-	boundary.
-]]
-local KEY_LABEL_WIDTH = ns.OPTIONS_LABEL_WIDTH
-local KEY_BUTTON_WIDTH = 0.55
-local KEY_STATUS_WIDTH = ns.OPTIONS_CONTROL_WIDTH - KEY_BUTTON_WIDTH - 0.1
-
-local function GetBindingStatus(bindingName)
-	local key = GetBindingKey(bindingName)
-	if not key then
-		return GetColor("MUTED") .. NOT_BOUND .. "|r"
-	end
-	local text = (GetBindingText and GetBindingText(key)) or key
-	return GetColor("TEXT") .. text .. "|r"
-end
-
--- Each binding is its row (caption, key, Set Key), then its description under it.
-local function AddKeyBindingRows(args, startOrder)
-	local order = startOrder
-
-	for index, entry in ipairs(KEY_BINDINGS) do
-		local bindingName, captionKey, descKey = entry[1], entry[2], entry[3]
-
-		if index > 1 then
-			args["spacerKeyBinding" .. index] = Spacer(order)
-			order = order + 1
-		end
-
-		args["rowKeyBinding" .. index] = {
-			type = "group",
-			name = "",
-			inline = true,
-			order = order,
-			args = {
-				caption = ns.OptionsRowLabel(GetColor("INFO") .. L[captionKey] .. "|r", 1, KEY_LABEL_WIDTH),
-				status = {
-					type = "description",
-					name = function()
-						return GetBindingStatus(bindingName)
-					end,
-					fontSize = "medium",
-					width = KEY_STATUS_WIDTH,
-					order = 2,
-				},
-				setKey = {
-					type = "execute",
-					name = L["OPTIONS_KEY_SET"],
-					desc = L["OPTIONS_KEY_SET_DESCRIPTION"],
-					width = KEY_BUTTON_WIDTH,
-					order = 3,
-					func = function()
-						ns:OpenKeyBindings()
-					end,
-				},
-			},
-		}
-		order = order + 1
-
-		args["descKeyBinding" .. index] = Desc(GetColor("HELP") .. L[descKey] .. "|r", order)
-		order = order + 1
-	end
-end
 
 --------------------------------------------------------------------------------
 -- Delete Macros
@@ -97,7 +15,7 @@ local DELETE_BUTTON_WIDTH = 1.5
 
 --[[
 	A button deleting the Spellbook's macros from one list (ns.DeleteAddonMacros), behind a confirm, and
-	greyed out while the list holds none. The panel repaints after, so the button greys out at once.
+	grayed out while the list holds none. The panel repaints after, so the button grays out at once.
 ]]
 local function DeleteMacrosButton(general, nameKey, descKey, confirmKey, order)
 	return {
@@ -119,42 +37,45 @@ local function DeleteMacrosButton(general, nameKey, descKey, confirmKey, order)
 end
 
 --------------------------------------------------------------------------------
--- Spellbook Panel
+-- Enhanced Spellbook Panel
 --------------------------------------------------------------------------------
 
 --[[
 	The Spellbook's page in the settings tree. Its settings live on the Spellbook itself, so this holds only
-	what can't: the master switch, the key that opens it, what the ability tooltips' ranks are for, and the
-	buttons that delete the macros it made.
+	what can't: the on/off switch, what the ability tooltips' ranks are for and their own switch, and the buttons that delete the
+	macros it made. The key that opens it is on the root panel, with every other key binding.
 ]]
 function ns.BuildSpellbookOptions()
 	local args = {
 		descIntro = Desc(L["OPTIONS_SPELLBOOK_DESCRIPTION"], 1),
 		spaceEnable = Spacer(2),
-		toggleSpellbookEnabled = {
-			type = "toggle",
-			name = L["SPELLBOOK_ENABLE"],
-			desc = L["SPELLBOOK_ENABLE_DESCRIPTION"],
-			order = 3,
-			width = "full",
-			get = function()
-				return ns.IsSpellbookEnabled()
-			end,
-			set = function(_, value)
-				ns.SetSpellbookEnabled(value)
-			end,
-		},
-
-		-- Key Bindings: the rows fill 33 onward.
-		spacerKeyBindings0 = Spacer(30),
-		headerKeyBindings = Header(L["OPTIONS_KEY_BINDINGS_HEADER"], 31),
-		spacerKeyBindings1 = Spacer(32),
+		toggleSpellbookEnabled = ns.OptionsFeatureSwitch("Spellbook", 3),
 
 		-- What's Next ability tooltips: the ranks under every spell's tooltip (Features/Spellbook/Spell-Ranks-Tooltip.lua)
 		spacerAbilityTooltips0 = Spacer(50),
 		headerAbilityTooltips = Header(L["OPTIONS_ABILITY_TOOLTIPS_HEADER"], 51),
 		spacerAbilityTooltips1 = Spacer(52),
 		descAbilityTooltips = Desc(L["OPTIONS_ABILITY_TOOLTIPS_DESCRIPTION"], 53),
+		spacerAbilityTooltips2 = Spacer(54),
+		-- Grayed out while the Spellbook is off, since no tooltip gets ranks then.
+		toggleAbilityTooltips = {
+			type = "toggle",
+			name = L["OPTIONS_ABILITY_TOOLTIPS_ENABLE"],
+			desc = L["OPTIONS_ABILITY_TOOLTIPS_ENABLE_DESCRIPTION"],
+			order = 55,
+			width = "full",
+			disabled = function()
+				return not ns.IsSpellbookEnabled()
+			end,
+			get = function()
+				return ns.db and ns.db.global.abilityTooltipRanks
+			end,
+			set = function(_, value)
+				if ns.db then
+					ns.db.global.abilityTooltipRanks = value
+				end
+			end,
+		},
 
 		-- Delete Macros
 		spacerDeleteMacros0 = Spacer(60),
@@ -177,10 +98,9 @@ function ns.BuildSpellbookOptions()
 			66
 		),
 	}
-	AddKeyBindingRows(args, 33)
 	return {
 		type = "group",
-		name = L["TAB_SPELLBOOK"],
+		name = L["TAB_ENHANCED_SPELLBOOK"],
 		args = args,
 	}
 end

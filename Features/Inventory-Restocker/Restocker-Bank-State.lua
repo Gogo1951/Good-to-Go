@@ -209,12 +209,15 @@ function RestockState:StuckMessage()
 			parts[#parts + 1] = string.format(
 				L["RESTOCKER_STUCK_ITEM_FORMAT"],
 				math.min(wanted - haveInBag, haveInBank),
-				eachItem.itemName
+				ns.GetItemHyperlink(itemID, eachItem.itemName)
 			)
 		elseif (eachItem.stashToBank or self.overshotItems[itemID]) and haveInBag > wanted then
 			depositStuck = true
-			parts[#parts + 1] =
-				string.format(L["RESTOCKER_STUCK_ITEM_EXTRA_FORMAT"], haveInBag - wanted, eachItem.itemName)
+			parts[#parts + 1] = string.format(
+				L["RESTOCKER_STUCK_ITEM_EXTRA_FORMAT"],
+				haveInBag - wanted,
+				ns.GetItemHyperlink(itemID, eachItem.itemName)
+			)
 		end
 	end
 

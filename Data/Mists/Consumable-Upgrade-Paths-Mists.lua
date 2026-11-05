@@ -333,7 +333,7 @@ ns.CONSUMABLE_UPGRADE_CHAINS = {
 How We Got the Data
 
 Last Validated
-	2026-11-03, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-04, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- The staple ladders, read by Features/Inventory-Restocker/Restocker-Upgrade.lua and the Starter List (Restocker-Starter-List.lua). Same chains, keys and row format as the other clients; see Consumable-Upgrade-Paths-TBC.lua for why this is a table of its own.

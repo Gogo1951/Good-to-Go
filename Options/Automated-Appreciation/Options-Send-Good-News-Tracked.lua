@@ -2,7 +2,7 @@ local _, ns = ...
 local L = ns.L
 
 --[[
-    "Tracked Abilities" panel, under Send Good News: the class categories of
+    "Tracked Abilities" panel, under Sharing Good News: the class categories of
     ns.GoodNewsCategories, with toggles bound to the independent
     goodNews.watched list, so "thank for it" and "announce it" stay separate
     choices on the same ids. Not hidden behind the Good News switch, like Buff
@@ -16,7 +16,7 @@ function ns.BuildGoodNewsTrackedOptions()
 	end
 
 	local options = {
-		name = ns.SubPanelTitle(L["TAB_GOOD_NEWS"], L["TRACKED_HEADER"]),
+		name = ns.SubPanelTitle(L["TAB_SHARING_GOOD_NEWS"], L["TRACKED_HEADER"]),
 		type = "group",
 		args = {},
 	}

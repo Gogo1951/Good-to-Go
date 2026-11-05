@@ -2,7 +2,7 @@ local _, ns = ...
 
 --[[
 	The class's spell lists (ns.CLASS_SPELL_LISTS) resolved to this client's names, and the spell-name lookup
-	every Spellbook file shares. Features/Spellbook/Macro-Builder.lua builds the page's macros from them.
+	every Spellbook file shares. Features/Spellbook/Macro-Builder/Macro-Builder.lua builds the page's macros from them.
 ]]
 
 local NO_IDS = {}
@@ -127,6 +127,7 @@ local function ResolveClassConfig()
 		groupSpells = {},
 		soloSpells = {},
 		spellGroups = {}, -- each grouped spell's name -> its group's names, in the order they are learned
+		spellGroupIds = {}, -- each grouped spell's name -> its group's Rank 1 IDs, in the same order
 		categoryRankByName = {}, -- each spellbook tab's name -> its section rank, filled by ns.CollectMacros
 		extraSpells = lists.extraSpells or NO_IDS,
 		petAbilities = {},
@@ -188,6 +189,7 @@ local function ResolveClassConfig()
 		if #names == #ids then
 			for _, name in ipairs(names) do
 				config.spellGroups[name] = names
+				config.spellGroupIds[name] = ids
 			end
 		end
 	end
@@ -222,7 +224,7 @@ function ns.ClassExtraSpells()
 end
 
 --[[
-	Whether a spell is cast on an enemy unit: harmful and with a range. Self-centred AoE such as Arcane
+	Whether a spell is cast on an enemy unit: harmful and with a range. Self-centered AoE such as Arcane
 	Explosion or Hellfire has no range, so it is left out.
 ]]
 local function TargetsEnemy(id)

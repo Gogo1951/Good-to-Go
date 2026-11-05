@@ -43,6 +43,10 @@ function ns.BuildGroceryList()
 			local have = C_Item.GetItemCount(key, false, false) or 0
 			local short = wanted - have
 			if short > 0 then
+				-- sorted by the client's name, not a saved one gone stale (Restocker-Saved-Format.lua)
+				if record.itemID then
+					ns.RefreshRestockItemName(record)
+				end
 				--[[
 				    have/wanted ride along for the verbose town reminder, which reports
 				    the ratio rather than the shortfall.

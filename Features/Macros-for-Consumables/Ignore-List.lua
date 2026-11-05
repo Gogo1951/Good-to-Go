@@ -175,7 +175,7 @@ end
 
     The live table behind ns.db.profile is the same table as its sv.profiles
     entry, so the loop covers the current character too -- but only once AceDB
-    has materialized that profile, hence the direct pass afterwards.
+    has materialized that profile, hence the direct pass afterward.
 ]]
 local function ClearFromAllProfiles(itemID)
 	local profiles = ns.db.sv and ns.db.sv.profiles

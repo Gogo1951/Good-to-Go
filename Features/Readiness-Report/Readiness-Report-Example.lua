@@ -4,14 +4,18 @@ local Clause = ns.ReadinessClause
 local Line = ns.ReadinessLine
 
 --[[
-    Readiness-Report-Example -- the Readiness Report panel's Example: the
-    title, then the report's lines as they would read with something wrong for
-    every switch that is on, built with the same clauses and keys as
+    Readiness-Report-Example -- the Readiness Report panel's Example: one
+    line, the report's first as it would read with something wrong for every
+    switch that is on (the title alone when none is), built with the same
+    clauses and keys as
     ns.BuildReadinessLines (Readiness-Report.lua). A switch the panel hides on
     this client (flask, pet, spec) never shows here either, and nor does a line
-    the real report keeps to a class this character isn't: the pet's food
-    (Hunters), the Soulstone (Warlocks), the Mana Gem (Mages) and a mana potion
-    (classes that use mana).
+    the real report keeps to a class this character isn't: the Soulstone
+    (Warlocks), the Mana Gem (Mages) and a mana potion (classes that use mana).
+    Well Fed, the pet's food, scrolls, the Soulstone and the Mana Gem go
+    through the real report's own checks (ns.ReadinessAsksWellFed,
+    ns.ShouldTrackPetFood and the rest), so a macro switched off, a pet not
+    out or a conjure spell not yet learned keeps them out of here too.
 ]]
 
 local function FirstQuestionableLink()
@@ -30,32 +34,33 @@ local function AddIf(values, enabled, value)
 	end
 end
 
-function ns.BuildReadinessSampleLines()
+function ns.BuildReadinessSampleLine()
 	local reports = ns.db and ns.db.global
-	if not reports then
-		return {}
+	local settings = ns.db and ns.db.profile
+	if not reports or not settings then
+		return nil
 	end
 
 	local buffs = {}
 	AddIf(buffs, reports.readinessFlask and ns.EXPANSION >= 2, L["READINESS_FLASK"])
-	AddIf(buffs, reports.readinessWellFed, ns.GetWellFedName())
+	AddIf(buffs, ns.ReadinessAsksWellFed(settings, reports), ns.GetWellFedName())
 	AddIf(
 		buffs,
-		reports.readinessPetWellFed and ns.isHunter and next(ns.PET_BUFF_FOODS) ~= nil,
+		reports.readinessPetWellFed and ns.ShouldTrackPetFood(),
 		string.format(L["READINESS_PET_FORMAT"], ns.GetWellFedName())
 	)
-	AddIf(buffs, reports.readinessScrolls, L["READINESS_SCROLLS"])
-	AddIf(buffs, reports.readinessSoulstone and ns.isWarlock, L["READINESS_SOULSTONE"])
+	AddIf(buffs, ns.ReadinessAsksScrolls(settings, reports), L["READINESS_SCROLLS"])
+	AddIf(buffs, ns.ReadinessAsksSoulstone(reports), L["READINESS_SOULSTONE"])
 	AddIf(buffs, reports.readinessMainHandBuff, MAINHANDSLOT)
 	AddIf(buffs, reports.readinessOffHandBuff, SECONDARYHANDSLOT)
 
 	local expiring = {}
-	local minutes = math.max(1, math.floor((reports.readinessExpiringThreshold or 60) / 60))
+	local minutes = math.max(1, math.floor(reports.readinessExpiringThreshold / 60))
 	AddIf(expiring, reports.readinessExpiring, string.format(L["READINESS_TIME_MINUTES"], ns.GetWellFedName(), minutes))
 
 	local items = {}
 	AddIf(items, reports.readinessHealthstone, L["READINESS_HEALTHSTONE"])
-	AddIf(items, reports.readinessManaGem and ns.isMage, L["READINESS_MANA_GEM"])
+	AddIf(items, ns.ReadinessAsksManaGem(reports), L["READINESS_MANA_GEM"])
 	AddIf(items, reports.readinessHealingPotion, L["READINESS_HEALING_POTION"])
 	AddIf(items, reports.readinessManaPotion and ns.PlayerUsesMana(), L["READINESS_MANA_POTION"])
 	AddIf(items, reports.readinessBandages, L["READINESS_BANDAGES"])
@@ -64,22 +69,14 @@ function ns.BuildReadinessSampleLines()
 	AddIf(damaged, reports.readinessDurability, ns.FirstEquippedLink())
 
 	local character = {}
-	AddIf(character, reports.readinessSpec and ns.GetNumTalentTabs() ~= nil, ns.GetCurrentSpecializationLabel())
+	AddIf(character, reports.readinessSpec and ns.CanReportSpecialization(), ns.GetCurrentSpecializationLabel())
 	AddIf(character, reports.readinessPvP, L["READINESS_PVP_ON"])
 
 	local questionable = {}
 	AddIf(questionable, reports.readinessQuestionableGear, FirstQuestionableLink())
 
-	local lines = { L["READINESS_TITLE"] }
-	for _, line in ipairs({
-		Line(Clause(L["READINESS_MISSING_BUFFS"], buffs), Clause(L["READINESS_EXPIRING"], expiring)) or false,
-		Line(Clause(L["READINESS_MISSING_ITEMS"], items), Clause(L["READINESS_DAMAGED_GEAR"], damaged)) or false,
-		Line(Clause(L["READINESS_CHARACTER"], character), Clause(L["READINESS_QUESTIONABLE_GEAR"], questionable))
-			or false,
-	}) do
-		if line then
-			lines[#lines + 1] = line
-		end
-	end
-	return lines
+	return Line(Clause(L["READINESS_MISSING_BUFFS"], buffs), Clause(L["READINESS_EXPIRING"], expiring))
+		or Line(Clause(L["READINESS_MISSING_ITEMS"], items), Clause(L["READINESS_DAMAGED_GEAR"], damaged))
+		or Line(Clause(L["READINESS_CHARACTER"], character), Clause(L["READINESS_QUESTIONABLE_GEAR"], questionable))
+		or L["READINESS_TITLE"]
 end

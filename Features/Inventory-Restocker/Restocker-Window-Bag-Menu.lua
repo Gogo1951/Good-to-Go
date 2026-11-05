@@ -152,7 +152,7 @@ function ns.CreateRestockBagMenu(addonFrame, parent)
 	    The caption is all the field ever shows: a pick is carried out, never
 	    held, so there is no chosen value for it to give way to. It is drawn in
 	    white, as the filter's hint is (the maintainer's ruling): a menu reads
-	    as something to open, where the add box's grey reads as somewhere to
+	    as something to open, where the add box's gray reads as somewhere to
 	    type. Anchored on both sides with no wrap, as the placeholders are, so a
 	    longer caption in another locale truncates inside the field instead of
 	    running under the arrow.

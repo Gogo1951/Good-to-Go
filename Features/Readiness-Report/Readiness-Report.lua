@@ -2,6 +2,7 @@ local _, ns = ...
 local L = ns.L
 local GetColor = ns.GetColor
 local GroupHasClass = ns.GroupHasClass
+local PartyHasClass = ns.PartyHasClass
 
 --[[
     Readiness -- the Readiness Report. When a ready check starts, prints a
@@ -59,8 +60,8 @@ end
 --[[
     A report line from its clauses, or nil when every one of them was empty.
 
-    The clause colours sit INSIDE what ns.PrintMessage wraps in C_TEXT. A |r
-    resets to the default rather than to the enclosing colour, which is why each
+    The clause colors sit INSIDE what ns.PrintMessage wraps in C_TEXT. A |r
+    resets to the default rather than to the enclosing color, which is why each
     clause re-opens C_TEXT after its label instead of relying on the wrapper's.
 ]]
 function ns.ReadinessLine(...)
@@ -79,6 +80,32 @@ end
 
 local Clause = ns.ReadinessClause
 local Line = ns.ReadinessLine
+
+--------------------------------------------------------------------------------
+-- Which Lines Can Show
+--------------------------------------------------------------------------------
+
+--[[
+    Whether the report asks about each of these at all, before it looks at the
+    player's buffs or bags. Shared with the panel's Example, so the Example
+    never shows a line the real report would keep quiet about.
+]]
+function ns.ReadinessAsksWellFed(settings, reports)
+	return reports.readinessWellFed and settings.useBuffFood and ns.IsModeActive(settings.buffFoodMode) or false
+end
+
+function ns.ReadinessAsksScrolls(settings, reports)
+	return reports.readinessScrolls and settings.useScrolls and ns.IsModeActive(settings.scrollsMode) or false
+end
+
+function ns.ReadinessAsksSoulstone(reports)
+	return reports.readinessSoulstone and ns.isWarlock and ns.KnowsAny(ns.CONJURE_SPELLS.WarlockCreateSoulstone)
+		or false
+end
+
+function ns.ReadinessAsksManaGem(reports)
+	return reports.readinessManaGem and ns.isMage and ns.KnowsAny(ns.CONJURE_SPELLS.MageCreateManaGem) or false
+end
 
 --------------------------------------------------------------------------------
 -- Missing Buffs
@@ -108,10 +135,8 @@ local function BuildMissingBuffs(settings, reports)
 		missing[#missing + 1] = L["READINESS_FLASK"]
 	end
 
-	if reports.readinessWellFed and settings.useBuffFood and ns.IsModeActive(settings.buffFoodMode) then
-		if snapshot.wellFedExpiration == nil then
-			missing[#missing + 1] = ns.GetWellFedName()
-		end
+	if ns.ReadinessAsksWellFed(settings, reports) and snapshot.wellFedExpiration == nil then
+		missing[#missing + 1] = ns.GetWellFedName()
 	end
 
 	--[[
@@ -131,7 +156,7 @@ local function BuildMissingBuffs(settings, reports)
 	    as covered. A type counts as covered by its own scroll buff or by a
 	    conflicting class buff or elixir.
 	]]
-	if reports.readinessScrolls and settings.useScrolls and ns.IsModeActive(settings.scrollsMode) then
+	if ns.ReadinessAsksScrolls(settings, reports) then
 		local uncovered = false
 		for scrollType, enabled in pairs(settings.scrollTypes or {}) do
 			if enabled then
@@ -152,13 +177,7 @@ local function BuildMissingBuffs(settings, reports)
 	    only they can put one up, and only while the stones' cooldown lets them.
 	    Anyone else would be reading a nag they cannot clear.
 	]]
-	if
-		reports.readinessSoulstone
-		and ns.isWarlock
-		and ns.KnowsAny(ns.CONJURE_SPELLS.WarlockCreateSoulstone)
-		and not ns.GroupHasSoulstone()
-		and not ns.SoulstonesOnCooldown()
-	then
+	if ns.ReadinessAsksSoulstone(reports) and not ns.GroupHasSoulstone() and not ns.SoulstonesOnCooldown() then
 		missing[#missing + 1] = L["READINESS_SOULSTONE"]
 	end
 
@@ -167,15 +186,16 @@ local function BuildMissingBuffs(settings, reports)
 	    imbue -- because GetWeaponEnchantInfo answers whether the slot carries
 	    one without caring which.
 
-	    A SHAMAN IN THE GROUP SATISFIES THE MAIN HAND, and only the main hand:
-	    that is the slot their buff answers for, so with one present the line
-	    stops being a thing the player has to act on. The off hand asks the
+	    A SHAMAN IN THE PLAYER'S OWN PARTY SATISFIES THE MAIN HAND, and only the
+	    main hand: that is the slot their totem answers for, and it reaches only
+	    their party, so with one there the line stops being a thing the player
+	    has to act on. The off hand asks the
 	    same question with no such exemption. Resolved once for the pair rather
 	    than per slot, so the group walk runs at most once per report.
 	]]
 	if reports.readinessMainHandBuff or reports.readinessOffHandBuff then
 		local mainHandMissing, offHandMissing = ns.GetMissingWeaponBuffs()
-		if reports.readinessMainHandBuff and mainHandMissing and not GroupHasClass("SHAMAN") then
+		if reports.readinessMainHandBuff and mainHandMissing and not PartyHasClass("SHAMAN") then
 			missing[#missing + 1] = MAINHANDSLOT
 		end
 		if reports.readinessOffHandBuff and offHandMissing then
@@ -265,12 +285,7 @@ local function BuildMissingItems(reports)
 	end
 
 	-- A Mage who can conjure one: anyone else could only ever read "missing".
-	if
-		reports.readinessManaGem
-		and ns.isMage
-		and ns.KnowsAny(ns.CONJURE_SPELLS.MageCreateManaGem)
-		and CarryingNoManaGem()
-	then
+	if ns.ReadinessAsksManaGem(reports) and CarryingNoManaGem() then
 		missing[#missing + 1] = L["READINESS_MANA_GEM"]
 	end
 
@@ -397,7 +412,7 @@ function ns.BuildReadinessLines(inArena)
 end
 
 --[[
-    Routed from Core's dispatcher on READY_CHECK. Owns the master switch, the
+    Called on READY_CHECK by this file's own event module, below. Owns the master switch, the
     gate that decides whether the report is allowed to speak at all, and hands
     ns.BuildReadinessLines the live arena test; what it would say is that
     function's business.
@@ -430,3 +445,32 @@ function ns.OnReadyCheck()
 		ns:PrintMessage(line)
 	end
 end
+
+--------------------------------------------------------------------------------
+-- Events
+--------------------------------------------------------------------------------
+
+--[[
+    The report's own event module, so it hears READY_CHECK only while its
+    switch is on and whether or not the Macros feature is. Nothing here waits
+    for combat to end: a ready check routinely fires with the raid already
+    pulling, and the report only reads auras and the last bag scan before
+    printing, so it touches nothing protected.
+]]
+local MODULE = "ReadinessReport"
+
+-- Called at login and by the report's switch (Options/Options-Utilities.lua).
+function ns.SyncReadinessReportEvents()
+	local reports = ns.db and ns.db.global
+	ns.SetModuleEvent(MODULE, "READY_CHECK", reports and reports.readinessReportEnabled and true or false)
+end
+
+ns.RegisterEventModule(MODULE, function(event)
+	if event == "PLAYER_LOGIN" then
+		ns.SyncReadinessReportEvents()
+	elseif event == "READY_CHECK" then
+		ns.OnReadyCheck()
+	end
+end)
+
+ns.SetModuleEvent(MODULE, "PLAYER_LOGIN", true)

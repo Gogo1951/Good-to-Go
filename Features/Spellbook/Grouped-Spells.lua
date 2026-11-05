@@ -24,12 +24,29 @@ local function GroupNames(macro)
 	return names
 end
 
--- The names ticked in the macro's group, in the group's order. Don't modify it.
+--[[
+	The names ticked in the macro's group, in the group's order, from the Rank 1 IDs saved for them, so the
+	ticks hold in any game language.
+]]
 function ns.GroupedSpells(macro)
 	if not ns.OffersGroupedSpells(macro) then
 		return NO_SLOTS
 	end
-	return SpellSettings("groupedSpells")[SettingsKey(macro)] or GroupNames(macro)
+	local ids = SpellSettings("groupedSpells")[SettingsKey(macro)]
+	if not ids then
+		return GroupNames(macro)
+	end
+	local ticked = {}
+	for _, id in ipairs(ids) do
+		ticked[id] = true
+	end
+	local names = {}
+	for _, member in ipairs(macro.groupMembers) do
+		if ticked[member.id] then
+			names[#names + 1] = member.name
+		end
+	end
+	return names
 end
 
 function ns.IsGroupedSpellOn(macro, name)
@@ -52,8 +69,8 @@ function ns.IsGrouped(macro)
 end
 
 --[[
-	Ticks or unticks a spell of the macro's group. Unticking the last one ticks the macro's own spell again,
-	and the whole group ticked is stored as nil, the default.
+	Ticks or unticks a spell of the macro's group, saved by Rank 1 ID. Unticking the last one ticks the macro's
+	own spell again, and the whole group ticked is stored as nil, the default.
 ]]
 function ns.ToggleGroupedSpell(macro, name)
 	local on = not ns.IsGroupedSpellOn(macro, name)
@@ -64,11 +81,11 @@ function ns.ToggleGroupedSpell(macro, name)
 			ticked = ns.IsGroupedSpellOn(macro, member.name)
 		end
 		if ticked then
-			list[#list + 1] = member.name
+			list[#list + 1] = member.id
 		end
 	end
 	if #list == 0 then
-		list[1] = macro.name
+		list[1] = macro.baseID
 	end
 	SpellSettings("groupedSpells")[SettingsKey(macro)] = #list < #macro.groupMembers and list or nil
 end

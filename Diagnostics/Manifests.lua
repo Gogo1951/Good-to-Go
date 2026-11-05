@@ -22,20 +22,36 @@ local _, ns = ...
 ns.DIAGNOSTIC_API_CHECKS = {}
 ns.DIAGNOSTIC_SPELLS = {}
 --[[
-    The same spell rows, held under a second name the probes read: Thanks for
-    the Buff's Features/Automated-Appreciation/Tracked-Lookups.lua replaces
-    ns.DIAGNOSTIC_SPELLS at login with its own per-class table, which Buff
-    Reactions Context reads by class, so the rows appended here at load would
+    The same spell rows, held under a second name the probes read: Automated
+    Appreciation's Features/Automated-Appreciation/Tracked-Lookups.lua replaces
+    ns.DIAGNOSTIC_SPELLS at login with its own per-class table, which its
+    context report reads by class, so the rows appended here at load would
     otherwise be gone by the time a report runs.
 ]]
 ns.DIAGNOSTIC_SPELL_ROWS = ns.DIAGNOSTIC_SPELLS
 ns.DIAGNOSTIC_NAME_LOOKUPS = {}
 ns.DIAGNOSTIC_DATA_SOURCES = {}
 
+--[[
+    An API check another feature's file already added under the same label is
+    skipped, so a function two features both call prints once.
+]]
+local function IsRepeatedApiCheck(target, row)
+	if type(row) ~= "table" or type(row[1]) ~= "string" or type(row[2]) ~= "function" then
+		return false
+	end
+	for _, existing in ipairs(target) do
+		if type(existing) == "table" and existing[1] == row[1] and type(existing[2]) == "function" then
+			return true
+		end
+	end
+	return false
+end
+
 function ns.AppendDiagnosticRows(target, rows)
 	for _, row in ipairs(rows) do
-		local merged = false
-		if type(row) == "table" and row.label and row.sources then
+		local merged = IsRepeatedApiCheck(target, row)
+		if not merged and type(row) == "table" and row.label and row.sources then
 			for _, existing in ipairs(target) do
 				if existing.label == row.label and existing.sources then
 					for _, source in ipairs(row.sources) do

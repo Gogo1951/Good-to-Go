@@ -7,7 +7,7 @@ ns.POISON_RECIPES = {}
 How We Got the Data
 
 Last Validated
-	2026-11-03, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-04, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- Empty: this client has no poison crafting. The Poisons skill line (40) has no abilities, the TBC crafting spells are gone, and the poisons are spells rather than items (Poisons-Mists.lua).

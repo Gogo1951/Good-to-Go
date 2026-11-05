@@ -145,10 +145,10 @@ ns.SCROLL_DATA = {
 How We Got the Data
 
 Last Validated
-	2026-10-16, Season of Discovery 1.15.9.70003
+	2026-11-04, Season of Discovery 1.15.9.70576
 
 Notes
-	- The stat scrolls, read by Features/Scanner-Auras.lua (FindBestScroll) to pick a scroll whose buff the player lacks. Each type lists its scrolls as { itemID, buffID, requiredLevel, amount }: the buff is the aura the scroll leaves, requiredLevel the level the tooltip requires, amount the stat it grants.
+	- The stat scrolls, read by Features/Macros-for-Consumables/Scanner/Scanner-Auras.lua (FindBestScroll) to pick a scroll whose buff the player lacks. Each type lists its scrolls as { itemID, buffID, requiredLevel, amount }: the buff is the aura the scroll leaves, requiredLevel the level the tooltip requires, amount the stat it grants.
 	- conflictSpells lists the buffs a scroll can't stack with, keyed by spell ID, with the amount each grants; a scroll is skipped while the player has a conflicting buff at least as strong. Class buffs come first. Agility, Protection and Strength list no class buffs; Protection stacks with Devotion Aura, Stoneskin and the like.
 	- After the class buffs come every elixir, flask and other consumable buff in ns.ELIXIR_BUFF_IDS and ns.FLASK_BUFF_IDS (Data/{Game}/Elixirs-{Game}.lua) that raises the same stat: a SpellEffect Mod Stat aura (29) for the stat, or a Mod Resistance aura (22) on armor for Protection, at its amount on this build. A buff that raises two stats, such as Elixir of the Sages, is listed under both. Only Elixir of the Mongoose blocking Scroll of Agility is confirmed in game (GitHub issue #3); the rest follow the same rule without an in-game check. That errs toward skipping a scroll that would have stacked rather than building a scroll line that fails on use.
 	- Buff 11328 is the Elixir of Agility's, whose spell is named Deprecated Alchemy Elixir Template; it's listed by the item.

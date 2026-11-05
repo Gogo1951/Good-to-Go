@@ -42,7 +42,7 @@ Last Validated
 	2026-10-16, WoW Forever 1.60.1.70450
 
 Notes
-	- Every Engineering explosive this client knows that deals damage, read by the item cache (Features/Item-Cache.lua) for the Explosive macro. The family is the items sharing Coarse Dynamite's (4365) use category, which on this client is class 0, subclass 0.
+	- Every Engineering explosive this client knows that deals damage, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Explosive macro. The family is the items sharing Coarse Dynamite's (4365) use category, which on this client is class 0, subclass 0.
 	- Min Damage and Max Damage are the use spell's damage range. Engineering Skill is the rank the tooltip requires (0 for none). Required Spell ID, where present, is the Goblin or Gnomish specialization the item needs; no row on this client carries one.
 	- Items that share the explosive cooldown but aren't crafted explosives are left out: the Portable Bronze Mortar (a reusable device), Goblin Fishing Pole, Flash Bundle, Explosive Rocket, Magic Candle, Brimstone, Fertile Bulb, M73 Frag Grenade, and the quest items (Crystal Charge, the Holy Waters).
 	- Damage on this client is the base points times one plus or minus half the variance, rounded (Rough Dynamite's 25.9999996 is 26). The Scrolls of Cryoblast and Greater Cryoblast (217495, 277499) are left out: they are scrolls, not explosives.

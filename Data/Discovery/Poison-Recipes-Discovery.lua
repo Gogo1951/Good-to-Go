@@ -48,7 +48,7 @@ ns.POISON_RECIPES = {
 How We Got the Data
 
 Last Validated
-	2026-10-16, Season of Discovery 1.15.9.70003
+	2026-11-04, Season of Discovery 1.15.9.70576
 
 Notes
 	- What a rogue poison costs to craft, read by Features/Inventory-Restocker/Restocker-Crafting-Reagents.lua: when the Restock List is short of a poison, the shortfall becomes an order for these reagents, and the vendor has to stock every one of them before any is bought.

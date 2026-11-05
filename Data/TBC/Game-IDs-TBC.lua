@@ -12,6 +12,7 @@ ns.CANNIBALIZE_RESTORES_MANA = false
 
 -- Races
 ns.NIGHT_ELF_RACE_ID = 4
+ns.UNDEAD_RACE_ID = 5
 
 -- Druid Forms
 ns.DRUID_DIRE_BEAR_FORM_SPELL_ID = 9634
@@ -32,25 +33,18 @@ ns.REVIVE_PET_SPELL_ID = 982
 -- A "Well Fed" food buff, read for the buff's name; it is named Well Fed in every locale on every client.
 ns.WELL_FED_SPELL_ID = 19705
 
--- Global Cooldown
--- Read for the global cooldown's own timer, which a cooldown check compares against.
-ns.GLOBAL_COOLDOWN_SPELL_ID = 61304
-
 -- Ranged Attack
 -- Shoot, read for the one label the page gives its folded ranged-attack macro.
 ns.SHOOT_SPELL_ID = 5019
 
 -- Auto Attacks
--- Attack, Auto Shot, Shoot (a wand), Shoot Bow, Shoot Gun, Shoot Crossbow and Throw: the page's Basic Attacks.
-ns.BASIC_ATTACK_SPELL_IDS = { 6603, 75, 5019, 2480, 7918, 7919, 2764 }
+-- Attack, Auto Shot, Shoot (a wand), Shoot (a bow, gun or crossbow) and Throw: the page's Basic Attacks.
+ns.BASIC_ATTACK_SPELL_IDS = { 6603, 75, 5019, 3018, 2764 }
 
 -- Ranged Weapon Attacks
 -- { id = spellId, subclass = the weapon's Enum.ItemWeaponSubclass }, in the order the Shoot macro tries them.
 ns.RANGED_ATTACKS = {
 	{ id = 2764, subclass = 16 }, -- Throw
-	{ id = 2480, subclass = 2 }, -- Shoot Bow
-	{ id = 7918, subclass = 3 }, -- Shoot Gun
-	{ id = 7919, subclass = 18 }, -- Shoot Crossbow
 }
 
 -- Call Pet Flyout
@@ -92,6 +86,7 @@ ns.GOBLIN_ENGINEER_SPELL_ID = 20222
 ns.GAME_IDS = {
 	PHASE_SHIFT_SPELL_ID = 4511, -- Phase Shift
 	SAMPLE_BUFF_SPELL_ID = 1459, -- Arcane Intellect
+	SAMPLE_COMBAT_BUFF_SPELL_ID = 1044, -- Blessing of Freedom
 	SAMPLE_GOOD_NEWS_SPELL_ID = 10060, -- Power Infusion
 	SAMPLE_SERVICE_SPELL_ID = 10059, -- Portal: Stormwind
 }
@@ -124,19 +119,22 @@ ns.THANK_YOU_MACRO_ICONS = {
 How We Got the Data
 
 Last Validated
-	2026-10-22, TBC Anniversary 2.5.6.70006
+	2026-11-04, TBC Anniversary 2.5.6.70577
 
 Notes
 	- Single spell, item, race and skill-line IDs the feature code reads by name, grouped by use. The client supplies every name the player sees from these IDs.
 	- Shadowmeld and Stealth are the spells the Food and Water macros cast for Stealth Eating and Shadowmeld Drinking. Stealth is rank 1: C_Spell.GetSpellName resolves the base name "Stealth", which a bare /cast fires at the highest rank the rogue knows.
 	- Cannibalize is the Forsaken racial, which channels off a corpse of the creature types listed (6 Undead, 7 Humanoid). It restores health only on this client, so CANNIBALIZE_RESTORES_MANA decides whether the Water macro may cast it.
 	- Poisons (2842) is the rogue poison-crafting skill, the same ID on Era and TBC. Knowing it gates the Poisons macro (a rogue without it can't apply poisons at all) and provides the middle-click crafting branch.
+	- Shoot Bow, Shoot Gun and Shoot Crossbow (2480, 7918, 7919) are not on this client. One Shoot (3018) takes their place, learned with the Bows, Guns and Crossbows skills (SkillLineAbility 45, 46, 226) by warriors and rogues, so it joins the Basic Attacks. It is not a RANGED_ATTACKS row: a row names one weapon type, and this spell serves three under the same name as the wand's Shoot. So RANGED_ATTACKS holds Throw alone, and with one ranged weapon attack there is nothing for the Shoot macro to fold.
+	- There is no GLOBAL_COOLDOWN_SPELL_ID: this client has no Global Cooldown spell (61304), so the Buff Duty key picker reads the global cooldown from one of the player's own Buff Duty spells, one with no cooldown of its own.
 	- Well Fed (19705) is read for the buff's name, which is Well Fed in every locale on every client. The two mana runes are read for the names the Mana Gem panel shows.
 	- ns.PET_BUFF_FOODS holds the Hunter and Warlock pet buff foods: the pet-buff override offers the highest rank the bags hold, settingKey names each food's petBuffTypes toggle, and requiredLevel is the level a player needs before the food is offered.
 	- The profession skill lines are the ones the usability gates read ranks from; each is found in the skill list by the name the client gives its ID. The Goblin Engineer specialization is what Diagnostics checks the player for.
 	- Thanks for the Buff: Spell IDs that feature code needs by name rather than from a list: the sample spells the options panels use for their preview messages.
-	- Thanks for the Buff: SAMPLE_GOOD_NEWS_SPELL_ID (Power Infusion) is the spell linked in the Good News sample whisper (Options/Options-Send-Good-News.lua).
-	- Thanks for the Buff: THANK_YOU_MACRO_ICONS are the icons a Thank You Button macro can wear (Options/Options-Thank-You-Button.lua): bold, distinct item art nobody keeps on a bar, so a Thank You macro stands out. Each is a texture file ID present under the same ID on Classic Era, TBC Anniversary and WoW Forever. The client gives an icon no name, so the Icon dropdown shows each one as its picture alone, in this order. The second field is the button that starts on it, so buttons 2 through 5 each start on their own icon.
+	- Thanks for the Buff: SAMPLE_GOOD_NEWS_SPELL_ID (Power Infusion) is the spell linked in the Good News sample whisper (Options/Automated-Appreciation/Options-Send-Good-News.lua).
+	- Thanks for the Buff: SAMPLE_COMBAT_BUFF_SPELL_ID (Blessing of Freedom) is the spell linked in the Combat Buffs sample whisper and print out, cast by a sample Paladin (Options/Automated-Appreciation/Options-Teammate-Buffs.lua): a buff cast in a fight, unlike SAMPLE_BUFF_SPELL_ID's Arcane Intellect, which the Stranger Buffs samples use.
+	- Thanks for the Buff: THANK_YOU_MACRO_ICONS are the icons a Thank You Button macro can wear (Options/Automated-Appreciation/Options-Thank-You-Button.lua): bold, distinct item art nobody keeps on a bar, so a Thank You macro stands out. Each is a texture file ID present under the same ID on Classic Era, TBC Anniversary and WoW Forever. The client gives an icon no name, so the Icon dropdown shows each one as its picture alone, in this order. The second field is the button that starts on it, so buttons 2 through 5 each start on their own icon.
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query
@@ -148,6 +146,8 @@ wago.tools
 	https://wago.tools/db2/SpellName?build=2.5.6.70006
 	https://wago.tools/db2/ItemSparse?build=2.5.6.70006
 	https://wago.tools/db2/ManifestInterfaceData?build=2.5.6.70006
+	https://wago.tools/db2/SkillLineAbility?build=2.5.6.70577
+	https://wago.tools/db2/SpellName?build=2.5.6.70577
 
 QuestieDB
 	None.

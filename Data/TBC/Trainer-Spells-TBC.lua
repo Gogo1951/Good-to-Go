@@ -1625,10 +1625,10 @@ ns.TRAINER_SPELLS = {
 How We Got the Data
 
 Last Validated
-	2026-10-24, TBC Anniversary 2.5.6.70006
+	2026-11-04, TBC Anniversary 2.5.6.70577
 
 Notes
-	- Every class spell this client's class trainers teach, one row per rank, so the spellbook page can list the spells a character hasn't learned yet. Features/Unlearned-Spells.lua shows only each spell's rank 1; the higher ranks keep the list in level order and let it tell rank 1 apart.
+	- Every class spell this client's class trainers teach, one row per rank, so the spellbook page can list the spells a character hasn't learned yet. Features/Spellbook/Unlearned-Spells.lua shows only each spell's rank 1; the higher ranks keep the list in level order and let it tell rank 1 apart.
 	- level is the level the trainer offers the rank, which is the spell's learn level. A talent row is the exception (below).
 	- The client's own learn level (Validate Data's SPELL_LEVEL_LEARNED) reads 0 or 1 for spells with no level of their own: weapon and armor skills, Parry, Pick Lock, the hunter's pet skills and talents. Those rows keep the trainer's level.
 	- requires is the spell the trainer wants first, usually the previous rank. Rows added from the game tables take the rank the tables say it replaces, or else the same spell's previous rank in this table, which agrees with all but 3 of the 860 hand-made rows that follow an earlier rank.

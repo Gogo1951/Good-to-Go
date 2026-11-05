@@ -168,9 +168,9 @@ end
     client resolves |Hitem:| on hover, so the tooltip is correct even while the
     cache behind it is still cold.
 
-    The colour on the hand-built form is white rather than the item's quality
-    colour, which is the one thing that cannot be known without the cache. The
-    cached link is preferred whenever it exists, and it carries the real colour.
+    The color on the hand-built form is white rather than the item's quality
+    color, which is the one thing that cannot be known without the cache. The
+    cached link is preferred whenever it exists, and it carries the real color.
 ]]
 function ns.GetItemHyperlink(itemID, fallbackName)
 	local info = itemID and ns.GetItemData(itemID) or nil

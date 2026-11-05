@@ -17,7 +17,7 @@ ns.MANA_RUNES = {
 How We Got the Data
 
 Last Validated
-	2026-11-03, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-04, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- ns.MANA_GEMS holds the mage's mana gems, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Mana Gem macro and by the Readiness Report. Mana Gem (36799) is what Conjure Mana Gem (759) makes; Brilliant Mana Gem (81901) is what Conjure Mana Gem 119316 makes. Both restore through a scripted effect whose base points are 1 (5405 and 119313), so the column holds 1 for each and carries no ranking. A mage holds only one of the two.

@@ -387,10 +387,10 @@ ns.FOOD_AND_WATER = {
 How We Got the Data
 
 Last Validated
-	2026-10-23, TBC Anniversary 2.5.6.70006
+	2026-11-04, TBC Anniversary 2.5.6.70577
 
 Notes
-	- Every food and drink this client knows that restores health or mana while seated, read by the item cache (Features/Item-Cache.lua) for the Food and Water macros and the buff-food choices.
+	- Every food and drink this client knows that restores health or mana while seated, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Food and Water macros and the buff-food choices.
 	- Buff Food is 1 when eating gives a Well Fed buff (the text says "well fed", "also increases" or the like). Food % and Water % are percent of health or mana per second (100% over 20 sec is 5). Food Amount and Water Amount are the whole restore over the meal.
 	- Allowed Zones are uiMapIDs: 1460 Warsong Gulch and 1461 Arathi Basin. Each zone-locked ration's text says where it works.
 	- Arena (column 7) is a fixed per-item property: 1 = offered ONLY inside a PvP Arena (Star's Tears, Star's Lament). They work anywhere, but they are expensive and ordinary food and water serve better outside one. 2 = a conjured item the client flags usable in arenas too (the item's arena flag). Harvest Bread and Winter Veil Loaf say Conjured Item but lack the flag, so they carry no arena value and are never offered in one. Whether an item is actually offered is gated live on IsInInstance() at scan time (ns.CacheItemData and ns.ScanBags); no arena zone IDs are kept.

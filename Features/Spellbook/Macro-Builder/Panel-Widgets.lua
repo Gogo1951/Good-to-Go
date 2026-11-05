@@ -10,7 +10,7 @@ local PixelInset = ns.PixelInset
 	The controls the panels docked beside the Spell Book share (Features/Spellbook/Macro-Builder/Docked-Panel.lua):
 	the Conditionals panel and its rows (Features/Spellbook/Macro-Builder/Conditionals-Panel.lua,
 	Conditionals-Rows.lua) and the Cast Sequence panel (Features/Spellbook/Macro-Builder/Cast-Sequence-Panel.lua).
-	Their colours, a box, a tooltip, a dropdown, the grip a row is dragged by and the wash on the row it will land
+	Their colors, a box, a tooltip, a dropdown, the grip a row is dragged by and the wash on the row it will land
 	on, a spell slot and how it draws, and a row's remove button. They load before the panels, which read them as
 	they load.
 ]]
@@ -27,8 +27,10 @@ local TEXTURE_REMOVE = "Interface\\Buttons\\UI-GroupLoot-Pass-Up"
 local TEXTURE_REMOVE_DOWN = "Interface\\Buttons\\UI-GroupLoot-Pass-Down"
 local TEXTURE_REMOVE_HIGHLIGHT = "Interface\\Buttons\\UI-GroupLoot-Pass-Highlight"
 
--- The panels' own dark leather (Data/Data.lua), so they read as part of the window rather than the parchment, as
--- the {r, g, b} lists the texture calls unpack.
+--[[
+	The panels' own dark leather (Data/Data.lua), so they read as part of the window rather than the parchment, as
+	the {r, g, b} lists the texture calls unpack.
+]]
 local COLORS = {}
 for key, hex in pairs(ns.CONDITIONALS_COLORS) do
 	local rgb = ns.HexToRGB(hex)
@@ -45,7 +47,7 @@ Widgets.SLOT_ICON, Widgets.COLORS = SLOT_ICON, COLORS
 -- Drawing
 --------------------------------------------------------------------------------
 
--- A box on frame: a one-pixel edge in one colour around a fill in another.
+-- A box on frame: a one-pixel edge in one color around a fill in another.
 local function Box(frame, fill, edge)
 	local edgeTexture = frame:CreateTexture(nil, "BACKGROUND")
 	edgeTexture:SetAllPoints()

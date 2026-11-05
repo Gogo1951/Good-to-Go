@@ -1,7 +1,7 @@
 local _, ns = ...
 local L = ns.L
 
--- Keeps the WoW macros the page creates in step with it, and reads the action bars for the page's glows.
+-- Keeps the WoW macros the page creates in step with it.
 
 --[[
 	The macro slot limits. The Retail engine has them in Constants.MacroConsts; the Classic engine's
@@ -36,7 +36,7 @@ end
 
 --[[
 	The name the WoW macro for a page macro takes: the page macro's own behind ns.MACRO_NAME_PREFIX
-	("-Divine Spirit"), so the add-on's macros sort together in /macro. A consumable's is Connoisseur's own
+	("-Divine Spirit"), so the add-on's macros sort together in /macro. A consumable's is Consumable Macros' own
 	(Features/Spellbook/Consumable-Macros.lua).
 ]]
 function ns.WowMacroName(macro)
@@ -297,10 +297,10 @@ end
 ]]
 function ns.PickupMacro(macro)
 	if InCombatLockdown() then
-		UIErrorsFrame:AddMessage(ERR_NOT_IN_COMBAT, 1, 0.1, 0.1)
+		ns.ShowUIError(ERR_NOT_IN_COMBAT)
 		return
 	end
-	-- a consumable's macro is Connoisseur's to write, so the page only picks it up
+	-- a consumable's macro is Consumable Macros' to write, so the page only picks it up
 	if macro.consumable then
 		local index = GetMacroIndexByName(macro.wowName)
 		if index > 0 then
@@ -317,7 +317,7 @@ function ns.PickupMacro(macro)
 		local numAccount, numCharacter = GetNumMacros()
 		local perCharacter = numCharacter < MaxCharacterMacros()
 		if not perCharacter and numAccount >= MaxAccountMacros() then
-			UIErrorsFrame:AddMessage(L["ADDON_SHORT_NAME"] .. " // " .. L["ERROR_MACRO_SLOTS_FULL"], 1, 0.1, 0.1)
+			ns.ShowUIError(L["ADDON_SHORT_NAME"] .. " // " .. L["ERROR_MACRO_SLOTS_FULL"])
 			return
 		end
 		ns.AssignMacroTag(macro)

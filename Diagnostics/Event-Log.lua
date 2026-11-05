@@ -18,21 +18,22 @@ local EVENT_LOG_MAX_ARG_LENGTH = 255
 
     - COMBAT_LOG_EVENT_UNFILTERED, registered on every flavor but Forever: raw
       combat-log traffic would bury the signal, so every aura landing on you
-      and every cast or revive Thanks for the Buff tracks is logged in full instead, and every
-      other cast is counted by spell id in the summary (see ns:LogCombatCast).
-    - UNIT_AURA, registered for every unit while Buff Duty is on (the Buff
-      Window reads the whole group), for you alone on Forever while praise is
-      on, and by Connoisseur for you and your pet while a macro needs it
+      and every cast or revive Automated Appreciation tracks is logged in full
+      instead, and every other cast is counted by spell id in the summary (see
+      ns:LogCombatCast).
+    - UNIT_AURA, registered for every unit while Buff Duty is on (its window
+      reads the whole group), for you alone on Forever while praise is
+      on, and by Consumable Macros for you and your pet while a macro needs it
       (ns.UpdateAuraTracking): its update table can't be logged as text, and on
       Forever each added aura on you is logged with the gate that decided it
-      instead (see ns:LogAuraUpdate). Connoisseur logs each firing on you or
+      instead (see ns:LogAuraUpdate). Consumable Macros logs each firing on you or
       your pet that changes a macro, with what changed (ns.OnUnitAura in
-      Features/Macros-for-Consumables/Scanner-Auras.lua). The Buff Window's own
-      reads show on the Buff Window Context report.
+      Features/Macros-for-Consumables/Scanner/Scanner-Auras.lua). The Buff Duty
+      window's own reads show on the Buff Duty Context report.
 
     SPELL_UPDATE_COOLDOWN is dropped outright: it fires on every global
     cooldown and carries no id to classify by, and all it drives is the Buff
-    Window's cooldown swipes, which show on the window itself.
+    Duty window's cooldown swipes, which show on the window itself.
 ]]
 ns.DIAGNOSTIC_EVENT_EXCLUDE = {
 	COMBAT_LOG_EVENT_UNFILTERED = true,
@@ -44,8 +45,8 @@ ns.DIAGNOSTIC_EVENT_EXCLUDE = {
     Events that carry an id worth classifying, and the argument position it
     arrives in, for ns:SuppressUncorrelatedMessage to classify per firing
     rather than drop wholesale. A firing logs in full when a feature
-    correlates it (Thanks for the Buff's ns.IsCorrelatedMessage, or
-    Connoisseur's checks below), and every other firing is counted.
+    correlates it (Automated Appreciation's ns.IsCorrelatedMessage, or
+    Consumable Macros' checks below), and every other firing is counted.
 
     - UNIT_SPELLCAST_SUCCEEDED fires for every unit the client tracks, so in a
       group or a city it is a firehose; its id is the spell id.
@@ -90,7 +91,7 @@ local GATED_EVENTS = {
 }
 
 --[[
-    Connoisseur & Restocker's correlations, beside Thanks for the Buff's
+    Consumable Macros' correlations, beside Automated Appreciation's
     ns.IsCorrelatedMessage, each the exact test its live handler makes: the
     two errors the consumable macros read by text, ERR_ITEM_WRONG_ZONE
     (Features/Macros-for-Consumables/Macros/Runtime.lua) and SPELL_FAILED_TARGETS_DEAD

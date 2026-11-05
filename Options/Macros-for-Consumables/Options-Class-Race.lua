@@ -191,11 +191,14 @@ function ns.BuildClassRaceOptions()
 
 		--[[
 		    Forsaken -- Cannibalize in the Food macro, and in the Water macro
-		    where it restores mana. Headed "Forsaken", the maintainer's choice,
-		    though the client names the race Undead.
+		    where it restores mana. Headed with the client's name for the race,
+		    which is Undead.
 		]]
 		spaceForsaken0 = Spacer(40),
-		headerForsaken = Header(L["OPTIONS_RACE_HEADER_FORMAT"]:format(L["OPTIONS_FORSAKEN_HEADER"]), 41),
+		headerForsaken = Header(
+			L["OPTIONS_RACE_HEADER_FORMAT"]:format(C_CreatureInfo.GetRaceInfo(ns.UNDEAD_RACE_ID).raceName),
+			41
+		),
 		spaceForsaken1 = Spacer(42),
 		descCannibalize = Desc(function()
 			return GetColor("BODY")

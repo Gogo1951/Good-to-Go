@@ -41,8 +41,6 @@ ns.MISSING_SPELL_MESSAGE_IDS = {
 	noCreateHealthstone = 6201, -- Create Healthstone
 	noCreateSoulstone = 20707, -- Soulstone
 	noRitualOfSouls = 29893, -- Create Soulwell
-	-- Rogue poisons
-	noPoisonsSkill = 2842, -- Poisons: absent on this client, so the tip prints nothing (see Game-IDs-Mists.lua)
 	-- Hunter pet spells
 	noMendPet = 136, -- Mend Pet
 }
@@ -51,7 +49,7 @@ ns.MISSING_SPELL_MESSAGE_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-11-03, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-04, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- The mage and warlock conjure spells the macros cast, one list per conjure, read by Features/Macros-for-Consumables/Macros/Smart-Spell.lua (GetSmartSpell), the Food and Water macros, the class tools, the Readiness Report and the mini-map tooltip. Smart-Spell sorts each list by its level column, highest first, at load, so row order carries no meaning.
@@ -60,7 +58,7 @@ Notes
 	- Conjure Mana Gem (759) creates Mana Gem (36799) directly. Conjure Refreshment Table (43987) is the old Ritual of Refreshment; Create Soulwell (29893) is the old Ritual of Souls (60429, on no skill line here).
 	- Create Healthstone (6201) is a script effect; Create Healthstone 23517 and 120038 are the spells in this client's tables that create Healthstone (5512).
 	- Soulstone (20707) is cast straight on a target and makes no item: it puts a 15-minute aura on the target (SpellEffect aura 4, SpellDuration 347). The warlock tools' right-click casts it bare, on the player's target.
-	- ns.MISSING_SPELL_MESSAGE_IDS holds the spells ConnoisseurTip names at print time (Features/Macros-for-Consumables/Macros/Runtime.lua): one per conjure list, plus the rogue's Poisons skill, which this client lacks. Its ID resolves to no name here, so that tip prints nothing.
+	- ns.MISSING_SPELL_MESSAGE_IDS holds the spells GtGTip names at print time (Features/Macros-for-Consumables/Macros/Runtime.lua): one per conjure list, and Mend Pet. The rogue's Poisons skill (2842) is left out: this client doesn't have it, and a tip key with no entry prints nothing.
 
 SQL (CMaNGOS)
 	None.

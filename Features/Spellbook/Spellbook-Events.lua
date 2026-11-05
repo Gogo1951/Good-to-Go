@@ -55,6 +55,7 @@ local spellsPending = false
 
 local function RefreshForSpells()
 	spellsPending = false
+	ns.InvalidateSpellRankRows()
 	if ns.RefreshWhatsNext then
 		ns.RefreshWhatsNext()
 	end
@@ -82,7 +83,7 @@ local gearPending = false
 
 function ns:OnPlayerEquipmentChanged()
 	ns:InvalidateUsableSlots()
-	if gearPending or not ns.db then
+	if gearPending then
 		return
 	end
 	gearPending = true
@@ -102,14 +103,17 @@ end
 --[[
 	Unlearned spells and unlearned ranks whose names weren't loaded were skipped; redraw once a burst of them
 	arrives. Only the spells this add-on asked for count, not every load another add-on or a tooltip causes.
-	It can fire before PLAYER_LOGIN creates the database.
 ]]
 local refreshPending = false
 
 function ns:OnSpellDataLoadResult(spellID)
 	local pendingRank = ns.TakePendingRank(spellID)
 	local wasRequested = ns.TakeRequestedSpell(spellID)
-	if not ns.db or refreshPending then
+	-- a name that just loaded can complete a row the tooltip's ranks left out
+	if wasRequested then
+		ns.InvalidateSpellRankRows()
+	end
+	if refreshPending then
 		return
 	end
 	-- the What's Next? tab lists unlearned spells whatever Show Unlearned Spells says
@@ -141,12 +145,13 @@ end
 	The pet called, dismissed or swapped (UNIT_PET), its level (UNIT_LEVEL), the abilities it knows
 	(PET_BAR_UPDATE) or a grimoire bought or used (BAG_UPDATE_DELAYED) change the pet tabs; redraw the open tab
 	once per burst, since PET_BAR_UPDATE fires several times in a row. Only the player's and the pet's own
-	events count.
+	events count. One handler per event, each named for the Spellbook (ns.OnUnitPet is the Feed Pet macro's).
 ]]
 local petPending = false
 
-function ns:OnPetChanged(unit)
-	if petPending or (unit and unit ~= "player" and unit ~= "pet") then
+local function PetChanged()
+	ns.InvalidateSpellRankRows(true)
+	if petPending then
 		return
 	end
 	if not (ns.IsWhatsNextPetShown and ns.IsWhatsNextPetShown()) then
@@ -157,6 +162,30 @@ function ns:OnPetChanged(unit)
 		petPending = false
 		ns.RefreshWhatsNextPet()
 	end)
+end
+
+local function IsPlayerOrPet(unit)
+	return unit == "player" or unit == "pet"
+end
+
+function ns:OnSpellbookUnitPet(unit)
+	if IsPlayerOrPet(unit) then
+		PetChanged()
+	end
+end
+
+function ns:OnSpellbookUnitLevel(unit)
+	if IsPlayerOrPet(unit) then
+		PetChanged()
+	end
+end
+
+function ns:OnSpellbookPetBarUpdate()
+	PetChanged()
+end
+
+function ns:OnSpellbookBagUpdateDelayed()
+	PetChanged()
 end
 
 -- Placing or removing an action only changes the glows; redraw them once per burst.

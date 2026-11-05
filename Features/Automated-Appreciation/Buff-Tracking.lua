@@ -99,14 +99,6 @@ ns.GetPetOwnerUnit = GetPetOwnerUnit
     second is already on cooldown).
 ]]
 local function OnUnitSpellcastSucceeded(unitTarget, castGUID, spellID)
-	-- The Buff Key hears its own casts go off, whether or not tracking is ready.
-	if ns.OnBuffKeyCastSucceeded then
-		ns.OnBuffKeyCastSucceeded(unitTarget, spellID)
-	end
-	if ns.OnResurrectCastSucceeded then
-		ns.OnResurrectCastSucceeded(unitTarget, spellID)
-	end
-
 	if not isReady or not ns.db then
 		return
 	end
@@ -149,11 +141,11 @@ local function OnUnitSpellcastSucceeded(unitTarget, castGUID, spellID)
 		return
 	end
 	local creditGUID = UnitGUID(unitTarget)
-	if not creditGUID or not ns.IsPlain(creditGUID) or creditGUID == playerGUID then
+	if not ns.IsPlain(creditGUID) or not creditGUID or creditGUID == playerGUID then
 		return
 	end
 	local creditName = GetUnitName(unitTarget, true)
-	if not creditName or not ns.IsPlain(creditName) then
+	if not ns.IsPlain(creditName) or not creditName then
 		return
 	end
 
@@ -165,16 +157,11 @@ local function OnUnitSpellcastSucceeded(unitTarget, castGUID, spellID)
 end
 
 --[[
-    UNIT_AURA is subscribed for every unit while Buff Duty is on for your class,
-    because it reads the whole group, and otherwise on Forever for you alone
-    (ns.UpdateThanksForTheBuffEvents); this handler owns the event and hands it
-    on to Buff Duty first. The rest is Forever's buff detection
+    UNIT_AURA is subscribed on Forever for you alone
+    (ns.UpdateAutomatedAppreciationEvents), for Forever's buff detection
     (ns.OnForeverPlayerAura), which only ever cares about auras on you.
 ]]
 local function OnUnitAura(unit, updateInfo)
-	if ns.OnBuffWindowAura then
-		ns.OnBuffWindowAura(unit)
-	end
 	if not ns.OnForeverPlayerAura or not ns.IsPlain(unit) or unit ~= "player" then
 		return
 	end

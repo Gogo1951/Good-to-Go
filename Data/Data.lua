@@ -75,7 +75,7 @@ ns.CLASS_COLORS = {
 	WARRIOR = "C69B6D",
 }
 
--- Thanks for the Buff reads the same table through ns.Data.
+-- Automated Appreciation reads the same table through ns.Data.
 Data.CLASS_COLORS = ns.CLASS_COLORS
 
 --------------------------------------------------------------------------------
@@ -99,12 +99,11 @@ ns.SAMPLE_NAMES = {
 -- URLs
 --------------------------------------------------------------------------------
 
--- TODO: The CurseForge, Wago and GitHub links once the projects exist.
 ns.LINKS = {
-	CURSEFORGE = "TBD",
+	CURSEFORGE = "https://www.curseforge.com/wow/addons/good-to-go",
 	GITHUB = "https://github.com/Gogo1951/Good-to-Go",
 	DISCORD = "https://discord.gg/eh8hKq992Q",
-	WAGO = "TBD",
+	WAGO = "https://addons.wago.io/addons/good-to-go",
 }
 
 --------------------------------------------------------------------------------
@@ -146,34 +145,26 @@ ns.MACRO_BODY_MAX_LENGTH = 255
 ns.OPTIONS_REGISTRY = {
 	General = ADDON_NAME .. "_General",
 
-	-- Connoisseur: its heading page, then its panels under it
-	Connoisseur = ADDON_NAME .. "_Connoisseur",
+	-- Each feature's panel, then its sub-panels, in the root panel's Features order
+	BuffDuty = ADDON_NAME .. "_BuffDuty",
+	BuffDutyBuffs = ADDON_NAME .. "_BuffDutyBuffs",
+	BuffDutySelfBuffs = ADDON_NAME .. "_BuffDutySelfBuffs",
+	BuffDutyWeaponBuffs = ADDON_NAME .. "_BuffDutyWeaponBuffs",
+	Restocker = ADDON_NAME .. "_Restocker",
+	Spellbook = ADDON_NAME .. "_Spellbook",
 	Macros = ADDON_NAME .. "_Macros",
 	ClassRace = ADDON_NAME .. "_ClassRace",
 	IgnoreList = ADDON_NAME .. "_IgnoreList",
-	ReadinessReport = ADDON_NAME .. "_ReadinessReport",
-
-	-- Restocker, then the Inventory Report under it
-	Restocker = ADDON_NAME .. "_Restocker",
 	InventoryReport = ADDON_NAME .. "_InventoryReport",
-
-	-- Thanks for the Buff: its heading page, then its panels under it
-	ThanksForTheBuff = ADDON_NAME .. "_ThanksForTheBuff",
+	ReadinessReport = ADDON_NAME .. "_ReadinessReport",
 	StrangerBuffs = ADDON_NAME .. "_StrangerBuffs",
-	TeammateBuffs = ADDON_NAME .. "_TeammateBuffs",
-	TeammateBuffsTracked = ADDON_NAME .. "_TeammateBuffsTracked",
 	SendGoodNews = ADDON_NAME .. "_SendGoodNews",
 	SendGoodNewsTracked = ADDON_NAME .. "_SendGoodNewsTracked",
+	TeammateBuffs = ADDON_NAME .. "_TeammateBuffs",
+	TeammateBuffsTracked = ADDON_NAME .. "_TeammateBuffsTracked",
 	ServiceAlerts = ADDON_NAME .. "_ServiceAlerts",
 	ServiceAlertsTracked = ADDON_NAME .. "_ServiceAlertsTracked",
-	BuffWindow = ADDON_NAME .. "_BuffWindow",
-	BuffWindowBuffs = ADDON_NAME .. "_BuffWindowBuffs",
-	BuffWindowSelfBuffs = ADDON_NAME .. "_BuffWindowSelfBuffs",
-	BuffWindowWeaponBuffs = ADDON_NAME .. "_BuffWindowWeaponBuffs",
 	ThankYouButton = ADDON_NAME .. "_ThankYouButton",
-
-	-- Spellbook
-	Spellbook = ADDON_NAME .. "_Spellbook",
 
 	Profiles = ADDON_NAME .. "_Profiles",
 	FeedbackSupport = ADDON_NAME .. "_FeedbackSupport",
@@ -268,14 +259,17 @@ ns.QUESTION_MARK_ICON = 134400
 ns.ICON_ADDON = "Interface\\AddOns\\" .. ADDON_NAME .. "\\Includes\\Images\\Spellbook"
 ns.TEXTURE_GEAR = "Interface\\AddOns\\" .. ADDON_NAME .. "\\Includes\\Images\\Gear"
 
+-- The arrow before the hovered rank in a spell tooltip's ranks; white, tinted where it's used.
+ns.TEXTURE_RANK_ARROW = "Interface\\AddOns\\" .. ADDON_NAME .. "\\Includes\\Images\\Rank-Arrow"
+
 -- The gold bag the Restock List and Staples windows wear in their portrait.
 ns.ICON_RESTOCKER = "Interface\\AddOns\\" .. ADDON_NAME .. "\\Includes\\Images\\Restocker"
 
 --------------------------------------------------------------------------------
--- Connoisseur & Restocker
+-- Consumable Macros & Restocker
 --------------------------------------------------------------------------------
 
--- The sections from here to Spellbook are Connoisseur & Restocker's.
+-- The sections from here to Spellbook are Consumable Macros & Restocker's.
 
 --------------------------------------------------------------------------------
 -- Restock Window Colors
@@ -354,7 +348,7 @@ ns.MULTI_USE_MACRO_TYPES = {
 }
 
 --[[
-    Number of free General macro slots Connoisseur leaves untouched for the
+    Number of free General macro slots Consumable Macros leaves untouched for the
     player. At 0 nothing is reserved, so macro creation pauses only when the
     General macro book is completely full. When it pauses, a once-per-session
     chat message fires and creation resumes automatically once a slot frees
@@ -422,7 +416,7 @@ ns.MODE_ORDER = { "always", "solo", "party", "raid", "leveling", "maxlevel" }
 --[[
     Every restock reminder is either a headline on its own or a headline plus one
     line per item you are short of. Stored as a mode rather than a boolean so the
-    option reads as a choice ("Simple" or "Verbose") instead of an unlabelled
+    option reads as a choice ("Simple" or "Verbose") instead of an unlabeled
     switch, and so a third level could be added without another setting.
 ]]
 ns.REMINDER_SIMPLE = "simple"
@@ -1001,7 +995,7 @@ ns.STARTER_LIST_CATEGORIES = {
 -- Spellbook
 --------------------------------------------------------------------------------
 
--- The sections from here to Thanks for the Buff are the Spellbook's.
+-- The sections from here to Automated Appreciation are the Spellbook's.
 
 --------------------------------------------------------------------------------
 -- Macro Names
@@ -1056,12 +1050,20 @@ ns.WHATS_NEXT_BRIGHT = {
 }
 
 --[[
-    The ranks section of a spell's tooltip ("GtG // Fear Ranks"), each rank in
-    the add-ons' shared palette: green (ON) once known, red (OFF) where its
-    level is reached and it isn't trained, gold (TITLE) for a rank whose level
-    is still to come.
+    A spell's ranks wherever they're listed: the ranks section of a spell's
+    tooltip ("GtG // Fear Ranks"), the macro menu's Rank and Grouped Spells
+    submenus, and the Spell Book tile's note. White (TEXT) once known; red
+    (OFF) for one the character could have now and doesn't, the one thing to
+    go and fix; gray (MUTED) for one it can't learn yet, like a disabled
+    entry, since a level still to come isn't an error. The note beside each
+    (its level, or where to learn it) is silver (HELP) for a known rank and
+    takes the rank's own color otherwise. Keys are ns.RankState's. The
+    tooltip's hovered rank and its arrow are blue (INFO) instead, reading
+    as "selected"; its note keeps the state color, so its state still shows.
 ]]
-ns.SPELL_RANK_COLORS = { KNOWN = "ON", LEARNABLE = "OFF", NOT_YET = "TITLE" }
+ns.SPELL_RANK_COLORS = { KNOWN = "TEXT", LEARNABLE = "OFF", NOT_YET = "MUTED" }
+ns.SPELL_RANK_SELECTED_COLOR = "INFO"
+ns.SPELL_RANK_NOTE_COLORS = { KNOWN = "HELP", LEARNABLE = "OFF", NOT_YET = "MUTED" }
 
 --[[
     The Conditionals panel's own dark leather beside the parchment, so it reads
@@ -1084,19 +1086,19 @@ ns.CONDITIONALS_COLORS = {
 }
 
 --------------------------------------------------------------------------------
--- Thanks for the Buff
+-- Automated Appreciation
 --------------------------------------------------------------------------------
 
--- The sections from here to the end are Thanks for the Buff's, kept on ns.Data.
+-- The sections from here to the end are Automated Appreciation's, kept on ns.Data.
 
 --------------------------------------------------------------------------------
--- Buff Window Audiences
+-- Buff Duty Audiences
 --------------------------------------------------------------------------------
 
 --[[
-    Who a Buff Window buff is offered to, one choice per buff.
+    Who a Buff Duty buff is offered to, one choice per buff.
     BUFF_AUDIENCE_ORDER is the dropdown's order; the labels come from the locale
-    (BUFF_WINDOW_AUDIENCE_*).
+    (BUFF_DUTY_AUDIENCE_*).
 ]]
 Data.BUFF_AUDIENCE = {
 	OFF = "OFF",
@@ -1107,7 +1109,7 @@ Data.BUFF_AUDIENCE = {
 Data.BUFF_AUDIENCE_ORDER = { "OFF", "TANK", "HEALER", "ALL" }
 
 --[[
-    Classes with nothing to gain from melee attack power, so a Buff Window row
+    Classes with nothing to gain from melee attack power, so a Buff Duty window row
     marked noCasters (Blessing of Might) skips them.
 ]]
 Data.CASTER_CLASSES = {
@@ -1116,7 +1118,7 @@ Data.CASTER_CLASSES = {
 	WARLOCK = true,
 }
 
--- Classes with no mana, so a Buff Window row marked manaOnly skips them.
+-- Classes with no mana, so a Buff Duty window row marked manaOnly skips them.
 Data.NO_MANA_CLASSES = {
 	DEATHKNIGHT = true,
 	ROGUE = true,
@@ -1164,10 +1166,10 @@ Data.MAX_GLOBAL_MACROS = 120
 Data.THANK_YOU_DEFAULT_ICON = 134411
 
 --[[
-    When a class, or pets, count as tanks on the Buff Window ("Count as
+    When a class, or pets, count as tanks on the Buff Duty window ("Count as
     Tanks"): NEVER, SOLO while you're not in a party or raid, or ALWAYS. Only
     for a player with no role of their own. TANK_WHEN_ORDER is the dropdown's
-    order; the labels come from the locale (BUFF_WINDOW_TANKS_*). Pets are
+    order; the labels come from the locale (BUFF_DUTY_TANKS_*). Pets are
     stored under TANK_WHEN_PET beside the class tokens.
 ]]
 Data.TANK_WHEN = {
@@ -1179,19 +1181,19 @@ Data.TANK_WHEN_ORDER = { "NEVER", "SOLO", "ALWAYS" }
 Data.TANK_WHEN_PET = "PET"
 
 --[[
-    Where the Buff Window shows while Solo or In Group lets it show at all
-    ("When to Show"): ALWAYS, or INSTANCE for inside a dungeon, raid,
-    battleground or arena only. BUFF_WINDOW_WHERE_ORDER is the dropdown's
-    order; the labels come from the locale (BUFF_WINDOW_WHERE_*).
+    Where the Buff Duty window shows while Solo, In Party or In Raid lets it
+    show at all ("When to Show"): ALWAYS, or INSTANCE for inside a dungeon,
+    raid, battleground or arena only. BUFF_DUTY_WHERE_ORDER is the dropdown's
+    order; the labels come from the locale (BUFF_DUTY_WHERE_*).
 ]]
-Data.BUFF_WINDOW_WHERE = {
+Data.BUFF_DUTY_WHERE = {
 	ALWAYS = "ALWAYS",
 	INSTANCE = "INSTANCE",
 }
-Data.BUFF_WINDOW_WHERE_ORDER = { "ALWAYS", "INSTANCE" }
+Data.BUFF_DUTY_WHERE_ORDER = { "ALWAYS", "INSTANCE" }
 
 --[[
-    When a self buff or the Soulstone shows on the Buff Window: OFF, MISSING
+    When a self buff or the Soulstone shows on the Buff Duty window: OFF, MISSING
     (only once it's gone), or a number of minutes left. Doubles as the
     dropdown's order. The Weapon Buffs dropdown reuses MISSING for When
     Missing.
@@ -1203,7 +1205,7 @@ Data.SELF_REFRESH_CHOICES = { "OFF", 0, 10, 5, 3 }
 --[[
     The weapon hands a poison or imbue can go on, by the inventory slot each
     names. Which hands a class is offered is the data folder's call
-    (BUFF_WINDOW_WEAPON_HANDS): a Classic Era shaman can't dual wield.
+    (BUFF_DUTY_WEAPON_HANDS): a Classic Era shaman can't dual wield.
 ]]
 Data.WEAPON_HAND_SLOTS = { MAIN = 16, OFF = 17 }
 Data.WEAPON_HAND_ORDER = { "MAIN", "OFF" }
@@ -1216,31 +1218,31 @@ Data.WEAPON_HAND_ORDER = { "MAIN", "OFF" }
 Data.WEAPON_REFRESH_CHOICES = { 0, 10, 5, 3 }
 Data.WEAPON_REFRESH_DEFAULT = 3
 
--- The Weapon Buffs panel's boxes for the items any class can use, in order (BUFF_WINDOW_WEAPON_ITEMS' kind).
+-- The Weapon Buffs panel's boxes for the items any class can use, in order (BUFF_DUTY_WEAPON_ITEMS' kind).
 Data.WEAPON_ITEM_KINDS = { "OIL", "STONE", "LURE" }
 -- A kind that only one hand can carry: a fishing pole is always two-handed, so a lure is main hand only.
 Data.WEAPON_ITEM_KIND_HANDS = { LURE = { "MAIN" } }
 
 --[[
-    The Buff Window's "Refresh Under" choices, in minutes: a buff with
+    Buff Duty's "Refresh Under" choices, in minutes: a buff with
     less than this left is offered again.
 ]]
-Data.BUFF_WINDOW_REFRESH_CHOICES = { 3, 5, 10 }
+Data.BUFF_DUTY_REFRESH_CHOICES = { 3, 5, 10 }
 
 --[[
-    How long a stranger who buffed you can stay on the Buff Window's Return the
+    How long a stranger who buffed you can stay on the Buff Duty window's Return the
     Favor list, in seconds (the player picks one), and how many of them it
     holds at once. Short on purpose: past a few seconds
     they have usually walked on.
 ]]
-Data.BUFF_WINDOW_FAVOR_CHOICES = { 20, 40, 60 }
-Data.BUFF_WINDOW_FAVOR_MAX = 5
+Data.BUFF_DUTY_FAVOR_CHOICES = { 20, 40, 60 }
+Data.BUFF_DUTY_FAVOR_MAX = 5
 
--- The Buff Window's buff buttons, and the role icon in front of each name.
-Data.BUFF_WINDOW_ICON_SIZE = 20
+-- The Buff Duty window's buff buttons, and the role icon in front of each name.
+Data.BUFF_DUTY_ICON_SIZE = 20
 
--- The Buff Window's frame, and the title row's hover list of who needs a buff.
-Data.BUFF_WINDOW_BACKDROP = {
+-- The Buff Duty window's frame, and the Party-Buffs hover list of who needs a buff.
+Data.BUFF_DUTY_BACKDROP = {
 	bgFile = "Interface/Tooltips/UI-Tooltip-Background",
 	edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
 	edgeSize = 12,
@@ -1257,7 +1259,7 @@ Data.PRAISE_DELAY_CHOICES = { 1, 2, 3, 4 }
 --[[
     The seconds scale behind the cooldown and duration dropdowns.
 
-    Straight Fibonacci, and every entry is labelled in SECONDS -- 144 stays 144,
+    Straight Fibonacci, and every entry is labeled in SECONDS -- 144 stays 144,
     not "2 Minutes". Mixing units inside one list makes two adjacent options look
     like different kinds of thing, and the reader has to convert to compare them.
 
@@ -1273,8 +1275,8 @@ Data.SECONDS_CHOICES = { 0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144 }
 
 -- How the thank-you reads, and which panel the toggle lives on.
 Data.BUFF = {
-	SOLO = "SOLO", -- cast on you            -> "gave you ..."        (Teammate Buffs)
-	GROUP = "GROUP", -- party/raid-wide        -> "gave your group ..." (Teammate Buffs)
+	SOLO = "SOLO", -- cast on you            -> "gave you ..."        (Combat Buffs)
+	GROUP = "GROUP", -- party/raid-wide        -> "gave your group ..." (Combat Buffs)
 	SERVICE = "SERVICE", -- set out for the group  -> "set out a ..."       (Service Alerts)
 }
 

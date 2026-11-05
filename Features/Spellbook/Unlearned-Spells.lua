@@ -33,11 +33,13 @@ end
 
 --[[
 	Calls fn(name, icon, id, level, talent) for the rank 1 of every class trainer spell whose name isn't in
-	learned: the bundled ones (Data/) by level, then the ones this character's trainers offered
-	(Trainer-Recording.lua), then the class lists' extraSpells. level is the row's learn level, nil for an
-	extraSpells entry; talent is true for a row Data/ marks as a talent. Data/ includes the rank 1 of each
-	talent that has trainer ranks, so those talents show until learned; talents without trainer ranks need an
-	extraSpells entry.
+	learned: the bundled ones (Data/) and the ones this character's trainers offered (Trainer-Recording.lua)
+	together with the class lists' extraSpells, by level. level is the row's learn level; an extraSpells
+	entry takes the level ns.EXTRA_SPELL_SOURCES gives it (the level its class quest opens), else the
+	client's learn level, else nil, and those without one come last. talent is true for a row Data/ marks as
+	a talent, or an extraSpells entry whose source is TALENT. Data/ includes the rank 1 of each talent that
+	has trainer ranks, so those talents show until learned; talents without trainer ranks need an extraSpells
+	entry.
 	Spells whose data isn't loaded yet are skipped: the page refreshes on SPELL_DATA_LOAD_RESULT.
 ]]
 function ns.ForEachUnlearnedSpell(fn, learned)
@@ -50,13 +52,33 @@ function ns.ForEachUnlearnedSpell(fn, learned)
 			spells[#spells + 1] = spell
 		end
 	end
-	-- rows carry their level; the lowest level row of a spell is its rank 1
-	table.sort(spells, function(a, b)
-		return a.level < b.level
-	end)
+	local sources = ns.EXTRA_SPELL_SOURCES or {}
+	local levelLearned = C_Spell.GetSpellLevelLearned
 	for _, entry in ipairs(ns.ClassExtraSpells()) do
-		spells[#spells + 1] = { id = type(entry) == "table" and entry[1] or entry }
+		local id = type(entry) == "table" and entry[1] or entry
+		local source, level = unpack(sources[id] or {})
+		if not level and levelLearned then
+			level = levelLearned(id)
+		end
+		spells[#spells + 1] = { id = id, level = level and level > 0 and level or nil, talent = source == "TALENT" }
 	end
+	--[[
+		by level, the lowest level row of a spell being its rank 1; rows without a level last; otherwise in list
+		order, so a trainer row stays ahead of an extraSpells entry at the same level
+	]]
+	local order = {}
+	for i, spell in ipairs(spells) do
+		order[spell] = i
+	end
+	table.sort(spells, function(a, b)
+		if a.level ~= b.level then
+			if not a.level or not b.level then
+				return b.level == nil
+			end
+			return a.level < b.level
+		end
+		return order[a] < order[b]
+	end)
 	for _, spell in ipairs(spells) do
 		if (not spell.faction or spell.faction == faction) and (not spell.race or spell.race == race) then
 			local name = ns.SpellName(spell.id)

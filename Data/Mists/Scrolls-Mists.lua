@@ -206,14 +206,14 @@ ns.SCROLL_DATA = {
 How We Got the Data
 
 Last Validated
-	2026-11-03, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-04, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
-	- The stat scrolls, read by Features/Macros-for-Consumables/Scanner-Auras.lua and Scanner-Scrolls.lua (FindBestScroll) to pick a scroll whose buff the player lacks. Each type lists its scrolls as { itemID, buffID, requiredLevel, amount }: the buff is the aura the scroll leaves, requiredLevel the level the item requires, amount the stat it grants. This client keeps the scrolls through rank IX (Inscription).
+	- The stat scrolls, read by Features/Macros-for-Consumables/Scanner/Scanner-Auras.lua and Scanner-Scrolls.lua (FindBestScroll) to pick a scroll whose buff the player lacks. Each type lists its scrolls as { itemID, buffID, requiredLevel, amount }: the buff is the aura the scroll leaves, requiredLevel the level the item requires, amount the stat it grants. This client keeps the scrolls through rank IX (Inscription).
 	- amount is the buff's scaled value: the coefficient times the SpellScaling game table (gametables/spellscaling.txt, file 1391660) at the spell's MaxScalingLevel. The client's data gives a few odd results (Scroll of Agility 6 against Scroll of Agility II 5, Scroll of Protection VI 20 against V's 60); they are kept as the client computes them. FindBestScroll ranks by required level first, so only the conflict check reads them.
 	- conflictSpells lists the buffs a scroll is skipped for while one at least as strong is up, keyed by spell ID with the amount each grants: every elixir and flask buff in ns.ELIXIR_BUFF_IDS and ns.FLASK_BUFF_IDS (Data/Mists/Elixirs-Mists.lua) whose own spell, or a spell its text quotes, has a Mod Stat aura (29) for the stat (or for all stats), or a Mod Resistance aura (22) on armor for Protection, at its amount on this build. The other scrolls' buffs are left out, since the scroll's own buff check covers them.
 	- No class buffs are listed: on this client Mark of the Wild, Blessing of Kings and Power Word: Fortitude raise stats by a percentage, not a flat amount, and stack with an elixir.
-	- From Cataclysm on every scroll counts as an elixir (Battle for Agility, Intellect, Spirit and Strength; Guardian for Protection and Stamina), so on this client a scroll also replaces any elixir or flask in its slot, whatever the stat. This table follows the same-stat rule the other clients use and cannot say that; saying it takes a slot check in ns.HasScrollBuff (Features/Macros-for-Consumables/Scanner-Auras.lua), not more rows here.
+	- From Cataclysm on every scroll counts as an elixir (Battle for Agility, Intellect, Spirit and Strength; Guardian for Protection and Stamina), so on this client a scroll also replaces any elixir or flask in its slot, whatever the stat. This table follows the same-stat rule the other clients use and cannot say that; saying it takes a slot check in ns.HasScrollBuff (Features/Macros-for-Consumables/Scanner/Scanner-Auras.lua), not more rows here.
 	- Scroll of Protection VIII (43468) is left out: no drop, vendor or quest reward in QuestieDB's MoP item table and no spell that creates it.
 
 SQL (CMaNGOS)

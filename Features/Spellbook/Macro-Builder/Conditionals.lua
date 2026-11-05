@@ -168,7 +168,7 @@ end
 
 --[[
 	Every spell macro offers Conditionals but a focus copy, which shares its spell's settings key and casts only
-	on the focus, and a consumable's, which is Connoisseur's.
+	on the focus, and a consumable's, which is Consumable Macros'.
 ]]
 function ns.OffersConditionals(macro)
 	return ns.HasOptions(macro) and not macro.focus
@@ -461,14 +461,14 @@ function ns.SetConditionalSpell(macro, index, pick)
 	StoreRows(macro, rows)
 end
 
--- A known rank's spell ID, by its text, from the macro's ranks; nil for a rank not among them.
-local function RankID(macro, text)
+-- Whether a spell ID is one of the macro's known ranks.
+local function IsKnownRank(macro, spellID)
 	for _, rank in ipairs(macro.ranks or NO_ROWS) do
-		if rank.text == text then
-			return rank.id
+		if rank.id == spellID then
+			return true
 		end
 	end
-	return nil
+	return false
 end
 
 --[[
@@ -483,7 +483,7 @@ function ns.ConditionalSpellOf(macro)
 	if macro.rangedAttacks then
 		return { ranged = true }
 	end
-	local fixedID = RankID(macro, ns.FixedRank(macro))
+	local fixedID = ns.FixedRankID(macro)
 	if fixedID then
 		return { spellID = fixedID, fixed = true }
 	end
@@ -493,14 +493,13 @@ end
 
 --[[
 	A spell from a spellbook or an action bar, by its ID, as a row's pick: fixed when it's a lower rank than the
-	highest its page macro knows, so the rank dragged is the rank cast.
+	highest its page macro knows, so the rank dragged is the rank cast. The page macro is found by the rank's ID
+	among its known ranks, never by name.
 ]]
 function ns.ConditionalPickOfSpell(spellID)
-	local name = C_Spell.GetSpellName(spellID)
 	for _, macro in ipairs(ns.macros or NO_ROWS) do
-		if macro.name == name and not macro.copy and not macro.focus and not macro.rank then
-			local top = macro.ranks and macro.ranks[1]
-			if top and top.id ~= spellID and RankID(macro, C_Spell.GetSpellSubtext(spellID)) then
+		if not macro.copy and not macro.focus and not macro.rank and IsKnownRank(macro, spellID) then
+			if macro.ranks[1].id ~= spellID then
 				return { spellID = spellID, fixed = true }
 			end
 			break

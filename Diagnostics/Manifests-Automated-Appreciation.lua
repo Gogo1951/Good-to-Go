@@ -8,11 +8,11 @@ local GetClientHeader = ns.GetDiagnosticClientHeader
 
 --[[
     Existence and shape checks only: read-only, no side effects, no protected
-    calls. One row per API TFTB actually calls or guards, wherever it lives --
+    calls. One row per API Good to Go actually calls or guards, wherever it lives --
     nothing incidental, and nothing the add-on does not use.
 
     Every modern/legacy pair the add-on still picks between is listed as both
-    halves: the unit tooltip the Buff Window reads a pet's owner from
+    halves: the unit tooltip the Buff Duty window reads a pet's owner from
     (C_TooltipInfo.GetUnit or a hidden tooltip's SetUnit), Validate Data's stat
     read, and its tooltip-text read (C_TooltipInfo.GetItemByID and
     GetSpellByID, or the hidden scan tooltip). The hidden tooltips are probed
@@ -111,6 +111,10 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 	},
 	{ "UnitIsVisible", HasGlobalFunction("UnitIsVisible") },
 	{ "UnitInRange", HasGlobalFunction("UnitInRange") },
+	-- The Buff Key holds a group buff for a member out of sight unless they're AFK.
+	{ "UnitIsAFK", HasGlobalFunction("UnitIsAFK") },
+	-- A borrowed pet (Mind Control, Enslave Demon) takes no Buff Duty buff.
+	{ "UnitIsCharmed", HasGlobalFunction("UnitIsCharmed") },
 	{ "CreateMacro", HasGlobalFunction("CreateMacro") },
 	{ "EditMacro", HasGlobalFunction("EditMacro") },
 	{ "DeleteMacro", HasGlobalFunction("DeleteMacro") },
@@ -118,7 +122,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 	{ "GetNumMacros", HasGlobalFunction("GetNumMacros") },
 	{ "GetMacroInfo", HasGlobalFunction("GetMacroInfo") },
 	{ "PlaySoundFile", HasGlobalFunction("PlaySoundFile") },
-	-- The Buff Window's group read, role guesses and range check, and When to Show's In Instance.
+	-- Buff Duty's group read, role guesses and range check, and When to Show's In Instance.
 	{ "IsInInstance", HasGlobalFunction("IsInInstance") },
 	-- Where a zone-limited weapon item works.
 	{ "GetInstanceInfo", HasGlobalFunction("GetInstanceInfo") },
@@ -159,7 +163,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 	{ "C_Container.GetItemCooldown", HasFunction("C_Container", "GetItemCooldown") },
 	-- The game's "replace your enchant?" question, answered when a weapon icon's click asked it.
 	{ "C_Item.ReplaceEnchant", HasFunction("C_Item", "ReplaceEnchant") },
-	-- A Buff Window item icon's tooltip.
+	-- A Buff Duty item icon's tooltip.
 	{
 		"GameTooltip:SetItemByID",
 		function()
@@ -195,7 +199,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 				and type(GameTooltip.NumLines) == "function"
 		end,
 	},
-	-- The Buff Window's secure buttons and the state driver behind Hide in Combat.
+	-- Buff Duty's secure buttons and the state driver behind Hide in Combat.
 	{ "RegisterStateDriver", HasGlobalFunction("RegisterStateDriver") },
 	{ "UnregisterStateDriver", HasGlobalFunction("UnregisterStateDriver") },
 	{ "C_XMLUtil.GetTemplateInfo", HasFunction("C_XMLUtil", "GetTemplateInfo") },
@@ -232,19 +236,24 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 })
 
 --------------------------------------------------------------------------------
--- Buff Reactions Context
+-- Thanks and Good News Context
 --------------------------------------------------------------------------------
 
 --[[
     The probes read feature state through the accessors the feature files
-    expose (ns.IsBuffTrackingReady, ns.GetPraiseCooldownState, ns.BuffWindow
+    expose (ns.IsBuffTrackingReady, ns.GetPraiseCooldownState, ns.BuffDuty
     and the like), so a report shows the values the features act on rather
     than a copy of their logic.
 ]]
 
--- Per-class tracked-spell manifest for the IsPlayerSpell readout, rebuilt from
--- ns.TRACKED_ABILITIES at login by Features/Automated-Appreciation/Tracked-Lookups.lua.
-ns.AppendDiagnosticRows(ns.DIAGNOSTIC_SPELLS, {})
+--[[
+    This file appends no spell rows. At login
+    Features/Automated-Appreciation/Tracked-Lookups.lua replaces
+    ns.DIAGNOSTIC_SPELLS with a per-class table of the tracked spells, built
+    from ns.TRACKED_ABILITIES, which the class readout below reads; the rows
+    other manifests append stay reachable as ns.DIAGNOSTIC_SPELL_ROWS
+    (Diagnostics/Manifests.lua).
+]]
 
 -- Tracked-trigger coverage on the running client, filled at login by
 -- Features/Automated-Appreciation/Tracked-Lookups.lua.
@@ -255,14 +264,20 @@ ns.DIAGNOSTIC_TRACKED = { entriesLive = 0, entriesTotal = 0, auraIds = 0, castId
     carries every live id of one entry and switches them together, so it reads
     on when any of its ids is watched.
 ]]
+local function IsToggleOn(toggle, watched)
+	for _, id in ipairs(toggle.ids or {}) do
+		if watched and watched[id] then
+			return true
+		end
+	end
+	return false
+end
+
 local function CountToggles(toggles, watched)
 	local on = 0
 	for _, toggle in ipairs(toggles or {}) do
-		for _, id in ipairs(toggle.ids or {}) do
-			if watched and watched[id] then
-				on = on + 1
-				break
-			end
+		if IsToggleOn(toggle, watched) then
+			on = on + 1
 		end
 	end
 	return on, #(toggles or {})
@@ -275,6 +290,38 @@ local function CountCategoryToggles(categories, watched)
 		on, total = on + categoryOn, total + categoryTotal
 	end
 	return on, total
+end
+
+-- A toggle's name as its panel shows it, without the icon: a spell's name, a group's label, or its item's name.
+local function ToggleName(toggle)
+	if toggle.spellName then
+		return toggle.spellName
+	end
+	if toggle.label then
+		return toggle.label
+	end
+	local item = toggle.labelItem or toggle.itemId
+	return C_Item.GetItemInfo(item) or ("item " .. tostring(item))
+end
+
+--[[
+    The toggles a panel has switched off, by name, so a buff that lands and
+    is never answered can be found here: a buff whose toggle is off is
+    dropped before any print, sound, whisper or emote.
+]]
+local function UnwatchedText(categories, watched)
+	local names = {}
+	for _, category in ipairs(categories or {}) do
+		for _, toggle in ipairs(category.entries or {}) do
+			if not IsToggleOn(toggle, watched) then
+				names[#names + 1] = ToggleName(toggle)
+			end
+		end
+	end
+	if #names == 0 then
+		return "none"
+	end
+	return table.concat(names, ", ")
 end
 
 --[[
@@ -337,20 +384,38 @@ local function GoodNewsState(ids, goodNews)
 	return "n/a"
 end
 
+-- How many of a recipient's Good News whispers are held back by the per-recipient-and-spell dedupe right now.
+local function GoodNewsDedupCount(guid)
+	local count = 0
+	for _, entry in ipairs(ns.TRACKED_ABILITIES or {}) do
+		for _, trigger in ipairs(entry.triggers or {}) do
+			if ns.GetGivenEntry(trigger.spell) and ns.IsOnCooldown("goodnews:" .. guid .. ":" .. trigger.spell) then
+				count = count + 1
+			end
+		end
+	end
+	return count
+end
+
 --[[
-    Who the player has targeted and whether TFTB would praise them right now:
-    the Thank You Button's player and faction checks, whether they're in your
-    party or raid (Good News on Only Group Members whispers no one else), and the
-    per-source praise and whisper throttles for that GUID. A target whose
-    identity is secret (WoW Forever) is reported as such and never read
-    further.
+    Who the player has targeted and whether Good to Go would act on them right
+    now: the Thank You Button's player, self and faction checks, whether
+    they're friendly (on WoW Forever a stranger buff from a unit that isn't is
+    dropped), whether they're in your party or raid (Sharing Good News on
+    Only Group Members whispers no one else, Group Service Alerts and Combat
+    Buffs hear no one else, and Stranger Buffs hears no one in it), the owner
+    a pet's buff would be credited to (none drops the buff), whether they
+    could see an emote (a praise emote skips a unit that isn't visible, or a
+    group member out of range), and the per-source praise, whisper, service
+    and Good News throttles for that GUID. A target whose identity is secret
+    (WoW Forever) is reported as such and never read further.
 ]]
 local function CurrentTargetLine()
 	if not UnitExists("target") then
 		return "Current target: none"
 	end
 	if ns.IsUnitIdentitySecret("target") then
-		return "Current target: identity secret"
+		return "Current target: identity secret (the Thank You Button emotes but never whispers)"
 	end
 	local playerFaction, targetFaction = UnitFactionGroup("player"), UnitFactionGroup("target")
 	local sameFaction = "<secret>"
@@ -362,18 +427,129 @@ local function CurrentTargetLine()
 	if ns.IsPlain(inParty) and ns.IsPlain(inRaid) then
 		inGroup = tostring((inParty or inRaid) and true or false)
 	end
+	local inRange, checkedRange = UnitInRange("target")
+	local isPlayer = UnitIsPlayer("target")
 	local line = string.format(
-		"Current target: player=%s sameFaction=%s inGroup=%s",
-		PlainText(UnitIsPlayer("target")),
+		"Current target: player=%s self=%s friendly=%s sameFaction=%s inGroup=%s visible=%s inRange=%s (checked=%s)",
+		PlainText(isPlayer),
+		PlainText(UnitIsUnit("target", "player")),
+		PlainText(UnitIsFriend("player", "target")),
 		sameFaction,
-		inGroup
+		inGroup,
+		PlainText(UnitIsVisible("target")),
+		PlainText(inRange),
+		PlainText(checkedRange)
 	)
 	local guid = UnitGUID("target")
 	if guid and ns.IsPlain(guid) then
+		if ns.IsPlain(isPlayer) and not isPlayer and ns.GetPetOwnerUnit then
+			line = line .. string.format(" petOwner=%s", tostring(ns.GetPetOwnerUnit(guid) or "none"))
+		end
 		local _, source, whisper = ns.GetPraiseCooldownState(guid)
-		line = line .. string.format(" praiseCooldown=%s whisperCooldown=%s", tostring(source), tostring(whisper))
+		line = line
+			.. string.format(
+				" praiseCooldown=%s whisperCooldown=%s serviceCooldown=%s goodNewsHeld=%d",
+				tostring(source),
+				tostring(whisper),
+				tostring(ns.IsOnCooldown("service:" .. guid) and true or false),
+				GoodNewsDedupCount(guid)
+			)
 	end
 	return line
+end
+
+--[[
+    Who cast a buff on you, as the aura names them: its caster's unit token
+    and whether that is you, a group member, a player outside your group, or
+    not a player (a pet is credited to its owner, or the buff is dropped).
+    With no token, WoW Forever reads the caster's GUID off the aura the way
+    its buff detection does, and a stranger known only by GUID is still
+    thanked; elsewhere the combat log, not the aura, names the caster.
+]]
+local function AuraCaster(data)
+	local unit = data.sourceUnit
+	if not ns.IsPlain(unit) then
+		return "<secret>"
+	end
+	if not unit then
+		local instanceID = data.auraInstanceID
+		if ns.FLAVOR == "Camelot" and ns.IsPlain(instanceID) and instanceID then
+			local ok, guid = pcall(C_UnitAuras.GetAuraCasterGUID, "player", instanceID)
+			if ok and ns.IsPlain(guid) and guid then
+				return ns.IsPlayerGUID(guid) and "player by GUID only" or "non-player by GUID only"
+			end
+		end
+		return "unknown"
+	end
+	if ns.IsUnitIdentitySecret(unit) then
+		return unit .. " (identity secret)"
+	end
+	local kind = "not a player"
+	if UnitIsUnit(unit, "player") then
+		kind = "you"
+	elseif UnitInParty(unit) or UnitInRaid(unit) then
+		kind = "group"
+	elseif UnitIsPlayer(unit) then
+		kind = "outside group"
+	end
+	return unit .. " (" .. kind .. ")"
+end
+
+--[[
+    The helpful auras on you right now, read through the same
+    C_UnitAuras.GetBuffDataByIndex walk ns.GetBuffDuration makes (Stranger
+    Buffs drops a buff that walk can't find): each one's name and id, its
+    duration against Stranger Buffs' minimum, who cast it, and the type and
+    watched state Combat Buffs or Group Service Alerts track it under. A
+    secret field (WoW Forever) reads <secret> and keys no lookup.
+]]
+local function BuffsOnYouLines(lines, db)
+	if not (type(C_UnitAuras) == "table" and C_UnitAuras.GetBuffDataByIndex) then
+		lines[#lines + 1] = "  C_UnitAuras.GetBuffDataByIndex is missing"
+		return
+	end
+	local minimum = db and db.strangers and db.strangers.minBuffDuration
+	local watched = db and db.watchedBuffs or {}
+	local count = 0
+	for index = 1, 40 do
+		local data = C_UnitAuras.GetBuffDataByIndex("player", index, "HELPFUL")
+		if not ns.IsPlain(data) then
+			lines[#lines + 1] = "  <secret aura data>"
+			return
+		end
+		if not data then
+			break
+		end
+		count = count + 1
+		local spellID, duration = data.spellId, data.duration
+		local name, tracked, isWatched, tooShort = "?", "no", "n/a", "<secret>"
+		if ns.IsPlain(spellID) and spellID then
+			name = C_Spell.GetSpellName(spellID) or "?"
+			local entry = ns.GetAuraEntry(spellID)
+			if entry then
+				tracked = tostring(entry.type)
+				isWatched = OnOff(watched[spellID])
+			end
+		end
+		if ns.IsPlain(duration) then
+			tooShort = tostring(
+				(minimum and minimum > 0 and duration and duration > 0 and duration < minimum) and true or false
+			)
+		end
+		lines[#lines + 1] = string.format(
+			"  %s (%s) duration=%s tooShortForStrangers=%s from=%s tracked=%s watched=%s",
+			name,
+			PlainText(spellID),
+			PlainText(duration),
+			tooShort,
+			AuraCaster(data),
+			tracked,
+			isWatched
+		)
+	end
+	if count == 0 then
+		lines[#lines + 1] = "  (none read)"
+	end
 end
 
 --[[
@@ -381,13 +557,16 @@ end
     report: who the player is and which profile they're on, whether the buff
     engine ever set up and how buffs are detected on this flavor, whether that
     path is open right now (the post-loading-screen pause, combat, WoW
-    Forever's secret auras), every panel's switches and picked emotes, how many
-    of each panel's toggles are on, the praise throttles, the sound settings
-    the Master channel answers to, how much of the tracked data is live on this
-    client, which tracked spells of their class they know and whether Good
-    News watches each one, where /gtg goes, and what stops
-    each Thank You button: its command, its toggle, its macro and the icon it
-    wears, its whisper text and its emotes.
+    Forever's secret auras, and on Forever the first gate that stops an aura
+    read), every panel's switches and picked emotes, how many of each panel's
+    toggles are on and which are off, the praise throttles and what would
+    hold back each feature for your target, the buffs on you and how each
+    would be classified, the sound settings the Master channel answers to,
+    how much of the tracked data is live on this client, which tracked spells
+    of their class they know and whether Sharing Good News watches each one,
+    where /gtg goes, and what stops each Thank You button: its command, its
+    saved settings, its toggle, its macro and the icon it wears, its whisper
+    text and its emotes.
 ]]
 function ns:BuildContextReport()
 	local lines = { GetClientHeader(), "" }
@@ -424,13 +603,18 @@ function ns:BuildContextReport()
 	)
 	-- A nil player GUID means the login setup never ran, and with it no lookup, list or timer.
 	lines[#lines + 1] = string.format(
-		"Buff tracking set up: %s  Ready (past the post-loading-screen pause): %s",
+		"Buff tracking set up: %s  Ready (past the %ss post-loading-screen pause): %s",
 		tostring(ns.GetPlayerGUID and ns.GetPlayerGUID() ~= nil),
+		tostring(ns.Data.SAFETY_PAUSE),
 		tostring(ns.IsBuffTrackingReady and ns.IsBuffTrackingReady())
 	)
 	if ns.FLAVOR == "Camelot" then
 		lines[#lines + 1] =
-			"Buff detection: UNIT_AURA (WoW Forever has no combat log; skipped in combat and while auras are secret)"
+			"Buff detection: UNIT_AURA (WoW Forever has no combat log; skipped in combat and while auras are secret, and a rebuff of a buff you already have is not seen)"
+		-- The same gate the engine checks before it reads an aura update.
+		if ns.BuffAuraGate then
+			lines[#lines + 1] = string.format("Aura reads now: %s", ns.BuffAuraGate() or "open")
+		end
 	else
 		lines[#lines + 1] = "Buff detection: combat log"
 	end
@@ -444,7 +628,7 @@ function ns:BuildContextReport()
 	if db then
 		local strangers, teammates, services = db.strangers or {}, db.teammates or {}, db.services or {}
 		lines[#lines + 1] = string.format(
-			"Strangers: enabled=%s print=%s whisper=%s emotes=%s emotesPicked=%s sound=%s  praiseDelay=%s/%s praiseCooldown=%s minDuration=%s cooldown=%s",
+			"Stranger Buffs: enabled=%s print=%s whisper=%s emotes=%s emotesPicked=%s sound=%s  praiseDelay=%s/%s praiseCooldown=%s minDuration=%s cooldown=%s",
 			tostring(strangers.enabled),
 			tostring(strangers.printEnabled),
 			tostring(strangers.whisperEnabled),
@@ -459,7 +643,7 @@ function ns:BuildContextReport()
 		)
 		local teammatesOn, teammatesTotal = CountCategoryToggles(ns.TeammateCategories, db.watchedBuffs)
 		lines[#lines + 1] = string.format(
-			"Teammates: enabled=%s print=%s whisper=%s emotes=%s emotesPicked=%s sound=%s  praiseDelay=%s/%s watched=%d/%d",
+			"Combat Buffs: enabled=%s print=%s whisper=%s emotes=%s emotesPicked=%s sound=%s  praiseDelay=%s/%s watched=%d/%d",
 			tostring(teammates.enabled),
 			tostring(teammates.printEnabled),
 			tostring(teammates.whisperEnabled),
@@ -471,9 +655,10 @@ function ns:BuildContextReport()
 			teammatesOn,
 			teammatesTotal
 		)
+		lines[#lines + 1] = "  Not watched: " .. UnwatchedText(ns.TeammateCategories, db.watchedBuffs)
 		local servicesOn, servicesTotal = CountToggles(ns.ServiceEntries, db.watchedBuffs)
 		lines[#lines + 1] = string.format(
-			"Services: enabled=%s print=%s whisper=%s emotes=%s emotesPicked=%s sound=%s  praiseDelay=%s/%s watched=%d/%d",
+			"Group Service Alerts: enabled=%s print=%s whisper=%s emotes=%s emotesPicked=%s sound=%s  praiseDelay=%s/%s watched=%d/%d",
 			tostring(services.enabled),
 			tostring(services.printEnabled),
 			tostring(services.whisperEnabled),
@@ -485,6 +670,7 @@ function ns:BuildContextReport()
 			servicesOn,
 			servicesTotal
 		)
+		lines[#lines + 1] = "  Not watched: " .. UnwatchedText({ { entries = ns.ServiceEntries } }, db.watchedBuffs)
 
 		-- A blank saved template sends the default, so it reads as default here too.
 		local goodNews = db.goodNews or {}
@@ -496,13 +682,14 @@ function ns:BuildContextReport()
 			template = string.format("custom (%d bytes)", #message)
 		end
 		lines[#lines + 1] = string.format(
-			"Good News: whisper=%s scope=%s watched=%d/%d template=%s",
+			"Sharing Good News: whisper=%s scope=%s watched=%d/%d template=%s",
 			tostring(goodNews.whisperEnabled),
 			tostring(goodNews.scope),
 			goodNewsOn,
 			goodNewsTotal,
 			template
 		)
+		lines[#lines + 1] = "  Not watched: " .. UnwatchedText(ns.GoodNewsCategories, goodNews.watched)
 	else
 		lines[#lines + 1] = "Saved variables not initialized."
 	end
@@ -523,6 +710,10 @@ function ns:BuildContextReport()
 			string.format("  Overall praise cooldown active: %s", tostring(ns.GetPraiseCooldownState(nil)))
 	end
 	lines[#lines + 1] = "  " .. CurrentTargetLine()
+
+	lines[#lines + 1] = ""
+	lines[#lines + 1] = "Buffs on you now:"
+	BuffsOnYouLines(lines, db)
 
 	lines[#lines + 1] = ""
 	lines[#lines + 1] = "Tracked spells for your class (known / Good News):"
@@ -546,11 +737,13 @@ function ns:BuildContextReport()
 	lines[#lines + 1] = "Thank You buttons:"
 	if db then
 		lines[#lines + 1] = string.format(
-			"  Account macros: %s / %d (Thanks for the Buff creates a macro only while the list is under the cap, and never in combat)",
+			"  Account macros: %s / %d (Good to Go creates a Thank You macro only while the list is under the cap, and never in combat)",
 			tostring(GetNumMacros()),
 			ns.Data.MAX_GLOBAL_MACROS
 		)
 		for index, button in ipairs(ns.Data.THANK_YOU_BUTTONS) do
+			-- With no saved settings the command stops silently once its target checks pass.
+			local settings = db[button.profileKey] and "saved" or "MISSING"
 			local config = db[button.profileKey] or {}
 			local message = config.message
 			local whisper = "none"
@@ -576,10 +769,11 @@ function ns:BuildContextReport()
 				macro = (body and body:gsub("%s+$", "") == button.command) and "runs command" or "BODY EDITED"
 			end
 			lines[#lines + 1] = string.format(
-				"  %s (%s): command=%s createMacro=%s macro=%s icon=%s whisper=%s %s",
+				"  %s (%s): command=%s settings=%s createMacro=%s macro=%s icon=%s whisper=%s %s",
 				button.command,
 				button.macroName,
 				SlashCmdList["GOODTOGO_THANKYOU" .. index] and "registered" or "MISSING",
+				settings,
 				tostring(config.createMacro),
 				macro,
 				tostring(ns.GetThankYouIcon and ns.GetThankYouIcon(config)),
@@ -590,498 +784,6 @@ function ns:BuildContextReport()
 	else
 		lines[#lines + 1] = "  Saved variables not initialized."
 	end
-
-	return table.concat(lines, "\n")
-end
-
---------------------------------------------------------------------------------
--- Buff Window Context
---------------------------------------------------------------------------------
-
--- The group the Buff Window reads, in its order: the raid by subgroup, or you and your party.
-local function GroupUnits()
-	local members = {}
-	if IsInRaid() then
-		for index = 1, GetNumGroupMembers() do
-			local _, _, subgroup = GetRaidRosterInfo(index)
-			if subgroup then
-				members[#members + 1] = { unit = "raid" .. index, subgroup = subgroup }
-			end
-		end
-	else
-		members[1] = { unit = "player", subgroup = 1 }
-		for index = 1, 4 do
-			if UnitExists("party" .. index) then
-				members[#members + 1] = { unit = "party" .. index, subgroup = 1 }
-			end
-		end
-	end
-	return members
-end
-
-local function CountKnown(ids)
-	local known = 0
-	for _, id in ipairs(ids or {}) do
-		if ns.IsPlayerSpell(id) then
-			known = known + 1
-		end
-	end
-	return known
-end
-
-local function SpellLabel(entry)
-	local id = entry.ids[1]
-	return string.format("%s (%d)", C_Spell.GetSpellName(id) or "?", id)
-end
-
---[[
-    One line per member as the window sees them: class, level, the role a
-    Tanks or Healers buff is matched against, whether they can take a buff at
-    all, whether they're in range of your first castable buff, and their pet.
-]]
-local function MemberLine(BW, member, rangeSpell)
-	local unit = member.unit
-	local _, class = UnitClass(unit)
-	local pet = BW.PetUnitOf(unit)
-	local petState = "none"
-	if pet and UnitExists(pet) then
-		petState = BW.CanBuffPet(pet) and "buffable" or "not buffable"
-	end
-	return string.format(
-		"  %s (party %d): class=%s level=%s role=%s canBuff=%s connected=%s dead=%s inRange=%s pet=%s",
-		unit,
-		member.subgroup,
-		tostring(class),
-		PlainText(UnitLevel(unit)),
-		BW.RoleOf(unit, class),
-		tostring(BW.CanBuff(unit) and true or false),
-		PlainText(UnitIsConnected(unit)),
-		PlainText(UnitIsDeadOrGhost(unit)),
-		rangeSpell and tostring(ns.IsBuffInRange(unit, rangeSpell)) or "n/a",
-		petState
-	)
-end
-
--- A unit's helpful auras straight off the client: spell id -> seconds left (0 for no timer), and whether you cast it.
-local function ReadUnitBuffs(unit)
-	local left, mine = {}, {}
-	local now = GetTime()
-	for index = 1, 40 do
-		local data = C_UnitAuras.GetBuffDataByIndex(unit, index, "HELPFUL")
-		if not data then
-			break
-		end
-		local spellID, expires = data.spellId, data.expirationTime
-		if ns.IsPlain(spellID) and spellID and ns.IsPlain(expires) then
-			left[spellID] = (expires and expires > 0) and math.max(1, math.floor(expires - now)) or 0
-			mine[spellID] = ns.IsPlain(data.sourceUnit) and data.sourceUnit == "player"
-		end
-	end
-	return left, mine
-end
-
---[[
-    What a unit has on of each castable buff in `list` that is offered to it:
-    the longest-lasting version and its time left (yours or someone else's), or
-    missing with the rank the window would cast at the unit's level, TOO LOW
-    when none of yours fits. `class` nil skips the audience check (self buffs).
-    The window's own read adds Refresh Under and the blessing families on top
-    of this. A plain read of the unit's auras: the window's cache is untouched.
-]]
-local function BuffStates(BW, unit, class, list)
-	local left, mine = ReadUnitBuffs(unit)
-	local role = class and BW.RoleOf(unit, class)
-	local parts = {}
-	for _, buff in ipairs(list) do
-		local name = buff.singleName or buff.groupName or "?"
-		if class and not BW.Wants(buff, class, role) then
-			parts[#parts + 1] = name .. "=not offered"
-		else
-			local best
-			for id in pairs(buff.auraIds) do
-				local seconds = left[id]
-				if seconds and (not best or seconds == 0 or (left[best] ~= 0 and seconds > left[best])) then
-					best = id
-				end
-			end
-			if best then
-				local seconds = left[best]
-				parts[#parts + 1] = string.format(
-					"%s=on %s%s",
-					name,
-					seconds == 0 and "(no timer)" or (math.floor(seconds / 60) .. "m" .. (seconds % 60) .. "s"),
-					mine[best] and " yours" or ""
-				)
-			else
-				local cast = "group version only"
-				if buff.singleName then
-					local rank = BW.RankFor(buff, UnitLevel(unit))
-					cast = rank and rank.castText or "TOO LOW"
-				end
-				parts[#parts + 1] = string.format("%s=missing cast=%s", name, cast)
-			end
-		end
-	end
-	if #parts == 0 then
-		return "    buffs: (none castable)"
-	end
-	return "    buffs: " .. table.concat(parts, " | ")
-end
-
---[[
-    The state behind a "the Buff Window never shows" or "it doesn't offer X"
-    report: whether it set up, every switch and setting, each gate its refresh
-    checks (combat, WoW Forever's secret auras, being dead, nothing to offer),
-    every buff and self buff your class has on this client with who it's
-    offered to, the ranks you know, and the rank and group version the window
-    would cast; each hand's weapon and what your bags hold for it, the
-    Soulstone, and the Buff Key's binding; then every group member and your
-    target as the window reads them, each with which of your buffs they have
-    on or are missing. The group read is skipped
-    in combat, as the window skips it. Existence/value reads only: nothing is
-    cast, targeted or redrawn.
-]]
-function ns:BuildBuffWindowContextReport()
-	local lines = { GetClientHeader(), "" }
-	local BW = ns.BuffWindow
-	local db = ns.db and ns.db.global.buffWindow
-	if not BW then
-		lines[#lines + 1] = "Buff Window: not loaded"
-		return table.concat(lines, "\n")
-	end
-	if not db then
-		lines[#lines + 1] = "Buff Window: (database not loaded)"
-		return table.concat(lines, "\n")
-	end
-
-	local _, class = UnitClass("player")
-	lines[#lines + 1] = string.format(
-		"Set up: %s  Class: %s  Class has Buff Window rows: %s",
-		tostring(BW.isSetUp),
-		tostring(class),
-		tostring(ns.BuffWindowHasClassRows and ns.BuffWindowHasClassRows())
-	)
-	lines[#lines + 1] = string.format(
-		"Switches: enabled=%s hideInCombat=%s locked=%s selfBuffs=%s returnTheFavor=%s target=%s",
-		tostring(db.enabled),
-		tostring(db.hideInCombat),
-		tostring(db.locked),
-		tostring(db.selfEnabled),
-		tostring(db.favorEnabled),
-		tostring(db.targetEnabled)
-	)
-	local hiddenClasses = {}
-	for classToken, shown in pairs(db.showClasses or {}) do
-		if shown == false then
-			hiddenClasses[#hiddenClasses + 1] = classToken
-		end
-	end
-	table.sort(hiddenClasses)
-	-- The read BW.ShowsHere's In Instance takes, and the kind of instance it says this is.
-	local inInstance, instanceType = IsInInstance()
-	lines[#lines + 1] = string.format(
-		"When to Show: solo=%s (%s) group=%s (%s) hiddenClasses=%s inGroup=%s inInstance=%s (%s) shows here now=%s",
-		tostring(db.showSolo),
-		tostring(db.showSoloWhere),
-		tostring(db.showGroup),
-		tostring(db.showGroupWhere),
-		#hiddenClasses > 0 and table.concat(hiddenClasses, ",") or "none",
-		tostring(IsInGroup() and true or false),
-		tostring(inInstance and true or false),
-		tostring(instanceType),
-		tostring(BW.ShowsHere and BW.ShowsHere())
-	)
-	local tankWhen = {}
-	for key, when in pairs(db.tankWhen) do
-		tankWhen[#tankWhen + 1] = key .. "=" .. tostring(when)
-	end
-	table.sort(tankWhen)
-	lines[#lines + 1] = string.format(
-		"Settings: countAsMissingUnder=%s min countAsTanks=%s (unlisted classes NEVER)",
-		tostring(db.refreshMinutes),
-		#tankWhen > 0 and table.concat(tankWhen, " ") or "none"
-	)
-	lines[#lines + 1] = string.format(
-		"Gates now: inCombat=%s aurasSecret=%s youDead=%s anythingToOffer=%s castableBuffs=%d castableSelfBuffs=%d weaponHands=%d soulstone=%s",
-		tostring(InCombatLockdown() and true or false),
-		tostring(ns.AreAurasSecret()),
-		PlainText(UnitIsDeadOrGhost("player")),
-		tostring(BW.HasAnythingToOffer()),
-		#BW.buffs,
-		#BW.selfBuffs,
-		#BW.weaponBuffs,
-		tostring(BW.soulstoneBuff ~= nil)
-	)
-	lines[#lines + 1] = string.format(
-		"Rows live on this client: %d of %d buffs, %d of %d self buffs",
-		#BW.entries,
-		#(ns.BUFF_WINDOW_SPELLS or {}),
-		#BW.selfEntries,
-		#(ns.BUFF_WINDOW_SELF_SPELLS or {})
-	)
-
-	local castable = {}
-	for _, buff in ipairs(BW.buffs) do
-		castable[buff.key] = buff
-	end
-	lines[#lines + 1] = ""
-	lines[#lines + 1] = "Buffs for your class:"
-	local any = false
-	for _, entry in ipairs(BW.entries) do
-		if entry.row.class == class then
-			any = true
-			local buff = castable[entry.key]
-			local line = string.format(
-				"  %s: audience=%s ranksKnown=%d/%d groupKnown=%d/%d",
-				SpellLabel(entry),
-				tostring(db.audience[entry.key]),
-				CountKnown(entry.ids),
-				#entry.ids,
-				CountKnown(entry.groupIds),
-				#entry.groupIds
-			)
-			if buff then
-				line = line
-					.. string.format(
-						" inWindow=yes cast=%s group=%s",
-						buff.ranks[1] and buff.ranks[1].castText or "none",
-						tostring(buff.groupName)
-					)
-			else
-				line = line .. " inWindow=NO"
-			end
-			lines[#lines + 1] = line
-		end
-	end
-	if not any then
-		lines[#lines + 1] = "  (none for this class on this client)"
-	end
-
-	local castableSelf = {}
-	for _, buff in ipairs(BW.selfBuffs) do
-		castableSelf[buff.key] = buff
-	end
-	lines[#lines + 1] = ""
-	lines[#lines + 1] = "Self buffs for your class:"
-	any = false
-	for _, entry in ipairs(BW.selfEntries) do
-		if entry.row.class == class then
-			any = true
-			local buff = castableSelf[entry.key]
-			lines[#lines + 1] = string.format(
-				"  %s: shows=%s ranksKnown=%d/%d inWindow=%s%s",
-				SpellLabel(entry),
-				tostring(db.selfRefresh[entry.key]),
-				CountKnown(entry.ids),
-				#entry.ids,
-				buff and ("yes cast=" .. tostring(buff.ranks[1] and buff.ranks[1].castText)) or "NO",
-				entry.row.needsPet and " needsPet" or ""
-			)
-		end
-	end
-	if not any then
-		lines[#lines + 1] = "  (none for this class on this client)"
-	end
-	-- A self buff that needs a pet (Soul Link) waits for one that is out and alive.
-	local petState = "none"
-	if UnitExists("pet") then
-		local petDead = UnitIsDeadOrGhost("pet")
-		petState = not ns.IsPlain(petDead) and "<secret>" or petDead and "dead" or "out"
-	end
-	lines[#lines + 1] = "  Your pet: " .. petState
-	local aurasSecret = ns.AreAurasSecret()
-	if #BW.selfBuffs > 0 then
-		lines[#lines + 1] = aurasSecret and "    buffs: (auras secret)" or BuffStates(BW, "player", nil, BW.selfBuffs)
-	end
-
-	--[[
-	    Each hand as the window sees it: your class's picks ticked or not,
-	    the weapon items set apart from the default (ticked), how many made the
-	    castable list and how many of those item picks you carry at your level
-	    (an oil, stone or lure shows only from your bags), what the slot holds
-	    and whether it is a weapon the window asks about (an off hand holding a
-	    shield, or a fishing pole for anything but a lure, gets nothing), the
-	    temporary enchant's seconds left, and which row's enchant it is. Every
-	    class has hands, since any class can use an oil; your class's own picks
-	    are asked about only on the hands its data names.
-	]]
-	local classHands = ns.BUFF_WINDOW_WEAPON_HANDS and ns.BUFF_WINDOW_WEAPON_HANDS[class]
-	lines[#lines + 1] = ""
-	lines[#lines + 1] = string.format(
-		"Weapons (switch %s, reapply %s, your class's picks on %s):",
-		tostring(db.weaponEnabled),
-		tostring(db.weaponRefresh),
-		classHands and #classHands > 0 and table.concat(classHands, " ") or "no hand"
-	)
-	local level = UnitLevel("player")
-	local listed = {}
-	for _, buff in ipairs(BW.weaponBuffs) do
-		local keys, itemPicks, carried = {}, 0, 0
-		for _, pick in ipairs(buff.picks) do
-			keys[#keys + 1] = tostring(pick.key)
-			if pick.items then
-				itemPicks = itemPicks + 1
-				for _, item in ipairs(pick.items) do
-					if (not ns.IsPlain(level) or level >= item.level) and C_Item.GetItemCount(item.id) > 0 then
-						carried = carried + 1
-						break
-					end
-				end
-			end
-		end
-		listed[buff.hand] =
-			string.format("%d (%s) itemsInBags=%d/%d", #keys, table.concat(keys, " "), carried, itemPicks)
-	end
-	local weaponClass = Enum.ItemClass and Enum.ItemClass.Weapon or 2
-	local fishingPole = Enum.ItemWeaponSubclass and Enum.ItemWeaponSubclass.Fishingpole or 20
-	local function Holds(itemID)
-		if not ns.IsPlain(itemID) then
-			return "<secret>"
-		end
-		if not itemID then
-			return "nothing"
-		end
-		local _, _, _, _, _, classID, subclassID = C_Item.GetItemInfoInstant(itemID)
-		if classID ~= weaponClass then
-			return "not a weapon"
-		end
-		return subclassID == fishingPole and "fishing pole" or ("weapon subclass " .. tostring(subclassID))
-	end
-	local enchants = { GetWeaponEnchantInfo() }
-	local stride = select("#", GetWeaponEnchantInfo()) >= 8 and 4 or 3
-	for _, hand in ipairs(ns.Data.WEAPON_HAND_ORDER) do
-		local slot = ns.Data.WEAPON_HAND_SLOTS[hand]
-		local base = (ns.Data.WEAPON_HAND_ORDER[1] == hand and 0 or 1) * stride
-		local expiration = enchants[base + 1] and enchants[base + 2]
-		local enchant = enchants[base + 1] and stride == 4 and enchants[base + 4]
-		local carried = ns.IsPlain(enchant) and enchant and BW.weaponByEnchant[enchant]
-		local picks = {}
-		for key, when in pairs(db.weaponPicks[class .. "_" .. hand] or {}) do
-			picks[#picks + 1] = key .. "=" .. tostring(when)
-		end
-		table.sort(picks)
-		local items = {}
-		for key, when in pairs(db.weaponItems[hand] or {}) do
-			items[#items + 1] = key .. "=" .. tostring(when)
-		end
-		table.sort(items)
-		local itemID = GetInventoryItemID("player", slot)
-		lines[#lines + 1] = string.format(
-			"  %s (slot %d): picks=%s items=%s castable=%s item=%s (%s) enchantLeft=%s enchant=%s (row %s)",
-			hand,
-			slot,
-			#picks > 0 and table.concat(picks, " ") or "none",
-			#items > 0 and table.concat(items, " ") or "default",
-			listed[hand] or "0",
-			PlainText(itemID),
-			Holds(itemID),
-			ns.IsPlain(expiration) and expiration and (math.floor(expiration / 1000) .. "s") or "none",
-			PlainText(enchant),
-			carried and tostring(carried.key) or "not a Thanks for the Buff row"
-		)
-	end
-
-	local stone = BW.soulstoneEntry
-	if stone and stone.row.class == class then
-		local createIds = {}
-		for _, rank in ipairs(stone.ranks) do
-			createIds[#createIds + 1] = rank.id
-		end
-		-- With no stone in your bags the button makes one; with one, it goes on a healer or you.
-		local stonesCarried = 0
-		for _, id in ipairs(stone.items or {}) do
-			stonesCarried = stonesCarried + C_Item.GetItemCount(id)
-		end
-		lines[#lines + 1] = ""
-		lines[#lines + 1] = string.format(
-			"Soulstone: shows=%s createRanksKnown=%d/%d inWindow=%s stonesInBags=%d",
-			tostring(db.selfRefresh[stone.key]),
-			CountKnown(createIds),
-			#createIds,
-			BW.soulstoneBuff and "yes" or "NO",
-			stonesCarried
-		)
-	end
-
-	--[[
-	    The Buff Key: its binding (unbound, a press can't happen), the hidden
-	    button it clicks and a macro's /click reaches, any key still on the
-	    old Group Buff key (moved at login, out of combat), and the
-	    resurrection a press casts on a dead target first. A press also does
-	    nothing in combat, while you're dead, and while the window is off, not
-	    set up or reading secret auras (the switches and gates above).
-	]]
-	lines[#lines + 1] = ""
-	lines[#lines + 1] = string.format(
-		"Buff Key: resurrection=%s",
-		BW.resurrection and string.format("%s (%d)", tostring(BW.resurrection.name), BW.resurrection.id) or "none known"
-	)
-	local command = ns.BUFF_KEY_COMMAND
-	if command then
-		local bound = { GetBindingKey(command) }
-		local buttonName = command:match("^CLICK ([^:]+)")
-		lines[#lines + 1] = string.format(
-			"  %s: bound=%s button=%s",
-			command,
-			#bound > 0 and table.concat(bound, " ") or "NONE",
-			(buttonName and _G[buttonName]) and buttonName or "MISSING"
-		)
-	else
-		lines[#lines + 1] = "  not loaded"
-	end
-	local oldGroup = { GetBindingKey("CLICK TFTBBuffGroup:LeftButton") }
-	if #oldGroup > 0 then
-		lines[#lines + 1] = "  old Group Buff key still bound: " .. table.concat(oldGroup, " ")
-	end
-
-	lines[#lines + 1] = ""
-	if InCombatLockdown() then
-		lines[#lines + 1] = "Group and target: (in combat; the window reads nobody until combat ends)"
-		return table.concat(lines, "\n")
-	end
-	local members = GroupUnits()
-	lines[#lines + 1] = string.format(
-		"Group: party=%s raid=%s members read=%d",
-		tostring(IsInGroup() and true or false),
-		tostring(IsInRaid() and true or false),
-		#members
-	)
-	local first = BW.buffs[1]
-	local rangeSpell = first and (first.singleName or first.groupName)
-	for _, member in ipairs(members) do
-		lines[#lines + 1] = MemberLine(BW, member, rangeSpell)
-		if BW.CanBuff(member.unit) then
-			local _, memberClass = UnitClass(member.unit)
-			lines[#lines + 1] = aurasSecret and "    buffs: (auras secret)"
-				or BuffStates(BW, member.unit, memberClass, BW.buffs)
-		end
-	end
-
-	if not UnitExists("target") then
-		lines[#lines + 1] = "Target: none"
-	elseif ns.IsUnitIdentitySecret("target") then
-		lines[#lines + 1] = "Target: identity secret"
-	else
-		lines[#lines + 1] = string.format(
-			"Target: player=%s inParty=%s inRaid=%s canAssist=%s canBuff=%s petControlledByPlayer=%s",
-			PlainText(UnitIsPlayer("target")),
-			PlainText(UnitInParty("target")),
-			PlainText(UnitInRaid("target") ~= nil),
-			PlainText(UnitCanAssist("player", "target")),
-			tostring(BW.CanBuff("target") and true or false),
-			PlainText(not UnitIsPlayer("target") and UnitPlayerControlled("target"))
-		)
-		if BW.CanBuff("target") then
-			local _, targetClass = UnitClass("target")
-			lines[#lines + 1] = aurasSecret and "    buffs: (auras secret)"
-				or BuffStates(BW, "target", targetClass, BW.buffs)
-		end
-	end
-	lines[#lines + 1] = string.format(
-		"Return the Favor: a stranger who buffs you is listed for %d seconds, %d at a time.",
-		db.favorSeconds,
-		ns.Data.BUFF_WINDOW_FAVOR_MAX
-	)
 
 	return table.concat(lines, "\n")
 end
@@ -1115,21 +817,21 @@ end
 
 --[[
     The event log's per-id filter asks this whether a firing of an id-filtered
-    event (ns.MESSAGE_ID_FILTERED_EVENTS) is one TFTB acts on. For
+    event (ns.MESSAGE_ID_FILTERED_EVENTS) is one Good to Go acts on. For
     UNIT_SPELLCAST_SUCCEEDED that is a spell id the live lookups hold -- a
     service or other cast entry, or a buff you can give for Good News -- the
     same lookups the handlers match against, or any rank of a spell the Buff
     Window can cast, which is what a Buff Key press waits to hear go off (the
-    set built from this client's Buff-Window-Spells data, on the first firing
+    set built from this client's Buff-Duty-Spells data, on the first firing
     while logging). For GET_ITEM_INFO_RECEIVED it is an item of a tracked
     trigger, the set the panels' repaint watches (built from
-    ns.TRACKED_ABILITIES the same way), or one the Buff Window uses. For
+    ns.TRACKED_ABILITIES the same way), or one Buff Duty uses. For
     UI_ERROR_MESSAGE it is the "more powerful spell" refusal, whose error type
     Buff Duty learns from its text the first time it acts on one and logs that
     firing itself (ns.IsBuffBounceError). Everything else is counted.
 ]]
 local trackedItems
-local IsBuffWindowSpell -- defined under Validate Data Sources, from the same collectors
+local IsBuffDutySpell -- defined under Validate Data Sources, from the same collectors
 
 local function IsTrackedItem(itemID)
 	if not trackedItems then
@@ -1147,10 +849,10 @@ end
 
 function ns.IsCorrelatedMessage(event, id)
 	if event == "GET_ITEM_INFO_RECEIVED" then
-		return IsTrackedItem(id) or (ns.IsBuffWindowItem ~= nil and ns.IsBuffWindowItem(id))
+		return IsTrackedItem(id) or (ns.IsBuffDutyItem ~= nil and ns.IsBuffDutyItem(id))
 	end
 	if event == "UNIT_SPELLCAST_SUCCEEDED" then
-		return ns.GetCastEntry(id) ~= nil or ns.GetGivenEntry(id) ~= nil or IsBuffWindowSpell(id)
+		return ns.GetCastEntry(id) ~= nil or ns.GetGivenEntry(id) ~= nil or IsBuffDutySpell(id)
 	end
 	if event == "UI_ERROR_MESSAGE" then
 		return ns.IsBuffBounceError ~= nil and ns.IsBuffBounceError(id)
@@ -1164,10 +866,11 @@ end
     COMBAT_LOG_EVENT_UNFILTERED is excluded from the log as a firehose, so the
     buff engine calls this for each SPELL_CAST_SUCCESS and SPELL_RESURRECT, and
     for each SPELL_AURA_APPLIED or SPELL_AURA_REFRESH that lands on you
-    (labelled AURA), while logging is on, before any of its own filtering.
+    (labeled AURA), while logging is on, before any of its own filtering.
 
-    An aura on you, and a cast or revive TFTB acts on (a tracked entry, a buff
-    you give for Good News), records in full:
+    An aura on you, every revive (Buff Duty hides the revived player's
+    resurrect icon on any of them), and a cast Good to Go acts on (a tracked entry,
+    a buff you give for Good News), records in full:
     spell id and name, source, the decoded affiliation/reaction flags, and
     whether the add-on tracks and watches that id. tracked=true watched=true
     means the cast reached the add-on and the issue is downstream. A cable that
@@ -1179,7 +882,7 @@ end
 function ns:LogCombatCast(spellID, sourceName, sourceFlags, tracked, watched, label)
 	label = label or "CAST"
 	local name = C_Spell.GetSpellName(spellID) or "?"
-	local correlated = label == "AURA" or tracked or ns.GetGivenEntry(spellID) ~= nil
+	local correlated = label ~= "CAST" or tracked or ns.GetGivenEntry(spellID) ~= nil
 	if not correlated then
 		ns:CountUncorrelated("COMBAT_LOG_EVENT_UNFILTERED", spellID, label .. " " .. name)
 		return
@@ -1313,21 +1016,21 @@ local function EmoteCommand(token)
 end
 
 --[[
-    Every record TFTB shows or matches by the name this client gives it, for
+    Every record Good to Go shows or matches by the name this client gives it, for
     the Localization tab's Game Names report, built at load from this client's
     data. Each row reads the name exactly as the features do:
 
     - every ns.GAME_IDS constant, a spell named through C_Spell.GetSpellName
       (what ns.GetSpellLink builds the panel samples from), requested when it
       loads late;
-    - every class token this client's tracked and Buff Window
+    - every class token this client's tracked and Buff Duty
       data carries, named through LOCALIZED_CLASS_NAMES_MALE as the panels show
       it;
     - the client's duration strings, through ns.FormatDuration as the Good News
       whisper uses them, with the sample count in the ID cell;
-    - the pet-owner tooltip formats the Buff Window turns into patterns to find
+    - the pet-owner tooltip formats Buff Duty turns into patterns to find
       a targeted pet's owner (NIL means that wording is skipped on this client);
-    - the group labels the Buff Window heads its party sections with, the
+    - the group labels the Buff Duty window heads its party sections with, the
       hand names its weapon rows and the Weapon Buffs panel show, the error a
       Buff Key pressed in combat shows, and the "more powerful spell" refusal
       Buff Duty matches by its text (NIL means it never learns a buff bounced);
@@ -1335,7 +1038,7 @@ end
       command this client gives it (NIL means the client has no such emote, so
       a pick of it never plays).
 
-    TFTB names no item by constant: tracked items' names show on Validate Data.
+    Good to Go names no item by constant: tracked items' names show on Validate Data.
 ]]
 ns.AppendDiagnosticRows(ns.DIAGNOSTIC_NAME_LOOKUPS, {})
 
@@ -1363,7 +1066,11 @@ do
 			classes[entry.class] = true
 		end
 	end
-	for _, list in ipairs({ ns.BUFF_WINDOW_SPELLS or {}, ns.BUFF_WINDOW_SELF_SPELLS or {} }) do
+	for _, list in ipairs({
+		ns.BUFF_DUTY_SPELLS or {},
+		ns.BUFF_DUTY_SELF_SPELLS or {},
+		ns.BUFF_DUTY_WEAPON_ENCHANTS or {},
+	}) do
 		for _, row in ipairs(list) do
 			if row.class then
 				classes[row.class] = true
@@ -1381,7 +1088,8 @@ do
 		}
 	end
 
-	local durations = { { "D_SECONDS", 1 }, { "D_SECONDS", 15 }, { "D_MINUTES", 120 }, { "D_HOURS", 7200 } }
+	local durations =
+		{ { "D_SECONDS", 1 }, { "D_SECONDS", 2 }, { "D_SECONDS", 15 }, { "D_MINUTES", 120 }, { "D_HOURS", 7200 } }
 	for _, duration in ipairs(durations) do
 		local seconds = duration[2]
 		rows[#rows + 1] = {
@@ -1435,7 +1143,7 @@ local MACRO_MAX_LENGTH = 255
 local CHARACTER_NAME_MAX_LETTERS = 12
 
 --[[
-    Every whisper and macro TFTB sends or writes, for the Localization tab's
+    Every whisper and macro Good to Go sends or writes, for the Localization tab's
     Message Length report, built at report time through the add-on's own
     builders with the longest names this client's data holds in this locale.
     Returns rows of { label, ceiling, text } and a list of notes. The ceiling
@@ -1443,16 +1151,17 @@ local CHARACTER_NAME_MAX_LETTERS = 12
     ruRU.
 
     The longest link is the longest of ns.GetBuffLink over every trigger live
-    on this client, the same link the thank-you and Good News whispers carry.
-    An item link is only as long as its cached name, so items not loaded yet
-    are counted into a note.
+    on this client, the same link the thank-you whisper carries; Good News
+    links the cast id, so its longest is taken over the triggers it whispers
+    for, by cast id. An item link is only as long as its cached name, so items
+    not loaded yet are counted into a note.
 
-    The Buff Window's ask for another class's buff, said to the group or
+    Buff Duty's ask for another class's buff, said to the group or
     whispered, is built for every raid-wide buff the window counts, and the
     longest is kept.
 
-    The Buff Window's Return the Favor buttons cast through a macro naming the
-    stranger, one per buff you can give right now, built by ns.BuffWindow's
+    Buff Duty's Return the Favor buttons cast through a macro naming the
+    stranger, one per buff you can give right now, built by ns.BuffDuty's
     own SingleIcon with your top rank's cast text and a 12-letter name on your
     realm.
 ]]
@@ -1469,10 +1178,22 @@ ns.DIAGNOSTIC_MESSAGES = function()
 				if #link > #longestLink then
 					longestLink = link
 				end
-				if ns.GetGivenEntry(trigger.spell) and #link > #longestGivenLink then
-					longestGivenLink = link
+				if ns.GetGivenEntry(trigger.spell) then
+					local givenLink = ns.GetBuffLink({ itemId = trigger.item }, trigger.spell)
+					if #givenLink > #longestGivenLink then
+						longestGivenLink = givenLink
+					end
 				end
 			end
+		end
+	end
+
+	-- Every duration under a minute is tried: in a Slavic locale the plural form, not the count, decides the width.
+	local goodNews = ""
+	for seconds = 1, 59 do
+		local text = ns:BuildGoodNewsMessage(longestGivenLink, seconds)
+		if #text > #goodNews then
+			goodNews = text
 		end
 	end
 
@@ -1482,11 +1203,10 @@ ns.DIAGNOSTIC_MESSAGES = function()
 			ceiling = ns.CHAT_MESSAGE_MAX_LENGTH,
 			text = ns:BuildAnnounceMessage("MESSAGE_WHISPER_THANKS", longestLink),
 		},
-		-- 59 seconds forces the longest duration clause the whisper ever carries.
 		{
 			label = "Good News whisper",
 			ceiling = ns.CHAT_MESSAGE_MAX_LENGTH,
-			text = ns:BuildGoodNewsMessage(longestGivenLink, 59),
+			text = goodNews,
 		},
 	}
 
@@ -1511,15 +1231,20 @@ ns.DIAGNOSTIC_MESSAGES = function()
 	end
 
 	local notes = {}
-	local BW = ns.BuffWindow
+	local BW = ns.BuffDuty
 	if BW and BW.entries then
 		local longestAsk
+		-- the longest names list an ask can carry: as many as it names, each at the game's 12-letter limit
+		local longestNames = {}
+		for i = 1, ns.BUFF_ASK_MAX_NAMES do
+			longestNames[i] = string.rep("W", 12)
+		end
 		for _, entry in ipairs(BW.entries) do
 			local row = entry.row
 			if row.group and not row.exclusive then
 				local linkId = entry.ids[#entry.ids]
 				local link = ns.GetSpellLink(linkId) or C_Spell.GetSpellName(linkId) or ""
-				local ask = ns:BuildBuffRequestMessage(row.class, link)
+				local ask = ns:BuildBuffRequestMessage(longestNames, #longestNames, link)
 				if not longestAsk or #ask > #longestAsk then
 					longestAsk = ask
 				end
@@ -1527,7 +1252,7 @@ ns.DIAGNOSTIC_MESSAGES = function()
 		end
 		if longestAsk then
 			rows[#rows + 1] = {
-				label = "Buff Window ask for a buff",
+				label = "Buff Duty ask for a buff",
 				ceiling = ns.CHAT_MESSAGE_MAX_LENGTH,
 				text = longestAsk,
 			}
@@ -1540,14 +1265,14 @@ ns.DIAGNOSTIC_MESSAGES = function()
 			if buff.singleName then
 				local icon = BW.SingleIcon(buff, nil, nil, fullName, fullName)
 				rows[#rows + 1] = {
-					label = "Buff Window favor macro (" .. buff.singleName .. ")",
+					label = "Buff Duty favor macro (" .. buff.singleName .. ")",
 					ceiling = MACRO_MAX_LENGTH,
 					text = icon and icon.macrotext or "",
 				}
 			end
 		end
 		if #BW.buffs == 0 then
-			notes[#notes + 1] = "No Buff Window buff is castable right now, so no favor macro was built."
+			notes[#notes + 1] = "No Buff Duty buff is castable right now, so no favor macro was built."
 		end
 		notes[#notes + 1] =
 			"A character name in a non-Latin script takes 2 or 3 bytes a letter, so a favor macro can run longer than shown."
@@ -1608,7 +1333,7 @@ local function FoundField(field)
 end
 
 -- Single-target ranks are { id, level learned }; group ranks are bare ids.
-local function CollectBuffWindow(rows)
+local function CollectBuffDuty(rows)
 	local found = {}
 	for index, row in ipairs(rows) do
 		for _, rank in ipairs(row.single or {}) do
@@ -1646,7 +1371,7 @@ end
 --[[
     Weapon enchants: an imbue's ranks are spells, a poison's items; `kind`
     picks which, and a row of the other kind adds nothing. A rank with no
-    enchant id shows a blank DATA_ENCHANT_ID: the Buff Window can't tell it's
+    enchant id shows a blank DATA_ENCHANT_ID: Buff Duty can't tell it's
     on a weapon, and keeps offering it.
 ]]
 local function CollectWeaponEnchants(kind)
@@ -1748,27 +1473,27 @@ local function CollectPetIcons(icons)
 	return found
 end
 
--- Every spell id a Buff Window data table names, for the event log's filter above.
-local buffWindowSpells
+-- Every spell id a Buff Duty data table names, for the event log's filter above.
+local buffDutySpells
 
-function IsBuffWindowSpell(id)
-	if not buffWindowSpells then
-		buffWindowSpells = {}
+function IsBuffDutySpell(id)
+	if not buffDutySpells then
+		buffDutySpells = {}
 		for _, source in ipairs({
-			{ ns.BUFF_WINDOW_SPELLS, CollectBuffWindow },
-			{ ns.BUFF_WINDOW_SELF_SPELLS, CollectSelfBuffs },
-			{ ns.BUFF_WINDOW_WEAPON_ENCHANTS, CollectWeaponEnchants("spell") },
-			{ ns.BUFF_WINDOW_SOULSTONE, CollectSoulstone("spell") },
-			{ ns.BUFF_WINDOW_RESURRECTIONS, CollectResurrections },
+			{ ns.BUFF_DUTY_SPELLS, CollectBuffDuty },
+			{ ns.BUFF_DUTY_SELF_SPELLS, CollectSelfBuffs },
+			{ ns.BUFF_DUTY_WEAPON_ENCHANTS, CollectWeaponEnchants("spell") },
+			{ ns.BUFF_DUTY_SOULSTONE, CollectSoulstone("spell") },
+			{ ns.BUFF_DUTY_RESURRECTIONS, CollectResurrections },
 		}) do
 			if type(source[1]) == "table" then
 				for _, found in ipairs(source[2](source[1])) do
-					buffWindowSpells[found.id] = true
+					buffDutySpells[found.id] = true
 				end
 			end
 		end
 	end
-	return buffWindowSpells[id] == true
+	return buffDutySpells[id] == true
 end
 
 ns.AppendDiagnosticRows(ns.DIAGNOSTIC_DATA_SOURCES, {
@@ -1835,12 +1560,12 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_DATA_SOURCES, {
 		},
 	},
 	{
-		label = "Buff-Window-Spells",
+		label = "Buff-Duty-Spells",
 		sources = {
 			{
-				table = "BUFF_WINDOW_SPELLS",
+				table = "BUFF_DUTY_SPELLS",
 				kind = "spell",
-				collect = CollectBuffWindow,
+				collect = CollectBuffDuty,
 				dataColumns = {
 					{ "DATA_ROLE", FoundField("role") },
 					{ "DATA_LEVEL", FoundField("level") },
@@ -1852,7 +1577,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_DATA_SOURCES, {
 				},
 			},
 			{
-				table = "BUFF_WINDOW_SELF_SPELLS",
+				table = "BUFF_DUTY_SELF_SPELLS",
 				kind = "spell",
 				collect = CollectSelfBuffs,
 				dataColumns = {
@@ -1863,7 +1588,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_DATA_SOURCES, {
 				},
 			},
 			{
-				table = "BUFF_WINDOW_WEAPON_ENCHANTS",
+				table = "BUFF_DUTY_WEAPON_ENCHANTS",
 				kind = "spell",
 				collect = CollectWeaponEnchants("spell"),
 				dataColumns = {
@@ -1873,7 +1598,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_DATA_SOURCES, {
 				},
 			},
 			{
-				table = "BUFF_WINDOW_WEAPON_ENCHANTS",
+				table = "BUFF_DUTY_WEAPON_ENCHANTS",
 				kind = "item",
 				collect = CollectWeaponEnchants("item"),
 				dataColumns = {
@@ -1883,9 +1608,9 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_DATA_SOURCES, {
 				},
 			},
 			-- Which hands each class is asked about: class tokens, no ids, so the report counts them.
-			{ table = "BUFF_WINDOW_WEAPON_HANDS", kind = "other" },
+			{ table = "BUFF_DUTY_WEAPON_HANDS", kind = "other" },
 			{
-				table = "BUFF_WINDOW_WEAPON_ITEMS",
+				table = "BUFF_DUTY_WEAPON_ITEMS",
 				kind = "item",
 				collect = CollectWeaponItems,
 				dataColumns = {
@@ -1898,7 +1623,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_DATA_SOURCES, {
 				},
 			},
 			{
-				table = "BUFF_WINDOW_SOULSTONE",
+				table = "BUFF_DUTY_SOULSTONE",
 				kind = "spell",
 				collect = CollectSoulstone("spell"),
 				dataColumns = {
@@ -1907,7 +1632,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_DATA_SOURCES, {
 				},
 			},
 			{
-				table = "BUFF_WINDOW_SOULSTONE",
+				table = "BUFF_DUTY_SOULSTONE",
 				kind = "item",
 				collect = CollectSoulstone("item"),
 				dataColumns = {
@@ -1915,7 +1640,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_DATA_SOURCES, {
 				},
 			},
 			{
-				table = "BUFF_WINDOW_RESURRECTIONS",
+				table = "BUFF_DUTY_RESURRECTIONS",
 				kind = "spell",
 				collect = CollectResurrections,
 				dataColumns = {
@@ -1923,7 +1648,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_DATA_SOURCES, {
 				},
 			},
 			{
-				table = "BUFF_WINDOW_PET_ICONS",
+				table = "BUFF_DUTY_PET_ICONS",
 				kind = "spell",
 				collect = CollectPetIcons,
 				dataColumns = {

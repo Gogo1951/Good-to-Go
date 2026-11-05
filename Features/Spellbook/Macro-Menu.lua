@@ -9,15 +9,15 @@ local LabelAndValue = ns.MenuLabelAndValue
 	A page macro's right-click options menu, opened from its button on the page (Features/Spellbook/Macro-Button.lua).
 	What the macro's kind is for comes first, as checkboxes: Cast At Cursor on Blizzard, the pet's ability on a
 	summon, the stance a spell needs, Never Turn Off on a form, the wand and the pet on a nuke. Then Target,
-	Grouped Spells, Rank, Conditionals and Cast Sequence (buttons opening their panels) and the four groups (When, First, Then, Error Messages), each a submenu button with what is on in it on the right, by
+	Grouped Spells, Rank, Conditionals and Cast Sequence (the last two buttons opening their panels) and the four groups (When, First, Then, Error Messages), each a submenu button with what is on in it on the right, by
 	its arrow; then the actions, and the macro text in a submenu of its own. Every option explains itself in its tooltip. The options themselves live in
-	Features/Spellbook/Macro-Options.lua. Its tooltips, submenu layout and option tables are shared with a category's
+	Features/Spellbook/Macro-Options.lua, their kinds' defaults in Features/Spellbook/Macro-Kinds.lua. Its tooltips, submenu layout and option tables are shared with a category's
 	menu, in Features/Spellbook/Menu-Utilities.lua. The sections from Target to Error Messages are built in
-	Features/Spellbook/Macro-Menu-Sections.lua, and the helpers both use live in Features/Spellbook/Macro-Menu-Helpers.lua.
+	Features/Spellbook/Macro-Menu-Sections.lua, and the helpers both use live in Features/Spellbook/Macro-Menu-Utilities.lua.
 ]]
 
 --[[
-	Every spell macro has a menu. A focus copy's menu only removes it. The
+	Every spell macro has a menu. A focus copy's menu only removes it and shows its macro text. The
 	menu stays open while options change: the game's checkboxes refresh it by default, and the radio choices
 	ask it to. Each change rebuilds the page's macros, so the menu follows the rebuilt entry, and every label
 	and the macro text redraw in place.

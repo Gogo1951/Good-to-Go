@@ -122,24 +122,20 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    An Example line: the chat prints a feature makes, each built by
-    ns.BuildPrintLine, under a silver "Example:" label. linesFunction returns
-    the print bodies and runs at every draw, so the Example follows the
-    settings the moment they change. A blank line parts the lines so each
-    reads on its own. Silver opens again after the lines, for a locale whose
-    label continues past its %s.
+    An Example line: one sample of the chat print a feature makes, built by
+    ns.BuildPrintLine, under a silver "Example:" label. An Example is a single
+    line, even for a feature that prints several. lineFunction returns the
+    print body, or nil, and runs at every draw, so the Example follows the
+    settings the moment they change. Silver opens again after the line, for a
+    locale whose label continues past its %s.
 ]]
-function ns.OptionsExample(order, linesFunction, hidden)
+function ns.OptionsExample(order, lineFunction, hidden)
 	return {
 		type = "description",
 		name = function()
-			local lines = {}
-			for index, body in ipairs(linesFunction()) do
-				lines[index] = ns.BuildPrintLine(body)
-			end
-			return GetColor("HELP")
-				.. format(L["SAMPLE_EXAMPLE"], table.concat(lines, "\n\n") .. GetColor("HELP"))
-				.. "|r"
+			local body = lineFunction()
+			local line = body and ns.BuildPrintLine(body) or ""
+			return GetColor("HELP") .. format(L["SAMPLE_EXAMPLE"], line .. GetColor("HELP")) .. "|r"
 		end,
 		fontSize = "medium",
 		order = order,
@@ -147,7 +143,7 @@ function ns.OptionsExample(order, linesFunction, hidden)
 	}
 end
 
--- The character's AceDB profile, the Connoisseur panels' settings table, or nil before the database is open.
+-- The character's AceDB profile, the Consumable Macros panels' settings table, or nil before the database is open.
 function ns.OptionsProfileSettings()
 	return ns.db and ns.db.profile
 end
@@ -222,17 +218,14 @@ function ns.OptionsWhisperExample(order, getMessage, hidden)
 end
 
 --[[
-    An Example of lines already drawn the way they arrive (ns.BuildPartyExampleLine,
-    ns.BuildWhisperExampleLine, ns.BuildPrintLine), a blank line between them;
-    linesFunction runs at every draw.
+    An Example of one line already drawn the way it arrives (ns.BuildPartyExampleLine,
+    ns.BuildWhisperExampleLine, ns.BuildPrintLine); lineFunction runs at every draw.
 ]]
-function ns.OptionsChatExample(order, linesFunction, hidden)
+function ns.OptionsChatExample(order, lineFunction, hidden)
 	return {
 		type = "description",
 		name = function()
-			return GetColor("HELP")
-				.. format(L["SAMPLE_EXAMPLE"], table.concat(linesFunction(), "\n\n") .. GetColor("HELP"))
-				.. "|r"
+			return GetColor("HELP") .. format(L["SAMPLE_EXAMPLE"], (lineFunction() or "") .. GetColor("HELP")) .. "|r"
 		end,
 		fontSize = "medium",
 		order = order,
@@ -306,47 +299,137 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Each feature's master switch, drawn on the feature's own panel and, for
-    Macros and Readiness Report, on Connoisseur's heading page too. Both copies come from here and
-    share one setter, and a change repaints both panels, so neither shows a
-    stale box.
+    Every feature's on/off switch, drawn twice: in the root panel's Features
+    section, two to a line, and atop the feature's own panel. Both copies come
+    from here, so they share one caption, one tooltip and one setter, and a
+    change repaints every panel so neither copy shows a stale box.
+
+    A switch on an Automated Appreciation feature (`appreciation`, its key in
+    ns.FEATURE_SWITCHES) goes through ns.SetFeatureSwitch, the one setter the
+    mini-map button and the Buff Duty window's close button use too. The rest
+    read and write their own account-wide key.
+
+    `confirmOff` asks before a switch that keeps macros current turns off:
+    off stops the updates and leaves every macro as it last was, which a
+    player could take for deleting them. The prompt says it doesn't, and turning
+    the switch on never asks.
+
+    FEATURE_GROUPS is the order the root panel draws them, left to right then
+    down, and the order the settings tree lists the features' panels. Each
+    group is a block of rows, with a blank line between blocks.
 ]]
 local FEATURE_SWITCHES = {
-	Macros = {
-		key = "macrosEnabled",
-		name = "OPTIONS_MACROS_ENABLE",
-		desc = "OPTIONS_MACROS_ENABLE_DESCRIPTION",
-		registry = "Macros",
-		set = function(value)
-			ns.SetMacrosEnabled(value)
-		end,
+	BuffDuty = {
+		appreciation = "buffWindow",
+		name = "BUFF_DUTY_ENABLE",
+		desc = "SWITCH_BUFF_DUTY_DESCRIPTION",
 	},
 	Restocker = {
 		key = "restockerEnabled",
 		name = "OPTIONS_RESTOCKER_ENABLE",
-		desc = "OPTIONS_RESTOCKER_ENABLE_DESCRIPTION",
-		registry = "Restocker",
+		desc = "SWITCH_RESTOCKER_DESCRIPTION",
 		set = function(value)
 			ns.SetRestockerEnabled(value)
 			ns.UpdateMinimapIcon()
 		end,
 	},
-	ReadinessReport = {
-		key = "readinessReportEnabled",
-		name = "OPTIONS_READINESS_ENABLE",
-		desc = "OPTIONS_READINESS_ENABLE_DESCRIPTION",
-		registry = "ReadinessReport",
+	Spellbook = {
+		name = "SWITCH_SPELLBOOK",
+		desc = "SWITCH_SPELLBOOK_DESCRIPTION",
+		confirmOff = "SWITCH_SPELLBOOK_CONFIRM_OFF",
+		get = function()
+			return ns.IsSpellbookEnabled()
+		end,
+		set = function(value)
+			ns.SetSpellbookEnabled(value)
+		end,
+	},
+	Macros = {
+		key = "macrosEnabled",
+		name = "SWITCH_MACROS",
+		desc = "SWITCH_MACROS_DESCRIPTION",
+		confirmOff = "SWITCH_MACROS_CONFIRM_OFF",
+		set = function(value)
+			ns.SetMacrosEnabled(value)
+		end,
 	},
 	InventoryReport = {
 		key = "inventoryReport",
-		name = "OPTIONS_INVENTORY_REPORT",
-		desc = "OPTIONS_INVENTORY_REPORT_DESCRIPTION",
-		registry = "InventoryReport",
+		name = "SWITCH_INVENTORY_REPORT",
+		desc = "SWITCH_INVENTORY_REPORT_DESCRIPTION",
 		set = function(value)
 			ns.SetInventoryReportEnabled(value)
 		end,
 	},
+	ReadinessReport = {
+		key = "readinessReportEnabled",
+		name = "SWITCH_READINESS_REPORT",
+		desc = "SWITCH_READINESS_REPORT_DESCRIPTION",
+		set = function(value)
+			ns.db.global.readinessReportEnabled = value
+			ns.SyncReadinessReportEvents()
+		end,
+	},
+	StrangerBuffs = {
+		appreciation = "strangers",
+		name = "STRANGERS_ENABLE",
+		desc = "SWITCH_STRANGER_BUFFS_DESCRIPTION",
+	},
+	GoodNews = {
+		appreciation = "goodNews",
+		name = "SWITCH_GOOD_NEWS",
+		desc = "SWITCH_GOOD_NEWS_DESCRIPTION",
+	},
+	CombatBuffs = {
+		appreciation = "teammates",
+		name = "SWITCH_COMBAT_BUFFS",
+		desc = "SWITCH_COMBAT_BUFFS_DESCRIPTION",
+	},
+	ServiceAlerts = {
+		appreciation = "services",
+		name = "SWITCH_SERVICE_ALERTS",
+		desc = "SWITCH_SERVICE_ALERTS_DESCRIPTION",
+	},
 }
+
+ns.FEATURE_GROUPS = {
+	{ "BuffDuty", "Restocker", "Spellbook", "Macros" },
+	{ "InventoryReport", "ReadinessReport" },
+	{ "StrangerBuffs", "GoodNews", "CombatBuffs", "ServiceAlerts" },
+}
+
+local function NotifyAllPanels()
+	for _, name in pairs(ns.OPTIONS_REGISTRY) do
+		AceConfigRegistry:NotifyChange(name)
+	end
+end
+
+local function GetSwitch(switch)
+	if not ns.db then
+		return false
+	end
+	if switch.get then
+		return switch.get()
+	end
+	if switch.appreciation then
+		return ns.IsFeatureOn(switch.appreciation)
+	end
+	return ns.db.global[switch.key]
+end
+
+local function SetSwitch(switch, value)
+	if switch.appreciation then
+		-- Repaints every panel itself.
+		ns.SetFeatureSwitch(switch.appreciation, value)
+		return
+	end
+	if switch.set then
+		switch.set(value)
+	else
+		ns.db.global[switch.key] = value
+	end
+	NotifyAllPanels()
+end
 
 function ns.OptionsFeatureSwitch(feature, order, width)
 	local switch = FEATURE_SWITCHES[feature]
@@ -356,19 +439,39 @@ function ns.OptionsFeatureSwitch(feature, order, width)
 		desc = L[switch.desc],
 		order = order,
 		width = width or "full",
+		-- A string asks first; anything else changes the box at once.
+		confirm = switch.confirmOff and function(_, value)
+			if not value then
+				return L[switch.confirmOff]
+			end
+		end or nil,
 		get = function()
-			return ns.db and ns.db.global[switch.key]
+			return GetSwitch(switch)
 		end,
 		set = function(_, value)
-			if switch.set then
-				switch.set(value)
-			else
-				ns.db.global[switch.key] = value
-			end
-			AceConfigRegistry:NotifyChange(ns.OPTIONS_REGISTRY.Connoisseur)
-			AceConfigRegistry:NotifyChange(ns.OPTIONS_REGISTRY[switch.registry])
+			SetSwitch(switch, value)
 		end,
 	}
+end
+
+--[[
+    The root panel's Features section: every switch, two to a line, group by
+    group in FEATURE_GROUPS. Each group takes ten orders from startOrder on,
+    a blank line opening every group after the first.
+]]
+function ns.OptionsFeatureSwitchRows(args, keyPrefix, startOrder)
+	for groupIndex, group in ipairs(ns.FEATURE_GROUPS) do
+		local groupOrder = startOrder + (groupIndex - 1) * 10
+		local groupPrefix = keyPrefix .. groupIndex
+		if groupIndex > 1 then
+			args[groupPrefix .. "Space"] = ns.OptionsSpacer(groupOrder)
+		end
+		local toggles = {}
+		for _, feature in ipairs(group) do
+			toggles[#toggles + 1] = ns.OptionsFeatureSwitch(feature)
+		end
+		ns.OptionsTogglePairs(args, groupPrefix .. "Row", groupOrder, toggles)
+	end
 end
 
 --------------------------------------------------------------------------------
@@ -921,7 +1024,7 @@ AceGUI:RegisterWidgetType(ns.ITEM_LINK_WIDGET_TYPE, ItemLinkWidgetConstructor, I
 --[[
     The stock AceGUI checkbox with air between its icon and its label, for a
     toggle that stands for an item: a staple in the staples pop-up, a macro on
-    the Macros panel. The stock widget sets the label a pixel off the image,
+    the Consumable Macros panel. The stock widget sets the label a pixel off the image,
     which suits a status glyph and crowds an item icon, so these rows take the
     gap the Restock List's own rows put between an icon and its name.
 
@@ -988,4 +1091,93 @@ if AceGUI.WidgetRegistry and AceGUI.WidgetRegistry.CheckBox then
 	AceGUI:RegisterWidgetType(ns.ICON_CHECKBOX_WIDGET_TYPE, IconCheckBoxConstructor, ICON_CHECKBOX_WIDGET_VERSION)
 else
 	ns.ICON_CHECKBOX_WIDGET_TYPE = nil
+end
+
+--------------------------------------------------------------------------------
+-- Shared Panel Helpers
+--------------------------------------------------------------------------------
+
+--[[
+    The title drawn at the top of a sub-panel: "Combat Buffs > Tracked
+    Abilities", so it is always clear where you are. Only the title carries the
+    parent; the settings tree already shows it by nesting, and the tree label is
+    the plain name passed to AddToBlizOptions.
+]]
+function ns.SubPanelTitle(parentName, name)
+	return parentName .. " > " .. name
+end
+
+--[[
+    A row label naming an ability, which shows the game's own tooltip for it
+    on hover, the same one an action bar shows. `hyperlink` returns
+    "spell:<id>" or "item:<id>". A plain Label takes no mouse, so this one is
+    an InteractiveLabel, which AceConfigDialog gives the same hover handler as
+    any control, and that handler shows `tooltipHyperlink` when there is one.
+]]
+function ns.OptionsAbilityLabel(text, order, width, hyperlink)
+	local label = ns.OptionsRowLabel(text, order, width)
+	label.dialogControl = "InteractiveLabel"
+	label.tooltipHyperlink = hyperlink
+	return label
+end
+
+--[[
+    The spell an ability's tooltip quotes: the HIGHEST id in its rank group
+    that the client describes, so it reads the rank you actually cast, not rank
+    1. Ids are sorted rather than trusted in data order -- rows are not
+    reliably rank-ordered (Combustion is { 29977, 11129 }, Vanish
+    { 1856, 1857, 27617, 26889, 44290 }). Classic holds tooltip data only for
+    spells the character has known, and these panels list every class, so each
+    id is requested once here and the pick is made again at every hover, when
+    the text has had time to land.
+]]
+function ns.SpellTooltipLink(ids)
+	local ranked = {}
+	for i = 1, #ids do
+		ranked[i] = ids[i]
+		C_Spell.RequestLoadSpellData(ids[i])
+	end
+	table.sort(ranked)
+	return function()
+		for i = #ranked, 1, -1 do
+			local text = C_Spell.GetSpellDescription(ranked[i])
+			if text and text ~= "" then
+				return "spell:" .. ranked[i]
+			end
+		end
+		return "spell:" .. ranked[#ranked]
+	end
+end
+
+--[[
+    The displayed name embeds an icon escape (|T...|t), so sorting by it would sort
+    by texture path. This returns the clean, lowercased name for comparison only.
+]]
+local function EntrySortKey(entry)
+	local name = entry.label or entry.spellName
+	if not name and entry.itemId then
+		name = C_Item.GetItemInfo(entry.labelItem or entry.itemId)
+	end
+	return (name or ""):lower()
+end
+
+--[[
+    A copy of `entries` ordered alphabetically by display name, with the watched id
+    breaking ties for a stable result. Item names resolve lazily, which is why the
+    panels register their builders as functions (run on open, when the item cache
+    is warm) rather than as prebuilt tables.
+]]
+function ns.SortedEntries(entries)
+	local sorted = {}
+	for i = 1, #entries do
+		sorted[i] = entries[i]
+	end
+	table.sort(sorted, function(a, b)
+		local keyA, keyB = EntrySortKey(a), EntrySortKey(b)
+		if keyA == keyB then
+			return (a.ids[1] or 0) < (b.ids[1] or 0)
+		end
+		return keyA < keyB
+	end)
+	return sorted
 end

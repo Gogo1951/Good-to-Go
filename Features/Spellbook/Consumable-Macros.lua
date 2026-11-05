@@ -2,15 +2,15 @@ local _, ns = ...
 local L = ns.L
 
 --[[
-	Connoisseur's macros on the page, in a GtG Consumables section after every other: the consumable macros
-	it keeps pointed at the best item in the bags. Connoisseur writes and owns those WoW macros
+	Consumable Macros' macros on the page, in a GtG Consumables section after every other: the consumable macros
+	it keeps pointed at the best item in the bags. Consumable Macros writes and owns those WoW macros
 	(Features/Macros-for-Consumables/Macros); the page only shows the ones that exist and picks them up, so nothing here
 	creates, rewrites or tags one. A tile's icon is the item the macro uses now, read again whenever the tile is
-	drawn, as Connoisseur rewrites the macro when the bags change; its note is Dynamic Item rather than the
+	drawn, as Consumable Macros rewrites the macro when the bags change; its note is Dynamic Item rather than the
 	item's name, which changes with the bags.
 ]]
 
--- In the order the Macros panel's Which Macros to Create toggles list them, keyed by ns.MACRO_CONFIG's type.
+-- In the order the Consumable Macros panel's Which Macros to Create toggles list them, keyed by ns.MACRO_CONFIG's type.
 local TYPES = {
 	"Bandage",
 	"Explosive",
@@ -58,9 +58,9 @@ function ns.ReadConsumableMacro(macro)
 end
 
 --[[
-	The page macros for the Connoisseur macros that exist, in TYPES' order. Each carries consumable = true, its
-	WoW macro's name as wowName (Connoisseur's own, "- Food", in place of the page's prefix), and its name as
-	the Macros panel shows it, without the dash. dynamicRank marks a type the player's class can also cast
+	The page macros for the Consumable Macros macros that exist, in TYPES' order. Each carries consumable = true, its
+	WoW macro's name as wowName (Consumable Macros' own, "- Food", in place of the page's prefix), and its name as
+	the Consumable Macros panel shows it, without the dash. dynamicRank marks a type the player's class can also cast
 	(SPELL_CLASSES).
 ]]
 function ns.ConsumablePageMacros()

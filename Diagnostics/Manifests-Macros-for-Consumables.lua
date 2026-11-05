@@ -375,7 +375,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 	--[[
 	    The level cap behind the Leveling and Max Level modes (ns.GetMaxPlayerLevel
 	    in Utilities), the smaller of these two, which all three clients ship.
-	    Connoisseur Context prints what each one answers.
+	    Consumable Macros Context prints what each one answers.
 	]]
 	{
 		"GetMaxPlayerLevel",
@@ -490,6 +490,13 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 		function()
 			return type(C_SpecializationInfo) == "table"
 				and type(C_SpecializationInfo.GetSpecializationInfo) == "function"
+		end,
+	},
+	-- Asked only from Mists on, for the one specialization the Spec line names.
+	{
+		"C_SpecializationInfo.GetSpecialization",
+		function()
+			return type(C_SpecializationInfo) == "table" and type(C_SpecializationInfo.GetSpecialization) == "function"
 		end,
 	},
 	{
@@ -780,18 +787,18 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 })
 
 --------------------------------------------------------------------------------
--- Connoisseur Context
+-- Consumable Macros Context
 --------------------------------------------------------------------------------
 
 -- The add-on's own example reports, appended to the shared Event Log intro.
 ns.DiagnosticsStrings.EVENT_LOG_EXAMPLES = "The best tool for 'my macro didn't update' reports."
 	.. " "
-	.. "Best for 'nobody got thanked' or 'a portal wasn't announced' reports. On every flavor it records each buff that lands on you, decoded, with whether the add-on tracks and watches it. Off WoW Forever it also records each nearby cast and revive the add-on tracks the same way, and counts every other spell cast by spell id at the end. For 'a Buff Key keeps casting the same buff' reports, it records every cast of a spell the Buff Window offers."
+	.. "Best for 'nobody got thanked' or 'a portal wasn't announced' reports. On every flavor it records each buff that lands on you, decoded, with whether the add-on tracks and watches it. Off WoW Forever it also records each nearby cast and revive the add-on tracks the same way, and counts every other spell cast by spell id at the end. For 'a Buff Key keeps casting the same buff' reports, it records every cast of a spell Buff Duty offers."
 	.. " "
 	.. "Best for 'the page never fills in', 'a macro doesn't update' or 'the glow is wrong' reports."
 
 --[[
-    The spells the add-on gates on, for Connoisseur Context's spell knowledge
+    The spells the add-on gates on, for Consumable Macros Context's spell knowledge
     lines. A spell this client's data folder doesn't carry has a nil id and
     gets no line.
 ]]
@@ -816,16 +823,17 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_SPELLS, {
 	{ ns.DRUID_BEAR_FORM_SPELL_ID, "Bear Form" },
 	{ ns.DRUID_DIRE_BEAR_FORM_SPELL_ID, "Dire Bear Form" },
 	{ ns.DRUID_CAT_FORM_SPELL_ID, "Cat Form" },
+	{ ns.GOBLIN_ENGINEER_SPELL_ID, "Goblin Engineer" },
 })
 
 --[[
     Existence/value reads only (same read-only contract as the API checks). The
     probe for "my macro does nothing" reports: every reason a macro can sit
     still, each with its current value -- a switch off, combat or the Macro
-    window holding writes back, a full macro book, a class, race, level or
-    target gate, a spell not known, a pet diet the add-on can't read, an item
-    not loaded -- then what the last scan picked and the spells the add-on
-    gates on. Restocker Context covers the Restocker and the Inventory Report,
+    window holding writes back, a full macro book, a body at the length cap, a
+    class, race, level, group or target gate, a scroll buff already covered, a
+    spell not known, a pet diet the add-on can't read, an item not loaded --
+    then what the last scan picked and the spells the add-on gates on. Restocker Context covers the Restocker and the Inventory Report,
     Readiness Report the ready check, and Display Context the mini-map button.
 ]]
 
@@ -855,6 +863,17 @@ local function ItemText(itemID)
 	end
 	local name = C_Item.GetItemInfo(itemID)
 	return string.format("%d (%s)", itemID, name or "name not loaded")
+end
+
+-- An aura expiration as the buff snapshot keeps it: nil absent, 0 no duration.
+local function ExpirationText(expiration)
+	if expiration == nil then
+		return "off"
+	end
+	if expiration == 0 then
+		return "on, no duration"
+	end
+	return string.format("on, %.0f s left", expiration - GetTime())
 end
 
 local function AppendCharacter(lines)
@@ -897,6 +916,9 @@ local function AppendCharacter(lines)
 	-- Until the login setup runs, every flag above reads "no" and no macro knows its spells.
 	lines[#lines + 1] = string.format("Character setup run: %s", YesNo(ns.spellCache ~= nil))
 
+	-- The Party, Raid and Solo modes of every when-to-use dropdown read these (ns.IsModeActive).
+	lines[#lines + 1] = string.format("In group: %s // In raid: %s", YesNo(IsInGroup()), YesNo(IsInRaid()))
+
 	-- Zone-locked and arena-only items read the cached map and the instance type.
 	lines[#lines + 1] = string.format(
 		"Map: %s // Cached map: %s // Instance: %s // Resting: %s",
@@ -921,12 +943,24 @@ local function AppendCharacter(lines)
 	    collapsed header keeps its last reading.
 	]]
 	local byID = C_SkillInfo and C_SkillInfo.GetSkillLineInfoByID
+	local readBy = "by ID"
+	if not byID then
+		local collapsed = false
+		for index = 1, ns.GetNumSkillLines() or 0 do
+			local _, isHeader, isExpanded = ns.GetSkillLineInfo(index)
+			if isHeader and not isExpanded then
+				collapsed = true
+				break
+			end
+		end
+		readBy = "from the skill list by name, a header collapsed: " .. YesNo(collapsed)
+	end
 	lines[#lines + 1] = string.format(
 		"Skills: First Aid %s // Alchemy %s // Engineering %s // read %s",
 		tostring(ns.currentFirstAidSkill),
 		tostring(ns.currentAlchemySkill),
 		tostring(ns.currentEngineeringSkill),
-		byID and "by ID" or "from the skill list by name"
+		readBy
 	)
 end
 
@@ -993,13 +1027,22 @@ local function AppendMacroWriting(lines)
 		nameTexts,
 		tostring(firstName and firstName:GetAlpha())
 	)
+	-- The same room test ns.TryCreateMacro makes before it creates a macro (Writer.lua).
+	local generalUsed = GetNumMacros() or 0
+	local generalCap = MAX_ACCOUNT_MACROS or 120
 	lines[#lines + 1] = string.format(
-		"General macros: %d of %d used, %d kept free (a full book stops new macros)",
-		GetNumMacros() or 0,
-		MAX_ACCOUNT_MACROS or 120,
-		ns.MACRO_SLOT_CUSHION
+		"General macros: %d of %d used, %d kept free // room for a new macro: %s (a full book stops new macros)",
+		generalUsed,
+		generalCap,
+		ns.MACRO_SLOT_CUSHION,
+		YesNo((generalCap - generalUsed) > ns.MACRO_SLOT_CUSHION)
 	)
 
+	--[[
+	    A body at the length cap has shed its optional lines (Body-Builder.lua's
+	    trim), and the items a body uses show whether it still matches the
+	    last scan's picks below.
+	]]
 	local typeNames = {}
 	for typeName in pairs(ns.MACRO_CONFIG) do
 		typeNames[#typeNames + 1] = typeName
@@ -1009,7 +1052,20 @@ local function AppendMacroWriting(lines)
 		local macroName = ns.MACRO_CONFIG[typeName].macro
 		local state = "NOT WRITTEN"
 		if (GetMacroIndexByName(macroName) or 0) > 0 then
-			state = string.format("written, %d bytes", #(GetMacroBody(macroName) or ""))
+			local body = GetMacroBody(macroName) or ""
+			local itemIDs, seen = {}, {}
+			for itemID in string.gmatch(body, "item:(%d+)") do
+				if not seen[itemID] then
+					seen[itemID] = true
+					itemIDs[#itemIDs + 1] = itemID
+				end
+			end
+			state = string.format(
+				"written, %d of %d bytes, items: %s",
+				#body,
+				ns.MACRO_BODY_MAX_LENGTH,
+				#itemIDs > 0 and table.concat(itemIDs, ", ") or "(none)"
+			)
 		end
 		lines[#lines + 1] = string.format(
 			"[%s] %s: %s, %s%s",
@@ -1019,6 +1075,50 @@ local function AppendMacroWriting(lines)
 			state,
 			CLASS_ONLY_MACROS[typeName] or ""
 		)
+	end
+end
+
+--[[
+    Each ticked scroll type: the best scroll the last scan's bags hold for it,
+    by Scanner-Scrolls.lua's rules (level, class, Ignore List), and the
+    snapshot readings that say whether its buff is already covered -- the
+    scroll's own buff, or a conflicting buff at least as large. While aura
+    data is restricted the snapshot holds its last reading.
+]]
+local function AppendScrollTypes(lines, profile)
+	local snapshot = ns.GetPlayerBuffSnapshot()
+	lines[#lines + 1] = string.format("Well Fed now: %s", ExpirationText(snapshot.wellFedExpiration))
+	if not (profile.useScrolls and profile.scrollTypes) then
+		return
+	end
+	local _, classToken = UnitClass("player")
+	local playerLevel = ns.cachedPlayerLevel or 1
+	local counts = ns.scannedItemCounts or {}
+	for _, scrollType in ipairs(ns.SCROLL_CHECK_ORDER) do
+		local data = ns.SCROLL_DATA[scrollType]
+		if profile.scrollTypes[scrollType] and data then
+			local bestID, bestAmount
+			for _, entry in ipairs(data.items) do
+				if
+					entry[3] <= playerLevel
+					and (entry[5] == nil or entry[5] == classToken)
+					and not ns.IsIgnored(entry[1])
+					and (counts[entry[1]] or 0) > 0
+				then
+					bestID, bestAmount = entry[1], entry[4]
+					break
+				end
+			end
+			local aura = snapshot.scrolls[scrollType] or {}
+			lines[#lines + 1] = string.format(
+				"  %s: best scroll in bags %s, amount %s // its buff %s // largest conflicting buff %s",
+				tostring(scrollType),
+				ItemText(bestID),
+				tostring(bestAmount),
+				ExpirationText(aura.expiration),
+				tostring(aura.conflictAmount)
+			)
+		end
 	end
 end
 
@@ -1067,6 +1167,7 @@ local function AppendChoices(lines)
 		EnabledKeys(profile.scrollTypes),
 		(ns.scrollOverrideIDs and #ns.scrollOverrideIDs > 0) and table.concat(ns.scrollOverrideIDs, ", ") or "(none)"
 	)
+	AppendScrollTypes(lines, profile)
 	-- Tracked means every gate passes: the switch, its mode, the level the food needs, and a live pet of any class.
 	lines[#lines + 1] = string.format(
 		"Pet buff food: %s (%s) // types: %s // tracked now: %s // picked now: %s",
@@ -1103,6 +1204,26 @@ local function AppendChoices(lines)
 		tostring(profile.itemCacheFolder),
 		tostring(ns.Version),
 		tostring(ns.DATA_FOLDER)
+	)
+
+	--[[
+	    A consumable in the last scan's bags with no cached record waits on
+	    the server's item info: it competes in no macro until that arrives
+	    (Scanner-Inventory.lua, Item-Cache.lua).
+	]]
+	local waiting = {}
+	local itemCache = profile.itemCache or {}
+	for itemID in pairs(ns.scannedItemCounts or {}) do
+		local isScroll = ns.SCROLL_ITEM_LOOKUP and ns.SCROLL_ITEM_LOOKUP[itemID]
+		if not isScroll and ns.HasRawData(itemID) and type(itemCache[itemID]) ~= "table" then
+			waiting[#waiting + 1] = itemID
+		end
+	end
+	table.sort(waiting)
+	lines[#lines + 1] = string.format(
+		"Bag consumables waiting on item info: %d%s",
+		#waiting,
+		#waiting > 0 and (" (" .. table.concat(waiting, ", ") .. ")") or ""
 	)
 end
 
@@ -1153,6 +1274,69 @@ local function PetDietText()
 	return #parts > 0 and table.concat(parts, ", ") or "(none)"
 end
 
+--[[
+    Each pet food in the last scan's bags and the rule it meets in Feed Pet's
+    pick (Tools-Hunters-Pet-Food.lua): the Ignore List, the pet's diet, more
+    than 10 levels under the pet, or an objective of a quest in the log.
+]]
+local function AppendPetFoods(lines)
+	if not (ns.isHunter and UnitExists("pet")) then
+		return
+	end
+	local petLevel = UnitLevel("pet") or 0
+	local ok, diets = pcall(ns.GetPetFoodTypes)
+	local dietSet = {}
+	for _, diet in ipairs(ok and diets or {}) do
+		local dietID = ns.PET_DIET_MAP[diet]
+		if dietID then
+			dietSet[dietID] = true
+		end
+	end
+	local questSet = {}
+	for index = 1, ns.GetNumQuestLogEntries() or 0 do
+		local questID = ns.GetQuestLogQuestID(index)
+		if questID then
+			questSet[questID] = true
+		end
+	end
+	local foodIDs = {}
+	for itemID in pairs(ns.scannedItemCounts or {}) do
+		if ns.PET_FOOD_DATA[itemID] then
+			foodIDs[#foodIDs + 1] = itemID
+		end
+	end
+	table.sort(foodIDs)
+	if #foodIDs == 0 then
+		lines[#lines + 1] = "Pet foods in bags: (none)"
+		return
+	end
+	for _, itemID in ipairs(foodIDs) do
+		local foodLevel, foodDiet, _, questIDs = unpack(ns.PET_FOOD_DATA[itemID])
+		local held = false
+		for _, questID in ipairs(questIDs or {}) do
+			if questSet[questID] then
+				held = true
+			end
+		end
+		local verdict
+		if ns.IsIgnored(itemID) then
+			verdict = "on the Ignore List"
+		elseif not dietSet[foodDiet] then
+			verdict = "not in the pet's diet"
+		elseif petLevel - foodLevel > 10 then
+			verdict = "more than 10 levels under the pet"
+		elseif held then
+			verdict = "kept for a quest in the log"
+		elseif foodLevel > petLevel then
+			verdict = "above the pet's level (used only when nothing fits)"
+		else
+			verdict = "fits"
+		end
+		lines[#lines + 1] =
+			string.format("Pet food in bags: %s, level %s: %s", ItemText(itemID), tostring(foodLevel), verdict)
+	end
+end
+
 local function AppendClassAndRace(lines)
 	local profile = ns.db and ns.db.profile
 	if not profile then
@@ -1188,11 +1372,28 @@ local function AppendClassAndRace(lines)
 	-- A buff-food pick takes Cannibalize's place in the eating macro (Tools-Forsaken.lua).
 	local foodPick = ns.bestSelection and ns.bestSelection.Food
 	lines[#lines + 1] = string.format("Food pick is buff food: %s", YesNo(foodPick and foodPick.isBuffFood))
+	-- The macros write /dmh lines only while DruidMacroHelper is loaded (Integration-Druid-Macro-Helper.lua).
 	lines[#lines + 1] = string.format(
-		"Druid Macro Helper: %s // return form: %s // /dmh command present: %s",
+		"Druid Macro Helper: %s // return form: %s // DruidMacroHelper loaded: %s // /dmh command present: %s",
 		OnOff(profile.enableDruidMacroHelper),
 		tostring(profile.druidReturnForm),
+		YesNo(C_AddOns.IsAddOnLoaded("DruidMacroHelper")),
 		YesNo(SlashCommandExists("/dmh"))
+	)
+	-- Best form first, as the integration picks it; with none known the standard body is written.
+	local formSpellIDs = profile.druidReturnForm == "cat" and { ns.DRUID_CAT_FORM_SPELL_ID }
+		or { ns.DRUID_DIRE_BEAR_FORM_SPELL_ID, ns.DRUID_BEAR_FORM_SPELL_ID }
+	local returnFormName
+	for _, spellID in ipairs(formSpellIDs) do
+		if ns.KnowsAny({ { spellID } }) then
+			returnFormName = C_Spell.GetSpellName(spellID)
+			break
+		end
+	end
+	lines[#lines + 1] = string.format(
+		"Druid Macro Helper wraps: %s (Druids only) // return form known: %s",
+		EnabledKeys(ns.DRUID_MACRO_HELPER_TYPES),
+		tostring(returnFormName)
 	)
 	lines[#lines + 1] = string.format(
 		"Pet: out %s, dead %s // dead-pet flag: %s // spells named: Call %s, Feed %s, Mend %s, Revive %s, Dismiss %s",
@@ -1214,6 +1415,15 @@ local function AppendClassAndRace(lines)
 	)
 	lines[#lines + 1] = "Pet diets: " .. PetDietText()
 	lines[#lines + 1] = "Feed Pet pick: " .. ItemText(ns.bestPetFoodID)
+	-- Feed Pet's shape by the pet spells known (Tools-Hunters.lua): A has no food line at all.
+	local feedPetTier = "C (every pet spell)"
+	if not (ns.feedPetSpellName and ns.revivePetSpellName and ns.callPetSpellName and ns.dismissPetSpellName) then
+		feedPetTier = "A (a Feed, Revive, Call or Dismiss Pet not known: tip only, no food)"
+	elseif not ns.mendPetSpellName then
+		feedPetTier = "B (no Mend Pet)"
+	end
+	lines[#lines + 1] = string.format("Feed Pet tier: %s (Hunters only)", feedPetTier)
+	AppendPetFoods(lines)
 	lines[#lines + 1] = string.format(
 		"Poisons known: %s // main hand: %s -> %s // off hand: %s -> %s",
 		YesNo(ns.POISONS_SPELL_ID and (ns.IsSpellKnown(ns.POISONS_SPELL_ID) or ns.IsPlayerSpell(ns.POISONS_SPELL_ID))),
@@ -1347,9 +1557,11 @@ end
     The "why did it pick that?" read-out. For every category that goes through
     the scanner's ranking ladder, prints the winner and the runners-up it beat,
     each tagged with the RANKING_PRIORITY field that decided the pair (see
-    Features/Macros-for-Consumables/Scanner-Ranking.lua). Reads only what the last scan left behind;
+    Features/Macros-for-Consumables/Scanner/Scanner-Ranking.lua). Reads only what the last scan left behind;
     it never rescans, so the report can never disagree with the macros the
-    player is actually looking at.
+    player is actually looking at. Then every consumable in that scan's bags
+    with the usability gate it meets, read from its cached record against the
+    level, skills and map the scan reads.
 ]]
 
 local function DescribeItem(itemID)
@@ -1396,6 +1608,106 @@ local function AppendCategoryLines(lines, typeName, entry, candidates)
 	end
 end
 
+--[[
+    The first usability gate a cached record fails, in the scan's order
+    (Scanner-Inventory.lua), or nil when it passes them all.
+]]
+local function FailedGate(data, inArena)
+	local playerLevel = ns.cachedPlayerLevel or 1
+	if data.requiredLevel > playerLevel then
+		return string.format("needs level %d (cached level %d)", data.requiredLevel, playerLevel)
+	end
+	local skills = {
+		{ "First Aid", data.requiredFirstAid, ns.currentFirstAidSkill },
+		{ "Alchemy", data.requiredAlchemy, ns.currentAlchemySkill },
+		{ "Engineering", data.requiredEngineering, ns.currentEngineeringSkill },
+	}
+	for _, skill in ipairs(skills) do
+		local required, current = skill[2] or 0, skill[3] or 0
+		if required > 0 and required > current then
+			return string.format("needs %s %d (read as %d)", skill[1], required, current)
+		end
+	end
+	local spellID = data.requiredSpellID
+	if spellID and not (ns.IsSpellKnown(spellID) or ns.IsPlayerSpell(spellID)) then
+		return string.format("needs spell %d, not known", spellID)
+	end
+	if data.zones and not (ns.cachedMapID ~= nil and data.zones[ns.cachedMapID] == true) then
+		return string.format("zone-locked, not usable on cached map %s", tostring(ns.cachedMapID))
+	end
+	if data.arenaOnly and not inArena then
+		return "arena only"
+	end
+	if inArena then
+		local itemType = data.itemType
+		local isFoodOrWater = itemType == "food" or itemType == "water" or itemType == "foodwater"
+		if itemType == "potion" or (isFoodOrWater and not data.arenaUsable) then
+			return "blocked in an arena"
+		end
+	end
+	return nil
+end
+
+--[[
+    A consumable with no cached record waits on the server's item info and
+    competes nowhere; one that passes every gate names each macro that took it,
+    and each that turned it away (buff food held back, runes not added, no heal
+    value). An ignored item competes nowhere and only counts as carried, for
+    the Readiness Report.
+]]
+local function AppendBagGates(lines)
+	local itemCache = ns.db and ns.db.profile.itemCache or {}
+	local inArena = select(2, IsInInstance()) == "arena"
+	local itemIDs = {}
+	for itemID in pairs(ns.scannedItemCounts or {}) do
+		if not (ns.SCROLL_ITEM_LOOKUP and ns.SCROLL_ITEM_LOOKUP[itemID]) and ns.HasRawData(itemID) then
+			itemIDs[#itemIDs + 1] = itemID
+		end
+	end
+	table.sort(itemIDs)
+	if #itemIDs == 0 then
+		lines[#lines + 1] = "(no consumables in the last scan's bags)"
+		return
+	end
+	for _, itemID in ipairs(itemIDs) do
+		local data = itemCache[itemID]
+		local verdict
+		if type(data) ~= "table" or data.itemID == nil then
+			verdict = "no current cached record (waits on item info, competes in nothing)"
+		else
+			local failed = FailedGate(data, inArena)
+			local ignored = ns.IsIgnored(itemID)
+			if failed then
+				verdict = failed .. (ignored and " // on the Ignore List" or "")
+			else
+				local took, refused = {}, {}
+				for _, definition in ipairs(ns.REGISTERED_MACRO_DEFINITIONS or {}) do
+					if definition.itemTypes and definition.itemTypes[data.itemType] then
+						if not definition.accepts or definition.accepts(data) then
+							took[#took + 1] = definition.typeName
+						else
+							refused[#refused + 1] = definition.typeName
+						end
+					end
+				end
+				verdict = string.format(
+					"%s %s%s",
+					ignored and "usable but on the Ignore List, counts as carried for" or "usable, competes in",
+					#took > 0 and table.concat(took, ", ") or "(none)",
+					#refused > 0 and (" // turned away by " .. table.concat(refused, ", ")) or ""
+				)
+			end
+		end
+		lines[#lines + 1] = string.format(
+			"%s x%d [%s]: %s",
+			DescribeItem(itemID),
+			ns.scannedItemCounts[itemID] or 0,
+			type(data) == "table" and tostring(data.itemType) or "?",
+			verdict
+		)
+	end
+end
+
 function ns:BuildSelectionReport()
 	local lines = { GetClientHeader(), "" }
 
@@ -1404,6 +1716,13 @@ function ns:BuildSelectionReport()
 
 	if next(selection or {}) == nil then
 		lines[#lines + 1] = "No scan has completed yet. Trigger one by looting an item or changing zone."
+		-- What holds every scan back (Engine.lua's ns.UpdateMacros, and the login setup before it).
+		lines[#lines + 1] = string.format(
+			"In combat lockdown: %s // Macro window open: %s // Character setup run: %s",
+			YesNo(InCombatLockdown()),
+			YesNo(MacroFrame and MacroFrame:IsShown()),
+			YesNo(ns.spellCache ~= nil)
+		)
 		return table.concat(lines, "\n")
 	end
 
@@ -1423,6 +1742,7 @@ function ns:BuildSelectionReport()
 	lines[#lines + 1] = string.format("allowBuffFood (live scan preference): %s", tostring(ns.allowBuffFood))
 	lines[#lines + 1] = string.format("allowConjuredFirst (live scan preference): %s", tostring(ns.allowConjuredFirst))
 	lines[#lines + 1] = string.format("allowRestockLast (live scan preference): %s", tostring(ns.allowRestockLast))
+	lines[#lines + 1] = string.format("Runners-up kept (these tools on): %s", YesNo(ns.diagnostics.enabled))
 	if not retained then
 		lines[#lines + 1] = ""
 		lines[#lines + 1] =
@@ -1464,6 +1784,10 @@ function ns:BuildSelectionReport()
 		end
 		lines[#lines + 1] = string.format("Feed Pet current pick: %s", DescribeItem(ns.bestPetFoodID))
 	end
+
+	lines[#lines + 1] = ""
+	lines[#lines + 1] = "-- Bag consumables and the gate each one meets --"
+	AppendBagGates(lines)
 
 	return table.concat(lines, "\n")
 end
@@ -1515,8 +1839,17 @@ function ns:BuildReadinessDiagnosticReport()
 	end
 
 	lines[#lines + 1] = string.format("Report enabled: %s", tostring(reports.readinessReportEnabled))
+	-- An arena drops the buff, expiring and missing-item clauses, and an arena or battleground the PvP entry.
 	lines[#lines + 1] = string.format("Instance type: %s", tostring(select(2, IsInInstance())))
-	lines[#lines + 1] = string.format("In group: %s", tostring(IsInGroup()))
+	-- A ready check can only start in a group, so solo the report never runs.
+	lines[#lines + 1] = string.format(
+		"In group: %s // In raid: %s // Members: %d",
+		tostring(IsInGroup()),
+		tostring(IsInRaid()),
+		GetNumGroupMembers() or 0
+	)
+	-- While aura data is restricted (Forever, mid-fight) a ready check prints nothing at all.
+	lines[#lines + 1] = string.format("Aura data restricted now: %s", tostring(ns.AreAurasSecret()))
 
 	lines[#lines + 1] = ""
 	lines[#lines + 1] = "-- What it would print now --"
@@ -1547,7 +1880,54 @@ function ns:BuildReadinessDiagnosticReport()
 		local profile = ns.db.profile
 		local okGates, gates = pcall(function()
 			local mainHandMissing, offHandMissing = ns.GetMissingWeaponBuffs()
+			local gemsCarried = 0
+			for gemID in pairs(ns.MANA_GEMS) do
+				gemsCarried = gemsCarried + (ns.scannedItemCounts[gemID] or 0)
+			end
+			local snapshot = ns.GetPlayerBuffSnapshot()
+			-- A ticked type counts as covered by its own scroll buff or by any conflicting buff.
+			local scrollCoverage = {}
+			for scrollType, enabled in pairs(profile.scrollTypes or {}) do
+				if enabled then
+					local entry = snapshot.scrolls[scrollType]
+					scrollCoverage[#scrollCoverage + 1] = string.format(
+						"%s %s",
+						tostring(scrollType),
+						YesNo(entry and (entry.expiration or entry.conflictAmount))
+					)
+				end
+			end
+			table.sort(scrollCoverage)
+			-- What each item line reads from the last scan: an ignored item counts as carried.
+			local function Carried(typeName)
+				local entry = ns.bestSelection and ns.bestSelection[typeName]
+				if not entry then
+					return "not scanned"
+				end
+				if entry.id then
+					return tostring(entry.id)
+				end
+				return ns.scannedIgnoredTypes[typeName] and "only ignored ones" or "none"
+			end
+			local lowestPercent, lowestSlot
+			for slot = 1, 19 do
+				local current, maximum = GetInventoryItemDurability(slot)
+				if current and maximum and maximum > 0 then
+					local percent = current / maximum * 100
+					if not lowestPercent or percent < lowestPercent then
+						lowestPercent, lowestSlot = percent, slot
+					end
+				end
+			end
 			return {
+				-- The report's own checks: each switch together with every gate the report puts on it.
+				string.format(
+					"Asked at all: Well Fed %s, Scrolls %s, Soulstone %s, Mana Gem %s",
+					YesNo(ns.ReadinessAsksWellFed(profile, reports)),
+					YesNo(ns.ReadinessAsksScrolls(profile, reports)),
+					YesNo(ns.ReadinessAsksSoulstone(reports)),
+					YesNo(ns.ReadinessAsksManaGem(reports))
+				),
 				string.format(
 					"Well Fed: buff food %s, mode active %s // Scrolls: %s, mode active %s",
 					OnOff(profile.useBuffFood),
@@ -1555,10 +1935,22 @@ function ns:BuildReadinessDiagnosticReport()
 					OnOff(profile.useScrolls),
 					YesNo(ns.IsModeActive(profile.scrollsMode))
 				),
+				-- Any Well Fed aura or pet food buff counts, however little of it is left.
 				string.format(
-					"Flask: TBC or later %s, has one %s // Pet Well Fed: tracked %s",
+					"Well Fed now: %s // pet food buff now: %s // scroll types covered: %s // scrolls in bags to use: %s",
+					ExpirationText(snapshot.wellFedExpiration),
+					ExpirationText(ns.GetPetFoodBuffExpiration()),
+					#scrollCoverage > 0 and table.concat(scrollCoverage, ", ") or "(none ticked)",
+					(ns.scrollOverrideIDs and #ns.scrollOverrideIDs > 0) and table.concat(ns.scrollOverrideIDs, ", ")
+						or "(none)"
+				),
+				-- An empty flask or elixir table reads as covered, so the Flask line stays silent.
+				string.format(
+					"Flask: TBC or later %s, has one %s, flask ids %d, elixir ids %d // Pet Well Fed: tracked %s",
 					YesNo(ns.EXPANSION >= 2),
 					YesNo(ns.HasFlaskOrElixirs()),
+					CountKeys(ns.FLASK_BUFF_IDS),
+					CountKeys(ns.ELIXIR_BUFF_IDS),
 					YesNo(ns.ShouldTrackPetFood())
 				),
 				string.format(
@@ -1569,10 +1961,10 @@ function ns:BuildReadinessDiagnosticReport()
 					YesNo(ns.SoulstonesOnCooldown())
 				),
 				string.format(
-					"Weapon buffs missing: main hand %s, off hand %s // Shaman in group (covers the main hand) %s",
+					"Weapon buffs missing: main hand %s, off hand %s // Shaman in party (covers the main hand) %s",
 					YesNo(mainHandMissing),
 					YesNo(offHandMissing),
-					YesNo(ns.GroupHasClass("SHAMAN"))
+					YesNo(ns.PartyHasClass("SHAMAN"))
 				),
 				string.format(
 					"Warlock in group (Healthstone) %s // knows Conjure Mana Gem %s // uses mana %s // talent tabs %s",
@@ -1582,9 +1974,37 @@ function ns:BuildReadinessDiagnosticReport()
 					tostring(ns.GetNumTalentTabs and ns.GetNumTalentTabs())
 				),
 				string.format(
-					"Bags scanned: %s // categories with an ignored item: %s",
+					"Bags scanned: %s // categories with an ignored item: %s // Mana Gems carried: %d",
 					YesNo(next(ns.bestSelection or {}) ~= nil),
-					EnabledKeys(ns.scannedIgnoredTypes)
+					EnabledKeys(ns.scannedIgnoredTypes),
+					gemsCarried
+				),
+				string.format(
+					"Carried at the last scan: Healthstone %s, Health Potion %s, Mana Potion %s, Bandage %s",
+					Carried("Healthstone"),
+					Carried("Health Potion"),
+					Carried("Mana Potion"),
+					Carried("Bandage")
+				),
+				-- Expiring skips an aura whose whole duration fits inside the window.
+				string.format(
+					"Buffs inside the expiring window now: %d // lowest durability now: %s // slots under the threshold: %d",
+					#ns.GetExpiringBuffs(reports.readinessExpiringThreshold or 0),
+					lowestPercent and string.format("%.0f%% (slot %d)", lowestPercent, lowestSlot)
+						or "(nothing damageable)",
+					#ns.GetDamagedGear(reports.readinessDurabilityThreshold or 0)
+				),
+				string.format(
+					"Non-combat gear worn now: %d // item ids on the non-combat list: %d",
+					#ns.GetQuestionableEquipment(),
+					CountKeys(ns.QUESTIONABLE_EQUIPMENT)
+				),
+				-- The spec reads nil until the talent data loads and the points nil when none are unspent; the line drops a nil.
+				string.format(
+					"Spec: %s // unspent talent points: %s // PvP flagged: %s",
+					tostring(ns.GetCurrentSpecializationLabel()),
+					tostring(ns.GetUnspentTalentPoints()),
+					YesNo(ns.IsPvPFlagged())
 				),
 			}
 		end)
@@ -1651,7 +2071,7 @@ local function SortedKeys(tbl)
 end
 
 --[[
-    Every record Connoisseur shows or matches by the name this client gives it,
+    Every record Consumable Macros shows or matches by the name this client gives it,
     for the Localization tab's Game Names report, each read through the call
     its feature makes. A record this client's folder doesn't carry has a nil id
     and gets no row. Spells and items load late, so their rows add request,
@@ -1736,10 +2156,13 @@ for _, constant in ipairs({ "ALCHEMY_SKILL_LINE_ID", "ENGINEERING_SKILL_LINE_ID"
 end
 
 -- The Class & Race panel's headers.
-AddLookup("NIGHT_ELF_RACE_ID", "race", ns.NIGHT_ELF_RACE_ID, function()
-	local info = C_CreatureInfo.GetRaceInfo(ns.NIGHT_ELF_RACE_ID)
-	return info and info.raceName
-end)
+for _, constant in ipairs({ "NIGHT_ELF_RACE_ID", "UNDEAD_RACE_ID" }) do
+	local raceID = ns[constant]
+	AddLookup(constant, "race", raceID, function()
+		local info = C_CreatureInfo.GetRaceInfo(raceID)
+		return info and info.raceName
+	end)
+end
 for _, classToken in ipairs({ "DRUID", "ROGUE" }) do
 	AddLookup("LOCALIZED_CLASS_NAMES_MALE." .. classToken, "class", classToken, function()
 		return LOCALIZED_CLASS_NAMES_MALE[classToken]
@@ -1797,12 +2220,23 @@ for chainIndex, chain in ipairs(ns.CONSUMABLE_UPGRADE_CHAINS or {}) do
 end
 AddItemLookup("SAMPLE_RESTOCK_ITEM_ID", ns.SAMPLE_RESTOCK_ITEM_ID)
 
+-- The Readiness Report Example's non-combat gear: the lowest item id on the list.
+local firstQuestionableID
+for itemID in pairs(ns.QUESTIONABLE_EQUIPMENT or {}) do
+	if not firstQuestionableID or itemID < firstQuestionableID then
+		firstQuestionableID = itemID
+	end
+end
+AddItemLookup(string.format("QUESTIONABLE_EQUIPMENT[%s]", tostring(firstQuestionableID)), firstQuestionableID)
+
 --[[
     Blizzard UI labels the add-on shows (the weapon slots, the scroll stats, the
-    pop-up buttons) and the error texts its handlers match a UI_ERROR_MESSAGE
-    against, and UNKNOWNOBJECT, which marks a character name not yet known.
+    pop-up buttons, the macro tab the macros-ready message names) and the error
+    texts its handlers match a UI_ERROR_MESSAGE against, and UNKNOWNOBJECT,
+    which marks a character name not yet known.
 ]]
 for _, constant in ipairs({
+	"GENERAL_MACROS",
 	"MAINHANDSLOT",
 	"SECONDARYHANDSLOT",
 	"SPELL_STAT1_NAME",
@@ -1973,7 +2407,9 @@ ns.DIAGNOSTIC_ITEM_ID_CONSTANTS = {
 
 --[[
     The IDs no lookup kind reads: Game Names checks the skill lines' and the
-    race's names instead, and the Call Pet flyout's is counted only.
+    races' names instead, the Call Pet flyout's is counted only, and
+    SOD_FIRST_SPELL_ID is a threshold, the lowest spell ID the season's
+    abilities use, not one spell.
 ]]
 ns.DIAGNOSTIC_OTHER_ID_CONSTANTS = {
 	"ALCHEMY_SKILL_LINE_ID",
@@ -1981,6 +2417,8 @@ ns.DIAGNOSTIC_OTHER_ID_CONSTANTS = {
 	"ENGINEERING_SKILL_LINE_ID",
 	"FIRST_AID_SKILL_LINE_ID",
 	"NIGHT_ELF_RACE_ID",
+	"SOD_FIRST_SPELL_ID",
+	"UNDEAD_RACE_ID",
 }
 
 local CollectConstants = Collector(function(names, add)

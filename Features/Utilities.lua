@@ -2,11 +2,12 @@ local _, ns = ...
 
 --[[
     Utilities -- stateless, cross-cutting helpers used by multiple files: the
-    color accessor, cross-client API shims, and the secret-value checks. No
+    color accessor, cross-client API shims, the secret-value checks, and the
+    spell link, GUID, unit and buff-duration helpers several features share. No
     module state beyond the hidden tooltip Era and TBC read tooltip text
     through; the one saved-data read is ns.GetClassesByProfileName's, of
-    ns.db.global.inventory. Each feature's own helpers live beside it, in
-    Features/<Feature>/<Feature>-Utilities.lua.
+    ns.db.global.inventory. A feature's own helpers live in its folder, in
+    a <Feature>-Utilities.lua where it has one.
 ]]
 
 --------------------------------------------------------------------------------
@@ -49,12 +50,30 @@ end
     The same palette as numbers, for the APIs that take components rather than
     an escape string -- SetTextColor, SetColorTexture, SetVertexColor. Derived
     from ns.PALETTE at load rather than written out again, so a palette edit
-    reaches the drawn frames and the coloured text together instead of moving
+    reaches the drawn frames and the colored text together instead of moving
     one and leaving the other behind.
 ]]
 ns.COLORS_RGB = {}
 for key, hex in pairs(ns.PALETTE) do
 	ns.COLORS_RGB[key] = ns.HexToRGB(hex)
+end
+
+--[[
+    A line in the middle of the screen, where the game puts its own "can't do
+    that" messages: ns.ShowUIError in OFF red for something refused, and
+    ns.ShowUINotice in TITLE gold for a plain status.
+]]
+local function ShowUIMessage(text, key)
+	local color = ns.COLORS_RGB[key]
+	UIErrorsFrame:AddMessage(text, color.r, color.g, color.b)
+end
+
+function ns.ShowUIError(text)
+	ShowUIMessage(text, "OFF")
+end
+
+function ns.ShowUINotice(text)
+	ShowUIMessage(text, "TITLE")
 end
 
 --[[
@@ -107,8 +126,8 @@ end
       ns.FetchPurchasedBankTabIDs()  Forever's character bank is the C_Bank
                                      tabs the player bought; nil on Era and
                                      TBC, which have BANK_CONTAINER and bags.
-      ns.GetNumTalentTabs()          The classic talent trees; nil on Forever,
-                                     whose talents are Retail's.
+      ns.GetNumTalentTabs()          The classic talent trees; nil from MoP on,
+                                     whose talents are specializations.
       ns.UnitCharacterPoints(unit)   Unspent talent points; nil on Forever.
       ns.IsSecretValue(value)        Forever's secret values; false elsewhere.
       ns.GetPlayerFullName()         This character's name: the first name and
@@ -155,7 +174,12 @@ else
 	end
 end
 
-if GetNumTalentTabs then
+--[[
+    From MoP on there are no talent trees, only specializations. MoP Classic
+    still has the GetNumTalentTabs global, but calling it raises "API
+    unsupported in this version", so the classic trees count as missing there.
+]]
+if GetNumTalentTabs and ns.EXPANSION < 5 then
 	ns.GetNumTalentTabs = GetNumTalentTabs
 else
 	function ns.GetNumTalentTabs()
@@ -649,10 +673,129 @@ end
 
 --[[
     Stable per-character identity, which the Inventory Report's records, the
-    Diagnostics reports and the two Connoisseur key migrations key on. The
+    Diagnostics reports and the two Consumable Macros key migrations key on. The
     character's whole name, which on Forever is its first name and surname
     (ns.GetPlayerFullName above), then its realm.
 ]]
 function ns.GetCharacterKey()
 	return (ns.GetPlayerFullName() or "Unknown") .. RealmSuffix()
+end
+
+--------------------------------------------------------------------------------
+-- Spell Links
+--------------------------------------------------------------------------------
+
+--[[
+    Chat-safe spell link, built by hand the way Control Freak does. We deliberately
+    do NOT prefer the native GetSpellLink: on Classic it returns a link WITHOUT the
+    trailing ":0" glyph field, which renders fine in a local tooltip or print, but
+    SendChatMessage's hyperlink validator strips a link without it and leaves only
+    the bare spell name. Building "Hspell:<id>:0"
+    ourselves passes that validator and works in both chat and local prints.
+
+    Native is only a last resort, for the rare spell whose name won't resolve (so we
+    can't build the link text ourselves) -- at least it gives something on screen.
+
+    The link's color is ns.SPELL_LINK_COLOR (Data/Data.lua), lowercased as the
+    client writes it, since this string is handed to SendChatMessage's
+    hyperlink validator.
+]]
+local C_SPELL_LINK = ns.SPELL_LINK_COLOR:lower()
+
+function ns.GetSpellLink(spellId)
+	local name = C_Spell.GetSpellName(spellId)
+	if name then
+		return ("|cff" .. C_SPELL_LINK .. "|Hspell:%d:0|h[%s]|h|r"):format(spellId, name)
+	end
+	local link = C_Spell.GetSpellLink(spellId)
+	if link and link ~= "" then
+		return link
+	end
+	return nil
+end
+
+--------------------------------------------------------------------------------
+-- GUID Helpers
+--------------------------------------------------------------------------------
+
+--[[
+    Is this GUID a player character? The client stamps every GUID with its own
+    type -- "Player-<realm>-<hex>" for characters, "Pet-...", "Creature-...",
+    "Vehicle-..." for everything else -- which makes this the authoritative test,
+    independent of the combat log's TYPE_PLAYER flag. It guards the whisper
+    paths: a whisper addressed to a pet bounces back as "No player named 'X' is
+    currently playing", so a pet name must never reach SendChatMessage.
+]]
+function ns.IsPlayerGUID(guid)
+	return type(guid) == "string" and guid:sub(1, 7) == "Player-"
+end
+
+--------------------------------------------------------------------------------
+-- Aura API Compatibility
+--------------------------------------------------------------------------------
+
+--[[
+    Duration of a HELPFUL aura on `unit` for `spellId`, or nil when absent. A live
+    buff can legitimately report 0 (no timer), so callers must nil-check the result,
+    not test it for truthiness. 40 is the aura cap the client exposes.
+]]
+function ns.GetBuffDuration(unit, spellId)
+	for i = 1, 40 do
+		local data = C_UnitAuras.GetBuffDataByIndex(unit, i, "HELPFUL")
+		if not data then
+			return nil
+		end
+		if ns.IsPlain(data.spellId) and data.spellId == spellId then
+			return data.duration or 0
+		end
+	end
+	return nil
+end
+
+--------------------------------------------------------------------------------
+-- Unit Resolution
+--------------------------------------------------------------------------------
+
+--[[
+    A usable emote target must be a live unit token: C_ChatInfo.PerformEmote
+    only directs "you cheer at X" at a real unit, and a combat-log name is not
+    one -- cross-realm sources arrive as "Name-Realm" and never resolve. Map the
+    buffer's GUID to a unit we actually have (the player, a group member, or the
+    current target / focus / mouseover) and return nil when none matches; the
+    emote caller then falls back to the bare name, which still degrades to the
+    undirected emote when the client can't resolve it.
+
+    On Forever a unit's GUID can be secret, and comparing a secret value
+    errors, so a unit whose GUID can't be read simply doesn't match.
+]]
+local POINTED_UNITS = { "target", "focus", "mouseover" }
+
+local function HasGUID(unit, guid)
+	local unitGUID = UnitGUID(unit)
+	return ns.IsPlain(unitGUID) and unitGUID == guid
+end
+
+function ns.GetUnitByGUID(guid)
+	if not ns.IsPlain(guid) or not guid then
+		return nil
+	end
+	if HasGUID("player", guid) then
+		return "player"
+	end
+	local prefix, count = "party", 4
+	if IsInRaid() then
+		prefix, count = "raid", 40
+	end
+	for i = 1, count do
+		local unit = prefix .. i
+		if UnitExists(unit) and HasGUID(unit, guid) then
+			return unit
+		end
+	end
+	for _, unit in ipairs(POINTED_UNITS) do
+		if UnitExists(unit) and HasGUID(unit, guid) then
+			return unit
+		end
+	end
+	return nil
 end

@@ -9,8 +9,8 @@ local _, ns = ...
     One-time upgrade shim. Delete on the first code pass after that date, all
     four pieces together:
       1. this file
-      2. its tagged line in all three flavor TOCs (Good-to-Go_Vanilla.toc,
-         _TBC.toc and _Camelot.toc)
+      2. its tagged line in all four flavor TOCs (Good-to-Go_Vanilla.toc,
+         _TBC.toc, _Camelot.toc and _Mists.toc)
       3. the ns.MoveCharactersOntoOwnProfiles() call in Features/Core.lua
       4. the tagged noDefaultProfiles argument in Options/Options-Profiles.lua,
          and the sentence about it in that file's comment
@@ -19,7 +19,7 @@ local _, ns = ...
 --[[
     Every character has a profile of its own, named as AceDB names the
     character (the maintainer's ruling): scrolls, buff food
-    and the rest of the Macros panel differ from one character to the next.
+    and the rest of the Consumable Macros panel differ from one character to the next.
     Three things a release saved have to be carried into that shape.
 
     Characters on the shared Default profile. Releases before 2026-07-25 put

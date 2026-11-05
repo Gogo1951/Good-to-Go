@@ -41,9 +41,9 @@ function ns.HideTooltip(owner)
 	end
 end
 
--- The heading of the tooltip on the game spellbook's tab: "GtG // Spellbook", gold like a tooltip title.
+-- The heading of the tooltip on the game spellbook's tab: "GtG // Enhanced Spellbook", gold like a tooltip title.
 function ns.SpellbookTabTitle()
-	return ns.GetColor("TITLE") .. ns.L["ADDON_SHORT_NAME"] .. " // " .. ns.L["TAB_SPELLBOOK"] .. "|r"
+	return ns.GetColor("TITLE") .. ns.L["ADDON_SHORT_NAME"] .. " // " .. ns.L["TAB_ENHANCED_SPELLBOOK"] .. "|r"
 end
 
 --[[

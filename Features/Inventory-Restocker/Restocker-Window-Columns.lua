@@ -177,7 +177,7 @@ local AMOUNT_BOX_PAD_X = 14 -- digits to box edge, both sides together
     Starting widths are the English measurement, replaced once the font
     resolves (see ResolveColumns). Cells re-read them on every update (see
     UpdateRestockListRow), and because each cell is anchored to its
-    neighbour's edge rather than to a fixed x, setting a new width is all it
+    neighbor's edge rather than to a fixed x, setting a new width is all it
     takes to reflow the whole chain.
 ]]
 ns.restockColumnWidths = {
@@ -325,7 +325,7 @@ ns.FitRestockButton = FitButton
     construction rather than by matching offsets in two places. The Keep box
     then hangs off the leftmost column.
 
-    Each cell anchors to its neighbour's edge, never to a fixed x. That is what
+    Each cell anchors to its neighbor's edge, never to a fixed x. That is what
     lets a late column measurement reflow the row with nothing but SetWidth calls,
     and what lets the item name -- anchored on both sides -- absorb whatever the
     columns leave.
@@ -357,8 +357,8 @@ local REMOVE_GAP = 6 -- last column to the remove control
 ]]
 --[[
     Every lit control in the window is the palette's TITLE gold and every plain
-    body string its TEXT white. The greys below are not palette roles: they are
-    this window's own UI states, and each says something a palette colour does not.
+    body string its TEXT white. The grays below are not palette roles: they are
+    this window's own UI states, and each says something a palette color does not.
 ]]
 local GOLD = ns.COLORS_RGB.TITLE
 local WHITE = ns.COLORS_RGB.TEXT

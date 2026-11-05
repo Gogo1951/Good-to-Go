@@ -41,7 +41,7 @@ end
 --[[
 	A condition dropdown's menu, for the condition at place in the row: every condition offered, less the one
 	the row's other place holds and the one that can never match beside it, each explaining itself, a condition
-	the macro can't use (ns.ConditionBlockReason) greyed with why. The first dropdown also offers And, a second
+	the macro can't use (ns.ConditionBlockReason) grayed with why. The first dropdown also offers And, a second
 	condition, while the row has one; the second offers dropping itself.
 ]]
 local function OpenConditionMenu(owner, index, place)

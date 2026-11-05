@@ -20,7 +20,7 @@ Last Validated
 	2026-10-16, WoW Forever 1.60.1.70450
 
 Notes
-	- Conjure spell ID to the items it makes, read by GetSmartSpell (Features/Macros/Smart-Spell.lua) when it is called with checkUnique. Conjured stones are unique in bags, so a rank whose item the player already holds is skipped and the macro conjures the next rank down instead of failing on a duplicate.
+	- Conjure spell ID to the items it makes, read by GetSmartSpell (Features/Macros-for-Consumables/Macros/Smart-Spell.lua) when it is called with checkUnique. Conjured stones are unique in bags, so a rank whose item the player already holds is skipped and the macro conjures the next rank down instead of failing on a duplicate.
 	- Each Create Healthstone rank and each Mana Gem spell makes exactly one item: WoW Forever has no Improved Healthstone talent, whose ranks made two stronger copies of each stone elsewhere.
 	- Soulstones have no rows here on purpose: they share a 30-minute use cooldown that matches the buff duration, so only one stone can ever be deployed at a time, and conjuring a lower rank while holding the best one would just waste a soul shard. The Soulstone resolver runs with checkUnique off and always offers the best known conjure.
 

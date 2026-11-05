@@ -104,8 +104,8 @@ local function RestockFromBank()
 	return false
 end
 
--- The finished run's line itself; the options panel's Example draws through it too.
-function ns.BuildBankRestockCompleteLine()
+-- The finished run's line itself.
+local function BuildBankRestockCompleteLine()
 	return string.format(
 		L["RESTOCKER_COMPLETE"],
 		GetColor("INFO") .. L["RESTOCKER_COMMAND"] .. "|r" .. GetColor("TEXT")
@@ -121,7 +121,7 @@ local function CompletionMessage()
 	if not restockState.movedAny then
 		return nil
 	end
-	return ns.BuildBankRestockCompleteLine()
+	return BuildBankRestockCompleteLine()
 end
 
 local function FinishRestocking(message)

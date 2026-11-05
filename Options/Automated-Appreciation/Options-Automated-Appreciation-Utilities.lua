@@ -3,22 +3,11 @@ local Data = ns.Data
 local L = ns.L
 
 local GetSpellName = C_Spell.GetSpellName
-local GetSpellDescription = C_Spell.GetSpellDescription
 local GetSpellTexture = C_Spell.GetSpellTexture
 
 --------------------------------------------------------------------------------
 -- Shared Options Helpers
 --------------------------------------------------------------------------------
-
---[[
-    The title drawn at the top of a sub-panel: "Teammate Buffs > Tracked
-    Abilities", so it is always clear where you are. Only the title carries the
-    parent; the settings tree already shows it by nesting, and the tree label is
-    the plain name passed to AddToBlizOptions.
-]]
-function ns.SubPanelTitle(parentName, name)
-	return parentName .. " > " .. name
-end
 
 --[[
     Always seconds. FormatDuration switches to minutes above 60 and rounds, which
@@ -81,17 +70,19 @@ function ns.DefineSecondsSelect(settings, key, order, desc)
 	}
 end
 
--- The player every buff panel's Example lines credit: a mage, for the Arcane Intellect and portals they name.
+-- The player a buff panel's Example lines credit unless it names another: a mage, for the Arcane Intellect and portals they name.
 local SAMPLE_CLASS = "MAGE"
 
 --[[
     The Example line under a buff panel's print toggle, hidden with it. build
     gets the sample player's class and name and returns the message body, made
-    by the same builder the real print uses.
+    by the same builder the real print uses. sampleClass names the caster for
+    a panel whose sample spell isn't a mage's.
 ]]
-function ns.DefinePrintExample(settings, order, build)
+function ns.DefinePrintExample(settings, order, build, sampleClass)
+	local class = sampleClass or SAMPLE_CLASS
 	return ns.OptionsExample(order, function()
-		return { build(SAMPLE_CLASS, ns.SAMPLE_NAMES[SAMPLE_CLASS]) }
+		return build(class, ns.SAMPLE_NAMES[class])
 	end, function()
 		return not settings().printEnabled
 	end)
@@ -140,77 +131,6 @@ function ns.TrimToBytes(text, maxBytes)
 end
 
 --[[
-    Every class this client's data names, sorted by token: the classes this
-    game version has. Count as Tanks and Buff Duty's Classes list draw from it.
-]]
-function ns.OptionsClassList()
-	local classes = {}
-	for _, list in ipairs({
-		ns.TRACKED_ABILITIES,
-		ns.BUFF_WINDOW_SPELLS,
-		ns.BUFF_WINDOW_SELF_SPELLS,
-		ns.BUFF_WINDOW_WEAPON_ENCHANTS,
-	}) do
-		for _, row in ipairs(list) do
-			if row.class then
-				classes[row.class] = true
-			end
-		end
-	end
-	local classNames = {}
-	for class in pairs(classes) do
-		classNames[#classNames + 1] = class
-	end
-	table.sort(classNames)
-	return classNames
-end
-
--- A class's name in the client's language, in its class color.
-ns.OptionsClassName = ns.ClassName
-
---[[
-    A row label naming an ability, which shows the game's own tooltip for it
-    on hover, the same one an action bar shows. `hyperlink` returns
-    "spell:<id>" or "item:<id>". A plain Label takes no mouse, so this one is
-    an InteractiveLabel, which AceConfigDialog gives the same hover handler as
-    any control, and that handler shows `tooltipHyperlink` when there is one.
-]]
-function ns.OptionsAbilityLabel(text, order, width, hyperlink)
-	local label = ns.OptionsRowLabel(text, order, width)
-	label.dialogControl = "InteractiveLabel"
-	label.tooltipHyperlink = hyperlink
-	return label
-end
-
---[[
-    The spell an ability's tooltip quotes: the HIGHEST id in its rank group
-    that the client describes, so it reads the rank you actually cast, not rank
-    1. Ids are sorted rather than trusted in data order -- rows are not
-    reliably rank-ordered (Combustion is { 29977, 11129 }, Vanish
-    { 1856, 1857, 27617, 26889, 44290 }). Classic holds tooltip data only for
-    spells the character has known, and these panels list every class, so each
-    id is requested once here and the pick is made again at every hover, when
-    the text has had time to land.
-]]
-function ns.SpellTooltipLink(ids)
-	local ranked = {}
-	for i = 1, #ids do
-		ranked[i] = ids[i]
-		C_Spell.RequestLoadSpellData(ids[i])
-	end
-	table.sort(ranked)
-	return function()
-		for i = #ranked, 1, -1 do
-			local text = GetSpellDescription(ranked[i])
-			if text and text ~= "" then
-				return "spell:" .. ranked[i]
-			end
-		end
-		return "spell:" .. ranked[#ranked]
-	end
-end
-
---[[
     Hide every control on a panel behind its master switch.
 
     Applied to the finished args table rather than threaded through every shared
@@ -241,26 +161,6 @@ function ns.HideAllExcept(args, isHidden, keep)
 			end
 		end
 	end
-end
-
---------------------------------------------------------------------------------
--- Feature Switches
---------------------------------------------------------------------------------
-
-function ns.OptionsFeatureToggle(feature, order, width)
-	return {
-		type = "toggle",
-		name = L[feature.name],
-		desc = L[feature.desc],
-		width = width or "full",
-		order = order,
-		get = function()
-			return ns.db.global[feature.key][feature.setting]
-		end,
-		set = function(_, value)
-			ns.SetFeatureSwitch(feature.key, value)
-		end,
-	}
 end
 
 --------------------------------------------------------------------------------
@@ -374,39 +274,6 @@ function ns.DefineEntryToggle(entry, order, watched)
 			end
 		end,
 	}
-end
-
---[[
-    The displayed name embeds an icon escape (|T...|t), so sorting by it would sort
-    by texture path. This returns the clean, lowercased name for comparison only.
-]]
-local function EntrySortKey(entry)
-	local name = entry.label or entry.spellName
-	if not name and entry.itemId then
-		name = C_Item.GetItemInfo(entry.labelItem or entry.itemId)
-	end
-	return (name or ""):lower()
-end
-
---[[
-    A copy of `entries` ordered alphabetically by display name, with the watched id
-    breaking ties for a stable result. Item names resolve lazily, which is why the
-    panels register their builders as functions (run on open, when the item cache
-    is warm) rather than as prebuilt tables.
-]]
-function ns.SortedEntries(entries)
-	local sorted = {}
-	for i = 1, #entries do
-		sorted[i] = entries[i]
-	end
-	table.sort(sorted, function(a, b)
-		local keyA, keyB = EntrySortKey(a), EntrySortKey(b)
-		if keyA == keyB then
-			return (a.ids[1] or 0) < (b.ids[1] or 0)
-		end
-		return keyA < keyB
-	end)
-	return sorted
 end
 
 --[[
@@ -584,60 +451,5 @@ function ns.DefinePraiseDelaySelect(settings, order)
 		set = function(_, value)
 			settings().praiseDelay = value
 		end,
-	}
-end
-
---------------------------------------------------------------------------------
--- Spell Dropdown Rows
---------------------------------------------------------------------------------
-
---[[
-    The Off / When Missing / Under labels for a list of choices the Self-Buffs
-    and Weapon Buffs panels share, "Under 5 Minutes" built from the client's
-    own duration string.
-]]
-function ns.BuffWindowRefreshValues(choices)
-	local values = {}
-	for _, choice in ipairs(choices) do
-		if choice == Data.SELF_REFRESH_OFF then
-			values[choice] = L["BUFF_WINDOW_SELF_REFRESH_OFF"]
-		elseif choice == Data.SELF_REFRESH_MISSING then
-			values[choice] = L["BUFF_WINDOW_SELF_REFRESH_MISSING"]
-		else
-			values[choice] = L["BUFF_WINDOW_SELF_REFRESH_UNDER"]:format(D_MINUTES:format(choice))
-		end
-	end
-	return values
-end
-
---[[
-    One spell's row inside a class's inline group: its icon and name as the
-    caption, and a dropdown beside it. The Buff Duty panels build their lists
-    from these, so every dropdown on them shares one x and one width -- the
-    caption takes ns.OPTIONS_INLINE_LABEL_WIDTH, and a row outside a box that
-    should line up with these takes ns.OPTIONS_ALIGNED_LABEL_WIDTH.
-
-    Hovering the caption shows the spell's own game tooltip (ns.SpellTooltipLink),
-    and hovering the dropdown says what it sets (`desc`).
-
-    `select` carries the dropdown's values, sorting, get and set.
-]]
-function ns.DefineSpellSelectRow(args, entry, order, desc, select)
-	local primary = entry.ids[1]
-	local texture = GetSpellTexture(primary)
-	local caption = texture and ("|T" .. texture .. ":16|t " .. entry.spellName) or entry.spellName
-
-	args["label_" .. primary] =
-		ns.OptionsAbilityLabel(caption, order, ns.OPTIONS_INLINE_LABEL_WIDTH, ns.SpellTooltipLink(entry.ids))
-	args["select_" .. primary] = {
-		type = "select",
-		name = "",
-		desc = desc,
-		values = select.values,
-		sorting = select.sorting,
-		width = ns.OPTIONS_CONTROL_WIDTH,
-		order = order + 0.5,
-		get = select.get,
-		set = select.set,
 	}
 end

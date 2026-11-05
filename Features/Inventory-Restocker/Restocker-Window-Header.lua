@@ -41,7 +41,7 @@ local function SetBoxTakesDrops(box)
 	box:SetScript("OnReceiveDrag", TakeDroppedItem)
 end
 
-local EDIT_BOX_HEIGHT = 18 -- all three fields, shorter than the header's buttons so they centre beside them
+local EDIT_BOX_HEIGHT = 18 -- all three fields, shorter than the header's buttons so they center beside them
 --[[
     Each field is only as wide as its job takes, since all of them share the
     header with its buttons and must fit at the window's narrowest. The filter
@@ -57,7 +57,7 @@ local EDIT_BOX_HEIGHT = 18 -- all three fields, shorter than the header's button
     A placeholder is a FontString rather than editbox content, so nothing clips
     it for you: with only a left anchor, the add hint runs out over the Add
     button. Each is anchored on both sides, so a hint that outgrows its field
-    truncates inside it instead of over its neighbour.
+    truncates inside it instead of over its neighbor.
 ]]
 local FILTER_BOX_WIDTH = 170
 local BAG_MENU_WIDTH = 160
@@ -214,7 +214,7 @@ end
 --[[
     The header bar, on the dark frame under the title like the Spell Book's
     controls row, with the filter at its left end and Pick Staples at its
-    right. Returns the bar; the adders are placed in it afterwards
+    right. Returns the bar; the adders are placed in it afterward
     (ns.CreateRestockAddButton and the two after it), chained off Pick Staples.
 
     Every control is a child of the bar, never of the window: a control
@@ -298,7 +298,7 @@ local function CreateEditBox(addonFrame, header)
 	SetBoxTakesDrops(editBox)
 
 	--[[
-	    Greyed-out placeholder, shown only while the box is empty -- the same
+	    Grayed-out placeholder, shown only while the box is empty -- the same
 	    arrangement as the filter box, both ends anchored and no wrap included.
 	    This is the longest hint on the row and the one ADD_BOX_WIDTH is sized
 	    to; with only a left anchor it overruns the field and draws under the
@@ -312,7 +312,7 @@ local function CreateEditBox(addonFrame, header)
 	placeholder:SetWordWrap(false)
 	placeholder:SetText(L["RESTOCKER_ADD_PLACEHOLDER"])
 	addonFrame.addPlaceholder = placeholder
-	-- The grey its font object draws in, kept for ns.ClearRestockAddNotice to put back.
+	-- The gray its font object draws in, kept for ns.ClearRestockAddNotice to put back.
 	placeholderTone = { placeholder:GetTextColor() }
 	editBox:SetScript("OnTextChanged", function(self)
 		local isEmpty = (self:GetText() or "") == ""

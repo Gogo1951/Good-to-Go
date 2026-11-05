@@ -35,7 +35,7 @@ local TooltipBody = ns.RestockColumnTooltipBody
 local ReputationStandingByValue = ns.RestockReputationStandingByValue
 
 --[[
-    Zebra stripe alpha. Deliberately faint: the row already carries quality-coloured
+    Zebra stripe alpha. Deliberately faint: the row already carries quality-colored
     item names and gold check glyphs, and a stripe strong enough to notice on its own
     competes with both. It only has to make the eye's path across seven cells hold
     its line.
@@ -238,7 +238,7 @@ local DASH_HEIGHT = 2
 
     The nil defaults are load-bearing and differ per flag: buyFromMerchant and
     upgrade default ON when unset, buyExtra defaults OFF. A plain `not` on the
-    first two would read nil as false and switch them on, which is backwards.
+    first two would read nil as false and switch them on, which is backward.
 ]]
 local COLUMN_STATE = {
 	withdraw = function(item)

@@ -12,7 +12,6 @@ contact_links:
     url: https://discord.gg/eh8hKq992Q
     about: Quick questions, help with setup, or just hanging out.
 
-  # PLACEHOLDER: add the CurseForge link once the listing exists.
-  # - name: Good to Go on CurseForge
-  #   url: https://www.curseforge.com/wow/addons/{slug}
-  #   about: Downloads, changelog, and the latest version of Good to Go.
+  - name: Good to Go on CurseForge
+    url: https://www.curseforge.com/wow/addons/good-to-go
+    about: Downloads, changelog, and the latest version of Good to Go.

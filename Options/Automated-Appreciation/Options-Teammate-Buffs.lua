@@ -3,7 +3,7 @@ local Data = ns.Data
 local L = ns.L
 
 --[[
-    "Teammate Buffs" panel -- party/raid buffs & cooldowns cast on you. Two
+    "Combat Buffs" panel -- party/raid buffs & cooldowns cast on you. Two
     sections, as on Stranger Buffs: Praise (what the teammate sees) and
     Notifications (the chat line and sound only you get). The tracked abilities
     live in their own sub-panel (Options-Teammate-Buffs-Tracked.lua). The
@@ -20,19 +20,31 @@ function ns.BuildTeammatesOptions()
 	end
 
 	local options = {
-		name = L["TAB_TEAMMATES"],
+		name = L["TAB_COMBAT_BUFFS"],
 		type = "group",
 		args = {
 			descIntro = ns.OptionsDesc(L["TEAMMATES_DESCRIPTION"], 1),
+
+			--[[
+			    WoW Forever only: it has no combat log, so buffs are read off your
+			    own auras (Buff-Tracking-Forever.lua), and the game hides who cast
+			    one often enough, in combat most of all, that many are skipped.
+			]]
+			spaceForever = ns.OptionsSpacer(1.3, ns.FLAVOR ~= "Camelot"),
+			descForever = ns.OptionsDesc(
+				ns.GetColor("TITLE") .. L["TEAMMATES_FOREVER_WARNING"] .. "|r",
+				1.6,
+				ns.FLAVOR ~= "Camelot"
+			),
 			space0 = ns.OptionsSpacer(2),
 
 			--[[
 			    Master switch: everything below it hides when off, and the feature
-			    itself stops -- see the `enabled` gate in Praise. Its twin sits on
-			    Thanks for the Buff's heading page. Fractional orders keep it above
+			    itself stops -- see the `enabled` gate in Praise. Its twin sits in
+			    the root panel's Features section. Fractional orders keep it above
 			    the first header without renumbering the panel.
 			]]
-			enable = ns.OptionsFeatureToggle(ns.GetFeatureSwitch("teammates"), 2.5),
+			enable = ns.OptionsFeatureSwitch("CombatBuffs", 2.5),
 			enableSpacer = ns.OptionsSpacer(2.6),
 
 			headerPraise = ns.OptionsHeader(L["PRAISE_HEADER"], 3),
@@ -45,7 +57,7 @@ function ns.BuildTeammatesOptions()
 			space2 = ns.OptionsSpacer(8),
 			whisper = ns.DefineWhisperToggle(settings, 9),
 			whisperExampleSpacer = ns.DefineExampleSpacer(settings, "whisperEnabled", 9.3),
-			whisperExample = ns.DefineWhisperExample(settings, 9.6, ns.GAME_IDS.SAMPLE_BUFF_SPELL_ID),
+			whisperExample = ns.DefineWhisperExample(settings, 9.6, ns.GAME_IDS.SAMPLE_COMBAT_BUFF_SPELL_ID),
 			space3 = ns.OptionsSpacer(10),
 			praiseDelay = ns.DefinePraiseDelayToggle(settings, 11),
 			praiseDelayLength = ns.DefinePraiseDelaySelect(settings, 12),
@@ -57,20 +69,24 @@ function ns.BuildTeammatesOptions()
 			spaceNotifications = ns.OptionsSpacer(15.6),
 			printOut = ns.DefinePrintToggle(settings, 16),
 			printExampleSpacer = ns.DefineExampleSpacer(settings, "printEnabled", 16.3),
+			-- Blessing of Freedom is a paladin's, so a paladin casts it.
 			printExample = ns.DefinePrintExample(settings, 16.6, function(class, name)
-				local link = ns.GetSpellLink(ns.GAME_IDS.SAMPLE_BUFF_SPELL_ID) or ""
+				local link = ns.GetSpellLink(ns.GAME_IDS.SAMPLE_COMBAT_BUFF_SPELL_ID) or ""
 				return ns:BuildTrackedMessage({ type = Data.BUFF.SOLO, detect = Data.DETECT.AURA }, class, name, link)
-			end),
+			end, "PALADIN"),
 			space6 = ns.OptionsSpacer(17),
 			sound = ns.DefineSoundToggle(settings, 18),
 			soundPreview = ns.DefineSoundPreview(ns.PlayBuffSound, 19),
 		},
 	}
 
-	-- Intro text and the switch itself stay; everything else follows the switch.
+	--[[
+	    Intro text, Forever's warning (so it's read before turning the feature
+	    on) and the switch itself stay; everything else follows the switch.
+	]]
 	ns.HideAllExcept(options.args, function()
 		return not settings().enabled
-	end, { descIntro = true, space0 = true, enable = true })
+	end, { descIntro = true, spaceForever = true, descForever = true, space0 = true, enable = true })
 
 	return options
 end

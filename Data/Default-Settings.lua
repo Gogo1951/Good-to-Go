@@ -33,7 +33,7 @@ local Data = ns.Data
                           shared by every character.
       * restockerEnabled -- the Restocker master switch, kept with the Restock
                           Lists it governs, which are account-wide too.
-      * readinessReportEnabled -- a behaviour preference (does Connoisseur speak
+      * readinessReportEnabled -- a behavior preference (do the Consumable Macros speak
                           up on a ready check?) rather than a consumable choice.
       * enabledMacros  -- the macros themselves are account-wide: they live in
                           the shared General macro tab, so which ones exist has
@@ -84,14 +84,14 @@ ns.DATABASE_DEFAULTS = {
 		--[[
 		    Use Conjured Food & Water First: the Food and Water macros rank
 		    conjured items above anything that restores more (buff food still
-		    comes first). Off by default like every opt-in here, and while on
-		    it applies only while leveling ("leveling", below max level) unless
-		    the player picks another mode from the shared list: leveling is when
+		    comes first). On by default, applying only while leveling
+		    ("leveling", below max level) unless the player picks another mode
+		    from the shared list: leveling is when
 		    free conjured food matters, solo or in a dungeon with a Mage friend,
 		    while at max level a raider wants the best. Per-character like the
 		    other consumable choices.
 		]]
-		useConjuredFirst = false,
+		useConjuredFirst = true,
 		conjuredFirstMode = "leveling",
 		--[[
 		    Use Restock List Food & Water Last: between two items that restore
@@ -112,11 +112,13 @@ ns.DATABASE_DEFAULTS = {
 		    Early re-application: with earlyReapply on, a food/scroll/pet buff
 		    whose remaining time is under earlyReapplyThreshold (seconds)
 		    counts as already expired, so the macros offer a fresh application
-		    before a pull. See BuffCountsAsActive in Scanner-Auras.lua.
+		    before a pull. See BuffCountsAsActive in Scanner-Auras.lua. On by
+		    default at three minutes, so a buff can't lapse mid-fight unseen.
 		]]
-		earlyReapply = false,
-		earlyReapplyThreshold = 120,
-		useBuffFood = false,
+		earlyReapply = true,
+		earlyReapplyThreshold = 180,
+		-- Prioritize Buff Food: on by default, at every level.
+		useBuffFood = true,
 		buffFoodMode = "always",
 		useScrolls = false,
 		scrollsMode = "always",
@@ -129,7 +131,7 @@ ns.DATABASE_DEFAULTS = {
 			Strength = true,
 		},
 		--[[
-		    Off by default, like every other opt-in feature here. Pet buff food
+		    Off by default. Pet buff food
 		    is a min-maxer's tool -- it needs level 55+, a live pet, and a
 		    steady supply of Kibler's Bits or Sporeling Snacks -- so a new user
 		    should never meet it uninvited. Leave this false.
@@ -175,8 +177,8 @@ ns.DATABASE_DEFAULTS = {
 	global = {
 		showWelcome = true,
 		--[[
-		    The features' master switches, atop each add-on's heading page and
-		    each feature's own panel, all account-wide. Off, macrosEnabled
+		    The features' master switches, in the root panel's Features section
+		    and atop each feature's own panel, all account-wide. Off, macrosEnabled
 		    leaves every macro as it last was: nothing is created, rewritten or
 		    deleted until it is back on. Off, restockerEnabled stops every part
 		    of the Restocker, its window, /restock and the mini-map click
@@ -227,7 +229,7 @@ ns.DATABASE_DEFAULTS = {
 		},
 		--[[
 		    The Inventory Report in item tooltips (Features/Inventory-Report/Inventory-Report-Tooltip.lua).
-		    Ships ON, unlike the opt-ins above: it only ever adds lines to a
+		    Ships ON: it only ever adds lines to a
 		    tooltip the player asked for, and never acts. The switch exists
 		    because most auction add-ons print their own counts under the same
 		    items, and a player running one wants a single set. A display
@@ -261,8 +263,8 @@ ns.DATABASE_DEFAULTS = {
 		showMacroNames = false,
 		--[[
 		    The Readiness Report: on a ready check, a private report naming what
-		    still needs fixing. A behaviour preference -- whether you want
-		    Connoisseur speaking up at all -- rather than a consumable choice, so
+		    still needs fixing. A behavior preference -- whether you want
+		    the Consumable Macros speaking up at all -- rather than a consumable choice, so
 		    it is answered once for the account rather than per character, and so
 		    is every category switch under it.
 
@@ -271,48 +273,48 @@ ns.DATABASE_DEFAULTS = {
 		    what lets it cover this much without becoming noise, so a switch here
 		    should only ever be able to ADD a line about something broken.
 
-		    Beta soft launch: the report ships OFF and every player opts in. The
-		    key is deliberately a NEW one rather than the retired readinessReport,
-		    whose saved values belong to its old meaning.
+		    The report ships ON: it speaks only at a ready check, privately, and
+		    only about something broken. The key is deliberately a NEW one rather
+		    than the retired readinessReport, whose saved values belong to its
+		    old meaning.
 		]]
-		readinessReportEnabled = false,
+		readinessReportEnabled = true,
 		--[[
 		    Which categories the report covers. Each is answered once for the
 		    account, like the master toggle above, and every one of them is dead
 		    while readinessReportEnabled is off.
 
-		    Three ship ON, and they share a reason: each is something another
-		    player standing next to you can fix inside the few seconds a ready
-		    check gives you. A Warlock can hand you a stone, a Warlock can put a
-		    soulstone up, and a Mage conjures their own gem. Each also gates on
-		    who can fix it, so none of the three can nag someone who cannot
-		    answer it: the Healthstone on a Warlock being in the group, the
-		    soulstone and the gem on the player being that class.
+		    Ships ON: the things a player can fix in the few seconds a ready
+		    check gives them, or fix before the pull. Well Fed, the weapon buffs
+		    and buffs about to lapse are their own to fix. A Warlock can hand
+		    over a Healthstone or put a soulstone up, and a Mage conjures their
+		    own gem; those three gate on who can fix them, so none can nag
+		    someone who cannot answer it: the Healthstone on a Warlock being in
+		    the group, the soulstone and the gem on the player being that class.
+		    Damaged gear is the one thing that breaks mid-pull.
 
-		    Everything else ships OFF. A report that fires on a fresh install for
-		    things the player never asked about is one they switch off entirely
-		    rather than tune, and the switches are cheap to find once they go
-		    looking. The two potions especially: mid-pull an empty potion slot is
-		    not something anyone can act on.
+		    Ships OFF: what a player may not carry by choice. Scrolls, the pet's
+		    food and the flask are min-maxing, and an empty potion or bandage
+		    slot mid-pull is not something anyone can act on.
 		]]
 		-- Missing Buffs
 		readinessFlask = false,
-		readinessWellFed = false,
+		readinessWellFed = true,
 		readinessPetWellFed = false,
 		readinessScrolls = false,
 		readinessSoulstone = true,
-		readinessMainHandBuff = false,
-		readinessOffHandBuff = false,
+		readinessMainHandBuff = true,
+		readinessOffHandBuff = true,
 		--[[
-		    Buffs about to lapse, in seconds. Distinct from the Macros panel's
+		    Buffs about to lapse, in seconds. Distinct from the Consumable Macros panel's
 		    Buff Re-Application threshold, which decides when the MACROS treat a
 		    buff as spent: this one only decides when the report mentions one,
-		    covers every aura on the character rather than the tracked ones, and
-		    reaches further out because a raid leader's pull timer is longer than
-		    a macro press.
+		    and covers every aura on the character rather than the tracked ones.
+		    Both ship at three minutes, so the report and the macros agree on
+		    what counts as expiring until the player sets them apart.
 		]]
-		readinessExpiring = false,
-		readinessExpiringThreshold = 150,
+		readinessExpiring = true,
+		readinessExpiringThreshold = 180,
 
 		-- Missing Items
 		readinessHealthstone = true,
@@ -325,7 +327,7 @@ ns.DATABASE_DEFAULTS = {
 		    average: one weapon at 5% is the thing that breaks mid-pull, and an
 		    average hides it behind seventeen healthy pieces.
 		]]
-		readinessDurability = false,
+		readinessDurability = true,
 		readinessDurabilityThreshold = 20,
 
 		-- Character
@@ -333,7 +335,7 @@ ns.DATABASE_DEFAULTS = {
 		readinessPvP = false,
 		readinessQuestionableGear = false,
 		--[[
-		    Which macros Connoisseur maintains. Account-wide because the macros
+		    Which macros Consumable Macros maintains. Account-wide because the macros
 		    are: they live in the shared General macro tab, so unchecking one
 		    removes the shared macro for every character. Feed Pet and Poisons
 		    are class-gated on top of this toggle and build only for Hunters and
@@ -401,6 +403,12 @@ local SPELLBOOK_DEFAULTS = {
 		-- each WoW macro's tag line ID (see ns.MacroTag), by what the macro is for, and how many were handed out
 		macroTags = {},
 		macroTagCount = 0,
+		--[[
+			the What's Next ranks under the game's own spell tooltips (Features/Spellbook/Spell-Ranks-Tooltip.lua):
+			a display preference for the account, like inventoryReport. Enhanced Spellbook's own window shows its
+			ranks either way.
+		]]
+		abilityTooltipRanks = true,
 	},
 	profile = {
 		showAllRanks = false,
@@ -462,7 +470,7 @@ local SPELLBOOK_DEFAULTS = {
 		castSequenceEnd = {}, -- "stop" where a spell's Cast Sequence stops on NULL rather than starting over
 		castSequenceReset = {}, -- each spell's Cast Sequence resets, where not the default (see ns.CastSequenceResetText)
 		useItems = {},
-		macroCopies = {}, -- the Duplicate copies of each spell's macro, by spell name, as a list of copy numbers
+		macroCopies = {}, -- the Duplicate copies of each spell's macro, by its Rank 1 ID, as a list of copy numbers
 		trainerSpells = {}, -- by class token, then spell id -> required level (see Features/Spellbook/Trainer-Recording.lua)
 	},
 	char = {
@@ -475,7 +483,7 @@ AddDefaults("profile", SPELLBOOK_DEFAULTS.profile)
 AddDefaults("char", SPELLBOOK_DEFAULTS.char)
 
 --------------------------------------------------------------------------------
--- Thanks for the Buff Defaults
+-- Automated Appreciation Defaults
 --------------------------------------------------------------------------------
 
 --[[
@@ -492,7 +500,7 @@ local function GetDefaultEmoteSettings(enabled)
 end
 
 --[[
-    Thanks for the Buff's settings, account-wide: none of them is about one
+    Automated Appreciation's settings, account-wide: none of them is about one
     character, so every character thanks, praises and buffs the same way. The
     welcome toggle is the shared one above.
 ]]
@@ -535,7 +543,7 @@ local THANKS_FOR_THE_BUFF_DEFAULTS = {
 		emotes = GetDefaultEmoteSettings(true),
 	},
 	--[[
-		    Teammate Buffs (party/raid buffs & cooldowns cast on you) and Service
+		    Combat Buffs (party/raid buffs & cooldowns cast on you) and Service
 		    Alerts (no-aura raid help) each own their messaging settings, like
 		    strangers above. The watched-buff list is shared (ids never overlap) and
 		    seeds from the `received` defaults in this client's Tracked-Abilities file.
@@ -597,28 +605,30 @@ local THANKS_FOR_THE_BUFF_DEFAULTS = {
 		watched = {},
 	},
 	--[[
-		    Buff Window: the click-to-cast list of group members missing a buff
+		    Buff Duty: the click-to-cast list of group members missing a buff
 		    you can give. On by default: it is self-only, and it
 		    only appears when there is something you can fix. `audience` holds who
 		    each buff is offered to (Data.BUFF_AUDIENCE), keyed by the row's first
 		    single-target id, and seeds from the row defaults in this client's
-		    Buff-Window-Spells file. `point` is nil until the window is first
+		    Buff-Duty-Spells file. `point` is nil until the window is first
 		    dragged, and until then its top-right corner sits a little right of
 		    and above the middle of the screen.
 		]]
 	buffWindow = {
 		enabled = true,
 		--[[
-			    When to Show: whether the window shows solo and in a party or
-			    raid, each with where (one of Data.BUFF_WINDOW_WHERE), and
+			    When to Show: whether the window shows solo, in a party and in
+			    a raid, each with where (one of Data.BUFF_DUTY_WHERE), and
 			    which of your classes it shows on, keyed by class token. An
 			    unset class reads as ticked. Paladins start off: most of them
 			    run Pally Power for their blessings.
 			]]
 		showSolo = true,
 		showSoloWhere = "ALWAYS",
-		showGroup = true,
-		showGroupWhere = "INSTANCE",
+		showParty = true,
+		showPartyWhere = "ALWAYS",
+		showRaid = true,
+		showRaidWhere = "INSTANCE",
 		showClasses = {
 			PALADIN = false,
 		},
@@ -626,7 +636,7 @@ local THANKS_FOR_THE_BUFF_DEFAULTS = {
 		hideInCombat = true,
 		--[[
 			    Minutes left under which a buff counts as missing; one of
-			    Data.BUFF_WINDOW_REFRESH_CHOICES.
+			    Data.BUFF_DUTY_REFRESH_CHOICES.
 			]]
 		refreshMinutes = 3,
 		--[[
@@ -648,7 +658,7 @@ local THANKS_FOR_THE_BUFF_DEFAULTS = {
 		--[[
 			    The Self Buffs row's master switch, and when each self buff shows
 			    (one of Data.SELF_REFRESH_CHOICES), keyed by the row's first rank
-			    id and seeded from this client's BUFF_WINDOW_SELF_SPELLS defaults.
+			    id and seeded from this client's BUFF_DUTY_SELF_SPELLS defaults.
 			]]
 		selfEnabled = true,
 		selfRefresh = {},
@@ -656,7 +666,7 @@ local THANKS_FOR_THE_BUFF_DEFAULTS = {
 		selfRefreshMigrated = {},
 		--[[
 			    Whether each poison or imbue is ticked for each hand, keyed
-			    "ROGUE_MAIN" and so on, then by the BUFF_WINDOW_WEAPON_ENCHANTS
+			    "ROGUE_MAIN" and so on, then by the BUFF_DUTY_WEAPON_ENCHANTS
 			    row's first id. Unset reads as ticked.
 			]]
 		weaponPicks = {},
@@ -670,10 +680,10 @@ local THANKS_FOR_THE_BUFF_DEFAULTS = {
 		weaponRefresh = 3,
 		weaponItems = {},
 		favorEnabled = true,
-		-- One of Data.BUFF_WINDOW_FAVOR_CHOICES.
+		-- One of Data.BUFF_DUTY_FAVOR_CHOICES.
 		favorSeconds = 40,
 		targetEnabled = true,
-		-- The title row's raid buffs, and the asks its clicks send.
+		-- The Party-Buffs raid buffs, and the asks its clicks send.
 		askOtherClasses = true,
 		audience = {},
 	},

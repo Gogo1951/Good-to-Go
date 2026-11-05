@@ -21,6 +21,11 @@ function ns.ActionMacroName(slot)
 	return GetActionText(slot) or (subType ~= "spell" and GetMacroInfo(id)) or nil
 end
 
+-- The tag a named WoW macro's body carries, or nil, so a macro the player renamed is still found.
+function ns.MacroNameTag(name)
+	return ns.BodyTag(GetMacroBody(name))
+end
+
 -- The macro names on the action bars, by slot; a slot holding no macro has none.
 function ns.BarMacroNames()
 	local names = {}
@@ -42,8 +47,7 @@ function ns.ScanActionBars()
 			local name = ns.ActionMacroName(slot)
 			if name then
 				bars.macros[name] = true
-				-- by its tag too, so a macro the player renamed is still found
-				local tag = ns.BodyTag(GetMacroBody(name))
+				local tag = ns.MacroNameTag(name)
 				if tag then
 					bars.tags[tag] = true
 				end

@@ -14,7 +14,7 @@ local SettingsKey = ns.SettingsKey
 	gets its own (Features/Spellbook/Macro-Copies.lua): "castSequence" the added steps, "castSequenceEnd"
 	"stop" or nil for starting over, and "castSequenceReset" the resets, keys and a number of seconds.
 	Features/Spellbook/Macro-Body.lua writes them into the cast line, and
-	Features/Spellbook/Macro-Builder/Cast-Sequence-Panel.lua is the panel docked beside the Spell Book that sets them.
+	Features/Spellbook/Macro-Builder/Cast-Sequence-Panel.lua is the panel docked beside the Spellbook that sets them.
 ]]
 
 local NO_STEPS = {}
@@ -50,7 +50,7 @@ end
 
 --[[
 	Every spell macro offers a Cast Sequence but a focus copy, which shares its spell's settings key and casts
-	only on the focus; a consumable's, which is Connoisseur's; and the Shoot macro's, whose attack follows the
+	only on the focus; a consumable's, which is Consumable Macros'; and the Shoot macro's, whose attack follows the
 	weapon worn by a clause per weapon, which a sequence can't take.
 ]]
 function ns.OffersCastSequence(macro)
@@ -195,7 +195,7 @@ function ns.CastSequenceSummary(macro)
 	if ns.CastSequenceStops(macro) then
 		names[#names + 1] = L["CAST_SEQUENCE_END_STOP_SHORT"]
 	end
-	return table.concat(names, ", ")
+	return table.concat(names, L["LIST_SEPARATOR"])
 end
 
 --------------------------------------------------------------------------------
