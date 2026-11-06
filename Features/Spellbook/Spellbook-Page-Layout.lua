@@ -15,7 +15,7 @@ local HEADER_HEIGHT, ROW_HEIGHT = ns.SPELLBOOK_HEADER_HEIGHT, ns.SPELLBOOK_ROW_H
 	sits about 30 above its first tiles (the header's lower half and a row strip), so the gap is wider than that:
 	more air above a header than below it, so each name reads with the spells under it.
 ]]
-local CATEGORY_GAP = 34
+local CATEGORY_GAP = 32
 
 --[[
 	A category's runs packed into rows of SLOTS tiles, each { segments }. A run starts in the very next free

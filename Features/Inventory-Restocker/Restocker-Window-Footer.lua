@@ -43,7 +43,7 @@ local FOOTER_X = 12
 local FOOTER_RIGHT_INSET = 26 -- clear of the resize grip
 local FOOTER_ROW_HEIGHT = 22
 local FOOTER_Y = ns.RESTOCK_WINDOW_BANDS.FRAME_BORDER + (ns.RESTOCK_WINDOW_BANDS.FOOTER_HEIGHT - FOOTER_ROW_HEIGHT) / 2
-local UNDO_GAP = 10 -- "Removed [item]." to the Undo button
+local UNDO_GAP = 8 -- "Removed [item]." to the Undo button
 local UNDO_HEIGHT = 20
 
 -- The most orders the hover lists one per row; past it, one closing line counts the rest.

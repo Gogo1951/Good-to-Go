@@ -19,13 +19,13 @@ local PixelInset = ns.PixelInset
 local TITLE_HEIGHT, CONTROLS_HEIGHT = 24, 36
 local FOOTER_HEIGHT, FRAME_BORDER = 28, 4
 local PARCHMENT_SIDE = 8
-local PAGER_HEIGHT = 30
+local PAGER_HEIGHT = 32
 --[[
 	Each column's padding inside the parchment. A page is half the paper (the window's width less its borders);
 	at 1060 wide that leaves about 70 beside each 448-wide column, split so the column has room at the fold as
 	well as at the page's outer edge (with the spine shift: about 30 at the fold, 41 at the edge).
 ]]
-local COLUMN_TOP, COLUMN_SIDE = 14, 36
+local COLUMN_TOP, COLUMN_SIDE = 12, 36
 
 -- The flow inside a column (see PackRows and Paginate, in Features/Spellbook/Spellbook-Page-Layout.lua).
 local SLOTS, GAP_X = 2, 12

@@ -56,7 +56,7 @@ local ROW_COUNT = ns.HexToRGB(ns.RESTOCKER_WINDOW_COLORS.ROW_COUNT)
 
 local GROUP_ROW_HEIGHT = 20
 local GROUP_ROW_INSET = 8
-local GROUP_COUNT_WIDTH = 30
+local GROUP_COUNT_WIDTH = 32
 
 --[[
     The pane is as wide as the longest type name it actually has to show, because

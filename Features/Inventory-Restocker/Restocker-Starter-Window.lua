@@ -33,25 +33,25 @@ local BANDS = ns.RESTOCK_WINDOW_BANDS
     taller than the cap keeps it and scrolls -- a level-60 rogue's, with
     poisons, ammo and reagents under the food.
 ]]
-local WINDOW_WIDTH = 690
+local WINDOW_WIDTH = 688
 local WINDOW_MAX_HEIGHT = 640
 local WINDOW_MIN_HEIGHT = 260
 
-local CONTENT_PADDING = 14 -- inside the inset, around everything it holds
+local CONTENT_PADDING = 16 -- inside the inset, around everything it holds
 local SCROLL_BAR_SPACE = 26
-local PARAGRAPH_GAP = 10
+local PARAGRAPH_GAP = 8
 local SECTION_GAP = 16
-local HEADER_HEIGHT = 18
+local HEADER_HEIGHT = 20
 local HEADER_GAP = 8 -- the rule under a section's name to its first row
-local ROW_HEIGHT = 30
+local ROW_HEIGHT = 32
 local COLUMN_GAP = 24
 
 -- One staple's cell, left to right: the box, the item's icon, its name, and the stacks dropdown at the cell's end.
 local CHECKBOX_SIZE = 24
 local ICON_SIZE = 18
 local ICON_GAP = 4
-local NAME_GAP = 6
-local DROPDOWN_WIDTH = 110
+local NAME_GAP = 8
+local DROPDOWN_WIDTH = 112
 local DROPDOWN_GAP = 8
 
 local RULE_COLOR = ns.COLORS_RGB.TITLE
