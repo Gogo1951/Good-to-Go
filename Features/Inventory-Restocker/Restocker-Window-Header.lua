@@ -17,7 +17,7 @@ local L = ns.L
 ]]
 local BAR_HEIGHT = 22
 local BAR_INSET_LEFT = 6 -- past the portrait's clearance, as the Spell Book's filter sits
-local BAR_INSET_RIGHT = 10
+local BAR_INSET_RIGHT = 8
 ns.RESTOCK_BAR_HEIGHT = BAR_HEIGHT
 ns.RESTOCK_BAR_INSET_RIGHT = BAR_INSET_RIGHT
 
@@ -59,15 +59,15 @@ local EDIT_BOX_HEIGHT = 18 -- all three fields, shorter than the header's button
     button. Each is anchored on both sides, so a hint that outgrows its field
     truncates inside it instead of over its neighbor.
 ]]
-local FILTER_BOX_WIDTH = 170
+local FILTER_BOX_WIDTH = 168
 local BAG_MENU_WIDTH = 160
-local ADD_BOX_WIDTH = 170
+local ADD_BOX_WIDTH = 168
 --[[
     Between the bag menu and the add box. An InputBoxTemplate field draws its
     border some 4px left of its own edge, which eats into the gap, so it is
     wider than the 20 it draws as (measured in the Forever client).
 ]]
-local CONTROL_ITEM_GAP = 25
+local CONTROL_ITEM_GAP = 24
 local ADD_BUTTON_WIDTH = 60
 local STAPLES_GAP = 8 -- between the header's buttons, and between the add box and Add
 

@@ -417,12 +417,33 @@ end
 --[[
     The same for spell tooltips: func(tooltip, spellID) after the game fills
     any tooltip with a spell. A client with neither route hooks nothing.
+    On the Retail client an action bar slot holding a macro (every Spell Book
+    macro) fills a Macro tooltip, not a Spell one; the spell the macro shows
+    is its first line's tooltipID, so those count too. A macro showing an
+    item, or none, is skipped.
 ]]
 if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum.TooltipDataType then
 	function ns.AddSpellTooltipPostCall(func)
-		TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Spell, function(tooltip, data)
+		local SPELL = Enum.TooltipDataType.Spell
+		TooltipDataProcessor.AddTooltipPostCall(SPELL, function(tooltip, data)
 			func(tooltip, data and data.id)
 		end)
+		local MACRO = Enum.TooltipDataType.Macro
+		if MACRO then
+			TooltipDataProcessor.AddTooltipPostCall(MACRO, function(tooltip, data)
+				local line = data and ns.IsPlain(data.lines) and data.lines and data.lines[1]
+				if not line then
+					return
+				end
+				local lineType, spellID = line.tooltipType, line.tooltipID
+				if not (ns.IsPlain(lineType) and ns.IsPlain(spellID)) or not spellID then
+					return
+				end
+				if lineType == nil or lineType == SPELL then
+					func(tooltip, spellID)
+				end
+			end)
+		end
 	end
 elseif GameTooltip:HasScript("OnTooltipSetSpell") then
 	function ns.AddSpellTooltipPostCall(func)

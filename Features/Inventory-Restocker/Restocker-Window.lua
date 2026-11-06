@@ -14,7 +14,7 @@ local L = ns.L
     they are the sum of three things that each have their own floor:
 
       the category pane   its widest ALLOWED width (180) plus the gap (8)
-      the table           591, which holds the item name at its readable floor
+      the table           596, which holds the item name at its readable floor
       window chrome       the inset (ns.RESTOCK_WINDOW_BANDS: 4 left, 6 right), its
                           padding (8), the scroll bar (26)
 
@@ -37,7 +37,7 @@ local L = ns.L
 local DEFAULT_WIDTH = 870
 local DEFAULT_HEIGHT = 440
 local BANDS = ns.RESTOCK_WINDOW_BANDS
-local MIN_WIDTH = 180 + 8 + 591 + BANDS.INSET_LEFT + BANDS.INSET_RIGHT + 8 + 26
+local MIN_WIDTH = 180 + 8 + 596 + BANDS.INSET_LEFT + BANDS.INSET_RIGHT + 8 + 26
 local MIN_HEIGHT = 300
 local MAX_WIDTH = 1600
 local MAX_HEIGHT = 1200
@@ -218,7 +218,7 @@ local function CreateListInset(addonFrame)
 end
 
 -- Clear space between the inset's top edge and the list's column headings.
-local LIST_TOP_GAP = 10
+local LIST_TOP_GAP = 8
 local LIST_BOTTOM_MARGIN = 8 -- nothing else shares the list's inset
 
 --[[
@@ -297,7 +297,7 @@ end
 ]]
 local EMPTY_BODY_WIDTH = 440
 local EMPTY_TITLE_OFFSET = 48 -- the title's foot above the area's center, which centers the stack
-local EMPTY_GAP = 10
+local EMPTY_GAP = 8
 local EMPTY_BUTTON_WIDTH = 140
 local EMPTY_BUTTON_HEIGHT = 28
 

@@ -148,7 +148,7 @@ local COLUMNS = {
 	},
 }
 
-local COLUMN_GAP = 5 -- between columns inside a group
+local COLUMN_GAP = 4 -- between columns inside a group
 local COLUMN_GROUP_GAP = 12 -- where the grouping changes
 local COLUMN_PAD_X = 8 -- caption to column edge, both sides together
 local COLUMN_MIN_WIDTH = 24
@@ -171,7 +171,7 @@ local COLUMN_MIN_WIDTH = 24
 ns.restockAmountWidth = 44
 local AMOUNT_DIGITS_SAMPLE = "8888"
 local AMOUNT_BOX_FONT = "ChatFontNormal"
-local AMOUNT_BOX_PAD_X = 14 -- digits to box edge, both sides together
+local AMOUNT_BOX_PAD_X = 16 -- digits to box edge, both sides together
 
 --[[
     Starting widths are the English measurement, replaced once the font
@@ -332,14 +332,14 @@ ns.FitRestockButton = FitButton
 ]]
 local REMOVE_ICON_SIZE = 16
 -- The row's inset from both its edges: the icon on the left, this on the right.
-local ROW_INSET = 6
+local ROW_INSET = 8
 
 local ICON_SIZE = 18
 local ICON_TEXT_GAP = 4
 local NAME_INSET = ROW_INSET + ICON_SIZE + ICON_TEXT_GAP
-local NAME_COLUMN_GAP = 10 -- name to the Keep box
+local NAME_COLUMN_GAP = 8 -- name to the Keep box
 
-local REMOVE_GAP = 6 -- last column to the remove control
+local REMOVE_GAP = 8 -- last column to the remove control
 
 --------------------------------------------------------------------------------
 -- Cell States
