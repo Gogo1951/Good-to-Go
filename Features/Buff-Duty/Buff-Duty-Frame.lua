@@ -56,7 +56,12 @@ local SECTION_GAP = 4
     long title-and-realm string pushes the icons off across the screen.
 ]]
 local MIN_NAME_WIDTH = 80
-local MAX_NAME_WIDTH = 260
+local MAX_NAME_WIDTH = 256
+--[[
+    The name column grows in whole steps of this, not to the pixel, so a
+    slightly longer name doesn't nudge the window wider.
+]]
+local NAME_STEP = 16
 -- Room between the end of the longest name and the first icon.
 local NAME_GAP = 8
 -- A member's role icon lines up with the header above it.
@@ -68,8 +73,8 @@ local MEMBER_INDENT = 0
 local PARTIES_PER_ROW = 2
 local COLUMN_GAP = 16
 -- A pet sits one step further in, under its owner.
-local PET_INDENT = 10
-local PADDING = 7
+local PET_INDENT = 12
+local PADDING = 8
 --[[
     The title bar: one icon-high row for the title and close button, then one
     blank row before the first section so the title doesn't read as one of them.
@@ -92,6 +97,29 @@ local labels, usedLabels = {}, 0
 local pool = ns.buffDutyIconPool
 local icons = pool.buttons
 local lastSignature
+
+--[[
+    What the window holds on to while it stays up for the same group, so it
+    keeps its width as buffs are cast: every grid's columns any icon has used
+    (a buff cast on everyone leaves its column empty rather than pulling the
+    icons left under the cursor), the widest name column, and the most
+    Party-Buffs icons. Let go when the window hides (everything's buffed), the
+    group's size changes, or a setting changes (ns.ApplyBuffDutySettings).
+]]
+local held = { columns = {}, nameWidth = 0, partyBuffs = 0 }
+
+local function ForgetHeldLayout()
+	held.columns, held.nameWidth, held.partyBuffs = {}, 0, 0
+end
+
+local function RosterKey()
+	return (IsInRaid() and "raid" or "party") .. GetNumGroupMembers()
+end
+
+-- value rounded up to the next whole step
+local function SnapUp(value, step)
+	return math.ceil(value / step) * step
+end
 
 --------------------------------------------------------------------------------
 -- Icons
@@ -318,12 +346,12 @@ end
     icons start at the left whatever the header's hold. Returns grid ->
     (column -> pixels from the first icon), and grid -> the icons' whole
     width. The party columns share one grid, so a buff sits at the same place
-    in each.
+    in each. The columns the window holds (held.columns) are kept too.
 ]]
 local MAIN_GRID = "main"
 
 local function GridSlots(sections)
-	local used = {}
+	local used = held.columns
 	local function Mark(grid, list)
 		used[grid] = used[grid] or {}
 		for _, spec in ipairs(list) do
@@ -404,6 +432,13 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 	end
 	otherBuffs = otherBuffs or {}
 
+	local roster = RosterKey()
+	if roster ~= held.roster then
+		ForgetHeldLayout()
+		held.roster = roster
+		lastSignature = nil
+	end
+
 	local signature = Signature(sections, otherBuffs)
 	if signature ~= lastSignature then
 		lastSignature = signature
@@ -464,11 +499,13 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 		if not partyBuffsPlaced then
 			AddPartyBuffs()
 		end
-		nameWidth = math.min(math.ceil(nameWidth), MAX_NAME_WIDTH)
+		nameWidth = math.max(math.min(SnapUp(nameWidth, NAME_STEP), MAX_NAME_WIDTH), held.nameWidth)
+		held.nameWidth = nameWidth
 
 		-- A window column: the names, then as many icons as its grid keeps.
 		local offsetsByGrid, iconWidths = GridSlots(sections)
-		iconWidths[PARTY_BUFFS_GRID] = #otherBuffs * (ICON_SIZE + ICON_GAP) - ICON_GAP
+		held.partyBuffs = math.max(held.partyBuffs, #otherBuffs)
+		iconWidths[PARTY_BUFFS_GRID] = held.partyBuffs * (ICON_SIZE + ICON_GAP) - ICON_GAP
 		local function ColumnWidth(grid)
 			return nameWidth + NAME_GAP + math.max(iconWidths[grid] or 0, ICON_SIZE)
 		end
@@ -495,7 +532,7 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 		local minWidth = math.ceil(title:GetStringWidth()) + TITLE_CLOSE_GAP + (CLOSE_SIZE + ICON_SIZE) / 2
 		local width = ContentWidth()
 		if width < minWidth then
-			nameWidth = nameWidth + (minWidth - width)
+			nameWidth = SnapUp(nameWidth + (minWidth - width), NAME_STEP)
 			width = ContentWidth()
 		end
 
@@ -537,6 +574,8 @@ function ns.HideBuffDuty()
 		return
 	end
 	content:Hide()
+	ForgetHeldLayout()
+	lastSignature = nil
 	pool.rosterStale = false
 	ns.HideBuffDutyRoster()
 	ns.StopBuffDutyRangeTicker()
@@ -564,6 +603,7 @@ function ns.ApplyBuffDutySettings()
 	ns.RestoreBuffDutyPosition(anchor)
 	-- A settings change can change how the list is drawn without changing its rows.
 	lastSignature = nil
+	ForgetHeldLayout()
 	return true
 end
 
