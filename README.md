@@ -152,6 +152,7 @@ Buttons that manage themselves, so you're always prepared. Drag them onto your b
 
 * Gogo1951's [GogoLoot](https://www.curseforge.com/wow/addons/gogoloot)
 * Gogo1951's [Magic Eraser](https://www.curseforge.com/wow/addons/magic-eraser)
+* Gogo1951's [Play It Forward](https://www.curseforge.com/wow/addons/play-it-forward)
 * Gogo1951's [Water Dispenser](https://www.curseforge.com/wow/addons/water-dispenser-revisited)
 
 ### 🔴 Alternatives
