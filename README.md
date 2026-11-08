@@ -8,22 +8,58 @@ Always ready for the next pull. Self-updating macros for your best food, water, 
 
 <img width="800" src="https://github.com/user-attachments/assets/01cbb0ae-c1f1-4fa3-8b6d-5d3c993a6c79" />
 
+* **Every Buff You Owe** // One click-to-cast window, or one key, covers your group, yourself, your weapons, and the stranger who just buffed you.
+* **Never Let Your Own Buffs Drop** // Class buffs, self-buffs, and weapon buffs show up the moment they're missing or running low, and one click puts them back.
+* **Gentle Reminders for the Group** // See which buffs your group is missing, then nudge the group, or quietly whisper the players who can cast them.
+
 ### Enhanced Spellbook
 
 <img width="800" src="https://github.com/user-attachments/assets/e3e65c7c-04df-45c4-8564-f613da0b2746" />
+
+* **No Macro Syntax** // Mouseover, cursor, and self-cast macros for every class spell, built in one click and kept current as you level and train.
+* **The Right Rank** // Buffing a lower-level player? The macro casts the rank that fits their level.
+* **Your Targets, Your Rules** // Mouseover, focus, pet, cursor, and more, in the order you want, plus a different spell on Shift, Ctrl, Alt, Right-Click, in combat, or by spec.
+* **Extras on Right-Click** // Right-Click a spell on the page to add focus casting, stop casting, auto attack, pet attack, or a trinket.
+* **What's Next?** // A second tab shows the spells you can learn now and the ones coming soon, so you know when it's time to visit your trainer.
 
 ### Restocker
 
 <img width="800" src="https://github.com/user-attachments/assets/fa63db86-8638-4483-9f18-f47765ba8a8f" />
 
+* **Pick Your Staples Once** // Every merchant and bank visit tops up your food, water, ammo, and reagents.
+* **Your List Levels With You** // Food, water, ammo, poisons, and reagents climb to the next tier as you level, and every swap is announced in chat.
+* **Rogues Get a Bonus** // Put the finished poison on your list and its ingredients buy themselves at any merchant that stocks them all.
+* **Gold Reserve** // Restocking never spends your last gold.
+* **Skip a Visit** // Hold Shift while opening the bank to skip restocking that time.
+
 ### Macros for Consumables
 
 <img width="800" src="https://github.com/user-attachments/assets/034cffa2-69f5-43dd-91f8-4cee48ec7d72" />
+
+* **Always the Best Item** // Your consumable buttons rewrite themselves as your bags change, skipping anything you can't use yet. Drag them onto your bars once and forget about them.
+* **Mages and Warlocks** // Right-Click your Food, Water, Mana Gem, Healthstone, or Soulstone macro to conjure or create more. Target a lower-level player first to make food, water, or a Healthstone for their level.
+
+| Macro | Uses |
+| --- | --- |
+| `- Food` | Best food, plus optional buff food, scroll buffs, and pet buff food |
+| `- Water` | Best drink |
+| `- Health Potion` | Best healing potion, optionally with your best Healthstone stacked underneath |
+| `- Mana Potion` | Best mana potion |
+| `- Healthstone` | Best Healthstone |
+| `- Mana Gem` | Best Mana Gem |
+| `- Soulstone` | Best Soulstone |
+| `- Bandage` | Best bandage your First Aid skill allows |
+| `- Explosives` | Hardest-hitting bomb, grenade, or sapper your Engineering skill allows |
+| `- Feed Pet` | Call, feed, or revive your pet, or cast Mend Pet (Hunters only) |
+| `- Poisons` | Poisons for both weapons from one button (Rogues only) |
 
 ### Automated Appreciation
 
 <img width="800" src="https://github.com/user-attachments/assets/ecd9839b-4f94-4657-b764-4f25dd24a82e" />
 
+* **Thanks Without the Spam** // Thank the players who buff you with a whisper or an emote, and tell the ones you buff what they got.
+* **Thank You Buttons** // Up to five one-click macros that emote at your target and whisper your own words: thank the healer, ask a mage for water, or heckle a guildie.
+* **Group Service Alerts** // Know the moment someone sets out a feast, soulwell, portal, or repair bot, and thank them for it.
 
 ## Setup
 
@@ -33,18 +69,6 @@ Always ready for the next pull. Self-updating macros for your best food, water, 
 4. Open your spellbook, click the GtG // Spellbook tab, and drag any spell onto your bars as a ready-made macro.
 5. Pick your staples when the Staples window pops up. From then on, every merchant and bank visit keeps your bags stocked.
 6. _"Luck favors the prepared, darling."_
-
-## Features
-
-🛡️ **Buff Duty** // One click-to-cast window, or one key, for every buff you owe: your group, yourself, your weapons, and the stranger who just buffed you.
-
-📖 **Enhanced Spellbook** // Mouseover, cursor, and self-cast macros for every class spell, built in one click with no macro syntax, and kept current as you level and train.
-
-🧞‍♂️ **Always the Best Item** // Your food, water, potion, and healthstone buttons rewrite themselves as your bags change, skipping anything you can't use yet.
-
-🛒 **Restocker** // Pick your staples once, and every merchant and bank visit tops up your food, water, ammo, and reagents. Your list even upgrades as you level.
-
-🙌 **Automated Appreciation** // Thank the players who buff you with a whisper or an emote, and tell the ones you buff what they got, without it ever turning into spam.
 
 ## Tips & Tricks
 
@@ -61,54 +85,11 @@ Always ready for the next pull. Self-updating macros for your best food, water, 
 
 Hover it for your current food, notes on your class's macros, and what your Restock List is still short.
 
-### Buff Duty
+### Good to Know
 
-* **Keep your own buffs up, easily** // Your class buffs, self-buffs, and weapon buffs show up the moment they're missing or running low, and one click puts them back on.
-* **Gentle reminders for the group** // See which buffs your group is missing, then nudge the group, or quietly whisper the players who can cast them.
-
-### Enhanced Spellbook
-
-* **Drag, drop, done** // Drag any spell from the GtG // Spellbook tab to your bar and it's a macro that stays up to date on its own. Open it in your Macros window to see how it's built, and you'll pick up a few macro tricks along the way.
-* **Dynamic Rank** // Buffing a lower-level player? The macro casts the rank that fits their level.
-* **Conditionals** // Cast a different spell while holding Shift, Ctrl, or Alt, on a Right-Click, in or out of combat, or by talent spec.
-* **Any target you like** // Mouseover, target of target, focus, pet, cast at cursor, and more, stacked in the order you want.
-* **Right-Click a spell** on the page to add focus casting, stop casting, auto attack, pet attack, or a trinket to its macro.
-* **What's Next?** // A second tab shows the spells you can learn now and the ones coming soon, so you know when it's time to visit your trainer.
-* **Mute Error Sounds** // This macro option briefly turns off your Sound Effects and Error Speech game settings while the macro runs, so a spell that isn't ready stays quiet, then puts them back within a second.
-
-### Restocker
-
-* **Your list levels with you.** Food, water, ammo, poisons, and reagents climb to the next tier as you level, and every swap is announced in chat.
-* **Rogues get a bonus.** Put the finished poison on your list and its ingredients buy themselves at any merchant that stocks them all.
-* **A Gold Reserve** keeps restocking from spending your last gold.
-* **Hold Shift** while opening the bank to skip restocking for that visit.
-
-### Macros for Consumables
-
-Buttons that manage themselves, so you're always prepared. Drag them onto your bars once and forget about them.
-
-| Macro | Uses |
-| --- | --- |
-| `- Food` | Best food, plus optional buff food, scroll buffs, and pet buff food |
-| `- Water` | Best drink |
-| `- Health Potion` | Best healing potion, optionally with your best Healthstone stacked underneath |
-| `- Mana Potion` | Best mana potion |
-| `- Healthstone` | Best Healthstone |
-| `- Mana Gem` | Best Mana Gem |
-| `- Soulstone` | Best Soulstone |
-| `- Bandage` | Best bandage your First Aid skill allows |
-| `- Explosives` | Hardest-hitting bomb, grenade, or sapper your Engineering skill allows |
-| `- Feed Pet` | Call, feed, or revive your pet, or cast Mend Pet (Hunters only) |
-| `- Poisons` | Poisons for both weapons from one button (Rogues only) |
-
-* **Mages and Warlocks** // Right-Click your Food, Water, Mana Gem, Healthstone, or Soulstone macro to conjure or create more. Target a lower-level player first to make food, water, or a Healthstone for their level.
+* **Quiet Misfires** // Turn on Mute Error Sounds in a spell's macro options so a spell that isn't ready stays quiet.
 * **Druids** // With DruidMacroHelper, your potion and Healthstone macros powershift you out of form and back.
 * **Forsaken and Night Elves** // Forsaken can Cannibalize instead of eating, and Night Elves can slip into Shadowmeld before they eat or drink.
-
-### Automated Appreciation
-
-* **Thank You Buttons** // Up to five one-click macros that emote at your target and whisper your own words: thank the healer, ask a mage for water, or heckle a guildie.
-* **Group Service Alerts** // Know the moment someone sets out a feast, soulwell, portal, or repair bot, and thank them for it.
 
 ## Testing & Localization Status
 
