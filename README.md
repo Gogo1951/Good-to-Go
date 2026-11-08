@@ -87,7 +87,6 @@ Hover it for your current food, notes on your class's macros, and what your Rest
 
 ### Good to Know
 
-* **Quiet Misfires** // Turn on Mute Error Sounds in a spell's macro options so a spell that isn't ready stays quiet.
 * **Druids** // With DruidMacroHelper, your potion and Healthstone macros powershift you out of form and back.
 * **Forsaken and Night Elves** // Forsaken can Cannibalize instead of eating, and Night Elves can slip into Shadowmeld before they eat or drink.
 
