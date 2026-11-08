@@ -30,7 +30,9 @@ ns.currentEngineeringSkill = 0
 
     That list leaves out the lines under a collapsed header, so a skill not
     found while a header is collapsed answers nil, and the caller keeps the last
-    rank read rather than reading the profession as unlearned.
+    rank read rather than reading the profession as unlearned. There is no last
+    rank at login, so ns.InitializeCharacterConstants opens the headers for its
+    first read (ExpandCollapsedSkillHeaders).
 ]]
 local GetSkillLineInfoByID = C_SkillInfo and C_SkillInfo.GetSkillLineInfoByID
 
@@ -61,6 +63,44 @@ local function ReadSkillRank(skillLineID)
 		return nil
 	end
 	return 0
+end
+
+--[[
+    Opens every collapsed skill header, and answers their names for
+    RestoreCollapsedSkillHeaders; nil where nothing was opened. Bottom to top,
+    so opening one leaves the indexes still to visit where they were.
+
+    Only for the read at login. Opening a header fires SKILL_LINES_CHANGED, so
+    doing this from that event's handler would loop.
+]]
+local function ExpandCollapsedSkillHeaders()
+	if GetSkillLineInfoByID or not ExpandSkillHeader then
+		return nil
+	end
+
+	local expanded
+	for i = ns.GetNumSkillLines(), 1, -1 do
+		local skillName, isHeader, isExpanded = ns.GetSkillLineInfo(i)
+		if isHeader and not isExpanded then
+			expanded = expanded or {}
+			expanded[skillName] = true
+			ExpandSkillHeader(i)
+		end
+	end
+	return expanded
+end
+
+local function RestoreCollapsedSkillHeaders(expanded)
+	if not expanded then
+		return
+	end
+
+	for i = ns.GetNumSkillLines(), 1, -1 do
+		local skillName, isHeader = ns.GetSkillLineInfo(i)
+		if isHeader and expanded[skillName] then
+			CollapseSkillHeader(i)
+		end
+	end
 end
 
 -- Each Update reads one profession's rank and returns whether it changed.
@@ -140,7 +180,9 @@ function ns.InitializeCharacterConstants()
 		end
 	end
 
+	local expandedHeaders = ExpandCollapsedSkillHeaders()
 	ns.UpdateFirstAidSkill()
 	ns.UpdateAlchemySkill()
 	ns.UpdateEngineeringSkill()
+	RestoreCollapsedSkillHeaders(expandedHeaders)
 end
