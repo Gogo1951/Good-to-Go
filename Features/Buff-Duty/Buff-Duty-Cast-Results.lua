@@ -56,7 +56,59 @@ function ns.NoteBuffCastAttempt(spec)
 	end
 	local guid = spec.favorGUID or (spec.unit and UnitGUID(spec.unit))
 	if ns.IsPlain(guid) and guid then
-		lastAttempt = { guid = guid, unit = spec.unit, key = spec.buffKey, at = GetTime() }
+		--[[
+		    A pet (anything not a player: a party pet's token, or a targeted
+		    one) has its cast followed through below, since its buffs reach
+		    the client less reliably than a player's.
+		]]
+		local isPet = false
+		if spec.unit and not spec.isGroup and not spec.favorGUID then
+			local isPlayer = UnitIsPlayer(spec.unit)
+			isPet = ns.IsPlain(isPlayer) and not isPlayer
+		end
+		local ids = {}
+		for _, id in ipairs(spec.castIds or { spec.spellId }) do
+			ids[id] = true
+		end
+		lastAttempt = { guid = guid, unit = spec.unit, key = spec.buffKey, ids = ids, isPet = isPet, at = GetTime() }
+	end
+end
+
+--[[
+    The player's cast going off. One the window or key just aimed at a pet is
+    taken at its word (BuffDuty.NotePetCast): the pet isn't offered that buff
+    again until it would need a refresh, whether or not its aura ever shows.
+]]
+function ns.OnBuffCastSucceeded(unit, spellID)
+	local attempt = lastAttempt
+	if not attempt or not attempt.isPet or not ns.IsPlain(unit) or unit ~= "player" or not ns.IsPlain(spellID) then
+		return
+	end
+	if GetTime() - attempt.at > BOUNCE_WINDOW then
+		return
+	end
+	if attempt.ids[spellID] then
+		lastAttempt = nil
+		BuffDuty.NotePetCast(attempt.guid, attempt.key)
+		ns.RequestBuffDutyRefresh()
+	end
+end
+
+--[[
+    The client's own words for a target the spell can never land on, so they
+    match in every locale. Only these mark a pet as refused: range, line of
+    sight, mana and cooldowns pass and are worth another click.
+]]
+local PET_REFUSALS = {}
+for _, message in ipairs({
+	SPELL_FAILED_BAD_TARGETS,
+	SPELL_FAILED_BAD_IMPLICIT_TARGETS,
+	SPELL_FAILED_TARGET_NOT_IN_PARTY,
+	SPELL_FAILED_TARGET_NOT_IN_RAID,
+	SPELL_FAILED_TARGET_IS_PLAYER_CONTROLLED,
+}) do
+	if type(message) == "string" then
+		PET_REFUSALS[message] = true
 	end
 end
 
@@ -72,7 +124,23 @@ end
     SPELL_FAILED_AURA_BOUNCED, so it matches in every locale.
 ]]
 local function OnUIErrorMessage(errorType, message)
-	if not lastAttempt or not ns.IsPlain(message) or message ~= SPELL_FAILED_AURA_BOUNCED then
+	if not lastAttempt or not ns.IsPlain(message) then
+		return
+	end
+	--[[
+	    A pet the game won't take the buff on at all: it isn't offered that
+	    buff again while it stays around (BuffDuty.NotePetRefused).
+	]]
+	if lastAttempt.isPet and PET_REFUSALS[message] then
+		local attempt = lastAttempt
+		lastAttempt = nil
+		if GetTime() - attempt.at <= BOUNCE_WINDOW then
+			BuffDuty.NotePetRefused(attempt.guid, attempt.key)
+			ns.RequestBuffDutyRefresh()
+		end
+		return
+	end
+	if message ~= SPELL_FAILED_AURA_BOUNCED then
 		return
 	end
 	if ns.IsPlain(errorType) and errorType ~= bounceErrorType then

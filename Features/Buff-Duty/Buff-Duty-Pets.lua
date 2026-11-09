@@ -103,15 +103,113 @@ local function IsCharmedPet(unit)
 	return not BuffDuty.PetOwnerClass(unit) and not UnitCreatureFamily(unit)
 end
 
--- A phase-shifted imp drops off the list: nothing can reach it until it phases back in.
+--[[
+    A pet the window can't do anything for drops off the list rather than hold
+    its owner's row, and the window, up: one out of sight (another zone, or
+    past the client's view -- its buffs aren't sent and no cast reaches it),
+    one the game won't let you help (UnitCanAssist), and on WoW Forever one
+    whose identity is kept secret. A secret or missing answer to either
+    question keeps the pet on: only a readable "no" drops it.
+
+    A phase-shifted imp drops off too: nothing can reach it until it phases
+    back in.
+]]
 local function CanBuffPet(unit)
-	return UnitExists(unit)
-		and not UnitIsPlayer(unit)
-		and not UnitIsDeadOrGhost(unit)
-		and not IsPhaseShifted(unit)
-		and not IsCharmedPet(unit)
+	if not UnitExists(unit) or UnitIsPlayer(unit) or UnitIsDeadOrGhost(unit) then
+		return false
+	end
+	if ns.IsUnitIdentitySecret(unit) then
+		return false
+	end
+	local visible = UnitIsVisible(unit)
+	if ns.IsPlain(visible) and not visible then
+		return false
+	end
+	local canAssist = UnitCanAssist("player", unit)
+	if ns.IsPlain(canAssist) and not canAssist then
+		return false
+	end
+	return not IsPhaseShifted(unit) and not IsCharmedPet(unit)
 end
 BuffDuty.CanBuffPet = CanBuffPet
+
+--------------------------------------------------------------------------------
+-- Holds
+--------------------------------------------------------------------------------
+
+--[[
+    GUID -> buff key -> GetTime() until which the pet isn't offered that buff
+    even though it reads as missing.
+
+    A pet's buffs reach the client less reliably than a player's, so a cast
+    that went off on it (BuffDuty.NotePetCast) is taken at its word: the buff
+    is held for as long as your cast of it lasts, less the Refresh Under time,
+    whether or not the aura ever shows. If it does show, Has sees it first
+    and the hold never matters.
+
+    A cast the game refused outright -- not a valid target (BuffDuty.NotePetRefused)
+    -- holds that buff for as long as the pet stays around: clicking again
+    would only fail again.
+]]
+local holds = {}
+
+-- How long a cast on a pet is trusted when you haven't seen how long that buff lasts yet.
+local PET_HOLD_FALLBACK = 600
+-- The shortest a cast on a pet is trusted, however soon it would want a refresh.
+local PET_HOLD_MINIMUM = 60
+
+local function BuffByKey(key)
+	for _, buff in ipairs(buffs) do
+		if buff.key == key then
+			return buff
+		end
+	end
+	return nil
+end
+
+local function Hold(guid, key, untilTime)
+	if not (ns.IsPlain(guid) and guid and key) then
+		return
+	end
+	holds[guid] = holds[guid] or {}
+	holds[guid][key] = untilTime
+end
+
+function BuffDuty.NotePetCast(guid, key)
+	local buff = BuffByKey(key)
+	if not buff then
+		return
+	end
+	local threshold = buff.refreshSeconds or BuffDuty.refreshSeconds
+	local trusted = math.max((BuffDuty.MyDuration(buff) or PET_HOLD_FALLBACK) - threshold, PET_HOLD_MINIMUM)
+	Hold(guid, key, GetTime() + trusted)
+end
+
+function BuffDuty.NotePetRefused(guid, key)
+	Hold(guid, key, math.huge)
+end
+
+local function IsHeld(guid, key)
+	local byKey = guid and holds[guid]
+	local untilTime = byKey and byKey[key]
+	if not untilTime then
+		return false
+	end
+	if GetTime() < untilTime then
+		return true
+	end
+	byKey[key] = nil
+	return false
+end
+
+-- Drops every hold but those on the GUIDs in `keep`, from BuffDuty.PruneAuraCache.
+function BuffDuty.PrunePetHolds(keep)
+	for guid in pairs(holds) do
+		if not keep[guid] then
+			holds[guid] = nil
+		end
+	end
+end
 
 -- The pet token that goes with a group member's token.
 function BuffDuty.PetUnitOf(unit)
@@ -134,12 +232,28 @@ function BuffDuty.PetRow(unit, castUnit, ownerClass, ownerName)
 		return nil
 	end
 	BuffDuty.ReadAuras(unit)
+	-- With any of its auras unreadable, a buff it looks to be missing may only be hidden from us.
+	if not BuffDuty.AurasReadable() then
+		return nil
+	end
+	local guid = UnitGUID(unit)
+	guid = ns.IsPlain(guid) and guid or nil
 	local name = GetUnitName(unit, false) or ""
 	local icons = {}
 	for _, buff in ipairs(buffs) do
 		if buff.singleName and PetWants(buff, unit) then
 			local has, expires, duration = Has(buff, unit)
-			if not has then
+			--[[
+			    Once Has agrees the pet has the buff, a hold on it has done its
+			    job: from here on Has alone decides. One that is only seen (it
+			    reads as weaker, or running low, right after your cast landed)
+			    keeps its hold until that runs out, so a version Has misjudges
+			    on a pet can't bring the row straight back.
+			]]
+			if has and guid and holds[guid] then
+				holds[guid][buff.key] = nil
+			end
+			if not has and not IsHeld(guid, buff.key) then
 				icons[#icons + 1] = BuffDuty.WithTimeLeft(SingleIcon(buff, unit, castUnit, name), expires, duration)
 			end
 		end

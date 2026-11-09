@@ -41,12 +41,25 @@ local auraExpires, auraDurations, auraStrengths, auraMine =
 	uncachedRecord.expires, uncachedRecord.durations, uncachedRecord.strengths, uncachedRecord.mine
 
 --[[
+    Whether the record ReadAuras last selected skipped an aura it couldn't
+    read (a secret spell id on WoW Forever). Its buffs can't be told apart,
+    so a missing one there may only be one we can't see.
+]]
+local auraUnreadable = false
+
+--[[
     Spell id -> the strength your own cast of it landed with, learned from
     every aura of yours ReadAuras sees, on anyone. Talents raise it (Improved
     Mark of the Wild), so it is only known once you have cast that rank this
     session; until then Has falls back to comparing ranks.
 ]]
 local myStrengths = {}
+
+--[[
+    Spell id -> the full duration your own cast of it landed with, learned the
+    same way. Kept across talent changes: they change strength, not time.
+]]
+local myDurations = {}
 
 -- Talents and new ranks change what your casts land with, so it is learned again.
 function BuffDuty.ForgetMyStrengths()
@@ -137,6 +150,7 @@ function BuffDuty.PruneAuraCache()
 			bounced[guid] = nil
 		end
 	end
+	BuffDuty.PrunePetHolds(keep)
 end
 
 function BuffDuty.MarkAurasDirty(unit)
@@ -167,6 +181,7 @@ function BuffDuty.ReadAuras(unit)
 		then
 			auraExpires, auraDurations, auraStrengths, auraMine =
 				record.expires, record.durations, record.strengths, record.mine
+			auraUnreadable = record.unreadable or false
 			return
 		end
 		record = record or NewRecord()
@@ -183,12 +198,17 @@ function BuffDuty.ReadAuras(unit)
 	wipe(auraDurations)
 	wipe(auraStrengths)
 	wipe(auraMine)
+	record.unreadable = false
+	auraUnreadable = false
 	for i = 1, 40 do
 		local data = C_UnitAuras.GetBuffDataByIndex(unit, i, "HELPFUL")
 		if not data then
 			return
 		end
-		if ns.IsPlain(data.spellId) and data.spellId then
+		if not ns.IsPlain(data.spellId) then
+			record.unreadable = true
+			auraUnreadable = true
+		elseif data.spellId then
 			local expires, duration = data.expirationTime, data.duration
 			auraExpires[data.spellId] = ns.IsPlain(expires) and expires or 0
 			auraDurations[data.spellId] = ns.IsPlain(duration) and duration or 0
@@ -198,9 +218,29 @@ function BuffDuty.ReadAuras(unit)
 			if ns.IsPlain(source) and source == "player" then
 				auraMine[data.spellId] = true
 				myStrengths[data.spellId] = strength or myStrengths[data.spellId]
+				if auraDurations[data.spellId] > 0 then
+					myDurations[data.spellId] = auraDurations[data.spellId]
+				end
 			end
 		end
 	end
+end
+
+-- Asked after ReadAuras(unit): whether every aura on the unit could be read.
+function BuffDuty.AurasReadable()
+	return not auraUnreadable
+end
+
+-- The longest any version of the buff has lasted when you cast it this session, or nil if you haven't yet.
+function BuffDuty.MyDuration(buff)
+	local longest
+	for id in pairs(buff.auraIds) do
+		local duration = myDurations[id]
+		if duration and (not longest or duration > longest) then
+			longest = duration
+		end
+	end
+	return longest
 end
 
 --[[

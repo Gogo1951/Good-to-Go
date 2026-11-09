@@ -566,7 +566,8 @@ The feature is "Restocker"; its window is the Restock List; its starter popup is
 #### Who Gets What
 
 - `RoleOf` checks, in order: the Main Tank mark, the assigned role (tank only outside a raid), the player's own LFG roles, `tankWhen[class]`.
-- Pets take `ALL` buffs, plus `TANK` per `tankWhen.PET`, never `HEALER`. `manaOnly` is judged by the pet's power type. Charmed or phase-shifted pets are skipped.
+- Pets take `ALL` buffs, plus `TANK` per `tankWhen.PET`, never `HEALER`. `manaOnly` is judged by the pet's power type. Charmed or phase-shifted pets are skipped, and so are pets out of sight (`UnitIsVisible`), ones `UnitCanAssist` refuses, ones whose identity is secret on Forever, and ones with any unreadable aura (`BuffDuty.AurasReadable`); only a readable "no" skips.
+- Pet holds (`Buff-Duty-Pets.lua`): a cast the window or key aimed at a pet that goes off (`ns.OnBuffCastSucceeded`) holds that buff for your cast's learned duration (`BuffDuty.MyDuration`, else `PET_HOLD_FALLBACK`) less the refresh time; a bad-target refusal (`PET_REFUSALS`) holds it while the pet stays around. `Has` agreeing clears a hold; `PruneAuraCache` drops holds on GUIDs no longer watched.
 - `ns.IsBuffInRange` tries spell range, then `UnitIsVisible`, then `UnitInRange`. An unknown or secret answer reads as in range.
 
 #### Buff Key (`Buff-Duty-Keys.lua`, `Buff-Duty-Key-Picker.lua`)
