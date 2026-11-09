@@ -87,6 +87,15 @@ function ns.GetClassColor(classToken)
 	return hex and (COLOR_PREFIX .. hex) or nil
 end
 
+--[[
+	A player's name in their class color, for a chat line drawn in the TEXT color (ns.BuildPrintLine): the line's
+	color picks up again after it. Plain where the class is unknown.
+]]
+function ns.ClassColoredName(name, classToken)
+	local color = ns.GetClassColor(classToken)
+	return color and (color .. name .. "|r" .. ns.GetColor("TEXT")) or name
+end
+
 -- A class's name in the client's language, in its class color, white for a class the table does not hold.
 function ns.ClassName(classToken)
 	return (ns.GetClassColor(classToken) or ns.GetColor("TEXT"))
@@ -126,6 +135,8 @@ end
       ns.FetchPurchasedBankTabIDs()  Forever's character bank is the C_Bank
                                      tabs the player bought; nil on Era and
                                      TBC, which have BANK_CONTAINER and bags.
+      ns.GetReagentBagID()           Forever's equipped reagent bag; nil on
+                                     Era, TBC and Mists, which have none.
       ns.GetNumTalentTabs()          The classic talent trees; nil from MoP on,
                                      whose talents are specializations.
       ns.UnitCharacterPoints(unit)   Unspent talent points; nil on Forever.
@@ -136,7 +147,9 @@ end
       ns.GetNumQuestLogEntries(),    The quest log: a quest ID, nil for a
       ns.GetQuestLogQuestID(index)   header line.
       ns.GetNumSkillLines(),         The skill list, in the legacy return order.
-      ns.GetSkillLineInfo(index)
+      ns.GetSkillLineInfo(index),
+      ns.ExpandSkillHeader(index),   Opening and closing a skill header; nil
+      ns.CollapseSkillHeader(index)  where the client has neither call.
       ns.GetPetFoodTypes()           The pet's diets, as a list.
       ns.GetMerchantItemInfo(index)  A merchant slot, in the legacy return
                                      order as far as the eighth value, whether
@@ -172,6 +185,32 @@ else
 	function ns.FetchPurchasedBankTabIDs()
 		return nil
 	end
+end
+
+--[[
+    The equipped reagent bag's container ID, or nil on a client without the slot.
+    Only Forever defines NUM_REAGENTBAG_SLOTS; on Era, TBC and Mists the container
+    after the player's bags is a bank bag, so it must never be read as one of
+    theirs.
+]]
+if (NUM_REAGENTBAG_SLOTS or 0) > 0 then
+	local reagentBagID = Enum.BagIndex and Enum.BagIndex.ReagentBag or (NUM_BAG_SLOTS + 1)
+	function ns.GetReagentBagID()
+		return reagentBagID
+	end
+else
+	function ns.GetReagentBagID()
+		return nil
+	end
+end
+
+-- The bags the player carries, backpack first, then Forever's reagent bag where there is one.
+ns.CARRIED_BAG_IDS = {}
+for bagID = 0, NUM_BAG_SLOTS do
+	ns.CARRIED_BAG_IDS[#ns.CARRIED_BAG_IDS + 1] = bagID
+end
+if ns.GetReagentBagID() then
+	ns.CARRIED_BAG_IDS[#ns.CARRIED_BAG_IDS + 1] = ns.GetReagentBagID()
 end
 
 --[[
@@ -281,6 +320,10 @@ else
 	ns.GetSkillLineInfo = GetSkillLineInfo
 end
 
+-- Opening and closing a skill list header by its index; nil where the client has neither call.
+ns.ExpandSkillHeader = (C_SkillInfo and C_SkillInfo.ExpandSkillHeader) or ExpandSkillHeader
+ns.CollapseSkillHeader = (C_SkillInfo and C_SkillInfo.CollapseSkillHeader) or CollapseSkillHeader
+
 if C_PetInfo and C_PetInfo.GetPetFoodTypes then
 	ns.GetPetFoodTypes = C_PetInfo.GetPetFoodTypes
 else
@@ -383,9 +426,14 @@ end
 
 --[[
     Dual spec: how many talent groups the character has and which is active,
-    nil where the client can't say.
+    nil where the client can't say. GetNumSpecGroups comes before
+    GetNumTalentGroups because MoP Classic still defines the old name but
+    throws "API unsupported" when it's called.
 ]]
-ns.GetNumSpecGroups = C_SpecializationInfo and C_SpecializationInfo.GetNumSpecGroups or GetNumTalentGroups or Missing
+ns.GetNumSpecGroups = C_SpecializationInfo and C_SpecializationInfo.GetNumSpecGroups
+	or GetNumSpecGroups
+	or GetNumTalentGroups
+	or Missing
 ns.GetActiveSpecGroup = C_SpecializationInfo and C_SpecializationInfo.GetActiveSpecGroup
 	or GetActiveTalentGroup
 	or Missing
@@ -462,6 +510,15 @@ end
 -- True when a value is safe to compare, concatenate, or send; secret values error on all three.
 function ns.IsPlain(value)
 	return not (issecretvalue and issecretvalue(value))
+end
+
+--[[
+    True only for a readable true. WoW Forever answers some unit questions about
+    other players (charmed, enemy, attackable) with a secret boolean, which
+    errors when tested; a secret answer counts as false, as RankSentinel reads it.
+]]
+function ns.IsPlainTrue(value)
+	return ns.IsPlain(value) and value == true
 end
 
 --[[
@@ -752,6 +809,16 @@ function ns.IsPlayerGUID(guid)
 end
 
 --------------------------------------------------------------------------------
+-- Instance Type
+--------------------------------------------------------------------------------
+
+-- Whether the player is in a battleground or an arena.
+function ns.IsInPvPInstance()
+	local _, instanceType = IsInInstance()
+	return instanceType == "pvp" or instanceType == "arena"
+end
+
+--------------------------------------------------------------------------------
 -- Aura API Compatibility
 --------------------------------------------------------------------------------
 
@@ -778,13 +845,10 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    A usable emote target must be a live unit token: C_ChatInfo.PerformEmote
-    only directs "you cheer at X" at a real unit, and a combat-log name is not
-    one -- cross-realm sources arrive as "Name-Realm" and never resolve. Map the
-    buffer's GUID to a unit we actually have (the player, a group member, or the
-    current target / focus / mouseover) and return nil when none matches; the
-    emote caller then falls back to the bare name, which still degrades to the
-    undirected emote when the client can't resolve it.
+    The unit token we hold for a GUID: the player, a group member, or the
+    current target / focus / mouseover, or nil when none matches. A
+    combat-log name is no substitute -- cross-realm sources arrive as
+    "Name-Realm" and never resolve to a unit.
 
     On Forever a unit's GUID can be secret, and comparing a secret value
     errors, so a unit whose GUID can't be read simply doesn't match.

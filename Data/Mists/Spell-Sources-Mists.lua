@@ -10,7 +10,7 @@ Last Validated
 	2026-11-04, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
-	- Empty on purpose. Where each class list's extraSpells entry is learned, for the What's Next? tab (Features/Spellbook/Whats-Next/Whats-Next.lua), which no TOC for this client loads yet. Data/Vanilla/ has the full notes.
+	- Empty on purpose. Where each class list's extraSpells entry is learned, for the What's Next? tab (Features/Enhanced-Spellbook/Whats-Next/Whats-Next.lua), which no TOC for this client loads yet. Data/Vanilla/ has the full notes.
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query

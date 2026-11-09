@@ -141,16 +141,14 @@ ns.DiagnosticsStrings = {
 	RESTOCKER_DESCRIPTION = "Shows where the Restocker and the Inventory Report stand: their switches, the list in use and its rows, what a merchant would buy and an open bank would move, your gold and bag space, open windows, items not yet loaded, the reminders and the sound settings that could silence them, the Staples offer, /restock, the tooltip hook and the lines it would add.",
 	READINESS_TITLE = "Readiness Report",
 	READINESS_DESCRIPTION = "Shows what the Readiness Report would print right now, without waiting for a ready check, what each line reads (buffs, items carried, durability, gear), which of its switches are on, and its durability and expiring thresholds.",
-	BUFFS_CONTEXT_TITLE = "Thanks and Good News Context",
-	BUFFS_CONTEXT_DESCRIPTION = "Shows your character and profile, how buffs are detected and whether that is ready right now, each feature's switches, picked emotes and the tracked spells switched off, the buffs on you and how each would be handled, praise cooldowns and what would hold back thanks, whispers or Good News for your target, sound settings, the tracked spells you know and which Good News watches, and each Thank You button's command, settings, macro, icon, whisper and emotes.",
 	BUFF_DUTY_TITLE = "Buff Duty Context",
 	BUFF_DUTY_DESCRIPTION = "Shows every switch and gate that can keep the Buff Duty window hidden, each buff your class can give with who it's offered to, the ranks you know, their mana cost and whether the Buff Key would find it ready, your self buffs, each weapon with what fits it and what your bags hold for it, the Soulstone and who already carries one, the Buff Key's binding and anything overriding it, and every group member, their pet and your target as the window reads them, with which of your buffs each has on or is missing.",
-	EMOTES_TITLE = "Emote Extract",
-	EMOTES_DESCRIPTION = "Lists every emote this client can perform, read from the client itself, as tab-separated text: index, token, slash commands, and whether it plays a voice line.",
 	PAGE_TITLE = "Page Context",
 	PAGE_DESCRIPTION = "Shows your class and flavor, which spellbook the page attaches to, what hides its tab and where it sits, the class lists this client resolved, your spellbook's spells and what the page leaves out, every page setting and filter and the page showing, spells still waiting on data, the What's Next? and pet tabs, the key binding, and what the page lists in each section.",
 	MACROS_TITLE = "Macro Context",
 	MACROS_DESCRIPTION = "Shows whether the Spellbook is on, your free macro slots and whether a new macro can be made, which macros the page made and for which character, any macro holding a page macro's name or tag, Conditionals rows and Cast Sequence steps left out, each Dynamic Rank macro with where it's placed and the units it ranks for, what Delete Macros would remove, the equipped items it offers, the Mute Errors sound settings, and the trainer spells it recorded.",
+	RANK_WATCH_TITLE = "Rank Watch Context",
+	RANK_WATCH_DESCRIPTION = "Shows every switch and gate that keeps Rank Watch quiet, who whispers for your group, how this client sees casts, what it watches and the casts already reported, each group member's level, and the rank your level allows for each of your abilities.",
 	VALIDATE_TITLE = "Validate Data: %s",
 	VALIDATE_DESCRIPTION = "Checks every id in this data file against this client and exports the results as tab-separated text.",
 	VALIDATE_PROGRESS = "%s / %s IDs",
@@ -174,12 +172,12 @@ ns.DiagnosticsStrings = {
 	MESSAGES_DESCRIPTION = "Builds every consumable macro "
 		.. TITLE
 		.. " writes at its longest, with your client's spell names, and checks each against the 255-byte limit. Nothing is written.",
-	MESSAGES_BUFFS_TITLE = "Message Length: Buff Whispers",
-	MESSAGES_BUFFS_DESCRIPTION = "Builds every whisper, buff request and buff macro "
-		.. TITLE
-		.. " sends or writes, with the longest names in your language, and checks each one fits. Nothing is sent.",
+	MESSAGES_BUFF_DUTY_TITLE = "Message Length: Buff Duty",
+	MESSAGES_BUFF_DUTY_DESCRIPTION = "Builds every buff ask and Return the Favor macro Buff Duty sends or writes, with the longest names in your language, and checks each one fits. Nothing is sent.",
 	MESSAGES_SPELLBOOK_TITLE = "Message Length: Spellbook Macros",
 	MESSAGES_SPELLBOOK_DESCRIPTION = "Builds every macro the Spellbook page lists for your class, with every option it offers turned on, and shows each one's length against the macro limit. Nothing is written.",
+	MESSAGES_RANK_WATCH_TITLE = "Message Length: Rank Watch",
+	MESSAGES_RANK_WATCH_DESCRIPTION = "Builds every whisper Rank Watch sends, with the longest spell names in your language, and checks each one fits. Nothing is sent.",
 	MESSAGES_ALL_FIT = "all fit",
 	MESSAGES_SOME_OVER = "%d over",
 

@@ -284,20 +284,22 @@ end
 
 --[[
     What the add-on fills in itself, counted rather than printed, matched by
-    key at any depth since AceDB moves it with the active profile: itemCache,
-    the derived consumable cache; inventory, the Inventory Report's record of
-    every character's bags and bank; selfRefreshMigrated, Buff Duty's
+    key at any depth since AceDB moves it with the active profile: inventory,
+    the Inventory Report's record of every character's bags and bank;
+    selfRefreshMigrated, Buff Duty's
     record of settings already moved to a new default; and the Spellbook's
     ownedMacros and macroTags, the WoW macros it created and tagged, and
-    trainerSpells, what it recorded at trainers (listed on Macro Context).
+    trainerSpells, what it recorded at trainers (listed on Macro Context); and
+    Rank Watch's announced, every low rank already reported, by this client or
+    another in the group (counted on Rank Watch Context too).
 ]]
 local SUMMARIZED_BY_KEY = {
-	itemCache = "cached items",
 	inventory = "recorded characters",
 	selfRefreshMigrated = "migrated settings",
 	ownedMacros = "macros created",
 	macroTags = "tagged macros",
 	trainerSpells = "recorded classes",
+	announced = "reported casts",
 }
 
 local function DumpTable(value, indent, depth, lines)

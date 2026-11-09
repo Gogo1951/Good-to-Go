@@ -188,7 +188,7 @@ function GtGReplace()
 end
 
 --[[
-    MIGRATION (remove after 2026-11-26): the names these callbacks had before
+    MIGRATION (remove after 2026-12-08): the names these callbacks had before
     the GtG prefix. A macro body written under them can still be pressed before
     its next rewrite, such as after logging in mid-combat.
 ]]

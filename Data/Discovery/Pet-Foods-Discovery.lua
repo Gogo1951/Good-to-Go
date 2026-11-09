@@ -163,7 +163,7 @@ ns.PET_FOOD_DATA = {
 How We Got the Data
 
 Last Validated
-	2026-11-04, Season of Discovery 1.15.9.70576
+	2026-11-08, Season of Discovery 1.15.9.70576
 
 Notes
 	- The foods a hunter's pet eats, for Feed Pet support (Features/Macros-for-Consumables/Macros/Tools-Hunters-Pet-Food.lua). Diet IDs follow ns.PET_DIET_MAP in Data/Data.lua: 1 Meat, 2 Fish, 3 Bread, 4 Cheese, 5 Fruit, 6 Fungus.
@@ -193,4 +193,7 @@ wago.tools
 	https://wago.tools/db2/SpellEffect?build=1.15.9.70003
 	https://wago.tools/db2/SpellMisc?build=1.15.9.70003
 	https://wago.tools/db2/SpellDuration?build=1.15.9.70003
+
+QuestieDB
+	None.
 ]]

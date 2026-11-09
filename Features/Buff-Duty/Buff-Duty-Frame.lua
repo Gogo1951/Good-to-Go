@@ -18,7 +18,7 @@ local UpdateRange = ns.UpdateBuffDutyRange
     (the range fade), which the client allows on a protected frame, and the
     cooldown swipes, plain children of the buttons, still change.
 
-    The Party-Buffs icons and their hover list are
+    The Party-Buffs icons and their hover menu are
     Buff-Duty-Party-Buffs.lua; the icons' cooldown swipes and range fade are
     Buff-Duty-Icon-State.lua; the icons' secure attributes are
     Buff-Duty-Button-Attributes.lua; the window's saved position is
@@ -55,7 +55,7 @@ local SECTION_GAP = 4
     never narrower than a short name needs to look tidy, and never so wide that a
     long title-and-realm string pushes the icons off across the screen.
 ]]
-local MIN_NAME_WIDTH = 80
+local MIN_NAME_WIDTH = 64
 local MAX_NAME_WIDTH = 256
 --[[
     The name column grows in whole steps of this, not to the pixel, so a
@@ -73,14 +73,14 @@ local MEMBER_INDENT = 0
 local PARTIES_PER_ROW = 2
 local COLUMN_GAP = 16
 -- A pet sits one step further in, under its owner.
-local PET_INDENT = 12
+local PET_INDENT = 16
 local PADDING = 8
 --[[
-    The title bar: one icon-high row for the title and close button, then one
-    blank row before the first section so the title doesn't read as one of them.
+    The title bar: one icon-high row for the title and close button, then a
+    32-point gap before the first section so the title doesn't read as one of them.
 ]]
 local TITLE_HEIGHT = ICON_SIZE
-local TITLE_GAP = ROW_HEIGHT + ICON_GAP
+local TITLE_GAP = 32
 local CLOSE_SIZE = 22
 -- Room between the end of the title and the close button.
 local TITLE_CLOSE_GAP = 8
@@ -137,7 +137,11 @@ local function OnIconEnter(self)
 		GameTooltip:SetSpellByID(spec.spellId)
 	end
 	GameTooltip:AddLine(" ")
-	-- A Self Buffs weapon or Soulstone icon brings its own hint, already worded.
+	--[[
+	    Who the click lands on, not which click: every icon here casts on a
+	    click. A Self Buffs weapon or Soulstone icon brings its own line, already
+	    worded.
+	]]
 	local hint = spec.hint
 	if not hint then
 		local text = (spec.favorGUID and L["BUFF_DUTY_TOOLTIP_FAVOR"])
@@ -145,16 +149,7 @@ local function OnIconEnter(self)
 			or L["BUFF_DUTY_TOOLTIP_CAST"]
 		hint = text:format(spec.targetName)
 	end
-	GameTooltip:AddLine(GetColor("INFO") .. hint .. "|r", 1, 1, 1, true)
-	if spec.favorGUID then
-		GameTooltip:AddLine(
-			GetColor("INFO") .. L["BUFF_DUTY_TOOLTIP_DISMISS"]:format(spec.targetName) .. "|r",
-			1,
-			1,
-			1,
-			true
-		)
-	end
+	GameTooltip:AddLine(GetColor("HELP") .. hint .. "|r", 1, 1, 1, true)
 	GameTooltip:Show()
 end
 
@@ -212,7 +207,7 @@ local function AcquireIcon()
 		button.cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate")
 		button.cooldown:SetAllPoints()
 		button.cooldown:SetHideCountdownNumbers(false)
-		-- The template's numbers are sized for a 36-pixel bar button; ours is 20.
+		-- The template's numbers are sized for a 36-pixel bar button; ours is 16 (Data.BUFF_DUTY_ICON_SIZE).
 		if button.cooldown.SetCountdownFont then
 			button.cooldown:SetCountdownFont("GameFontHighlightSmallOutline")
 		end

@@ -3,8 +3,8 @@ local Data = ns.Data
 
 --[[
     Buff Duty's settings: who each buff is offered to, when each self
-    buff shows, and the weapon choices and timing, seeded into the profile
-    from each row's default and cleaned of values the dropdowns don't offer.
+    buff shows, and the weapon choices and timing, seeded into the
+    account-wide settings from each row's default and cleaned of values the dropdowns don't offer.
 ]]
 
 local BuffDuty = ns.BuffDuty

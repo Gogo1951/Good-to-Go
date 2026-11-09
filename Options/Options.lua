@@ -17,21 +17,16 @@ local REGISTRY = ns.OPTIONS_REGISTRY
 
     One panel per feature directly under the root, in the root panel's Features
     order (ns.FEATURE_GROUPS, left to right then down), each followed by its
-    sub-panels; the Thank You Button, which has no Features switch, follows the
-    features:
+    sub-panels:
 
       Good to Go    (welcome, mini-map, Features, Key Bindings, /Commands)
-        Buff Duty               Tracked Abilities, Self-Buffs, Weapon Buffs
+        Buff Duty               Group Buffs, Self-Buffs, Weapon Buffs
         Restocker
         Enhanced Spellbook
         Consumable Macros       Class & Race, Ignore List
+        Rank Watch              Reported Ranks, Ignored Players (where the flavor has ranks)
         Inventory Report
         Readiness Report
-        Stranger Buffs
-        Sharing Good News       Tracked Abilities
-        Combat Buffs            Tracked Abilities
-        Group Service Alerts    Tracked Abilities
-        Thank You Button
         Profiles, Feedback & Support, Diagnostic Tools
 
     Child-panel order is the order of the AddToBlizOptions calls. The third
@@ -53,13 +48,14 @@ local function RegisterChild(registryKey, builder, displayName, parentID)
 end
 
 --[[
-    Each panel with a tracked list gets it as a "Tracked Abilities" sub-panel.
+    Each panel with a tracked list gets it as a sub-panel: Group Buffs under
+    Buff Duty, Reported Ranks under Rank Watch.
     Sub-panels and panels whose lists exist only after login register their
     builder function, not a built table, so each is rebuilt on open.
 ]]
 local function RegisterBuffDutyPanels()
 	local buffDutyID = RegisterChild("BuffDuty", ns.BuildBuffDutyOptions, L["TAB_BUFF_DUTY"])
-	RegisterChild("BuffDutyBuffs", ns.BuildBuffDutyBuffsOptions, L["TRACKED_HEADER"], buffDutyID)
+	RegisterChild("BuffDutyBuffs", ns.BuildBuffDutyBuffsOptions, L["BUFF_DUTY_TRACKED_HEADER"], buffDutyID)
 	RegisterChild("BuffDutySelfBuffs", ns.BuildBuffDutySelfBuffsOptions, L["BUFF_DUTY_SELF_HEADER"], buffDutyID)
 	RegisterChild(
 		"BuffDutyWeaponBuffs",
@@ -91,17 +87,24 @@ local function RegisterMacrosPanels()
 	ignoreStatus.groups.treewidth = ns.OPTIONS_TREE_WIDTH
 end
 
-local function RegisterAppreciationPanels()
-	RegisterChild("StrangerBuffs", ns.BuildStrangersOptions(), L["TAB_STRANGERS"])
+--[[
+    Rank Watch, where its TOC loads it (every flavor with ranks to compare), with its Reported Ranks and
+    Ignored Players under it. Reported Ranks is a tree of classes, opened on the player's own and seeded with
+    the shared tree width, the way the Ignore List seeds its own; a player dragging the splitter or picking a
+    class overwrites either from then on.
+]]
+local function RegisterRankWatchPanels()
+	if not ns.BuildRankWatchOptions then
+		return
+	end
+	local rankWatchID = RegisterChild("RankWatch", ns.BuildRankWatchOptions, L["TAB_RANK_WATCH"])
+	RegisterChild("RankWatchTracked", ns.BuildRankWatchTrackedOptions, L["RANK_WATCH_TRACKED_HEADER"], rankWatchID)
+	RegisterChild("RankWatchIgnored", ns.BuildRankWatchIgnoredOptions, L["RANK_WATCH_IGNORED_HEADER"], rankWatchID)
 
-	local goodNewsID = RegisterChild("SendGoodNews", ns.BuildGoodNewsOptions, L["TAB_SHARING_GOOD_NEWS"])
-	RegisterChild("SendGoodNewsTracked", ns.BuildGoodNewsTrackedOptions, L["TRACKED_HEADER"], goodNewsID)
-
-	local combatID = RegisterChild("TeammateBuffs", ns.BuildTeammatesOptions, L["TAB_COMBAT_BUFFS"])
-	RegisterChild("TeammateBuffsTracked", ns.BuildTeammatesTrackedOptions, L["TRACKED_HEADER"], combatID)
-
-	local servicesID = RegisterChild("ServiceAlerts", ns.BuildServicesOptions, L["TAB_GROUP_SERVICE_ALERTS"])
-	RegisterChild("ServiceAlertsTracked", ns.BuildServicesTrackedOptions, L["TRACKED_HEADER"], servicesID)
+	local trackedStatus = AceConfigDialog:GetStatusTable(REGISTRY.RankWatchTracked)
+	trackedStatus.groups = trackedStatus.groups or {}
+	trackedStatus.groups.treewidth = trackedStatus.groups.treewidth or ns.OPTIONS_TREE_WIDTH
+	trackedStatus.groups.selected = trackedStatus.groups.selected or select(2, UnitClass("player"))
 end
 
 function ns.RegisterOptionsPanels()
@@ -113,11 +116,10 @@ function ns.RegisterOptionsPanels()
 	RegisterChild("Restocker", ns.BuildRestockerOptions, L["TAB_RESTOCKER"])
 	RegisterChild("Spellbook", ns.BuildSpellbookOptions, L["TAB_ENHANCED_SPELLBOOK"])
 	RegisterMacrosPanels()
+	RegisterRankWatchPanels()
 	-- Named by the tooltip block's own title, so the panel and the tooltip cannot name it two ways.
 	RegisterChild("InventoryReport", ns.BuildInventoryReportOptions, L["INVENTORY_REPORT_TITLE"])
 	RegisterChild("ReadinessReport", ns.BuildReadinessReportOptions, L["TAB_READINESS_REPORT"])
-	RegisterAppreciationPanels()
-	RegisterChild("ThankYouButton", ns.BuildThankYouButtonOptions(), L["TAB_THANK_YOU_BUTTON"])
 
 	--[[
 	    Profiles panel: the stock AceDBOptions-3.0 table, unmodified. Its display
@@ -170,8 +172,14 @@ end
 -- Slash Commands
 --------------------------------------------------------------------------------
 
+-- "/gtg ignore Name" hands the rest to Rank Watch where it loads (a README-Notes exception); anything else opens the panel.
 SLASH_GOODTOGO1 = "/gtg"
-SlashCmdList["GOODTOGO"] = function()
+SlashCmdList["GOODTOGO"] = function(message)
+	local command, rest = strtrim(message or ""):match("^(%S*)%s*(.-)$")
+	if command:lower() == "ignore" and ns.IgnoreRankWatchPlayer then
+		ns.IgnoreRankWatchPlayer(rest)
+		return
+	end
 	ns:OpenOptionsPanel()
 end
 
@@ -183,19 +191,4 @@ end
 SLASH_GOODTOGORESTOCK1 = "/restock"
 SlashCmdList["GOODTOGORESTOCK"] = function(message)
 	ns.HandleRestockerCommand(message)
-end
-
---[[
-    One command per Thank You button, generated from the same list the macros
-    and the options sections come from. The command TEXT is what users and their
-    existing macros type; only the internal SlashCmdList key is namespaced.
-]]
-for index, button in ipairs(ns.Data.THANK_YOU_BUTTONS) do
-	local key = "GOODTOGO_THANKYOU" .. index
-	_G["SLASH_" .. key .. "1"] = button.command
-	SlashCmdList[key] = function()
-		if ns.RunThankYou then
-			ns.RunThankYou(button)
-		end
-	end
 end

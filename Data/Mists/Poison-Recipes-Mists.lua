@@ -11,7 +11,7 @@ Last Validated
 
 Notes
 	- Empty: this client has no poison crafting. The Poisons skill line (40) has no abilities, the TBC crafting spells are gone, and the poisons are spells rather than items (Poisons-Mists.lua).
-	- Read by Features/Inventory-Restocker/Restocker-Crafting-Reagents.lua, which then turns no shortfall into a reagent order.
+	- Read by Features/Restocker/Restocker-Crafting-Reagents.lua, which then turns no shortfall into a reagent order.
 
 SQL (CMaNGOS)
 	None.

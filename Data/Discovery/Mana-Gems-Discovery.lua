@@ -4,25 +4,25 @@ if not ns.IS_DISCOVERY then
 	return
 end
 
--- [ID] = {Mana Amount}, -- Name
+-- [ID] = {Mana Amount, Min Level, Vendor Price, Max Stack, Bind Type}, -- Name
 ns.MANA_GEMS = {
-	[8008] = { 1000 }, -- Mana Ruby
-	[8007] = { 775 }, -- Mana Citrine
-	[5513] = { 550 }, -- Mana Jade
-	[5514] = { 375 }, -- Mana Agate
+	[8008] = { 1000, 58, 0, 1, 1 }, -- Mana Ruby
+	[8007] = { 775, 48, 0, 1, 1 }, -- Mana Citrine
+	[5513] = { 550, 38, 0, 1, 1 }, -- Mana Jade
+	[5514] = { 375, 23, 0, 1, 1 }, -- Mana Agate
 }
 
--- [ID] = {Mana Amount}, -- Name
+-- [ID] = {Mana Amount, Min Level, Vendor Price, Max Stack, Bind Type}, -- Name
 ns.MANA_RUNES = {
-	[20520] = { 900 }, -- Dark Rune
-	[12662] = { 900 }, -- Demonic Rune
+	[20520] = { 900, 0, 2000, 20, 0 }, -- Dark Rune
+	[12662] = { 900, 0, 600, 20, 1 }, -- Demonic Rune
 }
 
 --[[
 How We Got the Data
 
 Last Validated
-	2026-11-04, Season of Discovery 1.15.9.70576
+	2026-11-08, Season of Discovery 1.15.9.70576
 
 Notes
 	- ns.MANA_GEMS holds the mage's mana gems, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Mana Gem macro and by the Readiness Report. Mana Amount is the low end of the restore.
@@ -71,4 +71,7 @@ wago.tools
 	https://wago.tools/db2/SpellEffect?build=1.15.9.70003
 	https://wago.tools/db2/SpellMisc?build=1.15.9.70003
 	https://wago.tools/db2/SpellDuration?build=1.15.9.70003
+
+QuestieDB
+	None.
 ]]

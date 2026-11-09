@@ -9,7 +9,8 @@ local L = ns.L
     shaman's imbues come first, then the oils, stones and lures any class can
     use, strongest first. Everything is listed, whatever is in your bags (these settings
     are account-wide); the window offers only what you have and can
-    use. ns.OnBuffDutyItemInfo repaints the panel as item names load.
+    use. An item name still loading is warmed when its row draws, and the
+    panel repaints as it arrives.
 
     The switch for the window's weapon rows lives on the Buff Duty panel with
     the window's other rows.
@@ -21,12 +22,17 @@ local COLUMN_WIDTH = ns.OPTIONS_CONTROL_WIDTH / 2
 --[[
     A poison or weapon item is named by its line's first item, an imbue by
     its spell. An item the client hasn't cached yet shows its placeholder
-    until it loads.
+    and is warmed, so the panel repaints once it loads.
 ]]
 local function WeaponChoiceName(entry)
 	local id = entry.ids[1]
 	if entry.items then
-		return C_Item.GetItemInfo(id) or L["TRACKED_ITEM_PENDING"]:format(id)
+		local name = C_Item.GetItemInfo(id)
+		if name then
+			return name
+		end
+		ns.WarmItemCache({ id }, ns.OPTIONS_REGISTRY.BuffDutyWeaponBuffs)
+		return L["TRACKED_ITEM_PENDING"]:format(id)
 	end
 	return C_Spell.GetSpellName(id) or L["TRACKED_SPELL_PENDING"]:format(id)
 end

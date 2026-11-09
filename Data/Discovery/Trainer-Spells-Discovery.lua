@@ -1319,10 +1319,10 @@ ns.TRAINER_SPELLS = {
 How We Got the Data
 
 Last Validated
-	2026-11-04, Season of Discovery 1.15.9.70576
+	2026-11-08, Season of Discovery 1.15.9.70576
 
 Notes
-	- Every class spell this client's class trainers teach, and the ranks only a book teaches, one row per rank, so the spellbook page can list the spells a character hasn't learned yet. Features/Spellbook/Unlearned-Spells.lua shows only each spell's rank 1; the higher ranks keep the list in level order and let it tell rank 1 apart.
+	- Every class spell this client's class trainers teach, and the ranks only a book teaches, one row per rank, so the spellbook page can list the spells a character hasn't learned yet. Features/Enhanced-Spellbook/Unlearned-Spells.lua shows only each spell's rank 1; the higher ranks keep the list in level order and let it tell rank 1 apart.
 	- level is the level the trainer offers the rank, which is the spell's learn level. A talent row is the exception (below).
 	- The client's own learn level (Validate Data's SPELL_LEVEL_LEARNED) reads 0 or 1 for spells with no level of their own: weapon and armor skills, Parry, Pick Lock, the hunter's pet skills and talents, and Season of Discovery's runes. Those rows keep the trainer's level; a rune keeps the level WoW Forever's trainer teaches it at, which orders the list.
 	- requires is the spell the trainer wants first, usually the previous rank. Rows added from the game tables take the rank the tables say it replaces, or else the same spell's previous rank in this table, which agrees with all but 3 of the 852 hand-made rows that follow an earlier rank.
@@ -1337,7 +1337,7 @@ Notes
 	- Ruled out by hand: Seal of Righteousness rank 1 and Summon Imp (starting spells), Summon Dreadsteed (a quest, so it's in the warlock's extraSpells), Poisons and Mind-numbing Poison I to III (the rows hold no poison skill or recipes), and pet Growl rank 1 (every pet starts with it).
 	- Likely unobtainable, so not added: Curse of Idiocy (1010) and Black Arrow (3674, 14296), pre-release spells no trainer here teaches, and Mangle (22570), the leftover of TBC's Maim.
 	- Some rows are WoW Forever talents that reuse Season of Discovery rune spells (Arcane Blast, Wild Growth, Lava Burst and others, marked talent). Here they are runes learned by engraving, and the page lists them until learned.
-	- quest marks a rank a class quest teaches and no trainer does on this client: Conjure Water rank 7 (Arcane Refreshment), Summon Felsteed, and rank 1 of the priest's race spells (Desperate Prayer, Fear Ward, Touch of Weakness, Hex of Weakness, Starshards, Devouring Plague, Elune's Grace, Feedback, Shadowguard). Their teaching spells no item uses, so the test above took them for the trainer's. Found by matching CMaNGOS classic-db's quest rewards (quest_template RewSpell and RewSpellCast, followed through spell_template's Learn Spell effect) against its trainer lists (npc_trainer, npc_trainer_template); the What's Next? tab (Features/Spellbook/Whats-Next/Whats-Next.lua) shows them as Quest.
+	- quest marks a rank a class quest teaches and no trainer does on this client: Conjure Water rank 7 (Arcane Refreshment), Summon Felsteed, and rank 1 of the priest's race spells (Desperate Prayer, Fear Ward, Touch of Weakness, Hex of Weakness, Starshards, Devouring Plague, Elune's Grace, Feedback, Shadowguard). Their teaching spells no item uses, so the test above took them for the trainer's. Found by matching CMaNGOS classic-db's quest rewards (quest_template RewSpell and RewSpellCast, followed through spell_template's Learn Spell effect) against its trainer lists (npc_trainer, npc_trainer_template); the What's Next? tab (Features/Enhanced-Spellbook/Whats-Next/Whats-Next.lua) shows them as Quest.
 	- Nature's Grasp, Omen of Clarity, Aimed Shot, Blessing of Kings, Consecration and Divine Spirit are talents whose higher ranks the trainer teaches, so their rank 1 rows carry talent too; CMaNGOS has no trainer, quest or item teaching those ranks.
 
 SQL (CMaNGOS)

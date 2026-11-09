@@ -436,7 +436,7 @@ L["INVENTORY_REPORT_TOTAL"] = "합계 %s"
 --------------------------------------------------------------------------------
 
 L["OPTIONS_DESCRIPTION"] =
-	"최고의 음식, 물, 물약, 생명석으로 자동 갱신되는 매크로, 재료와 탄약을 자동으로 구매하고 은행에 보관하는 보충 목록, 클릭 한 번으로 시전하는 빠진 버프, 자동 감사 귓속말, 그리고 모든 주문의 마우스오버 매크로."
+	"최고의 음식, 물, 물약, 생명석으로 자동 갱신되는 매크로, 재료와 탄약을 자동으로 구매하고 은행에 보관하는 보충 목록, 클릭 한 번으로 시전하는 빠진 버프, 그리고 모든 주문의 마우스오버 매크로."
 
 -- Options: tree labels
 L["TAB_ENHANCED_SPELLBOOK"] = "향상된 마법책"
@@ -460,9 +460,8 @@ L["OPTIONS_MINIMAP_BUTTON_DESCRIPTION"] = "미니맵 버튼을 표시합니다."
 --[[
     The root panel's Features section: every feature's on/off switch, two to a
     line, each the same toggle that heads its feature's own panel. Enable Buff
-    Duty, Enable Restocker and Enable Thanks for Stranger Buffs keep their
-    original keys (BUFF_DUTY_ENABLE, OPTIONS_RESTOCKER_ENABLE, STRANGERS_ENABLE),
-    with the Buff Duty, Restocker and Stranger Buffs strings.
+    Duty and Enable Restocker keep their original keys (BUFF_DUTY_ENABLE,
+    OPTIONS_RESTOCKER_ENABLE), with the Buff Duty and Restocker strings.
 
     The two *_CONFIRM_OFF prompts appear only when the switch is turned off,
     and must say plainly that turning it off does not delete any macro.
@@ -488,17 +487,6 @@ L["SWITCH_INVENTORY_REPORT_DESCRIPTION"] =
 L["SWITCH_READINESS_REPORT"] = "준비 보고서 활성화"
 L["SWITCH_READINESS_REPORT_DESCRIPTION"] =
 	"전투 준비 확인이 시작되면 빠진 버프나 물약, 손상된 장비처럼 아직 해결해야 할 것을 나만 볼 수 있게 출력합니다. 준비가 끝났다면 아무것도 출력하지 않습니다."
-L["SWITCH_STRANGER_BUFFS_DESCRIPTION"] =
-	"필드에서 파티 밖의 플레이어가 버프를 걸어 주면 귓속말, 감정 표현, 또는 둘 다로 감사를 전합니다."
-L["SWITCH_GOOD_NEWS"] = "좋은 소식 나누기 활성화"
-L["SWITCH_GOOD_NEWS_DESCRIPTION"] =
-	"내가 버프를 걸어 준 플레이어에게 무엇을 걸었는지, 지속시간이 짧다면 얼마나 지속되는지도 귓속말로 알려 줍니다."
-L["SWITCH_COMBAT_BUFFS"] = "전투 버프에 감사 표시 활성화"
-L["SWITCH_COMBAT_BUFFS_DESCRIPTION"] =
-	"파티원이나 공격대원이 나에게 버프나 재사용 대기시간 기술을 걸어 주면 귓속말, 감정 표현, 또는 둘 다로 감사를 전합니다."
-L["SWITCH_SERVICE_ALERTS"] = "파티 지원 알림 활성화"
-L["SWITCH_SERVICE_ALERTS_DESCRIPTION"] =
-	"누군가 파티를 위해 잔치, 영혼의 샘, 차원문, 수리 로봇을 설치하면 알려 주고, 그 플레이어에게 감사를 전합니다."
 
 -- Features: each feature's master switch, also on the panel that configures it.
 L["OPTIONS_RESTOCKER_ENABLE"] = "Restocker 활성화"
@@ -545,7 +533,7 @@ L["OPTIONS_VERSION"] = "버전 %s"
     orients the player to the page's two halves -- which macros exist, then how
     each one behaves. The Which Macros to Create header below titles the first
     section, after the page's two headerless toggles, Enable Consumable Macros and
-    Macro Names on Buttons.
+    Enable Macro Names on Buttons.
 ]]
 L["TAB_CONSUMABLE_MACROS"] = "소모품 매크로"
 L["OPTIONS_MACROS_DESCRIPTION"] =
@@ -636,7 +624,7 @@ L["OPTIONS_INCLUDE_MANA_RUNES"] = "룬 및 기타 마나 회복 아이템을 마
 L["OPTIONS_INCLUDE_MANA_RUNES_DESCRIPTION_FORMAT"] =
 	"%s, %s, 그리고 마나 보석과 재사용 대기시간을 공유하는 다른 마나 회복 아이템도 마나 보석과 함께 우선순위를 매겨, 그중 하나가 가장 좋은 선택이거나 보석이 다 떨어졌을 때 마나 보석 매크로가 이를 사용합니다."
 
--- Buff Re-Application
+-- Buff Reapplication
 L["OPTIONS_REAPPLY_HEADER"] = "버프 재적용"
 L["OPTIONS_REAPPLY_SECTION_DESCRIPTION"] =
 	"전투 중에는 매크로를 변경할 수 없으므로, 전투 도중 만료된 버프는 전투가 끝날 때까지 사라진 채로 남습니다."
@@ -673,7 +661,7 @@ L["EXPLOSIVES_MODE_ATPLAYER"] = "좌클릭 @player"
 L["EXPLOSIVES_MODE_TOSS"] = "좌클릭 던지기"
 
 --[[
-    Class & Race panel (Options-Class-Race.lua), nested under Macros. TAB_CLASS_RACE
+    Class & Race panel (Options-Class-Race.lua), nested under Consumable Macros. TAB_CLASS_RACE
     is its label in the settings tree and the title on the page;
     OPTIONS_CLASS_RACE_DESCRIPTION is the intro beneath it.
 ]]
@@ -741,6 +729,16 @@ L["OPTIONS_CANNIBALIZE_DRINKING_DESCRIPTION"] =
 	"대상이 %s 주문을 사용할 수 있는 시체이고 주문이 재사용 대기 중이 아니면, 물 매크로가 물을 마시는 대신 이 주문을 시전합니다. 그 외에는 평소처럼 물을 마십니다. 버프 음료가 여전히 먼저입니다."
 
 --[[
+    Trolls, headed with the client's name for the race. In the three texts
+    below, %s is the client's name for Rapid Regeneration. WoW Forever only.
+]]
+L["OPTIONS_RAPID_REGENERATION_DESCRIPTION"] =
+	"%s이(가) 재사용 대기 중이 아니면 음식 매크로가 음식을 먹는 대신 이 주문을 시전하여 음식을 아낍니다. 재사용 대기 중이면 평소처럼 음식을 먹습니다."
+L["OPTIONS_RAPID_REGENERATION_EATING"] = "음식 대신 %s 사용"
+L["OPTIONS_RAPID_REGENERATION_EATING_DESCRIPTION"] =
+	"%s이(가) 재사용 대기 중이 아니면 음식 매크로가 음식을 먹는 대신 이 주문을 시전합니다. 그 외에는 평소처럼 음식을 먹습니다. 두루마리와 버프 음식이 여전히 먼저입니다."
+
+--[[
     Ignore List panel (Options-Ignore-List.lua). One tree scope per list: the
     Global list, then the character playing and every other character with
     something ignored, each under its profile's name, which is never
@@ -785,8 +783,10 @@ L["OPTIONS_RESTOCKER_OPEN_BANK"] = "은행에서 열기"
 L["OPTIONS_RESTOCKER_OPEN_BANK_DESCRIPTION"] = "은행을 방문하면 보충 목록을 엽니다."
 L["OPTIONS_RESTOCKER_OPEN_MERCHANT"] = "상인 방문 시 열기"
 L["OPTIONS_RESTOCKER_OPEN_MERCHANT_DESCRIPTION"] = "상인을 방문하면 보충 목록을 엽니다."
--- The header over the three reminder rows below, which follow the Staples Pop-Up and Gold Reserve rows on the page.
+-- The header over the three reminder rows below, which follow the Gold Reserve section on the page, and its description.
 L["OPTIONS_RESTOCKER_REMINDERS_HEADER"] = "알림"
+L["OPTIONS_RESTOCKER_REMINDERS_DESCRIPTION"] =
+	"보충 목록의 물품이 부족할 때 언제 알림을 받을지 선택하세요."
 L["OPTIONS_RESTOCKER_REMIND"] = "마을 보충 알림 사용"
 L["OPTIONS_RESTOCKER_REMIND_DESCRIPTION"] =
 	"보충 목록에 부족한 것이 있고 여관이나 도시에 도착하거나 이미 그곳에 있는 상태로 접속했을 때 대화창에 알림을 표시합니다."
@@ -800,8 +800,12 @@ L["OPTIONS_RESTOCKER_BANK_REMIND_DESCRIPTION"] =
 --[[
     The Gold Reserve: the floor the merchant restock never spends below. The
     dropdown beside it writes each amount as a number and the gold coin, so
-    its values have no strings; AMOUNT_DESCRIPTION is its hover text.
+    its values have no strings; AMOUNT_DESCRIPTION is its hover text. HEADER
+    and SECTION_DESCRIPTION head its section.
 ]]
+L["OPTIONS_RESTOCKER_GOLD_RESERVE_HEADER"] = "예비 골드"
+L["OPTIONS_RESTOCKER_GOLD_RESERVE_SECTION_DESCRIPTION"] =
+	"상인에게서 구매할 때 절대 쓰지 않을 골드를 따로 남겨 둡니다."
 L["OPTIONS_RESTOCKER_GOLD_RESERVE"] = "예비 골드 사용"
 L["OPTIONS_RESTOCKER_GOLD_RESERVE_DESCRIPTION"] =
 	"여기서 따로 남겨 둔 골드는 보충에 절대 사용하지 않습니다."
@@ -865,8 +869,7 @@ L["OPTIONS_READINESS_DESCRIPTION"] =
 L["OPTIONS_READINESS_RESET"] = "준비 보고서 설정 초기화"
 L["OPTIONS_READINESS_RESET_DESCRIPTION"] =
 	"이 페이지의 모든 체크박스와 두 기준값을 기본값으로 되돌립니다."
-L["OPTIONS_READINESS_RESET_CONFIRM"] =
-	"준비 보고서의 모든 설정을 기본값으로 초기화할까요? 보고서 자체도 다시 꺼집니다."
+L["OPTIONS_READINESS_RESET_CONFIRM"] = "준비 보고서의 모든 설정을 기본값으로 초기화할까요?"
 
 --[[
     The three sections, each a real header over the switches it covers. They
@@ -903,6 +906,11 @@ L["OPTIONS_READINESS_MAIN_HAND_DESCRIPTION"] =
 L["OPTIONS_READINESS_OFF_HAND"] = "보조장비 무기 버프"
 L["OPTIONS_READINESS_OFF_HAND_DESCRIPTION"] =
 	"보조장비 무기에 일시적인 강화 효과가 없으면 알려 줍니다. 어떤 강화든 인정합니다: 숫돌, 무게추, 오일, 독, 주술사 무기 버프."
+-- WoW Forever, where an imbue sits beside an oil or stone (ns.WEAPON_ENCHANTS_STACK).
+L["OPTIONS_READINESS_MAIN_HAND_DESCRIPTION_STACKED"] =
+	"주장비 무기에 일시적인 강화 효과가 부족하면 알려 줍니다. 도적과 주술사는 독이나 무기 강화 하나와 오일이나 숫돌 하나, 총 두 가지가 필요하고, 다른 직업은 아무것이나 하나면 됩니다."
+L["OPTIONS_READINESS_OFF_HAND_DESCRIPTION_STACKED"] =
+	"보조장비 무기에 일시적인 강화 효과가 부족하면 알려 줍니다. 도적은 독 하나와 오일이나 숫돌 하나, 총 두 가지가 필요하고, 다른 직업은 아무것이나 하나면 됩니다."
 --[[
     Names the OTHER threshold so the two cannot be mistaken for each other: the
     Consumable Macros panel has one that decides when a macro treats a buff as spent, and
@@ -949,10 +957,147 @@ L["OPTIONS_READINESS_NONCOMBAT_GEAR_DESCRIPTION"] =
 	"승마 장비나 낚시 장비처럼 전투에 어울리지 않는 착용 장비를 링크합니다."
 
 --------------------------------------------------------------------------------
+-- Rank Watch
+--------------------------------------------------------------------------------
+
+--[[
+    Rank Watch tells a group member who cast a spell at a lower rank than they could have. Its messages are
+    fixed, one whisper and one print, with nothing for the player to edit. Rank Sentinel is the standalone
+    add-on Rank Watch replaces; its name stays as written in every locale.
+]]
+L["TAB_RANK_WATCH"] = "주문 레벨 감시"
+L["OPTIONS_RANK_WATCH_DESCRIPTION"] =
+	"그룹에서 시전자가 쓸 수 있는 것보다 낮은 레벨로 시전된 주문을 감시하고, 상급자에게 더 높은 레벨이 기다리고 있다고 알려 줍니다. 레벨이 낮은 플레이어에게 거는 버프처럼 게임이 스스로 낮추는 레벨은 절대 알리지 않습니다."
+--[[
+    Printed at login, and when the switch is turned on, while the standalone add-on runs; also shown on the
+    panel. %s is the standalone add-on's title.
+]]
+L["RANK_WATCH_STANDALONE"] =
+	"%s이(가) 아직 실행 중이므로, 그룹원이 낮은 레벨 알림을 두 번씩 받지 않도록 주문 레벨 감시는 조용히 있습니다. Good to Go가 그 애드온을 끄고 주문 레벨 감시를 켜 두었습니다. UI를 다시 불러오면 주문 레벨 감시가 이어서 맡습니다."
+
+-- A spell and its rank in every message: "[Arcane Intellect] (Rank 3)". The first %s is the spell, the second its rank.
+L["RANK_WATCH_SPELL_RANK"] = "%s (%s)"
+-- A rank's number, where the client hasn't loaded the spell's own rank text yet.
+L["RANK_WATCH_RANK"] = "레벨 %d"
+
+--[[
+    The whisper to the caster. { the spell and rank they cast, the level a higher rank is learned at } Sent
+    after the marker and before " // GtG", so "Good to Go" runs straight into the sign-off: "...and you'll be
+    Good to Go // GtG". Casual on purpose; a stranger's whisper should read as a tip, not a correction.
+]]
+L["RANK_WATCH_MESSAGE_WHISPER"] =
+	"참고로, 별건 아닌데 %s을(를) 쓰셨어요. %d레벨부터 상위 레벨을 배울 수 있어요. 행동 단축바를 바꾸시거나 상급자에게 들르시면 바로 Good to Go!"
+--[[
+    The whisper to a pet's owner, the same shape with the pet first. { the pet, the spell and rank it cast, the
+    level a higher rank comes at } A hunter pet is named ("your pet Fluffy") and its level is its own; a demon is
+    named by its kind ("your Imp"), and its level is the warlock's, which a grimoire asks for.
+]]
+L["RANK_WATCH_MESSAGE_WHISPER_PET"] =
+	"참고로, 별건 아닌데 소환수 %s이(가) %s을(를) 썼어요. 소환수 %d레벨부터 상위 레벨을 배울 수 있어요. 야수 조련으로 가르쳐 주시면 바로 Good to Go!"
+L["RANK_WATCH_MESSAGE_WHISPER_DEMON"] =
+	"참고로, 별건 아닌데 소환하신 %s이(가) %s을(를) 썼어요. %d레벨부터 상위 레벨을 배울 수 있어요. 악마 조련사에게서 마법서를 구하시면 바로 Good to Go!"
+--[[
+    Sent once per player, right after the first whisper they ever get from you, so a stranger's tip comes with a
+    way to make it stop. Signed off like the whisper above it. %s is their opt-out number, made from their name,
+    so it is the same from everyone running Good to Go.
+]]
+L["RANK_WATCH_MESSAGE_OPT_OUT"] =
+	"이런 팁이 필요 없으시면 답장으로 %s만 보내 주세요. 그러면 주문 레벨 관련 귓속말을 다시는 보내지 않을게요. 이 번호는 Good to Go를 쓰는 누구에게나 통해요."
+-- Sent back once to a player who whispered their opt-out number.
+L["RANK_WATCH_MESSAGE_OPT_OUT_DONE"] = "알겠어요, 이제 주문 레벨 팁은 보내지 않을게요."
+-- Printed when a player says their opt-out number. %s is their name.
+L["RANK_WATCH_OPT_OUT_ADDED"] =
+	"%s 님이 수신 거부 번호를 보내서 이제 주문 레벨 감시가 이 플레이어를 제외합니다. 주문 레벨 감시의 제외한 플레이어에서 되돌릴 수 있습니다."
+-- Printed when you cast a low rank yourself. { the spell and rank, the higher spell and rank, its level }
+L["RANK_WATCH_PRINT_SELF"] =
+	"%s을(를) 시전했습니다. %s은(는) %d레벨부터 배울 수 있습니다. 상급자를 찾아가거나 행동 단축바를 갱신하세요."
+-- Printed when your own pet casts one. { the pet, the spell and rank, the higher spell and rank, its level }
+L["RANK_WATCH_PRINT_SELF_PET"] =
+	"소환수 %s이(가) %s을(를) 시전했습니다. %s은(는) 소환수 %d레벨부터 배울 수 있습니다."
+L["RANK_WATCH_PRINT_SELF_DEMON"] =
+	"내 %s이(가) %s을(를) 시전했습니다. %s은(는) %d레벨부터 배울 수 있습니다."
+-- Printed when a group member casts one. { their name, the spell and rank, the higher spell and rank, its level }
+L["RANK_WATCH_PRINT_OTHER"] =
+	"%s 님이 %s을(를) 시전했습니다. 이 플레이어는 %s을(를) %d레벨부터 배울 수 있습니다."
+-- A group member's pet. { the owner's name, the pet, the spell and rank, the higher spell and rank, its level }
+L["RANK_WATCH_PRINT_OTHER_PET"] =
+	"%s 님의 소환수 %s이(가) %s을(를) 시전했습니다. 이 소환수는 %s을(를) 소환수 %d레벨부터 배울 수 있습니다."
+L["RANK_WATCH_PRINT_OTHER_DEMON"] =
+	"%s 님의 %s이(가) %s을(를) 시전했습니다. 이 악마는 %s을(를) %d레벨부터 배울 수 있습니다."
+-- Added after the print when another player's add-on whispers for the group. %s is that player's name.
+L["RANK_WATCH_PRINT_WHISPERER"] = "귓속말은 %s 님이 보냅니다."
+
+-- Features: the switch, also on the panel.
+L["SWITCH_RANK_WATCH"] = "주문 레벨 감시 활성화"
+L["SWITCH_RANK_WATCH_DESCRIPTION"] =
+	"누군가 배울 수 있는 것보다 낮은 레벨로 주문을 시전하면 나에게 알려 주고 그룹원에게 귓속말을 보내, 상급자를 찾아가도록 알려 줍니다."
+
+L["RANK_WATCH_MESSAGES_HEADER"] = "알림"
+L["RANK_WATCH_MESSAGES_DESCRIPTION"] =
+	"주문 레벨 감시가 낮은 레벨을 시전한 플레이어에게 알리는 방법입니다."
+L["RANK_WATCH_WHISPER"] = "그룹원에게 귓속말"
+L["RANK_WATCH_WHISPER_DESCRIPTION"] =
+	"낮은 레벨을 시전한 그룹원에게 귓속말을 보냅니다. 그룹에서 여러 명이 주문 레벨 감시나 Rank Sentinel을 사용하면 그중 한 명만 귓속말을 보냅니다."
+L["RANK_WATCH_PRINT"] = "그룹원의 낮은 레벨 출력"
+L["RANK_WATCH_PRINT_DESCRIPTION"] =
+	"그룹원의 낮은 레벨을 대화창에 출력합니다. 내 낮은 레벨은 항상 출력됩니다."
+L["RANK_WATCH_GRACE_HEADER"] = "유예 기간"
+L["RANK_WATCH_GRACE_DESCRIPTION"] =
+	"시전자의 레벨이 새 주문 레벨의 습득 레벨을 이 값만큼 넘어서기 전까지는 알리지 않으므로, 막 도달해 아직 배울 시간이 없었던 레벨 때문에 알림을 받는 사람이 없습니다."
+L["RANK_WATCH_GRACE_MAX_LEVEL"] = "최고 레벨 유예 기간"
+L["RANK_WATCH_GRACE_MAX_LEVEL_DESCRIPTION"] =
+	"최고 레벨 캐릭터의 경우, 최고 레벨보다 이 값 이하로 낮은 레벨에서 배우는 주문 레벨은 알리지 않습니다. 0이면 배울 수 있는 모든 주문 레벨을 알립니다."
+L["RANK_WATCH_GRACE_LEVELING"] = "레벨업 중 유예 기간"
+L["RANK_WATCH_GRACE_LEVELING_DESCRIPTION"] =
+	"아직 레벨업 중인 캐릭터의 경우, 자기 레벨과 이 값 이내로 차이 나는 레벨에서 배우는 주문 레벨은 알리지 않아 상급자를 찾아갈 시간을 줍니다."
+-- The grace period dropdowns' choices: 1, then 0 and 2 to 5.
+L["RANK_WATCH_GRACE_LEVEL"] = "1레벨"
+L["RANK_WATCH_GRACE_LEVELS"] = "%d레벨"
+
+L["RANK_WATCH_OPT_OUT_HEADER"] = "수신 거부"
+L["RANK_WATCH_OPT_OUT_DESCRIPTION"] =
+	"주문 레벨 감시가 누군가에게 처음 귓속말을 보내면, 이어서 그 사람의 수신 거부 번호를 알려 줍니다. 번호는 이름으로 만들어지므로 Good to Go를 쓰는 누구에게서나 같습니다. 그 사람이 귓속말이나 내가 볼 수 있는 대화 채널에서 이 번호를 말하면 제외한 플레이어에 추가되어, 다시는 나에게서 주문 레벨 알림을 받지 않습니다. 직접 누군가를 제외하려면 대상으로 지정하고 /gtg ignore를 입력하세요."
+L["RANK_WATCH_WHISPERER_HEADER"] = "그룹 알림 담당자"
+L["RANK_WATCH_WHISPERER_DESCRIPTION"] =
+	"그룹에서 여러 명이 주문 레벨 감시나 Rank Sentinel을 사용하면 그중 한 명만 귓속말을 보내므로, 낮은 레벨을 시전한 플레이어는 모두에게서가 아니라 한 번만 알림을 받습니다. 나머지는 자기 대화창에만 출력합니다. 지금 귓속말을 보내는 사람은 다음과 같습니다."
+L["RANK_WATCH_WHISPERER_SELF"] = "나입니다."
+-- %s is the player whose Rank Watch or Rank Sentinel whispers for the group.
+L["RANK_WATCH_WHISPERER_OTHER"] = "%s 님이 보내므로, 나는 출력만 봅니다."
+L["RANK_WATCH_WHISPERER_NONE"] = "없음: 그룹원에게 귓속말이 꺼져 있습니다."
+
+-- Ignored Players, under Rank Watch.
+L["RANK_WATCH_IGNORED_HEADER"] = "제외한 플레이어"
+L["RANK_WATCH_IGNORED_DESCRIPTION"] =
+	"주문 레벨 감시는 이 플레이어들에 대해 절대 알리지 않습니다."
+L["RANK_WATCH_IGNORED_NONE"] = "아직 없습니다."
+L["RANK_WATCH_IGNORED_REMOVE"] = "제외 해제"
+L["RANK_WATCH_IGNORE_TARGET"] = "대상 제외"
+L["RANK_WATCH_IGNORE_TARGET_DESCRIPTION"] = "대상으로 지정한 플레이어를 목록에 추가합니다."
+L["RANK_WATCH_IGNORE_ADDED"] = "이제 주문 레벨 감시가 %s 님을 제외합니다."
+L["RANK_WATCH_IGNORE_NOT_FOUND"] =
+	"%s 님을 찾을 수 없습니다. 그룹을 맺거나 대상으로 지정한 다음 다시 시도하세요."
+L["RANK_WATCH_IGNORE_NO_TARGET"] = "플레이어를 대상으로 지정하거나 /gtg ignore 이름을 입력하세요."
+L["RANK_WATCH_IGNORE_COMMAND"] = "/gtg ignore 이름"
+L["RANK_WATCH_IGNORE_COMMAND_DESCRIPTION"] =
+	"주문 레벨 감시가 그 플레이어를 더 이상 알리지 않습니다. 이름을 생략하면 대상을 제외합니다."
+
+-- Tracked Abilities, under Rank Watch.
+L["RANK_WATCH_TRACKED_DESCRIPTION"] =
+	"주문 레벨 감시가 알리는 주문 레벨을 직업별로 보여 줍니다. 일부러 낮춰 쓰는 레벨은 체크를 해제하면 주문 레벨 감시가 알리지 않습니다. 모든 능력이 표시됩니다. 치유, 특성, 불태우기 레벨 1처럼 주문 레벨 감시가 기본적으로 감시하지 않는 능력은 체크가 해제된 상태로 시작합니다. 능력의 가장 높은 레벨은 그 위가 없으므로 회색으로 표시됩니다."
+-- A rank's checkbox. %s is the rank ("Rank 3"), %d the level it is learned at.
+L["RANK_WATCH_RANK_LEVEL"] = "%s (요구 레벨 %d)"
+L["RANK_WATCH_RANK_DESCRIPTION"] = "더 높은 레벨을 배울 수 있으면 이 레벨을 알립니다."
+L["RANK_WATCH_TOP_RANK_DESCRIPTION"] = "가장 높은 레벨입니다. 그 위가 없으므로 알리지 않습니다."
+-- The tree entry after Hunter and Warlock listing their pets' and demons' abilities. %s is the class name.
+L["RANK_WATCH_PETS"] = "%s 소환수"
+L["RANK_WATCH_TRACK_ALL"] = "모두 체크"
+L["RANK_WATCH_TRACK_NONE"] = "모두 체크 해제"
+
+--------------------------------------------------------------------------------
 -- Restocker Window & Chat
 --------------------------------------------------------------------------------
 
--- Chat messages printed by the Restocker feature (Features/Inventory-Restocker/).
+-- Chat messages printed by the Restocker feature (Features/Restocker/).
 L["RESTOCKER_PROFILE_EXISTS"] = '"%s" 이름의 목록이 이미 있습니다.'
 --[[
     %d is the item ID the player typed. Written into the add box itself while
@@ -985,7 +1130,7 @@ L["RESTOCKER_STOPPED_ERROR"] = "오류로 보충이 중단되었습니다: %s"
     Printed during a merchant restock when the crafting-reagent buyer stands
     down: this merchant stocks some of the reagents the Restock List needs but
     not all of them, and reagents buy all-or-nothing (VendorStocksAllReagents in
-    Features/Inventory-Restocker/Restocker-Merchant.lua). Silent at vendors stocking none.
+    Features/Restocker/Restocker-Merchant.lua). Silent at vendors stocking none.
 ]]
 L["RESTOCKER_REAGENTS_SKIPPED"] =
 	"이 상인은 독에 필요한 재료를 전부 취급하지는 않습니다. 재료 구매를 모두 건너뜁니다."
@@ -1064,7 +1209,7 @@ L["RESTOCKER_RESTOCKED_PARTIAL_ONE"] = "보충 주문 1건을 일부만 채웠�
 L["RESTOCKER_RESTOCKED_PARTIAL_MANY"] = "보충 주문 %d건을 일부만 채웠습니다."
 -- Printed after the counts above when the bags ran out of room before every order was bought.
 L["RESTOCKER_BAGS_FULL_PARTIAL"] = "모든 아이템을 구매하기 전에 가방이 가득 찼습니다."
--- Printed after the counts above when gold ran out before every order was bought, while the Gold Reserve is off.
+-- Printed after the counts above when gold ran out before every order was bought, while the Gold Reserve is off or the purse started above it.
 L["RESTOCKER_OUT_OF_GOLD"] = "보충을 마치기에 골드가 부족합니다."
 --[[
     RESTOCKER_OUT_OF_GOLD's line while the Gold Reserve is on, whole so each
@@ -1089,8 +1234,8 @@ L["RESTOCKER_HELP_PROFILE_USE"] = "이 캐릭터가 해당 이름의 목록을 �
     Starter List pop-up, the staples window: offers staples at login when the
     Restock List is empty, and on demand from the Restock List window's Pick
     Staples button. The staples logic is in
-    Features/Inventory-Restocker/Restocker-Starter-List.lua, the window in
-    Features/Inventory-Restocker/Restocker-Starter-Window.lua. The six
+    Features/Restocker/Restocker-Starter-List.lua, the window in
+    Features/Restocker/Restocker-Starter-Window.lua. The six
     food staples reuse the DIET_ keys above, so each food row carries the
     client's own pet diet name.
 
@@ -1110,6 +1255,8 @@ L["RESTOCKER_HELP_PROFILE_USE"] = "이 캐릭터가 해당 이름의 목록을 �
     names is open right behind it.
 ]]
 L["STARTER_POPUP_TITLE"] = "기본 물품"
+-- The button at the Staples window's footer end that closes it once you've picked.
+L["STARTER_POPUP_DONE"] = "완료"
 L["STARTER_POPUP_INTRO_LOGIN"] =
 	"시작하실 수 있도록 직업에 맞는 기본 물품 몇 가지를 체크해 두었습니다."
 L["STARTER_POPUP_INTRO_EMPTY"] =
@@ -1211,7 +1358,7 @@ L["RESTOCKER_ADD_DUPLICATE"] = "이미 이 목록에 있습니다."
 ]]
 L["RESTOCKER_ADD_FROM_BAGS"] = "가방에서 아이템 추가"
 L["RESTOCKER_ADD_FROM_BAGS_TOOLTIP"] =
-	"가방에 있지만 아직 이 목록에 없는 모든 아이템입니다. 하나를 클릭하면 추가됩니다."
+	"가방에 있지만 아직 이 목록에 없는 모든 아이템으로, 바로 추가할 수 있습니다."
 L["RESTOCKER_ADD_FROM_BAGS_NONE"] = "가방에 추가할 아이템 없음"
 
 --[[
@@ -1227,7 +1374,7 @@ L["RESTOCKER_ADD_FROM_BAGS_NONE"] = "가방에 추가할 아이템 없음"
 ]]
 L["RESTOCKER_PROFILE_LABEL"] = "목록"
 L["RESTOCKER_PROFILE_TOOLTIP"] =
-	"클릭하면 이 캐릭터가 사용할 보충 목록을 다른 목록으로 바꾸거나 새 목록을 시작할 수 있습니다."
+	"이 캐릭터가 사용할 보충 목록을 다른 목록으로 바꾸거나 새 목록을 시작합니다."
 L["RESTOCKER_USED_BY"] = "사용 중: %s"
 L["RESTOCKER_MANAGE"] = "목록 관리"
 L["RESTOCKER_MANAGE_TOOLTIP"] =
@@ -1289,12 +1436,9 @@ L["RESTOCKER_UPGRADE_TOOLTIP_BODY"] =
 	"레벨이 오르면 Good to Go가 음식, 물, 탄약, 독, 물약, 직업 재료를 더 좋은 아이템으로 업그레이드하도록 허용합니다."
 
 --[[
-    The band labels drawn over the Bank and Merchant column groups, and the
-    Upgrade column's caption. The bands name the place an item moves to or
-    from, so the column captions under them can stay one word each.
+    The Upgrade column's caption. The Bank and Merchant bands over the other
+    columns are the client's own BANK and MERCHANT strings.
 ]]
-L["RESTOCKER_ROW_BANK"] = "은행"
-L["RESTOCKER_ROW_MERCHANT"] = "상인"
 L["RESTOCKER_ROW_UPGRADE"] = "업그레이드"
 
 --[[
@@ -1327,8 +1471,7 @@ L["RESTOCKER_COLUMN_AMOUNT"] = "유지"
     the heading opens, where %d is how many of the items shown the column can be
     set on. Menu entries: title case, no terminal punctuation.
 ]]
-L["RESTOCKER_COLUMN_BULK_HINT"] =
-	"열 제목을 클릭하면 표시된 모든 아이템에 이 설정을 적용할 수 있습니다."
+L["RESTOCKER_COLUMN_BULK_HINT"] = "열 제목으로 표시된 모든 아이템에 이 설정을 적용합니다."
 L["RESTOCKER_BULK_ON"] = "표시된 아이템 %d개 켜기"
 L["RESTOCKER_BULK_OFF"] = "표시된 아이템 %d개 끄기"
 
@@ -1383,7 +1526,7 @@ L["RESTOCKER_UNDO_TOOLTIP"] = "목록에 이 아이템 다시 추가"
 
 -- Title slot: title case, no terminal period. The line under it is body text.
 L["RESTOCKER_REMOVE_TOOLTIP"] = "보충 목록에서 이 아이템 제거"
-L["RESTOCKER_REMOVE_TOOLTIP_UNDO"] = "창 아래쪽에서 되돌릴 수 있습니다."
+L["RESTOCKER_REMOVE_TOOLTIP_UNDO"] = "목록 위쪽에서 되돌릴 수 있습니다."
 --[[
     The Keep box and its heading, which share one tooltip: the title, and KEEP
     under it, which explains the number. There is no editing hint: the box
@@ -1438,7 +1581,7 @@ L["RESTOCKER_REPUTATION_TOOLTIP_TITLE"] = "필요한 상인 평판"
     last sentence names the dash; "Any" is still the menu's first entry.
 ]]
 L["RESTOCKER_REPUTATION_TOOLTIP_DISCOUNTS"] =
-	"클릭하면 Good to Go가 상인에게서 구매하는 데 필요한 평판 단계를 설정할 수 있으며, 이 평판으로 가격도 할인됩니다: %s 5%%, %s 10%%, %s 15%%, %s 20%%. 대시(-)로 표시되면 어느 상인에게서나 구매합니다."
+	"Good to Go가 상인에게서 구매하는 데 필요한 평판 단계를 설정하며, 이 평판으로 가격도 할인됩니다: %s 5%%, %s 10%%, %s 15%%, %s 20%%. 대시(-)로 표시되면 어느 상인에게서나 구매합니다."
 
 --[[
     Why a cell cannot be set on its row: the tooltip a dimmed cell shows under
@@ -1452,15 +1595,17 @@ L["RESTOCKER_REPUTATION_NOT_APPLICABLE"] =
 	"이 아이템은 구매가 꺼져 있어 평판 단계가 적용되지 않습니다."
 L["RESTOCKER_UPGRADE_NOT_APPLICABLE"] = "이 아이템에는 업그레이드할 상위 등급이 없습니다."
 
--- MIGRATION (remove after 2026-11-25): the import from the add-ons this one replaces.
+-- The add-ons this one replaces, turned off at login whenever they run (ns.REPLACED_ADDONS).
+L["POPUP_REPLACED_RELOAD"] =
+	"Good to Go로 대체되는 %s을(를) Good to Go가 꺼 두었습니다. 기존 애드온이 더 이상 실행되지 않도록 지금 UI를 다시 불러올까요?"
+L["POPUP_REPLACED_RELOAD_ACCEPT"] = "지금 다시 불러오기"
+L["POPUP_REPLACED_LATER"] = "나중에"
+
+-- MIGRATION (remove after 2026-12-08): the import from the add-ons this one replaces.
 L["CHAT_LEGACY_IMPORTED"] = "%s 설정을 복사했습니다."
 
 L["POPUP_LEGACY_RELOAD_COPIED"] =
 	"Good to Go가 %s에서 설정을 복사했으며, Good to Go로 대체되는 %s은(는) 꺼 두었습니다. 기존 애드온이 더 이상 실행되지 않도록 지금 UI를 다시 불러올까요?"
-L["POPUP_LEGACY_RELOAD_TURNED_OFF"] =
-	"Good to Go로 대체되는 %s을(를) Good to Go가 꺼 두었습니다. 기존 애드온이 더 이상 실행되지 않도록 지금 UI를 다시 불러올까요?"
-L["POPUP_LEGACY_RELOAD_ACCEPT"] = "지금 다시 불러오기"
-L["POPUP_LEGACY_LATER"] = "나중에"
 L["POPUP_LEGACY_IMPORT_SETTINGS"] =
 	"Good to Go가 설치되어 있지만 꺼져 있는 %s을(를) 찾았습니다. 설정을 가져올까요? 기존 애드온을 다시 켜고 UI를 다시 불러온 다음, 기존 애드온을 다시 끌 수 있도록 한 번 더 다시 불러오기를 제안합니다."
 L["POPUP_LEGACY_IMPORT_LISTS"] =
@@ -1469,152 +1614,21 @@ L["POPUP_LEGACY_IMPORT_ACCEPT"] = "가져오기"
 L["POPUP_LEGACY_IMPORT_DECLINE"] = "괜찮습니다"
 
 --------------------------------------------------------------------------------
--- Automated Appreciation
+-- Options: Tracked Abilities
 --------------------------------------------------------------------------------
 
---------------------------------------------------------------------------------
--- Messages
---------------------------------------------------------------------------------
-
--- Buff & gift announcements
-L["MESSAGE_BUFFED"] = "%s님이 당신에게 %s 버프를 주었습니다!"
-L["MESSAGE_GAVE_YOU"] = "%s님이 당신에게 %s(을)를 주었습니다!"
-L["MESSAGE_GAVE_GROUP"] = "%s님이 파티에 %s(을)를 주었습니다!"
-L["MESSAGE_USED_ITEM"] = "%s님이 당신에게 %s(을)를 사용했습니다!"
-L["MESSAGE_USED_SPELL"] = "%s님이 당신에게 %s(을)를 시전했습니다!"
-L["MESSAGE_SET_OUT"] = "%s님이 %s(을)를 꺼냈습니다!"
-L["MESSAGE_OPENED"] = "%s님이 %s(을)를 열었습니다!"
-
--- Thank-you
-L["MESSAGE_WHISPER_THANKS"] = "%s 고맙습니다"
-L["MESSAGE_SELECT_PLAYER"] = "먼저 플레이어를 대상으로 지정하세요."
-L["MESSAGE_CANT_THANK_SELF"] = "자신에게는 감사할 수 없습니다!"
-
---------------------------------------------------------------------------------
--- Text Fragments
---------------------------------------------------------------------------------
-
-L["UNKNOWN_SPELL"] = "알 수 없는 주문"
-
---------------------------------------------------------------------------------
--- Options: Buff Panels
---------------------------------------------------------------------------------
-
--- Stranger Buffs
-L["TAB_STRANGERS"] = "낯선 사람의 버프"
-L["STRANGERS_ENABLE"] = "낯선 사람의 버프에 감사 표시 활성화"
-L["STRANGERS_DESCRIPTION"] = "야외에서 파티 외부의 플레이어가 버프를 주면 감사를 표합니다."
--- The dropdown values carry the unit, so these labels do not repeat it.
-L["STRANGERS_OVERALL_COOLDOWN"] = "감사 표시 대기시간"
-L["STRANGERS_OVERALL_COOLDOWN_DESCRIPTION"] =
-	"누가 버프를 주었든, 한 차례 감사 표시와 다음 감사 표시 사이의 대기시간을 설정합니다. 0으로 설정하면 모든 버프에 감사를 표합니다."
-L["STRANGERS_SOURCE_COOLDOWN"] = "같은 플레이어 감사 표시 대기시간"
-L["STRANGERS_SOURCE_COOLDOWN_DESCRIPTION"] =
-	"같은 플레이어에게 감사를 표하는 사이의 대기시간을 설정합니다. 0으로 설정하면 모든 버프에 감사를 표합니다."
-L["STRANGERS_MIN_DURATION"] = "최소 버프 지속시간"
-L["STRANGERS_MIN_DURATION_DESCRIPTION"] =
-	"이보다 짧은 버프는 무시합니다. 0으로 설정하면 모든 버프에 반응합니다."
-
--- Combat Buffs
-L["TAB_COMBAT_BUFFS"] = "전투 버프"
-L["TEAMMATES_DESCRIPTION"] =
-	"파티 및 공격대원이 당신에게 시전한 버프와 재사용 대기시간 기술에 감사를 표합니다."
--- Shown on WoW Forever only.
-L["TEAMMATES_FOREVER_WARNING"] =
-	"WoW Forever에서는 제대로 작동하지 않을 가능성이 높습니다. 게임이 누가 버프를 걸었는지 숨기는 경우가 많고 특히 전투 중에 그렇기 때문에, 감사를 전하지 못하는 버프가 많습니다."
-
--- Group Service Alerts
-L["TAB_GROUP_SERVICE_ALERTS"] = "파티 지원 알림"
-L["SERVICES_DESCRIPTION"] =
-	"누군가 파티를 위해 도움이 될 것을 설치하면 반응합니다: 잔치, 영혼의 샘, 차원문, 수리 로봇."
-
--- Sharing Good News
-L["TAB_SHARING_GOOD_NEWS"] = "좋은 소식 나누기"
-L["GOOD_NEWS_DESCRIPTION"] =
-	"버프를 걸어 준 플레이어에게 무엇을 시전했는지, 그리고 짧은 버프라면 얼마나 지속되는지 알려 주세요."
-L["GOOD_NEWS_SCOPE"] = "받는 대상"
-L["GOOD_NEWS_SCOPE_ALWAYS"] = "버프한 모든 대상"
-L["GOOD_NEWS_SCOPE_GROUP"] = "파티/공격대 구성원만"
-L["GOOD_NEWS_SCOPE_DESCRIPTION"] =
-	"좋은 소식 귓속말을 받을 대상을 설정합니다. 버프한 모든 대상 또는 그룹 구성원만 선택할 수 있습니다."
-L["GOOD_NEWS_MESSAGES_HEADER"] = "좋은 소식 메시지"
-L["GOOD_NEWS_MESSAGES_DESCRIPTION"] = "버프를 받은 플레이어가 받게 되는 귓속말입니다."
---[[
-    The message box's tooltip, in three parts. LIMIT's %d is a real placeholder
-    and gets formatted; TOKENS carries a literal %a for the reader to copy and so
-    must never reach string.format. Joined into one line at the point of use.
-]]
-L["GOOD_NEWS_MESSAGE_INPUT_DESCRIPTION"] =
-	"귓속말 내용을 설정합니다. 비워 두면 기본 문구를 사용합니다."
-L["GOOD_NEWS_MESSAGE_LIMIT"] = "최대 길이는 %d입니다."
-L["GOOD_NEWS_MESSAGE_TOKENS"] =
-	"%a(은)는 기술 링크로 바뀌며, 지속시간이 1분 미만이면 지속시간도 함께 표시됩니다."
---[[
-    Appended to the ability link inside %a when the buff has a readable duration
-    under a minute. A whole clause rather than a bare number so it can be reworded
-    per language.
-]]
-L["GOOD_NEWS_DURATION_CLAUSE"] = "%s 동안"
-
--- Shared across the buff panels
-L["TRACKED_HEADER"] = "추적 중인 능력"
-L["TRACKED_GROUP_ITEMS"] = "아이템"
+-- The two Tracked Abilities panels' titles, Buff Duty's then Rank Watch's, and the stand-in for an item or spell whose name the client hasn't loaded yet.
+L["BUFF_DUTY_TRACKED_HEADER"] = "그룹 버프"
+L["RANK_WATCH_TRACKED_HEADER"] = "알릴 주문 레벨"
 L["TRACKED_ITEM_PENDING"] = "아이템 #%d"
 L["TRACKED_SPELL_PENDING"] = "주문 #%d"
 
--- Shared by Sharing Good News and the Thank You Button
-L["WHISPER_MESSAGE"] = "귓속말 메시지"
-L["WHISPER_MESSAGE_RESET"] = "초기화"
-L["WHISPER_MESSAGE_RESET_DESCRIPTION"] = "귓속말 메시지를 기본 문구로 되돌립니다."
-
 --------------------------------------------------------------------------------
--- Shared: Praise and Notifications
+-- Shared: Sound Preview
 --------------------------------------------------------------------------------
 
---[[
-    The two section headers every buff panel is built from: what the other player
-    sees, then what only you get. Key prefixes match the header the control
-    appears under.
-]]
-L["PRAISE_HEADER"] = "감사 귓속말 및 감정 표현"
-L["NOTIFICATIONS_HEADER"] = "알림"
-L["PRAISE_DESCRIPTION"] = "상대 플레이어가 보는 것: 감사 귓속말, 감정 표현 또는 둘 다."
-L["NOTIFICATIONS_DESCRIPTION"] = "자신만 받는 것: 텍스트 알림, 효과음 또는 둘 다."
-
--- Also titles the Thank You Button's emote grid, so it carries no PRAISE_ prefix.
-L["EMOTES_SELECT"] = "감정 표현 선택"
-
-L["PRAISE_WHISPER_ENABLE"] = "감사 귓속말 활성화"
-L["PRAISE_WHISPER_DESCRIPTION"] = "버프를 준 플레이어에게 감사의 귓속말을 보냅니다."
-L["PRAISE_EMOTES_ENABLE"] = "감정 표현 활성화"
-L["PRAISE_EMOTES_DESCRIPTION"] =
-	"감정 표현으로 감사를 표합니다. 전투 중에는 감정 표현이 보류됩니다."
-L["PRAISE_DELAY_ENABLE"] = "감사 표시 지연 활성화"
-L["PRAISE_DELAY_DESCRIPTION"] =
-	"귓속말과 감정 표현을 보내기 전에 잠시 기다려, 버프와 같은 순간에 감사가 전달되지 않도록 합니다. 알림은 영향을 받지 않습니다."
-L["PRAISE_DELAY_LENGTH_DESCRIPTION"] =
-	"귓속말과 감정 표현을 보내기 전에 기다릴 시간을 설정합니다."
-
-L["NOTIFICATIONS_PRINT_ENABLE"] = "텍스트 알림 활성화"
-L["NOTIFICATIONS_PRINT_DESCRIPTION"] = "버프를 받을 때 자신만 볼 수 있는 메시지를 출력합니다."
-L["NOTIFICATIONS_SOUND_ENABLE"] = "효과음 활성화"
-L["NOTIFICATIONS_SOUND_DESCRIPTION"] =
-	"버프를 받을 때 효과음을 재생합니다. 자신에게만 들립니다."
 L["NOTIFICATIONS_SOUND_PREVIEW_DESCRIPTION"] =
 	"켜기 전에 미리 들어 볼 수 있도록 효과음을 재생합니다."
-
---------------------------------------------------------------------------------
--- Tracked Ability Groups
---------------------------------------------------------------------------------
-
---[[
-    Labels for multi-member tracked groups that no single game record names
-    (Data/{Game}/Tracked-Abilities-{Game}.lua). Single spells and items, and a
-    group named after one of its own items, take their names from the client.
-]]
-L["GROUP_PORTALS"] = "차원문"
-L["GROUP_RESISTANCE_CAULDRONS"] = "저항 가마솥"
-L["GROUP_REPAIR_BOTS"] = "수리 로봇"
 
 --------------------------------------------------------------------------------
 -- Options: Buff Duty
@@ -1738,23 +1752,22 @@ L["BUFF_DUTY_MISSING_SELF_HEADER"] = "누락된 자기 버프"
 L["BUFF_DUTY_PARTY_BUFFS_HEADER"] = "누락된 파티 버프"
 L["BUFF_DUTY_FAVOR_HEADER"] = "보답하기"
 L["BUFF_DUTY_TARGET_HEADER"] = "대상"
-L["BUFF_DUTY_TOOLTIP_CAST"] = "클릭하면 %s에게 시전합니다."
+-- A buff icon's tooltip ends with who the click lands on.
+L["BUFF_DUTY_TOOLTIP_CAST"] = "%s에게 시전합니다."
 -- %s is the client's "Main Hand" or "Off Hand".
-L["BUFF_DUTY_TOOLTIP_WEAPON"] = "클릭하면 %s 무기에 적용합니다."
+L["BUFF_DUTY_TOOLTIP_WEAPON"] = "%s 무기에 적용합니다."
 L["BUFF_DUTY_TOOLTIP_USE"] =
-	"파티에 영혼석을 지닌 사람이 없습니다. 클릭하면 %s에게 영혼석을 사용합니다."
-L["BUFF_DUTY_TOOLTIP_CREATE"] =
-	"파티에 영혼석을 지닌 사람이 없습니다. 클릭하면 영혼석을 만듭니다."
-L["BUFF_DUTY_TOOLTIP_GROUP"] = "클릭하면 %s와(과) 그 파티에게 시전합니다."
-L["BUFF_DUTY_TOOLTIP_FAVOR"] = "클릭하면 %s을(를) 대상으로 지정하고 시전합니다."
-L["BUFF_DUTY_TOOLTIP_DISMISS"] = "우클릭하면 목록에서 %s을(를) 제외합니다."
--- A Party-Buffs icon's tooltip: a raid buff your group is missing, and its count.
+	"파티에 영혼석을 지닌 사람이 없습니다. %s에게 영혼석을 사용합니다."
+L["BUFF_DUTY_TOOLTIP_CREATE"] = "파티에 영혼석을 지닌 사람이 없습니다. 영혼석을 만듭니다."
+L["BUFF_DUTY_TOOLTIP_GROUP"] = "%s와(과) 그 파티에게 시전합니다."
+L["BUFF_DUTY_TOOLTIP_FAVOR"] = "%s을(를) 대상으로 지정하고 시전합니다."
+-- A Party-Buffs icon's menu: a raid buff your group is missing, and its count.
 L["BUFF_DUTY_OTHERS_TOOLTIP_COUNT"] = "없거나 곧 사라짐: %d"
--- A Party-Buffs icon's clicks, beside Left-Click and Right-Click: one asks the party or raid, the other whispers the players who can cast it.
-L["BUFF_DUTY_OTHERS_TOOLTIP_ASK_GROUP"] = "파티에 버프 요청"
-L["BUFF_DUTY_OTHERS_TOOLTIP_ASK_WHISPER"] = "직접 버프 요청"
+-- The menu's rows: the first asks the party or raid for the buff (its name), the second whispers the players who can cast it (their names).
+L["BUFF_DUTY_OTHERS_MENU_ASK_GROUP"] = "그룹에 %s 요청"
+L["BUFF_DUTY_OTHERS_MENU_WHISPER"] = "%s에게 귓속말"
 --[[
-    The ask either click sends, signed off like every sent message ({star} ... // GtG), so it
+    The ask either row sends, signed off like every sent message ({star} ... // GtG), so it
     ends as a statement, not a question. Up to five missing players are named (ONE for one,
     NAMES for two to five, joined with LIST_PAIR_FORMAT or LIST_LAST_FORMAT), then the buff's link;
     past five, COUNT gives how many, then the link.
@@ -1762,13 +1775,14 @@ L["BUFF_DUTY_OTHERS_TOOLTIP_ASK_WHISPER"] = "직접 버프 요청"
 L["BUFF_DUTY_OTHERS_ASK_ONE"] = "%s 님에게 %s 버프가 없습니다."
 L["BUFF_DUTY_OTHERS_ASK_NAMES"] = "%s 님에게 %s 버프가 없습니다."
 L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "%d명에게 %s 버프가 없습니다."
--- Your own chat, after a Right-Click: who was whispered, then the buff's link.
+-- Your own chat, after the Whisper row: who was whispered, then the buff's link.
 L["BUFF_DUTY_OTHERS_SENT"] = "%s에게 %s 관련 귓속말을 보냈습니다."
--- The window's close button: the class name in its color, then the options command.
+-- The window's close button: the class name, the class name again for its checkbox, the When to Show
+-- header, then the options command.
 L["BUFF_DUTY_CLOSED"] =
-	"%s 직업의 버프 당번이 꺼졌습니다. 다시 켜려면 미니맵 버튼을 Shift + 좌클릭하거나 %s 명령어를 입력하세요."
+	"%1$s 직업의 버프 당번이 꺼졌습니다. 다시 켜려면 미니맵 버튼을 Shift + 좌클릭하거나, %4$s 설정의 %3$s에서 %2$s을(를) 체크하세요."
 
--- The Buff Key (Key Bindings, and the Keybinds section of Buff Duty)
+-- The Buff Button key: its name in the game's Key Bindings list and the root panel's Key Bindings section, then the notices a press shows.
 L["BUFF_KEY"] = "버프 버튼"
 -- %s is a player's name.
 L["BUFF_KEY_WAITING"] = "%s님이 사거리 안에 들어오기를 기다리는 중입니다."
@@ -1776,72 +1790,20 @@ L["BUFF_KEY_DONE"] = "더 걸 버프가 없습니다."
 L["BUFF_KEY_OFF"] = "버프 당번이 꺼져 있습니다."
 
 --------------------------------------------------------------------------------
--- Options: Thank You Button
---------------------------------------------------------------------------------
-
-L["TAB_THANK_YOU_BUTTON"] = "감사 버튼"
-L["BUTTON_DESCRIPTION"] =
-	"키 한 번으로 대상에게 귓속말과 감정 표현을 보냅니다. 예의를 자동으로."
--- One heading per button, numbered; %d is the button's position in the list.
-L["BUTTON_SECTION"] = "감사 버튼 %d"
-L["BUTTON_EMOTE"] = "감정 표현"
-L["BUTTON_EMOTE_DESCRIPTION"] =
-	"이 버튼이 대상에게 할 감정 표현을 설정합니다. 없음을 선택하면 감정 표현을 하지 않습니다."
-L["BUTTON_EMOTE_NONE"] = "없음"
-L["BUTTON_ICON"] = "아이콘"
-L["BUTTON_ICON_DESCRIPTION"] =
-	"이 버튼의 매크로가 매크로 목록과 행동 단축바에 표시할 아이콘을 설정합니다."
--- The Icon dropdown's first choice, the macros' own icon; every other choice is a picture alone.
-L["BUTTON_ICON_DEFAULT"] = "기본값"
---[[
-    The toggle owns the macro in both directions, so the label is ENABLE rather
-    than CREATE. Both strings carry the macro's name: with five buttons stacked,
-    "which macro is this one?" should not need a hover.
-]]
-L["BUTTON_MACRO_ENABLE"] = '매크로 "%s" 활성화'
-L["BUTTON_MACRO_ENABLE_DESCRIPTION"] =
-	"%s(이)라는 이름의 매크로를 만들고, 이 설정을 끄면 다시 삭제합니다."
-L["BUTTON_WHISPER_DESCRIPTION"] =
-	"이 버튼이 대상에게 보낼 귓속말을 설정합니다. 비워 두면 귓속말을 보내지 않습니다."
-
---------------------------------------------------------------------------------
--- Defaults
---------------------------------------------------------------------------------
-
-L["DEFAULT_WHISPER"] = "감사합니다, 최고예요! (="
---[[
-    The star marker (left off on WoW Forever) and " // GtG" sign-off are added
-    by the builder, which also drops the closing punctuation; neither is part of
-    the editable text.
-]]
-L["DEFAULT_GOOD_NEWS"] = "%a 버프를 받았습니다"
-
---------------------------------------------------------------------------------
--- Emotes
---------------------------------------------------------------------------------
-
-L["EMOTE_CHEER_DESCRIPTION"] = "<Target>에게 환호합니다."
-L["EMOTE_DRINK_DESCRIPTION"] = "<Target>을(를) 향해 건배합니다."
-L["EMOTE_FLEX_DESCRIPTION"] = "<Target>에게 근육을 자랑합니다."
-L["EMOTE_GRIN_DESCRIPTION"] = "<Target>에게 짓궂게 웃어 보입니다."
-L["EMOTE_HIGHFIVE_DESCRIPTION"] = "<Target>와(과) 하이파이브를 합니다."
-L["EMOTE_PRAISE_DESCRIPTION"] = "<Target>을(를) 칭찬합니다."
-L["EMOTE_SALUTE_DESCRIPTION"] = "<Target>에게 정중하게 경례합니다."
-L["EMOTE_SMILE_DESCRIPTION"] = "<Target>을(를) 보며 미소 짓습니다."
-L["EMOTE_THANK_DESCRIPTION"] = "<Target>에게 감사합니다."
-L["EMOTE_WHOA_DESCRIPTION"] = "<Target>에게 '우와!'하고 외칩니다."
-L["EMOTE_WINK_DESCRIPTION"] = "<Target>에게 윙크합니다."
-L["EMOTE_YES_DESCRIPTION"] = "<Target>에게 고개를 끄덕입니다."
-
---------------------------------------------------------------------------------
 -- Spellbook
 --------------------------------------------------------------------------------
 
--- the window's first tab and its title before "// Good to Go"
+-- The window's first tab, and its title before "// Good to Go", is TAB_ENHANCED_SPELLBOOK (Options Panel above).
 
 -- Page: Sections
 L["SECTION_UNLEARNED"] = "배우지 않음"
 L["SECTION_CONSUMABLES"] = "GtG 소모품"
+
+-- Page: WoW Macro Names. Each ends a macro's name, which WoW caps at 16 bytes in all; the spell name is cut to make room.
+-- a focus copy's ("Heal @F")
+L["MACRO_NAME_FOCUS_SUFFIX"] = " @F"
+-- a lower rank's own macro ("Fireball R3"); %s is the rank's number
+L["MACRO_NAME_RANK_SUFFIX"] = " R%s"
 
 -- Page: Macro Menu
 L["MACRO_TEXT"] = "매크로 내용"
@@ -1862,8 +1824,8 @@ L["MENU_RIGHT_CLICK_GROUP"] = "우클릭 시 그룹 버전"
 L["MENU_CATEGORY_TITLE"] = "모든 %s에 적용"
 L["MENU_ONCE_PER_COMBAT"] = "전투당 한 번 시전"
 L["MENU_ONCE_PER_TARGET"] = "대상당 한 번 시전"
-L["MENU_HIDE_ERRORS"] = "오류 메시지 숨기기"
-L["MENU_MUTE_ERRORS"] = "오류 소리 끄기"
+L["MENU_HIDE_ERRORS"] = "오류 숨기기"
+L["MENU_MUTE_ERRORS"] = "오류 음소거"
 L["MENU_SWITCH_TO"] = "%s(으)로 전환"
 L["MENU_START_AUTO_ATTACK"] = "자동 공격 시작"
 L["MENU_STOP_ATTACK"] = "공격 중지"
@@ -1873,8 +1835,8 @@ L["MENU_START_WAND"] = "마법봉 시작"
 L["MENU_STOP_CASTING"] = "시전 중지"
 L["MENU_STOP_CASTING_NOTE"] =
 	"차단이나 해제처럼 기다릴 수 없는 주문에는 시전 중지를 사용하세요."
-L["MENU_STOP_IF_CHANNELING"] = "정신 집중 중이면 매크로 중지"
-L["MENU_STOP_IF_STEALTHED"] = "은신 중이면 매크로 중지"
+L["MENU_STOP_IF_CHANNELING"] = "정신 집중 중 안 함"
+L["MENU_STOP_IF_STEALTHED"] = "은신 중 안 함"
 L["MENU_DUPLICATE"] = "복제"
 L["MENU_DELETE"] = "삭제"
 L["MENU_DELETE_USED_ONE"] = "삭제 (단축바 1개에서 사용 중)"
@@ -1920,7 +1882,7 @@ L["MENU_OPTIONS_COUNT"] = "옵션 %d개"
 L["MENU_ENABLED"] = "켜짐"
 L["MENU_HIGHEST"] = "최고 레벨"
 L["MENU_HIGHEST_DESCRIPTION"] = "알고 있는 가장 높은 레벨로 시전합니다."
-L["MENU_RANK_DYNAMIC"] = "동적"
+L["MENU_RANK_DYNAMIC"] = "동적 레벨"
 L["MENU_FIXED_RANK_DESCRIPTION"] = "캐릭터 레벨과 관계없이 항상 %s(으)로 시전합니다."
 L["MENU_ANY_TIME"] = "항상"
 L["MENU_ANY_TIME_DESCRIPTION"] = "전투 중이든 아니든 시전합니다."
@@ -1948,6 +1910,8 @@ L["MENU_ADD_FOCUS"] = "주시 대상용 복사본 추가"
 L["MENU_REMOVE_FOCUS"] = "주시 대상용 복사본 제거"
 L["MENU_FOCUS_DESCRIPTION"] =
 	"주시 대상에게, 그다음에는 대상에게 시전하는 두 번째 매크로를 페이지에 추가합니다."
+L["MENU_REMOVE_FOCUS_DESCRIPTION"] =
+	"주시 대상용 복사본을 페이지에서 제거하고 그 매크로를 삭제합니다."
 L["MENU_DUPLICATE_DESCRIPTION"] =
 	"이 옵션으로 시작하는 이 매크로의 복사본을 페이지에 하나 더 추가하여, 다르게 설정할 수 있게 합니다."
 L["MENU_MAKE_DEFAULT"] = "%s의 기본값으로 설정"
@@ -1958,7 +1922,7 @@ L["MENU_DEFAULT_SET"] = "이제 %s 매크로가 이 옵션으로 시작합니다
 -- Page: Conditionals
 L["MENU_GROUP_CONDITIONALS"] = "조건"
 L["MENU_CONDITIONALS_DESCRIPTION"] =
-	"마법책 옆에 조건 패널을 엽니다. 이 패널에서는 Shift를 누르고 있거나 특성 2일 때처럼 조건이 맞으면 매크로가 다른 주문을 시전하게 할 수 있습니다."
+	"향상된 마법책 창 옆에 조건 패널을 엽니다. 이 패널에서는 Shift를 누르고 있거나 특성 2일 때처럼 조건이 맞으면 매크로가 다른 주문을 시전하게 할 수 있습니다."
 L["MENU_RIGHT_CLICK_TAKEN"] =
 	"조건 중 하나가 우클릭을 사용하고 있습니다. 이 기능을 켜려면 그 조건을 제거하세요."
 -- TRANSLATORS: the panel's title after the spell's name and "//" ("Fireball // Conditionals").
@@ -2032,7 +1996,7 @@ L["SUBTEXT_CONDITIONALS"] = "조건 %d개"
 -- Page: Cast Sequence
 L["MENU_GROUP_CAST_SEQUENCE"] = "시전 순서"
 L["MENU_CAST_SEQUENCE_DESCRIPTION"] =
-	"마법책 옆에 시전 순서 패널을 엽니다. 이 패널에서는 매크로를 누를 때마다 부패, 고통의 저주, 제물처럼 다음 주문을 순서대로 시전하게 할 수 있습니다."
+	"향상된 마법책 창 옆에 시전 순서 패널을 엽니다. 이 패널에서는 매크로를 누를 때마다 부패, 고통의 저주, 제물처럼 다음 주문을 순서대로 시전하게 할 수 있습니다."
 -- TRANSLATORS: how many spells a Cast Sequence casts in turn, the macro's own included ("3 Steps").
 L["MENU_CAST_SEQUENCE_STEPS"] = "%d단계"
 -- TRANSLATORS: the panel's title after the spell's name and "//" ("Corruption // Cast Sequence").
@@ -2083,6 +2047,8 @@ L["CAST_SEQUENCE_STOP_NO_RESET"] =
 	"완전히 정지합니다: 처음부터 다시 시작할 조건이 없으므로, 매크로가 바뀌거나 UI를 다시 불러올 때까지 순서가 NULL에 머무릅니다. 처음부터 다시 시작 조건에서 초기화 조건을 고르세요."
 L["CAST_SEQUENCE_PET_BLOCKED"] =
 	'"소환수가 있으면 시전"이 %s을(를) 시전하는 동안에는 대기합니다. 이 옵션은 자체 시전 줄을 쓰기 때문입니다. 시전 순서를 사용하려면 그 옵션을 끄세요.'
+L["CAST_SEQUENCE_SLOT_DESCRIPTION"] =
+	"여기를 클릭한 다음 페이지에서 주문을 클릭하면 이 단계에서 그 주문을 시전합니다. 또는 페이지에서 주문을 이 칸으로 끌어다 놓으세요."
 -- TRANSLATORS: the spell's note on the page, counting the spells its Cast Sequence casts in turn ("3-Step Sequence").
 L["SUBTEXT_CAST_SEQUENCE"] = "%d단계 순서"
 
@@ -2149,7 +2115,7 @@ L["SUBTEXT_ONCE_PER_TARGET"] = "대상당 1회"
 L["SUBTEXT_COMBAT_ONLY"] = "전투 중만"
 L["SUBTEXT_NO_COMBAT"] = "비전투"
 L["SUBTEXT_LEAVE_FORM"] = "변신 해제"
-L["SUBTEXT_NO_TOGGLE"] = "계속 켬"
+L["SUBTEXT_NO_TOGGLE"] = "끄지 않기"
 L["SUBTEXT_WAND"] = "마법봉"
 L["SUBTEXT_START_ATTACK"] = "자동 공격"
 L["SUBTEXT_STOP_ATTACK"] = "공격 중지"
@@ -2291,10 +2257,10 @@ L["PET_SPELLBOOK_AUTOCAST_OFF"] = "자동 시전 꺼짐"
 L["WHATS_NEXT_PET_TITLE"] = "소환수 다음 배울 기술"
 L["WHATS_NEXT_PET_EMPTY"] = "표시할 소환수 기술이 없습니다."
 -- the footer's right: the pet out, or that there's none
--- TRANSLATORS: %1$s is the pet's name, %2$d its level, %3$s its family ("Fang, Level 23 Wolf").
-L["WHATS_NEXT_PET_FOOTER"] = "%1$s, %2$d레벨 %3$s"
--- TRANSLATORS: %1$d is the training points the pet has left, %2$d its total.
-L["WHATS_NEXT_PET_FOOTER_TRAINING_POINTS"] = "훈련 포인트: %1$d / %2$d"
+-- TRANSLATORS: the first %s is the pet's name, %d its level, the second %s its family ("Fang, Level 23 Wolf").
+L["WHATS_NEXT_PET_FOOTER"] = "%s, %d레벨 %s"
+-- TRANSLATORS: the first %d is the training points the pet has left, the second its total.
+L["WHATS_NEXT_PET_FOOTER_TRAINING_POINTS"] = "훈련 포인트: %d / %d"
 L["WHATS_NEXT_PET_NO_PET"] = "소환수 없음: 야수 조련으로 배운 기술을 표시합니다."
 L["WHATS_NEXT_PET_NO_DEMON"] = "악마 없음: 악마를 소환하면 이미 아는 기술을 볼 수 있습니다."
 
@@ -2325,8 +2291,8 @@ L["WHATS_NEXT_PET_TOOLTIP_GRIMOIRE_IN_BAGS"] =
 	"가방에 마법서가 있습니다. 이 악마를 소환한 상태에서 사용하세요."
 L["WHATS_NEXT_PET_TOOLTIP_OTHER"] = "소환수가 배울 수 없습니다."
 L["WHATS_NEXT_PET_TOOLTIP_BEASTS"] = "이 기술을 아는 야수"
--- TRANSLATORS: %1$s is a beast's name, %2$s its level or level range ("Forest Spider (5-6)").
-L["WHATS_NEXT_PET_TOOLTIP_BEAST"] = "%1$s (%2$s)"
+-- TRANSLATORS: the first %s is a beast's name, the second its level or level range ("Forest Spider (5-6)").
+L["WHATS_NEXT_PET_TOOLTIP_BEAST"] = "%s (%s)"
 -- TRANSLATORS: %d is how many more beasts know the ability than the tooltip names.
 L["WHATS_NEXT_PET_TOOLTIP_MORE"] = "그 외 %d마리가 더 있습니다."
 
@@ -2348,10 +2314,10 @@ L["OPTIONS_KEY_BINDING_TOGGLE_DESCRIPTION"] =
 -- %s is the macro line that presses the same key, /click GtGBuffKey.
 L["OPTIONS_KEY_BINDING_BUFF_DESCRIPTION"] =
 	"전투 중이 아닐 때 누를 때마다 버프 당번 창이 제안하는 다음 버프를 하나씩 시전합니다. 무기 버프는 계속 창에서 클릭해야 합니다. 매크로에서 누르려면 %s을(를) 사용하세요."
-L["OPTIONS_ABILITY_TOOLTIPS_HEADER"] = "다음 배울 주문 툴팁"
+L["OPTIONS_ABILITY_TOOLTIPS_HEADER"] = "주문 레벨 툴팁"
 L["OPTIONS_ABILITY_TOOLTIPS_DESCRIPTION"] =
-	"모든 능력의 툴팁에 주문 레벨과 각 레벨에 필요한 캐릭터 레벨을 표시합니다: 이미 아는 레벨은 초록색, 지금 배울 수 있지만 아직 배우지 않은 레벨은 빨간색, 앞으로 배울 레벨은 노란색입니다. 항상 가장 좋은 레벨을 쓰고 있는지 빠르게 확인할 수 있어, 언제나 최고의 실력으로 플레이할 수 있습니다. 전투 중에는 레벨이 표시되지 않으므로, 중요한 순간에는 툴팁이 짧게 유지됩니다."
-L["OPTIONS_ABILITY_TOOLTIPS_ENABLE"] = "다음 배울 주문 툴팁 활성화"
+	"모든 능력의 툴팁에 주문 레벨과 각 레벨에 필요한 캐릭터 레벨을 표시합니다: 이미 아는 레벨은 흰색, 지금 배울 수 있는 레벨은 초록색, 앞으로 배울 레벨은 회색입니다. 가장 좋은 레벨을 쓰고 있는지 빠르게 스스로 확인할 수 있어, 언제나 최고의 실력으로 플레이할 수 있습니다. 전투 중에는 레벨이 표시되지 않으므로, 중요한 순간에는 툴팁이 짧게 유지됩니다."
+L["OPTIONS_ABILITY_TOOLTIPS_ENABLE"] = "주문 레벨 툴팁 활성화"
 L["OPTIONS_ABILITY_TOOLTIPS_ENABLE_DESCRIPTION"] =
 	"행동 단축바, 게임의 마법책, 다른 애드온에서 보이는 각 능력의 툴팁에 주문 레벨을 추가합니다. 끄면 이 툴팁은 게임 기본 상태로 표시됩니다. 향상된 마법책 창에는 어느 쪽이든 주문 레벨이 표시됩니다."
 L["OPTIONS_DELETE_MACROS_HEADER"] = "매크로 삭제"
@@ -2429,6 +2395,7 @@ L["CHAT_KEY_BINDINGS_IN_COMBAT"] = "안전을 위해 전투 중에는 단축키 
 L["KEY_BINDINGS_LOCATION"] = "게임 메뉴를 열고 %s, %s 순으로 들어가 Good to Go 항목을 찾으세요."
 L["ERROR_MACRO_SLOTS_FULL"] =
 	"빈 매크로 칸이 없습니다. /macro에서 매크로를 삭제해 자리를 만드세요."
+L["ERROR_MACRO_WINDOW_OPEN"] = "먼저 매크로 창을 닫으세요."
 L["CHAT_MACROS_DELETED"] = "삭제한 매크로: %d"
 L["CHAT_MACRO_TOO_LONG"] =
 	'"%s" 매크로는 옵션을 켠 상태로 %d바이트라서 매크로 최대 길이인 %d바이트를 넘습니다. 옵션을 하나 꺼서 줄이세요.'

@@ -51,16 +51,22 @@ ns.HasFriendlyPlayerTarget = HasFriendlyPlayerTarget
     it errors. While C_Secrets says the comparison is off, the self reading
     keeps its last value, so a restricted read counts as unchanged, never as a
     flip. The creature-type reading does the same when the client hides it.
+    When the whole target identity is hidden (Forever, in combat), nothing is
+    read and the readings are owed: ns.RereadTargetIfPending takes them once
+    combat ends, so a target changed mid-fight still counts after it.
 ]]
 local lastTargetFriendly, lastTargetIsSelf, lastTargetLevel, lastTargetCannibalizable
 local lastInGroup, lastInRaid
+local targetReadPending = false
 
 -- Records this firing's target readings and reports whether any of the four moved.
 function ns.TargetSignatureChanged()
 	-- Forever hides a target's identity in combat; the last readings stand until it can be read again.
 	if ns.IsUnitIdentitySecret("target") then
+		targetReadPending = true
 		return false
 	end
+	targetReadPending = false
 	local isFriendly = HasFriendlyPlayerTarget() and true or false
 	local isSelf = lastTargetIsSelf
 	if ns.CanCompareUnitTokens("target", "player") then
@@ -84,6 +90,14 @@ function ns.TargetSignatureChanged()
 	return changed
 end
 
+-- The target readings a hidden identity put off, taken now; true when they moved meanwhile.
+function ns.RereadTargetIfPending()
+	if not targetReadPending then
+		return false
+	end
+	return ns.TargetSignatureChanged()
+end
+
 -- Records this firing's group readings and reports whether either moved.
 function ns.GroupSignatureChanged()
 	local inGroup, inRaid = IsInGroup(), IsInRaid()
@@ -95,4 +109,5 @@ end
 function ns.ResetTargetTracking()
 	lastTargetFriendly, lastTargetIsSelf, lastTargetLevel, lastTargetCannibalizable = nil, nil, nil, nil
 	lastInGroup, lastInRaid = nil, nil
+	targetReadPending = false
 end

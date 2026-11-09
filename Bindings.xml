@@ -4,15 +4,20 @@
     binding needs its keys moved over (ns.MigrateBuffKeys,
     ns.MigrateSpellbookBinding).
 
-    Toggle Enhanced Spellbook (Features/Spellbook/Key-Bindings.lua) calls
+    Toggle Enhanced Spellbook (Features/Enhanced-Spellbook/Key-Bindings.lua) calls
     a global, since Bindings.xml can call nothing else. Buff Duty's Buff Key
     (Features/Buff-Duty/Buff-Duty-Keys.lua) clicks a hidden secure
     button, which picks the next buff on the list and casts it; a macro clicks
     the same button: /click GtGBuffKey.
 
-    MIGRATION (remove after 2026-12-03): the two hidden bindings are the names
-    these had before the GtG names, kept so a key still saved against one keeps
-    working until login moves it over.
+    MIGRATION (remove after 2026-12-03): the hidden binding is the spellbook
+    toggle's name before the GtG name, kept so a key still saved against it
+    keeps working until login moves it over. The Buff Key's old name,
+    CLICK TFTBBuffIndividual:LeftButton, is deliberately not declared: a
+    Thanks for the Buff from before Buff Duty moved here still ships that
+    binding, and declaring it twice warns on every login. A CLICK binding
+    needs no declaration to keep a saved key, and the old button name stays
+    an alias (Buff-Duty-Keys.lua), so the key still works until login moves it.
 -->
 <Bindings>
 	<Binding name="GOODTOGO_TOGGLE_SPELLBOOK" header="GOODTOGO" category="ADDONS">
@@ -22,5 +27,4 @@
 	<Binding name="MACROSPELLBOOK_TOGGLE" category="ADDONS" hidden="true">
 		GoodToGo_ToggleSpellbook()
 	</Binding>
-	<Binding name="CLICK TFTBBuffIndividual:LeftButton" category="ADDONS" hidden="true" />
 </Bindings>

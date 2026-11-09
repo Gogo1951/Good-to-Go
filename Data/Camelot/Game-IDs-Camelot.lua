@@ -10,9 +10,13 @@ ns.CANNIBALIZE_SPELL_ID = 20577
 ns.CANNIBALIZE_CREATURE_TYPE_IDS = { 6, 7 }
 ns.CANNIBALIZE_RESTORES_MANA = true
 
+-- Rapid Regeneration (Troll)
+ns.RAPID_REGENERATION_SPELL_ID = 1260270
+
 -- Races
 ns.NIGHT_ELF_RACE_ID = 4
 ns.UNDEAD_RACE_ID = 5
+ns.TROLL_RACE_ID = 8
 
 -- Druid Forms
 ns.DRUID_DIRE_BEAR_FORM_SPELL_ID = 9634
@@ -32,10 +36,6 @@ ns.REVIVE_PET_SPELL_ID = 982
 -- Well Fed Buff
 -- A "Well Fed" food buff, read for the buff's name; it is named Well Fed in every locale on every client.
 ns.WELL_FED_SPELL_ID = 19705
-
--- Global Cooldown
--- Read for the global cooldown's own timer, which a cooldown check compares against.
-ns.GLOBAL_COOLDOWN_SPELL_ID = 61304
 
 -- Ranged Attack
 -- Shoot, read for the one label the page gives its folded ranged-attack macro.
@@ -85,58 +85,28 @@ ns.ENGINEERING_SKILL_LINE_ID = 202
 -- The Engineering specialization Diagnostics checks the player for.
 ns.GOBLIN_ENGINEER_SPELL_ID = 20222
 
--- Thanks for the Buff
+-- Buff Duty
 -- [constant] = spell id, -- Spell Name
 ns.GAME_IDS = {
 	PHASE_SHIFT_SPELL_ID = 4511, -- Phase Shift
-	SAMPLE_BUFF_SPELL_ID = 1459, -- Arcane Intellect
-	SAMPLE_COMBAT_BUFF_SPELL_ID = 1044, -- Blessing of Freedom
-	SAMPLE_GOOD_NEWS_SPELL_ID = 10060, -- Power Infusion
-	SAMPLE_SERVICE_SPELL_ID = 10059, -- Portal: Stormwind
-}
-
--- { texture file ID, button it starts on }, -- Icon File Name
-ns.THANK_YOU_MACRO_ICONS = {
-	{ 135453, 2 }, -- inv_valentinescard01
-	{ 134141, 3 }, -- inv_misc_gift_02
-	{ 134927, 4 }, -- inv_rosebouquet01
-	{ 133783, 5 }, -- inv_misc_celebrationcake_01
-	{ 135767 }, -- spell_brokenheart
-	{ 133939 }, -- inv_misc_flower_02
-	{ 135263 }, -- inv_summerfest_fireflower
-	{ 133196 }, -- inv_holiday_beerfestpretzel01
-	{ 133201 }, -- inv_holiday_brewfestbuff_01
-	{ 134505 }, -- inv_misc_toy_01
-	{ 135448 }, -- inv_valentinepinkrocket
-	{ 132387 }, -- inv_ammo_snowball
-	{ 133785 }, -- inv_misc_coin_02
-	{ 134237 }, -- inv_misc_key_03
-	{ 133471 }, -- inv_letter_15
-	{ 134481 }, -- inv_misc_ticket_darkmoon_01
-	{ 134333 }, -- inv_misc_orb_01
-	{ 133730 }, -- inv_misc_bone_humanskull_01
-	{ 134153 }, -- inv_misc_head_dragon_01
-	{ 132834 }, -- inv_egg_03
 }
 
 --[[
 How We Got the Data
 
 Last Validated
-	2026-10-16, WoW Forever 1.60.1.70450
+	2026-11-08, WoW Forever 1.60.1.70862
 
 Notes
 	- Single spell, item, race and skill-line IDs the feature code reads by name, grouped by use. The client supplies every name the player sees from these IDs.
 	- Shadowmeld and Stealth are the spells the Food and Water macros cast for Stealth Eating and Shadowmeld Drinking. Stealth is rank 1: C_Spell.GetSpellName resolves the base name "Stealth", which a bare /cast fires at the highest rank the rogue knows.
 	- Cannibalize is the Forsaken racial, which channels off a corpse of the creature types listed (6 Undead, 7 Humanoid). It restores health and mana on this client, 7% of each every 2 sec, so CANNIBALIZE_RESTORES_MANA decides whether the Water macro may cast it.
+	- Rapid Regeneration is the Troll racial on this client. The Food macro casts it in place of eating while it is off cooldown (Tools-Troll.lua); the other clients have no such spell, so the constant is left nil there and the Class & Race panel hides the Troll section.
 	- Poisons (2842) is the rogue poison-crafting skill, the same ID on Era and TBC. Knowing it gates the Poisons macro (a rogue without it can't apply poisons at all) and provides the middle-click crafting branch.
 	- Well Fed (19705) is read for the buff's name, which is Well Fed in every locale on every client. The two mana runes are read for the names the Mana Gem panel shows.
 	- ns.PET_BUFF_FOODS holds the Hunter and Warlock pet buff foods: the pet-buff override offers the highest rank the bags hold, settingKey names each food's petBuffTypes toggle, and requiredLevel is the level a player needs before the food is offered. This client has none.
+	- There is no GLOBAL_COOLDOWN_SPELL_ID: this client has no Global Cooldown spell (61304), so the Buff Duty key picker reads the global cooldown from one of the player's own Buff Duty spells, one with no cooldown of its own.
 	- The profession skill lines are the ones the usability gates read ranks from; each is found in the skill list by the name the client gives its ID. The Goblin Engineer specialization is what Diagnostics checks the player for.
-	- Thanks for the Buff: Spell IDs that feature code needs by name rather than from a list: the sample spells the options panels use for their preview messages.
-	- Thanks for the Buff: SAMPLE_GOOD_NEWS_SPELL_ID (Power Infusion) is the spell linked in the Good News sample whisper (Options/Automated-Appreciation/Options-Send-Good-News.lua).
-	- Thanks for the Buff: SAMPLE_COMBAT_BUFF_SPELL_ID (Blessing of Freedom) is the spell linked in the Combat Buffs sample whisper and print out, cast by a sample Paladin (Options/Automated-Appreciation/Options-Teammate-Buffs.lua): a buff cast in a fight, unlike SAMPLE_BUFF_SPELL_ID's Arcane Intellect, which the Stranger Buffs samples use.
-	- Thanks for the Buff: THANK_YOU_MACRO_ICONS are the icons a Thank You Button macro can wear (Options/Automated-Appreciation/Options-Thank-You-Button.lua): bold, distinct item art nobody keeps on a bar, so a Thank You macro stands out. Each is a texture file ID present under the same ID on Classic Era, TBC Anniversary and WoW Forever. The client gives an icon no name, so the Icon dropdown shows each one as its picture alone, in this order. The second field is the button that starts on it, so buttons 2 through 5 each start on their own icon.
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query
@@ -148,6 +118,8 @@ wago.tools
 	https://wago.tools/db2/SpellName?build=1.60.1.70450
 	https://wago.tools/db2/ItemSparse?build=1.60.1.70450
 	https://wago.tools/db2/ManifestInterfaceData?build=1.60.1.70450
+	https://wago.tools/db2/SpellName?build=1.60.1.70862
+	https://wago.tools/db2/ItemSparse?build=1.60.1.70862
 
 QuestieDB
 	None.

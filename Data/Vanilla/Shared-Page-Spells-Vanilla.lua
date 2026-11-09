@@ -76,12 +76,12 @@ ns.PROFESSION_SPECIALIZATIONS = {
 How We Got the Data
 
 Last Validated
-	2026-11-04, Classic Era 1.15.9.70576
+	2026-11-08, Classic Era 1.15.9.70576
 
 Notes
-	- SHARED_PAGE_SPELLS holds the spells every class shares, which the Spell Book page files under its own headings whatever their spellbook tab: each race's spells (racials, which Sort By Category gives a Racials section), the profession and tracking spells the General tab lists (professions, tracking), and its Attack (attacks). ns.PageCategory and the page-tag lookup in Features/Spellbook/Macro-Builder/Macro-Builder.lua read it.
+	- SHARED_PAGE_SPELLS holds the spells every class shares, which the Spell Book page files under its own headings whatever their spellbook tab: each race's spells (racials, which Sort By Category gives a Racials section), the profession and tracking spells the General tab lists (professions, tracking), and its Attack (attacks). ns.PageCategory and the page-tag lookup in Features/Enhanced-Spellbook/Macro-Builder/Macro-Builder.lua read it.
 	- An entry is a spell ID, or a list of every ID one spell has on this client. Each is matched by name, so an ID the player doesn't know is skipped.
-	- PROFESSION_SPECIALIZATIONS lists each profession's spell, then its specializations: passives the spellbook lists beside the profession that do nothing when cast. When one is learned, the page shows the profession's macro under the specialization's name and icon ("Goblin Engineer", still opening Engineering) and leaves the specialization's own off. A later one in the row wins, so a Master Swordsmith beats the Weaponsmith it builds on. FoldSpecializations in Features/Spellbook/Macro-Builder/Macro-Builder.lua reads it.
+	- PROFESSION_SPECIALIZATIONS lists each profession's spell, then its specializations: passives the spellbook lists beside the profession that do nothing when cast. When one is learned, the page shows the profession's macro under the specialization's name and icon ("Goblin Engineer", still opening Engineering) and leaves the specialization's own off. A later one in the row wins, so a Master Swordsmith beats the Weaponsmith it builds on. FoldSpecializations in Features/Enhanced-Spellbook/Macro-Builder/Macro-Builder.lua reads it.
 	- Rows began as one table shared by every folder, then each folder was pruned to its own client's Validate Data report. Not on this client, so pruned: Gift of the Naaru, Arcane Torrent, Mana Tap and the later races' racials, the later IDs of Shadowmeld and Blood Fury, Jewelcrafting, Inscription, Prospecting, Milling, Archaeology, Survey, Find Fish, and the TBC Alchemy and Tailoring specializations, which took Alchemy's and Tailoring's rows with them.
 	- The racials were checked against this client's tables: every spell on a racial skill line (SkillLine category 9, named Racial; SkillLineAbility), less the passive and hidden ones (SpellMisc), is a row. Every profession and secondary skill line (categories 11 and 9, leaving out riding, Swimming and Survival) has its spell here, with its gathering and specialization spells.
 

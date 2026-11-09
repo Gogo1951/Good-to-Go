@@ -1,43 +1,41 @@
 # Good to Go (GtG)
 
-Always ready for the next pull. Self-updating macros for your best food, water, potions, an easy macro builder for your spells, a Restock List that auto-buys and banks reagents and ammo, click-to-cast missing buffs, and auto thank-you whispers.
+Auto-updating macros for your best food, water, potions, and healthstones, a Restock List that auto-buys and banks reagents and ammo, click-to-cast missing buffs, and mouseover macros for every spell.
 
-**TL;DR:** Always put your best foot forward. Use the right spells, even after you train or change specs. Reach for the best consumables you're carrying, without thinking about it. Keep your bags full simply by stopping by a vendor or your bank next time you're in town. Spend more time playing instead of prepping.
+**TL;DR:** Spend your time playing, not prepping. The right spells, the best consumables, and full bags, all handled for you.
 
 ### Buff Duty
 
 <img width="800" src="https://github.com/user-attachments/assets/01cbb0ae-c1f1-4fa3-8b6d-5d3c993a6c79" />
 
 * **Every Buff You Owe** // One click-to-cast window, or one key, covers your group, yourself, your weapons, and the stranger who just buffed you.
-* **Never Let Your Own Buffs Drop** // Class buffs, self-buffs, and weapon buffs show up the moment they're missing or running low, and one click puts them back.
-* **Gentle Reminders for the Group** // See which buffs your group is missing, then nudge the group, or quietly whisper the players who can cast them.
+* **Never Let a Buff Drop** // Missing or fading buffs show up right away, and one click puts them back.
+* **Gentle Reminders for the Group** // See which buffs your group is missing, then ask the group, or whisper the class that can cast them.
 
 ### Enhanced Spellbook
 
 <img width="800" src="https://github.com/user-attachments/assets/e3e65c7c-04df-45c4-8564-f613da0b2746" />
 
-* **Pro Macros, Zero Typing** // Every class spell becomes a smart button in one click, and it keeps itself up to date as you level and train.
+* **Pro Macros, Zero Typing** // Every class spell becomes a smart button in one click, and it stays up to date as you level and train.
 * **The Right Rank** // Buffing a lower-level player? The macro casts the rank that fits their level.
-* **One Button, Many Jobs** // Heal whoever your mouse is over, swap spells with a modifier key, or cast something else in combat, all from the same button.
-* **Bonus Moves** // Pop a trinket or send in your pet with the same press. Right-Click a spell to add them.
-* **What's Next?** // A second tab shows the spells you can learn now and the ones coming soon, so you know when it's time to visit your trainer.
+* **One Button, Many Jobs** // Heal whoever your mouse is over, swap spells with a modifier key, or pop a trinket and send in your pet, all from the same button.
+* **What's Next?** // See the spells you can learn now and the ones coming soon, so you know when to visit your trainer.
 
 ### Restocker
 
 <img width="800" src="https://github.com/user-attachments/assets/fa63db86-8638-4483-9f18-f47765ba8a8f" />
 
-* **Pick Your Staples Once** // Every merchant and bank visit tops up your food, water, ammo, and reagents.
-* **Your List Levels With You** // Food, water, ammo, poisons, and reagents climb to the next tier as you level, and every swap is announced in chat.
+* **Pick Your Staples Once** // Every merchant and bank visit tops up your food, water, ammo, and reagents, and never spends your last gold.
+* **Your List Levels With You** // Food, water, ammo, poisons, and reagents climb to the next tier as you level.
 * **Rogues Get a Bonus** // List the poison you want, and the ingredients buy themselves.
-* **Gold Reserve** // Restocking never spends your last gold.
-* **Skip a Visit** // Hold Shift while opening the bank to skip restocking that time.
+* **Skip a Visit** // Hold Shift while opening a merchant or the bank to skip restocking that time.
 
-### Macros for Consumables
+### Consumable Macros
 
 <img width="800" src="https://github.com/user-attachments/assets/034cffa2-69f5-43dd-91f8-4cee48ec7d72" />
 
-* **Always the Best Item** // One button each for food, water, potions, and more, always using the best thing in your bags you can actually use. Set them up once and forget them.
-* **Mages and Warlocks** // Right-Click the same button to conjure more, even food and water sized for a lower-level friend.
+* **Always the Best Item** // One button each for food, water, potions, and more, always using the best thing in your bags. Set them up once and forget them.
+* **Mages and Warlocks** // Right-Click the same button to conjure more, even sized for a lower-level friend.
 
 | Macro | Uses |
 | --- | --- |
@@ -53,22 +51,30 @@ Always ready for the next pull. Self-updating macros for your best food, water, 
 | `- Feed Pet` | Call, feed, or revive your pet, or cast Mend Pet (Hunters only) |
 | `- Poisons` | Poisons for both weapons from one button (Rogues only) |
 
-### Automated Appreciation
+### Rank Watch
 
-<img width="800" src="https://github.com/user-attachments/assets/ecd9839b-4f94-4657-b764-4f25dd24a82e" />
+* **Catch Outdated Action Bars** // Find out when you or a group member casts a spell at a lower rank than you could, with a friendly whisper pointing them to the trainer.
+* **No False Alarms** // A buff the game lowers for a low-level player is never reported, and you pick which ranks are worth a mention.
+* **One Voice Per Group** // When several players run Rank Watch or RankSentinel, only one of them whispers.
 
-* **Thanks Without the Spam** // Thank the players who buff you with a whisper or an emote, and tell the ones you buff what they got.
-* **Thank You Buttons** // One click to thank the healer, ask a mage for water, or heckle a guildie, in your own words.
-* **Group Service Alerts** // Know the moment someone sets out a feast, soulwell, portal, or repair bot, and thank them for it.
+### Example Messages
+
+> **Ready Check, Self:** Good to Go // Missing Buffs : Well Fed, Main Hand
+
+> **Back in Town, 🔊 & Self:** Good to Go // Don't forget to restock while you're in town!
+
+> **Level Up, Self:** Good to Go // [Ice Cold Milk]x20 upgrades to [Melon Juice]x20.
+
+> **Low Rank Cast, Message To Portalrico:** ⭐ FYI, no biggie, but you used [Fireball] (Rank 5). There's a newer rank at level 30. Update your action bars or visit your trainer and you'll be Good to Go // GtG
 
 ## Setup
 
 1. Install the add-on, ideally using [CurseForge](https://www.curseforge.com/wow/addons/good-to-go) or [Wago](https://addons.wago.io/addons/good-to-go).
 2. Type `/gtg`, or Shift + Middle-Click the mini-map button, to open the Options Interface.
 3. Open your Macros window and drag `- Food`, `- Water`, and the rest from the General tab onto your action bars.
-4. Open your spellbook, click the GtG // Spellbook tab, and drag any spell onto your bars as a ready-made macro.
+4. Open your spellbook, click the Enhanced Spellbook tab, and drag any spell onto your bars as a ready-made macro.
 5. Pick your staples when the Staples window pops up. From then on, every merchant and bank visit keeps your bags stocked.
-6. _"Luck favors the prepared, darling."_
+6. _"I love it when a plan comes together."_
 
 ## Tips & Tricks
 
@@ -87,8 +93,10 @@ Hover it for your current food, notes on your class's macros, and what your Rest
 
 ### Good to Know
 
+* **Readiness Report** // When a ready check starts, get a private list of anything you still need to fix, like a missing buff, potion, or damaged gear. Silent when you're ready.
+* **Inventory Report** // Item tooltips show how many you have in your bags, your bank, and on your other characters on the same realm.
 * **Druids** // Add DruidMacroHelper, and your potion buttons work from any form.
-* **Forsaken and Night Elves** // Forsaken can Cannibalize instead of eating, and Night Elves can slip into Shadowmeld before they eat or drink.
+* **Forsaken, Night Elves and Trolls** // Forsaken can Cannibalize instead of eating, Night Elves can slip into Shadowmeld before they eat or drink, and Trolls on WoW Forever can use Rapid Regeneration instead of eating.
 
 ## Testing & Localization Status
 
@@ -111,13 +119,13 @@ Hover it for your current food, notes on your class's macros, and what your Rest
 🚀 **This add-on stands on the shoulders of those that came before.**
 
 * Gogo1951's [Connoisseur & Restocker](https://www.curseforge.com/wow/addons/connoisseur-restocker)
-* Gogo1951's [Thanks for the Buff](https://www.curseforge.com/wow/addons/thanks-for-the-buff-revisited)
+* Gogo1951's [GogoWatch](https://github.com/Gogo1951/GogoWatch)
+* SabreValkyrn's [RankSentinel](https://www.curseforge.com/wow/addons/ranksentinel)
+* Gronzig's [RankWatch](https://www.curseforge.com/wow/addons/rankwatch)
 * oscarucb's [RaidBuffStatus](https://www.curseforge.com/wow/addons/raidbuffstatus)
 * targon's [Free Refills](https://www.wowinterface.com/downloads/info7950-FreeRefills.html)
 * kvakvs's [Restocker Classic](https://www.curseforge.com/wow/addons/restocker-classic)
 * guardycmw's [Restocker Kit](https://www.curseforge.com/wow/addons/restocker-kit)
-* Runew0lf's [Thanks For The Buff](https://www.curseforge.com/wow/addons/thanks-for-the-buff)
-* vbezhenar's [Thank For Buff](https://www.curseforge.com/wow/addons/thank-for-buff)
 
 ## Get Involved
 
@@ -133,12 +141,5 @@ Hover it for your current food, notes on your class's macros, and what your Rest
 * Gogo1951's [GogoLoot](https://www.curseforge.com/wow/addons/gogoloot)
 * Gogo1951's [Magic Eraser](https://www.curseforge.com/wow/addons/magic-eraser)
 * Gogo1951's [Play It Forward](https://www.curseforge.com/wow/addons/play-it-forward)
+* Gogo1951's [Thanks for the Buff](https://www.curseforge.com/wow/addons/thanks-for-the-buff-revisited)
 * Gogo1951's [Water Dispenser](https://www.curseforge.com/wow/addons/water-dispenser-revisited)
-
-### 🔴 Alternatives
-
-* ollidiemaus's [Auto Potion](https://www.curseforge.com/wow/addons/auto-potion)
-* kvakvs's [Buffomat Classic](https://www.curseforge.com/wow/addons/buffomat-classic)
-* Pupp3h's [Buffwatch Classic](https://www.curseforge.com/wow/addons/buffwatch-classic)
-* funki's [Clickable Raid Buffs](https://www.curseforge.com/wow/addons/clickable-raid-buffs)
-* jnwhiteh's [Clique](https://www.curseforge.com/wow/addons/clique)

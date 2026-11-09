@@ -29,7 +29,7 @@ end
     The level cap on this client, which the Leveling and Max Level modes
     compare against: the smaller of the expansion's cap and the player's own,
     the rule Blizzard's GameRulesUtil.GetEffectiveMaxLevelForPlayer applies on
-    all three clients, which ship both readers. Show Connoisseur Context prints
+    all three clients, which ship both readers. Consumable Macros Context prints
     what each answers.
 ]]
 function ns.GetMaxPlayerLevel()

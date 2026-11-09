@@ -16,12 +16,6 @@
 - **Instead:** The six `DIET_*` values are the client's own diet words, which the Feed Pet macro matches against the pet's diets.
 - **Why:** The client names a pet's diets only as words and has no ID lookup for them.
 
-### Thank You Button whisper is unbranded
-
-- **Departs from:** MESSAGES, sent messages shaped `{rtN} Message // Short Name`.
-- **Instead:** The Thank You Button's whisper goes out as written, with no target marker and no Short Name sign-off.
-- **Why:** The button sends the player's own thank-you, which should read as their words, not the add-on's.
-
 ### Docked Spellbook panels titled by spell
 
 - **Departs from:** ADD-ON NAMES, window titles shaped `Title // Full Name`.
@@ -38,16 +32,16 @@
 
 - **Departs from:** MESSAGES → Target Marker, two add-ons never collide.
 - **Instead:** Messages sent to other players carry the Star, `{rt1}`, the same marker as Thanks for the Buff.
-- **Why:** Good to Go carries on Thanks for the Buff's messages, and the same marker keeps them familiar to the players who receive them.
-
-### Four README infographics
-
-- **Departs from:** README generation → Image Handling, one image under the TL;DR.
-- **Instead:** The README shows an infographic for Consumable Macros under the TL;DR, and one each for Restocker, Automated Appreciation and Enhanced Spellbook atop that feature's own Tips & Tricks section.
-- **Why:** Good to Go merges four add-ons, and each one's story needs its own picture.
+- **Why:** Buff Duty's buff asks came from Thanks for the Buff, and the same marker keeps them familiar to the players who receive them. Good to Go no longer sends thank-yous, so the two add-ons' messages never say the same thing.
 
 ### English beast names in the Pet What's Next? tooltip
 
 - **Departs from:** GAME NAMES, code never shows a name from a data row.
 - **Instead:** The hunter's Pet What's Next? tooltip names tameable beasts in English, from the data file, on every client.
 - **Why:** The client has no creature-name-by-ID lookup on every flavor, and an English name is more useful than none.
+
+### Options command takes an ignore argument
+
+- **Departs from:** OPTIONS PANEL → Slash Commands, the options command takes no arguments.
+- **Instead:** `/gtg ignore Name` adds a player to Rank Watch's Ignored Players, and `/gtg` with anything else still opens the Options Interface.
+- **Why:** Ignoring a player is reached from the add-on's one command rather than a second literal.

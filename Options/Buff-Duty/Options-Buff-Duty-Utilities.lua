@@ -7,8 +7,7 @@ local GetSpellTexture = C_Spell.GetSpellTexture
 --[[
     The builders only the Buff Duty panels (Options/Buff-Duty/) use: the
     classes this client has, the refresh choices' labels, and a spell's
-    caption-and-dropdown row. The ones every buff panel shares are in
-    Options/Automated-Appreciation/Options-Automated-Appreciation-Utilities.lua.
+    caption-and-dropdown row.
 ]]
 
 --------------------------------------------------------------------------------
@@ -18,11 +17,14 @@ local GetSpellTexture = C_Spell.GetSpellTexture
 --[[
     Every class this client's data names, sorted by token: the classes this
     game version has. Count as Tanks and Buff Duty's Classes list draw from it.
+    CLASS_SPELL_LISTS is keyed by every class the flavor has.
 ]]
 function ns.OptionsClassList()
 	local classes = {}
+	for class in pairs(ns.CLASS_SPELL_LISTS) do
+		classes[class] = true
+	end
 	for _, list in ipairs({
-		ns.TRACKED_ABILITIES,
 		ns.BUFF_DUTY_SPELLS,
 		ns.BUFF_DUTY_SELF_SPELLS,
 		ns.BUFF_DUTY_WEAPON_ENCHANTS,

@@ -17,6 +17,7 @@ ns.PET_FOOD_DATA = {
 	[2673] = { 10, 1, 10, nil }, -- Coyote Meat
 	[5467] = { 10, 1, 7, nil }, -- Kodo Meat
 	[5469] = { 10, 1, 9, { 2178 } }, -- Strider Meat
+	[5473] = { 10, 1, 10, nil }, -- Scorpid Surprise
 	[3173] = { 11, 1, 15, { 418 } }, -- Bear Meat
 	[723] = { 12, 1, 15, { 22 } }, -- Goretusk Liver
 	[2677] = { 14, 1, 15, nil }, -- Boar Ribs
@@ -77,6 +78,7 @@ ns.PET_FOOD_DATA = {
 	[6317] = { 15, 2, 2, nil }, -- Raw Loch Frenzy
 	[6361] = { 15, 2, 2, nil }, -- Raw Rainbow Fin Albacore
 	[6458] = { 15, 2, 1, nil }, -- Oil Covered Fish
+	[6522] = { 15, 2, 4, nil }, -- Deviate Fish
 	[12238] = { 15, 2, 2, { 1141 } }, -- Darkshore Grouper
 	[5526] = { 15, 2, 75, nil }, -- Clam Chowder
 	[21071] = { 20, 2, 25, nil }, -- Raw Sagefish
@@ -185,7 +187,7 @@ ns.PET_FOOD_DATA = {
 How We Got the Data
 
 Last Validated
-	2026-10-16, WoW Forever 1.60.1.70450
+	2026-11-08, WoW Forever 1.60.1.70862
 
 Notes
 	- The foods a hunter's pet eats, for Feed Pet support (Features/Macros-for-Consumables/Macros/Tools-Hunters-Pet-Food.lua). Diet IDs follow ns.PET_DIET_MAP in Data/Data.lua: 1 Meat, 2 Fish, 3 Bread, 4 Cheese, 5 Fruit, 6 Fungus.
@@ -195,6 +197,7 @@ Notes
 	- Diets on this client come from ItemPetFoodID in its own tables, numbered 1 Meat, 2 Fish, 3 Cheese, 4 Bread, 5 Fungus, 6 Fruit, so 3 and 4 and 5 and 6 swap on the way in. Those tables hold no quest objectives, so every row's questIDs were checked against QuestieDB's Forever quest table.
 	- Roasted Quail's level-1 copy (287963) carries the original's row, which Validate Data confirmed on build 1.60.1.70450.
 	- Season of Discovery items are left out even though this client knows many of their IDs (any ID of 200000 or more that the Classic Era tables also hold): they live only in Data/Discovery/. Where a table would otherwise pick one up, a deliberately-absent line in the table says so.
+	- Deviate Fish (6522) and Scorpid Surprise (5473) carry a pet diet on this client and have a source (fished from Deviate pools; cooked), so they are rows here. Savory Deviate Delight (6657) and Dragonbreath Chili (12217) are left out: they are cooked for what they do to the player, so Feed Pet would waste them. Items with ItemPetFoodID 7 (Pound of Flesh, Chunk of Flesh, Rabbit's Foot and the like) are left out because no pet family's PetFoodMask on this client eats that diet.
 
 SQL (CMaNGOS)
 	Database not recorded.
@@ -218,7 +221,15 @@ wago.tools
 	https://wago.tools/db2/SpellEffect?build=1.60.1.70450
 	https://wago.tools/db2/SpellMisc?build=1.60.1.70450
 	https://wago.tools/db2/SpellDuration?build=1.60.1.70450
+	https://wago.tools/db2/Item?build=1.60.1.70862
+	https://wago.tools/db2/ItemSparse?build=1.60.1.70862
+	https://wago.tools/db2/ItemEffect?build=1.60.1.70862
+	https://wago.tools/db2/ItemXItemEffect?build=1.60.1.70862
+	https://wago.tools/db2/CreatureFamily?build=1.60.1.70862
+	https://wago.tools/db2/SpellEffect?build=1.60.1.70862
+	https://wago.tools/db2/SpellReagents?build=1.60.1.70862
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Forever/foreverQuestDB.lua
+	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Forever/foreverItemDB.lua
 ]]

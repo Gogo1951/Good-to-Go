@@ -19,8 +19,8 @@ local IsPhaseShifted = BuffDuty.IsPhaseShifted
 -- Labels
 --------------------------------------------------------------------------------
 
--- A pet's inline icon in front of its name, sized to the small font.
-local LABEL_ICON_SIZE = 14
+-- A pet's inline icon in front of its name, the window's icon size.
+local LABEL_ICON_SIZE = Data.BUFF_DUTY_ICON_SIZE
 
 --[[
     A pet's row label: its summoning spell's icon, then the name in its owner's

@@ -182,4 +182,13 @@ ns.RegisterMacroType({
 	corpseSpell = function(entry)
 		return ns.CannibalizeCast("enableCannibalizeEating", entry)
 	end,
+
+	--[[
+	    Troll Rapid Regeneration: while it is off cooldown the body casts it
+	    instead of eating (Tools-Troll.lua). Asked under the same rule as
+	    corpseSpell, so the pet-buff override never carries it.
+	]]
+	leadSpell = function(entry)
+		return ns.RapidRegenerationCast(entry)
+	end,
 })

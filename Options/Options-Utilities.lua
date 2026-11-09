@@ -123,9 +123,10 @@ end
 
 --[[
     An Example line: one sample of the chat print a feature makes, built by
-    ns.BuildPrintLine, under a silver "Example:" label. An Example is a single
-    line, even for a feature that prints several. lineFunction returns the
-    print body, or nil, and runs at every draw, so the Example follows the
+    ns.BuildPrintLine, under a silver "Example:" label. lineFunction returns
+    the print body, or nil, or a list of bodies for a feature whose every line
+    the Example shows (the Readiness Report's), each printed on its own line;
+    it runs at every draw, so the Example follows the
     settings the moment they change. Silver opens again after the line, for a
     locale whose label continues past its %s.
 ]]
@@ -134,7 +135,12 @@ function ns.OptionsExample(order, lineFunction, hidden)
 		type = "description",
 		name = function()
 			local body = lineFunction()
-			local line = body and ns.BuildPrintLine(body) or ""
+			local bodies = type(body) == "table" and body or { body }
+			local lines = {}
+			for index, text in ipairs(bodies) do
+				lines[index] = ns.BuildPrintLine(text)
+			end
+			local line = table.concat(lines, "\n" .. GetColor("HELP"))
 			return GetColor("HELP") .. format(L["SAMPLE_EXAMPLE"], line .. GetColor("HELP")) .. "|r"
 		end,
 		fontSize = "medium",
@@ -157,7 +163,7 @@ end
 
 -- A sent line's {rtN} target markers as the icons the receiving client draws; panel text needs the texture itself.
 function ns.MarkersAsTextures(message)
-	return (message:gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:14|t"))
+	return (message:gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:16|t"))
 end
 
 --[[
@@ -252,8 +258,8 @@ function ns.DefineSoundPreview(playSound, order, hidden, description)
 		name = "",
 		desc = description or L["NOTIFICATIONS_SOUND_PREVIEW_DESCRIPTION"],
 		image = "Interface\\Common\\VoiceChat-Speaker",
-		imageWidth = 18,
-		imageHeight = 18,
+		imageWidth = 16,
+		imageHeight = 16,
 		width = 0.15,
 		order = order,
 		hidden = hidden,
@@ -304,10 +310,8 @@ end
     from here, so they share one caption, one tooltip and one setter, and a
     change repaints every panel so neither copy shows a stale box.
 
-    A switch on an Automated Appreciation feature (`appreciation`, its key in
-    ns.FEATURE_SWITCHES) goes through ns.SetFeatureSwitch, the one setter the
-    mini-map button and the Buff Duty window's close button use too. The rest
-    read and write their own account-wide key.
+    A switch with `get` and `set` goes through the feature's own functions;
+    the rest read and write their own account-wide key.
 
     `confirmOff` asks before a switch that keeps macros current turns off:
     off stops the updates and leaves every macro as it last was, which a
@@ -320,9 +324,16 @@ end
 ]]
 local FEATURE_SWITCHES = {
 	BuffDuty = {
-		appreciation = "buffWindow",
 		name = "BUFF_DUTY_ENABLE",
 		desc = "SWITCH_BUFF_DUTY_DESCRIPTION",
+		get = function()
+			return ns.IsBuffDutyOn()
+		end,
+		-- Repaints every panel itself.
+		set = function(value)
+			ns.SetBuffDutyOn(value)
+		end,
+		notifies = true,
 	},
 	Restocker = {
 		key = "restockerEnabled",
@@ -370,33 +381,27 @@ local FEATURE_SWITCHES = {
 			ns.SyncReadinessReportEvents()
 		end,
 	},
-	StrangerBuffs = {
-		appreciation = "strangers",
-		name = "STRANGERS_ENABLE",
-		desc = "SWITCH_STRANGER_BUFFS_DESCRIPTION",
-	},
-	GoodNews = {
-		appreciation = "goodNews",
-		name = "SWITCH_GOOD_NEWS",
-		desc = "SWITCH_GOOD_NEWS_DESCRIPTION",
-	},
-	CombatBuffs = {
-		appreciation = "teammates",
-		name = "SWITCH_COMBAT_BUFFS",
-		desc = "SWITCH_COMBAT_BUFFS_DESCRIPTION",
-	},
-	ServiceAlerts = {
-		appreciation = "services",
-		name = "SWITCH_SERVICE_ALERTS",
-		desc = "SWITCH_SERVICE_ALERTS_DESCRIPTION",
+	RankWatch = {
+		name = "SWITCH_RANK_WATCH",
+		desc = "SWITCH_RANK_WATCH_DESCRIPTION",
+		get = function()
+			return ns.RankWatchSettings().enabled
+		end,
+		set = function(value)
+			ns.SetRankWatchEnabled(value)
+		end,
 	},
 }
 
 ns.FEATURE_GROUPS = {
 	{ "BuffDuty", "Restocker", "Spellbook", "Macros" },
 	{ "InventoryReport", "ReadinessReport" },
-	{ "StrangerBuffs", "GoodNews", "CombatBuffs", "ServiceAlerts" },
 }
+
+-- Rank Watch, under Consumable Macros, wherever its TOC loads it: Mists has no ranks and leaves it out.
+if ns.SetRankWatchEnabled then
+	table.insert(ns.FEATURE_GROUPS[1], "RankWatch")
+end
 
 local function NotifyAllPanels()
 	for _, name in pairs(ns.OPTIONS_REGISTRY) do
@@ -411,24 +416,18 @@ local function GetSwitch(switch)
 	if switch.get then
 		return switch.get()
 	end
-	if switch.appreciation then
-		return ns.IsFeatureOn(switch.appreciation)
-	end
 	return ns.db.global[switch.key]
 end
 
 local function SetSwitch(switch, value)
-	if switch.appreciation then
-		-- Repaints every panel itself.
-		ns.SetFeatureSwitch(switch.appreciation, value)
-		return
-	end
 	if switch.set then
 		switch.set(value)
 	else
 		ns.db.global[switch.key] = value
 	end
-	NotifyAllPanels()
+	if not switch.notifies then
+		NotifyAllPanels()
+	end
 end
 
 function ns.OptionsFeatureSwitch(feature, order, width)
@@ -724,7 +723,7 @@ end
 local function GetCarriedItemChoices(sourceTable)
 	local values, sorting, seen = {}, {}, {}
 
-	for bag = 0, NUM_BAG_SLOTS do
+	for _, bag in ipairs(ns.CARRIED_BAG_IDS) do
 		for slot = 1, (C_Container.GetContainerNumSlots(bag) or 0) do
 			local info = C_Container.GetContainerItemInfo(bag, slot)
 			local itemID = info and info.itemID
@@ -962,7 +961,7 @@ local itemLinkMethods = {}
 
 function itemLinkMethods:OnAcquire()
 	self.itemID = nil
-	self:SetHeight(20)
+	self:SetHeight(16)
 end
 
 function itemLinkMethods:OnRelease()
@@ -992,7 +991,7 @@ function itemLinkMethods:SetDisabled() end
 
 local function ItemLinkWidgetConstructor()
 	local frame = CreateFrame("Frame", nil, UIParent)
-	frame:SetHeight(20)
+	frame:SetHeight(16)
 	frame:EnableMouse(true)
 	frame:SetScript("OnEnter", OnItemLinkEnter)
 	frame:SetScript("OnLeave", OnItemLinkLeave)
@@ -1098,7 +1097,7 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The title drawn at the top of a sub-panel: "Combat Buffs > Tracked
+    The title drawn at the top of a sub-panel: "Buff Duty > Tracked
     Abilities", so it is always clear where you are. Only the title carries the
     parent; the settings tree already shows it by nesting, and the tree label is
     the plain name passed to AddToBlizOptions.

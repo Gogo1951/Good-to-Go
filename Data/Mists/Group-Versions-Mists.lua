@@ -30,11 +30,11 @@ ns.SPELL_GROUPS = {}
 How We Got the Data
 
 Last Validated
-	2026-11-04, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-08, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- Each row pairs a single-target spell with its group version, as [singleSpellId] = groupSpellId. On this client that is only each mage Teleport with its Portal: Mark of the Wild, Arcane Brilliance, the paladin Blessings and Power Word: Fortitude already reach the whole group, and Gift of the Wild, Arcane Intellect, the Greater Blessings and the priest Prayers are gone.
-	- The "Right-Click For Group Version" option reads it (ResolveClassConfig in Features/Spellbook/Macro-Builder/Macro-Builder.lua): a learned single spell whose group version is also learned can cast the group version on a right-click.
+	- The "Right-Click For Group Version" option reads it (ResolveClassConfig in Features/Enhanced-Spellbook/Macro-Builder/Macro-Builder.lua): a learned single spell whose group version is also learned can cast the group version on a right-click.
 	- Both names come from the client, so a pair whose spells this client does not know drops out at runtime until the Data Review prunes it from this folder.
 	- SPELL_GROUPS lists spells with names of their own that one replaces another as the player trains (Demon Skin then Demon Armor, Cure Disease then Abolish Disease), by class, since two classes can share a spell's name (Cure Poison). The Grouped Spells submenu reads it: each spell in a group offers every spell of its group as a checkbox, and the macro casts the last one learned of those ticked.
 	- Built from this client's game tables after its Validate Data report, which found the table empty: every Teleport and Portal on the mage skill line (SkillLineAbility), paired by destination. Shattrath, Tol Barad and the Vale of Eternal Blossoms have one pair per faction, the Alliance one carrying the lower IDs, as the portal objects they summon do (SpellEffect).

@@ -27,18 +27,23 @@ local function Refresh()
 end
 
 --[[
-    Recorded Characters: one row per other character the Inventory Report
-    holds, A to Z, the name in its class color and then its realm, with a
-    remove icon that asks before it forgets them
-    (ns.ForgetRecordedCharacter). Added to args only while there is one, so
+    Recorded Characters: one row per other character on this realm the
+    Inventory Report holds, A to Z, the name in its class color (no realm:
+    every row is on this one), with a remove icon that asks before it forgets them
+    (ns.ForgetRecordedCharacter). Only this realm's, the same characters the
+    tooltip reads (Inventory-Report-Tooltip.lua): the saved table is
+    account-wide, so it also holds characters from the client's other realms
+    and from a WTF folder copied in from another game version, none of whom
+    the tooltip can show here. Added to args only while there is one, so
     the section isn't there at all otherwise; the panel is built afresh each
     time it draws.
 ]]
 local function AddRecordedCharacters(args, order)
 	local ownKey = ns.GetCharacterKey()
+	local realm = GetRealmName()
 	local keys = {}
 	for key, record in pairs(ns.db.global.inventory) do
-		if key ~= ownKey and type(record) == "table" and record.name then
+		if key ~= ownKey and type(record) == "table" and record.name and record.realm == realm then
 			keys[#keys + 1] = key
 		end
 	end
@@ -46,8 +51,9 @@ local function AddRecordedCharacters(args, order)
 		return
 	end
 	local inventory = ns.db.global.inventory
+	-- A to Z whatever the case, as the tooltip lists them; the key only settles two characters that share a name.
 	table.sort(keys, function(a, b)
-		local nameA, nameB = inventory[a].name, inventory[b].name
+		local nameA, nameB = inventory[a].name:lower(), inventory[b].name:lower()
 		if nameA ~= nameB then
 			return nameA < nameB
 		end
@@ -68,7 +74,7 @@ local function AddRecordedCharacters(args, order)
 			args = {
 				name = {
 					type = "description",
-					name = color .. record.name .. "|r " .. GetColor("HELP") .. (record.realm or "") .. "|r",
+					name = color .. record.name .. "|r",
 					fontSize = "medium",
 					width = ns.OPTIONS_ROW_WIDTH - ns.OPTIONS_REMOVE_ICON_WIDTH,
 					order = 1,

@@ -314,6 +314,7 @@ ns.BUFF_DUTY_WEAPON_ITEMS = {
 	{ 28420, 50, 2954, 9264, STONE, 60 }, -- Fel Weightstone
 	{ 7307, 0, 265, 1048576, LURE, 30 }, -- Flesh Eating Worm
 	{ 3829, 30, 26, 173555, OIL, 40 }, -- Frost Oil
+	{ 67404, 0, 4264, 1048576, LURE, 1 }, -- Glass Fishing Bobber
 	{ 46006, 0, 3868, 1048576, LURE, 30 }, -- Glow Worm
 	{ 68049, 0, 4225, 1048576, LURE, 81 }, -- Heat-Treated Spinning Lure
 	{ 2871, 15, 14, 33219, STONE, 25 }, -- Heavy Sharpening Stone
@@ -359,7 +360,7 @@ ns.BUFF_DUTY_RESURRECTIONS = {
 How We Got the Data
 
 Last Validated
-	2026-11-04, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-08, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- Built offline from this client's game tables, not yet checked against a Validate Data run from a Mists client. Every ID below is in this build's SpellName or ItemSparse, under the name its comment gives.
@@ -379,7 +380,7 @@ Notes
 	- Left out of the self buffs: stances, presences (Death Knight) and Monk stances, as Warrior stances are on TBC; Omen of Clarity, now passive; forms, tracking and mounts; Grimoire of Sacrifice and Soul Link, which have cooldowns; Battle Shout, which now has a cooldown. Druid, Death Knight, Monk, Warlock and Warrior have no rows here.
 	- BUFF_DUTY_WEAPON_ENCHANTS: the shaman imbues, one spell each, with the enchant ID from SpellEffect's ENCHANT_ITEM_TEMPORARY misc value and their 60-minute duration from each spell's description ("Lasts 60 minutes"). Rockbiter names one enchant (3021) here, where TBC's named one per weapon speed. Earthliving (Restoration) and Windfury (Enhancement) are Specialization spells.
 	- BUFF_DUTY_WEAPON_HANDS: shamans only, both hands (Enhancement dual wields). Rogues have no weapon row: their poisons are self buffs.
-	- BUFF_DUTY_WEAPON_ITEMS: every item this client's tables say puts a temporary enchant on a hand weapon or fishing pole (ItemEffect to a spell with ENCHANT_ITEM_TEMPORARY), with SpellEquippedItems' subclass mask, ItemSparse's required level and item level, and the same kinds as TBC. Changed from TBC: Blessed Wizard Oil's enchant (3592), Consecrated Sharpening Stone's (3593), Elemental Sharpening Stone's weapon types (41411), and Isle of Quel'Danas, UiMap 122 here. Added: Exceptional Mana Oil, Feathered Lure, Glow Worm and Heat-Treated Spinning Lure. Left out: Weather-Beaten Fishing Hat and Nat's Hat (worn lures), Ninja Hook [PH] and Test Sharpening Stone (placeholders), armor items (Comfortable Insoles, Runes of Warding), and Corpse Worm and Glass Fishing Bobber, whose sources nothing here confirms. Whether the older items still drop or sell on this client isn't checked: those with a crafting spell on a profession skill line are craftable here.
+	- BUFF_DUTY_WEAPON_ITEMS: every item this client's tables say puts a temporary enchant on a hand weapon or fishing pole (ItemEffect to a spell with ENCHANT_ITEM_TEMPORARY), with SpellEquippedItems' subclass mask, ItemSparse's required level and item level, and the same kinds as TBC. Changed from TBC: Blessed Wizard Oil's enchant (3592), Consecrated Sharpening Stone's (3593), Elemental Sharpening Stone's weapon types (41411), and Isle of Quel'Danas, UiMap 122 here. Added: Exceptional Mana Oil, Feathered Lure, Glass Fishing Bobber (a drop in QuestieDB's MoP item table), Glow Worm and Heat-Treated Spinning Lure. Left out: Weather-Beaten Fishing Hat and Nat's Hat (worn lures), Ninja Hook [PH] and Test Sharpening Stone (placeholders), armor items (Comfortable Insoles, Runes of Warding), and Corpse Worm (69907), a quest bait that only catches Corpse-Fed Pike in Brightwater Lake. Whether the older items still drop or sell on this client isn't checked: those with a crafting spell on a profession skill line are craftable here.
 	- BUFF_DUTY_SOULSTONE is declared with no spells: on this client Soulstone (20707) is cast straight on a party member, with no stone item and a 10-minute cooldown, which the Soulstone reminder (Features/Buff-Duty/Buff-Duty-Self.lua) doesn't handle. Its fields are empty lists so every reader skips it.
 	- BUFF_DUTY_RESURRECTIONS: one spell per class, now with Druid (Revive) and Monk (Resuscitate). Rebirth and Raise Ally stay out (combat resurrections on a cooldown), as does Mass Resurrection (83968, a 10-minute cooldown).
 
@@ -411,5 +412,5 @@ wago.tools
 	https://wago.tools/db2/UiMap?build=5.5.4.70631
 
 QuestieDB
-	None.
+	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/MoP/mopItemDB.lua
 ]]

@@ -1,16 +1,16 @@
 local _, ns = ...
 
--- [ID] = {Healthstone Amount, Required Level}, -- Name
+-- [ID] = {Healthstone Amount, Required Level, Min Level, Vendor Price, Max Stack, Bind Type}, -- Name
 ns.HEALTHSTONES = {
-	[9421] = { 1440, 48 }, -- Major Healthstone
-	[15723] = { 1050, 50 }, -- Tea with Sugar
-	[5510] = { 960, 36 }, -- Greater Healthstone
-	[11951] = { 700, 45 }, -- Whipper Root Tuber
-	[5509] = { 600, 24 }, -- Healthstone
+	[9421] = { 1440, 48, 48, 0, 1, 0 }, -- Major Healthstone
+	[15723] = { 1050, 50, 50, 2825, 1, 1 }, -- Tea with Sugar
+	[5510] = { 960, 36, 36, 0, 1, 0 }, -- Greater Healthstone
+	[11951] = { 700, 45, 45, 0, 20, 1 }, -- Whipper Root Tuber
+	[5509] = { 600, 24, 24, 0, 1, 0 }, -- Healthstone
 	-- Lily Root (14894) is deliberately absent; on this client it needs Lei of Lilies equipped to be eaten, which this table can't express.
-	[5511] = { 300, 12 }, -- Lesser Healthstone
-	[5512] = { 120, 1 }, -- Minor Healthstone
-	[5205] = { 86, 5 }, -- Sprouted Frond
+	[5511] = { 300, 12, 12, 0, 1, 0 }, -- Lesser Healthstone
+	[5512] = { 120, 1, 1, 0, 1, 0 }, -- Minor Healthstone
+	[5205] = { 86, 5, 5, 31, 10, 0 }, -- Sprouted Frond
 	-- The Improved Healthstone copies of each stone (19004 to 19013) are deliberately absent; Forever removed that talent and raised each base stone to its top copy's amount, though Validate Data still reports the copies OK.
 }
 
@@ -18,7 +18,7 @@ ns.HEALTHSTONES = {
 How We Got the Data
 
 Last Validated
-	2026-10-16, WoW Forever 1.60.1.70450
+	2026-11-08, WoW Forever 1.60.1.70862
 
 Notes
 	- Every item that heals instantly on the healthstone cooldown, keyed by the cooldown category Charged Crystal Focus (32578) uses, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Healthstone and Health Potion macros. Healthstone Amount is the low end of the heal; Required Level is the level the tooltip requires (0 for none).
@@ -75,7 +75,12 @@ wago.tools
 	https://wago.tools/db2/SpellMisc?build=1.60.1.70450
 	https://wago.tools/db2/SpellDuration?build=1.60.1.70450
 	https://wago.tools/db2/SpellLevels?build=1.60.1.70450
+	https://wago.tools/db2/Item?build=1.60.1.70862
+	https://wago.tools/db2/ItemSparse?build=1.60.1.70862
+	https://wago.tools/db2/ItemEffect?build=1.60.1.70862
+	https://wago.tools/db2/ItemXItemEffect?build=1.60.1.70862
+	https://wago.tools/db2/SpellEffect?build=1.60.1.70862
 
 QuestieDB
-	None.
+	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Forever/foreverItemDB.lua
 ]]

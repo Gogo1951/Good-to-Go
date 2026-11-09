@@ -10,10 +10,10 @@ ns.DEMON_ABILITIES = {}
 How We Got the Data
 
 Last Validated
-	Never.
+	2026-11-08, WoW Forever 1.60.1.70862
 
 Notes
-	- The hunter pet ability ranks and the warlock's demon ability ranks for the Pet What's Next? tab (Features/Spellbook/Whats-Next/Whats-Next-Pet.lua), which shows only where this table has rows.
+	- The hunter pet ability ranks and the warlock's demon ability ranks for the Pet What's Next? tab (Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Pet.lua), which shows only where this table has rows.
 	- Empty: from Wrath on a pet learns its abilities as it levels, with no training points, Beast Training or grimoires, and WoW Forever's pets are Retail's. Tamed has no data for Forever either.
 
 SQL (CMaNGOS)

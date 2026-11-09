@@ -4,11 +4,13 @@ local Clause = ns.ReadinessClause
 local Line = ns.ReadinessLine
 
 --[[
-    Readiness-Report-Example -- the Readiness Report panel's Example: one
-    line, the report's first as it would read with something wrong for every
-    switch that is on (the title alone when none is), built with the same
-    clauses and keys as
-    ns.BuildReadinessLines (Readiness-Report.lua). A switch the panel hides on
+    Readiness-Report-Example -- the Readiness Report panel's Example: every
+    line the report would print with something wrong for every switch that is
+    on (buffs, items, character; the title alone when none is), so each switch
+    turned on visibly adds to it, built with the same clauses and keys as
+    ns.BuildReadinessLines (Readiness-Report.lua). Well Fed stands under
+    Expiring Soon while that switch is on, rather than under Missing Buffs as
+    well, so no buff is listed as both missing and running out. A switch the panel hides on
     this client (flask, pet, spec) never shows here either, and nor does a line
     the real report keeps to a class this character isn't: the Soulstone
     (Warlocks), the Mana Gem (Mages) and a mana potion (classes that use mana).
@@ -34,7 +36,7 @@ local function AddIf(values, enabled, value)
 	end
 end
 
-function ns.BuildReadinessSampleLine()
+function ns.BuildReadinessSampleLines()
 	local reports = ns.db and ns.db.global
 	local settings = ns.db and ns.db.profile
 	if not reports or not settings then
@@ -43,7 +45,7 @@ function ns.BuildReadinessSampleLine()
 
 	local buffs = {}
 	AddIf(buffs, reports.readinessFlask and ns.EXPANSION >= 2, L["READINESS_FLASK"])
-	AddIf(buffs, ns.ReadinessAsksWellFed(settings, reports), ns.GetWellFedName())
+	AddIf(buffs, ns.ReadinessAsksWellFed(settings, reports) and not reports.readinessExpiring, ns.GetWellFedName())
 	AddIf(
 		buffs,
 		reports.readinessPetWellFed and ns.ShouldTrackPetFood(),
@@ -54,9 +56,12 @@ function ns.BuildReadinessSampleLine()
 	AddIf(buffs, reports.readinessMainHandBuff, MAINHANDSLOT)
 	AddIf(buffs, reports.readinessOffHandBuff, SECONDARYHANDSLOT)
 
+	-- The most the real report can print: a buff just under the threshold, and under a minute reads as such.
 	local expiring = {}
-	local minutes = math.max(1, math.floor(reports.readinessExpiringThreshold / 60))
-	AddIf(expiring, reports.readinessExpiring, string.format(L["READINESS_TIME_MINUTES"], ns.GetWellFedName(), minutes))
+	local minutes = math.floor((reports.readinessExpiringThreshold - 1) / 60)
+	local expiringLine = minutes > 0 and string.format(L["READINESS_TIME_MINUTES"], ns.GetWellFedName(), minutes)
+		or string.format(L["READINESS_TIME_EXPIRING"], ns.GetWellFedName())
+	AddIf(expiring, reports.readinessExpiring, expiringLine)
 
 	local items = {}
 	AddIf(items, reports.readinessHealthstone, L["READINESS_HEALTHSTONE"])
@@ -75,8 +80,16 @@ function ns.BuildReadinessSampleLine()
 	local questionable = {}
 	AddIf(questionable, reports.readinessQuestionableGear, FirstQuestionableLink())
 
-	return Line(Clause(L["READINESS_MISSING_BUFFS"], buffs), Clause(L["READINESS_EXPIRING"], expiring))
-		or Line(Clause(L["READINESS_MISSING_ITEMS"], items), Clause(L["READINESS_DAMAGED_GEAR"], damaged))
-		or Line(Clause(L["READINESS_CHARACTER"], character), Clause(L["READINESS_QUESTIONABLE_GEAR"], questionable))
-		or L["READINESS_TITLE"]
+	local lines = {}
+	AddIf(lines, true, Line(Clause(L["READINESS_MISSING_BUFFS"], buffs), Clause(L["READINESS_EXPIRING"], expiring)))
+	AddIf(lines, true, Line(Clause(L["READINESS_MISSING_ITEMS"], items), Clause(L["READINESS_DAMAGED_GEAR"], damaged)))
+	AddIf(
+		lines,
+		true,
+		Line(Clause(L["READINESS_CHARACTER"], character), Clause(L["READINESS_QUESTIONABLE_GEAR"], questionable))
+	)
+	if not lines[1] then
+		lines[1] = L["READINESS_TITLE"]
+	end
+	return lines
 end

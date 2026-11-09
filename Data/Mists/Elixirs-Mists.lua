@@ -57,8 +57,11 @@ ns.ELIXIR_BUFF_IDS = {
 	[54452] = true, -- Adept's Elixir
 	[11390] = true, -- Arcane Elixir
 	[45373] = true, -- Bloodberry Elixir
+	[46352] = true, -- Burning Blossom (Fire Festival Fury)
 	[12608] = true, -- Catseye Elixir
 	[10692] = true, -- Cerebral Cortex Compound
+	[15231] = true, -- Crystal Force
+	[15233] = true, -- Crystal Ward
 	[109933] = true, -- Darkmoon Firewater
 	[39626] = true, -- Earthen Elixir
 	[60340] = true, -- Elixir of Accuracy
@@ -210,7 +213,7 @@ ns.ELIXIR_BUFF_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-11-04, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-08, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- What counts as being flasked, for the Readiness Report's Flask or 2x Elixirs check (Features/Readiness-Report/Readiness-Report-Probes.lua): a flask, OR two different elixirs. Two different elixirs is the whole test, and it is enough because the client enforces the rest: a character may carry one battle and one guardian elixir at a time, so any two elixir auras up together are already one of each.
@@ -219,6 +222,7 @@ Notes
 	- From Cataclysm on the stat scrolls say "This effect counts as a Battle Elixir" (Protection and Stamina say Guardian), so their buffs are in ns.ELIXIR_BUFF_IDS: on this client a scroll fills an elixir slot like any elixir. So do the Blasted Lands and Zul'Gurub buffs (R.O.I.D.S., Gizzard Gum, the Zanza potions), Oil of Olaf and Elixir of Water Walking, whose text now names a slot.
 	- Two flasks pick their buff by script, so their buffs are listed by hand: Alchemist's Flask (75525) gives Enhanced Strength, Agility or Intellect (79638, 79639, 79640), by the drinker's highest stat; Flask of Battle (65455) gives one of 92725, 92729, 92730 and 92731, the four Cataclysm flask buffs re-issued under its own duration (its text quotes 92725's; the other three carry the same names and text as the Cataclysm flasks and sit beside it). The union errs toward silence on purpose: an ID here that isn't really a flask only keeps the report quiet, while a missing one nags a player who IS flasked.
 	- Left out for having no source (no drop, vendor or quest reward in QuestieDB's MoP item table and no spell that creates them): the Flaskataur's flasks (32764-32767, whose buffs are listed anyway through the real flasks), Jillian's Tonic of Pure Mojo (45007, same), Worg's Blood Elixir (37878), Scroll of Protection VIII (43468, buff 58453) and Crystal of Insanity (86569, buff 127230, Visions of Insanity). Deprecated Alchemy Elixir Template (36845) shares buff 11328 with Elixir of Agility, which is kept.
+	- Crystal Force and Crystal Ward (11563, 11564; rewards for Un'Goro's crystal quests 24726 and 24728) and Burning Blossom's Fire Festival Fury (46352, Midsummer) name a Battle or Guardian Elixir in their text, so their buffs are listed. The Juju items (12450-12460) are left out: QuestieDB's MoP quest table marks the Winterspring quests that reward them unavailable (quest flag 0x4000) or lacks them.
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query
@@ -236,4 +240,5 @@ wago.tools
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/MoP/mopItemDB.lua
+	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/MoP/mopQuestDB.lua
 ]]

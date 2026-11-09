@@ -90,25 +90,11 @@ ns.DIAGNOSTIC_REPORTS = {
 			return ns:BuildReadinessDiagnosticReport()
 		end,
 	},
-	buffsContext = {
-		title = D.BUFFS_CONTEXT_TITLE,
-		description = D.BUFFS_CONTEXT_DESCRIPTION,
-		build = function()
-			return ns:BuildContextReport()
-		end,
-	},
 	buffDuty = {
 		title = D.BUFF_DUTY_TITLE,
 		description = D.BUFF_DUTY_DESCRIPTION,
 		build = function()
 			return ns:BuildBuffDutyContextReport()
-		end,
-	},
-	emotes = {
-		title = D.EMOTES_TITLE,
-		description = D.EMOTES_DESCRIPTION,
-		build = function()
-			return ns:BuildEmoteReport()
 		end,
 	},
 	page = {
@@ -123,6 +109,13 @@ ns.DIAGNOSTIC_REPORTS = {
 		description = D.MACROS_DESCRIPTION,
 		build = function()
 			return ns:BuildMacroContextReport()
+		end,
+	},
+	rankWatch = {
+		title = D.RANK_WATCH_TITLE,
+		description = D.RANK_WATCH_DESCRIPTION,
+		build = function()
+			return ns:BuildRankWatchContextReport()
 		end,
 	},
 	saved = {
@@ -183,11 +176,11 @@ ns.DIAGNOSTIC_REPORTS = {
 		end,
 		note = MessagesNote,
 	},
-	messagesBuffs = {
-		title = D.MESSAGES_BUFFS_TITLE,
-		description = D.MESSAGES_BUFFS_DESCRIPTION,
+	messagesBuffDuty = {
+		title = D.MESSAGES_BUFF_DUTY_TITLE,
+		description = D.MESSAGES_BUFF_DUTY_DESCRIPTION,
 		build = function()
-			return ns:BuildBuffsMessageLengthReport()
+			return ns:BuildBuffDutyMessageLengthReport()
 		end,
 		note = MessagesNote,
 	},
@@ -196,6 +189,14 @@ ns.DIAGNOSTIC_REPORTS = {
 		description = D.MESSAGES_SPELLBOOK_DESCRIPTION,
 		build = function()
 			return ns:BuildSpellbookMessageLengthReport()
+		end,
+		note = MessagesNote,
+	},
+	messagesRankWatch = {
+		title = D.MESSAGES_RANK_WATCH_TITLE,
+		description = D.MESSAGES_RANK_WATCH_DESCRIPTION,
+		build = function()
+			return ns:BuildRankWatchMessageLengthReport()
 		end,
 		note = MessagesNote,
 	},
@@ -220,11 +221,10 @@ ns.DIAGNOSTIC_SECTIONS = {
 			"selection",
 			"restocker",
 			"readiness",
-			"buffsContext",
 			"buffDuty",
-			"emotes",
 			"page",
 			"macros",
+			"rankWatch",
 			"saved",
 			"display",
 			"addons",
@@ -235,7 +235,7 @@ ns.DIAGNOSTIC_SECTIONS = {
 	{
 		key = "localization",
 		label = D.SECTION_LOCALIZATION,
-		reports = { "locale", "names", "messages", "messagesBuffs", "messagesSpellbook" },
+		reports = { "locale", "names", "messages", "messagesBuffDuty", "messagesSpellbook", "messagesRankWatch" },
 	},
 }
 

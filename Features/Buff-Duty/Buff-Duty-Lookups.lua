@@ -1,12 +1,12 @@
 local _, ns = ...
+local Data = ns.Data
 local L = ns.L
 
 --[[
     Buff Duty's lookups: which of this client's ns.BUFF_DUTY_SPELLS,
     self buff, weapon enchant, weapon item and Soulstone rows have live ids,
-    filled into the tables Buff-Duty-Castable.lua keeps on ns.BuffDuty;
-    the options panels' class categories; and the item ids whose data the
-    Weapon Buffs panel waits on.
+    filled into the tables Buff-Duty-Castable.lua keeps on ns.BuffDuty; and
+    the options panels' class categories.
 ]]
 
 local BuffDuty = ns.BuffDuty
@@ -19,13 +19,6 @@ local weaponEntries = BuffDuty.weaponEntries
 local weaponLookup = BuffDuty.weaponLookup
 local weaponItemEntries = BuffDuty.weaponItemEntries
 local weaponByEnchant = BuffDuty.weaponByEnchant
-
---------------------------------------------------------------------------------
--- State
---------------------------------------------------------------------------------
-
--- Every poison, weapon item and Soulstone item id this client's data names.
-local itemIds = {}
 
 --------------------------------------------------------------------------------
 -- Lookups
@@ -121,10 +114,10 @@ function BuffDuty.BuildLookup()
 	    A poison is an item, kept best first by the level it needs; an imbue is
 	    a spell, kept like any self buff's ranks. Items aren't checked against
 	    the client: a poison it doesn't know is one no bag ever holds. Every
-	    rank's enchant id points back at its row (weaponByEnchant), which is how
-	    the window tells which of the player's picks a weapon carries. A rank
-	    may name several: TBC's Rockbiter lands a different enchant for each
-	    weapon speed.
+	    rank's enchant id points back at its row (weaponByEnchant), for
+	    Diagnostics; the window reads each pick's own enchants. A rank may name
+	    several: TBC's Rockbiter lands a different enchant for each weapon
+	    speed.
 	]]
 	local function AddEnchants(enchants, value)
 		if type(value) == "table" then
@@ -134,6 +127,18 @@ function BuffDuty.BuildLookup()
 		elseif value then
 			enchants[value] = true
 		end
+	end
+	--[[
+	    Which layer each entry's enchant lands in (Data.WEAPON_LAYERS): on a
+	    client where two stack, a poison, an imbue and the data's imbue items
+	    in one, the oils, stones and lures in the other. Everywhere else the
+	    one slot.
+	]]
+	local IMBUE, TEMPORARY = Data.WEAPON_LAYERS.IMBUE, Data.WEAPON_LAYERS.TEMPORARY
+	local stack = ns.WEAPON_ENCHANTS_STACK == true
+	local imbueItems = {}
+	for _, itemId in ipairs(ns.BUFF_DUTY_WEAPON_IMBUE_ITEMS or {}) do
+		imbueItems[itemId] = true
 	end
 	wipe(weaponEntries)
 	wipe(weaponLookup)
@@ -151,7 +156,14 @@ function BuffDuty.BuildLookup()
 			table.sort(items, function(a, b)
 				return a.level > b.level
 			end)
-			entry = { key = ids[1], row = row, ids = ids, items = items, enchants = enchants }
+			entry = {
+				key = ids[1],
+				row = row,
+				ids = ids,
+				items = items,
+				enchants = enchants,
+				layer = stack and IMBUE or TEMPORARY,
+			}
 		else
 			local ranks, ids = {}, {}
 			for _, rank in ipairs(row.ranks) do
@@ -162,7 +174,14 @@ function BuffDuty.BuildLookup()
 				end
 			end
 			if ids[1] then
-				entry = { key = ids[1], row = row, ids = ids, ranks = ranks, enchants = enchants }
+				entry = {
+					key = ids[1],
+					row = row,
+					ids = ids,
+					ranks = ranks,
+					enchants = enchants,
+					layer = stack and IMBUE or TEMPORARY,
+				}
 			end
 		end
 		if entry then
@@ -192,30 +211,10 @@ function BuffDuty.BuildLookup()
 			kind = row[5],
 			itemLevel = row[6],
 			zones = row[7],
+			layer = (stack and imbueItems[itemId]) and IMBUE or TEMPORARY,
 		}
 		weaponItemEntries[#weaponItemEntries + 1] = entry
 		weaponByEnchant[row[3]] = weaponByEnchant[row[3]] or entry
-	end
-
-	--[[
-	    Ask for every poison's, weapon item's and Soulstone's item data now, so
-	    the Weapon Buffs panel names each one instead of its "Item #"
-	    placeholder; ns.OnBuffDutyItemInfo repaints the panel as each one
-	    arrives.
-	]]
-	wipe(itemIds)
-	for _, list in ipairs({ weaponEntries, weaponItemEntries }) do
-		for _, entry in ipairs(list) do
-			for _, id in ipairs(entry.items and entry.ids or {}) do
-				itemIds[id] = true
-			end
-		end
-	end
-	for _, id in ipairs(ns.BUFF_DUTY_SOULSTONE.items) do
-		itemIds[id] = true
-	end
-	for id in pairs(itemIds) do
-		C_Item.RequestLoadItemDataByID(id)
 	end
 
 	--[[
@@ -283,18 +282,6 @@ function BuffDuty.BuildCategories(list)
 		categories[#categories + 1] = { id = class, name = label, entries = buckets[class] }
 	end
 	return categories
-end
-
--- Called from Tracked-Lookups' GET_ITEM_INFO_RECEIVED handler, which owns the event.
-function ns.OnBuffDutyItemInfo(itemId)
-	if itemIds[itemId] then
-		LibStub("AceConfigRegistry-3.0"):NotifyChange(ns.OPTIONS_REGISTRY.BuffDutyWeaponBuffs)
-	end
-end
-
--- Diagnostics reads this to log a poison's, weapon item's or Soulstone's item load in full.
-function ns.IsBuffDutyItem(itemId)
-	return itemIds[itemId] == true
 end
 
 --[[

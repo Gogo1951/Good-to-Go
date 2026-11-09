@@ -183,19 +183,23 @@ local function BuildMissingBuffs(settings, reports)
 
 	--[[
 	    Any temporary enchant counts -- a stone, an oil, a poison, a shaman
-	    imbue -- because GetWeaponEnchantInfo answers whether the slot carries
-	    one without caring which.
+	    imbue -- without caring which. On WoW Forever, where an imbue sits
+	    beside an oil or stone, a Rogue's hands and a Shaman's main hand want
+	    one of each (ns.GetMissingWeaponBuffs counts them).
 
 	    A SHAMAN IN THE PLAYER'S OWN PARTY SATISFIES THE MAIN HAND, and only the
 	    main hand: that is the slot their totem answers for, and it reaches only
 	    their party, so with one there the line stops being a thing the player
 	    has to act on. The off hand asks the
-	    same question with no such exemption. Resolved once for the pair rather
-	    than per slot, so the group walk runs at most once per report.
+	    same question with no such exemption. Not on WoW Forever, where
+	    Windfury Totem is a group buff that leaves the weapon alone. Resolved
+	    once for the pair rather than per slot, so the group walk runs at most
+	    once per report.
 	]]
 	if reports.readinessMainHandBuff or reports.readinessOffHandBuff then
 		local mainHandMissing, offHandMissing = ns.GetMissingWeaponBuffs()
-		if reports.readinessMainHandBuff and mainHandMissing and not PartyHasClass("SHAMAN") then
+		local totemCovers = not ns.WEAPON_ENCHANTS_STACK and PartyHasClass("SHAMAN")
+		if reports.readinessMainHandBuff and mainHandMissing and not totemCovers then
 			missing[#missing + 1] = MAINHANDSLOT
 		end
 		if reports.readinessOffHandBuff and offHandMissing then

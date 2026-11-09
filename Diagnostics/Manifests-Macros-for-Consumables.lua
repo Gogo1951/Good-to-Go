@@ -329,6 +329,16 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(GetSkillLineInfo) == "function"
 		end,
 	},
+	-- A collapsed profession header is opened to read its rank, then closed again (ns.ExpandSkillHeader); with neither route, a collapsed header's ranks go unread.
+	{
+		"C_SkillInfo.ExpandSkillHeader and CollapseSkillHeader, or the globals",
+		function()
+			local modern = type(C_SkillInfo) == "table"
+				and type(C_SkillInfo.ExpandSkillHeader) == "function"
+				and type(C_SkillInfo.CollapseSkillHeader) == "function"
+			return modern or (type(ExpandSkillHeader) == "function" and type(CollapseSkillHeader) == "function")
+		end,
+	},
 	-- The First Aid labels name their skill line through this on every client, and Era and TBC find a rank by it.
 	{
 		"C_TradeSkillUI.GetTradeSkillDisplayName",
@@ -793,7 +803,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 -- The add-on's own example reports, appended to the shared Event Log intro.
 ns.DiagnosticsStrings.EVENT_LOG_EXAMPLES = "The best tool for 'my macro didn't update' reports."
 	.. " "
-	.. "Best for 'nobody got thanked' or 'a portal wasn't announced' reports. On every flavor it records each buff that lands on you, decoded, with whether the add-on tracks and watches it. Off WoW Forever it also records each nearby cast and revive the add-on tracks the same way, and counts every other spell cast by spell id at the end. For 'a Buff Key keeps casting the same buff' reports, it records every cast of a spell Buff Duty offers."
+	.. "Best for 'a Buff Key keeps casting the same buff' reports: it records every cast of a spell Buff Duty offers."
 	.. " "
 	.. "Best for 'the page never fills in', 'a macro doesn't update' or 'the glow is wrong' reports."
 
@@ -818,6 +828,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_SPELLS, {
 	{ ns.DISMISS_PET_SPELL_ID, "Dismiss Pet" },
 	{ ns.SHADOWMELD_SPELL_ID, "Shadowmeld" },
 	{ ns.CANNIBALIZE_SPELL_ID, "Cannibalize" },
+	{ ns.RAPID_REGENERATION_SPELL_ID, "Rapid Regeneration" },
 	{ ns.POISONS_SPELL_ID, "Poisons" },
 	{ ns.STEALTH_SPELL_ID, "Stealth" },
 	{ ns.DRUID_BEAR_FORM_SPELL_ID, "Bear Form" },
@@ -939,8 +950,8 @@ local function AppendCharacter(lines)
 
 	--[[
 	    The profession ranks the scanner's usability gates read (0 = unlearned).
-	    Where they are read from the skill list by name, a rank under a
-	    collapsed header keeps its last reading.
+	    Where they are read from the skill list by name, the read opens a
+	    collapsed header and closes it again, unless the client can't.
 	]]
 	local byID = C_SkillInfo and C_SkillInfo.GetSkillLineInfoByID
 	local readBy = "by ID"
@@ -953,7 +964,11 @@ local function AppendCharacter(lines)
 				break
 			end
 		end
-		readBy = "from the skill list by name, a header collapsed: " .. YesNo(collapsed)
+		readBy = string.format(
+			"from the skill list by name, a header collapsed: %s, headers can open: %s",
+			YesNo(collapsed),
+			YesNo(ns.ExpandSkillHeader and ns.CollapseSkillHeader)
+		)
 	end
 	lines[#lines + 1] = string.format(
 		"Skills: First Aid %s // Alchemy %s // Engineering %s // read %s",
@@ -987,16 +1002,20 @@ local function AppendMacroWriting(lines)
 	-- The writes held for the macro window resume when it closes, a hook set once its add-on loads (Engine.lua).
 	lines[#lines + 1] =
 		string.format("Macro window add-on loaded: %s", YesNo(C_AddOns.IsAddOnLoaded("Blizzard_MacroUI")))
-	-- An old add-on this one replaces, still running, rewrites the same macros (ns.LEGACY_ADDONS).
-	local legacyRunning = {}
-	for _, legacy in ipairs(ns.LEGACY_ADDONS or {}) do
-		if C_AddOns.IsAddOnLoaded(legacy.folder) then
-			legacyRunning[#legacyRunning + 1] = legacy.folder
+	--[[
+	    An old add-on this one replaces, still running, rewrites the same macros
+	    (ns.REPLACED_ADDONS). It is turned off at login, but runs on until the
+	    player reloads.
+	]]
+	local replacedRunning = {}
+	for _, folder in ipairs(ns.REPLACED_ADDONS) do
+		if C_AddOns.IsAddOnLoaded(folder) then
+			replacedRunning[#replacedRunning + 1] = folder
 		end
 	end
 	lines[#lines + 1] = string.format(
 		"Replaced add-ons still running: %s",
-		#legacyRunning > 0 and table.concat(legacyRunning, ", ") or "(none)"
+		#replacedRunning > 0 and table.concat(replacedRunning, ", ") or "(none)"
 	)
 	--[[
 	    Macro names on action buttons are hidden by fading each button's name
@@ -1196,13 +1215,10 @@ local function AppendChoices(lines)
 		EnabledKeys(ns.scannedIgnoredTypes)
 	)
 
-	-- A stamp that differs from this load's means the cache is rebuilt at the next scan.
+	-- The cache lasts the session and is never saved, so it is built from this load's data folder.
 	lines[#lines + 1] = string.format(
-		"Item cache: %d items // stamped %s, %s // this load %s, %s",
-		CountKeys(profile.itemCache),
-		tostring(profile.itemCacheVersion),
-		tostring(profile.itemCacheFolder),
-		tostring(ns.Version),
+		"Item cache: %d items this session // data folder %s",
+		ns.CountCachedItems(),
 		tostring(ns.DATA_FOLDER)
 	)
 
@@ -1212,10 +1228,9 @@ local function AppendChoices(lines)
 	    (Scanner-Inventory.lua, Item-Cache.lua).
 	]]
 	local waiting = {}
-	local itemCache = profile.itemCache or {}
 	for itemID in pairs(ns.scannedItemCounts or {}) do
 		local isScroll = ns.SCROLL_ITEM_LOOKUP and ns.SCROLL_ITEM_LOOKUP[itemID]
-		if not isScroll and ns.HasRawData(itemID) and type(itemCache[itemID]) ~= "table" then
+		if not isScroll and ns.HasRawData(itemID) and not ns.GetCachedItemData(itemID) then
 			waiting[#waiting + 1] = itemID
 		end
 	end
@@ -1369,6 +1384,14 @@ local function AppendClassAndRace(lines)
 	else
 		lines[#lines + 1] = "Cannibalize now: Tools-Forsaken.lua not loaded (restart the client)"
 	end
+	-- Rapid Regeneration exists only on WoW Forever (Tools-Troll.lua).
+	if ns.RAPID_REGENERATION_SPELL_ID then
+		lines[#lines + 1] = string.format(
+			"Rapid Regeneration: eating %s // name: %s",
+			OnOff(profile.enableRapidRegenerationEating),
+			tostring(ns.rapidRegenerationSpellName)
+		)
+	end
 	-- A buff-food pick takes Cannibalize's place in the eating macro (Tools-Forsaken.lua).
 	local foodPick = ns.bestSelection and ns.bestSelection.Food
 	lines[#lines + 1] = string.format("Food pick is buff food: %s", YesNo(foodPick and foodPick.isBuffFood))
@@ -1489,7 +1512,7 @@ local CONJURE_CAST_FLAGS = {
 
 local function AppendSpells(lines)
 	lines[#lines + 1] = "-- Spell knowledge --"
-	for _, entry in ipairs(ns.DIAGNOSTIC_SPELL_ROWS) do
+	for _, entry in ipairs(ns.DIAGNOSTIC_SPELLS) do
 		local spellID, label = entry[1], entry[2]
 		if spellID then
 			local known = ns.IsSpellKnown(spellID) or ns.IsPlayerSpell(spellID)
@@ -1656,7 +1679,6 @@ end
     the Readiness Report.
 ]]
 local function AppendBagGates(lines)
-	local itemCache = ns.db and ns.db.profile.itemCache or {}
 	local inArena = select(2, IsInInstance()) == "arena"
 	local itemIDs = {}
 	for itemID in pairs(ns.scannedItemCounts or {}) do
@@ -1670,9 +1692,9 @@ local function AppendBagGates(lines)
 		return
 	end
 	for _, itemID in ipairs(itemIDs) do
-		local data = itemCache[itemID]
+		local data = ns.GetCachedItemData(itemID)
 		local verdict
-		if type(data) ~= "table" or data.itemID == nil then
+		if not data then
 			verdict = "no current cached record (waits on item info, competes in nothing)"
 		else
 			local failed = FailedGate(data, inArena)
@@ -2121,6 +2143,7 @@ for _, constant in ipairs({
 	"FEED_PET_SPELL_ID",
 	"MEND_PET_SPELL_ID",
 	"POISONS_SPELL_ID",
+	"RAPID_REGENERATION_SPELL_ID",
 	"REVIVE_PET_SPELL_ID",
 	"SHADOWMELD_SPELL_ID",
 	"STEALTH_SPELL_ID",
@@ -2156,7 +2179,7 @@ for _, constant in ipairs({ "ALCHEMY_SKILL_LINE_ID", "ENGINEERING_SKILL_LINE_ID"
 end
 
 -- The Class & Race panel's headers.
-for _, constant in ipairs({ "NIGHT_ELF_RACE_ID", "UNDEAD_RACE_ID" }) do
+for _, constant in ipairs({ "NIGHT_ELF_RACE_ID", "TROLL_RACE_ID", "UNDEAD_RACE_ID" }) do
 	local raceID = ns[constant]
 	AddLookup(constant, "race", raceID, function()
 		local info = C_CreatureInfo.GetRaceInfo(raceID)
@@ -2418,6 +2441,7 @@ ns.DIAGNOSTIC_OTHER_ID_CONSTANTS = {
 	"FIRST_AID_SKILL_LINE_ID",
 	"NIGHT_ELF_RACE_ID",
 	"SOD_FIRST_SPELL_ID",
+	"TROLL_RACE_ID",
 	"UNDEAD_RACE_ID",
 }
 

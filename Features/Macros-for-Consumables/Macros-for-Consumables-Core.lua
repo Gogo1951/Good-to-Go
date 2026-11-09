@@ -28,16 +28,14 @@ local sessionConstantsInitialized = false
 
 --[[
     Login-time setup, once Features/Core.lua has opened the database. Session
-    constants are set up once; the item cache is checked against its stamps
-    every time it runs.
+    constants are set up once.
 ]]
 local function InitializeConsumableMacros()
-	ns.EnsureItemCache()
 	if not sessionConstantsInitialized then
 		sessionConstantsInitialized = true
 		ns.InitializeCharacterConstants()
-		-- Only a conjure or Cannibalize can change a macro (ns.SpellCastChangesMacros), so only those characters listen.
-		if ns.isMage or ns.isWarlock or ns.isForsaken then
+		-- Only a conjure, Cannibalize or Rapid Regeneration can change a macro (ns.SpellCastChangesMacros), so only those characters listen.
+		if ns.isMage or ns.isWarlock or ns.isForsaken or (ns.isTroll and ns.rapidRegenerationSpellName) then
 			ns.SetEventRegistered("UNIT_SPELLCAST_SUCCEEDED", true, "player")
 		end
 	end
@@ -51,7 +49,6 @@ end
     and then redraws every open panel.
 ]]
 function ns.ApplyConsumableMacrosProfile()
-	ns.EnsureItemCache()
 	ns.ResetMacroState()
 	ns.UpdateAuraTracking()
 	ns.RequestUpdate()
@@ -232,9 +229,9 @@ local function OnEvent(event, ...)
 	    Behind it, a change made mid-fight would leave the remembered signature at
 	    its pre-fight reading, so changing back after combat would read as no
 	    change and leave the macros built for the fight. Both only read unit
-	    state, the target comparison only while C_Secrets allows it (Forever
-	    can restrict it mid-fight), and ns.RequestUpdate leaves the rebuild
-	    pending until combat drops.
+	    state, the target only while C_Secrets allows it (Forever can hide it
+	    mid-fight; PLAYER_REGEN_ENABLED then takes the reading it put off), and
+	    ns.RequestUpdate leaves the rebuild pending until combat drops.
 	    Request only on a real change; see Target and Group Tracking in
 	    Features/Macros-for-Consumables/Macros/Signatures.lua.
 	]]
@@ -260,8 +257,13 @@ local function OnEvent(event, ...)
 	]]
 	if event == "UNIT_SPELLCAST_SUCCEEDED" then
 		local _, _, spellID = ...
-		-- A secret spellID (Forever, while casts are restricted) errors as a table key.
+		--[[
+		    A secret spellID (Forever, while casts are restricted) errors as a
+		    table key, so it can't be told apart; the macros rebuild once combat
+		    drops in case it was one that changes them.
+		]]
 		if ns.IsSecretValue(spellID) then
+			ns.RequestUpdate()
 			return
 		end
 		if ns.SpellCastChangesMacros(spellID) then
@@ -271,16 +273,16 @@ local function OnEvent(event, ...)
 	end
 
 	--[[
-	    Skill ranks are read ahead of the guard: a bandage in a fight raises First
-	    Aid there, and nothing re-reads the skills when combat ends. The reads
-	    touch nothing protected, and ns.RequestUpdate defers the rebuild.
+	    Skill ranks are handled ahead of the guard: a bandage in a fight raises
+	    First Aid there. In combat the read is only put off, since the macros
+	    can't change until it ends and PLAYER_REGEN_ENABLED reads the skills
+	    again; this event fires on every weapon skill-up too, and only a
+	    profession rank the macros read changes one.
 	]]
-	-- Fires on every weapon skill-up too; only a profession rank the macros read changes one.
 	if event == "SKILL_LINES_CHANGED" then
-		local firstAid = ns.UpdateFirstAidSkill()
-		local alchemy = ns.UpdateAlchemySkill()
-		local engineering = ns.UpdateEngineeringSkill()
-		if firstAid or alchemy or engineering then
+		if InCombatLockdown() then
+			ns.DeferProfessionSkillsRead()
+		elseif ns.UpdateProfessionSkills() then
 			ns.RequestUpdate()
 		end
 		return
@@ -297,6 +299,12 @@ local function OnEvent(event, ...)
 	end
 
 	if event == "PLAYER_REGEN_ENABLED" then
+		if ns.RereadProfessionSkillsIfPending() then
+			isUpdatePending = true
+		end
+		if ns.RereadTargetIfPending() then
+			isUpdatePending = true
+		end
 		if isUpdatePending then
 			ns.RequestUpdate()
 		end
@@ -367,7 +375,8 @@ end
 --[[
     Every event the consumable macros handle. The plain ones subscribe at
     load; UNIT_PET for the player alone; UNIT_SPELLCAST_SUCCEEDED for the
-    player alone, and only for mages, warlocks and Forsaken (at login); the
+    player alone, and only for mages, warlocks, Forsaken and Trolls with Rapid
+    Regeneration (at login); the
     on-demand ones only while needed (UNIT_AURA via ns.UpdateAuraTracking,
     QUEST_LOG_UPDATE for hunters in RefreshArrivalState), each through
     ns.SetEventRegistered. Item info arrives through Features/Item-Info.lua.

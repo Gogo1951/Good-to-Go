@@ -81,6 +81,10 @@ local _, ns = ...
                            Cannibalize. entry is the scanned pick; the
                            engine asks only when the body uses that pick, and
                            a potion macro asks its outOfCombatTypeName's
+      leadSpell(entry)  -- a spell cast instead of the action while it can be,
+                           or nil: Food's Troll Rapid Regeneration while off
+                           cooldown. Asked under corpseSpell's rule, only
+                           when the body uses the scanned pick
       buildModeOverride(context) -- full-body takeover; returns body, stateKey
                            or nil (Food's scroll-only mode). Mode state keys
                            MUST use their own prefix (e.g. "SCROLLS:") so they

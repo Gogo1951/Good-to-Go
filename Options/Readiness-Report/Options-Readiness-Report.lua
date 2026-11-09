@@ -228,12 +228,14 @@ local SECTIONS = {
 			{
 				key = "readinessMainHandBuff",
 				name = "OPTIONS_READINESS_MAIN_HAND",
-				description = "OPTIONS_READINESS_MAIN_HAND_DESCRIPTION",
+				description = ns.WEAPON_ENCHANTS_STACK and "OPTIONS_READINESS_MAIN_HAND_DESCRIPTION_STACKED"
+					or "OPTIONS_READINESS_MAIN_HAND_DESCRIPTION",
 			},
 			{
 				key = "readinessOffHandBuff",
 				name = "OPTIONS_READINESS_OFF_HAND",
-				description = "OPTIONS_READINESS_OFF_HAND_DESCRIPTION",
+				description = ns.WEAPON_ENCHANTS_STACK and "OPTIONS_READINESS_OFF_HAND_DESCRIPTION_STACKED"
+					or "OPTIONS_READINESS_OFF_HAND_DESCRIPTION",
 			},
 			{
 				key = "readinessExpiring",
@@ -437,7 +439,7 @@ function ns.BuildReadinessReportOptions()
 	-- The report as it prints, following the switches below.
 	args.spaceExample = Spacer(order, ReportsHidden)
 	order = order + 1
-	args.exampleReadiness = ns.OptionsExample(order, ns.BuildReadinessSampleLine, ReportsHidden)
+	args.exampleReadiness = ns.OptionsExample(order, ns.BuildReadinessSampleLines, ReportsHidden)
 	order = order + 1
 
 	for index, section in ipairs(SECTIONS) do

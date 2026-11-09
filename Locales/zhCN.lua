@@ -434,7 +434,7 @@ L["INVENTORY_REPORT_TOTAL"] = "总计 %s"
 --------------------------------------------------------------------------------
 
 L["OPTIONS_DESCRIPTION"] =
-	"自动更新的宏，总是使用你最好的食物、水、药水和治疗石；自动购买材料和弹药并存入银行的补货清单；一键施放缺失的增益；自动感谢密语；以及为每个法术生成的鼠标悬停宏。"
+	"自动更新的宏，总是使用你最好的食物、水、药水和治疗石；自动购买材料和弹药并存入银行的补货清单；一键施放缺失的增益；以及为每个法术生成的鼠标悬停宏。"
 
 -- Options: tree labels
 L["TAB_ENHANCED_SPELLBOOK"] = "增强法术书"
@@ -457,9 +457,8 @@ L["OPTIONS_MINIMAP_BUTTON_DESCRIPTION"] = "显示小地图按钮。"
 --[[
     The root panel's Features section: every feature's on/off switch, two to a
     line, each the same toggle that heads its feature's own panel. Enable Buff
-    Duty, Enable Restocker and Enable Thanks for Stranger Buffs keep their
-    original keys (BUFF_DUTY_ENABLE, OPTIONS_RESTOCKER_ENABLE, STRANGERS_ENABLE),
-    with the Buff Duty, Restocker and Stranger Buffs strings.
+    Duty and Enable Restocker keep their original keys (BUFF_DUTY_ENABLE,
+    OPTIONS_RESTOCKER_ENABLE), with the Buff Duty and Restocker strings.
 
     The two *_CONFIRM_OFF prompts appear only when the switch is turned off,
     and must say plainly that turning it off does not delete any macro.
@@ -485,17 +484,6 @@ L["SWITCH_INVENTORY_REPORT_DESCRIPTION"] =
 L["SWITCH_READINESS_REPORT"] = "启用就绪报告"
 L["SWITCH_READINESS_REPORT_DESCRIPTION"] =
 	"就位确认开始时，私下列出你仍需处理的问题，例如缺少的增益、药水或受损的装备。一切就绪时不会输出任何内容。"
-L["SWITCH_STRANGER_BUFFS_DESCRIPTION"] =
-	"在野外有队伍外的玩家为你施放增益时，用密语、表情或两者向他们致谢。"
-L["SWITCH_GOOD_NEWS"] = "启用分享好消息"
-L["SWITCH_GOOD_NEWS_DESCRIPTION"] =
-	"密语你施放增益的玩家，告诉他们你为其施放了什么，持续时间较短时还会告知持续多久。"
-L["SWITCH_COMBAT_BUFFS"] = "启用感谢战斗增益"
-L["SWITCH_COMBAT_BUFFS_DESCRIPTION"] =
-	"当小队或团队成员对你施放增益或冷却技能时，用密语、表情或两者向他们致谢。"
-L["SWITCH_SERVICE_ALERTS"] = "启用队伍服务提醒"
-L["SWITCH_SERVICE_ALERTS_DESCRIPTION"] =
-	"当有人为你的队伍摆出盛宴、灵魂之井、传送门或修理机器人时，提醒你并感谢该玩家。"
 
 -- Features: each feature's master switch, also on the panel that configures it.
 L["OPTIONS_RESTOCKER_ENABLE"] = "启用 Restocker"
@@ -541,7 +529,7 @@ L["OPTIONS_VERSION"] = "版本 %s"
     orients the player to the page's two halves -- which macros exist, then how
     each one behaves. The Which Macros to Create header below titles the first
     section, after the page's two headerless toggles, Enable Consumable Macros and
-    Macro Names on Buttons.
+    Enable Macro Names on Buttons.
 ]]
 L["TAB_CONSUMABLE_MACROS"] = "消耗品宏"
 L["OPTIONS_MACROS_DESCRIPTION"] =
@@ -631,7 +619,7 @@ L["OPTIONS_INCLUDE_MANA_RUNES"] = "将符文与其他法力物品加入法力宝
 L["OPTIONS_INCLUDE_MANA_RUNES_DESCRIPTION_FORMAT"] =
 	"将你的%s、%s，以及任何其他与法力宝石共享冷却时间的法力物品，和你的法力宝石一同排序，这样当其中某件物品是你的最佳选择，或你的法力宝石用完时，法力宝石宏就会使用该物品。"
 
--- Buff Re-Application
+-- Buff Reapplication
 L["OPTIONS_REAPPLY_HEADER"] = "增益补充"
 L["OPTIONS_REAPPLY_SECTION_DESCRIPTION"] =
 	"宏在战斗中无法更改，因此战斗中途到期的增益会一直缺失，直到战斗结束。"
@@ -668,7 +656,7 @@ L["EXPLOSIVES_MODE_ATPLAYER"] = "左键点击 @player"
 L["EXPLOSIVES_MODE_TOSS"] = "左键点击投掷"
 
 --[[
-    Class & Race panel (Options-Class-Race.lua), nested under Macros. TAB_CLASS_RACE
+    Class & Race panel (Options-Class-Race.lua), nested under Consumable Macros. TAB_CLASS_RACE
     is its label in the settings tree and the title on the page;
     OPTIONS_CLASS_RACE_DESCRIPTION is the intro beneath it.
 ]]
@@ -731,6 +719,16 @@ L["OPTIONS_CANNIBALIZE_DRINKING_DESCRIPTION"] =
 	"当你的目标是%s可用的尸体且该技能不在冷却中时，你的水宏会施放它而不是喝水。否则照常喝水。增益饮料仍然优先。"
 
 --[[
+    Trolls, headed with the client's name for the race. In the three texts
+    below, %s is the client's name for Rapid Regeneration. WoW Forever only.
+]]
+L["OPTIONS_RAPID_REGENERATION_DESCRIPTION"] =
+	"当%s冷却完毕时，你的食物宏会施放它而不是进食，以节省食物。冷却期间，宏会照常进食。"
+L["OPTIONS_RAPID_REGENERATION_EATING"] = "使用%s代替进食"
+L["OPTIONS_RAPID_REGENERATION_EATING_DESCRIPTION"] =
+	"当%s冷却完毕时，你的食物宏会施放它而不是进食。否则照常进食。卷轴和增益食物仍然优先。"
+
+--[[
     Ignore List panel (Options-Ignore-List.lua). One tree scope per list: the
     Global list, then the character playing and every other character with
     something ignored, each under its profile's name, which is never
@@ -773,8 +771,9 @@ L["OPTIONS_RESTOCKER_OPEN_BANK"] = "在银行打开"
 L["OPTIONS_RESTOCKER_OPEN_BANK_DESCRIPTION"] = "访问银行时打开你的补货清单。"
 L["OPTIONS_RESTOCKER_OPEN_MERCHANT"] = "在商人处打开"
 L["OPTIONS_RESTOCKER_OPEN_MERCHANT_DESCRIPTION"] = "访问商人时打开你的补货清单。"
--- The header over the three reminder rows below, which follow the Staples Pop-Up and Gold Reserve rows on the page.
+-- The header over the three reminder rows below, which follow the Gold Reserve section on the page, and its description.
 L["OPTIONS_RESTOCKER_REMINDERS_HEADER"] = "提醒"
+L["OPTIONS_RESTOCKER_REMINDERS_DESCRIPTION"] = "选择何时提醒你补货清单存量不足。"
 L["OPTIONS_RESTOCKER_REMIND"] = "启用城镇补货提醒"
 L["OPTIONS_RESTOCKER_REMIND_DESCRIPTION"] =
 	"当补货清单尚有缺口，且你抵达旅店或城市，或登录时已身处其中，在聊天中输出提醒。"
@@ -786,8 +785,11 @@ L["OPTIONS_RESTOCKER_BANK_REMIND_DESCRIPTION"] = "关闭银行时，报告所有
 --[[
     The Gold Reserve: the floor the merchant restock never spends below. The
     dropdown beside it writes each amount as a number and the gold coin, so
-    its values have no strings; AMOUNT_DESCRIPTION is its hover text.
+    its values have no strings; AMOUNT_DESCRIPTION is its hover text. HEADER
+    and SECTION_DESCRIPTION head its section.
 ]]
+L["OPTIONS_RESTOCKER_GOLD_RESERVE_HEADER"] = "金币储备"
+L["OPTIONS_RESTOCKER_GOLD_RESERVE_SECTION_DESCRIPTION"] = "预留一部分金币，向商人购买时绝不动用。"
 L["OPTIONS_RESTOCKER_GOLD_RESERVE"] = "启用金币储备"
 L["OPTIONS_RESTOCKER_GOLD_RESERVE_DESCRIPTION"] = "补货永远不会花掉你在此预留的金币。"
 L["OPTIONS_RESTOCKER_GOLD_RESERVE_AMOUNT_DESCRIPTION"] = "设置补货始终为你保留的金币数量。"
@@ -847,8 +849,7 @@ L["OPTIONS_READINESS_DESCRIPTION"] =
 ]]
 L["OPTIONS_READINESS_RESET"] = "重置就绪报告设置"
 L["OPTIONS_READINESS_RESET_DESCRIPTION"] = "将本页的所有复选框和两个阈值恢复为默认值。"
-L["OPTIONS_READINESS_RESET_CONFIRM"] =
-	"将就绪报告的所有设置重置为默认值？这也会重新关闭报告本身。"
+L["OPTIONS_READINESS_RESET_CONFIRM"] = "将就绪报告的所有设置重置为默认值？"
 
 --[[
     The three sections, each a real header over the switches it covers. They
@@ -885,6 +886,11 @@ L["OPTIONS_READINESS_MAIN_HAND_DESCRIPTION"] =
 L["OPTIONS_READINESS_OFF_HAND"] = "副手武器增益"
 L["OPTIONS_READINESS_OFF_HAND_DESCRIPTION"] =
 	"副手武器没有临时附魔时提醒。任何附魔都算：磨刀石、油剂、毒药或萨满祭司的武器增益。"
+-- WoW Forever, where an imbue sits beside an oil or stone (ns.WEAPON_ENCHANTS_STACK).
+L["OPTIONS_READINESS_MAIN_HAND_DESCRIPTION_STACKED"] =
+	"主手武器缺少临时附魔时提醒。潜行者和萨满祭司需要两项：毒药或武器灌注，加上油剂或磨刀石；其他职业有任意一项即可。"
+L["OPTIONS_READINESS_OFF_HAND_DESCRIPTION_STACKED"] =
+	"副手武器缺少临时附魔时提醒。潜行者需要两项：毒药，加上油剂或磨刀石；其他职业有任意一项即可。"
 --[[
     Names the OTHER threshold so the two cannot be mistaken for each other: the
     Consumable Macros panel has one that decides when a macro treats a buff as spent, and
@@ -929,10 +935,139 @@ L["OPTIONS_READINESS_NONCOMBAT_GEAR_DESCRIPTION"] =
 	"链接不该出现在战斗中的已装备物品，比如骑乘装备或钓鱼装备。"
 
 --------------------------------------------------------------------------------
+-- Rank Watch
+--------------------------------------------------------------------------------
+
+--[[
+    Rank Watch tells a group member who cast a spell at a lower rank than they could have. Its messages are
+    fixed, one whisper and one print, with nothing for the player to edit. Rank Sentinel is the standalone
+    add-on Rank Watch replaces; its name stays as written in every locale.
+]]
+L["TAB_RANK_WATCH"] = "等级守望"
+L["OPTIONS_RANK_WATCH_DESCRIPTION"] =
+	"留意你的队伍中有谁施放了低于自己可用等级的法术，并告诉对方训练师那里有更高等级在等着。游戏自动降低的等级（例如对低等级玩家施放的增益）永远不会被报告。"
+--[[
+    Printed at login, and when the switch is turned on, while the standalone add-on runs; also shown on the
+    panel. %s is the standalone add-on's title.
+]]
+L["RANK_WATCH_STANDALONE"] =
+	"%s 仍在运行，因此等级守望暂时保持沉默，以免你的队伍对每个低等级法术都听到两次提醒。Good to Go 已关闭它并开启了等级守望；重载界面后即由等级守望接手。"
+
+-- A spell and its rank in every message: "[Arcane Intellect] (Rank 3)". The first %s is the spell, the second its rank.
+L["RANK_WATCH_SPELL_RANK"] = "%s（%s）"
+-- A rank's number, where the client hasn't loaded the spell's own rank text yet.
+L["RANK_WATCH_RANK"] = "等级 %d"
+
+--[[
+    The whisper to the caster. { the spell and rank they cast, the level a higher rank is learned at } Sent
+    after the marker and before " // GtG", so "Good to Go" runs straight into the sign-off: "...and you'll be
+    Good to Go // GtG". Casual on purpose; a stranger's whisper should read as a tip, not a correction.
+]]
+L["RANK_WATCH_MESSAGE_WHISPER"] =
+	"友情提示，没啥大不了的：你刚才用的是%s，%d级就有更新的等级了。更新一下动作条或者去找训练师，马上就 Good to Go。"
+--[[
+    The whisper to a pet's owner, the same shape with the pet first. { the pet, the spell and rank it cast, the
+    level a higher rank comes at } A hunter pet is named ("your pet Fluffy") and its level is its own; a demon is
+    named by its kind ("your Imp"), and its level is the warlock's, which a grimoire asks for.
+]]
+L["RANK_WATCH_MESSAGE_WHISPER_PET"] =
+	"友情提示，没啥大不了的：你的宠物%s刚才用的是%s，宠物%d级就有更新的等级了。用训练野兽教给它，马上就 Good to Go。"
+L["RANK_WATCH_MESSAGE_WHISPER_DEMON"] =
+	"友情提示，没啥大不了的：你的%s刚才用的是%s，%d级就有更新的等级了。去恶魔训练师那里买本魔典，马上就 Good to Go。"
+--[[
+    Sent once per player, right after the first whisper they ever get from you, so a stranger's tip comes with a
+    way to make it stop. Signed off like the whisper above it. %s is their opt-out number, made from their name,
+    so it is the same from everyone running Good to Go.
+]]
+L["RANK_WATCH_MESSAGE_OPT_OUT"] =
+	"不想再收到这类提示？回复 %s，我就不会再因为法术等级密语你了。这个号码对所有使用 Good to Go 的人都有效。"
+-- Sent back once to a player who whispered their opt-out number.
+L["RANK_WATCH_MESSAGE_OPT_OUT_DONE"] = "收到，我不会再给你发等级提示了。"
+-- Printed when a player says their opt-out number. %s is their name.
+L["RANK_WATCH_OPT_OUT_ADDED"] =
+	'%s 发送了免打扰号码，等级守望现在会忽略此玩家。可在等级守望的"已忽略的玩家"中撤销。'
+-- Printed when you cast a low rank yourself. { the spell and rank, the higher spell and rank, its level }
+L["RANK_WATCH_PRINT_SELF"] =
+	"你施放了%s，而%s从%d级起即可获得。去找训练师或更新你的动作条吧。"
+-- Printed when your own pet casts one. { the pet, the spell and rank, the higher spell and rank, its level }
+L["RANK_WATCH_PRINT_SELF_PET"] = "你的宠物%s施放了%s，而%s从宠物%d级起即可获得。"
+L["RANK_WATCH_PRINT_SELF_DEMON"] = "你的%s施放了%s，而%s从%d级起即可获得。"
+-- Printed when a group member casts one. { their name, the spell and rank, the higher spell and rank, its level }
+L["RANK_WATCH_PRINT_OTHER"] = "%s 施放了%s，而%s对其来说从%d级起即可获得。"
+-- A group member's pet. { the owner's name, the pet, the spell and rank, the higher spell and rank, its level }
+L["RANK_WATCH_PRINT_OTHER_PET"] = "%s 的宠物%s施放了%s，而%s对它来说从宠物%d级起即可获得。"
+L["RANK_WATCH_PRINT_OTHER_DEMON"] = "%s 的%s施放了%s，而%s对它来说从%d级起即可获得。"
+-- Added after the print when another player's add-on whispers for the group. %s is that player's name.
+L["RANK_WATCH_PRINT_WHISPERER"] = "%s 会密语对方。"
+
+-- Features: the switch, also on the panel.
+L["SWITCH_RANK_WATCH"] = "启用等级守望"
+L["SWITCH_RANK_WATCH_DESCRIPTION"] =
+	"当有人施放了低于自己可用等级的法术时，提醒你并密语你的队伍成员，让对方知道该去找训练师了。"
+
+L["RANK_WATCH_MESSAGES_HEADER"] = "通知"
+L["RANK_WATCH_MESSAGES_DESCRIPTION"] = "等级守望如何告知玩家他们施放了低等级法术。"
+L["RANK_WATCH_WHISPER"] = "密语队伍成员"
+L["RANK_WATCH_WHISPER_DESCRIPTION"] =
+	"密语施放了低等级法术的队伍成员。当你的队伍中有多名玩家运行等级守望或 Rank Sentinel 时，只有其中一人会发送密语。"
+L["RANK_WATCH_PRINT"] = "输出队伍成员的低等级法术"
+L["RANK_WATCH_PRINT_DESCRIPTION"] =
+	"在你的聊天框中输出队伍成员施放的低等级法术。你自己的低等级法术总是会输出。"
+L["RANK_WATCH_GRACE_HEADER"] = "宽限期"
+L["RANK_WATCH_GRACE_DESCRIPTION"] =
+	"新的法术等级要等施法者超过其学习等级若干级（由此处设定）后才会报告，这样没人会因为刚刚达到、还没来得及训练的法术等级而收到提醒。"
+L["RANK_WATCH_GRACE_MAX_LEVEL"] = "满级宽限期"
+L["RANK_WATCH_GRACE_MAX_LEVEL_DESCRIPTION"] =
+	"对于已满级的角色，学习等级在满级以下这么多级以内的法术等级不会被报告。设为 0 时，他们可拥有的每个法术等级都会被报告。"
+L["RANK_WATCH_GRACE_LEVELING"] = "练级宽限期"
+L["RANK_WATCH_GRACE_LEVELING_DESCRIPTION"] =
+	"对于仍在练级的角色，学习等级与其当前等级相差在这么多级以内的法术等级不会被报告，给他们时间去找训练师。"
+-- The grace period dropdowns' choices: 1, then 0 and 2 to 5.
+L["RANK_WATCH_GRACE_LEVEL"] = "1 级"
+L["RANK_WATCH_GRACE_LEVELS"] = "%d 级"
+
+L["RANK_WATCH_OPT_OUT_HEADER"] = "免打扰"
+L["RANK_WATCH_OPT_OUT_DESCRIPTION"] =
+	'等级守望第一次密语某人时，会接着发送对方的免打扰号码。这个号码由对方的名字生成，因此所有使用 Good to Go 的人发出的号码都相同。如果对方在密语或任何你能看到的聊天频道中说出这个号码，就会被加入"已忽略的玩家"，之后再也不会收到你发出的等级提醒。若要自己忽略某人，请选中对方并输入 /gtg ignore。'
+L["RANK_WATCH_WHISPERER_HEADER"] = "由谁为队伍报告"
+L["RANK_WATCH_WHISPERER_DESCRIPTION"] =
+	"当你的队伍中有多人运行等级守望或 Rank Sentinel 时，只有其中一人会发送密语，这样施放了低等级法术的玩家只会收到一次提醒，而不是每个人都提醒一遍。其他人只会在自己的聊天框中输出。以下是目前负责发送密语的人。"
+L["RANK_WATCH_WHISPERER_SELF"] = "由你发送。"
+-- %s is the player whose Rank Watch or Rank Sentinel whispers for the group.
+L["RANK_WATCH_WHISPERER_OTHER"] = "由 %s 发送，所以你只会看到聊天输出。"
+L["RANK_WATCH_WHISPERER_NONE"] = "无人：密语队伍成员已关闭。"
+
+-- Ignored Players, under Rank Watch.
+L["RANK_WATCH_IGNORED_HEADER"] = "已忽略的玩家"
+L["RANK_WATCH_IGNORED_DESCRIPTION"] = "等级守望永远不会报告这些玩家。"
+L["RANK_WATCH_IGNORED_NONE"] = "暂时没有。"
+L["RANK_WATCH_IGNORED_REMOVE"] = "取消忽略"
+L["RANK_WATCH_IGNORE_TARGET"] = "忽略目标"
+L["RANK_WATCH_IGNORE_TARGET_DESCRIPTION"] = "将你当前选中的玩家加入列表。"
+L["RANK_WATCH_IGNORE_ADDED"] = "等级守望现在会忽略 %s。"
+L["RANK_WATCH_IGNORE_NOT_FOUND"] = "找不到 %s。请与对方组队或选中对方，然后再试一次。"
+L["RANK_WATCH_IGNORE_NO_TARGET"] = "请选中一名玩家，或输入 /gtg ignore 名字。"
+L["RANK_WATCH_IGNORE_COMMAND"] = "/gtg ignore 名字"
+L["RANK_WATCH_IGNORE_COMMAND_DESCRIPTION"] =
+	"等级守望将不再报告该玩家。不带名字时，忽略你的目标。"
+
+-- Tracked Abilities, under Rank Watch.
+L["RANK_WATCH_TRACKED_DESCRIPTION"] =
+	"等级守望要报告的法术等级，按职业列出。取消勾选你有意降级使用的等级，等级守望就不会理会它。所有技能都会列出。等级守望默认不监视的技能，例如治疗法术、天赋以及等级 1 的灼烧，初始为未勾选。技能的最高等级显示为灰色，因为没有比它更高的等级。"
+-- A rank's checkbox. %s is the rank ("Rank 3"), %d the level it is learned at.
+L["RANK_WATCH_RANK_LEVEL"] = "%s（%d级）"
+L["RANK_WATCH_RANK_DESCRIPTION"] = "有更高等级可用时报告此等级。"
+L["RANK_WATCH_TOP_RANK_DESCRIPTION"] = "最高等级。没有比它更高的等级，因此永远不会被报告。"
+-- The tree entry after Hunter and Warlock listing their pets' and demons' abilities. %s is the class name.
+L["RANK_WATCH_PETS"] = "%s宠物"
+L["RANK_WATCH_TRACK_ALL"] = "全部勾选"
+L["RANK_WATCH_TRACK_NONE"] = "全部取消勾选"
+
+--------------------------------------------------------------------------------
 -- Restocker Window & Chat
 --------------------------------------------------------------------------------
 
--- Chat messages printed by the Restocker feature (Features/Inventory-Restocker/).
+-- Chat messages printed by the Restocker feature (Features/Restocker/).
 L["RESTOCKER_PROFILE_EXISTS"] = '已存在名为"%s"的清单。'
 --[[
     %d is the item ID the player typed. Written into the add box itself while
@@ -962,7 +1097,7 @@ L["RESTOCKER_STOPPED_ERROR"] = "补货因错误而停止：%s"
     Printed during a merchant restock when the crafting-reagent buyer stands
     down: this merchant stocks some of the reagents the Restock List needs but
     not all of them, and reagents buy all-or-nothing (VendorStocksAllReagents in
-    Features/Inventory-Restocker/Restocker-Merchant.lua). Silent at vendors stocking none.
+    Features/Restocker/Restocker-Merchant.lua). Silent at vendors stocking none.
 ]]
 L["RESTOCKER_REAGENTS_SKIPPED"] =
 	"这个商人没有出售你的毒药所需的全部材料。跳过购买这些材料。"
@@ -1041,7 +1176,7 @@ L["RESTOCKER_RESTOCKED_PARTIAL_ONE"] = "有 1 项补货订单仅部分完成。"
 L["RESTOCKER_RESTOCKED_PARTIAL_MANY"] = "有 %d 项补货订单仅部分完成。"
 -- Printed after the counts above when the bags ran out of room before every order was bought.
 L["RESTOCKER_BAGS_FULL_PARTIAL"] = "背包在全部购买完成前就已装满。"
--- Printed after the counts above when gold ran out before every order was bought, while the Gold Reserve is off.
+-- Printed after the counts above when gold ran out before every order was bought, while the Gold Reserve is off or the purse started above it.
 L["RESTOCKER_OUT_OF_GOLD"] = "金币不足，无法完成补货。"
 --[[
     RESTOCKER_OUT_OF_GOLD's line while the Gold Reserve is on, whole so each
@@ -1065,8 +1200,8 @@ L["RESTOCKER_HELP_PROFILE_USE"] = "将此角色切换到该名称的清单。"
     Starter List pop-up, the staples window: offers staples at login when the
     Restock List is empty, and on demand from the Restock List window's Pick
     Staples button. The staples logic is in
-    Features/Inventory-Restocker/Restocker-Starter-List.lua, the window in
-    Features/Inventory-Restocker/Restocker-Starter-Window.lua. The six
+    Features/Restocker/Restocker-Starter-List.lua, the window in
+    Features/Restocker/Restocker-Starter-Window.lua. The six
     food staples reuse the DIET_ keys above, so each food row carries the
     client's own pet diet name.
 
@@ -1086,6 +1221,8 @@ L["RESTOCKER_HELP_PROFILE_USE"] = "将此角色切换到该名称的清单。"
     names is open right behind it.
 ]]
 L["STARTER_POPUP_TITLE"] = "基础物资"
+-- The button at the Staples window's footer end that closes it once you've picked.
+L["STARTER_POPUP_DONE"] = "完成"
 L["STARTER_POPUP_INTRO_LOGIN"] = "我们已为你的职业勾选了一些基础物资，帮你快速上手。"
 L["STARTER_POPUP_INTRO_EMPTY"] = "你的补货清单是空的，我们来添加一些物品好让你上手。"
 -- Shown instead when the window is opened over a list that already has items on it.
@@ -1182,8 +1319,7 @@ L["RESTOCKER_ADD_DUPLICATE"] = "已在此清单中。"
     case and no terminal punctuation for both, like every menu entry.
 ]]
 L["RESTOCKER_ADD_FROM_BAGS"] = "从背包添加物品"
-L["RESTOCKER_ADD_FROM_BAGS_TOOLTIP"] =
-	"你背包中尚未加入此清单的所有物品。点击其中一件即可添加。"
+L["RESTOCKER_ADD_FROM_BAGS_TOOLTIP"] = "你背包中尚未加入此清单的所有物品，随时可以添加。"
 L["RESTOCKER_ADD_FROM_BAGS_NONE"] = "背包中没有可添加的物品"
 
 --[[
@@ -1198,7 +1334,7 @@ L["RESTOCKER_ADD_FROM_BAGS_NONE"] = "背包中没有可添加的物品"
     that button's caption and the title of its tooltip.
 ]]
 L["RESTOCKER_PROFILE_LABEL"] = "清单"
-L["RESTOCKER_PROFILE_TOOLTIP"] = "点击为此角色切换到其他补货清单，或新建一个清单。"
+L["RESTOCKER_PROFILE_TOOLTIP"] = "为此角色切换到其他补货清单，或新建一个清单。"
 L["RESTOCKER_USED_BY"] = "使用者：%s"
 L["RESTOCKER_MANAGE"] = "管理清单"
 L["RESTOCKER_MANAGE_TOOLTIP"] = "新建一个清单，或复制、重命名、删除此清单。"
@@ -1256,12 +1392,9 @@ L["RESTOCKER_UPGRADE_TOOLTIP_BODY"] =
 	"允许 Good to Go 在你升级时，将食物、水、弹药、毒药、药水和职业施法材料升级为更好的物品。"
 
 --[[
-    The band labels drawn over the Bank and Merchant column groups, and the
-    Upgrade column's caption. The bands name the place an item moves to or
-    from, so the column captions under them can stay one word each.
+    The Upgrade column's caption. The Bank and Merchant bands over the other
+    columns are the client's own BANK and MERCHANT strings.
 ]]
-L["RESTOCKER_ROW_BANK"] = "银行"
-L["RESTOCKER_ROW_MERCHANT"] = "商人"
 L["RESTOCKER_ROW_UPGRADE"] = "升级"
 
 --[[
@@ -1294,7 +1427,7 @@ L["RESTOCKER_COLUMN_AMOUNT"] = "保留"
     the heading opens, where %d is how many of the items shown the column can be
     set on. Menu entries: title case, no terminal punctuation.
 ]]
-L["RESTOCKER_COLUMN_BULK_HINT"] = "点击此标题，可为当前显示的所有物品设置此项。"
+L["RESTOCKER_COLUMN_BULK_HINT"] = "此标题可为当前显示的所有物品设置此项。"
 L["RESTOCKER_BULK_ON"] = "为显示的 %d 件物品开启"
 L["RESTOCKER_BULK_OFF"] = "为显示的 %d 件物品关闭"
 
@@ -1349,7 +1482,7 @@ L["RESTOCKER_UNDO_TOOLTIP"] = "将此物品放回清单"
 
 -- Title slot: title case, no terminal period. The line under it is body text.
 L["RESTOCKER_REMOVE_TOOLTIP"] = "将此物品从补货清单中移除"
-L["RESTOCKER_REMOVE_TOOLTIP_UNDO"] = "你可以在窗口底部撤销此操作。"
+L["RESTOCKER_REMOVE_TOOLTIP_UNDO"] = "你可以在清单顶部撤销此操作。"
 --[[
     The Keep box and its heading, which share one tooltip: the title, and KEEP
     under it, which explains the number. There is no editing hint: the box
@@ -1404,7 +1537,7 @@ L["RESTOCKER_REPUTATION_TOOLTIP_TITLE"] = "所需商人声望"
     last sentence names the dash; "Any" is still the menu's first entry.
 ]]
 L["RESTOCKER_REPUTATION_TOOLTIP_DISCOUNTS"] =
-	"点击设置 Good to Go 向商人购买前所需的声望等级；声望还会降低价格：%s 5%%，%s 10%%，%s 15%%，%s 20%%。短横线表示向任何商人购买。"
+	"设置 Good to Go 向商人购买前所需的声望等级；声望还会降低价格：%s 5%%，%s 10%%，%s 15%%，%s 20%%。短横线表示向任何商人购买。"
 
 --[[
     Why a cell cannot be set on its row: the tooltip a dimmed cell shows under
@@ -1416,15 +1549,17 @@ L["RESTOCKER_EXTRA_NOT_APPLICABLE"] = '此物品的"购买"已关闭，因此无
 L["RESTOCKER_REPUTATION_NOT_APPLICABLE"] = '此物品的"购买"已关闭，因此声望要求不适用。'
 L["RESTOCKER_UPGRADE_NOT_APPLICABLE"] = "此物品没有可升级的更好版本。"
 
--- MIGRATION (remove after 2026-11-25): the import from the add-ons this one replaces.
+-- The add-ons this one replaces, turned off at login whenever they run (ns.REPLACED_ADDONS).
+L["POPUP_REPLACED_RELOAD"] =
+	"Good to Go 已关闭被它取代的 %s。现在重载界面，让旧插件停止运行吗？"
+L["POPUP_REPLACED_RELOAD_ACCEPT"] = "立即重载"
+L["POPUP_REPLACED_LATER"] = "稍后"
+
+-- MIGRATION (remove after 2026-12-08): the import from the add-ons this one replaces.
 L["CHAT_LEGACY_IMPORTED"] = "已复制你的 %s 设置。"
 
 L["POPUP_LEGACY_RELOAD_COPIED"] =
 	"Good to Go 已从 %s 复制了你的设置，并关闭了被它取代的 %s。现在重载界面，让旧插件停止运行吗？"
-L["POPUP_LEGACY_RELOAD_TURNED_OFF"] =
-	"Good to Go 已关闭被它取代的 %s。现在重载界面，让旧插件停止运行吗？"
-L["POPUP_LEGACY_RELOAD_ACCEPT"] = "立即重载"
-L["POPUP_LEGACY_LATER"] = "稍后"
 L["POPUP_LEGACY_IMPORT_SETTINGS"] =
 	"Good to Go 发现已安装但被关闭的 %s。要把设置迁移过来吗？这会重新开启旧插件并重载界面，之后会再提供一次重载，将它们重新关闭。"
 L["POPUP_LEGACY_IMPORT_LISTS"] =
@@ -1433,145 +1568,20 @@ L["POPUP_LEGACY_IMPORT_ACCEPT"] = "迁移过来"
 L["POPUP_LEGACY_IMPORT_DECLINE"] = "不用了，谢谢"
 
 --------------------------------------------------------------------------------
--- Automated Appreciation
+-- Options: Tracked Abilities
 --------------------------------------------------------------------------------
 
---------------------------------------------------------------------------------
--- Messages
---------------------------------------------------------------------------------
-
--- Buff & gift announcements
-L["MESSAGE_BUFFED"] = "%s 给你施放了 %s！"
-L["MESSAGE_GAVE_YOU"] = "%s 给了你 %s！"
-L["MESSAGE_GAVE_GROUP"] = "%s 给你的队伍提供了 %s！"
-L["MESSAGE_USED_ITEM"] = "%s 对你使用了 %s！"
-L["MESSAGE_USED_SPELL"] = "%s 对你施放了 %s！"
-L["MESSAGE_SET_OUT"] = "%s 摆放了 %s！"
-L["MESSAGE_OPENED"] = "%s 开启了 %s！"
-
--- Thank-you
-L["MESSAGE_WHISPER_THANKS"] = "感谢你的 %s"
-L["MESSAGE_SELECT_PLAYER"] = "请先以一名玩家为目标。"
-L["MESSAGE_CANT_THANK_SELF"] = "你不能感谢自己！"
-
---------------------------------------------------------------------------------
--- Text Fragments
---------------------------------------------------------------------------------
-
-L["UNKNOWN_SPELL"] = "未知法术"
-
---------------------------------------------------------------------------------
--- Options: Buff Panels
---------------------------------------------------------------------------------
-
--- Stranger Buffs
-L["TAB_STRANGERS"] = "来自陌生人的增益"
-L["STRANGERS_ENABLE"] = "启用对陌生人增益的感谢"
-L["STRANGERS_DESCRIPTION"] = "在开放世界中，感谢队伍外的玩家为你施放的增益。"
--- The dropdown values carry the unit, so these labels do not repeat it.
-L["STRANGERS_OVERALL_COOLDOWN"] = "感谢冷却时间"
-L["STRANGERS_OVERALL_COOLDOWN_DESCRIPTION"] =
-	"设置两轮感谢之间的间隔，无论增益来自谁。设为零则对每个增益都表示感谢。"
-L["STRANGERS_SOURCE_COOLDOWN"] = "同一玩家感谢冷却时间"
-L["STRANGERS_SOURCE_COOLDOWN_DESCRIPTION"] =
-	"设置对同一名玩家两次感谢之间的间隔。设为零则对每个增益都表示感谢。"
-L["STRANGERS_MIN_DURATION"] = "最短增益持续时间"
-L["STRANGERS_MIN_DURATION_DESCRIPTION"] =
-	"忽略持续时间短于此值的增益。设为零则对每个增益都作出反应。"
-
--- Combat Buffs
-L["TAB_COMBAT_BUFFS"] = "战斗增益"
-L["TEAMMATES_DESCRIPTION"] = "感谢小队和团队成员对你施放的增益与冷却技能。"
--- Shown on WoW Forever only.
-L["TEAMMATES_FOREVER_WARNING"] =
-	"此功能在 WoW Forever 上可能无法正常工作。游戏经常隐藏是谁为你施放了增益，战斗中尤其如此，因此许多增益会得不到感谢。"
-
--- Group Service Alerts
-L["TAB_GROUP_SERVICE_ALERTS"] = "队伍服务提醒"
-L["SERVICES_DESCRIPTION"] =
-	"有人为你的队伍摆出援助时作出反应：盛宴、灵魂之井、传送门和修理机器人。"
-
--- Sharing Good News
-L["TAB_SHARING_GOOD_NEWS"] = "分享好消息"
-L["GOOD_NEWS_DESCRIPTION"] =
-	"让被你施加增益的玩家知道你为他们施放了什么；对于短时增益，还会告知能持续多久。"
-L["GOOD_NEWS_SCOPE"] = "接收者"
-L["GOOD_NEWS_SCOPE_ALWAYS"] = "任何被你增益的人"
-L["GOOD_NEWS_SCOPE_GROUP"] = "仅小队或团队成员"
-L["GOOD_NEWS_SCOPE_DESCRIPTION"] =
-	"设置谁会收到好消息密语：任何被你增益的人，或仅限你的队伍成员。"
-L["GOOD_NEWS_MESSAGES_HEADER"] = "好消息密语"
-L["GOOD_NEWS_MESSAGES_DESCRIPTION"] = "被你增益的玩家会收到的密语。"
---[[
-    The message box's tooltip, in three parts. LIMIT's %d is a real placeholder
-    and gets formatted; TOKENS carries a literal %a for the reader to copy and so
-    must never reach string.format. Joined into one line at the point of use.
-]]
-L["GOOD_NEWS_MESSAGE_INPUT_DESCRIPTION"] = "设置密语的内容。留空则使用默认文本。"
-L["GOOD_NEWS_MESSAGE_LIMIT"] = "最大长度：%d。"
-L["GOOD_NEWS_MESSAGE_TOKENS"] = "%a 会变成技能链接，持续时间不足一分钟时还会附上持续时间。"
---[[
-    Appended to the ability link inside %a when the buff has a readable duration
-    under a minute. A whole clause rather than a bare number so it can be reworded
-    per language.
-]]
-L["GOOD_NEWS_DURATION_CLAUSE"] = "持续 %s"
-
--- Shared across the buff panels
-L["TRACKED_HEADER"] = "追踪的技能"
-L["TRACKED_GROUP_ITEMS"] = "物品"
+-- The two Tracked Abilities panels' titles, Buff Duty's then Rank Watch's, and the stand-in for an item or spell whose name the client hasn't loaded yet.
+L["BUFF_DUTY_TRACKED_HEADER"] = "队伍增益"
+L["RANK_WATCH_TRACKED_HEADER"] = "报告的法术等级"
 L["TRACKED_ITEM_PENDING"] = "物品 #%d"
 L["TRACKED_SPELL_PENDING"] = "法术 #%d"
 
--- Shared by Sharing Good News and the Thank You Button
-L["WHISPER_MESSAGE"] = "密语信息"
-L["WHISPER_MESSAGE_RESET"] = "重置"
-L["WHISPER_MESSAGE_RESET_DESCRIPTION"] = "将密语信息恢复为默认文本。"
-
 --------------------------------------------------------------------------------
--- Shared: Praise and Notifications
+-- Shared: Sound Preview
 --------------------------------------------------------------------------------
 
---[[
-    The two section headers every buff panel is built from: what the other player
-    sees, then what only you get. Key prefixes match the header the control
-    appears under.
-]]
-L["PRAISE_HEADER"] = "感谢密语与表情"
-L["NOTIFICATIONS_HEADER"] = "通知"
-L["PRAISE_DESCRIPTION"] = "对方玩家看到的内容：一条感谢密语、一个表情，或两者兼有。"
-L["NOTIFICATIONS_DESCRIPTION"] = "只有你会收到的内容：一条文字提示、一段音效，或两者兼有。"
-
--- Also titles the Thank You Button's emote grid, so it carries no PRAISE_ prefix.
-L["EMOTES_SELECT"] = "选择表情"
-
-L["PRAISE_WHISPER_ENABLE"] = "启用感谢密语"
-L["PRAISE_WHISPER_DESCRIPTION"] = "向为你施加增益的玩家密语致谢。"
-L["PRAISE_EMOTES_ENABLE"] = "启用表情"
-L["PRAISE_EMOTES_DESCRIPTION"] = "用表情表达你的谢意。战斗中会暂缓发送表情。"
-L["PRAISE_DELAY_ENABLE"] = "启用感谢延迟"
-L["PRAISE_DELAY_DESCRIPTION"] =
-	"在发送密语和表情前稍作等待，避免你的感谢与增益在同一瞬间出现。通知不受影响。"
-L["PRAISE_DELAY_LENGTH_DESCRIPTION"] = "设置发送密语和表情前的等待时长。"
-
-L["NOTIFICATIONS_PRINT_ENABLE"] = "启用文字提示"
-L["NOTIFICATIONS_PRINT_DESCRIPTION"] = "获得增益时，显示一条只有你能看到的信息。"
-L["NOTIFICATIONS_SOUND_ENABLE"] = "启用音效"
-L["NOTIFICATIONS_SOUND_DESCRIPTION"] = "获得增益时播放音效。只有你能听到。"
 L["NOTIFICATIONS_SOUND_PREVIEW_DESCRIPTION"] = "播放该音效，让你在开启前先试听。"
-
---------------------------------------------------------------------------------
--- Tracked Ability Groups
---------------------------------------------------------------------------------
-
---[[
-    Labels for multi-member tracked groups that no single game record names
-    (Data/{Game}/Tracked-Abilities-{Game}.lua). Single spells and items, and a
-    group named after one of its own items, take their names from the client.
-]]
-L["GROUP_PORTALS"] = "传送门"
-L["GROUP_RESISTANCE_CAULDRONS"] = "抗性大锅"
-L["GROUP_REPAIR_BOTS"] = "修理机器人"
 
 --------------------------------------------------------------------------------
 -- Options: Buff Duty
@@ -1616,7 +1626,7 @@ L["BUFF_DUTY_TARGET_ENABLE_DESCRIPTION"] =
 	"当你的目标是缺少你可施放增益的队伍外玩家时，将其列出。"
 L["BUFF_DUTY_ASK_OTHERS"] = "向其他职业请求增益"
 L["BUFF_DUTY_ASK_OTHERS_DESCRIPTION"] =
-	"在“缺少的队伍增益”下显示你的队伍缺少的团队增益，以及每种增益有多少人需要。左键点击一个即可向队伍请求，右键点击则密语能施放它的玩家。"
+	'在"缺少的队伍增益"下显示你的队伍缺少的团队增益，以及每种增益有多少人需要。左键点击一个即可向队伍请求，右键点击则密语能施放它的玩家。'
 L["BUFF_DUTY_REFRESH"] = "剩余低于此值时补充"
 L["BUFF_DUTY_REFRESH_DESCRIPTION"] =
 	"设置增益剩余时间低于多少时视为缺失，方便你在增益消失前及时补上。持续时间不超过此值的增益，只有在消失后才会视为缺失。"
@@ -1692,21 +1702,21 @@ L["BUFF_DUTY_MISSING_SELF_HEADER"] = "缺少的自身增益"
 L["BUFF_DUTY_PARTY_BUFFS_HEADER"] = "缺少的队伍增益"
 L["BUFF_DUTY_FAVOR_HEADER"] = "礼尚往来"
 L["BUFF_DUTY_TARGET_HEADER"] = "目标"
-L["BUFF_DUTY_TOOLTIP_CAST"] = "点击对 %s 施放。"
+-- A buff icon's tooltip ends with who the click lands on.
+L["BUFF_DUTY_TOOLTIP_CAST"] = "对 %s 施放。"
 -- %s is the client's "Main Hand" or "Off Hand".
-L["BUFF_DUTY_TOOLTIP_WEAPON"] = "点击施加到你的%s武器。"
-L["BUFF_DUTY_TOOLTIP_USE"] = "你的队伍中没有人有灵魂石。点击对 %s 使用一块。"
-L["BUFF_DUTY_TOOLTIP_CREATE"] = "你的队伍中没有人有灵魂石。点击制造一块。"
-L["BUFF_DUTY_TOOLTIP_GROUP"] = "点击对 %s 及其小队施放。"
-L["BUFF_DUTY_TOOLTIP_FAVOR"] = "点击选中 %s 为目标并施放。"
-L["BUFF_DUTY_TOOLTIP_DISMISS"] = "右键点击将 %s 从列表中移除。"
--- A Party-Buffs icon's tooltip: a raid buff your group is missing, and its count.
+L["BUFF_DUTY_TOOLTIP_WEAPON"] = "施加到你的%s武器。"
+L["BUFF_DUTY_TOOLTIP_USE"] = "你的队伍中没有人有灵魂石。对 %s 使用一块。"
+L["BUFF_DUTY_TOOLTIP_CREATE"] = "你的队伍中没有人有灵魂石。制造一块。"
+L["BUFF_DUTY_TOOLTIP_GROUP"] = "对 %s 及其小队施放。"
+L["BUFF_DUTY_TOOLTIP_FAVOR"] = "选中 %s 为目标并施放。"
+-- A Party-Buffs icon's menu: a raid buff your group is missing, and its count.
 L["BUFF_DUTY_OTHERS_TOOLTIP_COUNT"] = "缺少或即将消失：%d"
--- A Party-Buffs icon's clicks, beside Left-Click and Right-Click: one asks the party or raid, the other whispers the players who can cast it.
-L["BUFF_DUTY_OTHERS_TOOLTIP_ASK_GROUP"] = "向队伍请求增益"
-L["BUFF_DUTY_OTHERS_TOOLTIP_ASK_WHISPER"] = "直接请求增益"
+-- The menu's rows: the first asks the party or raid for the buff (its name), the second whispers the players who can cast it (their names).
+L["BUFF_DUTY_OTHERS_MENU_ASK_GROUP"] = "向队伍请求%s"
+L["BUFF_DUTY_OTHERS_MENU_WHISPER"] = "密语 %s"
 --[[
-    The ask either click sends, signed off like every sent message ({star} ... // GtG), so it
+    The ask either row sends, signed off like every sent message ({star} ... // GtG), so it
     ends as a statement, not a question. Up to five missing players are named (ONE for one,
     NAMES for two to five, joined with LIST_PAIR_FORMAT or LIST_LAST_FORMAT), then the buff's link;
     past five, COUNT gives how many, then the link.
@@ -1714,13 +1724,14 @@ L["BUFF_DUTY_OTHERS_TOOLTIP_ASK_WHISPER"] = "直接请求增益"
 L["BUFF_DUTY_OTHERS_ASK_ONE"] = "%s缺少%s。"
 L["BUFF_DUTY_OTHERS_ASK_NAMES"] = "%s缺少%s。"
 L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "%d名玩家缺少%s增益。"
--- Your own chat, after a Right-Click: who was whispered, then the buff's link.
+-- Your own chat, after the Whisper row: who was whispered, then the buff's link.
 L["BUFF_DUTY_OTHERS_SENT"] = "已向 %s 发送%s的密语。"
--- The window's close button: the class name in its color, then the options command.
+-- The window's close button: the class name, the class name again for its checkbox, the When to Show
+-- header, then the options command.
 L["BUFF_DUTY_CLOSED"] =
-	"已为%s职业关闭增益值班。要重新开启，请 Shift + 左键点击小地图按钮，或输入 %s。"
+	'已为%1$s职业关闭增益值班。要重新开启，请 Shift + 左键点击小地图按钮，或在 %4$s 的"%3$s"下勾选"%2$s"。'
 
--- The Buff Key (Key Bindings, and the Keybinds section of Buff Duty)
+-- The Buff Button key: its name in the game's Key Bindings list and the root panel's Key Bindings section, then the notices a press shows.
 L["BUFF_KEY"] = "增益按钮"
 -- %s is a player's name.
 L["BUFF_KEY_WAITING"] = "正在等待 %s 进入范围。"
@@ -1728,67 +1739,20 @@ L["BUFF_KEY_DONE"] = "没有需要施放的增益了。"
 L["BUFF_KEY_OFF"] = "增益值班已关闭。"
 
 --------------------------------------------------------------------------------
--- Options: Thank You Button
---------------------------------------------------------------------------------
-
-L["TAB_THANK_YOU_BUTTON"] = "感谢按钮"
-L["BUTTON_DESCRIPTION"] = "一次按键即可对目标发送密语和表情。让礼貌自动完成。"
--- One heading per button, numbered; %d is the button's position in the list.
-L["BUTTON_SECTION"] = "感谢按钮 %d"
-L["BUTTON_EMOTE"] = "表情"
-L["BUTTON_EMOTE_DESCRIPTION"] = "设置此按钮对你的目标使用的表情，选择'无'则不使用表情。"
-L["BUTTON_EMOTE_NONE"] = "无"
-L["BUTTON_ICON"] = "图标"
-L["BUTTON_ICON_DESCRIPTION"] = "设置此按钮的宏在宏列表和动作条上显示的图标。"
--- The Icon dropdown's first choice, the macros' own icon; every other choice is a picture alone.
-L["BUTTON_ICON_DEFAULT"] = "默认"
---[[
-    The toggle owns the macro in both directions, so the label is ENABLE rather
-    than CREATE. Both strings carry the macro's name: with five buttons stacked,
-    "which macro is this one?" should not need a hover.
-]]
-L["BUTTON_MACRO_ENABLE"] = '启用宏 "%s"'
-L["BUTTON_MACRO_ENABLE_DESCRIPTION"] = "创建一个名为 %s 的宏，关闭此项时会将其删除。"
-L["BUTTON_WHISPER_DESCRIPTION"] = "设置此按钮向你的目标发送的密语。留空则不发送密语。"
-
---------------------------------------------------------------------------------
--- Defaults
---------------------------------------------------------------------------------
-
-L["DEFAULT_WHISPER"] = "谢谢，你最棒了！(="
---[[
-    The star marker (left off on WoW Forever) and " // GtG" sign-off are added
-    by the builder, which also drops the closing punctuation; neither is part of
-    the editable text.
-]]
-L["DEFAULT_GOOD_NEWS"] = "你获得了 %a"
-
---------------------------------------------------------------------------------
--- Emotes
---------------------------------------------------------------------------------
-
-L["EMOTE_CHEER_DESCRIPTION"] = "你向<Target>欢呼。"
-L["EMOTE_DRINK_DESCRIPTION"] = "你向<Target>举杯致意。"
-L["EMOTE_FLEX_DESCRIPTION"] = "你向<Target>展示肌肉。"
-L["EMOTE_GRIN_DESCRIPTION"] = "你对着<Target>坏笑。"
-L["EMOTE_HIGHFIVE_DESCRIPTION"] = "你与<Target>击掌。"
-L["EMOTE_PRAISE_DESCRIPTION"] = "你赞美了<Target>。"
-L["EMOTE_SALUTE_DESCRIPTION"] = "你恭敬地向<Target>致敬。"
-L["EMOTE_SMILE_DESCRIPTION"] = "你对<Target>微笑。"
-L["EMOTE_THANK_DESCRIPTION"] = "你向<Target>表示感谢。"
-L["EMOTE_WHOA_DESCRIPTION"] = "你对<Target>惊叹道'哇！'。"
-L["EMOTE_WINK_DESCRIPTION"] = "你向<Target>眨眼。"
-L["EMOTE_YES_DESCRIPTION"] = "你向<Target>点头。"
-
---------------------------------------------------------------------------------
 -- Spellbook
 --------------------------------------------------------------------------------
 
--- the window's first tab and its title before "// Good to Go"
+-- The window's first tab, and its title before "// Good to Go", is TAB_ENHANCED_SPELLBOOK (Options Panel above).
 
 -- Page: Sections
 L["SECTION_UNLEARNED"] = "未学会"
 L["SECTION_CONSUMABLES"] = "GtG 消耗品"
+
+-- Page: WoW Macro Names. Each ends a macro's name, which WoW caps at 16 bytes in all; the spell name is cut to make room.
+-- a focus copy's ("Heal @F")
+L["MACRO_NAME_FOCUS_SUFFIX"] = " @F"
+-- a lower rank's own macro ("Fireball R3"); %s is the rank's number
+L["MACRO_NAME_RANK_SUFFIX"] = " R%s"
 
 -- Page: Macro Menu
 L["MACRO_TEXT"] = "宏文本"
@@ -1808,8 +1772,8 @@ L["MENU_RIGHT_CLICK_GROUP"] = "右键点击施放群体版本"
 L["MENU_CATEGORY_TITLE"] = "应用到所有%s"
 L["MENU_ONCE_PER_COMBAT"] = "每场战斗施放一次"
 L["MENU_ONCE_PER_TARGET"] = "每个目标施放一次"
-L["MENU_HIDE_ERRORS"] = "隐藏错误信息"
-L["MENU_MUTE_ERRORS"] = "关闭错误音效"
+L["MENU_HIDE_ERRORS"] = "隐藏错误"
+L["MENU_MUTE_ERRORS"] = "错误静音"
 L["MENU_SWITCH_TO"] = "切换为%s"
 L["MENU_START_AUTO_ATTACK"] = "开始自动攻击"
 L["MENU_STOP_ATTACK"] = "停止攻击"
@@ -1818,8 +1782,8 @@ L["MENU_START_PET_ATTACK"] = "开始宠物攻击"
 L["MENU_START_WAND"] = "开始魔杖射击"
 L["MENU_STOP_CASTING"] = "停止施法"
 L["MENU_STOP_CASTING_NOTE"] = "对打断、驱散这类不能等待的法术使用停止施法。"
-L["MENU_STOP_IF_CHANNELING"] = "引导时停止宏"
-L["MENU_STOP_IF_STEALTHED"] = "潜行时停止宏"
+L["MENU_STOP_IF_CHANNELING"] = "引导时不施放"
+L["MENU_STOP_IF_STEALTHED"] = "潜行时不施放"
 L["MENU_DUPLICATE"] = "复制"
 L["MENU_DELETE"] = "删除"
 L["MENU_DELETE_USED_ONE"] = "删除（用于 1 个动作条）"
@@ -1862,7 +1826,7 @@ L["MENU_OPTIONS_COUNT"] = "%d 个选项"
 L["MENU_ENABLED"] = "已启用"
 L["MENU_HIGHEST"] = "最高"
 L["MENU_HIGHEST_DESCRIPTION"] = "施放你已学会的最高等级。"
-L["MENU_RANK_DYNAMIC"] = "动态"
+L["MENU_RANK_DYNAMIC"] = "动态等级"
 L["MENU_FIXED_RANK_DESCRIPTION"] = "无论什么等级，总是施放%s。"
 L["MENU_ANY_TIME"] = "任何时候"
 L["MENU_ANY_TIME_DESCRIPTION"] = "战斗中和非战斗时都会施放。"
@@ -1885,6 +1849,7 @@ L["MENU_USE_SLOT"] = "使用%s"
 L["MENU_ADD_FOCUS"] = "添加焦点副本"
 L["MENU_REMOVE_FOCUS"] = "移除焦点副本"
 L["MENU_FOCUS_DESCRIPTION"] = "在本页添加第二个宏，先对你的焦点施放，然后是你的目标。"
+L["MENU_REMOVE_FOCUS_DESCRIPTION"] = "将焦点副本从本页移除，并删除它的宏。"
 L["MENU_DUPLICATE_DESCRIPTION"] =
 	"在本页再添加一个此宏的副本，初始选项与此相同，方便你进行不同的设置。"
 L["MENU_MAKE_DEFAULT"] = "设为%s的默认设置"
@@ -1894,7 +1859,7 @@ L["MENU_DEFAULT_SET"] = "%s现在会以这些选项开始。"
 -- Page: Conditionals
 L["MENU_GROUP_CONDITIONALS"] = "条件"
 L["MENU_CONDITIONALS_DESCRIPTION"] =
-	"在法术书旁打开条件面板，在条件满足时（例如按住 Shift 或使用天赋 2），宏可以施放另一个法术。"
+	"在增强法术书窗口旁打开条件面板，在条件满足时（例如按住 Shift 或使用天赋 2），宏可以施放另一个法术。"
 L["MENU_RIGHT_CLICK_TAKEN"] = "某个条件已使用右键点击。移除它才能开启此项。"
 -- TRANSLATORS: the panel's title after the spell's name and "//" ("Fireball // Conditionals").
 L["CONDITIONALS_TITLE"] = "条件"
@@ -1965,7 +1930,7 @@ L["SUBTEXT_CONDITIONALS"] = "%d 个条件"
 -- Page: Cast Sequence
 L["MENU_GROUP_CAST_SEQUENCE"] = "施法序列"
 L["MENU_CAST_SEQUENCE_DESCRIPTION"] =
-	"在法术书旁打开施法序列面板，每次按下宏都会按顺序施放下一个法术，例如先腐蚀术，然后痛苦诅咒，再然后献祭。"
+	"在增强法术书窗口旁打开施法序列面板，每次按下宏都会按顺序施放下一个法术，例如先腐蚀术，然后痛苦诅咒，再然后献祭。"
 -- TRANSLATORS: how many spells a Cast Sequence casts in turn, the macro's own included ("3 Steps").
 L["MENU_CAST_SEQUENCE_STEPS"] = "%d 步"
 -- TRANSLATORS: the panel's title after the spell's name and "//" ("Corruption // Cast Sequence").
@@ -2009,6 +1974,8 @@ L["CAST_SEQUENCE_STOP_NO_RESET"] =
 	'永久停止：没有任何东西能让它重新开始，序列会一直停在 NULL，直到宏发生变化或你重载界面。请在"重新开始的时机"中选择一种重置方式。'
 L["CAST_SEQUENCE_PET_BLOCKED"] =
 	'"宠物已召唤时施放"正在施放%s，它会写入自己的施法行，因此暂不可用。关闭它才能使用施法序列。'
+L["CAST_SEQUENCE_SLOT_DESCRIPTION"] =
+	"点击这里，然后点击本页上的一个法术，让这一步施放它。也可以把本页上的法术拖到这个栏位上。"
 -- TRANSLATORS: the spell's note on the page, counting the spells its Cast Sequence casts in turn ("3-Step Sequence").
 L["SUBTEXT_CAST_SEQUENCE"] = "%d 步序列"
 
@@ -2075,7 +2042,7 @@ L["SUBTEXT_ONCE_PER_TARGET"] = "每目标一次"
 L["SUBTEXT_COMBAT_ONLY"] = "仅战斗中"
 L["SUBTEXT_NO_COMBAT"] = "非战斗"
 L["SUBTEXT_LEAVE_FORM"] = "取消形态"
-L["SUBTEXT_NO_TOGGLE"] = "保持开启"
+L["SUBTEXT_NO_TOGGLE"] = "永不关闭"
 L["SUBTEXT_WAND"] = "魔杖"
 L["SUBTEXT_START_ATTACK"] = "自动攻击"
 L["SUBTEXT_STOP_ATTACK"] = "停止攻击"
@@ -2216,10 +2183,10 @@ L["PET_SPELLBOOK_AUTOCAST_OFF"] = "自动施法关闭"
 L["WHATS_NEXT_PET_TITLE"] = "宠物接下来学什么？"
 L["WHATS_NEXT_PET_EMPTY"] = "没有可列出的宠物技能。"
 -- the footer's right: the pet out, or that there's none
--- TRANSLATORS: %1$s is the pet's name, %2$d its level, %3$s its family ("Fang, Level 23 Wolf").
-L["WHATS_NEXT_PET_FOOTER"] = "%1$s，%2$d级%3$s"
--- TRANSLATORS: %1$d is the training points the pet has left, %2$d its total.
-L["WHATS_NEXT_PET_FOOTER_TRAINING_POINTS"] = "训练点数：%1$d / %2$d"
+-- TRANSLATORS: the first %s is the pet's name, %d its level, the second %s its family ("Fang, Level 23 Wolf").
+L["WHATS_NEXT_PET_FOOTER"] = "%s，%d级%s"
+-- TRANSLATORS: the first %d is the training points the pet has left, the second its total.
+L["WHATS_NEXT_PET_FOOTER_TRAINING_POINTS"] = "训练点数：%d / %d"
 L["WHATS_NEXT_PET_NO_PET"] = "宠物不在场：显示你通过训练野兽学会的技能。"
 L["WHATS_NEXT_PET_NO_DEMON"] = "恶魔不在场：召唤一个来查看它已经掌握的技能。"
 
@@ -2247,8 +2214,8 @@ L["WHATS_NEXT_PET_TOOLTIP_GRIMOIRE"] = "魔典"
 L["WHATS_NEXT_PET_TOOLTIP_GRIMOIRE_IN_BAGS"] = "它的魔典在你的背包里。在召唤此恶魔时使用。"
 L["WHATS_NEXT_PET_TOOLTIP_OTHER"] = "你的宠物无法学会它。"
 L["WHATS_NEXT_PET_TOOLTIP_BEASTS"] = "掌握它的野兽"
--- TRANSLATORS: %1$s is a beast's name, %2$s its level or level range ("Forest Spider (5-6)").
-L["WHATS_NEXT_PET_TOOLTIP_BEAST"] = "%1$s（%2$s）"
+-- TRANSLATORS: the first %s is a beast's name, the second its level or level range ("Forest Spider (5-6)").
+L["WHATS_NEXT_PET_TOOLTIP_BEAST"] = "%s（%s）"
 -- TRANSLATORS: %d is how many more beasts know the ability than the tooltip names.
 L["WHATS_NEXT_PET_TOOLTIP_MORE"] = "还有 %d 个。"
 
@@ -2270,10 +2237,10 @@ L["OPTIONS_KEY_BINDING_TOGGLE_DESCRIPTION"] =
 -- %s is the macro line that presses the same key, /click GtGBuffKey.
 L["OPTIONS_KEY_BINDING_BUFF_DESCRIPTION"] =
 	"非战斗时，每按一次施放你的增益值班窗口提供的下一个增益。武器增益仍需在窗口上点击。要在宏中按下它，请使用 %s。"
-L["OPTIONS_ABILITY_TOOLTIPS_HEADER"] = '"接下来学什么"技能提示'
+L["OPTIONS_ABILITY_TOOLTIPS_HEADER"] = "法术等级提示"
 L["OPTIONS_ABILITY_TOOLTIPS_DESCRIPTION"] =
-	"每个技能的鼠标提示都会列出它的各个等级及每级所需的角色等级：绿色表示已学会，红色表示现在就能训练但还没学，黄色表示以后才能学。这能让你快速自查是否一直在使用最高等级，始终发挥最佳水平。战斗中不会显示这些等级，让你的提示在关键时刻保持简短。"
-L["OPTIONS_ABILITY_TOOLTIPS_ENABLE"] = '启用"接下来学什么"技能提示'
+	"每个技能的鼠标提示都会列出它的各个等级及每级所需的角色等级：白色表示已学会，绿色表示现在就能训练，灰色表示以后才能学。这能让你快速自查是否在使用最高等级，始终发挥最佳水平。战斗中不会显示这些等级，让你的提示在关键时刻保持简短。"
+L["OPTIONS_ABILITY_TOOLTIPS_ENABLE"] = "启用法术等级提示"
 L["OPTIONS_ABILITY_TOOLTIPS_ENABLE_DESCRIPTION"] =
 	"在动作条、游戏法术书和其他插件中，把每个技能的等级加入它的鼠标提示。关闭后这些提示保持游戏原样。增强法术书自己的窗口无论如何都会显示等级。"
 L["OPTIONS_DELETE_MACROS_HEADER"] = "删除宏"
@@ -2343,6 +2310,7 @@ L["BINDING_TOGGLE_PAGE"] = "打开/关闭增强法术书"
 L["CHAT_KEY_BINDINGS_IN_COMBAT"] = "出于安全考虑，战斗中无法打开按键设置列表。"
 L["KEY_BINDINGS_LOCATION"] = "打开游戏菜单，依次进入 %s 和 %s，找到 Good to Go 分类。"
 L["ERROR_MACRO_SLOTS_FULL"] = "没有空余的宏栏位。请在 /macro 中删除一个宏来腾出位置。"
+L["ERROR_MACRO_WINDOW_OPEN"] = "请先关闭宏界面。"
 L["CHAT_MACROS_DELETED"] = "已删除宏：%d"
 L["CHAT_MACRO_TOO_LONG"] =
 	'"%s"宏在开启选项后为 %d 字节，超过了宏能容纳的 %d 字节。关闭一个选项来缩短它。'

@@ -35,7 +35,6 @@ ns.EXTRA_SPELL_SOURCES = {
 	[14251] = { "TALENT" }, -- Riposte
 	[13877] = { "TALENT" }, -- Blade Flurry
 	[13750] = { "TALENT" }, -- Adrenaline Rush
-	[14166] = { "TALENT" }, -- Improved Slice and Dice
 
 	-- Shaman
 	[8071] = { "QUEST", 4 }, -- Stoneskin Totem
@@ -75,10 +74,10 @@ ns.EXTRA_SPELL_SOURCES = {
 How We Got the Data
 
 Last Validated
-	Never.
+	2026-11-08, WoW Forever 1.60.1.70862
 
 Notes
-	- Where each class list's extraSpells entry (Data/Camelot/Class-Spell-Lists-Camelot.lua) is learned, and at what level, for the What's Next? tab (Features/Spellbook/Whats-Next/Whats-Next.lua). The trainer rows (Data/Camelot/Trainer-Spells-Camelot.lua) say their own source: a plain row is the trainer, book marks a book and talent a talent. extraSpells entries carry no source, so this table gives one.
+	- Where each class list's extraSpells entry (Data/Camelot/Class-Spell-Lists-Camelot.lua) is learned, and at what level, for the What's Next? tab (Features/Enhanced-Spellbook/Whats-Next/Whats-Next.lua). The trainer rows (Data/Camelot/Trainer-Spells-Camelot.lua) say their own source: a plain row is the trainer, book marks a book and talent a talent. extraSpells entries carry no source, so this table gives one.
 	- Keyed by the entry's first ID, the one the tab lists.
 	- source is QUEST (a class quest teaches it), TRAINER (the class trainer, though the trainer rows leave it out, mostly forms and spells a quest unlocks), BOOK (an item teaches it) or TALENT (a talent with no trainer ranks).
 	- level is the level the quest, trainer or book asks for. A TALENT row has none: the tab reads the talent's tier from the client's talent tree.
@@ -94,7 +93,7 @@ Wowhead
 	None.
 
 wago.tools
-	None.
+	https://wago.tools/db2/SpellName?build=1.60.1.70862
 
 QuestieDB
 	None.

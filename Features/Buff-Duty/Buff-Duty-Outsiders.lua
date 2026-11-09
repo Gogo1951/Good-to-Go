@@ -1,5 +1,4 @@
 local _, ns = ...
-local Data = ns.Data
 local L = ns.L
 
 --[[
@@ -11,7 +10,8 @@ local L = ns.L
     An outsider has no lasting unit token. Target does -- "target" stays theirs
     for as long as they are targeted -- so its buttons cast at it. A favor is
     only reachable now and then (as your mouseover or focus), so its buttons
-    find the player by name instead.
+    find the player by name instead. The favors themselves are kept by
+    Buff-Duty-Favors.lua.
 
     There is no Players in Range list on purpose: the game reveals players
     around you to add-ons only through friendly nameplates, which are off for
@@ -31,63 +31,6 @@ local ResurrectionIcon = BuffDuty.ResurrectionIcon
 local PlayerLabel = BuffDuty.PlayerLabel
 local PetOwnerClass = BuffDuty.PetOwnerClass
 local PetRow = BuffDuty.PetRow
-
---------------------------------------------------------------------------------
--- State
---------------------------------------------------------------------------------
-
-local favors = {} -- stranger GUID -> { name, short, class, at, given = { [buff key] = true } }
-
---------------------------------------------------------------------------------
--- Return the Favor
---------------------------------------------------------------------------------
-
---[[
-    Called from the stranger path (Buff-Tracking-Combat-Log.lua, or
-    Buff-Tracking-Forever.lua's UNIT_AURA reads on Forever) for every helpful
-    buff a player outside your group puts on you.
-    Kept for the player's favorSeconds from their latest buff.
-]]
-function ns.NoteFavor(guid, name)
-	if not BuffDuty.isSetUp or not ns.db or not ns.db.global.buffWindow.favorEnabled then
-		return
-	end
-	if not (ns.IsPlain(guid) and ns.IsPlain(name)) or not ns.IsPlayerGUID(guid) or not name then
-		return
-	end
-
-	local favor = favors[guid]
-	if favor then
-		favor.at = GetTime()
-	else
-		local _, class = GetPlayerInfoByGUID(guid)
-		favors[guid] = {
-			name = name,
-			short = Ambiguate(name, "short"),
-			class = ns.IsPlain(class) and class or nil,
-			at = GetTime(),
-			given = {},
-		}
-		-- Over the cap, the stranger who buffed you longest ago makes room.
-		local count, oldestGUID, oldestAt = 0, nil, nil
-		for key, entry in pairs(favors) do
-			count = count + 1
-			if not oldestAt or entry.at < oldestAt then
-				oldestGUID, oldestAt = key, entry.at
-			end
-		end
-		if count > Data.BUFF_DUTY_FAVOR_MAX then
-			favors[oldestGUID] = nil
-		end
-	end
-	ns.RequestBuffDutyRefresh()
-end
-
--- The favor icons' right-click.
-function ns.DismissFavor(guid)
-	favors[guid] = nil
-	ns.RequestBuffDutyRefresh()
-end
 
 --------------------------------------------------------------------------------
 -- Outsiders
@@ -275,7 +218,7 @@ local function TargetSection(listed)
 	local _, class = UnitClass("target")
 	local short = GetUnitName("target", false) or ""
 	-- A favor's record of what landed stays current while they're targeted.
-	local favor = favors[guid]
+	local favor = BuffDuty.FavorOf(guid)
 	local icons = OutsiderIcons("target", class, short, nil, "target", favor and favor.given)
 	local petRow = PetRow("targetpet", "targetpet", class)
 
@@ -299,20 +242,20 @@ local function FavorSection(listed)
 	local now = GetTime()
 	local keep = ns.db.global.buffWindow.favorSeconds
 	local rows = {}
-	for guid, favor in pairs(favors) do
+	for guid, favor in BuffDuty.EachFavor() do
 		local unit = ns.GetUnitByGUID(guid)
 		if now - favor.at > keep then
-			favors[guid] = nil
+			BuffDuty.ForgetFavor(guid)
 		elseif unit and (UnitInParty(unit) or UnitInRaid(unit)) then
 			-- They joined your group, and their party lists them now.
-			favors[guid] = nil
+			BuffDuty.ForgetFavor(guid)
 		elseif not listed[guid] then
 			listed[guid] = true
 			local readable = unit and CanBuff(unit) and unit or nil
 			local icons = OutsiderIcons(readable, favor.class, favor.short, favor.name, nil, favor.given, guid)
 			if #icons == 0 then
 				-- Every buff you can give them, they have: the favor is returned.
-				favors[guid] = nil
+				BuffDuty.ForgetFavor(guid)
 			else
 				rows[#rows + 1] =
 					{ at = favor.at, label = PlayerLabel(favor.short, favor.class, readable), icons = icons }

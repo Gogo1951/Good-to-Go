@@ -17,7 +17,7 @@ function ns.BuildBuffDutyBuffsOptions()
 	end
 
 	local options = {
-		name = ns.SubPanelTitle(L["TAB_BUFF_DUTY"], L["TRACKED_HEADER"]),
+		name = ns.SubPanelTitle(L["TAB_BUFF_DUTY"], L["BUFF_DUTY_TRACKED_HEADER"]),
 		type = "group",
 		args = {
 			--[[

@@ -141,7 +141,7 @@ end
 
 -- The mana a spell costs, or nil when the client doesn't say.
 local function ManaCost(spellId)
-	local costs = spellId and GetSpellPowerCost and GetSpellPowerCost(spellId)
+	local costs = spellId and GetSpellPowerCost(spellId)
 	if type(costs) ~= "table" then
 		return nil
 	end

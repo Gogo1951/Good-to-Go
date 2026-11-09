@@ -13,6 +13,7 @@ ns.CANNIBALIZE_RESTORES_MANA = true
 -- Races
 ns.NIGHT_ELF_RACE_ID = 4
 ns.UNDEAD_RACE_ID = 5
+ns.TROLL_RACE_ID = 8
 
 -- Druid Forms
 -- This client has no Dire Bear Form, so Bear Form stands in: the return-form list stays free of holes.
@@ -79,45 +80,16 @@ ns.ENGINEERING_SKILL_LINE_ID = 202
 -- The Engineering specialization Diagnostics checks the player for.
 ns.GOBLIN_ENGINEER_SPELL_ID = 20222
 
--- Thanks for the Buff
+-- Buff Duty
 -- [constant] = spell id, -- Spell Name
 -- No PHASE_SHIFT_SPELL_ID: this client's imp has no Phase Shift.
-ns.GAME_IDS = {
-	SAMPLE_BUFF_SPELL_ID = 1459, -- Arcane Brilliance
-	SAMPLE_COMBAT_BUFF_SPELL_ID = 1044, -- Hand of Freedom
-	SAMPLE_GOOD_NEWS_SPELL_ID = 10060, -- Power Infusion
-	SAMPLE_SERVICE_SPELL_ID = 10059, -- Portal: Stormwind
-}
-
--- { texture file ID, button it starts on }, -- Icon File Name
-ns.THANK_YOU_MACRO_ICONS = {
-	{ 135453, 2 }, -- inv_valentinescard01
-	{ 134141, 3 }, -- inv_misc_gift_02
-	{ 134927, 4 }, -- inv_rosebouquet01
-	{ 133783, 5 }, -- inv_misc_celebrationcake_01
-	{ 135767 }, -- spell_brokenheart
-	{ 133939 }, -- inv_misc_flower_02
-	{ 135263 }, -- inv_summerfest_fireflower
-	{ 133196 }, -- inv_holiday_beerfestpretzel01
-	{ 133201 }, -- inv_holiday_brewfestbuff_01
-	{ 134505 }, -- inv_misc_toy_01
-	{ 135448 }, -- inv_valentinepinkrocket
-	{ 132387 }, -- inv_ammo_snowball
-	{ 133785 }, -- inv_misc_coin_02
-	{ 134237 }, -- inv_misc_key_03
-	{ 133471 }, -- inv_letter_15
-	{ 134481 }, -- inv_misc_ticket_darkmoon_01
-	{ 134333 }, -- inv_misc_orb_01
-	{ 133730 }, -- inv_misc_bone_humanskull_01
-	{ 134153 }, -- inv_misc_head_dragon_01
-	{ 132834 }, -- inv_egg_03
-}
+ns.GAME_IDS = {}
 
 --[[
 How We Got the Data
 
 Last Validated
-	2026-11-04, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-08, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- Single spell, item, race and skill-line IDs the feature code reads by name, grouped by use. The client supplies every name the player sees from these IDs.
@@ -131,11 +103,7 @@ Notes
 	- Well Fed (19705) is read for the buff's name, which is Well Fed in every locale on every client. The two mana runes are read for the names the Mana Gem panel shows; both items are still on this client.
 	- ns.PET_BUFF_FOODS is empty: Kibler's Bits (33874) now only makes a pet bigger (65247), and Sporeling Snack (27656) has no use.
 	- The profession skill lines are the ones the usability gates read ranks from; each is found in the skill list by the name the client gives its ID. All three are on this client. The Goblin Engineer specialization is what Diagnostics checks the player for.
-	- Thanks for the Buff: Spell IDs that feature code needs by name rather than from a list: the sample spells the options panels use for their preview messages. 1459 is named Arcane Brilliance on this client.
-	- Thanks for the Buff: PHASE_SHIFT_SPELL_ID is left out: the imp's abilities on this client (skill line 188) have no Phase Shift, and the Buff Window reads a missing ID as never shifted.
-	- Thanks for the Buff: SAMPLE_GOOD_NEWS_SPELL_ID (Power Infusion) is the spell linked in the Good News sample whisper (Options/Automated-Appreciation/Options-Send-Good-News.lua).
-	- Thanks for the Buff: SAMPLE_COMBAT_BUFF_SPELL_ID (Hand of Freedom) is the spell linked in the Combat Buffs sample whisper and print out, cast by a sample Paladin (Options/Automated-Appreciation/Options-Teammate-Buffs.lua): a buff cast in a fight, unlike SAMPLE_BUFF_SPELL_ID's Arcane Intellect, which the Stranger Buffs samples use.
-	- Thanks for the Buff: THANK_YOU_MACRO_ICONS are the icons a Thank You Button macro can wear (Options/Automated-Appreciation/Options-Thank-You-Button.lua). All twenty are in this client's ManifestInterfaceData under the same IDs.
+	- Buff Duty: PHASE_SHIFT_SPELL_ID is left out: the imp's abilities on this client (skill line 188) have no Phase Shift, and the Buff Window reads a missing ID as never shifted.
 
 SQL (CMaNGOS)
 	None.

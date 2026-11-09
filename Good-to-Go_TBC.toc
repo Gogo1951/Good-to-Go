@@ -1,5 +1,5 @@
 ## Title: Good to Go
-## Notes: Auto-updating macros for your best food, water, potions, and healthstones, a Restock List that auto-buys and banks reagents and ammo, click-to-cast missing buffs, auto thank-you whispers, and mouseover macros for every spell.
+## Notes: Auto-updating macros for your best food, water, potions, and healthstones, a Restock List that auto-buys and banks reagents and ammo, click-to-cast missing buffs, and mouseover macros for every spell.
 ## Author: Gogo1951
 
 ## IconTexture: Interface/AddOns/Good-to-Go/Includes/Images/Connoisseur.tga
@@ -75,7 +75,6 @@ Data/TBC/Game-IDs-TBC.lua
 Data/TBC/Macro-Default-Items-TBC.lua
 Data/TBC/Conjure-Spells-TBC.lua
 Data/TBC/Well-Fed-Buffs-TBC.lua
-Data/TBC/Tracked-Abilities-TBC.lua
 Data/TBC/Buff-Duty-Spells-TBC.lua
 Data/TBC/Class-Spell-Lists-TBC.lua
 Data/TBC/Trainer-Spells-TBC.lua
@@ -83,20 +82,23 @@ Data/TBC/Spell-Sources-TBC.lua
 Data/TBC/Pet-Abilities-TBC.lua
 Data/TBC/Group-Versions-TBC.lua
 Data/TBC/Shared-Page-Spells-TBC.lua
+Data/TBC/Rank-Watch-Abilities-TBC.lua
+Data/TBC/Rank-Watch-Pet-Abilities-TBC.lua
 Data/Default-Settings.lua
 
 # Good to Go
 Features/Core.lua
 Features/Utilities.lua
 Features/Announcements.lua
+Features/Key-Bindings.lua
 Features/Item-Info.lua
 
 # Macros for Consumables
 Features/Macros-for-Consumables/Macros-for-Consumables-Core.lua
 Features/Macros-for-Consumables/Macros-for-Consumables-Utilities.lua
-# MIGRATION (remove after 2026-11-25)
+# MIGRATION (remove after 2026-12-08)
 Features/Macros-for-Consumables/Default-Profile-Migration.lua
-# MIGRATION (remove after 2026-11-25)
+# MIGRATION (remove after 2026-12-08)
 Features/Macros-for-Consumables/Character-Key-Migration.lua
 Features/Macros-for-Consumables/Item-Cache.lua
 Features/Macros-for-Consumables/Scanner/Scanner-Character.lua
@@ -118,6 +120,7 @@ Features/Macros-for-Consumables/Macros/Tools-Rogues.lua
 Features/Macros-for-Consumables/Macros/Tools-Hunters.lua
 Features/Macros-for-Consumables/Macros/Tools-Hunters-Pet-Food.lua
 Features/Macros-for-Consumables/Macros/Tools-Forsaken.lua
+Features/Macros-for-Consumables/Macros/Tools-Troll.lua
 Features/Macros-for-Consumables/Macros/Bandage.lua
 Features/Macros-for-Consumables/Macros/Explosive.lua
 Features/Macros-for-Consumables/Macros/Food.lua
@@ -137,54 +140,53 @@ Features/Readiness-Report/Readiness-Report.lua
 Features/Readiness-Report/Readiness-Report-Example.lua
 
 # Inventory Restocker
-Features/Inventory-Restocker/Restocker-List.lua
-Features/Inventory-Restocker/Restocker-Saved-Lists.lua
-Features/Inventory-Restocker/Restocker-Saved-Format.lua
-Features/Inventory-Restocker/Restocker-Trace.lua
-Features/Inventory-Restocker/Restocker-Inventory-Model.lua
-Features/Inventory-Restocker/Restocker-Bags.lua
-Features/Inventory-Restocker/Restocker-Purchase-Space.lua
-Features/Inventory-Restocker/Restocker-Bank-Tidy.lua
-Features/Inventory-Restocker/Restocker-Bank-State.lua
-Features/Inventory-Restocker/Restocker-Bank-Visit.lua
-Features/Inventory-Restocker/Restocker-Merchant.lua
-Features/Inventory-Restocker/Restocker-Shortfall.lua
-Features/Inventory-Restocker/Restocker-Crafting-Reagents.lua
-Features/Inventory-Restocker/Restocker-Upgrade.lua
-Features/Inventory-Restocker/Restocker-Window-Frame.lua
-Features/Inventory-Restocker/Restocker-Window-Widgets.lua
-Features/Inventory-Restocker/Restocker-Window.lua
-Features/Inventory-Restocker/Restocker-Window-Header.lua
-Features/Inventory-Restocker/Restocker-Window-Reputation.lua
-Features/Inventory-Restocker/Restocker-Window-Columns.lua
-Features/Inventory-Restocker/Restocker-Window-Column-Header.lua
-Features/Inventory-Restocker/Restocker-Window-Filter.lua
-Features/Inventory-Restocker/Restocker-Window-Rows.lua
-Features/Inventory-Restocker/Restocker-Window-Menus.lua
-Features/Inventory-Restocker/Restocker-Window-Render.lua
-Features/Inventory-Restocker/Restocker-Window-Categories.lua
-Features/Inventory-Restocker/Restocker-Window-List-Bar.lua
-Features/Inventory-Restocker/Restocker-Window-Bag-Menu.lua
-Features/Inventory-Restocker/Restocker-Window-Footer.lua
-Features/Inventory-Restocker/Restocker-Starter-List.lua
-Features/Inventory-Restocker/Restocker-Starter-Window.lua
-Features/Inventory-Restocker/Restocker-Reminders.lua
-Features/Inventory-Restocker/Restocker-Events.lua
-Features/Inventory-Restocker/Restocker-Slash-Command.lua
+Features/Restocker/Restocker-Core.lua
+Features/Restocker/Restocker-List.lua
+Features/Restocker/Restocker-Saved-Lists.lua
+Features/Restocker/Restocker-Saved-Format.lua
+Features/Restocker/Restocker-Trace.lua
+Features/Restocker/Restocker-Inventory-Model.lua
+Features/Restocker/Restocker-Bags.lua
+Features/Restocker/Restocker-Bank-Moves.lua
+Features/Restocker/Restocker-Purchase-Space.lua
+Features/Restocker/Restocker-Bank-Tidy.lua
+Features/Restocker/Restocker-Bank-State.lua
+Features/Restocker/Restocker-Bank-Visit.lua
+Features/Restocker/Restocker-Merchant.lua
+Features/Restocker/Restocker-Shortfall.lua
+Features/Restocker/Restocker-Crafting-Reagents.lua
+Features/Restocker/Restocker-Upgrade.lua
+Features/Restocker/Restocker-Window-Frame.lua
+Features/Restocker/Restocker-Window-Widgets.lua
+Features/Restocker/Restocker-Window.lua
+Features/Restocker/Restocker-Window-Header.lua
+Features/Restocker/Restocker-Window-Reputation.lua
+Features/Restocker/Restocker-Window-Columns.lua
+Features/Restocker/Restocker-Window-Column-Header.lua
+Features/Restocker/Restocker-Window-Filter.lua
+Features/Restocker/Restocker-Window-Rows.lua
+Features/Restocker/Restocker-Window-Menus.lua
+Features/Restocker/Restocker-Window-Render.lua
+Features/Restocker/Restocker-Window-Categories.lua
+Features/Restocker/Restocker-Window-List-Bar.lua
+Features/Restocker/Restocker-Window-Bag-Menu.lua
+Features/Restocker/Restocker-Window-Footer.lua
+Features/Restocker/Restocker-Starter-List.lua
+Features/Restocker/Restocker-Starter-Window.lua
+Features/Restocker/Restocker-Reminders.lua
+Features/Restocker/Restocker-Events.lua
+Features/Restocker/Restocker-Slash-Command.lua
 
 # Inventory Report
 Features/Inventory-Report/Inventory-Report-Recording.lua
 Features/Inventory-Report/Inventory-Report-Tooltip.lua
 
-# Automated Appreciation
-Features/Automated-Appreciation/Automated-Appreciation-Core.lua
-Features/Automated-Appreciation/Automated-Appreciation-Utilities.lua
-Features/Automated-Appreciation/Tracked-Lookups.lua
-Features/Automated-Appreciation/Praise.lua
-Features/Automated-Appreciation/Buff-Tracking.lua
-Features/Automated-Appreciation/Buff-Tracking-Combat-Log.lua
-Features/Automated-Appreciation/Good-News.lua
-Features/Automated-Appreciation/Thank-You-Button.lua
+# Rank Watch
+Features/Rank-Watch/Rank-Watch-Core.lua
+Features/Rank-Watch/Rank-Watch-Lookups.lua
+Features/Rank-Watch/Rank-Watch-Check.lua
+Features/Rank-Watch/Rank-Watch-Cluster.lua
+Features/Rank-Watch/Rank-Watch-Detection-Combat-Log.lua
 
 # Buff Duty
 Features/Buff-Duty/Buff-Duty-Events.lua
@@ -202,6 +204,7 @@ Features/Buff-Duty/Buff-Duty-Resurrections.lua
 Features/Buff-Duty/Buff-Duty-Pets.lua
 Features/Buff-Duty/Buff-Duty-Weapons.lua
 Features/Buff-Duty/Buff-Duty-Self.lua
+Features/Buff-Duty/Buff-Duty-Favors.lua
 Features/Buff-Duty/Buff-Duty-Outsiders.lua
 Features/Buff-Duty/Buff-Duty-Other-Classes.lua
 Features/Buff-Duty/Buff-Duty-Groups.lua
@@ -210,66 +213,69 @@ Features/Buff-Duty/Buff-Duty-Cast-Results.lua
 Features/Buff-Duty/Buff-Duty-Key-Picker.lua
 Features/Buff-Duty/Buff-Duty-Keys.lua
 
-# Spellbook
-Features/Spellbook/Spellbook-Core.lua
-Features/Spellbook/Spellbook-Utilities.lua
-Features/Spellbook/Class-Spells.lua
-Features/Spellbook/Trainer-Lookup.lua
-Features/Spellbook/Macro-Kinds.lua
-Features/Spellbook/Macro-Options.lua
-Features/Spellbook/Page-Settings.lua
-Features/Spellbook/Grouped-Spells.lua
-Features/Spellbook/Page-Categories.lua
-Features/Spellbook/Target-Priority.lua
-Features/Spellbook/Macro-Builder/Conditionals.lua
-Features/Spellbook/Macro-Builder/Cast-Sequence.lua
-Features/Spellbook/Macro-Copies.lua
-Features/Spellbook/Macro-Body.lua
-Features/Spellbook/Mute-Errors.lua
-Features/Spellbook/Macro-Tags.lua
-Features/Spellbook/Usable-Items.lua
-Features/Spellbook/Class-Config.lua
-Features/Spellbook/Spell-Ranks.lua
-Features/Spellbook/Group-Handover.lua
-Features/Spellbook/Ranged-Attacks.lua
-Features/Spellbook/Macro-Builder/Macro-Builder.lua
-Features/Spellbook/Unlearned-Spells.lua
-Features/Spellbook/Trainer-Recording.lua
-Features/Spellbook/Macro-Sync.lua
-Features/Spellbook/Action-Bars.lua
-Features/Spellbook/Macro-Delete.lua
-Features/Spellbook/Consumable-Macros.lua
-Features/Spellbook/Dynamic-Rank.lua
-Features/Spellbook/Menu-Utilities.lua
-Features/Spellbook/Macro-Menu.lua
-Features/Spellbook/Macro-Menu-Utilities.lua
-Features/Spellbook/Macro-Menu-Sections.lua
-Features/Spellbook/Category-Menu.lua
-Features/Spellbook/Spellbook-Paging.lua
-Features/Spellbook/Macro-Button-Notes.lua
-Features/Spellbook/Macro-Button.lua
-Features/Spellbook/Spellbook-Page.lua
-Features/Spellbook/Spellbook-Page-Parchment.lua
-Features/Spellbook/Spellbook-Page-Layout.lua
-Features/Spellbook/Spellbook-Controls.lua
-Features/Spellbook/Spellbook-Events.lua
-Features/Spellbook/Whats-Next/Whats-Next.lua
-Features/Spellbook/Whats-Next/Whats-Next-Pet.lua
-Features/Spellbook/Whats-Next/Pet-Spellbook.lua
-Features/Spellbook/Whats-Next/Whats-Next-Models.lua
-Features/Spellbook/Whats-Next/Whats-Next-Layout.lua
-Features/Spellbook/Whats-Next/Whats-Next-Controls.lua
-Features/Spellbook/Whats-Next/Whats-Next-Page.lua
-Features/Spellbook/Spell-Ranks-Tooltip.lua
-Features/Spellbook/Spellbook-Window.lua
-Features/Spellbook/Macro-Builder/Panel-Widgets.lua
-Features/Spellbook/Macro-Builder/Docked-Panel.lua
-Features/Spellbook/Macro-Builder/Conditionals-Panel.lua
-Features/Spellbook/Macro-Builder/Conditionals-Pick.lua
-Features/Spellbook/Macro-Builder/Conditionals-Rows.lua
-Features/Spellbook/Macro-Builder/Cast-Sequence-Panel.lua
-Features/Spellbook/Spellbook-Host-Classic.lua
-Features/Spellbook/Key-Bindings.lua
+# Enhanced Spellbook
+Features/Enhanced-Spellbook/Spellbook-Core.lua
+Features/Enhanced-Spellbook/Spellbook-Utilities.lua
+Features/Enhanced-Spellbook/Class-Spells.lua
+Features/Enhanced-Spellbook/Trainer-Lookup.lua
+Features/Enhanced-Spellbook/Macro-Kinds.lua
+Features/Enhanced-Spellbook/Macro-Options.lua
+Features/Enhanced-Spellbook/Page-Settings.lua
+Features/Enhanced-Spellbook/Grouped-Spells.lua
+Features/Enhanced-Spellbook/Page-Categories.lua
+Features/Enhanced-Spellbook/Target-Priority.lua
+Features/Enhanced-Spellbook/Macro-Builder/Conditionals.lua
+Features/Enhanced-Spellbook/Macro-Builder/Cast-Sequence.lua
+Features/Enhanced-Spellbook/Macro-Copies.lua
+Features/Enhanced-Spellbook/Macro-Body.lua
+Features/Enhanced-Spellbook/Mute-Errors.lua
+Features/Enhanced-Spellbook/Macro-Tags.lua
+Features/Enhanced-Spellbook/Usable-Items.lua
+Features/Enhanced-Spellbook/Class-Config.lua
+Features/Enhanced-Spellbook/Spell-Ranks.lua
+Features/Enhanced-Spellbook/Group-Handover.lua
+Features/Enhanced-Spellbook/Ranged-Attacks.lua
+Features/Enhanced-Spellbook/Macro-Builder/Macro-Builder.lua
+Features/Enhanced-Spellbook/Unlearned-Spells.lua
+Features/Enhanced-Spellbook/Trainer-Recording.lua
+Features/Enhanced-Spellbook/Macro-Lookup.lua
+Features/Enhanced-Spellbook/Macro-Sync.lua
+Features/Enhanced-Spellbook/Action-Bars.lua
+Features/Enhanced-Spellbook/Macro-Delete.lua
+Features/Enhanced-Spellbook/Consumable-Macros.lua
+Features/Enhanced-Spellbook/Dynamic-Rank.lua
+Features/Enhanced-Spellbook/Menu-Utilities.lua
+Features/Enhanced-Spellbook/Macro-Menu.lua
+Features/Enhanced-Spellbook/Macro-Menu-Utilities.lua
+Features/Enhanced-Spellbook/Macro-Menu-Sections.lua
+Features/Enhanced-Spellbook/Category-Menu.lua
+Features/Enhanced-Spellbook/Spellbook-Paging.lua
+Features/Enhanced-Spellbook/Macro-Button-Notes.lua
+Features/Enhanced-Spellbook/Macro-Button.lua
+Features/Enhanced-Spellbook/Spellbook-Page-Order.lua
+Features/Enhanced-Spellbook/Spellbook-Page.lua
+Features/Enhanced-Spellbook/Spellbook-Page-Parchment.lua
+Features/Enhanced-Spellbook/Spellbook-Page-Layout.lua
+Features/Enhanced-Spellbook/Spellbook-Widgets.lua
+Features/Enhanced-Spellbook/Spellbook-Controls.lua
+Features/Enhanced-Spellbook/Spellbook-Events.lua
+Features/Enhanced-Spellbook/Whats-Next/Whats-Next.lua
+Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Pet.lua
+Features/Enhanced-Spellbook/Whats-Next/Pet-Spellbook.lua
+Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Models.lua
+Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Layout.lua
+Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Controls.lua
+Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Page.lua
+Features/Enhanced-Spellbook/Spell-Ranks-Tooltip.lua
+Features/Enhanced-Spellbook/Spellbook-Window.lua
+Features/Enhanced-Spellbook/Macro-Builder/Panel-Widgets.lua
+Features/Enhanced-Spellbook/Macro-Builder/Docked-Panel.lua
+Features/Enhanced-Spellbook/Macro-Builder/Conditionals-Panel.lua
+Features/Enhanced-Spellbook/Macro-Builder/Spell-Pick.lua
+Features/Enhanced-Spellbook/Macro-Builder/Conditionals-Rows.lua
+Features/Enhanced-Spellbook/Macro-Builder/Cast-Sequence-Panel.lua
+Features/Enhanced-Spellbook/Spellbook-Host-Classic.lua
+Features/Enhanced-Spellbook/Key-Bindings.lua
 
 # Mini-map Button
 Features/Minimap-Button.lua
@@ -278,44 +284,39 @@ Features/Minimap-Button.lua
 Diagnostics/Diagnostics-Core.lua
 Diagnostics/Manifests.lua
 Diagnostics/Manifests-Macros-for-Consumables.lua
-Diagnostics/Manifests-Inventory-Restocker.lua
-Diagnostics/Manifests-Automated-Appreciation.lua
+Diagnostics/Manifests-Restocker.lua
 Diagnostics/Manifests-Buff-Duty.lua
-Diagnostics/Manifests-Spellbook.lua
+Diagnostics/Manifests-Enhanced-Spellbook.lua
+Diagnostics/Manifests-Rank-Watch.lua
 Diagnostics/Event-Log.lua
 Diagnostics/Code-Reports.lua
 Diagnostics/Settings-Reports.lua
 Diagnostics/Validate-Data.lua
 Diagnostics/Localization-Reports.lua
 Diagnostics/Message-Length-Macros-for-Consumables.lua
-Diagnostics/Message-Length-Automated-Appreciation.lua
-Diagnostics/Message-Length-Spellbook.lua
+Diagnostics/Message-Length-Buff-Duty.lua
+Diagnostics/Message-Length-Enhanced-Spellbook.lua
+Diagnostics/Message-Length-Rank-Watch.lua
 Diagnostics/Report-Runner.lua
 
 # Options
 Options/Options-Utilities.lua
 Options/Options-General.lua
-Options/Automated-Appreciation/Options-Automated-Appreciation-Utilities.lua
 Options/Macros-for-Consumables/Options-Macros.lua
 Options/Macros-for-Consumables/Options-Class-Race.lua
 Options/Macros-for-Consumables/Options-Ignore-List.lua
 Options/Readiness-Report/Options-Readiness-Report.lua
-Options/Inventory-Restocker/Options-Restocker.lua
+Options/Rank-Watch/Options-Rank-Watch.lua
+Options/Rank-Watch/Options-Rank-Watch-Tracked.lua
+Options/Rank-Watch/Options-Rank-Watch-Ignored.lua
+Options/Restocker/Options-Restocker.lua
 Options/Inventory-Report/Options-Inventory-Report.lua
-Options/Automated-Appreciation/Options-Stranger-Buffs.lua
-Options/Automated-Appreciation/Options-Teammate-Buffs.lua
-Options/Automated-Appreciation/Options-Teammate-Buffs-Tracked.lua
-Options/Automated-Appreciation/Options-Send-Good-News.lua
-Options/Automated-Appreciation/Options-Send-Good-News-Tracked.lua
-Options/Automated-Appreciation/Options-Service-Alerts.lua
-Options/Automated-Appreciation/Options-Service-Alerts-Tracked.lua
-Options/Automated-Appreciation/Options-Thank-You-Button.lua
 Options/Buff-Duty/Options-Buff-Duty-Utilities.lua
 Options/Buff-Duty/Options-Buff-Duty.lua
 Options/Buff-Duty/Options-Buff-Duty-Buffs.lua
 Options/Buff-Duty/Options-Buff-Duty-Self-Buffs.lua
 Options/Buff-Duty/Options-Buff-Duty-Weapon-Buffs.lua
-Options/Spellbook/Options-Spellbook.lua
+Options/Enhanced-Spellbook/Options-Enhanced-Spellbook.lua
 Options/Options-Profiles.lua
 Options/Options-Feedback-Support.lua
 Diagnostics/Options-Diagnostics.lua

@@ -12,7 +12,7 @@ local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
     macro-length trim (Body-Builder.lua).
 
     The macro-callback globals (GtGFire, GtGTip,
-    GtGTipIf, GtGNoItem) and the state they share live in
+    GtGTipIf, GtGNoItem, GtGReplace) and the state they share live in
     Features/Macros-for-Consumables/Macros/Runtime.lua, which loads immediately after this file.
     Body-Builder.lua writes the `/run GtG...` lines into macro bodies
     at update time, long after load, so the later load order is safe --
@@ -194,6 +194,12 @@ function ns.UpdateMacros(forced)
 				corpseCast = definition.corpseSpell(bestEntry)
 			end
 
+			-- Definition hook: a spell cast instead of the action (Food's Rapid Regeneration), under the same rule.
+			local leadCast
+			if definition.leadSpell and itemID == (bestEntry and bestEntry.id) then
+				leadCast = definition.leadSpell(bestEntry)
+			end
+
 			--[[
 			    Ranked /use list for multi-use types; topIDs[1] is itemID
 			    itself, so the list only adds fallback lines below it.
@@ -322,7 +328,8 @@ function ns.UpdateMacros(forced)
 					outOfCombatID,
 					outOfCombatStealth,
 					corpseCast,
-					outOfCombatCorpse
+					outOfCombatCorpse,
+					leadCast
 				)
 
 				if currentMacroState[typeName] ~= stateID or forced then
@@ -336,7 +343,8 @@ function ns.UpdateMacros(forced)
 						outOfCombatID,
 						outOfCombatStealth,
 						corpseCast,
-						outOfCombatCorpse
+						outOfCombatCorpse,
+						leadCast
 					)
 					WriteMacro(config.macro, body, stateID, typeName)
 				end
@@ -392,12 +400,14 @@ end
 
 --[[
     Whether the player's own cast changes what the macros hold: a conjure spell
-    in ns.spellCache, or Cannibalize, whose cooldown takes its line out of the
-    Food and Water macros.
+    in ns.spellCache, Cannibalize, whose cooldown takes its line out of the
+    Food and Water macros, or Rapid Regeneration, whose cooldown hands the
+    Food macro back to eating.
 ]]
 function ns.SpellCastChangesMacros(spellID)
 	return (ns.spellCache ~= nil and ns.spellCache[spellID] ~= nil)
 		or (ns.isForsaken and spellID == ns.CANNIBALIZE_SPELL_ID)
+		or (ns.isTroll and spellID == ns.RAPID_REGENERATION_SPELL_ID)
 		or false
 end
 

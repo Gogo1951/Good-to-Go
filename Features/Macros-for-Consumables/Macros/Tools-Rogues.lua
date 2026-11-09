@@ -146,7 +146,7 @@ end
 --[[
     Four body shapes:
 
-      no Poisons skill → tip-only stub ("You don't currently know Poisons.")
+      Poisons not learned → tip-only stub ("You don't currently know Poisons.")
       neither hand     → crafting middle-click + "no suitable Poison found"
       one hand missing → working hand keeps its branch; the missing hand's
                          click prints TIP_NO_HAND_POISON via GtGTipIf and halts
@@ -256,7 +256,8 @@ ns.RegisterMacroType({
 		if not ns.isRogue then
 			return
 		end
-		if ns.IsMacroEnabled("Poisons") then
+		-- A flavor with no Poisons skill (Mists) has nothing for the macro to apply, so it is never made there.
+		if ns.IsMacroEnabled("Poisons") and ns.POISONS_SPELL_ID then
 			UpdatePoisonsMacro(forced)
 		else
 			local config = MACRO_CONFIG["Poisons"]

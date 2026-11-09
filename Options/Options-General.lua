@@ -13,7 +13,7 @@ local Spacer = ns.OptionsSpacer
 --[[
     Each row shows the key the player bound, or a muted Not Bound, and a Set Key
     button that opens the game's Key Bindings list through ns:OpenKeyBindings,
-    so the key is set where the game's own are (Features/Spellbook/Key-Bindings.lua).
+    so the key is set where the game's own are (Features/Enhanced-Spellbook/Key-Bindings.lua).
     The binding name is Bindings.xml's name attribute; the caption is the same
     string the Key Bindings list prints. ns:OnUpdateBindings repaints this panel
     when the player changes a key.
@@ -176,6 +176,19 @@ function ns.BuildGeneralOptions()
 			95
 		),
 	}
+
+	-- Rank Watch's ignore command, wherever its TOC loads it.
+	if ns.IgnoreRankWatchPlayer then
+		args.spaceCommands3 = Spacer(96)
+		args.descCommandsRankWatchIgnore = Desc(
+			GetColor("INFO")
+				.. L["RANK_WATCH_IGNORE_COMMAND"]
+				.. "|r"
+				.. "  "
+				.. L["RANK_WATCH_IGNORE_COMMAND_DESCRIPTION"],
+			97
+		)
+	end
 
 	ns.OptionsFeatureSwitchRows(args, "rowFeatures", 23)
 	AddKeyBindingRows(args, 63)

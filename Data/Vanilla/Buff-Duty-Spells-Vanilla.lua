@@ -471,7 +471,7 @@ ns.BUFF_DUTY_RESURRECTIONS = {
 How We Got the Data
 
 Last Validated
-	2026-11-04, Classic Era 1.15.9.70576
+	2026-11-08, Classic Era 1.15.9.70576
 
 Notes
 	- Every buff one player can put on another that lasts more than two minutes: the ones worth keeping up on a group, and the ones a player may want to hand out on request. Only the rows for the player's own class are read, and only the ranks the player knows are cast.
@@ -514,18 +514,18 @@ Wowhead
 	None.
 
 wago.tools
-	https://wago.tools/db2/SpellName?build=1.15.9.70003
-	https://wago.tools/db2/Spell?build=1.15.9.70003
-	https://wago.tools/db2/SkillLineAbility?build=1.15.9.70003
-	https://wago.tools/db2/SkillLine?build=1.15.9.70003
-	https://wago.tools/db2/SpellLevels?build=1.15.9.70003
-	https://wago.tools/db2/SpellEffect?build=1.15.9.70003
-	https://wago.tools/db2/SpellMisc?build=1.15.9.70003
-	https://wago.tools/db2/SpellDuration?build=1.15.9.70003
-	https://wago.tools/db2/ItemEffect?build=1.15.9.70003
-	https://wago.tools/db2/ItemSparse?build=1.15.9.70003
-	https://wago.tools/db2/SpellEquippedItems?build=1.15.9.70003
-	https://wago.tools/db2/Item?build=1.15.9.70003
+	https://wago.tools/db2/SpellName?build=1.15.9.70576
+	https://wago.tools/db2/Spell?build=1.15.9.70576
+	https://wago.tools/db2/SkillLineAbility?build=1.15.9.70576
+	https://wago.tools/db2/SkillLine?build=1.15.9.70576
+	https://wago.tools/db2/SpellLevels?build=1.15.9.70576
+	https://wago.tools/db2/SpellEffect?build=1.15.9.70576
+	https://wago.tools/db2/SpellMisc?build=1.15.9.70576
+	https://wago.tools/db2/SpellDuration?build=1.15.9.70576
+	https://wago.tools/db2/ItemEffect?build=1.15.9.70576
+	https://wago.tools/db2/ItemSparse?build=1.15.9.70576
+	https://wago.tools/db2/SpellEquippedItems?build=1.15.9.70576
+	https://wago.tools/db2/Item?build=1.15.9.70576
 	https://wago.tools/db2/Talent?build=1.15.9.70003
 
 QuestieDB

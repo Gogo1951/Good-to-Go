@@ -4,34 +4,34 @@ if ns.IS_DISCOVERY then
 	return
 end
 
--- [ID] = {Min Damage, Max Damage, Engineering Skill, Required Spell ID}, -- Name
+-- [ID] = {Min Damage, Max Damage, Engineering Skill, Required Spell ID, Min Level, Vendor Price, Max Stack, Bind Type}, -- Name
 ns.EXPLOSIVES = {
-	[4380] = { 85, 115, 140 }, -- Big Bronze Bomb
-	[4394] = { 149, 201, 190 }, -- Big Iron Bomb
-	[4365] = { 51, 69, 75 }, -- Coarse Dynamite
-	[16005] = { 225, 675, 285 }, -- Dark Iron Bomb
-	[18641] = { 340, 460, 250 }, -- Dense Dynamite
-	[6714] = { 51, 69, 0 }, -- Ez-Thro Dynamite
-	[18588] = { 213, 287, 0 }, -- Ez-Thro Dynamite II
-	[10646] = { 450, 750, 205 }, -- Goblin Sapper Charge
-	[4378] = { 128, 172, 125 }, -- Heavy Dynamite
-	[10562] = { 255, 345, 235 }, -- Hi-Explosive Bomb
-	[4390] = { 132, 218, 175 }, -- Iron Grenade
-	[4370] = { 43, 57, 105 }, -- Large Copper Bomb
-	[10514] = { 149, 201, 205 }, -- Mithril Frag Bomb
-	[4360] = { 22, 28, 30 }, -- Rough Copper Bomb
-	[4358] = { 26, 34, 1 }, -- Rough Dynamite
-	[4374] = { 73, 97, 120 }, -- Small Bronze Bomb
-	[10507] = { 213, 287, 175 }, -- Solid Dynamite
-	[10586] = { 340, 460, 225 }, -- The Big One
-	[15993] = { 300, 500, 260 }, -- Thorium Grenade
+	[4380] = { 85, 115, 140, nil, 0, 500, 10, 0 }, -- Big Bronze Bomb
+	[4394] = { 149, 201, 190, nil, 0, 750, 10, 0 }, -- Big Iron Bomb
+	[4365] = { 51, 69, 75, nil, 0, 75, 20, 0 }, -- Coarse Dynamite
+	[16005] = { 225, 675, 285, nil, 0, 1250, 10, 0 }, -- Dark Iron Bomb
+	[18641] = { 340, 460, 250, nil, 0, 500, 20, 0 }, -- Dense Dynamite
+	[6714] = { 51, 69, 0, nil, 10, 75, 20, 0 }, -- Ez-Thro Dynamite
+	[18588] = { 213, 287, 0, nil, 30, 200, 20, 0 }, -- Ez-Thro Dynamite II
+	[10646] = { 450, 750, 205, nil, 0, 500, 10, 0 }, -- Goblin Sapper Charge
+	[4378] = { 128, 172, 125, nil, 0, 350, 20, 0 }, -- Heavy Dynamite
+	[10562] = { 255, 345, 235, nil, 0, 750, 10, 0 }, -- Hi-Explosive Bomb
+	[4390] = { 132, 218, 175, nil, 0, 500, 10, 0 }, -- Iron Grenade
+	[4370] = { 43, 57, 105, nil, 0, 175, 10, 0 }, -- Large Copper Bomb
+	[10514] = { 149, 201, 205, nil, 0, 750, 10, 0 }, -- Mithril Frag Bomb
+	[4360] = { 22, 28, 30, nil, 0, 60, 10, 0 }, -- Rough Copper Bomb
+	[4358] = { 26, 34, 1, nil, 0, 30, 20, 0 }, -- Rough Dynamite
+	[4374] = { 73, 97, 120, nil, 0, 200, 10, 0 }, -- Small Bronze Bomb
+	[10507] = { 213, 287, 175, nil, 0, 350, 20, 0 }, -- Solid Dynamite
+	[10586] = { 340, 460, 225, nil, 0, 750, 10, 0 }, -- The Big One
+	[15993] = { 300, 500, 260, nil, 0, 1500, 10, 0 }, -- Thorium Grenade
 }
 
 --[[
 How We Got the Data
 
 Last Validated
-	2026-11-04, Classic Era 1.15.9.70576
+	2026-11-08, Classic Era 1.15.9.70576
 
 Notes
 	- Every Engineering explosive this client knows that deals damage, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Explosive macro. The family is the items sharing Coarse Dynamite's (4365) use category and its class and subclass (Trade Goods, Explosives).
@@ -78,11 +78,11 @@ Wowhead
 	None.
 
 wago.tools
-	https://wago.tools/db2/Item?build=1.15.9.70003
-	https://wago.tools/db2/ItemSparse?build=1.15.9.70003
-	https://wago.tools/db2/ItemEffect?build=1.15.9.70003
+	https://wago.tools/db2/Item?build=1.15.9.70576
+	https://wago.tools/db2/ItemSparse?build=1.15.9.70576
+	https://wago.tools/db2/ItemEffect?build=1.15.9.70576
 	https://wago.tools/db2/Spell?build=1.15.9.70003
-	https://wago.tools/db2/SpellEffect?build=1.15.9.70003
+	https://wago.tools/db2/SpellEffect?build=1.15.9.70576
 	https://wago.tools/db2/SpellMisc?build=1.15.9.70003
 	https://wago.tools/db2/SpellDuration?build=1.15.9.70003
 

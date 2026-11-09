@@ -70,7 +70,7 @@ ns.MISSING_SPELL_MESSAGE_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-10-16, WoW Forever 1.60.1.70450
+	2026-11-08, WoW Forever 1.60.1.70862
 
 Notes
 	- The mage and warlock conjure spells the macros cast, one list per conjure, read by Features/Macros-for-Consumables/Macros/Smart-Spell.lua (GetSmartSpell), the Food and Water macros, the class tools, the Readiness Report and the mini-map tooltip. Smart-Spell sorts each list by its level column, highest first, at load, so row order carries no meaning.
@@ -93,6 +93,11 @@ wago.tools
 	https://wago.tools/db2/SpellEffect?build=1.60.1.70450
 	https://wago.tools/db2/SpellLevels?build=1.60.1.70450
 	https://wago.tools/db2/SkillLineAbility?build=1.60.1.70450
+	https://wago.tools/db2/SpellName?build=1.60.1.70862
+	https://wago.tools/db2/SpellEffect?build=1.60.1.70862
+	https://wago.tools/db2/SpellLevels?build=1.60.1.70862
+	https://wago.tools/db2/SkillLineAbility?build=1.60.1.70862
+	https://wago.tools/db2/ItemSparse?build=1.60.1.70862
 
 QuestieDB
 	None.

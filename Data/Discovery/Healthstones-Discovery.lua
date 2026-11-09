@@ -4,35 +4,35 @@ if not ns.IS_DISCOVERY then
 	return
 end
 
--- [ID] = {Healthstone Amount, Required Level}, -- Name
+-- [ID] = {Healthstone Amount, Required Level, Min Level, Vendor Price, Max Stack, Bind Type}, -- Name
 ns.HEALTHSTONES = {
-	[19013] = { 1440, 48 }, -- Major Healthstone
-	[19012] = { 1320, 48 }, -- Major Healthstone
-	[9421] = { 1200, 48 }, -- Major Healthstone
-	[15723] = { 1050, 50 }, -- Tea with Sugar
-	[19011] = { 960, 36 }, -- Greater Healthstone
-	[19010] = { 880, 36 }, -- Greater Healthstone
-	[5510] = { 800, 36 }, -- Greater Healthstone
-	[11951] = { 700, 45 }, -- Whipper Root Tuber
-	[23683] = { 450, 45 }, -- Crystal Flake Throat Lozenge
-	[19009] = { 600, 24 }, -- Healthstone
-	[19008] = { 550, 24 }, -- Healthstone
-	[14894] = { 525, 0 }, -- Lily Root
-	[5509] = { 500, 24 }, -- Healthstone
-	[19007] = { 300, 12 }, -- Lesser Healthstone
-	[19006] = { 275, 12 }, -- Lesser Healthstone
-	[5511] = { 250, 12 }, -- Lesser Healthstone
-	[19005] = { 120, 1 }, -- Minor Healthstone
-	[19004] = { 110, 1 }, -- Minor Healthstone
-	[5512] = { 100, 1 }, -- Minor Healthstone
-	[5205] = { 71, 5 }, -- Sprouted Frond
+	[19013] = { 1440, 48, 48, 0, 1, 0 }, -- Major Healthstone
+	[19012] = { 1320, 48, 48, 0, 1, 0 }, -- Major Healthstone
+	[9421] = { 1200, 48, 48, 0, 1, 0 }, -- Major Healthstone
+	[15723] = { 1050, 50, 50, 2825, 1, 1 }, -- Tea with Sugar
+	[19011] = { 960, 36, 36, 0, 1, 0 }, -- Greater Healthstone
+	[19010] = { 880, 36, 36, 0, 1, 0 }, -- Greater Healthstone
+	[5510] = { 800, 36, 36, 0, 1, 0 }, -- Greater Healthstone
+	[11951] = { 700, 45, 45, 0, 20, 1 }, -- Whipper Root Tuber
+	[23683] = { 450, 45, 45, 750, 20, 0 }, -- Crystal Flake Throat Lozenge
+	[19009] = { 600, 24, 24, 0, 1, 0 }, -- Healthstone
+	[19008] = { 550, 24, 24, 0, 1, 0 }, -- Healthstone
+	[14894] = { 525, 0, 0, 0, 1, 1 }, -- Lily Root
+	[5509] = { 500, 24, 24, 0, 1, 0 }, -- Healthstone
+	[19007] = { 300, 12, 12, 0, 1, 0 }, -- Lesser Healthstone
+	[19006] = { 275, 12, 12, 0, 1, 0 }, -- Lesser Healthstone
+	[5511] = { 250, 12, 12, 0, 1, 0 }, -- Lesser Healthstone
+	[19005] = { 120, 1, 1, 0, 1, 0 }, -- Minor Healthstone
+	[19004] = { 110, 1, 1, 0, 1, 0 }, -- Minor Healthstone
+	[5512] = { 100, 1, 1, 0, 1, 0 }, -- Minor Healthstone
+	[5205] = { 71, 5, 5, 31, 10, 0 }, -- Sprouted Frond
 }
 
 --[[
 How We Got the Data
 
 Last Validated
-	2026-11-04, Season of Discovery 1.15.9.70576
+	2026-11-08, Season of Discovery 1.15.9.70576
 
 Notes
 	- Every item that heals instantly on the healthstone cooldown, keyed by the cooldown category Charged Crystal Focus (32578) uses, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Healthstone and Health Potion macros. Healthstone Amount is the low end of the heal; Required Level is the level the tooltip requires (0 for none).
@@ -86,4 +86,7 @@ wago.tools
 	https://wago.tools/db2/SpellMisc?build=1.15.9.70003
 	https://wago.tools/db2/SpellDuration?build=1.15.9.70003
 	https://wago.tools/db2/SpellLevels?build=1.15.9.70003
+
+QuestieDB
+	None.
 ]]
