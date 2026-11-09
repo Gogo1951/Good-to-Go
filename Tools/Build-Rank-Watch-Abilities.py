@@ -8,6 +8,20 @@ Trainer-Spells-{Game}.lua to put every ability under its class, name it in the t
 learn levels from the trainer rows, which the Enhanced Spellbook's What's Next reads too. A rank the trainer
 rows don't list keeps Rank Sentinel's level, and the script says so.
 
+A flavor whose file already exists is merged onto, never rebuilt, because the shipped tables are hand-set
+past what this script can know: the off ladders and off first ranks Rank Sentinel leaves out, level-less
+rows, and each flavor's own corrections (WoW Forever's dropped ranks, renumbered ladders and added talent
+ranks). So:
+
+  - Every row already in the file stays exactly as it is, and so does every ability; where the build
+    disagrees on a row's rank or level, the script says so and keeps the file's.
+  - A rank Rank Sentinel has that the file doesn't is added only when this flavor's own Trainer-Spells or
+    Class-Spell-Lists knows the spell; the rest are named and left out, which keeps WoW Forever's drops
+    dropped. An added rank takes the off flag of the highest rank already on its ladder.
+  - The file's How We Got the Data block is kept, since its Last Validated and wago.tools lines are hand-set.
+
+So rerun on unchanged sources, it rewrites every file byte for byte. A flavor with no file yet is built fresh.
+
 Run from the add-on root, with a Rank Sentinel checkout beside it or named by --source:
 
     python3 Tools/Build-Rank-Watch-Abilities.py --source ../Rank-Sentinel
@@ -38,6 +52,17 @@ DISCOVERY_GUARD = {
     "Vanilla": "if ns.IS_DISCOVERY then\n\treturn\nend\n\n",
     "Discovery": "if not ns.IS_DISCOVERY then\n\treturn\nend\n\n",
 }
+TABLE_SHAPE = (
+    "-- [classToken] = { { { id, rank, level, off }, ... }, ... }, -- each ability's ranks, lowest first;"
+    " level: nil where no table gives one; off: unchecked until the player ticks it\n"
+)
+
+# The shipped table's own lines, read back so a rebuild can carry them.
+EXISTING_CLASS = re.compile(r"^\t([A-Z]+) = \{\s*$")
+EXISTING_OPEN = re.compile(r"^\t\t\{\s*$")
+EXISTING_ROW = re.compile(r"^\t\t\t\{ id = (\d+), rank = (\d+)(?:, level = (\d+))?(, off = true)? \},\s*$")
+EXISTING_CLOSE = re.compile(r"^\t\t\}, -- (.+?)\s*$")
+FOOTER_START = "\n--[[\nHow We Got the Data\n"
 
 
 def read_rank_sentinel(path):
@@ -87,6 +112,79 @@ def read_class_lists(path):
     return rows
 
 
+def table_path(flavor, root):
+    return os.path.join(root, "Data", flavor, "Rank-Watch-Abilities-%s.lua" % flavor)
+
+
+def read_existing(path):
+    """The shipped table as abilities by class, and its How We Got the Data block. (None, None) with no file."""
+    if not os.path.exists(path):
+        return None, None
+    with open(path, encoding="utf-8") as handle:
+        text = handle.read()
+    by_class = {}
+    current = None
+    ranks = None
+    for number, line in enumerate(text.splitlines(), 1):
+        header = EXISTING_CLASS.match(line)
+        if header:
+            current = header.group(1)
+            continue
+        if current and EXISTING_OPEN.match(line):
+            ranks = []
+            continue
+        row = EXISTING_ROW.match(line)
+        if row and ranks is not None:
+            spell, rank, level, off = row.groups()
+            ranks.append({"id": int(spell), "rank": int(rank), "level": level and int(level), "off": off is not None})
+            continue
+        close = EXISTING_CLOSE.match(line)
+        if close and ranks is not None:
+            by_class.setdefault(current, []).append({"name": close.group(1), "ranks": ranks})
+            ranks = None
+            continue
+        # Anything else inside an ability is a shape this reader would drop, so stop rather than lose it.
+        if ranks is not None:
+            sys.exit("%s:%d: a row this script can't read back: %s" % (path, number, line.strip()))
+    start = text.find(FOOTER_START)
+    return by_class, (text[start:] if start != -1 else None)
+
+
+def merge(built, existing, own_ids, notes):
+    """Rank Sentinel's build folded onto the shipped table, which wins wherever it has a row (see the docstring)."""
+    merged = {cls: [{"name": a["name"], "ranks": [dict(r) for r in a["ranks"]]} for a in abilities]
+              for cls, abilities in existing.items()}
+    held = {}
+    for abilities in merged.values():
+        for ability in abilities:
+            for row in ability["ranks"]:
+                held[row["id"]] = (ability, row)
+    for class_token in CLASS_ORDER:
+        for ability in built.get(class_token, []):
+            ladder = next((held[row["id"]][0] for row in ability["ranks"] if row["id"] in held), None)
+            for row in ability["ranks"]:
+                if row["id"] in held:
+                    kept = held[row["id"]][1]
+                    if (kept["rank"], kept["level"]) != (row["rank"], row["level"]):
+                        notes.append("%s %d: kept the file's rank %s, level %s over the build's rank %d, level %d"
+                                     % (ability["name"], row["id"], kept["rank"], kept["level"], row["rank"], row["level"]))
+                    continue
+                if row["id"] not in own_ids:
+                    notes.append("%s %d (Rank %d): this flavor's own lists don't have it; left out"
+                                 % (ability["name"], row["id"], row["rank"]))
+                    continue
+                if ladder is None:
+                    ladder = {"name": ability["name"], "ranks": []}
+                    merged.setdefault(class_token, []).append(ladder)
+                top = max(ladder["ranks"], key=lambda r: r["rank"], default=None)
+                added = dict(row, off=bool(top and top["off"]))
+                ladder["ranks"].append(added)
+                ladder["ranks"].sort(key=lambda r: r["rank"])
+                held[row["id"]] = (ladder, added)
+                notes.append("%s %d (Rank %d): added" % (ladder["name"], row["id"], row["rank"]))
+    return merged
+
+
 def build(flavor, source, root):
     trainer_path = os.path.join(root, "Data", flavor, "Trainer-Spells-%s.lua" % flavor)
     trainer = read_trainer(trainer_path)
@@ -119,14 +217,28 @@ def build(flavor, source, root):
             elif info["level"] != row["level"]:
                 notes.append("%s Rank %d: trainer level %d over Rank Sentinel's %d" % (info["name"], row["rank"], info["level"], row["level"]))
                 row["level"] = info["level"]
+        for row in ranks:
+            row["off"] = False
         by_class.setdefault(known[0]["class"], []).append({"name": known[0]["name"], "ranks": ranks})
-    return by_class, notes
+
+    existing, footer = read_existing(table_path(flavor, root))
+    if existing is not None:
+        # The build's own notes are about rows the file already settles; only what the merge did is news.
+        notes = []
+        by_class = merge(by_class, existing, set(trainer) | set(class_lists), notes)
+    return by_class, notes, footer
 
 
-def write(flavor, by_class, source_file, root):
-    path = os.path.join(root, "Data", flavor, "Rank-Watch-Abilities-%s.lua" % flavor)
+def format_row(row):
+    level = "" if row["level"] is None else ", level = %d" % row["level"]
+    off = ", off = true" if row["off"] else ""
+    return "\t\t\t{ id = %d, rank = %d%s%s },\n" % (row["id"], row["rank"], level, off)
+
+
+def write(flavor, by_class, source_file, root, footer=None):
+    path = table_path(flavor, root)
     out = ["local _, ns = ...\n\n", DISCOVERY_GUARD.get(flavor, "")]
-    out.append("-- [classToken] = { { { id, rank, level }, ... }, ... }, -- each ability's ranks, lowest first\n")
+    out.append(TABLE_SHAPE)
     if not by_class:
         out.append("ns.RANK_WATCH_ABILITIES = {}\n")
     else:
@@ -136,14 +248,15 @@ def write(flavor, by_class, source_file, root):
             if not abilities:
                 continue
             out.append("\t%s = {\n" % class_token)
-            for ability in sorted(abilities, key=lambda entry: entry["name"]):
+            # The abilities checked by default first, then the off ladders, each by name.
+            for ability in sorted(abilities, key=lambda entry: (all(r["off"] for r in entry["ranks"]), entry["name"])):
                 out.append("\t\t{\n")
                 for row in ability["ranks"]:
-                    out.append("\t\t\t{ id = %d, rank = %d, level = %d },\n" % (row["id"], row["rank"], row["level"]))
+                    out.append(format_row(row))
                 out.append("\t\t}, -- %s\n" % ability["name"])
             out.append("\t},\n")
         out.append("}\n")
-    out.append(HOW_WE_GOT_THE_DATA[source_file is not None].format(source=source_file, flavor=flavor))
+    out.append(footer or HOW_WE_GOT_THE_DATA[source_file is not None].format(source=source_file, flavor=flavor))
     with open(path, "w", encoding="utf-8", newline="\n") as handle:
         handle.write("".join(out))
     return path
@@ -210,14 +323,15 @@ def main():
     if not os.path.isdir(os.path.join(root, "Data")):
         sys.exit("Run from the Good to Go add-on root.")
     for flavor in FLAVORS:
-        by_class, notes = build(flavor, args.source, root)
-        path = write(flavor, by_class, FLAVORS[flavor], root)
+        by_class, notes, footer = build(flavor, args.source, root)
+        path = write(flavor, by_class, FLAVORS[flavor], root, footer)
         count = sum(len(abilities) for abilities in by_class.values())
         print("%s: %d abilities -> %s" % (flavor, count, path))
         for note in notes:
             print("  " + note)
     for flavor in EMPTY_FLAVORS:
-        print("%s: empty -> %s" % (flavor, write(flavor, {}, None, root)))
+        _, footer = read_existing(table_path(flavor, root))
+        print("%s: empty -> %s" % (flavor, write(flavor, {}, None, root, footer)))
 
 
 if __name__ == "__main__":

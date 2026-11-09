@@ -1158,9 +1158,6 @@ end
 -- Message Length
 --------------------------------------------------------------------------------
 
--- A macro body's ceiling, measured in bytes with #body, as the Style Guide's Message Length rule asks.
-local MACRO_MAX_LENGTH = 255
-
 -- The longest name a character can have, in letters.
 local CHARACTER_NAME_MAX_LETTERS = 12
 
@@ -1171,9 +1168,10 @@ local CHARACTER_NAME_MAX_LETTERS = 12
     The ceiling is in bytes, so the overflow canary is the widest-encoding
     locale, usually ruRU.
 
-    Buff Duty's ask for another class's buff, said to the group or
-    whispered, is built for every raid-wide buff the window counts, and the
-    longest is kept.
+    Buff Duty's ask for another class's buff is built for every raid-wide
+    buff the window counts, and the longest is kept. It is built whispered:
+    the whisper leads with the marker on every flavor, so it is never shorter
+    than the line said to the group.
 
     Buff Duty's Return the Favor buttons cast through a macro naming the
     stranger, one per buff you can give right now, built by ns.BuffDuty's
@@ -1195,7 +1193,7 @@ ns.DIAGNOSTIC_MESSAGES = function()
 			if row.group and not row.exclusive then
 				local linkId = entry.ids[#entry.ids]
 				local link = ns.GetSpellLink(linkId) or C_Spell.GetSpellName(linkId) or ""
-				local ask = ns:BuildBuffRequestMessage(longestNames, #longestNames, link)
+				local ask = ns:BuildBuffRequestMessage(longestNames, #longestNames, link, true)
 				if not longestAsk or #ask > #longestAsk then
 					longestAsk = ask
 				end
@@ -1217,7 +1215,7 @@ ns.DIAGNOSTIC_MESSAGES = function()
 				local icon = BW.SingleIcon(buff, nil, nil, fullName, fullName)
 				rows[#rows + 1] = {
 					label = "Buff Duty favor macro (" .. buff.singleName .. ")",
-					ceiling = MACRO_MAX_LENGTH,
+					ceiling = ns.MACRO_BODY_MAX_LENGTH,
 					text = icon and icon.macrotext or "",
 				}
 			end

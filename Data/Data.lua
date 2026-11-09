@@ -243,11 +243,9 @@ ns.OPTIONS_LINK_WIDTH = ns.OPTIONS_ROW_WIDTH / 3
       ICON_CHECKBOX_WIDGET_TYPE  The stock checkbox with a gap between its icon
                                  and its label, cleared again where there is no
                                  stock checkbox to build on.
-      LINK_WIDGET_TYPE           A spell or item link with its tooltip on hover.
 ]]
 ns.ITEM_LINK_WIDGET_TYPE = ADDON_NAME .. "_ItemLink"
 ns.ICON_CHECKBOX_WIDGET_TYPE = ADDON_NAME .. "_IconCheckBox"
-ns.LINK_WIDGET_TYPE = ADDON_NAME .. "_Link"
 
 --------------------------------------------------------------------------------
 -- Icons

@@ -253,7 +253,7 @@ Good-to-Go/
 ├── README-Testing.md                               Manual test plan
 ├── README.md                                       Player documentation
 └── Tools/                                          Rank Watch data builders; .pkgmeta keeps them out of the zip
-    ├── Build-Rank-Watch-Abilities.py               Writes Rank-Watch-Abilities-{Game}.lua; never writes the off rows
+    ├── Build-Rank-Watch-Abilities.py               Merges Rank Sentinel onto Rank-Watch-Abilities-{Game}.lua; the file's rows win
     └── Build-Rank-Watch-Pet-Abilities.py           Writes Rank-Watch-Pet-Abilities-{Game}.lua; Camelot only with --wago
 ```
 
@@ -333,7 +333,7 @@ Good-to-Go/
 ### Characters and Profiles
 
 - **AceDB can open the database under a placeholder name.** The newest AceDB among enabled add-ons loads and reads the character's name once, possibly before the client has named the character. `UseOwnProfileWhenUnnamed` moves to the profile saved under the real name at login, and `SaveProfileChoiceWhenUnnamed` saves the choice under the real name at logout and drops the placeholder entry.
-- **Copied-WTF characters are pruned** right after `AceDB:New` (`PruneOtherClientCharacters`, with `PruneOtherClientGlobals` for `restocker.listChoices` and Inventory Report records). The rule is a key's shape: `" - "` on realm clients, `"First Last"` on Forever.
+- **Copied-WTF characters are pruned** right after `AceDB:New` (`PruneOtherClientCharacters`, with `PruneOtherClientGlobals` for `restocker.listChoices` and Inventory Report records). The rule is a key's shape: `" - "` on realm clients, `"First Last"` on Forever. On Forever an older AceDB's `First - RuleSet` key (`Gogodruid - PvE`) is kept until the Default-Profile-Migration shim comes out (`IsOlderForeverKey`, MIGRATION 2026-12-08), so `CarryOlderForeverSettings` can still read it.
 - **Two character-key formats, never mixed** (`Features/Utilities.lua`):
 
 | Key | Shape | Readers | Used by |
@@ -526,7 +526,7 @@ The feature is "Restocker"; its window is the Restock List; its starter popup is
 
 ### Sent Messages (`Features/Announcements.lua`)
 
-- Every automated line is `{rt1} body // GtG`, built by `SignOff`. `ns:BuildWhisperMessage` (Rank Watch) and `ns:BuildAnnounceMessage` (Buff Duty asks) wrap it.
+- Every automated line is `{rt1} body // GtG`, built by `SignOff`. `ns:BuildWhisperMessage` (Rank Watch, whispered Buff Duty asks) and `ns:BuildAnnounceMessage` (Buff Duty's group ask) wrap it.
 - `MarkerPrefix` drops `ns.TARGET_MARKER` from non-whispers on Forever, which blocks raid-marker tokens in group chat.
 - `TrimSentBody` trims closing punctuation as whole UTF-8 sequences (`CLOSING_MARKS`) and drops leading `¡ ¿` (`OPENING_MARKS`). Bodies carry links, so pipes stay.
 - Whispers queue `WHISPER_GAP` apart (`QueueWhisper`); an empty queue sends at once. Group channel: `ns:GetGroupChatChannel`.
@@ -864,7 +864,7 @@ Every piece is tagged `MIGRATION (remove after YYYY-MM-DD)` where it sits. In ru
 
 **Saved data and characters**
 
-- **The prune runs before the Connoisseur & Restocker repairs**: on Forever, `PruneOtherClientCharacters` drops every `First - Rule` key right after `AceDB:New`. So `CarryOlderForeverSettings` (`Default-Profile-Migration.lua`) never finds the older profile key it looks up, despite its comment saying the older name stays.
+- **The prune runs before the Connoisseur & Restocker repairs**: a key shape the prune reads as another client's is gone before any migration sees it. Forever's older `First - RuleSet` keys survive only through `IsOlderForeverKey` (`Features/Core.lua`); a new migration reading another such key needs the same exemption.
 - **Indexing a default subtable at logout**: AceDB has already stripped empty defaults. Write whole values, as `ns.SaveRestockWindowGeometry` does.
 - **Changing a shipped default**: AceDB stripped every value equal to the old default, so every player still on it moves to the new one.
 - **Reusing a retired key's name**: whatever players saved under the old meaning reads straight back.
@@ -878,9 +878,9 @@ Every piece is tagged `MIGRATION (remove after YYYY-MM-DD)` where it sits. In ru
 **Messages and data**
 
 - **A `|4` plural escape in a sent line**: `SendChatMessage` drops the whole line, and nothing on the send path resolves it. Run client duration strings through `ns.FormatDuration`.
-- **Whispering a Buff Duty ask on Forever**: `WhisperOtherClassBuff` whispers a line built by `ns:BuildAnnounceMessage`, so it carries no Star.
+- **Whispering a line built for group chat**: on Forever it loses the Star. A whispered Buff Duty ask passes `isWhisper` to `ns:BuildBuffRequestMessage`.
 - **Rank Watch on Mists**: absent by TOC, not by empty data. A new outside caller must test that the function exists.
-- **Rerunning `Tools/Build-Rank-Watch-Abilities.py`**: it writes neither `off` nor level-less rows, so it wipes the hand-set `off = true` rows the shipped tables carry. The pet tool leaves Camelot untouched without `--wago`.
+- **Rerunning `Tools/Build-Rank-Watch-Abilities.py`**: it merges onto the shipped tables, keeping every row and ability they hold (off ladders, level-less rows, Forever's corrections) and their How We Got the Data block; it adds a Rank Sentinel rank only when the flavor's own Trainer-Spells or Class-Spell-Lists knows the spell, and prints what it kept, added and left out. On unchanged sources it rewrites every file byte for byte. A row its reader can't parse stops it rather than being dropped. The pet tool leaves Camelot untouched without `--wago`.
 - **Editing one flavor folder's copy of a row**: the seven copies are separate. Check the ID in every folder.
 - **An all-clear line in the Readiness Report**: silence is the feature.
 - **Legacy popup Escape**: means "ask again next login", not decline (`noCancelOnEscape`).

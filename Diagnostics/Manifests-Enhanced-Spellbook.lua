@@ -335,7 +335,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 	Method("Settings", "OpenToCategory"),
 	--[[
 		The key binding: its toggle (GoodToGo_ToggleSpellbook) opens the add-on's own page, and the
-		Spellbook panel shows the bound key. Then the three routes ns:OpenKeyBindings tries for the
+		General panel's Key Bindings row shows the bound key. Then the three routes ns:OpenKeyBindings tries for the
 		Set Key button, in its order; one route passing whole is enough, and the report says which one this
 		client has.
 	]]

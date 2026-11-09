@@ -7,13 +7,16 @@ local _, ns = ...
 -- MIGRATION (remove after 2026-12-08)
 --[[
     One-time upgrade shim. Delete on the first code pass after that date, all
-    four pieces together:
+    five pieces together:
       1. this file
       2. its tagged line in all four flavor TOCs (Good-to-Go_Vanilla.toc,
          _TBC.toc, _Camelot.toc and _Mists.toc)
       3. the ns.MoveCharactersOntoOwnProfiles() call in Features/Core.lua
       4. the tagged noDefaultProfiles argument in Options/Options-Profiles.lua,
          and the sentence about it in that file's comment
+      5. the tagged FOREVER_RULE_SETS / IsOlderForeverKey exemption in
+         Features/Core.lua, which keeps the older Forever names below from
+         being pruned as another client's
 ]]
 
 --[[
@@ -185,7 +188,9 @@ end
     The older name and its profile both stay: characters sharing a first name
     on one rule set shared the name, and each takes its copy at its own login.
     No logged-out character is carried, because its whole name reaches
-    profileKeys only at its own login.
+    profileKeys only at its own login. The login's prune of other clients'
+    characters (Features/Core.lua) runs first and would read the name's
+    " - " as a realm client's, so it passes these names over by rule set.
 ]]
 local function CarryOlderForeverSettings(profiles, profileKeys, ownProfileKey)
 	local firstName = UnitName("player")
