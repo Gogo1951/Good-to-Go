@@ -113,7 +113,10 @@ local function OnUnitSpellcastSucceeded(unit, castGUID, spellID)
 		if not recipient then
 			return
 		end
-		if not ns.IsPlainTrue(UnitIsUnit(recipient, "player")) and not ns.IsPlainTrue(UnitCanAttack("player", recipient)) then
+		if
+			not ns.IsPlainTrue(UnitIsUnit(recipient, "player"))
+			and not ns.IsPlainTrue(UnitCanAttack("player", recipient))
+		then
 			recipientLevel = ns.RankWatchUnitLevel(recipient)
 			if not recipientLevel then
 				return
