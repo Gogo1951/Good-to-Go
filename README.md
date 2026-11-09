@@ -53,6 +53,8 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 
 ### Rank Watch
 
+<img width="800" alt="README-Infographic-Rank-Watch" src="https://github.com/user-attachments/assets/a2822b48-d3d4-4d6f-aaf5-a3ae03962043" />
+
 * **Catch Outdated Action Bars** // Find out when you or a group member casts a spell at a lower rank than you could, with a friendly whisper pointing them to the trainer.
 * **No False Alarms** // A buff the game lowers for a low-level player is never reported, and you pick which ranks are worth a mention.
 * **One Voice Per Group** // When several players run Rank Watch or RankSentinel, only one of them whispers.
