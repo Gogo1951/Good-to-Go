@@ -87,6 +87,7 @@ ns.SCROLL_DATA = {
 			[105681] = 2250, -- Mantid Elixir
 			[79480] = 675, -- Elixir of Deep Earth
 			[53763] = 220, -- Elixir of Protection
+			[15233] = 204, -- Crystal Ward
 			[60343] = 180, -- Elixir of Mighty Defense
 			[28502] = 140, -- Elixir of Major Defense
 			[11348] = 120, -- Elixir of Superior Defense
@@ -154,6 +155,7 @@ ns.SCROLL_DATA = {
 			[53764] = 60, -- Elixir of Mighty Mageblood
 			[53747] = 50, -- Elixir of Spirit
 			[28509] = 40, -- Elixir of Major Mageblood
+			[15231] = 30, -- Crystal Force
 			[39627] = 30, -- Elixir of Draenic Wisdom
 			[24363] = 30, -- Mageblood Elixir
 			[10693] = 25, -- Gizzard Gum
@@ -206,7 +208,7 @@ ns.SCROLL_DATA = {
 How We Got the Data
 
 Last Validated
-	2026-11-04, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-08, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- The stat scrolls, read by Features/Macros-for-Consumables/Scanner/Scanner-Auras.lua and Scanner-Scrolls.lua (FindBestScroll) to pick a scroll whose buff the player lacks. Each type lists its scrolls as { itemID, buffID, requiredLevel, amount }: the buff is the aura the scroll leaves, requiredLevel the level the item requires, amount the stat it grants. This client keeps the scrolls through rank IX (Inscription).

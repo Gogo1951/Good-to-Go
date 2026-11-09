@@ -49,7 +49,7 @@ ns.SCROLL_DATA = {
 			[17535] = 18, -- Elixir of the Sages
 			[1250989] = 10, -- Elixir of Intellect
 			[1250988] = 6, -- Elixir of Lesser Intellect
-			[3166] = 6, -- Elixir of Wisdom
+			[3166] = 3, -- Elixir of Wisdom
 		},
 	},
 	Protection = {
@@ -88,10 +88,10 @@ ns.SCROLL_DATA = {
 			[1245] = 26, -- Power Word: Fortitude (Rank 3)
 			[1244] = 10, -- Power Word: Fortitude (Rank 2)
 			[1243] = 4, -- Power Word: Fortitude (Rank 1)
-			[1293740] = 60, -- Flask of Natural Accuracy
-			[1293741] = 60, -- Flask of Natural Aggression
-			[1293742] = 60, -- Flask of Natural Precision
-			[1293743] = 60, -- Flask of Natural Swiftness
+			[1293740] = 30, -- Flask of Natural Accuracy
+			[1293741] = 30, -- Flask of Natural Aggression
+			[1293742] = 30, -- Flask of Natural Precision
+			[1293743] = 30, -- Flask of Natural Swiftness
 			[24382] = 50, -- Spirit of Zanza
 			[10668] = 25, -- Lung Juice Cocktail
 			[17537] = 18, -- Elixir of Brute Force
@@ -152,7 +152,7 @@ ns.SCROLL_DATA = {
 How We Got the Data
 
 Last Validated
-	2026-10-16, WoW Forever 1.60.1.70450
+	2026-11-08, WoW Forever 1.60.1.70862
 
 Notes
 	- The stat scrolls, read by Features/Macros-for-Consumables/Scanner/Scanner-Auras.lua (FindBestScroll) to pick a scroll whose buff the player lacks. Each type lists its scrolls as { itemID, buffID, requiredLevel, amount }: the buff is the aura the scroll leaves, requiredLevel the level the tooltip requires, amount the stat it grants.
@@ -176,7 +176,13 @@ wago.tools
 	https://wago.tools/db2/SpellEffect?build=1.60.1.70450
 	https://wago.tools/db2/SpellMisc?build=1.60.1.70450
 	https://wago.tools/db2/SpellDuration?build=1.60.1.70450
+	https://wago.tools/db2/Item?build=1.60.1.70862
+	https://wago.tools/db2/ItemSparse?build=1.60.1.70862
+	https://wago.tools/db2/ItemEffect?build=1.60.1.70862
+	https://wago.tools/db2/ItemXItemEffect?build=1.60.1.70862
+	https://wago.tools/db2/SpellName?build=1.60.1.70862
+	https://wago.tools/db2/SpellEffect?build=1.60.1.70862
 
 QuestieDB
-	None.
+	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Forever/foreverItemDB.lua
 ]]

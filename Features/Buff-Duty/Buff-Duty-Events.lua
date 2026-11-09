@@ -1,11 +1,10 @@
 local _, ns = ...
+local Data = ns.Data
 
 --[[
-    Buff-Duty-Events -- Buff Duty's own module in Core's dispatcher, apart
-    from Automated Appreciation's, so turning either feature off, or editing
-    one, never takes the other's events. Each Buff Duty file attaches its
-    handler with ns.SetBuffDutyEventHandler; attaching the same event twice
-    replaces the earlier handler -- one owner per event.
+    Buff-Duty-Events -- Buff Duty's own module in Core's dispatcher. Each Buff
+    Duty file attaches its handler with ns.SetBuffDutyEventHandler; attaching
+    the same event twice replaces the earlier handler -- one owner per event.
 ]]
 
 local MODULE = "BuffDuty"
@@ -24,9 +23,10 @@ end)
 
 --[[
     On while Buff Duty is on for your class. UNIT_AURA is unfiltered, since the
-    window reads the whole group; UNIT_SPELLCAST_SUCCEEDED carries the Buff
-    Key's casts and the resurrects; the combat log, never on Forever, says
-    when anyone's resurrect lands.
+    window reads the whole group; UNIT_SPELLCAST_SUCCEEDED, the player's only,
+    carries the Buff Key's casts and the resurrects; the combat log, never on Forever, says
+    when anyone's resurrect lands and which strangers buff you (Return the
+    Favor), which Forever reads off your own UNIT_AURA instead.
 ]]
 local WINDOW_EVENTS = {
 	"GROUP_ROSTER_UPDATE",
@@ -49,22 +49,45 @@ end
 
 local EVENT_UNITS = {
 	UNIT_INVENTORY_CHANGED = { "player" },
+	UNIT_SPELLCAST_SUCCEEDED = { "player" },
 }
 
 --[[
-    On regardless: login setup, a loading screen's In Instance refresh, item
-    names arriving for the Weapon Buffs panel, and combat starting and ending,
-    since a change made to the window in combat, switching it off included,
-    waits for combat to end.
+    On regardless: login setup, a loading screen's In Instance refresh, and
+    combat starting and ending, since a change made to the window in combat,
+    switching it off included, waits for combat to end.
 ]]
 for _, event in ipairs({
 	"PLAYER_LOGIN",
 	"PLAYER_ENTERING_WORLD",
-	"GET_ITEM_INFO_RECEIVED",
 	"PLAYER_REGEN_DISABLED",
 	"PLAYER_REGEN_ENABLED",
 }) do
 	ns.SetModuleEvent(MODULE, event, true)
+end
+
+--[[
+    Login and every loading screen replay the auras already on you as if they
+    had just landed, so Return the Favor and the resurrect waits ignore the
+    combat log for a moment after each. A token voids earlier timers, so only
+    the latest loading screen's pause can end it.
+]]
+local isReady = false
+local safetyToken = 0
+
+local function StartSafetyPause()
+	isReady = false
+	safetyToken = safetyToken + 1
+	local token = safetyToken
+	C_Timer.After(Data.SAFETY_PAUSE, function()
+		if token == safetyToken then
+			isReady = true
+		end
+	end)
+end
+
+function ns.IsBuffDutyReady()
+	return isReady
 end
 
 -- Subscribes the window's events while Buff Duty is on for your class and releases them while it is off.
@@ -79,38 +102,49 @@ function ns.UpdateBuffDutyEvents()
 	ns.SetBuffDutyWatching(on)
 end
 
--- The Buff Key hears its own casts go off, and the resurrect waits hear theirs.
-ns.SetBuffDutyEventHandler("UNIT_SPELLCAST_SUCCEEDED", function(unitTarget, _, spellID)
+-- The player's own casts: the Buff Key hears its casts go off, and the resurrect waits hear theirs.
+local function OnUnitSpellcastSucceeded(unitTarget, _, spellID)
 	ns.OnBuffKeyCastSucceeded(unitTarget, spellID)
 	ns.OnResurrectCastSucceeded(unitTarget, spellID)
-end)
+end
+ns.SetBuffDutyEventHandler("UNIT_SPELLCAST_SUCCEEDED", OnUnitSpellcastSucceeded)
 
-ns.SetBuffDutyEventHandler("UNIT_AURA", function(unit)
-	ns.OnBuffDutyAura(unit)
-end)
+local function OnUnitAura(unit, updateInfo)
+	ns.OnBuffDutyUnitAura(unit)
+	if ns.FLAVOR == "Camelot" and isReady and unit == "player" then
+		ns.NoteFavorFromAuras(updateInfo)
+	end
+end
+ns.SetBuffDutyEventHandler("UNIT_AURA", OnUnitAura)
 
--- A dead player's resurrect icon hides while anyone's offer waits on them.
-ns.SetBuffDutyEventHandler("COMBAT_LOG_EVENT_UNFILTERED", function()
-	if not ns.IsBuffTrackingReady() then
+--[[
+    A dead player's resurrect icon hides while anyone's offer waits on them,
+    and a stranger's buff on you lists them under Return the Favor.
+]]
+local function OnCombatLogEventUnfiltered()
+	if not isReady then
 		return
 	end
-	local _, subEvent, _, _, _, _, _, destGUID = CombatLogGetCurrentEventInfo()
+	local _, subEvent, _, sourceGUID, sourceName, sourceFlags, _, destGUID, _, _, _, _, _, _, auraType =
+		CombatLogGetCurrentEventInfo()
 	if subEvent == "SPELL_RESURRECT" then
 		ns.BuffDuty.NoteResurrect(destGUID)
+	elseif subEvent == "SPELL_AURA_APPLIED" or subEvent == "SPELL_AURA_REFRESH" then
+		ns.NoteFavorFromCombatLog(sourceGUID, sourceName, sourceFlags, destGUID, auraType)
 	end
-end)
+end
+ns.SetBuffDutyEventHandler("COMBAT_LOG_EVENT_UNFILTERED", OnCombatLogEventUnfiltered)
 
-ns.SetBuffDutyEventHandler("GET_ITEM_INFO_RECEIVED", function(itemId)
-	ns.OnBuffDutyItemInfo(itemId)
-end)
-
-ns.SetBuffDutyEventHandler("PLAYER_LOGIN", function()
+local function OnPlayerLogin()
 	ns.SetupBuffDuty()
-end)
+end
+ns.SetBuffDutyEventHandler("PLAYER_LOGIN", OnPlayerLogin)
 
 -- In Instance: every way into or out of one is a loading screen.
-ns.SetBuffDutyEventHandler("PLAYER_ENTERING_WORLD", function()
+local function OnPlayerEnteringWorld()
+	StartSafetyPause()
 	if ns.db then
 		ns.RequestBuffDutyRefresh()
 	end
-end)
+end
+ns.SetBuffDutyEventHandler("PLAYER_ENTERING_WORLD", OnPlayerEnteringWorld)

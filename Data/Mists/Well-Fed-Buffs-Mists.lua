@@ -22,6 +22,7 @@ ns.WELL_FED_BUFF_IDS = {
 	[45245] = true, -- Well Fed (Hot Apple Cider)
 	[65365] = true, -- "Well Fed" (Barleybrew Gold, Chuganpug's Delight, Crimson Stripe)
 	[69559] = true, -- "Well Fed" (Promise of the Pandaren, Thunder's Plunder)
+	[105225] = true, -- Delusional (Mad Brewer's Breakfast)
 	[111840] = true, -- Healthy (Half a Lovely Apple)
 	[131828] = true, -- Well Fed (Mah's Warm Yak-Tail Stew)
 	[145635] = true, -- Increased Stamina (Dried Fruit Rations, Dried Mushroom Rations, Mightfish Steak)
@@ -38,12 +39,12 @@ ns.WELL_FED_ICON_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-11-04, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-08, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- ns.WELL_FED_BUFF_IDS lists food buffs Features/Macros-for-Consumables/Scanner/Scanner-Auras.lua must count as Well Fed although they show another icon, so the buff-food check doesn't nag a player who already has one.
 	- ns.WELL_FED_ICON_IDS lists the icons Well Fed buffs show, matched on the aura's icon when its spell ID is in no table. 136000 is the icon of 124 of the buffs the buff foods in Data/Mists/Food-and-Water-Mists.lua grant; 133943 is Juicy Bear Burger's (46687).
-	- Built from every buff food in Data/Mists/Food-and-Water-Mists.lua, plus Blessed Sunfruit Juice and Bottled Alterac Spring Water, which that table leaves out: the buffs its spell applies after the delay (a periodic trigger aura) or at once (a triggered spell), and a stat aura on the food spell itself, read with their SpellMisc icons. Every buff on an icon other than the two above is listed by ID. A few foods apply their buff by script with no spell in the tables (Fortune Cookie, the Love is in the Air chocolates, Noblegarden Chocolate); their buffs are left to the icon match.
+	- Built from every buff food in Data/Mists/Food-and-Water-Mists.lua, plus Blessed Sunfruit Juice and Bottled Alterac Spring Water, which that table leaves out: the buffs its spell applies after the delay (a periodic trigger aura) or at once (a triggered spell), and a stat aura on the food spell itself, read with their SpellMisc icons. Every buff on an icon other than the two above is listed by ID. A few foods apply their buff by script with no spell in the tables (Fortune Cookie, the Love is in the Air chocolates, Noblegarden Chocolate, and Grummlecake, whose 127784 picks a random buff); their buffs are left to the icon match.
 	- The Brewfest drinks apply a separate buff named "Well Fed" (with quotes) on icon 133696, which "Completely Hammered" also uses, so they are listed by ID rather than matched by icon. This client adds two (65365, 69559) to the older clients' nine.
 	- Left out from the older clients' list: Mana Regeneration (18194) and Health Regeneration (18222), which no buff food on this client grants any more, and Fizzy Energy Drink (29040), whose item has no source on this client.
 

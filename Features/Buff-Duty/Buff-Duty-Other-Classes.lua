@@ -19,8 +19,8 @@ local L = ns.L
     raid with no priest who can cast it would otherwise count everyone, for
     good.
 
-    A Left-Click on an icon asks the party or raid for the buff, and a
-    Right-Click whispers the same ask to every other player of that class in
+    An icon's menu (Buff-Duty-Party-Buffs.lua) asks the party or raid for the
+    buff, or whispers the same ask to every other player of that class in
     the group (Features/Announcements.lua builds and sends both); one of your
     own class's, with nobody else of it in the group, has no one to whisper.
     The whole row is the panel's Ask Other Classes for Buffs switch. The
@@ -30,8 +30,8 @@ local L = ns.L
 local BuffDuty = ns.BuffDuty
 
 --[[
-    How long a buff's ask waits before it can go out again the same way, so a
-    double click doesn't send everything twice.
+    How long a buff's ask waits before it can go out again the same way, so
+    the group isn't asked twice in a row.
 ]]
 local ASK_COOLDOWN = 10
 local lastAsked = { group = {}, whisper = {} } -- way -> buff key -> GetTime() of its last ask
@@ -89,7 +89,7 @@ end
     The icons to draw, in data order (druids, mages, priests), each one
     { key, spellId, spellName, link, class, count, groups, missing, recipients,
     recipientNames }: `groups` the names missing it, party by party, each
-    { label, names, classes }, for the tooltip; `missing` the same names in
+    { label, names, classes }, for the menu; `missing` the same names in
     one list, for the ask; and `recipients` the other
     players of its class to whisper, which may be none for your own class.
     Empty outside a group, and asked after BuildSections, which sets the
@@ -179,18 +179,22 @@ end
 -- Asking
 --------------------------------------------------------------------------------
 
--- False while the same ask went out the same way under ASK_COOLDOWN ago.
-local function ReadyToAsk(way, key)
-	local now = GetTime()
+-- False while the same ask went out the same way under ASK_COOLDOWN ago. The Party-Buffs menu greys its rows by it.
+function ns.CanAskForBuff(way, key)
 	local last = lastAsked[way][key]
-	if last and now - last < ASK_COOLDOWN then
+	return not (last and GetTime() - last < ASK_COOLDOWN)
+end
+
+-- As ns.CanAskForBuff, and when it can, starts the cooldown.
+local function ReadyToAsk(way, key)
+	if not ns.CanAskForBuff(way, key) then
 		return false
 	end
-	lastAsked[way][key] = now
+	lastAsked[way][key] = GetTime()
 	return true
 end
 
--- The icon's Left-Click: the ask, said to the party or raid.
+-- The menu's Ask row: the ask, said to the party or raid.
 function ns.AskGroupForBuff(spec)
 	if ReadyToAsk("group", spec.key) then
 		ns:SayBuffRequest(ns:BuildBuffRequestMessage(spec.missing, spec.count, spec.link))
@@ -198,7 +202,7 @@ function ns.AskGroupForBuff(spec)
 end
 
 --[[
-    The icon's Right-Click: the same ask whispered to every other player of
+    The menu's Whisper row: the same ask whispered to every other player of
     the class, then a line in your own chat saying who heard.
 ]]
 function ns.WhisperOtherClassBuff(spec)
@@ -209,7 +213,10 @@ function ns.WhisperOtherClassBuff(spec)
 	for _, target in ipairs(spec.recipients) do
 		ns:WhisperBuffRequest(target, message)
 	end
-	ns:PrintMessage(
-		L["BUFF_DUTY_OTHERS_SENT"]:format(table.concat(spec.recipientNames, L["LIST_SEPARATOR"]), spec.link)
-	)
+	-- Every recipient is of the buff's class, so each name takes its color.
+	local names = {}
+	for index, name in ipairs(spec.recipientNames) do
+		names[index] = ns.ClassColoredName(name, spec.class)
+	end
+	ns:PrintMessage(L["BUFF_DUTY_OTHERS_SENT"]:format(table.concat(names, L["LIST_SEPARATOR"]), spec.link))
 end

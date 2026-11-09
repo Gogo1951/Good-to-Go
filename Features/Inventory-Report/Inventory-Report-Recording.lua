@@ -80,12 +80,9 @@ end
 -- Containers
 --------------------------------------------------------------------------------
 
+-- The bags the player carries, Forever's reagent bag included (ns.CARRIED_BAG_IDS in Utilities).
 local function PlayerBagIDs()
-	local bagIDs = {}
-	for bagID = 0, NUM_BAG_SLOTS do
-		bagIDs[#bagIDs + 1] = bagID
-	end
-	return bagIDs
+	return ns.CARRIED_BAG_IDS
 end
 
 -- The bank's containers, the same list the Restocker reads (ns.BankBagIDs in Restocker-Bags.lua).
@@ -156,10 +153,12 @@ end
     keeps, is dropped here; a record saved before the GUID was stored goes only
     once its character logs in under the old key again. The name is the whole
     one, a Forever character's surname included (ns.GetPlayerFullName in
-    Utilities).
+    Utilities). A record under this key with another GUID belonged to a
+    deleted character of the same name, so its bags and bank are dropped, and
+    a bank this character hasn't seen yet counts as 0.
 
     The class is read by the Restock List as well, which colors the characters
-    on a list by it (Features/Inventory-Restocker/Restocker-Saved-Lists.lua).
+    on a list by it (Features/Restocker/Restocker-Saved-Lists.lua).
 ]]
 function ns.InitializeInventoryReport()
 	local inventory = ns.db.global.inventory
@@ -174,6 +173,10 @@ function ns.InitializeInventoryReport()
 
 	local guid = UnitGUID("player")
 	if guid and not ns.IsSecretValue(guid) then
+		if record.guid and record.guid ~= guid then
+			record.bags = nil
+			record.bank = nil
+		end
 		record.guid = guid
 		for otherKey, entry in pairs(inventory) do
 			if otherKey ~= key and entry.guid == guid then
@@ -222,7 +225,7 @@ function ns.ForgetRecordedCharacter(key)
 end
 
 --[[
-    Handlers keyed by event name, read by the Restocker's dispatcher (Features/Inventory-Restocker/Restocker-Events.lua),
+    Handlers keyed by event name, read by the Restocker's dispatcher (Features/Restocker/Restocker-Events.lua),
     which has no combat guard: every one only reads containers or writes saved
     variables, and a logout mid-combat must still save this character's bags.
 ]]

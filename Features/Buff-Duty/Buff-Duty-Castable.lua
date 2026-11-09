@@ -42,13 +42,15 @@ local weaponEntries, weaponLookup, weaponBuffs = {}, {}, {}
 --[[
     One per ns.BUFF_DUTY_WEAPON_ITEMS row, the oils, stones and lures any
     class can use, shaped like a poison's entry: { key, row, ids, items,
-    enchants, types, kind, itemLevel }. Picked per hand, not per class.
+    enchants, types, kind, itemLevel, zones, layer }. Picked per hand, not
+    per class.
 ]]
 local weaponItemEntries = {}
 --[[
     Enchant id (what GetWeaponEnchantInfo reports) -> an entry that puts it
-    on, for Diagnostics. Two items can share one (a Season of Discovery copy
-    of Blessed Wizard Oil), so the window asks each pick's own enchants set.
+    on: its layer files an enchant on the weapon, and Diagnostics names it.
+    Two items can share one (a Season of Discovery copy of Blessed Wizard
+    Oil), so the window asks each pick's own enchants set which pick it is.
 ]]
 local weaponByEnchant = {}
 
@@ -237,6 +239,7 @@ function BuffDuty.BuildBuffs()
 				enchants = entry.enchants,
 				types = entry.types,
 				zones = entry.zones,
+				layer = entry.layer,
 				refreshSeconds = when * 60,
 				durationSeconds = entry.row.duration and entry.row.duration * 60,
 				classPick = classPick,

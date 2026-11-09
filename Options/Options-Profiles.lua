@@ -18,6 +18,6 @@ local _, ns = ...
 function ns.BuildProfilesOptions()
 	return LibStub("AceDBOptions-3.0"):GetOptionsTable(
 		ns.db,
-		true -- MIGRATION (remove after 2026-11-25)
+		true -- MIGRATION (remove after 2026-12-08)
 	)
 end

@@ -4,7 +4,7 @@ local _, ns = ...
 -- Moving Every Character Off Default
 --------------------------------------------------------------------------------
 
--- MIGRATION (remove after 2026-11-25)
+-- MIGRATION (remove after 2026-12-08)
 --[[
     One-time upgrade shim. Delete on the first code pass after that date, all
     four pieces together:

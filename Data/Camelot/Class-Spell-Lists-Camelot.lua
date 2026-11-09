@@ -48,7 +48,7 @@ ns.CLASS_SPELL_LISTS = {
 			{ 99, 1735, 9490, 9747, 9898 }, -- Demoralizing Roar
 		},
 		offensives = {
-			{ 5217, 6793, 9845, 9846 }, -- Tiger's Fury
+			5217, -- Tiger's Fury
 		},
 		defensives = {
 			22812, -- Barkskin
@@ -328,7 +328,6 @@ ns.CLASS_SPELL_LISTS = {
 		noCooldown = {
 			1953, -- Blink
 			130, -- Slow Fall
-			2855, -- Detect Magic
 			2139, -- Counterspell
 		},
 		teleports = {
@@ -338,18 +337,12 @@ ns.CLASS_SPELL_LISTS = {
 			11416, -- Portal: Ironforge
 			3565, -- Teleport: Darnassus
 			11419, -- Portal: Darnassus
-			32271, -- Teleport: Exodar
-			32266, -- Portal: Exodar
-			{ 33690, 35715 }, -- Teleport: Shattrath
-			{ 33691, 35717 }, -- Portal: Shattrath
 			3567, -- Teleport: Orgrimmar
 			11417, -- Portal: Orgrimmar
 			3563, -- Teleport: Undercity
 			11418, -- Portal: Undercity
 			3566, -- Teleport: Thunder Bluff
 			11420, -- Portal: Thunder Bluff
-			32272, -- Teleport: Silvermoon
-			32267, -- Portal: Silvermoon
 		},
 		selfBuffs = {
 			{ 7300, 7301 }, -- Frost Armor
@@ -414,13 +407,11 @@ ns.CLASS_SPELL_LISTS = {
 			{ 633, 2800, 10310 }, -- Lay on Hands
 			1044, -- Blessing of Freedom
 			20217, -- Blessing of Kings
-			{ 19977, 19978, 19979 }, -- Blessing of Light
 			{ 19740, 19834, 19835, 19836, 19837, 19838, 25291 }, -- Blessing of Might
 			{ 1022, 5599, 10278 }, -- Blessing of Protection
 			{ 6940, 20729 }, -- Blessing of Sacrifice
 			{ 19742, 19850, 19852, 19853, 19854, 25290 }, -- Blessing of Wisdom
 			25898, -- Greater Blessing of Kings
-			25890, -- Greater Blessing of Light
 			{ 25782, 25916 }, -- Greater Blessing of Might
 			{ 25894, 25918 }, -- Greater Blessing of Wisdom
 			1152, -- Purify
@@ -428,8 +419,6 @@ ns.CLASS_SPELL_LISTS = {
 			{ 10322, 7328, 10324, 20772, 20773 }, -- Redemption
 			19752, -- Divine Intervention
 			{ 1310911, 1311590, 1311595 }, -- Light's Vigil
-			1038, -- Salvation
-			25895, -- Mass Salvation
 		},
 		resurrect = {
 			{ 10322, 7328, 10324, 20772, 20773 }, -- Redemption
@@ -438,8 +427,6 @@ ns.CLASS_SPELL_LISTS = {
 			4987, -- Cleanse
 			1152, -- Purify
 			19752, -- Divine Intervention
-			1038, -- Salvation
-			25895, -- Mass Salvation
 		},
 		crowdControl = {
 			{ 853, 5588, 5589, 10308 }, -- Hammer of Justice
@@ -472,13 +459,10 @@ ns.CLASS_SPELL_LISTS = {
 		},
 		blessings = {
 			20217, -- Blessing of Kings
-			{ 19977, 19978, 19979 }, -- Blessing of Light
 			{ 19740, 19834, 19835, 19836, 19837, 19838, 25291 }, -- Blessing of Might
 			{ 19742, 19850, 19852, 19853, 19854, 25290 }, -- Blessing of Wisdom
 			25898, -- Greater Blessing of Kings
-			25890, -- Greater Blessing of Light
 			{ 25782, 25916 }, -- Greater Blessing of Might
-			25895, -- Greater Blessing of Salvation
 			{ 25894, 25918 }, -- Greater Blessing of Wisdom
 			{ 1022, 5599, 10278 }, -- Blessing of Protection
 			{ 6940, 20729 }, -- Blessing of Sacrifice
@@ -488,13 +472,9 @@ ns.CLASS_SPELL_LISTS = {
 			20217, -- Blessing of Kings
 			{ 19742, 19850, 19852, 19853, 19854, 25290 }, -- Blessing of Wisdom
 			{ 19740, 19834, 19835, 19836, 19837, 19838, 25291 }, -- Blessing of Might
-			1038, -- Salvation
-			{ 19977, 19978, 19979 }, -- Blessing of Light
 			25782, -- Greater Blessing of Might
 			25894, -- Greater Blessing of Wisdom
 			25898, -- Greater Blessing of Kings
-			25895, -- Greater Blessing of Salvation
-			25890, -- Greater Blessing of Light
 		},
 		cursor = {},
 		channeled = {},
@@ -687,7 +667,6 @@ ns.CLASS_SPELL_LISTS = {
 			14251, -- Riposte
 			13877, -- Blade Flurry
 			13750, -- Adrenaline Rush
-			14166, -- Unknown
 			1310707, -- Mutilate
 			1310703, -- Venom
 		},
@@ -1080,3 +1059,32 @@ ns.CLASS_SPELL_LISTS = {
 		},
 	},
 }
+
+--[[
+How We Got the Data
+
+Last Validated
+	2026-11-08, WoW Forever 1.60.1.70862
+
+Notes
+	- Each class's lists for the spellbook page: the spells whose macros get the mouseover, cursor, channeled and stealth options; the stance bar order and the stances each spell needs; the ability each demon or pet summon's macro can cast; the spells listed until learned that no trainer row covers (extraSpells: quest-learned spells and talents without trainer ranks). Features/Enhanced-Spellbook/Macro-Builder/Macro-Builder.lua reads them.
+	- An entry is a spell ID, or a list of every rank's ID where some locales name the ranks differently. Spells are matched by the name this client gives them, so one ID per spell is enough otherwise.
+	- Hand-picked: the game tables can't say which option a spell belongs to, so there's no family test. Every ID was checked against this client's spell table.
+	- resurrect: the mouseoverFriend spells that bring back a dead player, so their macros look for a dead unit ([help,dead]) instead of a living one. Features/Enhanced-Spellbook/Macro-Options.lua gives them the Resurrection kind.
+	- utility: the mouseoverFriend spells that aren't heals (cures, dispels, Innervate, Power Infusion), so Sort By Category files them under Offensive Cooldowns where their cooldown is a minute or longer, else Utility, instead of Heals.
+	- crowdControl, offensives, defensives, selfBuffs, pageBuffs, heals, noCooldown, attacks, traps, totems, seals, blessings, curses, shocks, finishers, pets, teleports and threat are the page's own headings for spells their kind would file wrong under Sort By Category. They only sort the page; no macro reads them. A spell on two takes the first in PAGE_TAGS (Features/Enhanced-Spellbook/Macro-Builder/Macro-Builder.lua). ns.SHARED_PAGE_SPELLS (Shared-Page-Spells-Camelot.lua) holds the professions, tracking and racials every class shares.
+	- Data/Vanilla/ copied its lists from this folder.
+	- Left out because this client's Validate Data report says it doesn't have them: Detect Magic; the Exodar, Silvermoon and Shattrath Teleports and Portals; Blessing of Light, Greater Blessing of Light, Blessing of Salvation and Greater Blessing of Salvation; Tiger's Fury ranks 2 to 4 (6793, 9845, 9846); and Improved Slice and Dice (14166) from the rogue's extraSpells.
+
+SQL (CMaNGOS)
+	TODO: Add SQL Query
+
+Wowhead
+	None.
+
+wago.tools
+	https://wago.tools/db2/SpellName?build=1.60.1.70862
+
+QuestieDB
+	None.
+]]

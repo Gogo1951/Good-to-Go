@@ -1,10 +1,10 @@
 local _, ns = ...
 
 --[[
-    Item-Cache -- derives and caches per-item consumable data in
-    ns.db.profile.itemCache (the stateful item-metadata layer), and retries a
-    scan that met a cold item. The session's item info and its
-    GET_ITEM_INFO_RECEIVED waiters are shared, in Features/Item-Info.lua.
+    Item-Cache -- derives per-item consumable data from the consumable tables
+    once per session, and retries a scan that met a cold item. The session's
+    item info and its GET_ITEM_INFO_RECEIVED waiters are shared, in
+    Features/Item-Info.lua.
 ]]
 
 --------------------------------------------------------------------------------
@@ -12,38 +12,71 @@ local _, ns = ...
 --------------------------------------------------------------------------------
 
 --[[
-    The derived item cache lives on the profile and is never declared in
-    defaults, so a reset or a brand-new profile arrives without one. Core calls
-    this at login and after every profile change. It invalidates on a version
-    change, and on a change of data folder: Classic Era and Season of Discovery
-    characters share one saved file, so an Era and a Season of Discovery character can take turns on one profile, while their realms
-    build different folders' tables, so a record one of them derived can be
-    wrong for the other. The scanner's stale-schema nil-test catches
-    same-version (dev) field additions.
+    One record per consumable, built the first time a scan meets it. Every fact
+    in it comes from this load's consumable tables, or from the item info the
+    server sends, so it lasts the session and is never saved: a new release or
+    another data folder starts from an empty cache by itself.
 ]]
-function ns.EnsureItemCache()
-	local profile = ns.db.profile
-	if
-		type(profile.itemCache) ~= "table"
-		or profile.itemCacheVersion ~= ns.Version
-		or profile.itemCacheFolder ~= ns.DATA_FOLDER
-	then
-		profile.itemCache = {}
-		profile.itemCacheVersion = ns.Version
-		profile.itemCacheFolder = ns.DATA_FOLDER
+local itemCache = {}
+
+-- The record ns.CacheItemData built for the item this session, or nil while it waits on the server's item info.
+function ns.GetCachedItemData(itemID)
+	return itemCache[itemID]
+end
+
+-- How many consumables have a record this session (Diagnostics).
+function ns.CountCachedItems()
+	local count = 0
+	for _ in pairs(itemCache) do
+		count = count + 1
+	end
+	return count
+end
+
+--[[
+    The consumable tables in the order ns.CacheItemData reads them, each with
+    the column where its Min Level, Vendor Price, Max Stack and Bind Type start.
+]]
+local CONSUMABLE_TABLES = {
+	{ "FOOD_AND_WATER", 8 },
+	{ "POTIONS", 5 },
+	{ "HEALTHSTONES", 3 },
+	{ "SOULSTONES", 2 },
+	{ "BANDAGES", 5 },
+	{ "MANA_GEMS", 2 },
+	{ "MANA_RUNES", 2 },
+	{ "EXPLOSIVES", 5 },
+}
+
+-- The item's row in the first consumable table that carries it, and the column where its item facts start.
+local function FindConsumableRow(itemID)
+	for _, entry in ipairs(CONSUMABLE_TABLES) do
+		local row = ns[entry[1]][itemID]
+		if row then
+			return row, entry[2]
+		end
+	end
+end
+
+--[[
+    MIGRATION (remove after 2026-12-08)
+    Releases before this one saved the item cache on every profile, with its
+    itemCacheVersion and itemCacheFolder stamps. InitializeDatabase in
+    Features/Core.lua clears them from every profile once, at login.
+]]
+function ns.RetireSavedItemCache()
+	for _, profile in pairs(ns.db.sv.profiles or {}) do
+		if type(profile) == "table" then
+			profile.itemCache = nil
+			profile.itemCacheVersion = nil
+			profile.itemCacheFolder = nil
+		end
 	end
 end
 
 -- Whether any consumable table carries the item: the test that decides what ns.CacheItemData caches.
 function ns.HasRawData(itemID)
-	return ns.FOOD_AND_WATER[itemID] ~= nil
-		or ns.POTIONS[itemID] ~= nil
-		or ns.HEALTHSTONES[itemID] ~= nil
-		or ns.SOULSTONES[itemID] ~= nil
-		or ns.BANDAGES[itemID] ~= nil
-		or ns.MANA_GEMS[itemID] ~= nil
-		or ns.MANA_RUNES[itemID] ~= nil
-		or ns.EXPLOSIVES[itemID] ~= nil
+	return FindConsumableRow(itemID) ~= nil
 end
 
 --------------------------------------------------------------------------------
@@ -105,24 +138,33 @@ end
 
 --[[
     Looks up an item in the consumable tables, derives a canonical shape
-    (type, health/mana values, requirements, zones), and caches it under
-    ns.db.profile.itemCache. An item no consumable table carries returns "IGNORE"
-    without calling C_Item.GetItemInfo or writing to the cache, so the cache holds
-    consumables only and a cold non-consumable never arms a rescan.
+    (type, health/mana values, requirements, zones), and caches it for the
+    session. An item no consumable table carries returns "IGNORE" without
+    calling C_Item.GetItemInfo or writing to the cache, so the cache holds
+    consumables only and a cold non-consumable never arms a rescan. The item
+    facts (required level, vendor price, stack size, binding) come from the
+    row's columns; a row added since the last Validate Data run carries none
+    yet, and C_Item.GetItemInfo stands in for it, returning nil while cold.
 ]]
 function ns.CacheItemData(itemID)
-	local itemCache = ns.db and ns.db.profile.itemCache
-	if not itemCache then
-		return nil
+	local cached = itemCache[itemID]
+	if cached then
+		return cached
 	end
 
-	if not ns.HasRawData(itemID) then
+	local row, factsColumn = FindConsumableRow(itemID)
+	if not row then
 		return "IGNORE"
 	end
 
-	local name, _, _, _, minLevel, _, _, maxStack, _, _, vendorPrice, _, _, bindType = C_Item.GetItemInfo(itemID)
-	if not name then
-		return nil
+	local minLevel, vendorPrice, maxStack, bindType =
+		row[factsColumn], row[factsColumn + 1], row[factsColumn + 2], row[factsColumn + 3]
+	if minLevel == nil then
+		local name, _
+		name, _, _, _, minLevel, _, _, maxStack, _, _, vendorPrice, _, _, bindType = C_Item.GetItemInfo(itemID)
+		if not name then
+			return nil
+		end
 	end
 
 	local rawFoodAndWater = ns.FOOD_AND_WATER[itemID]
@@ -236,15 +278,15 @@ function ns.CacheItemData(itemID)
 		data.healthValue = rawHealthstone[1]
 		--[[
 		    Required level for the bag-scan usable gate comes from the curated
-		    ns.HEALTHSTONES column (static over API), falling back to
-		    C_Item.GetItemInfo's minLevel. (Conjure downranking uses a separate table.)
+		    ns.HEALTHSTONES Required Level column, falling back to the item's
+		    Min Level. (Conjure downranking uses a separate table.)
 		]]
 		data.requiredLevel = rawHealthstone[2] or data.requiredLevel
 	elseif rawSoulstone then
 		data.itemType = "soulstone"
 		data.healthValue = rawSoulstone[1]
 	elseif rawBandage then
-		-- Bandage row shape: {healAmount, requiredSkill, sellPrice, {zones}}
+		-- Bandage row shape: {healAmount, requiredSkill, sellPrice, {zones}, item facts}
 		data.itemType = "bandage"
 		data.healthValue = rawBandage[1]
 		data.requiredFirstAid = rawBandage[2] or 0
@@ -256,7 +298,7 @@ function ns.CacheItemData(itemID)
 		data.itemType = "manarune"
 		data.manaValue = rawManaRune[1]
 	elseif rawExplosive then
-		-- Explosive row shape: {minDamage, maxDamage, requiredSkill, requiredSpellID}
+		-- Explosive row shape: {minDamage, maxDamage, requiredSkill, requiredSpellID, item facts}
 		data.itemType = "explosive"
 		data.damageValue = rawExplosive[1]
 		data.requiredEngineering = rawExplosive[3] or 0

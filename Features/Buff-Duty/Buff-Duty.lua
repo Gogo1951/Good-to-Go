@@ -13,22 +13,8 @@ local L = ns.L
     missing something, and a party only while one of its members is, so a fully
     buffed raid shows no window at all.
 
-    The work is split sixteen ways, sharing state through ns.BuffDuty:
-    Buff-Duty-Castable.lua (what you can cast), Buff-Duty-Lookups.lua (the
-    spell and item lookups built from it), Buff-Duty-Settings.lua (each
-    buff's audience and weapon settings), Buff-Duty-Auras.lua (what
-    each player has on), Buff-Duty-Units.lua (reading one unit and building
-    its icons), Buff-Duty-Resurrections.lua (a dead player's resurrection
-    icon), Buff-Duty-Pets.lua (a pet's row), Buff-Duty-Weapons.lua (your weapons' row), Buff-Duty-Self.lua
-    (your own buffs, weapons and Soulstone, pinned on top),
-    Buff-Duty-Outsiders.lua (your target, and strangers who just buffed you,
-    listed above the parties), Buff-Duty-Other-Classes.lua (the raid
-    buffs your group is missing, any class's, counted under Party-Buffs and
-    asked of the group or their casters), Buff-Duty-Groups.lua (your group's
-    sections), this file (the refresh, events and setup), Buff-Duty-Cast-Results.lua (a buff refused for a
-    stronger one, and resurrections), Buff-Duty-Key-Picker.lua (what the key
-    binding casts next) and Buff-Duty-Keys.lua (the key binding that casts
-    from the same list).
+    The other Buff Duty files share state through ns.BuffDuty; this file owns
+    the refresh, the When to Show check and setup.
 
     Nothing is read in combat: the window's buttons are secure and can't be
     redrawn there anyway (see the frame file), so a change mid-fight waits for
@@ -182,6 +168,24 @@ function ns.RefreshBuffDuty()
 end
 
 --[[
+    Buff Duty's feature switch, the one setter both copies of its options
+    toggle and the per-class calls below use: it redraws the window and
+    repaints every open panel.
+]]
+function ns.IsBuffDutyOn()
+	return ns.db.global.buffWindow.enabled and true or false
+end
+
+function ns.SetBuffDutyOn(value)
+	ns.db.global.buffWindow.enabled = value
+	ns.RefreshBuffDuty()
+	local registry = LibStub("AceConfigRegistry-3.0")
+	for _, name in pairs(ns.OPTIONS_REGISTRY) do
+		registry:NotifyChange(name)
+	end
+end
+
+--[[
     Buff Duty on the class you're playing: the feature switch on and your
     class ticked under Classes. The close button and the mini-map button work
     per class through these, so closing the window on a rogue leaves it up on
@@ -189,14 +193,26 @@ end
 ]]
 function ns.IsBuffDutyOnForClass()
 	local _, class = UnitClass("player")
-	return ns.IsFeatureOn("buffWindow") and ns.db.global.buffWindow.showClasses[class] ~= false
+	return ns.IsBuffDutyOn() and ns.db.global.buffWindow.showClasses[class] ~= false
 end
 
 function ns.SetBuffDutyForClass(on)
 	local _, class = UnitClass("player")
 	ns.db.global.buffWindow.showClasses[class] = on
-	-- Through the feature switch, which redraws the window and repaints the panels.
-	ns.SetFeatureSwitch("buffWindow", on or ns.IsFeatureOn("buffWindow"))
+	ns.SetBuffDutyOn(on or ns.IsBuffDutyOn())
+end
+
+--[[
+    Buff Duty's settings are account-wide, so a profile switch, copy or reset
+    leaves them as they were; Features/Core.lua calls this anyway so a Reset
+    never leaves the window reading a stale table.
+]]
+function ns.ApplyBuffDutyProfile()
+	if not BuffDuty.isSetUp then
+		return
+	end
+	ns.PopulateBuffDutyAudience()
+	ns.RefreshBuffDuty()
 end
 
 --[[
@@ -208,7 +224,12 @@ function ns.CloseBuffDuty()
 	ns.SetBuffDutyForClass(false)
 	local _, class = UnitClass("player")
 	ns:PrintMessage(
-		L["BUFF_DUTY_CLOSED"]:format(ns.ClassName(class), ns.GetColor("INFO") .. L["OPTIONS_COMMAND"] .. "|r")
+		L["BUFF_DUTY_CLOSED"]:format(
+			ns.ClassName(class),
+			ns.ClassName(class),
+			L["BUFF_DUTY_WHEN_HEADER"],
+			ns.GetColor("INFO") .. L["OPTIONS_COMMAND"] .. "|r"
+		)
 	)
 end
 
@@ -223,13 +244,13 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Called from Buff-Tracking's UNIT_AURA handler, which owns the event. It is
+    Called from Buff-Duty-Events.lua's UNIT_AURA handler. It is
     subscribed unfiltered while Buff Duty is on for your class, so nameplates
     arrive here too; only the units the window reads are worth a refresh.
     Nothing is queued while the window is off for your class or in combat:
     turning it on and PLAYER_REGEN_ENABLED each request a fresh read.
 ]]
-function ns.OnBuffDutyAura(unit)
+function ns.OnBuffDutyUnitAura(unit)
 	if not BuffDuty.isSetUp or inCombat or not ns.IsPlain(unit) or not unit then
 		return
 	end

@@ -1,6 +1,6 @@
 local _, ns = ...
 
--- [ID] = {Rank Value}, -- Name
+-- [ID] = {Rank Value, Min Level, Vendor Price, Max Stack, Bind Type}, -- Name
 ns.SOULSTONES = {}
 
 -- buffSpellID, -- Name (cast spell ID)
@@ -12,7 +12,7 @@ ns.SOULSTONE_BUFF_SPELL_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-11-04, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-08, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- ns.SOULSTONES is empty: this client's Soulstone (20707) is cast straight on a target and makes no item.

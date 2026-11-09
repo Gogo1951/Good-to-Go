@@ -82,6 +82,7 @@ local function SoulstoneIcon()
 	end
 
 	local itemId = BestStone(buff.items)
+	-- The Buff Key casts this one on purpose, making a stone when none exists; only using one is left to its icon (hasCooldown below).
 	if not itemId then
 		return BuffDuty.WithTimeLeft({
 			spellId = buff.create.id,

@@ -1,5 +1,4 @@
 local _, ns = ...
-local Data = ns.Data
 
 --------------------------------------------------------------------------------
 -- Database Defaults
@@ -60,16 +59,10 @@ local Data = ns.Data
                           per-character snapshots behind them. Their reasons
                           are on the keys.
 
-    The derived item cache (itemCache, with its itemCacheVersion and
-    itemCacheFolder stamps) is deliberately NOT declared here:
-    ns.EnsureItemCache (Features/Macros-for-Consumables/Item-Cache.lua) creates it on the profile at
-    login and after every profile change, and owns its stamp invalidation, so
-    it never needs a default.
-
     No profile names a Restock List: which list a character uses is kept by
     character, in restocker.listChoices below, and
     ns.InitializeCharacterRestockList
-    (Features/Inventory-Restocker/Restocker-Saved-Lists.lua) gives a character without
+    (Features/Restocker/Restocker-Saved-Lists.lua) gives a character without
     one a list named for its class.
 ]]
 ns.DATABASE_DEFAULTS = {
@@ -167,6 +160,13 @@ ns.DATABASE_DEFAULTS = {
 		]]
 		enableCannibalizeEating = false,
 		enableCannibalizeDrinking = false,
+		--[[
+		    Troll: the Food macro casts Rapid Regeneration instead of eating
+		    while the spell is off cooldown
+		    (Features/Macros-for-Consumables/Macros/Tools-Troll.lua). Only WoW
+		    Forever has the spell (ns.RAPID_REGENERATION_SPELL_ID).
+		]]
+		enableRapidRegenerationEating = false,
 		--[[
 		    Rogue poison groups per weapon slot, keyed by ns.POISON_GROUP_BASE_ITEMS
 		    group IDs (4 = Instant Poison). See ns.POISON_GROUPS in Data/Data.lua.
@@ -404,7 +404,7 @@ local SPELLBOOK_DEFAULTS = {
 		macroTags = {},
 		macroTagCount = 0,
 		--[[
-			the What's Next ranks under the game's own spell tooltips (Features/Spellbook/Spell-Ranks-Tooltip.lua):
+			the What's Next ranks under the game's own spell tooltips (Features/Enhanced-Spellbook/Spell-Ranks-Tooltip.lua):
 			a display preference for the account, like inventoryReport. Enhanced Spellbook's own window shows its
 			ranks either way.
 		]]
@@ -423,7 +423,7 @@ local SPELLBOOK_DEFAULTS = {
 		-- the Pet What's Next? tab, which shares whatsNextSort; see ns.WhatsNextPetShowsKnown
 		whatsNextPetShowKnown = true,
 		whatsNextPetShowOtherFamilies = false,
-		markedPlaced = {}, -- macros marked placed from the page's settings menu, by WoW macro name
+		markedPlaced = {}, -- macros marked placed from the page's settings menu, by macro identity
 		--[[
 			the options each kind of macro starts with (see ns.MACRO_KINDS), as kind -> option -> true or
 			false. Buffs start on Dynamic Rank, since a buff's rank can't land on a player too far below its level,
@@ -471,7 +471,7 @@ local SPELLBOOK_DEFAULTS = {
 		castSequenceReset = {}, -- each spell's Cast Sequence resets, where not the default (see ns.CastSequenceResetText)
 		useItems = {},
 		macroCopies = {}, -- the Duplicate copies of each spell's macro, by its Rank 1 ID, as a list of copy numbers
-		trainerSpells = {}, -- by class token, then spell id -> required level (see Features/Spellbook/Trainer-Recording.lua)
+		trainerSpells = {}, -- by class token, then spell id -> required level (see Features/Enhanced-Spellbook/Trainer-Recording.lua)
 	},
 	char = {
 		ownedMacros = {}, -- character macros the add-on created, by WoW macro name
@@ -483,127 +483,14 @@ AddDefaults("profile", SPELLBOOK_DEFAULTS.profile)
 AddDefaults("char", SPELLBOOK_DEFAULTS.char)
 
 --------------------------------------------------------------------------------
--- Automated Appreciation Defaults
+-- Buff Duty Defaults
 --------------------------------------------------------------------------------
 
 --[[
-    `enabled` is explicit at every call site rather than defaulted, because the
-    two answers are both real: the praise panels seed every emote on, the extra
-    Thank You buttons seed every emote off.
+    Buff Duty's settings, account-wide: none of them is about one character,
+    so every character buffs the same way.
 ]]
-local function GetDefaultEmoteSettings(enabled)
-	local emotes = {}
-	for _, data in ipairs(Data.EMOTES) do
-		emotes[data.token] = enabled and true or false
-	end
-	return emotes
-end
-
---[[
-    Automated Appreciation's settings, account-wide: none of them is about one
-    character, so every character thanks, praises and buffs the same way. The
-    welcome toggle is the shared one above.
-]]
-local THANKS_FOR_THE_BUFF_DEFAULTS = {
-	--[[
-            Praise (the outgoing whisper and emote) carries its own throttles here:
-            `praiseCooldown` is the gap between any two praises whoever buffed you,
-            `cooldown` the gap between two praises of the SAME player. The overall
-            one ships at 0 (off), so out of the box only the per-source limit
-            applies. `praiseDelay` is only read while `praiseDelayEnabled` is set,
-            and its values are the ones the dropdown offers (Data.PRAISE_DELAY_CHOICES).
-        ]]
-	strangers = {
-		--[[
-			    Master switch for the whole panel. On by default: turning the add-on
-			    on and getting nothing would read as broken.
-			]]
-		enabled = true,
-		printEnabled = false,
-		whisperEnabled = false,
-		praiseDelayEnabled = false,
-		praiseDelay = 2,
-		praiseCooldown = 0,
-		cooldown = 3,
-		--[[
-			    21, not 25: the nearest step on Data.SECONDS_CHOICES. A default that
-			    is not on the scale would show up snapped anyway, so storing the
-			    snapped value keeps what is saved and what is shown identical.
-			]]
-		minBuffDuration = 21,
-		emotesEnabled = true,
-		soundEnabled = false,
-		emotes = GetDefaultEmoteSettings(true),
-	},
-	slash = {
-		createMacro = true,
-		-- The texture file ID the macro wears: its own icon, or one from ns.THANK_YOU_MACRO_ICONS.
-		macroIcon = Data.THANK_YOU_DEFAULT_ICON,
-		message = ns.L["DEFAULT_WHISPER"],
-		emotes = GetDefaultEmoteSettings(true),
-	},
-	--[[
-		    Combat Buffs (party/raid buffs & cooldowns cast on you) and Service
-		    Alerts (no-aura raid help) each own their messaging settings, like
-		    strangers above. The watched-buff list is shared (ids never overlap) and
-		    seeds from the `received` defaults in this client's Tracked-Abilities file.
-		    Teammates offers the same Praise Delay as strangers, but no cooldowns: a
-		    teammate's cooldown is worth acknowledging every single time it lands.
-		]]
-	teammates = {
-		-- Master switch for the whole panel. On by default, like strangers.
-		enabled = true,
-		printEnabled = false,
-		whisperEnabled = true,
-		praiseDelayEnabled = false,
-		praiseDelay = 2,
-		emotesEnabled = false,
-		soundEnabled = true,
-		emotes = GetDefaultEmoteSettings(true),
-	},
-	--[[
-		    Services carries the same Praise Delay and sound as teammates, and no
-		    cooldowns for the same reason. Its sound ships off: a feast or a portal
-		    is ambient group help rather than something aimed at you, so it earns a
-		    chat line by default and nothing louder.
-		]]
-	services = {
-		-- Master switch for the whole panel. On by default, like teammates.
-		enabled = true,
-		printEnabled = true,
-		whisperEnabled = false,
-		praiseDelayEnabled = false,
-		praiseDelay = 2,
-		emotesEnabled = false,
-		soundEnabled = false,
-		emotes = GetDefaultEmoteSettings(true),
-	},
-	--[[
-		    Good News: whispers for buffs YOU cast on other players.
-		    `watched` is its own list (seeded from the `given` defaults in this
-		    client's Tracked-Abilities file) because its ids are the same teammate buff
-		    ids -- one shared table couldn't hold independent "thank for it" and
-		    "announce it" choices.
-		]]
-	goodNews = {
-		-- The panel's master switch. On by default, like teammates.
-		whisperEnabled = true,
-		--[[
-			    Who gets the whisper: ALWAYS (anyone you buff) or GROUP (your
-			    party/raid -- a battleground is a raid). Anything unrecognized
-			    fails closed into the group check.
-			]]
-		scope = "ALWAYS",
-		--[[
-			    The editable body of the whisper. ONE token, %a, substituted by
-			    ns:BuildGoodNewsMessage with the ability link plus -- for a short
-			    enough buff -- its duration clause. That call also adds the star
-			    marker (left off on WoW Forever) and the " // GtG" sign-off, and
-			    trims the body's closing punctuation; neither is editable.
-			]]
-		message = ns.L["DEFAULT_GOOD_NEWS"],
-		watched = {},
-	},
+AddDefaults("global", {
 	--[[
 		    Buff Duty: the click-to-cast list of group members missing a buff
 		    you can give. On by default: it is self-only, and it
@@ -687,45 +574,37 @@ local THANKS_FOR_THE_BUFF_DEFAULTS = {
 		askOtherClasses = true,
 		audience = {},
 	},
-	watchedBuffs = {},
-}
+})
+
+--------------------------------------------------------------------------------
+-- Rank Watch Defaults
+--------------------------------------------------------------------------------
 
 --[[
-    The extra Thank You buttons, generated from Data.THANK_YOU_BUTTONS rather
-    than written out, so adding a sixth is a row in that list and nothing here.
+    Account-wide, like Buff Duty: whether to watch the group's ranks and how to speak up is a
+    behavior preference, not a choice about one character, and the casts already reported are a fact about the
+    other players, shared with every character who might group with them again. Off until the player turns it on.
 
-    Button 1 is skipped: its `slash` defaults are declared above and are on by
-    default. Every later button starts fully switched off -- no macro, no
-    whisper text, no emotes -- and only does something once its owner has
-    filled it in. An empty message sends no whisper and an all-false emote
-    table performs no emote, so "off" needs no guard of its own. Each starts on
-    the icon in this client's ns.THANK_YOU_MACRO_ICONS that names its button,
-    so the macros tell apart on a bar, or on the default icon where none does.
+    untracked holds the player's own choices on the Tracked Abilities panel, by spell ID: true for a rank they
+    unticked, false for one the data starts off (Rank 1 Scorch and the like) that they ticked. A rank they never
+    touched follows the data, so a rank added later starts at its default with no seeding. announced keys a reported cast as
+    "<caster GUID>-<caster level>-<spell ID>", the shape the standalone Rank Sentinel add-on records and sends
+    with NOTIFY, so the two never report the same cast twice; it is forgotten whenever announcedVersion stops
+    matching ns.Version.
 ]]
-local startingIcons = {}
-for _, icon in ipairs(ns.THANK_YOU_MACRO_ICONS) do
-	if icon[2] then
-		startingIcons[icon[2]] = icon[1]
-	end
-end
-
-for index = 2, #Data.THANK_YOU_BUTTONS do
-	local button = Data.THANK_YOU_BUTTONS[index]
-	local buttonDefaults = {
-		createMacro = false,
-		message = "",
-		macroIcon = startingIcons[index] or Data.THANK_YOU_DEFAULT_ICON,
-	}
-	if button.singleEmote then
-		--[[
-		    One chosen token, "" meaning none. A checklist would be the wrong shape:
-		    there is nothing to choose randomly between.
-		]]
-		buttonDefaults.emote = ""
-	else
-		buttonDefaults.emotes = GetDefaultEmoteSettings(false)
-	end
-	THANKS_FOR_THE_BUFF_DEFAULTS[button.profileKey] = buttonDefaults
-end
-
-AddDefaults("global", THANKS_FOR_THE_BUFF_DEFAULTS)
+AddDefaults("global", {
+	rankWatch = {
+		enabled = false,
+		whisper = true, -- whisper a group member who used a low rank, when this client is the one chosen to
+		print = true, -- print a group member's low rank in your own chat
+		graceMaxLevel = 0, -- levels a max-level character gets to train a rank before it's reported
+		graceLeveling = 4, -- the same for a character still leveling
+		untracked = {},
+		ignoredPlayers = {}, -- caster GUID -> name, never reported
+		ignoredClasses = {}, -- caster GUID -> class token, to draw the Ignored Players list in class colors
+		optOutOffered = {}, -- caster GUID -> true, sent the one-time opt-out number whisper
+		announced = {},
+		announcedVersion = "",
+		importedStandalone = false, -- MIGRATION (remove after 2026-12-08): the standalone add-on's settings were copied in
+	},
+})

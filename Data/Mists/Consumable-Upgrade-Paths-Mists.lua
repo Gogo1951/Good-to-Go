@@ -333,10 +333,10 @@ ns.CONSUMABLE_UPGRADE_CHAINS = {
 How We Got the Data
 
 Last Validated
-	2026-11-04, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-08, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
-	- The staple ladders, read by Features/Inventory-Restocker/Restocker-Upgrade.lua and the Starter List (Restocker-Starter-List.lua). Same chains, keys and row format as the other clients; see Consumable-Upgrade-Paths-TBC.lua for why this is a table of its own.
+	- The staple ladders, read by Features/Restocker/Restocker-Upgrade.lua and the Starter List (Restocker-Starter-List.lua). Same chains, keys and row format as the other clients; see Consumable-Upgrade-Paths-TBC.lua for why this is a table of its own.
 	- Each tier is { minLevel, itemID, rank }. minLevel is the item's required level on this client (from Cataclysm on a food's required level equals its item level). rank follows minLevel; where two tiers share a level, the newer item carries the higher rank, so the upgrader moves an older item onto it.
 	- Food and water: the TBC tiers carry over unchanged (same IDs, names and required levels on this client; Red-speckled Mushroom is now spelled Red-Speckled Mushroom). Added from Wrath on, each the plain food or drink at that level sold by the most vendors in QuestieDB's MoP item table, with a buy price on this client: the Northrend level-65 staples beside the TBC ones (Salted Venison, Fillet of Icefin, Crusty Flatbread, Sour Goat Cheese, Tundra Berries, Honey-Spiced Lichen, Sweetened Goat's Milk), Pungent Seal Whey at 70, the level-75 Northrend staples and Honeymint Tea, the Cataclysm level-80 and level-85 staples, and Golden Carp Consomme (85) and Frybread (90) from Pandaria. Fresh Water and Hardtack (Cataclysm, level 75) lose to Honeymint Tea and Sweet Potato Bread on vendor count.
 	- Pandaria's other vendor food and drink (81400-81414, Pounded Rice Cake to Pearl Milk Tea, Roasted Barley Tea among them, the two alcoholic drinks aside) give a Well Fed buff, so they aren't staples, and no other diet gets a level-90 tier.

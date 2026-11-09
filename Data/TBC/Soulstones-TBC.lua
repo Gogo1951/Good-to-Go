@@ -1,13 +1,13 @@
 local _, ns = ...
 
--- [ID] = {Rank Value}, -- Name
+-- [ID] = {Rank Value, Min Level, Vendor Price, Max Stack, Bind Type}, -- Name
 ns.SOULSTONES = {
-	[22116] = { 2900 }, -- Master Soulstone
-	[16896] = { 2200 }, -- Major Soulstone
-	[16895] = { 1600 }, -- Greater Soulstone
-	[16893] = { 1100 }, -- Soulstone
-	[16892] = { 750 }, -- Lesser Soulstone
-	[5232] = { 400 }, -- Minor Soulstone
+	[22116] = { 2900, 0, 0, 1, 1 }, -- Master Soulstone
+	[16896] = { 2200, 0, 0, 1, 1 }, -- Major Soulstone
+	[16895] = { 1600, 0, 0, 1, 1 }, -- Greater Soulstone
+	[16893] = { 1100, 0, 0, 1, 1 }, -- Soulstone
+	[16892] = { 750, 0, 0, 1, 1 }, -- Lesser Soulstone
+	[5232] = { 400, 0, 0, 1, 1 }, -- Minor Soulstone
 }
 
 -- buffSpellID, -- Rank, Name (conjure spell ID)
@@ -24,7 +24,7 @@ ns.SOULSTONE_BUFF_SPELL_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-11-04, TBC Anniversary 2.5.6.70577
+	2026-11-08, TBC Anniversary 2.5.6.70577
 
 Notes
 	- ns.SOULSTONES holds the warlock's soulstones, read by the item cache and the Readiness Report. Rank Value is the stone's resurrection health, used as a sortable preference score (Minor < Lesser < Soulstone < Greater < Major < Master).

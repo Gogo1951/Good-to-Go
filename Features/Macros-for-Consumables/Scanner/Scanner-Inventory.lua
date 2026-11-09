@@ -36,7 +36,7 @@ local ignoredTypes = {}
 
 --[[
     The bag walk, published so a second consumer does not have to repeat it.
-    itemCounts is stack totals by itemID across bags 0..NUM_BAG_SLOTS; slotItems
+    itemCounts is stack totals by itemID across ns.CARRIED_BAG_IDS; slotItems
     is one hyperlink per itemID, from the first slot holding it; ignoredTypes
     names every category a usable item on either Ignore List would have
     competed in, so the Readiness Report can count it as carried.
@@ -87,7 +87,6 @@ function ns.ScanBags()
 	local alchemySkill = ns.currentAlchemySkill or 0
 	local engineeringSkill = ns.currentEngineeringSkill or 0
 	local settings = (ns.db and ns.db.profile) or {}
-	local itemCache = (ns.db and ns.db.profile.itemCache) or {}
 
 	--[[
 	    Testing aid: targeting yourself forces the Food macro into plain-food
@@ -160,7 +159,7 @@ function ns.ScanBags()
 	wipe(slotItems)
 	wipe(ignoredTypes)
 
-	for bag = 0, NUM_BAG_SLOTS do
+	for _, bag in ipairs(ns.CARRIED_BAG_IDS) do
 		for slot = 1, C_Container.GetContainerNumSlots(bag) do
 			local info = C_Container.GetContainerItemInfo(bag, slot)
 			if info and info.itemID then
@@ -202,34 +201,8 @@ function ns.ScanBags()
 		    override system handles them.
 		]]
 		if not (ns.SCROLL_ITEM_LOOKUP and ns.SCROLL_ITEM_LOOKUP[id]) then
-			local data = itemCache[id]
-			--[[
-			    MIGRATION (remove after 2026-11-25): the cache holds
-			    consumables only, so a stored "IGNORE" is stale: clear it and
-			    let ns.CacheItemData answer from the consumable tables.
-			    Version-stamp invalidation only wipes the cache on a release
-			    bump, never on a dev copy, whose version is always "Dev".
-			]]
-			if data == "IGNORE" then
-				data = nil
-				itemCache[id] = nil
-			end
-			--[[
-			    Drop cache entries from an older schema so CacheItemData
-			    re-derives them below. Test the NEWEST cached field, not an
-			    old one: version-stamp invalidation only fires on a release
-			    bump, so a same-version update (dev edit) that adds a field
-			    would otherwise keep stale entries missing it. The newest
-			    field is itemID (CacheItemData always writes it, so == nil
-			    only ever means "older schema").
-			]]
-			if data and data.itemID == nil then
-				data = nil
-				itemCache[id] = nil
-			end
-			if not data then
-				data = ns.CacheItemData(id)
-			end
+			-- The session's record, built here the first time the scan meets the item (Item-Cache.lua).
+			local data = ns.CacheItemData(id)
 
 			if not data then
 				dataRetry = true

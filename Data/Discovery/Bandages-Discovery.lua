@@ -4,33 +4,33 @@ if not ns.IS_DISCOVERY then
 	return
 end
 
--- [ID] = {Bandage Amount, First Aid Skill, Vendor Value, {Allowed Zones}}, -- Name
+-- [ID] = {Bandage Amount, First Aid Skill, Vendor Value, {Allowed Zones}, Min Level, Vendor Price, Max Stack, Bind Type}, -- Name
 ns.BANDAGES = {
-	[19307] = { 2000, 225, 100, { 1459 } }, -- Alterac Heavy Runecloth Bandage
-	[20065] = { 1104, 175, 75, { 1461 } }, -- Arathi Basin Mageweave Bandage
-	[20066] = { 2000, 225, 100, { 1461 } }, -- Arathi Basin Runecloth Bandage
-	[20067] = { 640, 125, 50, { 1461 } }, -- Arathi Basin Silk Bandage
-	[23684] = { 2500, 225, 1500 }, -- Crystal Infused Bandage
-	[20232] = { 1104, 175, 75, { 1461 } }, -- Defiler's Mageweave Bandage
-	[20234] = { 2000, 225, 100, { 1461 } }, -- Defiler's Runecloth Bandage
-	[20235] = { 640, 125, 50, { 1461 } }, -- Defiler's Silk Bandage
-	[232433] = { 3400, 300, 2000 }, -- Dense Runecloth Bandage
-	[2581] = { 114, 20, 20 }, -- Heavy Linen Bandage
-	[8545] = { 1104, 175, 600 }, -- Heavy Mageweave Bandage
-	[14530] = { 2000, 225, 1000 }, -- Heavy Runecloth Bandage
-	[6451] = { 640, 125, 400 }, -- Heavy Silk Bandage
-	[3531] = { 301, 75, 57 }, -- Heavy Wool Bandage
-	[20237] = { 1104, 175, 75, { 1461 } }, -- Highlander's Mageweave Bandage
-	[20243] = { 2000, 225, 100, { 1461 } }, -- Highlander's Runecloth Bandage
-	[20244] = { 640, 125, 50, { 1461 } }, -- Highlander's Silk Bandage
-	[1251] = { 66, 1, 10 }, -- Linen Bandage
-	[8544] = { 800, 150, 400 }, -- Mageweave Bandage
-	[14529] = { 1360, 200, 500 }, -- Runecloth Bandage
-	[6450] = { 400, 100, 200 }, -- Silk Bandage
-	[19067] = { 1104, 175, 75, { 1460 } }, -- Warsong Gulch Mageweave Bandage
-	[19066] = { 2000, 225, 100, { 1460 } }, -- Warsong Gulch Runecloth Bandage
-	[19068] = { 640, 125, 50, { 1460 } }, -- Warsong Gulch Silk Bandage
-	[3530] = { 161, 50, 28 }, -- Wool Bandage
+	[19307] = { 2000, 225, 100, { 1459 }, 0, 100, 100, 1 }, -- Alterac Heavy Runecloth Bandage
+	[20065] = { 1104, 175, 75, { 1461 }, 35, 75, 20, 1 }, -- Arathi Basin Mageweave Bandage
+	[20066] = { 2000, 225, 100, { 1461 }, 45, 100, 20, 1 }, -- Arathi Basin Runecloth Bandage
+	[20067] = { 640, 125, 50, { 1461 }, 25, 50, 20, 1 }, -- Arathi Basin Silk Bandage
+	[23684] = { 2500, 225, 1500, nil, 0, 1500, 20, 0 }, -- Crystal Infused Bandage
+	[20232] = { 1104, 175, 75, { 1461 }, 35, 75, 20, 1 }, -- Defiler's Mageweave Bandage
+	[20234] = { 2000, 225, 100, { 1461 }, 45, 100, 20, 1 }, -- Defiler's Runecloth Bandage
+	[20235] = { 640, 125, 50, { 1461 }, 25, 50, 20, 1 }, -- Defiler's Silk Bandage
+	[232433] = { 3400, 300, 2000, nil, 50, 2000, 20, 0 }, -- Dense Runecloth Bandage
+	[2581] = { 114, 20, 20, nil, 0, 20, 20, 0 }, -- Heavy Linen Bandage
+	[8545] = { 1104, 175, 600, nil, 0, 600, 20, 0 }, -- Heavy Mageweave Bandage
+	[14530] = { 2000, 225, 1000, nil, 0, 1000, 20, 0 }, -- Heavy Runecloth Bandage
+	[6451] = { 640, 125, 400, nil, 0, 400, 20, 0 }, -- Heavy Silk Bandage
+	[3531] = { 301, 75, 57, nil, 0, 57, 20, 0 }, -- Heavy Wool Bandage
+	[20237] = { 1104, 175, 75, { 1461 }, 35, 75, 20, 1 }, -- Highlander's Mageweave Bandage
+	[20243] = { 2000, 225, 100, { 1461 }, 45, 100, 20, 1 }, -- Highlander's Runecloth Bandage
+	[20244] = { 640, 125, 50, { 1461 }, 25, 50, 20, 1 }, -- Highlander's Silk Bandage
+	[1251] = { 66, 1, 10, nil, 0, 10, 20, 0 }, -- Linen Bandage
+	[8544] = { 800, 150, 400, nil, 0, 400, 20, 0 }, -- Mageweave Bandage
+	[14529] = { 1360, 200, 500, nil, 0, 500, 20, 0 }, -- Runecloth Bandage
+	[6450] = { 400, 100, 200, nil, 0, 200, 20, 0 }, -- Silk Bandage
+	[19067] = { 1104, 175, 75, { 1460 }, 35, 75, 20, 1 }, -- Warsong Gulch Mageweave Bandage
+	[19066] = { 2000, 225, 100, { 1460 }, 45, 100, 20, 1 }, -- Warsong Gulch Runecloth Bandage
+	[19068] = { 640, 125, 50, { 1460 }, 25, 50, 20, 1 }, -- Warsong Gulch Silk Bandage
+	[3530] = { 161, 50, 28, nil, 0, 28, 20, 0 }, -- Wool Bandage
 	-- Dense Frostweave Bandage (38640) and Dalaran Bandage (44646) are deliberately absent; the query above excludes them too, so a regeneration will not bring them back.
 }
 
@@ -38,7 +38,7 @@ ns.BANDAGES = {
 How We Got the Data
 
 Last Validated
-	2026-11-04, Season of Discovery 1.15.9.70576
+	2026-11-08, Season of Discovery 1.15.9.70576
 
 Notes
 	- Every First Aid bandage on this client, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) to rank the Bandage macro's picks.
@@ -101,4 +101,7 @@ wago.tools
 	https://wago.tools/db2/SpellCastingRequirements?build=1.15.9.70003
 	https://wago.tools/db2/AreaGroupMember?build=1.15.9.70003
 	https://wago.tools/db2/UiMapAssignment?build=1.15.9.70003
+
+QuestieDB
+	None.
 ]]

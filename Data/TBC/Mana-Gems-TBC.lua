@@ -1,26 +1,26 @@
 local _, ns = ...
 
--- [ID] = {Mana Amount}, -- Name
+-- [ID] = {Mana Amount, Min Level, Vendor Price, Max Stack, Bind Type}, -- Name
 ns.MANA_GEMS = {
-	[22044] = { 2340 }, -- Mana Emerald
-	[8008] = { 1073 }, -- Mana Ruby
-	[8007] = { 829 }, -- Mana Citrine
-	[5513] = { 585 }, -- Mana Jade
-	[5514] = { 390 }, -- Mana Agate
+	[22044] = { 2340, 68, 0, 1, 1 }, -- Mana Emerald
+	[8008] = { 1073, 58, 0, 1, 1 }, -- Mana Ruby
+	[8007] = { 829, 48, 0, 1, 1 }, -- Mana Citrine
+	[5513] = { 585, 38, 0, 1, 1 }, -- Mana Jade
+	[5514] = { 390, 28, 0, 1, 1 }, -- Mana Agate
 }
 
--- [ID] = {Mana Amount}, -- Name
+-- [ID] = {Mana Amount, Min Level, Vendor Price, Max Stack, Bind Type}, -- Name
 ns.MANA_RUNES = {
-	[20520] = { 900 }, -- Dark Rune
-	[12662] = { 900 }, -- Demonic Rune
-	[35287] = { 455 }, -- Luminous Bluetail
+	[20520] = { 900, 0, 2000, 20, 0 }, -- Dark Rune
+	[12662] = { 900, 0, 600, 20, 1 }, -- Demonic Rune
+	[35287] = { 455, 55, 50, 20, 0 }, -- Luminous Bluetail
 }
 
 --[[
 How We Got the Data
 
 Last Validated
-	2026-11-04, TBC Anniversary 2.5.6.70577
+	2026-11-08, TBC Anniversary 2.5.6.70577
 
 Notes
 	- ns.MANA_GEMS holds the mage's mana gems, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Mana Gem macro and by the Readiness Report. Mana Amount is the low end of the restore.

@@ -1,0 +1,445 @@
+local _, ns = ...
+local L = ns.L
+local SpellSettings = ns.SpellSettings
+local SettingsKey = ns.SettingsKey
+
+--[[
+	A page macro's Conditionals: rows checked top to bottom, each one or two conditions and the spell the macro
+	casts in its place when they all match, ahead of everything the macro casts on its own. They are one of the
+	per-spell settings (Features/Enhanced-Spellbook/Macro-Options.lua), "conditionals", so a Duplicate copy keeps its own
+	and the menu's Delete and the middle-click reset drop them with the rest. Features/Enhanced-Spellbook/Macro-Body.lua
+	writes them into the /cast line, and Features/Enhanced-Spellbook/Macro-Builder/Conditionals-Panel.lua is the panel docked beside the
+	Spell Book that sets them.
+]]
+
+--------------------------------------------------------------------------------
+-- Conditions
+--------------------------------------------------------------------------------
+
+--[[
+	Every condition a row can check, in the order its dropdown lists them, as { key, the macro conditional it
+	writes, its label key, its short label key for the menu's value, its explanation key }. combat marks the two
+	a macro's own combat check makes pointless, spec the two only a character with dual spec is offered (specGroup
+	the talent group each matches), and opposite the condition that can never match alongside it, which a row's
+	second dropdown leaves out.
+]]
+ns.CONDITIONS = {
+	{
+		key = "shift",
+		clause = "mod:shift",
+		labelKey = "CONDITION_SHIFT",
+		shortKey = "CONDITION_SHIFT_SHORT",
+		descKey = "CONDITION_SHIFT_DESCRIPTION",
+	},
+	{
+		key = "ctrl",
+		clause = "mod:ctrl",
+		labelKey = "CONDITION_CTRL",
+		shortKey = "CONDITION_CTRL_SHORT",
+		descKey = "CONDITION_CTRL_DESCRIPTION",
+	},
+	{
+		key = "alt",
+		clause = "mod:alt",
+		labelKey = "CONDITION_ALT",
+		shortKey = "CONDITION_ALT_SHORT",
+		descKey = "CONDITION_ALT_DESCRIPTION",
+	},
+	{
+		key = "rightClick",
+		clause = "btn:2",
+		labelKey = "CONDITION_RIGHT_CLICK",
+		shortKey = "CONDITION_RIGHT_CLICK",
+		descKey = "CONDITION_RIGHT_CLICK_DESCRIPTION",
+	},
+	{
+		key = "combat",
+		clause = "combat",
+		labelKey = "CONDITION_IN_COMBAT",
+		shortKey = "CONDITION_IN_COMBAT",
+		descKey = "CONDITION_IN_COMBAT_DESCRIPTION",
+		combat = true,
+		opposite = "noCombat",
+	},
+	{
+		key = "noCombat",
+		clause = "nocombat",
+		labelKey = "CONDITION_OUT_OF_COMBAT",
+		shortKey = "CONDITION_OUT_OF_COMBAT",
+		descKey = "CONDITION_OUT_OF_COMBAT_DESCRIPTION",
+		combat = true,
+		opposite = "combat",
+	},
+	{
+		key = "spec1",
+		clause = "spec:1",
+		specGroup = 1,
+		labelKey = "CONDITION_SPEC_1",
+		shortKey = "CONDITION_SPEC_1",
+		descKey = "CONDITION_SPEC_1_DESCRIPTION",
+		spec = true,
+		opposite = "spec2",
+	},
+	{
+		key = "spec2",
+		clause = "spec:2",
+		specGroup = 2,
+		labelKey = "CONDITION_SPEC_2",
+		shortKey = "CONDITION_SPEC_2",
+		descKey = "CONDITION_SPEC_2_DESCRIPTION",
+		spec = true,
+		opposite = "spec1",
+	},
+}
+
+local BY_KEY = {}
+for _, condition in ipairs(ns.CONDITIONS) do
+	BY_KEY[condition.key] = condition
+end
+
+-- A condition's row in ns.CONDITIONS, by its key, or nil for a key no client knows.
+function ns.ConditionRow(key)
+	return BY_KEY[key]
+end
+
+--[[
+	The most rows a macro takes, which is what the panel has room for, and the most conditions a row joins. Every
+	row repeats its whole condition, so a full list runs into the macro's 255 bytes well before this.
+]]
+ns.CONDITIONALS_MAX_ROWS = 8
+ns.CONDITIONALS_MAX_CONDITIONS = 2
+
+--[[
+	Whether the character has a second talent spec, which [spec:2] needs to ever match: dual spec is on the
+	client and learned. A client without the API, or a character with one spec, is offered no Spec conditions.
+]]
+function ns.HasDualSpec()
+	return (ns.GetNumSpecGroups() or 1) >= 2
+end
+
+-- The talent group active now, 1 or 2, or nil on a client that can't say.
+local function ActiveSpecGroup()
+	return ns.GetActiveSpecGroup()
+end
+
+--[[
+	A condition's label for a dropdown's menu: a Spec condition matching the spec active now says so,
+	"Spec 1 (Current)".
+]]
+function ns.ConditionMenuLabel(condition)
+	local label = L[condition.labelKey]
+	if condition.specGroup and condition.specGroup == ActiveSpecGroup() then
+		return L["CONDITION_SPEC_CURRENT"]:format(label)
+	end
+	return label
+end
+
+-- Whether a condition is listed in a row's dropdown: every one but the Spec conditions without dual spec.
+function ns.OffersCondition(key)
+	local condition = BY_KEY[key]
+	return condition ~= nil and (not condition.spec or ns.HasDualSpec())
+end
+
+--[[
+	Why a condition can't be used on a macro, as the line its tooltip explains it with, or nil when it can. The
+	combat check in When writes a /stopmacro on the other side of combat, so In Combat would always match and
+	Out Of Combat never, or the other way about. Grouped Spells' Right-Click For writes btn:2 clauses of its
+	own, and the two never share the right-click: Right-Click For wins, since it is a kind default on buffs, so
+	this condition waits until it is turned off (the menus and Make Default, in turn, won't turn it on while a
+	row uses Right-Click).
+]]
+function ns.ConditionBlockReason(macro, key)
+	local condition = BY_KEY[key]
+	if not condition then
+		return nil
+	end
+	if condition.combat and ns.CombatCheck(macro) then
+		return L["CONDITION_COMBAT_BLOCKED"]
+	end
+	if key == "rightClick" and ns.IsOptionOn(macro, "groupVersion") then
+		return L["CONDITION_RIGHT_CLICK_BLOCKED"]:format(ns.RightClickSpell(macro))
+	end
+	return nil
+end
+
+--------------------------------------------------------------------------------
+-- Rows
+--------------------------------------------------------------------------------
+
+--[[
+	Every spell macro offers Conditionals but a focus copy, which shares its spell's settings key and casts only
+	on the focus, and a consumable's, which is Consumable Macros'.
+]]
+function ns.OffersConditionals(macro)
+	return ns.HasOptions(macro) and not macro.focus
+end
+
+local NO_ROWS = {}
+
+--[[
+	The macro's rows, in order, each { when = { condition keys }, spellID, fixed, ranged }: spellID the spell it
+	casts, the rank's own ID, with fixed set when the row casts that rank rather than the highest known; or
+	ranged, with no ID, for the Shoot macro's attack, which follows the ranged weapon worn. A row with neither is
+	waiting for a spell, and writes nothing. Rows are never changed in place, only replaced: the setters below
+	store a fresh list of fresh rows.
+]]
+function ns.Conditionals(macro)
+	if not ns.OffersConditionals(macro) then
+		return NO_ROWS
+	end
+	local rows = SpellSettings("conditionals")[SettingsKey(macro)]
+	return type(rows) == "table" and rows or NO_ROWS
+end
+
+-- A copy of the macro's rows, each row and its conditions copied too, for a setter to change and store.
+local function CopyRows(macro)
+	local rows = {}
+	for i, row in ipairs(ns.Conditionals(macro)) do
+		local when = {}
+		for k, key in ipairs(row.when or NO_ROWS) do
+			when[k] = key
+		end
+		rows[i] = { when = when, spellID = row.spellID, fixed = row.fixed, ranged = row.ranged }
+	end
+	return rows
+end
+
+local function StoreRows(macro, rows)
+	SpellSettings("conditionals")[SettingsKey(macro)] = #rows > 0 and rows or nil
+end
+
+-- A row's conditions that this client knows, in order.
+local function KnownConditions(row)
+	local known = {}
+	for _, key in ipairs(row.when or NO_ROWS) do
+		if BY_KEY[key] then
+			known[#known + 1] = key
+		end
+	end
+	return known
+end
+
+-- A row's first condition the macro can't use, as its ns.ConditionBlockReason, or nil.
+local function RowBlockReason(macro, row)
+	for _, key in ipairs(KnownConditions(row)) do
+		local reason = ns.ConditionBlockReason(macro, key)
+		if reason then
+			return reason
+		end
+	end
+	return nil
+end
+
+-- Whether a row has a spell to cast.
+function ns.ConditionalHasSpell(row)
+	return row.spellID ~= nil or row.ranged == true
+end
+local HasSpell = ns.ConditionalHasSpell
+
+-- Whether every condition of one row is among another's, so whenever the second matches the first does too.
+local function Within(row, other)
+	local checks = {}
+	for _, key in ipairs(KnownConditions(other)) do
+		checks[key] = true
+	end
+	for _, key in ipairs(KnownConditions(row)) do
+		if not checks[key] then
+			return false
+		end
+	end
+	return true
+end
+
+--[[
+	Why the row at index writes nothing, or nil when it casts: a condition blocked on the macro
+	(ns.ConditionBlockReason), or an earlier row with a spell that matches whenever this one does (Shift above
+	Shift and Alt), which always casts first, so this one never would. An earlier ranged row never shadows one:
+	its clauses also check the weapon worn, so with none it falls through. The panel draws such a row faded
+	with this reason, and the macro text leaves it out, which saves its bytes.
+]]
+function ns.ConditionalSkipReason(macro, index)
+	local rows = ns.Conditionals(macro)
+	local row = rows[index]
+	if not row then
+		return nil
+	end
+	local blocked = RowBlockReason(macro, row)
+	if blocked then
+		return blocked
+	end
+	for i = 1, index - 1 do
+		local earlier = rows[i]
+		local casts = HasSpell(earlier) and not earlier.ranged
+		if casts and #KnownConditions(earlier) > 0 and not RowBlockReason(macro, earlier) then
+			if Within(earlier, row) then
+				return L["CONDITIONALS_SHADOWED"]:format(i)
+			end
+		end
+	end
+	return nil
+end
+
+-- Whether a row of the macro checks Right-Click, which keeps Grouped Spells' Right-Click For off.
+function ns.ConditionalsUseRightClick(macro)
+	for _, row in ipairs(ns.Conditionals(macro)) do
+		for _, key in ipairs(row.when or NO_ROWS) do
+			if key == "rightClick" then
+				return true
+			end
+		end
+	end
+	return false
+end
+
+-- How many rows have a spell, which the page's note counts ("2 Conditionals").
+function ns.ConditionalCount(macro)
+	local count = 0
+	for _, row in ipairs(ns.Conditionals(macro)) do
+		if HasSpell(row) then
+			count = count + 1
+		end
+	end
+	return count
+end
+
+-- The spell whose icon and tooltip stand for a row: its own, or for a ranged row the attack for the weapon worn.
+function ns.ConditionalSpellID(row)
+	if row.ranged then
+		return ns.WornRangedAttackID()
+	end
+	return row.spellID
+end
+
+--[[
+	Each row that has a spell, in short words, for the menu's value and the tile's tooltip: "Shift: Frost Nova",
+	or "Spec 2 + Alt: Blizzard" for two conditions.
+]]
+function ns.ConditionalSummaries(macro)
+	local summaries = {}
+	for _, row in ipairs(ns.Conditionals(macro)) do
+		local text = ns.ConditionalSpellText(row)
+		if text then
+			local labels = {}
+			for i, key in ipairs(KnownConditions(row)) do
+				labels[i] = L[BY_KEY[key].shortKey]
+			end
+			local when = labels[1] or ""
+			for i = 2, #labels do
+				when = L["CONDITIONALS_JOIN"]:format(when, labels[i])
+			end
+			summaries[#summaries + 1] = L["CONDITIONALS_SUMMARY"]:format(when, text)
+		end
+	end
+	return summaries
+end
+
+--[[
+	The rows as /cast clauses for the macro text, { condition, nil, spell }, in order: "spec:2,mod:alt" and the
+	row's spell. Each casts on a plain target, never the macro's Target priority, since every clause would
+	repeat the row's whole condition and fill the 255 bytes fast. A ranged row writes one clause per ranged
+	attack known, each with its weapon worn ("mod:shift,worn:Bows" Shoot Bow), like the Shoot macro's own line,
+	so a weapon swapped mid-fight needs no rewrite. A row with no spell, no condition this client knows, or a
+	reason it never casts (ns.ConditionalSkipReason) is left out.
+]]
+function ns.ConditionalClauses(macro)
+	local clauses = {}
+	for index, row in ipairs(ns.Conditionals(macro)) do
+		local known = KnownConditions(row)
+		if HasSpell(row) and #known > 0 and not ns.ConditionalSkipReason(macro, index) then
+			local parts = {}
+			for i, key in ipairs(known) do
+				parts[i] = BY_KEY[key].clause
+			end
+			local condition = table.concat(parts, ",")
+			if row.ranged then
+				for _, attack in ipairs(ns.KnownRangedAttacks()) do
+					clauses[#clauses + 1] = { condition .. ",worn:" .. attack.wornName, nil, attack.name }
+				end
+			else
+				local text = ns.ConditionalSpellText(row)
+				if text then
+					clauses[#clauses + 1] = { condition, nil, text }
+				end
+			end
+		end
+	end
+	return clauses
+end
+
+--[[
+	The setters below only change the stored rows; the panel then rebuilds the page, which rewrites the macro
+	(ns.RefreshSpellbookPage), as the menu does.
+]]
+
+--[[
+	Adds a row at the bottom with no spell yet, checking the first condition offered that the macro can use and
+	no row checks alone already, since a second such row would never cast; Shift when every one is taken.
+]]
+function ns.AddConditional(macro)
+	local rows = CopyRows(macro)
+	if #rows >= ns.CONDITIONALS_MAX_ROWS then
+		return
+	end
+	local taken = {}
+	for _, row in ipairs(rows) do
+		if #row.when == 1 then
+			taken[row.when[1]] = true
+		end
+	end
+	local first = "shift"
+	for _, condition in ipairs(ns.CONDITIONS) do
+		local key = condition.key
+		if not taken[key] and ns.OffersCondition(key) and not ns.ConditionBlockReason(macro, key) then
+			first = key
+			break
+		end
+	end
+	rows[#rows + 1] = { when = { first } }
+	StoreRows(macro, rows)
+end
+
+function ns.RemoveConditional(macro, index)
+	local rows = CopyRows(macro)
+	table.remove(rows, index)
+	StoreRows(macro, rows)
+end
+
+-- Moves the row at from to the place to, the rows between shifting a place to make room.
+function ns.MoveConditional(macro, from, to)
+	local rows = CopyRows(macro)
+	if from == to or not rows[from] or not rows[to] then
+		return
+	end
+	local row = table.remove(rows, from)
+	table.insert(rows, to, row)
+	StoreRows(macro, rows)
+end
+
+--[[
+	Sets the condition at a place in a row (1 or 2), or with nil drops the second, so the row checks one
+	condition again.
+]]
+function ns.SetConditionalCondition(macro, index, place, key)
+	local rows = CopyRows(macro)
+	local row = rows[index]
+	if not row then
+		return
+	end
+	if key then
+		row.when[math.min(place, #row.when + 1)] = key
+	elseif place > 1 then
+		row.when[place] = nil
+	end
+	StoreRows(macro, rows)
+end
+
+-- Sets the spell a row casts, from a { spellID, fixed, ranged } pick (ns.ConditionalSpellOf).
+function ns.SetConditionalSpell(macro, index, pick)
+	local rows = CopyRows(macro)
+	local row = rows[index]
+	if not row then
+		return
+	end
+	row.spellID, row.fixed, row.ranged = pick.spellID, pick.fixed, pick.ranged
+	StoreRows(macro, rows)
+end

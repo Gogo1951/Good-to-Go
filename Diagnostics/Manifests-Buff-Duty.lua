@@ -522,15 +522,21 @@ function ns:BuildBuffDutyContextReport()
 		return (ns.IsPlain(instanceID) and tContains(zones.instances or {}, instanceID))
 			or (ns.IsPlain(uiMapID) and uiMapID ~= nil and tContains(zones.uiMaps or {}, uiMapID))
 	end
-	local enchants = { GetWeaponEnchantInfo() }
-	local stride = select("#", GetWeaponEnchantInfo()) >= 8 and 4 or 3
-	local enchanted = {}
+	-- Each hand's temporary enchants, one per layer where two stack (WoW Forever): seconds, enchant id, its row.
+	local worn = BW.ReadWeaponEnchants()
 	for _, hand in ipairs(ns.Data.WEAPON_HAND_ORDER) do
 		local slot = ns.Data.WEAPON_HAND_SLOTS[hand]
-		local base = (ns.Data.WEAPON_HAND_ORDER[1] == hand and 0 or 1) * stride
-		local expiration = enchants[base + 1] and enchants[base + 2]
-		local enchant = enchants[base + 1] and stride == 4 and enchants[base + 4]
-		local carried = ns.IsPlain(enchant) and enchant and BW.weaponByEnchant[enchant]
+		local wornText = {}
+		for _, enchant in ipairs(worn[slot]) do
+			local carried = enchant.enchant and BW.weaponByEnchant[enchant.enchant]
+			wornText[#wornText + 1] = string.format(
+				"%s:%s/%ds (row %s)",
+				enchant.layer,
+				tostring(enchant.enchant),
+				math.floor(enchant.seconds),
+				carried and tostring(carried.key) or "none"
+			)
+		end
 		local picks = {}
 		for key, when in pairs(db.weaponPicks[class .. "_" .. hand] or {}) do
 			picks[#picks + 1] = key .. "=" .. tostring(when)
@@ -543,7 +549,7 @@ function ns:BuildBuffDutyContextReport()
 		table.sort(items)
 		local itemID = GetInventoryItemID("player", slot)
 		lines[#lines + 1] = string.format(
-			"  %s (slot %d): picks=%s items=%s castable=%s item=%s (%s) enchantLeft=%s enchant=%s (row %s)",
+			"  %s (slot %d): picks=%s items=%s castable=%s item=%s (%s) enchants=%s",
 			hand,
 			slot,
 			#picks > 0 and table.concat(picks, " ") or "none",
@@ -551,16 +557,14 @@ function ns:BuildBuffDutyContextReport()
 			listed[hand] or "0",
 			PlainText(itemID),
 			Holds(itemID),
-			ns.IsPlain(expiration) and expiration and (math.floor(expiration / 1000) .. "s") or "none",
-			PlainText(enchant),
-			carried and tostring(carried.key) or "not a Buff Duty row"
+			#wornText > 0 and table.concat(wornText, " ") or "none"
 		)
-		enchanted[hand] = ns.IsPlain(enchants[base + 1]) and enchants[base + 1] and true or false
 		local subclass = SubclassIn(itemID)
 		local handBuff = handBuffs[hand]
 		if handBuff and subclass then
-			local fits, outOfZone = 0, 0
+			local fits, outOfZone, layers = 0, 0, {}
 			for _, pick in ipairs(handBuff.picks) do
+				layers[pick.layer] = (layers[pick.layer] or 0) + 1
 				if not pick.types or pick.types == 0 then
 					fits = fits + (subclass ~= fishingPole and 1 or 0)
 				elseif bit.band(pick.types, bit.lshift(1, subclass)) ~= 0 then
@@ -570,17 +574,30 @@ function ns:BuildBuffDutyContextReport()
 					outOfZone = outOfZone + 1
 				end
 			end
-			lines[#lines + 1] =
-				string.format("    picks that take this weapon=%d/%d outOfZone=%d", fits, #handBuff.picks, outOfZone)
+			local layerText = {}
+			for layer, count in pairs(layers) do
+				layerText[#layerText + 1] = layer .. "=" .. count
+			end
+			table.sort(layerText)
+			lines[#lines + 1] = string.format(
+				"    picks that take this weapon=%d/%d outOfZone=%d byLayer=%s",
+				fits,
+				#handBuff.picks,
+				outOfZone,
+				table.concat(layerText, " ")
+			)
 		end
 	end
-	-- An imbue picks its own hand: the main, unless it has an enchant and a bare off-hand weapon waits.
+	-- An imbue picks its own hand: the main, unless it has an imbue and a bare off-hand weapon waits.
 	if hasImbues then
-		local offSubclass = SubclassIn(GetInventoryItemID("player", ns.Data.WEAPON_HAND_SLOTS.OFF))
-		local offWeapon = offSubclass ~= nil and offSubclass ~= fishingPole
-		lines[#lines + 1] = "  next imbue lands on: "
-			.. ((enchanted.MAIN and not enchanted.OFF and offWeapon) and "OFF" or "MAIN")
+		local landsOn = BW.ImbueLandsOn(worn)
+		lines[#lines + 1] = "  next imbue lands on: " .. (landsOn == ns.Data.WEAPON_HAND_SLOTS.OFF and "OFF" or "MAIN")
 	end
+	lines[#lines + 1] = "  enchants stack (imbue beside oil or stone): " .. tostring(ns.WEAPON_ENCHANTS_STACK == true)
+	-- What the Readiness Report would say about each hand, before its switches and the Shaman waiver.
+	local mainMissing, offMissing = ns.GetMissingWeaponBuffs()
+	lines[#lines + 1] =
+		string.format("  readiness missing: MAIN=%s OFF=%s", tostring(mainMissing), tostring(offMissing))
 
 	local stone = BW.soulstoneEntry
 	if stone and stone.row.class == class then
@@ -745,16 +762,787 @@ function ns:BuildBuffDutyContextReport()
 		db.favorSeconds,
 		ns.Data.BUFF_DUTY_FAVOR_MAX
 	)
-	-- Buff tracking hears a stranger's buff only while one of these features keeps its events on.
-	local IsOn = ns.IsFeatureOn
+	-- Strangers' buffs are heard after the pause that follows login and every loading screen.
 	lines[#lines + 1] = string.format(
-		"  heard while Stranger Buffs or Combat Buffs%s is on: strangerBuffs=%s combatBuffs=%s sharingGoodNews=%s buffTrackingReady=%s",
-		ns.FLAVOR == "Camelot" and "" or " or Sharing Good News",
-		tostring(IsOn and IsOn("strangers")),
-		tostring(IsOn and IsOn("teammates")),
-		tostring(IsOn and IsOn("goodNews")),
-		tostring(ns.IsBuffTrackingReady and ns.IsBuffTrackingReady())
+		"  heard from %s: ready=%s",
+		ns.FLAVOR == "Camelot" and "your own auras" or "the combat log",
+		tostring(ns.IsBuffDutyReady and ns.IsBuffDutyReady())
 	)
 
 	return table.concat(lines, "\n")
 end
+
+--------------------------------------------------------------------------------
+-- API Endpoints
+--------------------------------------------------------------------------------
+
+--[[
+    Existence and shape checks only: read-only, no side effects, no protected
+    calls. One row per API Good to Go actually calls or guards, wherever it lives --
+    nothing incidental, and nothing the add-on does not use. Buff Duty's own
+    reads sit here beside the ones every feature shares.
+
+    Every modern/legacy pair the add-on still picks between is listed as both
+    halves: the unit tooltip the Buff Duty window reads a pet's owner from
+    (C_TooltipInfo.GetUnit or a hidden tooltip's SetUnit), Validate Data's stat
+    read, and its tooltip-text read (C_TooltipInfo.GetItemByID and
+    GetSpellByID, or the hidden scan tooltip). The hidden tooltips are probed
+    through the GameTooltip methods they inherit, so the check creates nothing.
+    A FAIL on one half is the report working rather than a defect: the pair
+    tells a bug report which branch that client took.
+]]
+local function HasFunction(namespace, name)
+	return function()
+		local library = _G[namespace]
+		return type(library) == "table" and type(library[name]) == "function"
+	end
+end
+
+local function HasGlobalFunction(name)
+	return function()
+		return type(_G[name]) == "function"
+	end
+end
+
+-- CreateFrame throws on a template the client doesn't ship, so each one the add-on names gets a row.
+local function HasTemplate(name)
+	return function()
+		local xml = _G.C_XMLUtil
+		return type(xml) == "table" and type(xml.GetTemplateInfo) == "function" and xml.GetTemplateInfo(name) ~= nil
+	end
+end
+
+ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
+	-- { label, testFunction }
+	{ "C_AddOns.GetAddOnMetadata", HasFunction("C_AddOns", "GetAddOnMetadata") },
+	{ "C_AddOns.GetNumAddOns", HasFunction("C_AddOns", "GetNumAddOns") },
+	{ "C_AddOns.GetAddOnInfo", HasFunction("C_AddOns", "GetAddOnInfo") },
+	{ "C_Seasons.GetActiveSeason", HasFunction("C_Seasons", "GetActiveSeason") },
+	{
+		"Enum.SeasonID.SeasonOfDiscovery",
+		function()
+			return type(Enum) == "table" and type(Enum.SeasonID) == "table" and Enum.SeasonID.SeasonOfDiscovery ~= nil
+		end,
+	},
+	{ "Settings.OpenToCategory", HasFunction("Settings", "OpenToCategory") },
+	{ "InCombatLockdown", HasGlobalFunction("InCombatLockdown") },
+	{ "C_Timer.After", HasFunction("C_Timer", "After") },
+	{ "C_Timer.NewTicker", HasFunction("C_Timer", "NewTicker") },
+	{ "C_EventUtils.IsEventValid", HasFunction("C_EventUtils", "IsEventValid") },
+	{ "C_Spell.GetSpellName", HasFunction("C_Spell", "GetSpellName") },
+	{ "C_Spell.DoesSpellExist", HasFunction("C_Spell", "DoesSpellExist") },
+	{ "C_Spell.GetSpellDescription", HasFunction("C_Spell", "GetSpellDescription") },
+	{ "C_Spell.RequestLoadSpellData", HasFunction("C_Spell", "RequestLoadSpellData") },
+	{ "C_Spell.IsSpellDataCached", HasFunction("C_Spell", "IsSpellDataCached") },
+	{ "C_Spell.GetSpellTexture", HasFunction("C_Spell", "GetSpellTexture") },
+	{ "C_Spell.GetSpellLink", HasFunction("C_Spell", "GetSpellLink") },
+	{ "C_Spell.GetSpellSubtext", HasFunction("C_Spell", "GetSpellSubtext") },
+	{ "C_Item.GetItemInfo", HasFunction("C_Item", "GetItemInfo") },
+	{ "C_Item.GetItemIconByID", HasFunction("C_Item", "GetItemIconByID") },
+	{ "C_UnitAuras.GetBuffDataByIndex", HasFunction("C_UnitAuras", "GetBuffDataByIndex") },
+	{ "C_UnitAuras.GetAuraCasterGUID", HasFunction("C_UnitAuras", "GetAuraCasterGUID") },
+	{ "C_Secrets.ShouldUnitIdentityBeSecret", HasFunction("C_Secrets", "ShouldUnitIdentityBeSecret") },
+	{ "C_Secrets.ShouldAurasBeSecret", HasFunction("C_Secrets", "ShouldAurasBeSecret") },
+	{ "issecretvalue", HasGlobalFunction("issecretvalue") },
+	{ "CombatLogGetCurrentEventInfo", HasGlobalFunction("CombatLogGetCurrentEventInfo") },
+	{
+		"COMBATLOG_OBJECT_* affiliation / reaction / type flags",
+		function()
+			return COMBATLOG_OBJECT_TYPE_PLAYER ~= nil
+				and COMBATLOG_OBJECT_REACTION_FRIENDLY ~= nil
+				and COMBATLOG_OBJECT_AFFILIATION_MINE ~= nil
+				and COMBATLOG_OBJECT_AFFILIATION_PARTY ~= nil
+				and COMBATLOG_OBJECT_AFFILIATION_RAID ~= nil
+				and COMBATLOG_OBJECT_AFFILIATION_OUTSIDER ~= nil
+		end,
+	},
+	{
+		"bit.band / bit.lshift",
+		function()
+			return type(bit) == "table" and type(bit.band) == "function" and type(bit.lshift) == "function"
+		end,
+	},
+	{ "GetPlayerInfoByGUID", HasGlobalFunction("GetPlayerInfoByGUID") },
+	{ "UnitNameFromGUID", HasGlobalFunction("UnitNameFromGUID") },
+	{ "Ambiguate", HasGlobalFunction("Ambiguate") },
+	{ "C_ChatInfo.SendChatMessage", HasFunction("C_ChatInfo", "SendChatMessage") },
+	{ "UnitIsVisible", HasGlobalFunction("UnitIsVisible") },
+	{ "UnitInRange", HasGlobalFunction("UnitInRange") },
+	-- The Buff Key holds a group buff for a member out of sight unless they're AFK.
+	{ "UnitIsAFK", HasGlobalFunction("UnitIsAFK") },
+	-- A borrowed pet (Mind Control, Enslave Demon) takes no Buff Duty buff.
+	{ "UnitIsCharmed", HasGlobalFunction("UnitIsCharmed") },
+	{ "CreateMacro", HasGlobalFunction("CreateMacro") },
+	{ "EditMacro", HasGlobalFunction("EditMacro") },
+	{ "DeleteMacro", HasGlobalFunction("DeleteMacro") },
+	{ "GetMacroIndexByName", HasGlobalFunction("GetMacroIndexByName") },
+	{ "GetNumMacros", HasGlobalFunction("GetNumMacros") },
+	{ "GetMacroInfo", HasGlobalFunction("GetMacroInfo") },
+	{ "PlaySoundFile", HasGlobalFunction("PlaySoundFile") },
+	-- Buff Duty's group read, role guesses and range check, and When to Show's In Instance.
+	{ "IsInInstance", HasGlobalFunction("IsInInstance") },
+	-- Where a zone-limited weapon item works.
+	{ "GetInstanceInfo", HasGlobalFunction("GetInstanceInfo") },
+	{ "C_Map.GetBestMapForUnit", HasFunction("C_Map", "GetBestMapForUnit") },
+	{ "GetNumGroupMembers", HasGlobalFunction("GetNumGroupMembers") },
+	{ "GetRaidRosterInfo", HasGlobalFunction("GetRaidRosterInfo") },
+	{ "GetPartyAssignment (guarded)", HasGlobalFunction("GetPartyAssignment") },
+	{ "UnitGroupRolesAssigned (guarded)", HasGlobalFunction("UnitGroupRolesAssigned") },
+	{ "GetLFGRoles (guarded)", HasGlobalFunction("GetLFGRoles") },
+	{ "C_Spell.IsSpellInRange", HasFunction("C_Spell", "IsSpellInRange") },
+	{ "UnitPowerType", HasGlobalFunction("UnitPowerType") },
+	{
+		"Enum.PowerType.Mana / Focus",
+		function()
+			return type(Enum) == "table"
+				and type(Enum.PowerType) == "table"
+				and Enum.PowerType.Mana ~= nil
+				and Enum.PowerType.Focus ~= nil
+		end,
+	},
+	{ "C_Spell.GetSpellCooldown", HasFunction("C_Spell", "GetSpellCooldown") },
+	-- Self Buffs' weapons and Soulstone: what each hand holds and carries, and what your bags hold.
+	{ "GetInventoryItemID", HasGlobalFunction("GetInventoryItemID") },
+	{ "GetInventoryItemTexture", HasGlobalFunction("GetInventoryItemTexture") },
+	{
+		"C_Item.GetWeaponEnchantInfo, or GetWeaponEnchantInfo where enchants don't stack",
+		function()
+			local modern = type(C_Item) == "table"
+				and type(C_Item.GetWeaponEnchantInfo) == "function"
+				and type(Enum) == "table"
+				and type(Enum.ItemEnchantType) == "table"
+				and type(Enum.WeaponSlot) == "table"
+			if ns.WEAPON_ENCHANTS_STACK then
+				return modern
+			end
+			return modern or type(_G.GetWeaponEnchantInfo) == "function"
+		end,
+	},
+	{
+		"Enum.ItemClass.Weapon / Enum.ItemWeaponSubclass.Fishingpole (guarded)",
+		function()
+			return type(Enum) == "table"
+				and type(Enum.ItemClass) == "table"
+				and Enum.ItemClass.Weapon ~= nil
+				and type(Enum.ItemWeaponSubclass) == "table"
+				and Enum.ItemWeaponSubclass.Fishingpole ~= nil
+		end,
+	},
+	{ "C_Item.GetItemCount", HasFunction("C_Item", "GetItemCount") },
+	{ "C_Item.IsItemInRange", HasFunction("C_Item", "IsItemInRange") },
+	{ "C_Container.GetItemCooldown", HasFunction("C_Container", "GetItemCooldown") },
+	-- The game's "replace your enchant?" question, answered when a weapon icon's click asked it.
+	{ "C_Item.ReplaceEnchant", HasFunction("C_Item", "ReplaceEnchant") },
+	-- A Buff Duty item icon's tooltip.
+	{
+		"GameTooltip:SetItemByID",
+		function()
+			return type(GameTooltip) == "table" and type(GameTooltip.SetItemByID) == "function"
+		end,
+	},
+	-- Features/Announcements.lua picks the instance channel before party or raid.
+	{
+		"LE_PARTY_CATEGORY_INSTANCE",
+		function()
+			return LE_PARTY_CATEGORY_INSTANCE ~= nil
+		end,
+	},
+	{ "StaticPopup_Hide", HasGlobalFunction("StaticPopup_Hide") },
+	-- The Buff Key: what a press can cast, and the binding Buff Duty sets.
+	{ "C_Spell.IsSpellUsable", HasFunction("C_Spell", "IsSpellUsable") },
+	-- Weighs a group buff's mana against its members' single casts.
+	{ "C_Spell.GetSpellPowerCost (guarded)", HasFunction("C_Spell", "GetSpellPowerCost") },
+	-- Which spells have a cooldown, so the Buff Key passes over them.
+	{ "GetSpellBaseCooldown", HasGlobalFunction("GetSpellBaseCooldown") },
+	{ "UnitHasIncomingResurrection (guarded)", HasGlobalFunction("UnitHasIncomingResurrection") },
+	{ "GetBindingKey", HasGlobalFunction("GetBindingKey") },
+	{ "SetBinding", HasGlobalFunction("SetBinding") },
+	{ "SaveBindings", HasGlobalFunction("SaveBindings") },
+	{ "GetCurrentBindingSet", HasGlobalFunction("GetCurrentBindingSet") },
+	{ "C_TooltipInfo.GetUnit", HasFunction("C_TooltipInfo", "GetUnit") },
+	{
+		"Hidden unit tooltip (legacy)",
+		function()
+			return type(CreateFrame) == "function"
+				and type(GameTooltip) == "table"
+				and type(GameTooltip.SetUnit) == "function"
+				and type(GameTooltip.NumLines) == "function"
+		end,
+	},
+	-- Buff Duty's secure buttons and the state driver behind Hide in Combat.
+	{ "RegisterStateDriver", HasGlobalFunction("RegisterStateDriver") },
+	{ "UnregisterStateDriver", HasGlobalFunction("UnregisterStateDriver") },
+	{ "C_XMLUtil.GetTemplateInfo", HasFunction("C_XMLUtil", "GetTemplateInfo") },
+	{ "SecureActionButtonTemplate", HasTemplate("SecureActionButtonTemplate") },
+	{ "CooldownFrameTemplate", HasTemplate("CooldownFrameTemplate") },
+	{ "BackdropTemplate", HasTemplate("BackdropTemplate") },
+	{ "UIPanelCloseButton", HasTemplate("UIPanelCloseButton") },
+	{ "GameTooltipTemplate", HasTemplate("GameTooltipTemplate") },
+	-- Validate Data's reads beyond the reader lists it adds itself.
+	{ "C_Item.DoesItemExistByID", HasFunction("C_Item", "DoesItemExistByID") },
+	{ "C_Item.RequestLoadItemDataByID", HasFunction("C_Item", "RequestLoadItemDataByID") },
+	{ "C_Item.GetItemInfoInstant", HasFunction("C_Item", "GetItemInfoInstant") },
+	{ "C_Item.GetItemSpell", HasFunction("C_Item", "GetItemSpell") },
+	{ "C_Item.GetDetailedItemLevelInfo", HasFunction("C_Item", "GetDetailedItemLevelInfo") },
+	{ "C_Item.GetItemStats", HasFunction("C_Item", "GetItemStats") },
+	{ "GetItemStats (legacy)", HasGlobalFunction("GetItemStats") },
+	{ "C_Item.GetItemClassInfo", HasFunction("C_Item", "GetItemClassInfo") },
+	{ "C_Item.GetItemSubClassInfo", HasFunction("C_Item", "GetItemSubClassInfo") },
+	{ "C_TooltipInfo.GetItemByID", HasFunction("C_TooltipInfo", "GetItemByID") },
+	{ "C_TooltipInfo.GetSpellByID", HasFunction("C_TooltipInfo", "GetSpellByID") },
+	{
+		"Hidden scan tooltip (legacy)",
+		function()
+			return type(CreateFrame) == "function"
+				and type(GameTooltip) == "table"
+				and type(GameTooltip.SetHyperlink) == "function"
+				and type(GameTooltip.NumLines) == "function"
+		end,
+	},
+	-- Display Context's screen read, and the taintLog button.
+	{ "GetPhysicalScreenSize", HasGlobalFunction("GetPhysicalScreenSize") },
+	{ "GetCVar", HasGlobalFunction("GetCVar") },
+	{ "SetCVar", HasGlobalFunction("SetCVar") },
+})
+
+--------------------------------------------------------------------------------
+-- Event Log Correlation
+--------------------------------------------------------------------------------
+
+--[[
+    The event log's per-id filter asks this whether a firing of an id-filtered
+    event (ns.MESSAGE_ID_FILTERED_EVENTS) is one Buff Duty acts on. For
+    UNIT_SPELLCAST_SUCCEEDED that is any rank of a spell the window can cast,
+    which is what a Buff Key press waits to hear go off (the set built from
+    this client's Buff-Duty-Spells data, on the first firing while logging).
+    For UI_ERROR_MESSAGE it is the "more powerful spell" refusal, whose error type
+    Buff Duty learns from its text the first time it acts on one and logs that
+    firing itself (ns.IsBuffBounceError). Everything else is counted.
+]]
+local IsBuffDutySpell -- defined under Validate Data Sources, from the same collectors
+
+function ns.IsCorrelatedMessage(event, id)
+	if event == "UNIT_SPELLCAST_SUCCEEDED" then
+		return IsBuffDutySpell(id)
+	end
+	if event == "UI_ERROR_MESSAGE" then
+		return ns.IsBuffBounceError ~= nil and ns.IsBuffBounceError(id)
+	end
+	return false
+end
+
+--------------------------------------------------------------------------------
+-- Name Lookups
+--------------------------------------------------------------------------------
+
+local function SortedKeys(set)
+	local keys = {}
+	for key in pairs(set) do
+		keys[#keys + 1] = key
+	end
+	table.sort(keys)
+	return keys
+end
+
+local function UiLabel(constant)
+	return {
+		constant = constant,
+		kind = "uiLabel",
+		id = constant,
+		lookup = function()
+			return _G[constant]
+		end,
+	}
+end
+
+--[[
+    Every record Good to Go shows or matches by the name this client gives it, for
+    the Localization tab's Game Names report, built at load from this client's
+    data. Each row reads the name exactly as the features do:
+
+    - every ns.GAME_IDS constant, a spell named through C_Spell.GetSpellName
+      (what ns.GetSpellLink builds the panel samples from), requested when it
+      loads late;
+    - every class token this client has, named through
+      LOCALIZED_CLASS_NAMES_MALE as the panels show it;
+    - the client's duration strings, through ns.FormatDuration as the Buff
+      Duty panels use them, with the sample count in the ID cell;
+    - the pet-owner tooltip formats Buff Duty turns into patterns to find
+      a targeted pet's owner (NIL means that wording is skipped on this client);
+    - the group labels the Buff Duty window heads its party sections with, the
+      hand names its weapon rows and the Weapon Buffs panel show, the error a
+      Buff Key pressed in combat shows, and the "more powerful spell" refusal
+      Buff Duty matches by its text (NIL means it never learns a buff bounced).
+
+    Buff Duty names no item by constant: its items' names show on Validate Data.
+]]
+ns.AppendDiagnosticRows(ns.DIAGNOSTIC_NAME_LOOKUPS, {})
+
+do
+	local rows = ns.DIAGNOSTIC_NAME_LOOKUPS
+
+	for _, constant in ipairs(SortedKeys(ns.GAME_IDS or {})) do
+		local id = ns.GAME_IDS[constant]
+		rows[#rows + 1] = {
+			constant = constant,
+			kind = "spell",
+			id = id,
+			lookup = function()
+				return C_Spell.GetSpellName(id)
+			end,
+			request = function()
+				C_Spell.RequestLoadSpellData(id)
+			end,
+		}
+	end
+
+	local classes = {}
+	for class in pairs(ns.CLASS_SPELL_LISTS or {}) do
+		classes[class] = true
+	end
+	for _, list in ipairs({
+		ns.BUFF_DUTY_SPELLS or {},
+		ns.BUFF_DUTY_SELF_SPELLS or {},
+		ns.BUFF_DUTY_WEAPON_ENCHANTS or {},
+	}) do
+		for _, row in ipairs(list) do
+			if row.class then
+				classes[row.class] = true
+			end
+		end
+	end
+	for _, token in ipairs(SortedKeys(classes)) do
+		rows[#rows + 1] = {
+			constant = token,
+			kind = "class",
+			id = token,
+			lookup = function()
+				return LOCALIZED_CLASS_NAMES_MALE[token]
+			end,
+		}
+	end
+
+	local durations =
+		{ { "D_SECONDS", 1 }, { "D_SECONDS", 2 }, { "D_SECONDS", 15 }, { "D_MINUTES", 120 }, { "D_HOURS", 7200 } }
+	for _, duration in ipairs(durations) do
+		local seconds = duration[2]
+		rows[#rows + 1] = {
+			constant = duration[1],
+			kind = "globalString",
+			id = seconds,
+			lookup = function()
+				return ns.FormatDuration(seconds)
+			end,
+		}
+	end
+
+	for _, constant in ipairs({
+		"UNITNAME_TITLE_PET",
+		"UNITNAME_TITLE_MINION",
+		"UNITNAME_TITLE_GUARDIAN",
+		"UNITNAME_TITLE_CREATION",
+		"UNITNAME_TITLE_CHARM",
+		"UNITNAME_TITLE_COMPANION",
+		"GROUP",
+		"GROUP_NUMBER",
+		"INVTYPE_WEAPONMAINHAND",
+		"INVTYPE_WEAPONOFFHAND",
+		"ERR_NOT_IN_COMBAT",
+		"SPELL_FAILED_AURA_BOUNCED",
+	}) do
+		rows[#rows + 1] = UiLabel(constant)
+	end
+end
+
+--------------------------------------------------------------------------------
+-- Message Length
+--------------------------------------------------------------------------------
+
+-- A macro body's ceiling, measured in bytes with #body, as the Style Guide's Message Length rule asks.
+local MACRO_MAX_LENGTH = 255
+
+-- The longest name a character can have, in letters.
+local CHARACTER_NAME_MAX_LETTERS = 12
+
+--[[
+    Every chat line and macro Buff Duty sends or writes, for the Localization
+    tab's Message Length report, built at report time through the add-on's own
+    builders. Returns rows of { label, ceiling, text } and a list of notes.
+    The ceiling is in bytes, so the overflow canary is the widest-encoding
+    locale, usually ruRU.
+
+    Buff Duty's ask for another class's buff, said to the group or
+    whispered, is built for every raid-wide buff the window counts, and the
+    longest is kept.
+
+    Buff Duty's Return the Favor buttons cast through a macro naming the
+    stranger, one per buff you can give right now, built by ns.BuffDuty's
+    own SingleIcon with your top rank's cast text and a 12-letter name on your
+    realm.
+]]
+ns.DIAGNOSTIC_MESSAGES = function()
+	local rows, notes = {}, {}
+	local BW = ns.BuffDuty
+	if BW and BW.entries then
+		local longestAsk
+		-- the longest names list an ask can carry: as many as it names, each at the game's 12-letter limit
+		local longestNames = {}
+		for i = 1, ns.BUFF_ASK_MAX_NAMES do
+			longestNames[i] = string.rep("W", 12)
+		end
+		for _, entry in ipairs(BW.entries) do
+			local row = entry.row
+			if row.group and not row.exclusive then
+				local linkId = entry.ids[#entry.ids]
+				local link = ns.GetSpellLink(linkId) or C_Spell.GetSpellName(linkId) or ""
+				local ask = ns:BuildBuffRequestMessage(longestNames, #longestNames, link)
+				if not longestAsk or #ask > #longestAsk then
+					longestAsk = ask
+				end
+			end
+		end
+		if longestAsk then
+			rows[#rows + 1] = {
+				label = "Buff Duty ask for a buff",
+				ceiling = ns.CHAT_MESSAGE_MAX_LENGTH,
+				text = longestAsk,
+			}
+		end
+	end
+	if BW and BW.SingleIcon then
+		local realm = _G.GetNormalizedRealmName and _G.GetNormalizedRealmName() or "Realm"
+		local fullName = string.rep("W", CHARACTER_NAME_MAX_LETTERS) .. "-" .. tostring(realm)
+		for _, buff in ipairs(BW.buffs) do
+			if buff.singleName then
+				local icon = BW.SingleIcon(buff, nil, nil, fullName, fullName)
+				rows[#rows + 1] = {
+					label = "Buff Duty favor macro (" .. buff.singleName .. ")",
+					ceiling = MACRO_MAX_LENGTH,
+					text = icon and icon.macrotext or "",
+				}
+			end
+		end
+		if #BW.buffs == 0 then
+			notes[#notes + 1] = "No Buff Duty buff is castable right now, so no favor macro was built."
+		end
+		notes[#notes + 1] =
+			"A character name in a non-Latin script takes 2 or 3 bytes a letter, so a favor macro can run longer than shown."
+	end
+	return rows, notes
+end
+
+--------------------------------------------------------------------------------
+-- Validate Data Sources
+--------------------------------------------------------------------------------
+
+--[[
+    One entry per data file, and one report row per entry on the Data tab
+    (Diagnostics/Options-Diagnostics.lua). Each entry's label is the table-name
+    part of its file name, so ns.DataSourceFileName can name the file this
+    client's folder built. Each source names the static table on ns and its kind,
+    and reaches its ids through collect(tbl), which returns { id, key, row }
+    entries. dataColumns carries the shipped row's own values as
+    { header, getter(key, row) }, so the export sets what the file says beside
+    what the client says.
+]]
+local function BuffRowField(field)
+	return function(_, row)
+		return row.row[field]
+	end
+end
+
+local function FoundField(field)
+	return function(_, row)
+		return row[field]
+	end
+end
+
+-- Single-target ranks are { id, level learned }; group ranks are bare ids.
+local function CollectBuffDuty(rows)
+	local found = {}
+	for index, row in ipairs(rows) do
+		for _, rank in ipairs(row.single or {}) do
+			found[#found + 1] = { id = rank[1], key = index, row = { row = row, role = "single", level = rank[2] } }
+		end
+		for _, id in ipairs(row.group or {}) do
+			found[#found + 1] = { id = id, key = index, row = { row = row, role = "group" } }
+		end
+		for _, id in ipairs(row.greater or {}) do
+			found[#found + 1] = { id = id, key = index, row = { row = row, role = "greater" } }
+		end
+	end
+	return found
+end
+
+-- Self buffs: every rank, { id, level learned }.
+local function CollectSelfBuffs(rows)
+	local found = {}
+	for index, row in ipairs(rows) do
+		for _, rank in ipairs(row.ranks or {}) do
+			found[#found + 1] = { id = rank[1], key = index, row = { row = row, level = rank[2] } }
+		end
+	end
+	return found
+end
+
+-- A rank's enchant id, or its list of them (TBC's Rockbiter, one per weapon speed).
+local function EnchantText(enchant)
+	if type(enchant) == "table" then
+		return table.concat(enchant, " ")
+	end
+	return enchant
+end
+
+--[[
+    Weapon enchants: an imbue's ranks are spells, a poison's items; `kind`
+    picks which, and a row of the other kind adds nothing. A rank with no
+    enchant id shows a blank DATA_ENCHANT_ID: Buff Duty can't tell it's
+    on a weapon, and keeps offering it.
+]]
+local function CollectWeaponEnchants(kind)
+	return function(rows)
+		local found = {}
+		for index, row in ipairs(rows) do
+			local ranks
+			if kind == "item" then
+				ranks = row.items
+			else
+				ranks = row.ranks
+			end
+			for _, rank in ipairs(ranks or {}) do
+				found[#found + 1] = {
+					id = rank[1],
+					key = index,
+					row = { row = row, level = rank[2], enchant = EnchantText(rank[3]) },
+				}
+			end
+		end
+		return found
+	end
+end
+
+-- Weapon items: { item id, level required, enchant id, weapon types, kind, item level }; a blank DATA_ENCHANT_ID is a missing enchant id.
+-- A weapon item's zones as one cell, "instances 585 580; uiMaps 1957", or nil for an item that works anywhere.
+local function ZonesText(zones)
+	if not zones then
+		return nil
+	end
+	local parts = {}
+	for _, kind in ipairs({ "instances", "uiMaps" }) do
+		if zones[kind] then
+			parts[#parts + 1] = kind .. " " .. table.concat(zones[kind], " ")
+		end
+	end
+	return table.concat(parts, "; ")
+end
+
+local function CollectWeaponItems(rows)
+	local found = {}
+	for index, row in ipairs(rows) do
+		found[#found + 1] = {
+			id = row[1],
+			key = index,
+			row = {
+				level = row[2],
+				enchant = row[3],
+				types = row[4],
+				kind = row[5],
+				itemLevel = row[6],
+				zones = ZonesText(row[7]),
+			},
+		}
+	end
+	return found
+end
+
+-- The Soulstone: its Create Soulstone ranks and its auras as spells, its stones as items.
+local function CollectSoulstone(kind)
+	return function(stone)
+		local found = {}
+		if kind == "item" then
+			for _, id in ipairs(stone.items or {}) do
+				found[#found + 1] = { id = id, key = id, row = { role = "stone" } }
+			end
+			return found
+		end
+		for _, rank in ipairs(stone.create or {}) do
+			found[#found + 1] = { id = rank[1], key = rank[1], row = { role = "create", level = rank[2] } }
+		end
+		for _, id in ipairs(stone.auras or {}) do
+			found[#found + 1] = { id = id, key = id, row = { role = "aura" } }
+		end
+		return found
+	end
+end
+
+-- The Buff Key's resurrections: bare rank ids, one row per class.
+local function CollectResurrections(rows)
+	local found = {}
+	for index, row in ipairs(rows) do
+		for _, id in ipairs(row.ranks or {}) do
+			found[#found + 1] = { id = id, key = index, row = { row = row } }
+		end
+	end
+	return found
+end
+
+-- The pet icons' summoning spells: Call Pet for beasts, and one per demon by NPC id.
+local function CollectPetIcons(icons)
+	local found = {}
+	if icons.beast then
+		found[#found + 1] = { id = icons.beast, key = "beast", row = { npc = "" } }
+	end
+	for npc, spell in pairs(icons.demons or {}) do
+		found[#found + 1] = { id = spell, key = npc, row = { npc = npc } }
+	end
+	return found
+end
+
+-- Every spell id a Buff Duty data table names, for the event log's filter above.
+local buffDutySpells
+
+function IsBuffDutySpell(id)
+	if not buffDutySpells then
+		buffDutySpells = {}
+		for _, source in ipairs({
+			{ ns.BUFF_DUTY_SPELLS, CollectBuffDuty },
+			{ ns.BUFF_DUTY_SELF_SPELLS, CollectSelfBuffs },
+			{ ns.BUFF_DUTY_WEAPON_ENCHANTS, CollectWeaponEnchants("spell") },
+			{ ns.BUFF_DUTY_SOULSTONE, CollectSoulstone("spell") },
+			{ ns.BUFF_DUTY_RESURRECTIONS, CollectResurrections },
+		}) do
+			if type(source[1]) == "table" then
+				for _, found in ipairs(source[2](source[1])) do
+					buffDutySpells[found.id] = true
+				end
+			end
+		end
+	end
+	return buffDutySpells[id] == true
+end
+
+ns.AppendDiagnosticRows(ns.DIAGNOSTIC_DATA_SOURCES, {
+	-- { label, sources = { { table, kind, collect, dataColumns } } }
+	{
+		label = "Game-IDs",
+		sources = {
+			{
+				table = "GAME_IDS",
+				kind = "spell",
+				collect = function(ids)
+					local found = {}
+					for constant, id in pairs(ids) do
+						found[#found + 1] = { id = id, key = constant, row = id }
+					end
+					return found
+				end,
+				dataColumns = {
+					{
+						"DATA_CONSTANT",
+						function(key)
+							return key
+						end,
+					},
+				},
+			},
+		},
+	},
+	{
+		label = "Buff-Duty-Spells",
+		sources = {
+			{
+				table = "BUFF_DUTY_SPELLS",
+				kind = "spell",
+				collect = CollectBuffDuty,
+				dataColumns = {
+					{ "DATA_ROLE", FoundField("role") },
+					{ "DATA_LEVEL", FoundField("level") },
+					{ "DATA_CLASS", BuffRowField("class") },
+					{ "DATA_EXCLUSIVE", BuffRowField("exclusive") },
+					{ "DATA_MANA_ONLY", BuffRowField("manaOnly") },
+					{ "DATA_NO_CASTERS", BuffRowField("noCasters") },
+					{ "DATA_DEFAULT", BuffRowField("default") },
+				},
+			},
+			{
+				table = "BUFF_DUTY_SELF_SPELLS",
+				kind = "spell",
+				collect = CollectSelfBuffs,
+				dataColumns = {
+					{ "DATA_LEVEL", FoundField("level") },
+					{ "DATA_CLASS", BuffRowField("class") },
+					{ "DATA_EXCLUSIVE", BuffRowField("exclusive") },
+					{ "DATA_DEFAULT", BuffRowField("default") },
+				},
+			},
+			{
+				table = "BUFF_DUTY_WEAPON_ENCHANTS",
+				kind = "spell",
+				collect = CollectWeaponEnchants("spell"),
+				dataColumns = {
+					{ "DATA_LEVEL", FoundField("level") },
+					{ "DATA_CLASS", BuffRowField("class") },
+					{ "DATA_ENCHANT_ID", FoundField("enchant") },
+				},
+			},
+			{
+				table = "BUFF_DUTY_WEAPON_ENCHANTS",
+				kind = "item",
+				collect = CollectWeaponEnchants("item"),
+				dataColumns = {
+					{ "DATA_LEVEL", FoundField("level") },
+					{ "DATA_CLASS", BuffRowField("class") },
+					{ "DATA_ENCHANT_ID", FoundField("enchant") },
+				},
+			},
+			-- Which hands each class is asked about: class tokens, no ids, so the report counts them.
+			{ table = "BUFF_DUTY_WEAPON_HANDS", kind = "other" },
+			{
+				table = "BUFF_DUTY_WEAPON_ITEMS",
+				kind = "item",
+				collect = CollectWeaponItems,
+				dataColumns = {
+					{ "DATA_LEVEL", FoundField("level") },
+					{ "DATA_ENCHANT_ID", FoundField("enchant") },
+					{ "DATA_WEAPON_TYPES", FoundField("types") },
+					{ "DATA_KIND", FoundField("kind") },
+					{ "DATA_ITEM_LEVEL", FoundField("itemLevel") },
+					{ "DATA_ZONES", FoundField("zones") },
+				},
+			},
+			{
+				table = "BUFF_DUTY_SOULSTONE",
+				kind = "spell",
+				collect = CollectSoulstone("spell"),
+				dataColumns = {
+					{ "DATA_ROLE", FoundField("role") },
+					{ "DATA_LEVEL", FoundField("level") },
+				},
+			},
+			{
+				table = "BUFF_DUTY_SOULSTONE",
+				kind = "item",
+				collect = CollectSoulstone("item"),
+				dataColumns = {
+					{ "DATA_ROLE", FoundField("role") },
+				},
+			},
+			{
+				table = "BUFF_DUTY_RESURRECTIONS",
+				kind = "spell",
+				collect = CollectResurrections,
+				dataColumns = {
+					{ "DATA_CLASS", BuffRowField("class") },
+				},
+			},
+			{
+				table = "BUFF_DUTY_PET_ICONS",
+				kind = "spell",
+				collect = CollectPetIcons,
+				dataColumns = {
+					{ "DATA_NPC_ID", FoundField("npc") },
+				},
+			},
+		},
+	},
+})

@@ -47,12 +47,15 @@ local OLD_GROUP_COMMAND = "CLICK TFTBBuffGroup:LeftButton"
     MIGRATION (remove after 2026-12-03): the button's name before the GtG name.
     A key still bound to its command moves over at login (ns.MigrateBuffKeys),
     and the old name stays an alias for the button, so a player's own macro
-    that still types /click TFTBBuffIndividual keeps pressing it.
+    that still types /click TFTBBuffIndividual keeps pressing it. Bindings.xml
+    doesn't declare the old command: an older Thanks for the Buff declares
+    it too, and the client warns on a duplicate. A saved CLICK key needs no
+    declaration, and the alias answers it.
 ]]
 local OLD_KEY_BUTTON = "TFTBBuffIndividual"
 local OLD_KEY_COMMAND = "CLICK " .. OLD_KEY_BUTTON .. ":LeftButton"
 
--- The name the game's Key Bindings list shows (the add-on's header is set in Features/Spellbook/Key-Bindings.lua).
+-- The name the game's Key Bindings list shows (the add-on's header is set in Features/Key-Bindings.lua).
 _G["BINDING_NAME_" .. ns.BUFF_KEY_COMMAND] = L["BUFF_KEY"]
 
 --------------------------------------------------------------------------------
@@ -151,10 +154,10 @@ local function Remember(spec)
 end
 
 --[[
-    Called from Buff-Tracking's UNIT_SPELLCAST_SUCCEEDED handler, which owns
-    the event. The cast is matched by spell ID against every rank the press
-    could go off as, since a group buff or a resurrection is cast by its bare
-    name and resolves to whichever rank you know.
+    Called from Buff-Duty-Events.lua's UNIT_SPELLCAST_SUCCEEDED handler. The
+    cast is matched by spell ID against every rank the press could go off as:
+    a group buff's castIds list every group rank, and a resurrection is cast
+    by its bare name and resolves to whichever rank you know.
 ]]
 function ns.OnBuffKeyCastSucceeded(unit, spellID)
 	if not pending or not ns.IsPlain(unit) or unit ~= "player" or not ns.IsPlain(spellID) then

@@ -36,10 +36,10 @@ ns.TRAINER_SPELLS = {
 		{ level = 20, id = 6756, requires = { 5232 } }, -- Mark of the Wild
 		{ level = 20, id = 16864 }, -- Omen of Clarity
 		{ level = 20, id = 20484 }, -- Rebirth
+		{ level = 20, id = 5221, requires = { 768 } }, -- Shred
 		{ level = 20, id = 2912 }, -- Starfire
 		{ level = 22, id = 8926, requires = { 8925 } }, -- Moonfire
 		{ level = 22, id = 2090, requires = { 1430 } }, -- Rejuvenation
-		{ level = 22, id = 5221, requires = { 768 } }, -- Shred
 		{ level = 22, id = 2908 }, -- Soothe Animal
 		{ level = 22, id = 5179, requires = { 5178 } }, -- Wrath
 		{ level = 24, id = 1822, requires = { 768 } }, -- Rake
@@ -285,6 +285,7 @@ ns.TRAINER_SPELLS = {
 		{ level = 40, id = 14919, requires = { 14918 } }, -- Growl
 		{ level = 40, id = 24503, requires = { 24502 } }, -- Nature Resistance
 		{ level = 40, id = 24506, requires = { 24505 } }, -- Shadow Resistance
+		{ level = 40, id = 24507, requires = { 24506 } }, -- Shadow Resistance
 		{ level = 42, id = 13553, requires = { 13552 } }, -- Serpent Sting
 		{ level = 42, id = 4193, requires = { 4192 } }, -- Great Stamina
 		{ level = 42, id = 24554, requires = { 24553 } }, -- Natural Armor
@@ -313,7 +314,6 @@ ns.TRAINER_SPELLS = {
 		{ level = 50, id = 24449, requires = { 24448 } }, -- Frost Resistance
 		{ level = 50, id = 14920, requires = { 14919 } }, -- Growl
 		{ level = 50, id = 24504, requires = { 24503 } }, -- Nature Resistance
-		{ level = 50, id = 24507, requires = { 24506 } }, -- Shadow Resistance
 		{ level = 52, id = 20903, requires = { 20902 } }, -- Aimed Shot
 		{ level = 52, id = 14286, requires = { 14285 } }, -- Arcane Shot
 		{ level = 52, id = 13543, requires = { 13542 } }, -- Mend Pet
@@ -508,6 +508,7 @@ ns.TRAINER_SPELLS = {
 		{ level = 10, id = 1022 }, -- Blessing of Protection
 		{ level = 10, id = 10290, requires = { 465 } }, -- Devotion Aura
 		{ level = 10, id = 633 }, -- Lay on Hands
+		{ level = 10, id = 25780 }, -- Righteous Fury
 		{ level = 10, id = 1311649 }, -- Seal of Fury
 		{ level = 10, id = 20287, requires = { 20154 } }, -- Seal of Righteousness
 		{ level = 12, id = 19834, requires = { 19740 } }, -- Blessing of Might
@@ -516,7 +517,6 @@ ns.TRAINER_SPELLS = {
 		{ level = 14, id = 19742 }, -- Blessing of Wisdom
 		{ level = 14, id = 647, requires = { 639 } }, -- Holy Light
 		{ level = 16, id = 7294 }, -- Retribution Aura
-		{ level = 16, id = 25780 }, -- Righteous Fury
 		{ level = 18, id = 1044 }, -- Blessing of Freedom
 		{ level = 18, id = 5573, requires = { 498 } }, -- Divine Protection
 		{ level = 18, id = 1311656, requires = { 1311649 } }, -- Seal of Fury
@@ -537,10 +537,9 @@ ns.TRAINER_SPELLS = {
 		{ level = 24, id = 5588, requires = { 853 } }, -- Hammer of Justice
 		{ level = 24, id = 10322, requires = { 7328 } }, -- Redemption
 		{ level = 24, id = 2878 }, -- Turn Undead
-		{ level = 25, id = 20163, requires = { 1311656 } }, -- Seal of Fury
-		{ level = 26, id = 1038 }, -- Salvation
 		{ level = 26, id = 19939, requires = { 19750 } }, -- Flash of Light
 		{ level = 26, id = 10298, requires = { 7294 } }, -- Retribution Aura
+		{ level = 26, id = 20163, requires = { 1311656 } }, -- Seal of Fury
 		{ level = 26, id = 20289, requires = { 20288 } }, -- Seal of Righteousness
 		{ level = 28, id = 5614, requires = { 879 } }, -- Exorcism
 		{ level = 28, id = 680, requires = { 1866 } }, -- Holy Strike
@@ -569,7 +568,6 @@ ns.TRAINER_SPELLS = {
 		{ level = 38, id = 3472, requires = { 1042 } }, -- Holy Light
 		{ level = 38, id = 20166 }, -- Seal of Wisdom
 		{ level = 38, id = 5627, requires = { 2878 } }, -- Turn Undead
-		{ level = 40, id = 19977 }, -- Blessing of Light
 		{ level = 40, id = 20922, requires = { 20116 } }, -- Consecration
 		{ level = 40, id = 1032, requires = { 10291 } }, -- Devotion Aura
 		{ level = 40, id = 5589, requires = { 5588 } }, -- Hammer of Justice
@@ -594,7 +592,6 @@ ns.TRAINER_SPELLS = {
 		{ level = 48, id = 19899, requires = { 19891 } }, -- Fire Resistance Aura
 		{ level = 48, id = 20772, requires = { 10324 } }, -- Redemption
 		{ level = 48, id = 20356, requires = { 20166 } }, -- Seal of Wisdom
-		{ level = 50, id = 19978, requires = { 19977 } }, -- Blessing of Light
 		{ level = 50, id = 20923, requires = { 20922 } }, -- Consecration
 		{ level = 50, id = 10292, requires = { 1032 } }, -- Devotion Aura
 		{ level = 50, id = 1020, requires = { 642 } }, -- Divine Shield
@@ -625,15 +622,12 @@ ns.TRAINER_SPELLS = {
 		{ level = 58, id = 20423, requires = { 20422 } }, -- Seal of Fury
 		{ level = 58, id = 20293, requires = { 20292 } }, -- Seal of Righteousness
 		{ level = 58, id = 20357, requires = { 20356 } }, -- Seal of Wisdom
-		{ level = 60, id = 19979, requires = { 19978 } }, -- Blessing of Light
 		{ level = 60, id = 20924, requires = { 20923 } }, -- Consecration
 		{ level = 60, id = 10293, requires = { 10292 } }, -- Devotion Aura
 		{ level = 60, id = 10314, requires = { 10313 } }, -- Exorcism
 		{ level = 60, id = 19900, requires = { 19899 } }, -- Fire Resistance Aura
 		{ level = 60, id = 25898, requires = { 20217 } }, -- Greater Blessing of Kings
-		{ level = 60, id = 25890, requires = { 19979 } }, -- Greater Blessing of Light
 		{ level = 60, id = 25916, requires = { 19740 } }, -- Greater Blessing of Might
-		{ level = 60, id = 25895, requires = { 1038 } }, -- Mass Salvation
 		{ level = 60, id = 25918, requires = { 19742 } }, -- Greater Blessing of Wisdom
 		{ level = 60, id = 24239, requires = { 24274 } }, -- Hammer of Wrath
 		{ level = 60, id = 10333, requires = { 10332 } }, -- Holy Strike
@@ -891,7 +885,6 @@ ns.TRAINER_SPELLS = {
 		{ level = 38, id = 8621, requires = { 1760 } }, -- Sinister Strike
 		{ level = 40, id = 8624, requires = { 8623 } }, -- Eviscerate
 		{ level = 40, id = 8637, requires = { 6768 } }, -- Feint
-		{ level = 40, id = 1310706, talent = true }, -- Mutilate
 		{ level = 40, id = 1860 }, -- Safe Fall
 		{ level = 40, id = 1786, requires = { 1785 } }, -- Stealth
 		{ level = 42, id = 11267, requires = { 8725 } }, -- Ambush
@@ -1324,3 +1317,40 @@ ns.TRAINER_SPELLS = {
 		{ level = 60, id = 11574, requires = { 11573 } }, -- Rend
 	},
 }
+
+--[[
+How We Got the Data
+
+Last Validated
+	2026-11-08, WoW Forever 1.60.1.70862
+
+Notes
+	- Every class spell this client's class trainers teach, one row per rank, so the spellbook page can list the spells a character hasn't learned yet. Features/Enhanced-Spellbook/Unlearned-Spells.lua shows only each spell's rank 1; the higher ranks keep the list in level order and let it tell rank 1 apart.
+	- level is the level the trainer offers the rank, which is the spell's learn level. A talent row is the exception (below).
+	- The client's own learn level (Validate Data's SPELL_LEVEL_LEARNED) reads 0 or 1 for spells with no level of their own: weapon and armor skills (Dual Wield, Plate Mail), Parry and talents. Those rows keep the trainer's level.
+	- requires is the spell the trainer wants first, usually the previous rank.
+	- faction and race mark rows only one faction or race can learn. A spell several races of the class learn, but not all of them, gets one row per race.
+	- talent marks the rank 1 of a talent whose higher ranks the trainer teaches, listed at the level of its first trainer rank so it shows until learned (Mortal Strike, Bloodthirst and Shield Slam at 48, where the client says 40). The talent's own trainer ranks are left out. Talents with no trainer ranks are in the class lists' extraSpells instead.
+	- Left out on purpose: starting spells, spells learned by quest or with a form (the class lists' extraSpells list these), passive and hidden spells, effects other spells fire, the hunter pet's abilities, which are the pet's spells rather than the hunter's, rogue poison recipes and the Poisons skill.
+	- The rows are What's Training's WoW Forever trainer lists (Data/LICENSE-Trainer-Data), made by tools/gen_trainer_data.py. Data/Vanilla/ and Data/TBC/ copied their rows from this folder.
+	- Shred (5221), Righteous Fury (25780), Seal of Fury rank 3 (20163) and the pet's Shadow Resistance rank 4 (24507) take this client's learn level from SpellLevels on wago.tools, 20, 10, 26 and 40, where What's Training's list had 22, 16, 25 and 50; Validate Data's SPELL_LEVEL_LEARNED states the first three on this client.
+	- Left out because this client's Validate Data report says it doesn't have them: Blessing of Salvation, Blessing of Light and their Greater versions, and the Mutilate talent rank 1310706.
+
+SQL (CMaNGOS)
+	TODO: Add SQL Query
+
+Wowhead
+	None.
+
+wago.tools
+	https://wago.tools/db2/SpellName?build=1.60.1.70862
+	https://wago.tools/db2/Spell?build=1.60.1.70862
+	https://wago.tools/db2/SpellLevels?build=1.60.1.70862
+	https://wago.tools/db2/SpellMisc?build=1.60.1.70862
+	https://wago.tools/db2/SpellEffect?build=1.60.1.70862
+	https://wago.tools/db2/SkillLineAbility?build=1.60.1.70862
+	https://wago.tools/db2/Talent?build=1.60.1.70862
+
+QuestieDB
+	None.
+]]

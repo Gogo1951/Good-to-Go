@@ -28,6 +28,11 @@ local function NoCannibalizeDrinking()
 	return not ns.CANNIBALIZE_RESTORES_MANA
 end
 
+-- Rapid Regeneration exists only on WoW Forever, so the Troll section shows only there.
+local function NoRapidRegeneration()
+	return not ns.RAPID_REGENERATION_SPELL_ID
+end
+
 --------------------------------------------------------------------------------
 -- Shared Widget Factories
 --------------------------------------------------------------------------------
@@ -61,6 +66,9 @@ end
     ns.POISON_GROUP_BASE_ITEMS, so a group the loaded data folder has no base
     item for is never offered.
 ]]
+-- No Poisons skill on this flavor (Mists), so no Poisons macro for these rows to set up.
+local NO_POISONS = ns.POISONS_SPELL_ID == nil
+
 local function PoisonHandDropdown(description, settingKey, order)
 	local sorting = {}
 	for groupID in pairs(ns.POISON_GROUP_BASE_ITEMS) do
@@ -74,6 +82,7 @@ local function PoisonHandDropdown(description, settingKey, order)
 		desc = description,
 		order = order,
 		width = ns.OPTIONS_CONTROL_WIDTH,
+		hidden = NO_POISONS,
 		values = function()
 			local values = {}
 			local coldItemIDs = {}
@@ -104,10 +113,11 @@ end
 
 --[[
     The macro options that belong to one class or race, nested under Macros
-    (Options/Options.lua): the Druid, Rogue, Forsaken and Night Elf sections,
-    alphabetical within class and within race. Every character sees every
-    section, the maintainer's choice, so nothing here is gated on the
-    character playing; the only gate is a flavor one (Cannibalize drinking).
+    (Options/Options.lua): the Druid, Rogue, Forsaken, Night Elf and Troll
+    sections, alphabetical within class and within race. Every character sees
+    every section, the maintainer's choice, so nothing here is gated on the
+    character playing; the only gates are flavor ones (Cannibalize drinking,
+    and the Troll section, which needs Rapid Regeneration).
 
     Order values are spaced blocks so a section can be reordered or extended
     without renumbering its neighbors. Registered as this builder function
@@ -169,19 +179,31 @@ function ns.BuildClassRaceOptions()
 		    (ns.GetPoisonGroupName), so the dropdown labels localize for
 		    free. Its Stealth Eating and the Night Elves one write the same
 		    setting, which the Food macro reads as Stealth or Shadowmeld.
+		    Where the flavor has no Poisons skill (Mists) there is no Poisons
+		    macro, so only Stealth Eating shows.
 		]]
 		spaceRogue0 = Spacer(20),
 		headerRogue = Header(L["OPTIONS_CLASS_HEADER_FORMAT"]:format(LOCALIZED_CLASS_NAMES_MALE.ROGUE), 21),
 		spaceRogue1 = Spacer(22),
-		descPoisons = Desc(GetColor("BODY") .. L["OPTIONS_POISONS_DESCRIPTION"] .. "|r", 23),
-		spaceRogue2 = Spacer(24),
+		descPoisons = Desc(GetColor("BODY") .. L["OPTIONS_POISONS_DESCRIPTION"] .. "|r", 23, NO_POISONS),
+		spaceRogue2 = Spacer(24, NO_POISONS),
 		-- Label-beside-control rows: the label cell, then the unlabeled dropdown, one row wide together.
-		labelMainHandPoison = ns.OptionsRowLabel(GetColor("BODY") .. L["OPTIONS_POISON_MAIN_HAND"] .. "|r", 25),
+		labelMainHandPoison = ns.OptionsRowLabel(
+			GetColor("BODY") .. L["OPTIONS_POISON_MAIN_HAND"] .. "|r",
+			25,
+			nil,
+			NO_POISONS
+		),
 		mainHandPoison = PoisonHandDropdown(L["OPTIONS_POISON_MAIN_HAND_DESCRIPTION"], "mainHandPoisonGroup", 26),
-		spaceRogue3 = Spacer(27),
-		labelOffHandPoison = ns.OptionsRowLabel(GetColor("BODY") .. L["OPTIONS_POISON_OFF_HAND"] .. "|r", 28),
+		spaceRogue3 = Spacer(27, NO_POISONS),
+		labelOffHandPoison = ns.OptionsRowLabel(
+			GetColor("BODY") .. L["OPTIONS_POISON_OFF_HAND"] .. "|r",
+			28,
+			nil,
+			NO_POISONS
+		),
 		offHandPoison = PoisonHandDropdown(L["OPTIONS_POISON_OFF_HAND_DESCRIPTION"], "offHandPoisonGroup", 29),
-		spaceRogue4 = Spacer(30),
+		spaceRogue4 = Spacer(30, NO_POISONS),
 		toggleStealthEatingRogue = MacroSettingToggle(
 			"enableStealthEating",
 			L["OPTIONS_STEALTH_EATING"],
@@ -240,6 +262,28 @@ function ns.BuildClassRaceOptions()
 			L["OPTIONS_STEALTH_EATING"],
 			SpellDescription("OPTIONS_STEALTH_EATING_SPELL_DESCRIPTION", ns.SHADOWMELD_SPELL_ID),
 			56
+		),
+
+		-- Trolls -- Rapid Regeneration in the Food macro, on WoW Forever only.
+		spaceTroll0 = Spacer(60, NoRapidRegeneration),
+		headerTroll = Header(
+			L["OPTIONS_RACE_HEADER_FORMAT"]:format(C_CreatureInfo.GetRaceInfo(ns.TROLL_RACE_ID).raceName),
+			61,
+			NoRapidRegeneration
+		),
+		spaceTroll1 = Spacer(62, NoRapidRegeneration),
+		descRapidRegeneration = Desc(function()
+			return GetColor("BODY")
+				.. SpellDescription("OPTIONS_RAPID_REGENERATION_DESCRIPTION", ns.RAPID_REGENERATION_SPELL_ID)()
+				.. "|r"
+		end, 63, NoRapidRegeneration),
+		spaceTroll2 = Spacer(64, NoRapidRegeneration),
+		toggleRapidRegenerationEating = MacroSettingToggle(
+			"enableRapidRegenerationEating",
+			SpellDescription("OPTIONS_RAPID_REGENERATION_EATING", ns.RAPID_REGENERATION_SPELL_ID),
+			SpellDescription("OPTIONS_RAPID_REGENERATION_EATING_DESCRIPTION", ns.RAPID_REGENERATION_SPELL_ID),
+			65,
+			NoRapidRegeneration
 		),
 	}
 

@@ -1,38 +1,38 @@
 local _, ns = ...
 
--- [ID] = {Healthstone Amount, Required Level}, -- Name
+-- [ID] = {Healthstone Amount, Required Level, Min Level, Vendor Price, Max Stack, Bind Type}, -- Name
 ns.HEALTHSTONES = {
-	[22105] = { 2496, 60 }, -- Master Healthstone
-	[22104] = { 2288, 60 }, -- Master Healthstone
-	[22103] = { 2080, 60 }, -- Master Healthstone
-	[32578] = { 2000, 0 }, -- Charged Crystal Focus
-	[19013] = { 1440, 48 }, -- Major Healthstone
-	[19012] = { 1320, 48 }, -- Major Healthstone
-	[9421] = { 1200, 48 }, -- Major Healthstone
-	[15723] = { 1050, 50 }, -- Tea with Sugar
-	[19011] = { 960, 36 }, -- Greater Healthstone
-	[19010] = { 880, 36 }, -- Greater Healthstone
-	[5510] = { 800, 36 }, -- Greater Healthstone
-	[11951] = { 700, 45 }, -- Whipper Root Tuber
-	[19009] = { 600, 24 }, -- Healthstone
-	[19008] = { 550, 24 }, -- Healthstone
-	[14894] = { 525, 0 }, -- Lily Root
-	[5509] = { 500, 24 }, -- Healthstone
-	[19007] = { 300, 12 }, -- Lesser Healthstone
-	[19006] = { 275, 12 }, -- Lesser Healthstone
-	[5511] = { 250, 12 }, -- Lesser Healthstone
-	[19005] = { 120, 1 }, -- Minor Healthstone
-	[19004] = { 110, 1 }, -- Minor Healthstone
-	[5512] = { 100, 1 }, -- Minor Healthstone
-	[5205] = { 71, 5 }, -- Sprouted Frond
-	[23329] = { 18, 0 }, -- Enriched Lasher Root
+	[22105] = { 2496, 60, 60, 0, 1, 0 }, -- Master Healthstone
+	[22104] = { 2288, 60, 60, 0, 1, 0 }, -- Master Healthstone
+	[22103] = { 2080, 60, 60, 0, 1, 0 }, -- Master Healthstone
+	[32578] = { 2000, 0, 0, 0, 20, 1 }, -- Charged Crystal Focus
+	[19013] = { 1440, 48, 48, 0, 1, 0 }, -- Major Healthstone
+	[19012] = { 1320, 48, 48, 0, 1, 0 }, -- Major Healthstone
+	[9421] = { 1200, 48, 48, 0, 1, 0 }, -- Major Healthstone
+	[15723] = { 1050, 50, 50, 2825, 1, 1 }, -- Tea with Sugar
+	[19011] = { 960, 36, 36, 0, 1, 0 }, -- Greater Healthstone
+	[19010] = { 880, 36, 36, 0, 1, 0 }, -- Greater Healthstone
+	[5510] = { 800, 36, 36, 0, 1, 0 }, -- Greater Healthstone
+	[11951] = { 700, 45, 45, 0, 20, 1 }, -- Whipper Root Tuber
+	[19009] = { 600, 24, 24, 0, 1, 0 }, -- Healthstone
+	[19008] = { 550, 24, 24, 0, 1, 0 }, -- Healthstone
+	[14894] = { 525, 0, 0, 0, 1, 1 }, -- Lily Root
+	[5509] = { 500, 24, 24, 0, 1, 0 }, -- Healthstone
+	[19007] = { 300, 12, 12, 0, 1, 0 }, -- Lesser Healthstone
+	[19006] = { 275, 12, 12, 0, 1, 0 }, -- Lesser Healthstone
+	[5511] = { 250, 12, 12, 0, 1, 0 }, -- Lesser Healthstone
+	[19005] = { 120, 1, 1, 0, 1, 0 }, -- Minor Healthstone
+	[19004] = { 110, 1, 1, 0, 1, 0 }, -- Minor Healthstone
+	[5512] = { 100, 1, 1, 0, 1, 0 }, -- Minor Healthstone
+	[5205] = { 71, 5, 5, 31, 10, 0 }, -- Sprouted Frond
+	[23329] = { 18, 0, 0, 5, 5, 0 }, -- Enriched Lasher Root
 }
 
 --[[
 How We Got the Data
 
 Last Validated
-	2026-11-04, TBC Anniversary 2.5.6.70577
+	2026-11-08, TBC Anniversary 2.5.6.70577
 
 Notes
 	- Every item that heals instantly on the healthstone cooldown, keyed by the cooldown category Charged Crystal Focus (32578) uses, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Healthstone and Health Potion macros. Healthstone Amount is the low end of the heal; Required Level is the level the tooltip requires (0 for none).

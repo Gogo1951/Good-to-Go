@@ -320,6 +320,7 @@ ns.TRAINER_SPELLS = {
 		{ level = 50, id = 15631, requires = { 15630 } }, -- Distracting Shot
 		{ level = 50, id = 13554, requires = { 13553 } }, -- Serpent Sting
 		{ level = 50, id = 19879 }, -- Track Dragonkin
+		{ level = 50, id = 19506, talent = true }, -- Trueshot Aura
 		{ level = 50, id = 14294, requires = { 1510 } }, -- Volley
 		{ level = 50, id = 19386, talent = true }, -- Wyvern Sting
 		{ level = 52, id = 20903, requires = { 20902 } }, -- Aimed Shot
@@ -1625,10 +1626,10 @@ ns.TRAINER_SPELLS = {
 How We Got the Data
 
 Last Validated
-	2026-11-04, TBC Anniversary 2.5.6.70577
+	2026-11-08, TBC Anniversary 2.5.6.70577
 
 Notes
-	- Every class spell this client's class trainers teach, one row per rank, so the spellbook page can list the spells a character hasn't learned yet. Features/Spellbook/Unlearned-Spells.lua shows only each spell's rank 1; the higher ranks keep the list in level order and let it tell rank 1 apart.
+	- Every class spell this client's class trainers teach, one row per rank, so the spellbook page can list the spells a character hasn't learned yet. Features/Enhanced-Spellbook/Unlearned-Spells.lua shows only each spell's rank 1; the higher ranks keep the list in level order and let it tell rank 1 apart.
 	- level is the level the trainer offers the rank, which is the spell's learn level. A talent row is the exception (below).
 	- The client's own learn level (Validate Data's SPELL_LEVEL_LEARNED) reads 0 or 1 for spells with no level of their own: weapon and armor skills, Parry, Pick Lock, the hunter's pet skills and talents. Those rows keep the trainer's level.
 	- requires is the spell the trainer wants first, usually the previous rank. Rows added from the game tables take the rank the tables say it replaces, or else the same spell's previous rank in this table, which agrees with all but 3 of the 860 hand-made rows that follow an earlier rank.
@@ -1642,6 +1643,7 @@ Notes
 	- Ruled out by hand: Seal of Righteousness rank 1 and Summon Imp (starting spells), Summon Dreadsteed and Swift Flight Form (quests), Poisons and Mind-numbing Poison I to III (the rows hold no poison skill or recipes), pet Growl rank 1 (every pet starts with it), and effects the tests above let through: Execute 20647, Holy Vengeance, Blood Corruption, Lightwell Renew, Chilled, Create Soulwell, Enraged Defense.
 	- Likely unobtainable, so not added: Curse of Idiocy (1010), Black Arrow (3674, 14296) and Mass Resurrection (32841), IDs no trainer here teaches.
 	- Nature's Grasp, Omen of Clarity, Aimed Shot, Blessing of Kings, Consecration and Divine Spirit are talents whose higher ranks the trainer teaches, so their rank 1 rows carry talent too.
+	- The cross-check against this build's tables added Trueshot Aura (19506) as a talent row at 50, the level of its first trainer rank: SkillLineAbility puts its ranks 2 to 4 (20905, 20906, 27066) on the Marksmanship line at 50, 60 and 70, and neither a row nor an extraSpells entry covered it. The family test's other leftovers are the talents' own trainer ranks (Mangle (Cat) and (Bear), Pyroblast, Insect Swarm and the like) and spells other spells fire or that no trainer teaches: Felfire (24530), the Reincarnation effect (21169), Lightning Overload's Lightning Bolt (45284), and the rows already ruled out above.
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query
@@ -1650,15 +1652,15 @@ Wowhead
 	None.
 
 wago.tools
-	https://wago.tools/db2/SkillLineAbility?build=2.5.6.70006
-	https://wago.tools/db2/SkillLine?build=2.5.6.70006
-	https://wago.tools/db2/SpellLevels?build=2.5.6.70006
-	https://wago.tools/db2/SpellName?build=2.5.6.70006
-	https://wago.tools/db2/Spell?build=2.5.6.70006
-	https://wago.tools/db2/SpellMisc?build=2.5.6.70006
-	https://wago.tools/db2/SpellEffect?build=2.5.6.70006
+	https://wago.tools/db2/SkillLineAbility?build=2.5.6.70577
+	https://wago.tools/db2/SkillLine?build=2.5.6.70577
+	https://wago.tools/db2/SpellLevels?build=2.5.6.70577
+	https://wago.tools/db2/SpellName?build=2.5.6.70577
+	https://wago.tools/db2/Spell?build=2.5.6.70577
+	https://wago.tools/db2/SpellMisc?build=2.5.6.70577
+	https://wago.tools/db2/SpellEffect?build=2.5.6.70577
 	https://wago.tools/db2/ItemEffect?build=2.5.6.70006
-	https://wago.tools/db2/Talent?build=2.5.6.70006
+	https://wago.tools/db2/Talent?build=2.5.6.70577
 
 QuestieDB
 	None.

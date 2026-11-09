@@ -11,7 +11,7 @@ local _, ns = ...
 --------------------------------------------------------------------------------
 
 -- Where the window's top-right corner sits until it is first dragged: a little right of and above the middle of the screen.
-local DEFAULT_X, DEFAULT_Y = 190, 160
+local DEFAULT_X, DEFAULT_Y = 192, 160
 
 local TOP_RIGHT = "TOPRIGHT"
 

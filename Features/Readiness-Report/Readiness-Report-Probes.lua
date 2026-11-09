@@ -258,22 +258,51 @@ local function SlotHoldsEnchantableOffHand()
 end
 
 --[[
+    How many temporary enchants a hand should carry. One, of any kind, on
+    every client but WoW Forever. There (ns.WEAPON_ENCHANTS_STACK) a hand
+    your class keeps a poison or imbue on (ns.BUFF_DUTY_WEAPON_HANDS: a
+    Rogue's two, a Shaman's main hand) wants two once you're level for one,
+    that beside an oil or stone. Counted rather than sorted by kind, so it
+    holds whatever the client calls a poison.
+]]
+local function EnchantsWanted(hand)
+	if not ns.WEAPON_ENCHANTS_STACK then
+		return 1
+	end
+	local _, class = UnitClass("player")
+	local level = UnitLevel("player")
+	if not (ns.IsPlain(level) and level) or not tContains(ns.BUFF_DUTY_WEAPON_HANDS[class] or {}, hand) then
+		return 1
+	end
+	for _, row in ipairs(ns.BUFF_DUTY_WEAPON_ENCHANTS) do
+		if row.class == class then
+			for _, use in ipairs(row.items or row.ranks) do
+				if use[2] <= level then
+					return 2
+				end
+			end
+		end
+	end
+	return 1
+end
+
+--[[
     Whether each weapon slot wants a buff and is missing one, as
     (mainHandMissing, offHandMissing).
 
-    GetWeaponEnchantInfo answers for both slots at once and needs no buff
-    data, which is what keeps this off the sharpening-stone tables; the off
-    hand's equip slot comes from C_Item.GetItemInfoInstant, which never waits
-    on the item cache. A slot
-    with no weapon in it is never missing anything -- that is what makes a
-    two-hander read correctly with no two-hand special case, since its off hand
-    is empty by definition.
+    Buff Duty's reader answers for both slots at once, each a list of the
+    enchants it carries, and needs no buff data; the off hand's equip slot
+    comes from C_Item.GetItemInfoInstant, which never waits on the item
+    cache. A slot with no weapon in it is never missing anything -- that is
+    what makes a two-hander read correctly with no two-hand special case,
+    since its off hand is empty by definition.
 ]]
 function ns.GetMissingWeaponBuffs()
-	local hasMainHand, _, _, _, hasOffHand = GetWeaponEnchantInfo()
+	local worn = ns.BuffDuty.ReadWeaponEnchants()
 
-	local mainHandMissing = (GetInventoryItemLink("player", MAIN_HAND_SLOT) ~= nil) and not hasMainHand
-	local offHandMissing = SlotHoldsEnchantableOffHand() and not hasOffHand
+	local mainHandMissing = (GetInventoryItemLink("player", MAIN_HAND_SLOT) ~= nil)
+		and #worn[MAIN_HAND_SLOT] < EnchantsWanted("MAIN")
+	local offHandMissing = SlotHoldsEnchantableOffHand() and #worn[OFF_HAND_SLOT] < EnchantsWanted("OFF")
 
 	return mainHandMissing, offHandMissing
 end
@@ -409,11 +438,11 @@ end
 
 --[[
     Whether ns.GetCurrentSpecializationLabel can ever answer on this client: the
-    classic talent trees, or MoP's specializations. Never on Forever, whose
-    talents are Retail's.
+    classic talent trees, or the specializations of MoP and later. Never on
+    Forever, whose talents are Retail's.
 ]]
 function ns.CanReportSpecialization()
-	return ns.GetNumTalentTabs() ~= nil or ns.FLAVOR == "Mists"
+	return ns.GetNumTalentTabs() ~= nil or ns.EXPANSION >= 5
 end
 
 --[[

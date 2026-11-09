@@ -436,7 +436,7 @@ L["INVENTORY_REPORT_TOTAL"] = "Total %s"
 --------------------------------------------------------------------------------
 
 L["OPTIONS_DESCRIPTION"] =
-	"Macros que se atualizam sozinhas com sua melhor comida, água, poções e Pedras de Vida, uma lista de reabastecimento que compra e guarda no banco reagentes e munição, buffs que faltam com um clique, sussurros de agradecimento automáticos e macros de mouseover para cada feitiço."
+	"Macros que se atualizam sozinhas com sua melhor comida, água, poções e Pedras de Vida, uma lista de reabastecimento que compra e guarda no banco reagentes e munição, buffs que faltam com um clique e macros de mouseover para cada feitiço."
 
 -- Options: tree labels
 L["TAB_ENHANCED_SPELLBOOK"] = "Grimório Aprimorado"
@@ -460,9 +460,8 @@ L["OPTIONS_MINIMAP_BUTTON_DESCRIPTION"] = "Mostra o botão do minimapa."
 --[[
     The root panel's Features section: every feature's on/off switch, two to a
     line, each the same toggle that heads its feature's own panel. Enable Buff
-    Duty, Enable Restocker and Enable Thanks for Stranger Buffs keep their
-    original keys (BUFF_DUTY_ENABLE, OPTIONS_RESTOCKER_ENABLE, STRANGERS_ENABLE),
-    with the Buff Duty, Restocker and Stranger Buffs strings.
+    Duty and Enable Restocker keep their original keys (BUFF_DUTY_ENABLE,
+    OPTIONS_RESTOCKER_ENABLE), with the Buff Duty and Restocker strings.
 
     The two *_CONFIRM_OFF prompts appear only when the switch is turned off,
     and must say plainly that turning it off does not delete any macro.
@@ -488,17 +487,6 @@ L["SWITCH_INVENTORY_REPORT_DESCRIPTION"] =
 L["SWITCH_READINESS_REPORT"] = "Ativar Relatório de Prontidão"
 L["SWITCH_READINESS_REPORT_DESCRIPTION"] =
 	"Quando uma verificação de jogadores prontos começa, exibe uma lista privada de tudo o que você ainda precisa resolver, como um buff, uma poção ou um equipamento danificado. Não diz nada quando você está pronto."
-L["SWITCH_STRANGER_BUFFS_DESCRIPTION"] =
-	"Agradece aos jogadores de fora do seu grupo com um sussurro, uma expressão ou ambos quando eles buffam você pelo mundo."
-L["SWITCH_GOOD_NEWS"] = "Ativar Compartilhar boas notícias"
-L["SWITCH_GOOD_NEWS_DESCRIPTION"] =
-	"Sussurra aos jogadores que você buffa o que você lançou neles e, quando o buff é curto, quanto tempo ele dura."
-L["SWITCH_COMBAT_BUFFS"] = "Ativar agradecimentos por buffs de combate"
-L["SWITCH_COMBAT_BUFFS_DESCRIPTION"] =
-	"Agradece aos membros do seu grupo e da raide com um sussurro, uma expressão ou ambos quando eles lançam um buff ou uma habilidade com recarga em você."
-L["SWITCH_SERVICE_ALERTS"] = "Ativar Alertas de serviços do grupo"
-L["SWITCH_SERVICE_ALERTS_DESCRIPTION"] =
-	"Avisa você, e agradece ao jogador, quando alguém disponibiliza um banquete, poço de almas, portal ou robô de reparo para o seu grupo."
 
 -- Features: each feature's master switch, also on the panel that configures it.
 L["OPTIONS_RESTOCKER_ENABLE"] = "Ativar Restocker"
@@ -544,7 +532,7 @@ L["OPTIONS_VERSION"] = "Versão %s"
     orients the player to the page's two halves -- which macros exist, then how
     each one behaves. The Which Macros to Create header below titles the first
     section, after the page's two headerless toggles, Enable Consumable Macros and
-    Macro Names on Buttons.
+    Enable Macro Names on Buttons.
 ]]
 L["TAB_CONSUMABLE_MACROS"] = "Macros de Consumíveis"
 L["OPTIONS_MACROS_DESCRIPTION"] =
@@ -590,12 +578,12 @@ L["OPTIONS_FOOD_WATER_DESCRIPTION"] =
 ]]
 L["OPTIONS_BUFF_FOOD"] = "Priorizar Comida com Buff"
 L["OPTIONS_BUFF_FOOD_DESCRIPTION_FORMAT"] =
-	'Prioriza comida que concede o buff "%s" quando o buff estiver faltando, exceto nas Arenas.'
+	'Prioriza comida que concede o buff "%s" quando o buff estiver faltando, exceto em arenas.'
 
 -- Scroll Buffs, the second option under Food & Water.
 L["OPTIONS_USE_SCROLLS"] = "Ativar Buffs de Pergaminho"
 L["OPTIONS_USE_SCROLLS_DESCRIPTION"] =
-	"Sua macro de Comida aplica os pergaminhos que faltam no primeiro clique e come no seguinte, ignorando os pergaminhos quando você tem um jogador amigável como alvo ou está em uma Arena."
+	"Sua macro de Comida aplica os pergaminhos que faltam no primeiro clique e come no seguinte, ignorando os pergaminhos quando você tem um jogador amigável como alvo ou está em uma arena."
 L["OPTIONS_SCROLL_TYPES"] = "Incluir tipos de pergaminho na verificação"
 -- The other five scroll types are labeled with the client's stat names (SPELL_STAT1_NAME to SPELL_STAT5_NAME); Protection has none.
 L["OPTIONS_SCROLL_PROTECTION"] = "Proteção"
@@ -634,7 +622,7 @@ L["OPTIONS_INCLUDE_MANA_RUNES"] = "Adicionar Runas e outros itens de mana à mac
 L["OPTIONS_INCLUDE_MANA_RUNES_DESCRIPTION_FORMAT"] =
 	"Classifica %s, %s e qualquer outro item de mana que compartilhe o tempo de recarga das Gemas de Mana, junto com suas Gemas de Mana, para que a macro de Gema de Mana use um deles quando for sua melhor opção ou quando você estiver sem gemas."
 
--- Buff Re-Application
+-- Buff Reapplication
 L["OPTIONS_REAPPLY_HEADER"] = "Reaplicação de buffs"
 L["OPTIONS_REAPPLY_SECTION_DESCRIPTION"] =
 	"As macros não podem ser alteradas durante o combate, então um buff que expira no meio da luta continua ausente até o combate terminar."
@@ -655,7 +643,7 @@ L["OPTIONS_PET_HEADER"] = "Buffs de Comida de Ajudante"
 L["OPTIONS_PET_SECTION_DESCRIPTION_FORMAT"] = 'Algumas comidas dão ao seu ajudante um buff "%s" próprio.'
 L["OPTIONS_USE_PET_BUFFS"] = "Usar Buffs de Comida de Ajudante"
 L["OPTIONS_USE_PET_BUFFS_DESCRIPTION_FORMAT"] =
-	'Adiciona comida de ajudante à sua macro de Comida quando falta o buff "%s" no seu ajudante, exceto nas Arenas.'
+	'Adiciona comida de ajudante à sua macro de Comida quando falta o buff "%s" no seu ajudante, exceto em arenas.'
 -- The pet food toggles under this heading carry the client's own item names, so they have no keys here.
 L["OPTIONS_PET_BUFF_TYPES"] = "Incluir tipos de Comida de Ajudante na verificação"
 
@@ -671,7 +659,7 @@ L["EXPLOSIVES_MODE_ATPLAYER"] = "Clique esquerdo @player"
 L["EXPLOSIVES_MODE_TOSS"] = "Clique esquerdo arremessar"
 
 --[[
-    Class & Race panel (Options-Class-Race.lua), nested under Macros. TAB_CLASS_RACE
+    Class & Race panel (Options-Class-Race.lua), nested under Consumable Macros. TAB_CLASS_RACE
     is its label in the settings tree and the title on the page;
     OPTIONS_CLASS_RACE_DESCRIPTION is the intro beneath it.
 ]]
@@ -739,6 +727,16 @@ L["OPTIONS_CANNIBALIZE_DRINKING_DESCRIPTION"] =
 	"Enquanto seu alvo for um cadáver em que %s funcione e o feitiço estiver pronto, sua macro de Água o lança em vez de beber. Caso contrário, ela bebe como sempre. Bebidas com buff continuam tendo prioridade."
 
 --[[
+    Trolls, headed with the client's name for the race. In the three texts
+    below, %s is the client's name for Rapid Regeneration. WoW Forever only.
+]]
+L["OPTIONS_RAPID_REGENERATION_DESCRIPTION"] =
+	"Enquanto %s estiver disponível, sua macro de Comida o lança em vez de comer, poupando sua comida. Quando estiver em recarga, a macro come normalmente."
+L["OPTIONS_RAPID_REGENERATION_EATING"] = "Usar %s em vez de comer"
+L["OPTIONS_RAPID_REGENERATION_EATING_DESCRIPTION"] =
+	"Enquanto %s estiver disponível, sua macro de Comida o lança em vez de comer. Caso contrário, ela come normalmente. Pergaminhos e comida com buff continuam tendo prioridade."
+
+--[[
     Ignore List panel (Options-Ignore-List.lua). One tree scope per list: the
     Global list, then the character playing and every other character with
     something ignored, each under its profile's name, which is never
@@ -782,8 +780,10 @@ L["OPTIONS_RESTOCKER_OPEN_BANK"] = "Abrir no banco"
 L["OPTIONS_RESTOCKER_OPEN_BANK_DESCRIPTION"] = "Abre sua lista de reabastecimento quando você visita o banco."
 L["OPTIONS_RESTOCKER_OPEN_MERCHANT"] = "Abrir no mercador"
 L["OPTIONS_RESTOCKER_OPEN_MERCHANT_DESCRIPTION"] = "Abre sua lista de reabastecimento quando você visita um mercador."
--- The header over the three reminder rows below, which follow the Staples Pop-Up and Gold Reserve rows on the page.
+-- The header over the three reminder rows below, which follow the Gold Reserve section on the page, and its description.
 L["OPTIONS_RESTOCKER_REMINDERS_HEADER"] = "Lembretes"
+L["OPTIONS_RESTOCKER_REMINDERS_DESCRIPTION"] =
+	"Escolha quando você recebe um aviso de que algo da sua lista de reabastecimento está acabando."
 L["OPTIONS_RESTOCKER_REMIND"] = "Ativar lembretes de reabastecimento na cidade"
 L["OPTIONS_RESTOCKER_REMIND_DESCRIPTION"] =
 	"Exibe um lembrete no chat quando falta algo na sua lista de reabastecimento e você chega a uma estalagem ou cidade, ou já está em uma ao entrar no jogo."
@@ -797,8 +797,12 @@ L["OPTIONS_RESTOCKER_BANK_REMIND_DESCRIPTION"] =
 --[[
     The Gold Reserve: the floor the merchant restock never spends below. The
     dropdown beside it writes each amount as a number and the gold coin, so
-    its values have no strings; AMOUNT_DESCRIPTION is its hover text.
+    its values have no strings; AMOUNT_DESCRIPTION is its hover text. HEADER
+    and SECTION_DESCRIPTION head its section.
 ]]
+L["OPTIONS_RESTOCKER_GOLD_RESERVE_HEADER"] = "Reserva de ouro"
+L["OPTIONS_RESTOCKER_GOLD_RESERVE_SECTION_DESCRIPTION"] =
+	"Separe uma quantia de ouro que as compras em mercadores nunca vão gastar."
 L["OPTIONS_RESTOCKER_GOLD_RESERVE"] = "Ativar reserva de ouro"
 L["OPTIONS_RESTOCKER_GOLD_RESERVE_DESCRIPTION"] = "O reabastecimento nunca gasta o ouro que você separar aqui."
 L["OPTIONS_RESTOCKER_GOLD_RESERVE_AMOUNT_DESCRIPTION"] = "Define quanto ouro o reabastecimento sempre deixa com você."
@@ -860,8 +864,7 @@ L["OPTIONS_READINESS_DESCRIPTION"] =
 L["OPTIONS_READINESS_RESET"] = "Redefinir configurações do Relatório de Prontidão"
 L["OPTIONS_READINESS_RESET_DESCRIPTION"] =
 	"Restaura todas as caixas de seleção e os dois limites desta página para os valores padrão."
-L["OPTIONS_READINESS_RESET_CONFIRM"] =
-	"Redefinir todas as configurações do Relatório de Prontidão para o padrão? Isso também desliga o próprio relatório de novo."
+L["OPTIONS_READINESS_RESET_CONFIRM"] = "Redefinir todas as configurações do Relatório de Prontidão para o padrão?"
 
 --[[
     The three sections, each a real header over the switches it covers. They
@@ -898,6 +901,11 @@ L["OPTIONS_READINESS_MAIN_HAND_DESCRIPTION"] =
 L["OPTIONS_READINESS_OFF_HAND"] = "Buff de arma (Mão Secundária)"
 L["OPTIONS_READINESS_OFF_HAND_DESCRIPTION"] =
 	"Avisa quando a arma da mão secundária não tem encantamento temporário. Qualquer encantamento conta: uma pedra, um óleo, um veneno ou um buff de arma de Xamã."
+-- WoW Forever, where an imbue sits beside an oil or stone (ns.WEAPON_ENCHANTS_STACK).
+L["OPTIONS_READINESS_MAIN_HAND_DESCRIPTION_STACKED"] =
+	"Avisa quando falta um encantamento temporário na arma da mão principal. Ladinos e Xamãs precisam de dois, um veneno ou imbuição ao lado de um óleo ou pedra; os demais, de qualquer um."
+L["OPTIONS_READINESS_OFF_HAND_DESCRIPTION_STACKED"] =
+	"Avisa quando falta um encantamento temporário na arma da mão secundária. Ladinos precisam de dois, um veneno ao lado de um óleo ou pedra; os demais, de qualquer um."
 --[[
     Names the OTHER threshold so the two cannot be mistaken for each other: the
     Consumable Macros panel has one that decides when a macro treats a buff as spent, and
@@ -944,10 +952,142 @@ L["OPTIONS_READINESS_NONCOMBAT_GEAR_DESCRIPTION"] =
 	"Mostra o link de itens equipados que não têm lugar em combate, como equipamento de montaria ou de pesca."
 
 --------------------------------------------------------------------------------
+-- Rank Watch
+--------------------------------------------------------------------------------
+
+--[[
+    Rank Watch tells a group member who cast a spell at a lower rank than they could have. Its messages are
+    fixed, one whisper and one print, with nothing for the player to edit. Rank Sentinel is the standalone
+    add-on Rank Watch replaces; its name stays as written in every locale.
+]]
+L["TAB_RANK_WATCH"] = "Vigia de graus"
+L["OPTIONS_RANK_WATCH_DESCRIPTION"] =
+	"Observa seu grupo em busca de feitiços lançados num grau inferior ao que quem lançou poderia usar, e avisa que um grau mais alto está esperando no instrutor. Um grau que o próprio jogo reduz, como um buff num jogador de nível baixo, nunca é informado."
+--[[
+    Printed at login, and when the switch is turned on, while the standalone add-on runs; also shown on the
+    panel. %s is the standalone add-on's title.
+]]
+L["RANK_WATCH_STANDALONE"] =
+	"O %s ainda está rodando, então o Vigia de graus fica em silêncio para que seu grupo não seja avisado duas vezes de cada grau baixo. O Good to Go o desativou e ativou o Vigia de graus; recarregue a interface para o Vigia de graus assumir."
+
+-- A spell and its rank in every message: "[Arcane Intellect] (Rank 3)". The first %s is the spell, the second its rank.
+L["RANK_WATCH_SPELL_RANK"] = "%s (%s)"
+-- A rank's number, where the client hasn't loaded the spell's own rank text yet.
+L["RANK_WATCH_RANK"] = "Grau %d"
+
+--[[
+    The whisper to the caster. { the spell and rank they cast, the level a higher rank is learned at } Sent
+    after the marker and before " // GtG", so "Good to Go" runs straight into the sign-off: "...and you'll be
+    Good to Go // GtG". Casual on purpose; a stranger's whisper should read as a tip, not a correction.
+]]
+L["RANK_WATCH_MESSAGE_WHISPER"] =
+	"Só um toque, nada demais: você usou %s. Tem um grau mais novo no nível %d. Atualize suas barras de ação ou visite seu instrutor e você vai estar Good to Go."
+--[[
+    The whisper to a pet's owner, the same shape with the pet first. { the pet, the spell and rank it cast, the
+    level a higher rank comes at } A hunter pet is named ("your pet Fluffy") and its level is its own; a demon is
+    named by its kind ("your Imp"), and its level is the warlock's, which a grimoire asks for.
+]]
+L["RANK_WATCH_MESSAGE_WHISPER_PET"] =
+	"Só um toque, nada demais: seu ajudante %s usou %s. Tem um grau mais novo no nível %d do ajudante. Ensine com Treinamento de Feras e você vai estar Good to Go."
+L["RANK_WATCH_MESSAGE_WHISPER_DEMON"] =
+	"Só um toque, nada demais: seu %s usou %s. Tem um grau mais novo no nível %d. Pegue o grimório com um instrutor de demônios e você vai estar Good to Go."
+--[[
+    Sent once per player, right after the first whisper they ever get from you, so a stranger's tip comes with a
+    way to make it stop. Signed off like the whisper above it. %s is their opt-out number, made from their name,
+    so it is the same from everyone running Good to Go.
+]]
+L["RANK_WATCH_MESSAGE_OPT_OUT"] =
+	"Prefere não receber dicas assim? Responda %s e eu não vou mais sussurrar para você sobre graus de feitiço. Seu número vale com qualquer um que use o Good to Go."
+-- Sent back once to a player who whispered their opt-out number.
+L["RANK_WATCH_MESSAGE_OPT_OUT_DONE"] = "Beleza, sem mais dicas de grau da minha parte."
+-- Printed when a player says their opt-out number. %s is their name.
+L["RANK_WATCH_OPT_OUT_ADDED"] =
+	"%s enviou o número de recusa, então o Vigia de graus agora ignora essa pessoa. Dá para desfazer em Jogadores ignorados, no Vigia de graus."
+-- Printed when you cast a low rank yourself. { the spell and rank, the higher spell and rank, its level }
+L["RANK_WATCH_PRINT_SELF"] =
+	"Você lançou %s, e %s está disponível a partir do nível %d. Visite seu instrutor ou atualize suas barras de ação."
+-- Printed when your own pet casts one. { the pet, the spell and rank, the higher spell and rank, its level }
+L["RANK_WATCH_PRINT_SELF_PET"] = "Seu ajudante %s lançou %s, e %s está disponível a partir do nível %d do ajudante."
+L["RANK_WATCH_PRINT_SELF_DEMON"] = "Seu %s lançou %s, e %s está disponível a partir do nível %d."
+-- Printed when a group member casts one. { their name, the spell and rank, the higher spell and rank, its level }
+L["RANK_WATCH_PRINT_OTHER"] = "%s lançou %s, e %s fica disponível para esse jogador a partir do nível %d."
+-- A group member's pet. { the owner's name, the pet, the spell and rank, the higher spell and rank, its level }
+L["RANK_WATCH_PRINT_OTHER_PET"] =
+	"O ajudante %2$s de %1$s lançou %3$s, e %4$s fica disponível para ele a partir do nível %5$d do ajudante."
+L["RANK_WATCH_PRINT_OTHER_DEMON"] =
+	"O %2$s de %1$s lançou %3$s, e %4$s fica disponível para ele a partir do nível %5$d."
+-- Added after the print when another player's add-on whispers for the group. %s is that player's name.
+L["RANK_WATCH_PRINT_WHISPERER"] = "%s vai sussurrar para o jogador."
+
+-- Features: the switch, also on the panel.
+L["SWITCH_RANK_WATCH"] = "Ativar Vigia de graus"
+L["SWITCH_RANK_WATCH_DESCRIPTION"] =
+	"Avisa você, e sussurra para os membros do seu grupo, quando alguém lança um feitiço num grau inferior ao que poderia usar, para que saibam que é hora de visitar o instrutor."
+
+L["RANK_WATCH_MESSAGES_HEADER"] = "Notificações"
+L["RANK_WATCH_MESSAGES_DESCRIPTION"] = "Como o Vigia de graus avisa um jogador que lançou um grau baixo."
+L["RANK_WATCH_WHISPER"] = "Sussurrar aos membros do grupo"
+L["RANK_WATCH_WHISPER_DESCRIPTION"] =
+	"Sussurra para um membro do grupo que lançou um grau baixo. Quando vários jogadores do seu grupo usam o Vigia de graus ou o Rank Sentinel, só um deles sussurra."
+L["RANK_WATCH_PRINT"] = "Exibir graus baixos do grupo"
+L["RANK_WATCH_PRINT_DESCRIPTION"] =
+	"Exibe no seu chat o grau baixo de um membro do grupo. Seus próprios graus baixos sempre são exibidos."
+L["RANK_WATCH_GRACE_HEADER"] = "Período de tolerância"
+L["RANK_WATCH_GRACE_DESCRIPTION"] =
+	"Um grau novo só é informado depois que quem lançou já passou do nível dele por esta quantidade de níveis, para que ninguém seja avisado de um grau que acabou de alcançar e ainda não teve tempo de treinar."
+L["RANK_WATCH_GRACE_MAX_LEVEL"] = "Tolerância no nível máximo"
+L["RANK_WATCH_GRACE_MAX_LEVEL_DESCRIPTION"] =
+	"Para um personagem no nível máximo, ignora qualquer grau aprendido até esta quantidade de níveis abaixo do máximo. Em 0, todo grau que ele poderia ter é informado."
+L["RANK_WATCH_GRACE_LEVELING"] = "Tolerância ao subir de nível"
+L["RANK_WATCH_GRACE_LEVELING_DESCRIPTION"] =
+	"Para um personagem ainda subindo de nível, ignora qualquer grau aprendido até esta quantidade de níveis abaixo do nível dele, dando tempo para ir até um instrutor."
+-- The grace period dropdowns' choices: 1, then 0 and 2 to 5.
+L["RANK_WATCH_GRACE_LEVEL"] = "1 nível"
+L["RANK_WATCH_GRACE_LEVELS"] = "%d níveis"
+
+L["RANK_WATCH_OPT_OUT_HEADER"] = "Recusar dicas"
+L["RANK_WATCH_OPT_OUT_DESCRIPTION"] =
+	"Na primeira vez que o Vigia de graus sussurra para alguém, ele envia em seguida o número de recusa dessa pessoa. O número vem do nome dela, então é o mesmo com qualquer um que use o Good to Go. Se ela disser o número num sussurro ou em qualquer chat que você veja, ela vai para Jogadores ignorados e nunca mais recebe avisos de grau seus. Para deixar alguém em paz por conta própria, selecione essa pessoa como alvo e digite /gtg ignore."
+L["RANK_WATCH_WHISPERER_HEADER"] = "Quem avisa pelo seu grupo"
+L["RANK_WATCH_WHISPERER_DESCRIPTION"] =
+	"Quando várias pessoas do seu grupo usam o Vigia de graus ou o Rank Sentinel, só uma delas envia os sussurros, para que quem lançar um grau baixo seja avisado uma vez, e não por todos. As outras só exibem o aviso no próprio chat. Veja quem envia agora."
+L["RANK_WATCH_WHISPERER_SELF"] = "Você."
+-- %s is the player whose Rank Watch or Rank Sentinel whispers for the group.
+L["RANK_WATCH_WHISPERER_OTHER"] = "%s, então você só vê o aviso no chat."
+L["RANK_WATCH_WHISPERER_NONE"] = "Ninguém: Sussurrar aos membros do grupo está desativado."
+
+-- Ignored Players, under Rank Watch.
+L["RANK_WATCH_IGNORED_HEADER"] = "Jogadores ignorados"
+L["RANK_WATCH_IGNORED_DESCRIPTION"] = "O Vigia de graus nunca informa sobre estes jogadores."
+L["RANK_WATCH_IGNORED_NONE"] = "Ninguém ainda."
+L["RANK_WATCH_IGNORED_REMOVE"] = "Parar de ignorar"
+L["RANK_WATCH_IGNORE_TARGET"] = "Ignorar alvo"
+L["RANK_WATCH_IGNORE_TARGET_DESCRIPTION"] = "Adiciona à lista o jogador que você tem como alvo."
+L["RANK_WATCH_IGNORE_ADDED"] = "O Vigia de graus agora ignora %s."
+L["RANK_WATCH_IGNORE_NOT_FOUND"] =
+	"Não foi possível encontrar %s. Entre em grupo com essa pessoa ou selecione-a como alvo e tente de novo."
+L["RANK_WATCH_IGNORE_NO_TARGET"] = "Selecione um jogador como alvo, ou digite /gtg ignore Nome."
+L["RANK_WATCH_IGNORE_COMMAND"] = "/gtg ignore Nome"
+L["RANK_WATCH_IGNORE_COMMAND_DESCRIPTION"] =
+	"O Vigia de graus para de informar sobre esse jogador. Sem nome, ignora seu alvo."
+
+-- Tracked Abilities, under Rank Watch.
+L["RANK_WATCH_TRACKED_DESCRIPTION"] =
+	"Os graus que o Vigia de graus informa, classe por classe. Desmarque um grau que você reduz de propósito e o Vigia de graus o deixa em paz. Todas as habilidades estão listadas. As que o Vigia de graus não monitora por padrão, como curas, talentos e o Grau 1 de Chamuscar, começam desmarcadas. O grau mais alto de uma habilidade fica acinzentado, já que não há nada acima dele."
+-- A rank's checkbox. %s is the rank ("Rank 3"), %d the level it is learned at.
+L["RANK_WATCH_RANK_LEVEL"] = "%s (nível %d)"
+L["RANK_WATCH_RANK_DESCRIPTION"] = "Informa este grau quando houver um mais alto disponível."
+L["RANK_WATCH_TOP_RANK_DESCRIPTION"] = "O grau mais alto. Não há nada acima dele, então nunca é informado."
+-- The tree entry after Hunter and Warlock listing their pets' and demons' abilities. %s is the class name.
+L["RANK_WATCH_PETS"] = "Ajudantes de %s"
+L["RANK_WATCH_TRACK_ALL"] = "Marcar todos"
+L["RANK_WATCH_TRACK_NONE"] = "Desmarcar todos"
+
+--------------------------------------------------------------------------------
 -- Restocker Window & Chat
 --------------------------------------------------------------------------------
 
--- Chat messages printed by the Restocker feature (Features/Inventory-Restocker/).
+-- Chat messages printed by the Restocker feature (Features/Restocker/).
 L["RESTOCKER_PROFILE_EXISTS"] = 'Já existe uma lista chamada "%s".'
 --[[
     %d is the item ID the player typed. Written into the add box itself while
@@ -978,7 +1118,7 @@ L["RESTOCKER_STOPPED_ERROR"] = "Reabastecimento interrompido por um erro: %s"
     Printed during a merchant restock when the crafting-reagent buyer stands
     down: this merchant stocks some of the reagents the Restock List needs but
     not all of them, and reagents buy all-or-nothing (VendorStocksAllReagents in
-    Features/Inventory-Restocker/Restocker-Merchant.lua). Silent at vendors stocking none.
+    Features/Restocker/Restocker-Merchant.lua). Silent at vendors stocking none.
 ]]
 L["RESTOCKER_REAGENTS_SKIPPED"] =
 	"Este mercador não tem todos os ingredientes de que seus venenos precisam. Nenhum será comprado."
@@ -1057,7 +1197,7 @@ L["RESTOCKER_RESTOCKED_PARTIAL_ONE"] = "1 pedido de reabastecimento atendido em 
 L["RESTOCKER_RESTOCKED_PARTIAL_MANY"] = "%d pedidos de reabastecimento atendidos em parte."
 -- Printed after the counts above when the bags ran out of room before every order was bought.
 L["RESTOCKER_BAGS_FULL_PARTIAL"] = "Suas bolsas encheram antes de tudo ser comprado."
--- Printed after the counts above when gold ran out before every order was bought, while the Gold Reserve is off.
+-- Printed after the counts above when gold ran out before every order was bought, while the Gold Reserve is off or the purse started above it.
 L["RESTOCKER_OUT_OF_GOLD"] = "Ouro insuficiente para concluir o reabastecimento."
 --[[
     RESTOCKER_OUT_OF_GOLD's line while the Gold Reserve is on, whole so each
@@ -1081,8 +1221,8 @@ L["RESTOCKER_HELP_PROFILE_USE"] = "Troca este personagem para a lista com esse n
     Starter List pop-up, the staples window: offers staples at login when the
     Restock List is empty, and on demand from the Restock List window's Pick
     Staples button. The staples logic is in
-    Features/Inventory-Restocker/Restocker-Starter-List.lua, the window in
-    Features/Inventory-Restocker/Restocker-Starter-Window.lua. The six
+    Features/Restocker/Restocker-Starter-List.lua, the window in
+    Features/Restocker/Restocker-Starter-Window.lua. The six
     food staples reuse the DIET_ keys above, so each food row carries the
     client's own pet diet name.
 
@@ -1102,6 +1242,8 @@ L["RESTOCKER_HELP_PROFILE_USE"] = "Troca este personagem para a lista com esse n
     names is open right behind it.
 ]]
 L["STARTER_POPUP_TITLE"] = "Básicos"
+-- The button at the Staples window's footer end that closes it once you've picked.
+L["STARTER_POPUP_DONE"] = "Concluído"
 L["STARTER_POPUP_INTRO_LOGIN"] = "Marcamos alguns básicos da sua classe para você começar."
 L["STARTER_POPUP_INTRO_EMPTY"] =
 	"Sua lista de reabastecimento está vazia, então vamos adicionar alguns itens para você começar."
@@ -1200,7 +1342,7 @@ L["RESTOCKER_ADD_DUPLICATE"] = "Já está nesta lista."
 ]]
 L["RESTOCKER_ADD_FROM_BAGS"] = "Adicionar das bolsas"
 L["RESTOCKER_ADD_FROM_BAGS_TOOLTIP"] =
-	"Todos os itens das suas bolsas que ainda não estão nesta lista. Clique em um para adicioná-lo."
+	"Todos os itens das suas bolsas que ainda não estão nesta lista, prontos para adicionar."
 L["RESTOCKER_ADD_FROM_BAGS_NONE"] = "Nada nas suas bolsas para adicionar"
 
 --[[
@@ -1215,8 +1357,7 @@ L["RESTOCKER_ADD_FROM_BAGS_NONE"] = "Nada nas suas bolsas para adicionar"
     that button's caption and the title of its tooltip.
 ]]
 L["RESTOCKER_PROFILE_LABEL"] = "Lista"
-L["RESTOCKER_PROFILE_TOOLTIP"] =
-	"Clique para trocar este personagem para outra lista de reabastecimento, ou para começar uma nova."
+L["RESTOCKER_PROFILE_TOOLTIP"] = "Troca este personagem para outra lista de reabastecimento, ou começa uma nova."
 L["RESTOCKER_USED_BY"] = "Usada por %s"
 L["RESTOCKER_MANAGE"] = "Gerenciar listas"
 L["RESTOCKER_MANAGE_TOOLTIP"] = "Comece uma nova lista, ou copie, renomeie ou exclua esta."
@@ -1274,12 +1415,9 @@ L["RESTOCKER_UPGRADE_TOOLTIP_BODY"] =
 	"Permite que o Good to Go substitua comida, água, munição, venenos, poções e reagentes de classe por itens melhores conforme você sobe de nível."
 
 --[[
-    The band labels drawn over the Bank and Merchant column groups, and the
-    Upgrade column's caption. The bands name the place an item moves to or
-    from, so the column captions under them can stay one word each.
+    The Upgrade column's caption. The Bank and Merchant bands over the other
+    columns are the client's own BANK and MERCHANT strings.
 ]]
-L["RESTOCKER_ROW_BANK"] = "Banco"
-L["RESTOCKER_ROW_MERCHANT"] = "Mercador"
 L["RESTOCKER_ROW_UPGRADE"] = "Melhoria"
 
 --[[
@@ -1312,7 +1450,7 @@ L["RESTOCKER_COLUMN_AMOUNT"] = "Manter"
     the heading opens, where %d is how many of the items shown the column can be
     set on. Menu entries: title case, no terminal punctuation.
 ]]
-L["RESTOCKER_COLUMN_BULK_HINT"] = "Clique no cabeçalho para definir isto em todos os itens exibidos."
+L["RESTOCKER_COLUMN_BULK_HINT"] = "O cabeçalho define isto para todos os itens exibidos."
 L["RESTOCKER_BULK_ON"] = "Ativar nos exibidos (%d)"
 L["RESTOCKER_BULK_OFF"] = "Desativar nos exibidos (%d)"
 
@@ -1367,7 +1505,7 @@ L["RESTOCKER_UNDO_TOOLTIP"] = "Devolver este item à lista"
 
 -- Title slot: title case, no terminal period. The line under it is body text.
 L["RESTOCKER_REMOVE_TOOLTIP"] = "Remover este item da lista de reabastecimento"
-L["RESTOCKER_REMOVE_TOOLTIP_UNDO"] = "Você pode desfazer isso na parte inferior da janela."
+L["RESTOCKER_REMOVE_TOOLTIP_UNDO"] = "Você pode desfazer isso no topo da lista."
 --[[
     The Keep box and its heading, which share one tooltip: the title, and KEEP
     under it, which explains the number. There is no editing hint: the box
@@ -1423,7 +1561,7 @@ L["RESTOCKER_REPUTATION_TOOLTIP_TITLE"] = "Reputação exigida com o mercador"
     last sentence names the dash; "Any" is still the menu's first entry.
 ]]
 L["RESTOCKER_REPUTATION_TOOLTIP_DISCOUNTS"] =
-	"Clique para definir a reputação que um mercador exige antes que o Good to Go compre dele, o que também reduz o preço: %s 5%%, %s 10%%, %s 15%%, %s 20%%. Com um traço, compra de qualquer mercador."
+	"Define a reputação que um mercador exige antes que o Good to Go compre dele, o que também reduz o preço: %s 5%%, %s 10%%, %s 15%%, %s 20%%. Com um traço, compra de qualquer mercador."
 
 --[[
     Why a cell cannot be set on its row: the tooltip a dimmed cell shows under
@@ -1437,15 +1575,17 @@ L["RESTOCKER_REPUTATION_NOT_APPLICABLE"] =
 	"Comprar está desativado para este item, então nenhuma reputação se aplica."
 L["RESTOCKER_UPGRADE_NOT_APPLICABLE"] = "Este item não tem uma versão melhor para substituí-lo."
 
--- MIGRATION (remove after 2026-11-25): the import from the add-ons this one replaces.
+-- The add-ons this one replaces, turned off at login whenever they run (ns.REPLACED_ADDONS).
+L["POPUP_REPLACED_RELOAD"] =
+	"O Good to Go desativou o %s, que ele substitui. Recarregar agora para que a cópia antiga pare de rodar?"
+L["POPUP_REPLACED_RELOAD_ACCEPT"] = "Recarregar agora"
+L["POPUP_REPLACED_LATER"] = "Depois"
+
+-- MIGRATION (remove after 2026-12-08): the import from the add-ons this one replaces.
 L["CHAT_LEGACY_IMPORTED"] = "Suas configurações do %s foram copiadas."
 
 L["POPUP_LEGACY_RELOAD_COPIED"] =
 	"O Good to Go copiou suas configurações do %s e desativou o %s, que ele substitui. Recarregar agora para que a cópia antiga pare de rodar?"
-L["POPUP_LEGACY_RELOAD_TURNED_OFF"] =
-	"O Good to Go desativou o %s, que ele substitui. Recarregar agora para que a cópia antiga pare de rodar?"
-L["POPUP_LEGACY_RELOAD_ACCEPT"] = "Recarregar agora"
-L["POPUP_LEGACY_LATER"] = "Depois"
 L["POPUP_LEGACY_IMPORT_SETTINGS"] =
 	"O Good to Go encontrou instalado, mas desativado: %s. Trazer as configurações? Isso reativa os addons antigos e recarrega sua interface, depois oferece mais uma recarga para desativá-los de novo."
 L["POPUP_LEGACY_IMPORT_LISTS"] =
@@ -1454,147 +1594,20 @@ L["POPUP_LEGACY_IMPORT_ACCEPT"] = "Trazer tudo"
 L["POPUP_LEGACY_IMPORT_DECLINE"] = "Não, obrigado"
 
 --------------------------------------------------------------------------------
--- Automated Appreciation
+-- Options: Tracked Abilities
 --------------------------------------------------------------------------------
 
---------------------------------------------------------------------------------
--- Messages
---------------------------------------------------------------------------------
-
--- Buff & gift announcements
-L["MESSAGE_BUFFED"] = "%s buffou você com %s!"
-L["MESSAGE_GAVE_YOU"] = "%s deu %s a você!"
-L["MESSAGE_GAVE_GROUP"] = "%s deu %s ao seu grupo!"
-L["MESSAGE_USED_ITEM"] = "%s usou %s em você!"
-L["MESSAGE_USED_SPELL"] = "%s lançou %s em você!"
-L["MESSAGE_SET_OUT"] = "%s colocou %s!"
-L["MESSAGE_OPENED"] = "%s abriu %s!"
-
--- Thank-you
-L["MESSAGE_WHISPER_THANKS"] = "Obrigado por %s"
-L["MESSAGE_SELECT_PLAYER"] = "Primeiro, selecione um jogador como alvo."
-L["MESSAGE_CANT_THANK_SELF"] = "Você não pode agradecer a si mesmo!"
-
---------------------------------------------------------------------------------
--- Text Fragments
---------------------------------------------------------------------------------
-
-L["UNKNOWN_SPELL"] = "Feitiço desconhecido"
-
---------------------------------------------------------------------------------
--- Options: Buff Panels
---------------------------------------------------------------------------------
-
--- Stranger Buffs
-L["TAB_STRANGERS"] = "Buffs de estranhos"
-L["STRANGERS_ENABLE"] = "Ativar agradecimentos por buffs de estranhos"
-L["STRANGERS_DESCRIPTION"] = "Agradeça aos jogadores de fora do seu grupo quando eles buffarem você no mundo aberto."
--- The dropdown values carry the unit, so these labels do not repeat it.
-L["STRANGERS_OVERALL_COOLDOWN"] = "Recarga dos agradecimentos"
-L["STRANGERS_OVERALL_COOLDOWN_DESCRIPTION"] =
-	"Define o intervalo entre uma rodada de agradecimentos e a próxima, não importa quem buffou você. Defina como zero para agradecer todos os buffs."
-L["STRANGERS_SOURCE_COOLDOWN"] = "Recarga de agradecimento ao mesmo jogador"
-L["STRANGERS_SOURCE_COOLDOWN_DESCRIPTION"] =
-	"Define o intervalo entre agradecimentos dirigidos ao mesmo jogador. Defina como zero para agradecer todos os buffs."
-L["STRANGERS_MIN_DURATION"] = "Duração mínima do buff"
-L["STRANGERS_MIN_DURATION_DESCRIPTION"] =
-	"Ignora buffs com duração menor que este valor. Defina como zero para reagir a todos os buffs."
-
--- Combat Buffs
-L["TAB_COMBAT_BUFFS"] = "Buffs de combate"
-L["TEAMMATES_DESCRIPTION"] =
-	"Agradeça aos membros do grupo e da raide pelos buffs e habilidades com recarga que eles lançam em você."
--- Shown on WoW Forever only.
-L["TEAMMATES_FOREVER_WARNING"] =
-	"Isto provavelmente não funcionará direito no WoW Forever. O jogo muitas vezes oculta quem lançou um buff em você, principalmente durante o combate, então muitos buffs ficam sem agradecimento."
-
--- Group Service Alerts
-L["TAB_GROUP_SERVICE_ALERTS"] = "Alertas de serviços do grupo"
-L["SERVICES_DESCRIPTION"] =
-	"Reaja quando alguém disponibiliza ajuda para o seu grupo: banquetes, poços de almas, portais e robôs de reparo."
-
--- Sharing Good News
-L["TAB_SHARING_GOOD_NEWS"] = "Compartilhar boas notícias"
-L["GOOD_NEWS_DESCRIPTION"] =
-	"Avise os jogadores que você buffa sobre o que lançou neles e, nos buffs curtos, quanto tempo dura."
-L["GOOD_NEWS_SCOPE"] = "Destinatários"
-L["GOOD_NEWS_SCOPE_ALWAYS"] = "Qualquer um que você buffar"
-L["GOOD_NEWS_SCOPE_GROUP"] = "Apenas membros do grupo"
-L["GOOD_NEWS_SCOPE_DESCRIPTION"] =
-	"Define quem recebe um sussurro de boas notícias: qualquer um que você buffar ou apenas os membros do seu grupo."
-L["GOOD_NEWS_MESSAGES_HEADER"] = "Mensagem de boas notícias"
-L["GOOD_NEWS_MESSAGES_DESCRIPTION"] = "O sussurro que os jogadores que você buffa recebem."
---[[
-    The message box's tooltip, in three parts. LIMIT's %d is a real placeholder
-    and gets formatted; TOKENS carries a literal %a for the reader to copy and so
-    must never reach string.format. Joined into one line at the point of use.
-]]
-L["GOOD_NEWS_MESSAGE_INPUT_DESCRIPTION"] = "Define o que o sussurro diz. Deixe em branco para usar o texto padrão."
-L["GOOD_NEWS_MESSAGE_LIMIT"] = "Comprimento máximo: %d."
-L["GOOD_NEWS_MESSAGE_TOKENS"] = "%a vira o link da habilidade, com a duração quando ela é menor que um minuto."
---[[
-    Appended to the ability link inside %a when the buff has a readable duration
-    under a minute. A whole clause rather than a bare number so it can be reworded
-    per language.
-]]
-L["GOOD_NEWS_DURATION_CLAUSE"] = "por %s"
-
--- Shared across the buff panels
-L["TRACKED_HEADER"] = "Habilidades rastreadas"
-L["TRACKED_GROUP_ITEMS"] = "Itens"
+-- The two Tracked Abilities panels' titles, Buff Duty's then Rank Watch's, and the stand-in for an item or spell whose name the client hasn't loaded yet.
+L["BUFF_DUTY_TRACKED_HEADER"] = "Buffs de grupo"
+L["RANK_WATCH_TRACKED_HEADER"] = "Graus informados"
 L["TRACKED_ITEM_PENDING"] = "Item nº %d"
 L["TRACKED_SPELL_PENDING"] = "Feitiço nº %d"
 
--- Shared by Sharing Good News and the Thank You Button
-L["WHISPER_MESSAGE"] = "Mensagem de sussurro"
-L["WHISPER_MESSAGE_RESET"] = "Redefinir"
-L["WHISPER_MESSAGE_RESET_DESCRIPTION"] = "Redefine a mensagem de sussurro para o texto padrão."
-
 --------------------------------------------------------------------------------
--- Shared: Praise and Notifications
+-- Shared: Sound Preview
 --------------------------------------------------------------------------------
 
---[[
-    The two section headers every buff panel is built from: what the other player
-    sees, then what only you get. Key prefixes match the header the control
-    appears under.
-]]
-L["PRAISE_HEADER"] = "Sussurros de agradecimento e expressões"
-L["NOTIFICATIONS_HEADER"] = "Notificações"
-L["PRAISE_DESCRIPTION"] = "O que o outro jogador vê: um sussurro de agradecimento, uma expressão ou ambos."
-L["NOTIFICATIONS_DESCRIPTION"] = "O que só você recebe: um aviso de texto, um som ou ambos."
-
--- Also titles the Thank You Button's emote grid, so it carries no PRAISE_ prefix.
-L["EMOTES_SELECT"] = "Selecionar expressões"
-
-L["PRAISE_WHISPER_ENABLE"] = "Ativar sussurros de agradecimento"
-L["PRAISE_WHISPER_DESCRIPTION"] = "Sussurra um agradecimento ao jogador que buffou você."
-L["PRAISE_EMOTES_ENABLE"] = "Ativar expressões"
-L["PRAISE_EMOTES_DESCRIPTION"] =
-	"Mostra sua gratidão com uma expressão. As expressões ficam retidas enquanto você está em combate."
-L["PRAISE_DELAY_ENABLE"] = "Ativar atraso do agradecimento"
-L["PRAISE_DELAY_DESCRIPTION"] =
-	"Espera um momento antes do sussurro e da expressão, para que seu agradecimento não chegue no mesmo instante que o buff. As notificações não são afetadas."
-L["PRAISE_DELAY_LENGTH_DESCRIPTION"] = "Define quanto tempo esperar antes de enviar o sussurro e a expressão."
-
-L["NOTIFICATIONS_PRINT_ENABLE"] = "Ativar avisos de texto"
-L["NOTIFICATIONS_PRINT_DESCRIPTION"] = "Exibe uma mensagem que só você vê quando recebe um buff."
-L["NOTIFICATIONS_SOUND_ENABLE"] = "Ativar efeitos sonoros"
-L["NOTIFICATIONS_SOUND_DESCRIPTION"] = "Toca um som quando você recebe um buff. Só você ouve."
 L["NOTIFICATIONS_SOUND_PREVIEW_DESCRIPTION"] = "Toca o som para você ouvi-lo antes de ativá-lo."
-
---------------------------------------------------------------------------------
--- Tracked Ability Groups
---------------------------------------------------------------------------------
-
---[[
-    Labels for multi-member tracked groups that no single game record names
-    (Data/{Game}/Tracked-Abilities-{Game}.lua). Single spells and items, and a
-    group named after one of its own items, take their names from the client.
-]]
-L["GROUP_PORTALS"] = "Portais"
-L["GROUP_RESISTANCE_CAULDRONS"] = "Caldeirões de Resistência"
-L["GROUP_REPAIR_BOTS"] = "Robôs de Reparo"
 
 --------------------------------------------------------------------------------
 -- Options: Buff Duty
@@ -1639,7 +1652,7 @@ L["BUFF_DUTY_TARGET_ENABLE_DESCRIPTION"] =
 	"Lista o seu alvo quando ele é um jogador de fora do seu grupo sem um buff que você pode dar."
 L["BUFF_DUTY_ASK_OTHERS"] = "Pedir buffs a outras classes"
 L["BUFF_DUTY_ASK_OTHERS_DESCRIPTION"] =
-	"Mostra em “Buffs de grupo faltando” os buffs de raide que faltam ao seu grupo, com quantos jogadores precisam de cada um. Clique com o botão esquerdo em um para pedi-lo ao seu grupo, ou com o botão direito para sussurrar aos jogadores que podem lançá-lo."
+	"Em Buffs de grupo faltando, mostra os buffs de raide de que seu grupo precisa e quantos jogadores precisam de cada um. Clique com o botão esquerdo em um para pedi-lo ao seu grupo, ou com o botão direito para sussurrar aos jogadores que podem lançá-lo."
 L["BUFF_DUTY_REFRESH"] = "Renovar abaixo de"
 L["BUFF_DUTY_REFRESH_DESCRIPTION"] =
 	"Define com quanto tempo restante um buff passa a contar como ausente, para que você possa renová-lo antes que ele acabe. Um buff que não dura mais do que isso só conta depois que acaba."
@@ -1715,21 +1728,21 @@ L["BUFF_DUTY_MISSING_SELF_HEADER"] = "Buffs próprios faltando"
 L["BUFF_DUTY_PARTY_BUFFS_HEADER"] = "Buffs de grupo faltando"
 L["BUFF_DUTY_FAVOR_HEADER"] = "Retribuir o favor"
 L["BUFF_DUTY_TARGET_HEADER"] = "Alvo"
-L["BUFF_DUTY_TOOLTIP_CAST"] = "Clique para lançar em %s."
+-- A buff icon's tooltip ends with who the click lands on.
+L["BUFF_DUTY_TOOLTIP_CAST"] = "Lança em %s."
 -- %s is the client's "Main Hand" or "Off Hand".
-L["BUFF_DUTY_TOOLTIP_WEAPON"] = "Clique para aplicar na sua arma (%s)."
-L["BUFF_DUTY_TOOLTIP_USE"] = "Ninguém no seu grupo tem uma Pedra da Alma. Clique para usar uma em %s."
-L["BUFF_DUTY_TOOLTIP_CREATE"] = "Ninguém no seu grupo tem uma Pedra da Alma. Clique para criar uma."
-L["BUFF_DUTY_TOOLTIP_GROUP"] = "Clique para lançar em %s e no grupo dele."
-L["BUFF_DUTY_TOOLTIP_FAVOR"] = "Clique para selecionar %s como alvo e lançar."
-L["BUFF_DUTY_TOOLTIP_DISMISS"] = "Clique com o botão direito para tirar %s da lista."
--- A Party-Buffs icon's tooltip: a raid buff your group is missing, and its count.
+L["BUFF_DUTY_TOOLTIP_WEAPON"] = "Aplica na sua arma (%s)."
+L["BUFF_DUTY_TOOLTIP_USE"] = "Ninguém no seu grupo tem uma Pedra da Alma. Usa uma em %s."
+L["BUFF_DUTY_TOOLTIP_CREATE"] = "Ninguém no seu grupo tem uma Pedra da Alma. Cria uma."
+L["BUFF_DUTY_TOOLTIP_GROUP"] = "Lança em %s e no grupo dele."
+L["BUFF_DUTY_TOOLTIP_FAVOR"] = "Seleciona %s como alvo e lança."
+-- A Party-Buffs icon's menu: a raid buff your group is missing, and its count.
 L["BUFF_DUTY_OTHERS_TOOLTIP_COUNT"] = "Faltando ou acabando: %d"
--- A Party-Buffs icon's clicks, beside Left-Click and Right-Click: one asks the party or raid, the other whispers the players who can cast it.
-L["BUFF_DUTY_OTHERS_TOOLTIP_ASK_GROUP"] = "Pedir bônus ao grupo"
-L["BUFF_DUTY_OTHERS_TOOLTIP_ASK_WHISPER"] = "Pedir bônus diretamente"
+-- The menu's rows: the first asks the party or raid for the buff (its name), the second whispers the players who can cast it (their names).
+L["BUFF_DUTY_OTHERS_MENU_ASK_GROUP"] = "Pedir %s ao grupo"
+L["BUFF_DUTY_OTHERS_MENU_WHISPER"] = "Sussurrar para %s"
 --[[
-    The ask either click sends, signed off like every sent message ({star} ... // GtG), so it
+    The ask either row sends, signed off like every sent message ({star} ... // GtG), so it
     ends as a statement, not a question. Up to five missing players are named (ONE for one,
     NAMES for two to five, joined with LIST_PAIR_FORMAT or LIST_LAST_FORMAT), then the buff's link;
     past five, COUNT gives how many, then the link.
@@ -1737,13 +1750,14 @@ L["BUFF_DUTY_OTHERS_TOOLTIP_ASK_WHISPER"] = "Pedir bônus diretamente"
 L["BUFF_DUTY_OTHERS_ASK_ONE"] = "%s está sem %s."
 L["BUFF_DUTY_OTHERS_ASK_NAMES"] = "%s estão sem %s."
 L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "%d pessoas estão sem o buff %s."
--- Your own chat, after a Right-Click: who was whispered, then the buff's link.
+-- Your own chat, after the Whisper row: who was whispered, then the buff's link.
 L["BUFF_DUTY_OTHERS_SENT"] = "Sussurrado para %s sobre %s."
--- The window's close button: the class name in its color, then the options command.
+-- The window's close button: the class name, the class name again for its checkbox, the When to Show
+-- header, then the options command.
 L["BUFF_DUTY_CLOSED"] =
-	"O Plantão de buffs está desativado para a classe %s. Para reativá-lo, use Shift + clique esquerdo no botão do minimapa ou digite %s."
+	"O Plantão de buffs está desativado para a classe %s. Para reativá-lo, use Shift + clique esquerdo no botão do minimapa, ou marque %s em %s, dentro de %s."
 
--- The Buff Key (Key Bindings, and the Keybinds section of Buff Duty)
+-- The Buff Button key: its name in the game's Key Bindings list and the root panel's Key Bindings section, then the notices a press shows.
 L["BUFF_KEY"] = "Botão de buff"
 -- %s is a player's name.
 L["BUFF_KEY_WAITING"] = "Esperando %s chegar ao alcance."
@@ -1751,71 +1765,20 @@ L["BUFF_KEY_DONE"] = "Nada mais para buffar."
 L["BUFF_KEY_OFF"] = "O Plantão de buffs está desativado."
 
 --------------------------------------------------------------------------------
--- Options: Thank You Button
---------------------------------------------------------------------------------
-
-L["TAB_THANK_YOU_BUTTON"] = "Botão de agradecimento"
-L["BUTTON_DESCRIPTION"] =
-	"Sussurre e faça uma expressão para o seu alvo com uma única tecla. Gentileza, automatizada."
--- One heading per button, numbered; %d is the button's position in the list.
-L["BUTTON_SECTION"] = "Botão de agradecimento %d"
-L["BUTTON_EMOTE"] = "Expressão"
-L["BUTTON_EMOTE_DESCRIPTION"] =
-	"Define a expressão que este botão faz para o seu alvo, ou Nenhuma para não fazer expressão."
-L["BUTTON_EMOTE_NONE"] = "Nenhuma"
-L["BUTTON_ICON"] = "Ícone"
-L["BUTTON_ICON_DESCRIPTION"] =
-	"Define o ícone que a macro deste botão mostra na sua lista de macros e nas suas barras de ação."
--- The Icon dropdown's first choice, the macros' own icon; every other choice is a picture alone.
-L["BUTTON_ICON_DEFAULT"] = "Padrão"
---[[
-    The toggle owns the macro in both directions, so the label is ENABLE rather
-    than CREATE. Both strings carry the macro's name: with five buttons stacked,
-    "which macro is this one?" should not need a hover.
-]]
-L["BUTTON_MACRO_ENABLE"] = 'Ativar a macro "%s"'
-L["BUTTON_MACRO_ENABLE_DESCRIPTION"] = "Cria uma macro chamada %s e a apaga quando você desativa esta opção."
-L["BUTTON_WHISPER_DESCRIPTION"] =
-	"Define o que este botão sussurra para o seu alvo. Deixe em branco para não enviar sussurro."
-
---------------------------------------------------------------------------------
--- Defaults
---------------------------------------------------------------------------------
-
-L["DEFAULT_WHISPER"] = "Valeu, você é demais! (="
---[[
-    The star marker (left off on WoW Forever) and " // GtG" sign-off are added
-    by the builder, which also drops the closing punctuation; neither is part of
-    the editable text.
-]]
-L["DEFAULT_GOOD_NEWS"] = "Você tem %a"
-
---------------------------------------------------------------------------------
--- Emotes
---------------------------------------------------------------------------------
-
-L["EMOTE_CHEER_DESCRIPTION"] = "Você torce por <Target>."
-L["EMOTE_DRINK_DESCRIPTION"] = "Você ergue um brinde a <Target>."
-L["EMOTE_FLEX_DESCRIPTION"] = "Você exibe seus músculos para <Target>."
-L["EMOTE_GRIN_DESCRIPTION"] = "Você dá um sorriso malicioso para <Target>."
-L["EMOTE_HIGHFIVE_DESCRIPTION"] = "Você dá um toca-aqui em <Target>."
-L["EMOTE_PRAISE_DESCRIPTION"] = "Você elogia <Target>."
-L["EMOTE_SALUTE_DESCRIPTION"] = "Você saúda <Target> com respeito."
-L["EMOTE_SMILE_DESCRIPTION"] = "Você sorri para <Target>."
-L["EMOTE_THANK_DESCRIPTION"] = "Você agradece a <Target>."
-L["EMOTE_WHOA_DESCRIPTION"] = "Você exclama 'Uau!' para <Target>."
-L["EMOTE_WINK_DESCRIPTION"] = "Você pisca para <Target>."
-L["EMOTE_YES_DESCRIPTION"] = "Você acena com a cabeça para <Target>."
-
---------------------------------------------------------------------------------
 -- Spellbook
 --------------------------------------------------------------------------------
 
--- the window's first tab and its title before "// Good to Go"
+-- The window's first tab, and its title before "// Good to Go", is TAB_ENHANCED_SPELLBOOK (Options Panel above).
 
 -- Page: Sections
 L["SECTION_UNLEARNED"] = "Não aprendidos"
 L["SECTION_CONSUMABLES"] = "Consumíveis do GtG"
+
+-- Page: WoW Macro Names. Each ends a macro's name, which WoW caps at 16 bytes in all; the spell name is cut to make room.
+-- a focus copy's ("Heal @F")
+L["MACRO_NAME_FOCUS_SUFFIX"] = " @F"
+-- a lower rank's own macro ("Fireball R3"); %s is the rank's number
+L["MACRO_NAME_RANK_SUFFIX"] = " R%s"
 
 -- Page: Macro Menu
 L["MACRO_TEXT"] = "Texto da macro"
@@ -1836,8 +1799,8 @@ L["MENU_RIGHT_CLICK_GROUP"] = "Clique direito para versão de grupo"
 L["MENU_CATEGORY_TITLE"] = "Aplicar a todos: %s"
 L["MENU_ONCE_PER_COMBAT"] = "Lançar uma vez por combate"
 L["MENU_ONCE_PER_TARGET"] = "Lançar uma vez por alvo"
-L["MENU_HIDE_ERRORS"] = "Ocultar mensagens de erro"
-L["MENU_MUTE_ERRORS"] = "Silenciar sons de erro"
+L["MENU_HIDE_ERRORS"] = "Ocultar erros"
+L["MENU_MUTE_ERRORS"] = "Silenciar erros"
 L["MENU_SWITCH_TO"] = "Mudar para %s"
 L["MENU_START_AUTO_ATTACK"] = "Iniciar ataque automático"
 L["MENU_STOP_ATTACK"] = "Parar ataque"
@@ -1847,8 +1810,8 @@ L["MENU_START_WAND"] = "Iniciar varinha"
 L["MENU_STOP_CASTING"] = "Parar lançamento"
 L["MENU_STOP_CASTING_NOTE"] =
 	"Use Parar lançamento em feitiços que não podem esperar, como interrupções e dissipações."
-L["MENU_STOP_IF_CHANNELING"] = "Parar macro se canalizando"
-L["MENU_STOP_IF_STEALTHED"] = "Parar macro se em furtividade"
+L["MENU_STOP_IF_CHANNELING"] = "Não ao canalizar"
+L["MENU_STOP_IF_STEALTHED"] = "Não em furtividade"
 L["MENU_DUPLICATE"] = "Duplicar"
 L["MENU_DELETE"] = "Excluir"
 L["MENU_DELETE_USED_ONE"] = "Excluir (usada em 1 barra)"
@@ -1891,7 +1854,7 @@ L["MENU_OPTIONS_COUNT"] = "%d opções"
 L["MENU_ENABLED"] = "Ativado"
 L["MENU_HIGHEST"] = "Mais alto"
 L["MENU_HIGHEST_DESCRIPTION"] = "Lança o grau mais alto que você conhece."
-L["MENU_RANK_DYNAMIC"] = "Dinâmico"
+L["MENU_RANK_DYNAMIC"] = "Grau dinâmico"
 L["MENU_FIXED_RANK_DESCRIPTION"] = "Sempre lança %s, em qualquer nível."
 L["MENU_ANY_TIME"] = "A qualquer momento"
 L["MENU_ANY_TIME_DESCRIPTION"] = "Lança dentro ou fora de combate."
@@ -1916,6 +1879,7 @@ L["MENU_USE_SLOT"] = "Usar %s"
 L["MENU_ADD_FOCUS"] = "Adicionar cópia de foco"
 L["MENU_REMOVE_FOCUS"] = "Remover cópia de foco"
 L["MENU_FOCUS_DESCRIPTION"] = "Adiciona à página uma segunda macro que lança no seu foco e depois no seu alvo."
+L["MENU_REMOVE_FOCUS_DESCRIPTION"] = "Tira a cópia de foco da página e exclui a macro dela."
 L["MENU_DUPLICATE_DESCRIPTION"] =
 	"Adiciona outra cópia desta macro à página, começando com estas opções, para que você possa configurá-la de outro jeito."
 L["MENU_MAKE_DEFAULT"] = "Tornar padrão para %s"
@@ -1926,7 +1890,7 @@ L["MENU_DEFAULT_SET"] = "%s agora começam com estas opções."
 -- Page: Conditionals
 L["MENU_GROUP_CONDITIONALS"] = "Condicionais"
 L["MENU_CONDITIONALS_DESCRIPTION"] =
-	"Abre o painel Condicionais ao lado do Grimório, onde a macro pode lançar outro feitiço quando uma condição é atendida, como Shift pressionado ou Especialização 2."
+	"Abre o painel Condicionais ao lado da janela do Grimório Aprimorado, onde a macro pode lançar outro feitiço quando uma condição é atendida, como Shift pressionado ou Especialização 2."
 L["MENU_RIGHT_CLICK_TAKEN"] = "Uma condicional usa o clique direito. Remova-a para ativar isto."
 -- TRANSLATORS: the panel's title after the spell's name and "//" ("Fireball // Conditionals").
 L["CONDITIONALS_TITLE"] = "Condicionais"
@@ -1998,7 +1962,7 @@ L["SUBTEXT_CONDITIONALS"] = "%d condicionais"
 -- Page: Cast Sequence
 L["MENU_GROUP_CAST_SEQUENCE"] = "Sequência de lançamento"
 L["MENU_CAST_SEQUENCE_DESCRIPTION"] =
-	"Abre o painel Sequência de lançamento ao lado do Grimório, onde cada clique na macro lança o próximo feitiço em ordem, como Corrupção, depois Maldição da Agonia, depois Imolar."
+	"Abre o painel Sequência de lançamento ao lado da janela do Grimório Aprimorado, onde cada clique na macro lança o próximo feitiço em ordem, como Corrupção, depois Maldição da Agonia, depois Imolar."
 -- TRANSLATORS: how many spells a Cast Sequence casts in turn, the macro's own included ("3 Steps").
 L["MENU_CAST_SEQUENCE_STEPS"] = "%d etapas"
 -- TRANSLATORS: the panel's title after the spell's name and "//" ("Corruption // Cast Sequence").
@@ -2046,6 +2010,8 @@ L["CAST_SEQUENCE_STOP_NO_RESET"] =
 	"Para de vez: sem nada para recomeçá-la, a sequência fica em NULL até a macro mudar ou você recarregar a interface. Escolha uma redefinição em Recomeçar quando."
 L["CAST_SEQUENCE_PET_BLOCKED"] =
 	"Fica em espera enquanto Lançar se invocado lança %s, que escreve uma linha de lançamento própria. Desative isso para usar a sequência."
+L["CAST_SEQUENCE_SLOT_DESCRIPTION"] =
+	"Clique aqui e depois em um feitiço na página para lançá-lo nesta etapa. Ou arraste um feitiço da página para este espaço."
 -- TRANSLATORS: the spell's note on the page, counting the spells its Cast Sequence casts in turn ("3-Step Sequence").
 L["SUBTEXT_CAST_SEQUENCE"] = "Sequência de %d etapas"
 
@@ -2112,7 +2078,7 @@ L["SUBTEXT_ONCE_PER_TARGET"] = "1 por alvo"
 L["SUBTEXT_COMBAT_ONLY"] = "Só em combate"
 L["SUBTEXT_NO_COMBAT"] = "Fora de combate"
 L["SUBTEXT_LEAVE_FORM"] = "Sai da forma"
-L["SUBTEXT_NO_TOGGLE"] = "Fica ativo"
+L["SUBTEXT_NO_TOGGLE"] = "Nunca desativa"
 L["SUBTEXT_WAND"] = "Varinha"
 L["SUBTEXT_START_ATTACK"] = "Ataque auto."
 L["SUBTEXT_STOP_ATTACK"] = "Para ataque"
@@ -2253,10 +2219,10 @@ L["PET_SPELLBOOK_AUTOCAST_OFF"] = "Automático desativado"
 L["WHATS_NEXT_PET_TITLE"] = "Próximos Passos do Ajudante"
 L["WHATS_NEXT_PET_EMPTY"] = "Nenhuma habilidade de ajudante para listar."
 -- the footer's right: the pet out, or that there's none
--- TRANSLATORS: %1$s is the pet's name, %2$d its level, %3$s its family ("Fang, Level 23 Wolf").
-L["WHATS_NEXT_PET_FOOTER"] = "%1$s, nível %2$d, %3$s"
--- TRANSLATORS: %1$d is the training points the pet has left, %2$d its total.
-L["WHATS_NEXT_PET_FOOTER_TRAINING_POINTS"] = "Pontos de treinamento: %1$d de %2$d"
+-- TRANSLATORS: the first %s is the pet's name, %d its level, the second %s its family ("Fang, Level 23 Wolf").
+L["WHATS_NEXT_PET_FOOTER"] = "%s, nível %d, %s"
+-- TRANSLATORS: the first %d is the training points the pet has left, the second its total.
+L["WHATS_NEXT_PET_FOOTER_TRAINING_POINTS"] = "Pontos de treinamento: %d de %d"
 L["WHATS_NEXT_PET_NO_PET"] = "Nenhum ajudante invocado: mostrando o que você aprendeu com Treinamento de Feras."
 L["WHATS_NEXT_PET_NO_DEMON"] = "Nenhum demônio invocado: invoque um para ver o que ele já conhece."
 
@@ -2286,8 +2252,8 @@ L["WHATS_NEXT_PET_TOOLTIP_GRIMOIRE_IN_BAGS"] =
 	"O grimório dela está nas suas bolsas. Use-o enquanto este demônio estiver invocado."
 L["WHATS_NEXT_PET_TOOLTIP_OTHER"] = "Seu ajudante não pode aprendê-la."
 L["WHATS_NEXT_PET_TOOLTIP_BEASTS"] = "Feras que a conhecem"
--- TRANSLATORS: %1$s is a beast's name, %2$s its level or level range ("Forest Spider (5-6)").
-L["WHATS_NEXT_PET_TOOLTIP_BEAST"] = "%1$s (%2$s)"
+-- TRANSLATORS: the first %s is a beast's name, the second its level or level range ("Forest Spider (5-6)").
+L["WHATS_NEXT_PET_TOOLTIP_BEAST"] = "%s (%s)"
 -- TRANSLATORS: %d is how many more beasts know the ability than the tooltip names.
 L["WHATS_NEXT_PET_TOOLTIP_MORE"] = "E mais %d."
 
@@ -2296,7 +2262,7 @@ L["WHATS_NEXT_PET_SORT_DESCRIPTION"] =
 	"Ordenar por disponibilidade lista primeiro as habilidades que seu ajudante pode aprender agora e por último as que ele já conhece. Ordenar por nível lista cada habilidade sob o nível de ajudante que ela exige."
 L["WHATS_NEXT_PET_SHOW_KNOWN"] = "Mostrar habilidades conhecidas"
 L["WHATS_NEXT_PET_SHOW_KNOWN_DESCRIPTION"] =
-	"Também lista as habilidades que seu ajudante já conhece, depois das demais. Um caçador sem ajudante invocado vê as que ele mesmo aprendeu."
+	"Também lista as habilidades que seu ajudante já conhece, depois das demais. Um Caçador sem ajudante invocado vê as que ele mesmo aprendeu."
 L["WHATS_NEXT_PET_SHOW_OTHER"] = "Mostrar habilidades de outras famílias"
 L["WHATS_NEXT_PET_SHOW_OTHER_DESCRIPTION"] =
 	"Também lista as habilidades que seu ajudante não pode aprender, como Espreitar de um felino para um lobo, ou as de outro demônio."
@@ -2310,10 +2276,10 @@ L["OPTIONS_KEY_BINDING_TOGGLE_DESCRIPTION"] =
 -- %s is the macro line that presses the same key, /click GtGBuffKey.
 L["OPTIONS_KEY_BINDING_BUFF_DESCRIPTION"] =
 	"Lança o próximo buff que a janela do Plantão de buffs oferece, um por clique, fora de combate. Buffs de arma continuam sendo um clique na janela. Para acioná-lo a partir de uma macro, use %s."
-L["OPTIONS_ABILITY_TOOLTIPS_HEADER"] = "Dicas de habilidade dos Próximos Passos"
+L["OPTIONS_ABILITY_TOOLTIPS_HEADER"] = "Dicas de grau de feitiço"
 L["OPTIONS_ABILITY_TOOLTIPS_DESCRIPTION"] =
-	"A dica de cada habilidade lista seus graus e o nível que cada um exige: verde para os graus que você conhece, vermelho para os que você poderia treinar agora mas não treinou, e amarelo para os que ainda virão. É uma checagem rápida de que você está sempre usando seu melhor grau, para jogar sempre no seu melhor. Os graus não aparecem durante o combate, para que suas dicas fiquem curtas quando mais importa."
-L["OPTIONS_ABILITY_TOOLTIPS_ENABLE"] = "Ativar dicas de habilidade dos Próximos Passos"
+	"A dica de cada habilidade lista seus graus e o nível que cada um exige: branco para os graus que você conhece, verde para os que você poderia treinar agora e cinza para os que ainda virão. É uma checagem rápida de que você está usando seu melhor grau, para jogar sempre no seu melhor. Os graus não aparecem durante o combate, para que suas dicas fiquem curtas quando mais importa."
+L["OPTIONS_ABILITY_TOOLTIPS_ENABLE"] = "Ativar dicas de grau de feitiço"
 L["OPTIONS_ABILITY_TOOLTIPS_ENABLE_DESCRIPTION"] =
 	"Adiciona os graus de cada habilidade à dica dela nas suas barras de ação, no grimório do jogo e em outros addons. Desativado, essas dicas ficam como o jogo as mostra. A própria janela do Grimório Aprimorado mostra os graus de qualquer forma."
 L["OPTIONS_DELETE_MACROS_HEADER"] = "Excluir macros"
@@ -2386,6 +2352,7 @@ L["BINDING_TOGGLE_PAGE"] = "Mostrar/ocultar Grimório Aprimorado"
 L["CHAT_KEY_BINDINGS_IN_COMBAT"] = "Por segurança, a lista de teclas de atalho não pode ser aberta durante o combate."
 L["KEY_BINDINGS_LOCATION"] = "Abra o menu do jogo, depois %s, depois %s, e procure a seção Good to Go."
 L["ERROR_MACRO_SLOTS_FULL"] = "Não há espaços de macro livres. Apague uma macro em /macro para abrir espaço."
+L["ERROR_MACRO_WINDOW_OPEN"] = "Feche a janela de macros primeiro."
 L["CHAT_MACROS_DELETED"] = "Macros excluídas: %d"
 L["CHAT_MACRO_TOO_LONG"] =
 	'A macro "%s" tem %d bytes com as opções ativadas, acima dos %d que cabem em uma macro. Desative uma opção para encurtá-la.'

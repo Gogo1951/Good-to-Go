@@ -33,10 +33,22 @@ ns.EVENT_NAMES = {
 	"BAG_UPDATE_DELAYED",
 	"BANKFRAME_CLOSED",
 	"BANKFRAME_OPENED",
+	"CHAT_MSG_ADDON",
+	"CHAT_MSG_CHANNEL",
+	"CHAT_MSG_GUILD",
+	"CHAT_MSG_INSTANCE_CHAT",
+	"CHAT_MSG_INSTANCE_CHAT_LEADER",
+	"CHAT_MSG_OFFICER",
+	"CHAT_MSG_PARTY",
+	"CHAT_MSG_PARTY_LEADER",
+	"CHAT_MSG_RAID",
+	"CHAT_MSG_RAID_LEADER",
+	"CHAT_MSG_SAY",
+	"CHAT_MSG_WHISPER",
+	"CHAT_MSG_YELL",
 	"GET_ITEM_INFO_RECEIVED",
 	"GROUP_ROSTER_UPDATE",
 	"ITEM_PUSH",
-	"LOADING_SCREEN_DISABLED",
 	"MERCHANT_CLOSED",
 	"MERCHANT_SHOW",
 	"PET_BAR_UPDATE",
@@ -159,11 +171,63 @@ function ns.SetModuleEvent(name, event, enabled, ...)
 end
 
 --------------------------------------------------------------------------------
+-- Replaced Add-ons
+--------------------------------------------------------------------------------
+
+--[[
+    An add-on Good to Go replaces (ns.REPLACED_ADDONS) that runs alongside it
+    rewrites the same macros, each undoing the other. So whenever one is
+    running at login, it is turned off for every character and the player is
+    offered a reload, since the old copy runs on until then. This outlives the
+    settings import below: a player can install Good to Go, or turn the old
+    add-on back on, long after the import is gone.
+]]
+-- Titles of the old add-ons turned off this session.
+local turnedOff = {}
+
+local function AddOnTitle(folder)
+	return C_AddOns.GetAddOnMetadata(folder, "Title") or folder
+end
+
+local function JoinTitles(titles)
+	return table.concat(titles, L["LIST_SEPARATOR"])
+end
+
+local function TurnOffReplacedAddons()
+	for _, folder in ipairs(ns.REPLACED_ADDONS) do
+		if C_AddOns.IsAddOnLoaded(folder) then
+			C_AddOns.DisableAddOn(folder)
+			turnedOff[#turnedOff + 1] = AddOnTitle(folder)
+		end
+	end
+end
+
+StaticPopupDialogs.GOODTOGO_REPLACED_RELOAD = {
+	text = L["POPUP_REPLACED_RELOAD"],
+	button1 = L["POPUP_REPLACED_RELOAD_ACCEPT"],
+	button2 = L["POPUP_REPLACED_LATER"],
+	OnAccept = function()
+		ReloadUI()
+	end,
+	timeout = 0,
+	whileDead = true,
+	hideOnEscape = true,
+	preferredIndex = 3,
+}
+
+-- Asked once the player is in the world, after the welcome line.
+local function OfferReplacedReload()
+	if #turnedOff > 0 then
+		StaticPopup_Show("GOODTOGO_REPLACED_RELOAD", JoinTitles(turnedOff))
+	end
+end
+
+--------------------------------------------------------------------------------
 -- Legacy Settings
 --------------------------------------------------------------------------------
 
 --[[
-    MIGRATION (remove after 2026-11-25)
+    MIGRATION (remove after 2026-12-08)
     Bringing players over from the add-ons this one replaces (ns.LEGACY_ADDONS).
     The client loads an add-on's saved variables only while that add-on is
     turned on, so the import can read them only in a session where it runs:
@@ -175,7 +239,9 @@ end
                   played. Restock Lists merge by name. Then every old add-on
                   still running is turned off for all characters, and the
                   player is offered a reload so the old copy stops rewriting
-                  the same macros.
+                  the same macros. Those in ns.REPLACED_ADDONS are turned off
+                  by TurnOffReplacedAddons above, which stays when this goes;
+                  the rest are turned off here.
       turned off  The player is asked whether to bring its settings over.
                   Yes turns it on for this character and reloads, which lands
                   in the case above; No is remembered and never asked again;
@@ -185,14 +251,16 @@ end
                   the Restock List.
 
     Connoisseur & Restocker's table has this one's shape, profile for profile.
-    Thanks for the Buff kept everything on one shared profile, and its settings
-    are account-wide here. Macro Spellbook's settings are not brought over;
-    it is only turned off.
+    Macro Spellbook's settings are not brought over; it is only turned off.
+    Rank Sentinel is only turned off here too: Rank Watch copies its settings
+    itself at login (Features/Rank-Watch/Rank-Watch-Core.lua), in the same
+    session, since turning it off takes hold only after a reload.
+    Thanks for the Buff is not on the list: it is its own add-on, so it is
+    never imported or turned off.
 ]]
 local legacyNotices = {}
 local legacyToTurnOn = {}
--- Titles of the old add-ons turned off this session, and of those whose settings were copied in on the way.
-local legacyTurnedOff = {}
+-- Titles of the old add-ons whose settings were copied in this session.
 local legacyCopied = {}
 
 --[[
@@ -249,21 +317,19 @@ local LEGACY_IMPORTERS = {
 			CopyOver(saved.global.restocker.lists, restocker.lists)
 		end
 	end,
-	TFTBDB = function(saved, legacy)
-		local profiles = legacy.profiles or {}
-		local _, firstProfile = next(profiles)
-		local profile = profiles.Default or firstProfile
-		if not profile then
-			return
-		end
-		saved.global = saved.global or {}
-		-- Its welcome toggle and mini-map button are the shared ones now; Peer Pressure moved to Control Freak.
-		CopyOver(saved.global, profile, { showWelcome = true, minimap = true, peerPressure = true })
-	end,
 }
 
 local function LegacyTitle(legacy)
-	return C_AddOns.GetAddOnMetadata(legacy.folder, "Title") or legacy.folder
+	return AddOnTitle(legacy.folder)
+end
+
+local function IsReplacedAddon(folder)
+	for _, replaced in ipairs(ns.REPLACED_ADDONS) do
+		if replaced == folder then
+			return true
+		end
+	end
+	return false
 end
 
 -- Whether the player switched the old add-on off, so turning it back on lets this session read its settings.
@@ -294,8 +360,11 @@ local function ImportLegacySettings()
 				end
 				imported[key] = LEGACY_IMPORT_VERSION
 			end
-			C_AddOns.DisableAddOn(legacy.folder)
-			legacyTurnedOff[#legacyTurnedOff + 1] = LegacyTitle(legacy)
+			-- TurnOffReplacedAddons has already turned off and listed the ones in ns.REPLACED_ADDONS.
+			if not IsReplacedAddon(legacy.folder) then
+				C_AddOns.DisableAddOn(legacy.folder)
+				turnedOff[#turnedOff + 1] = LegacyTitle(legacy)
+			end
 		elseif key and not IsSettled(imported[key]) and IsInstalledButOff(legacy) then
 			legacyToTurnOn[#legacyToTurnOn + 1] = legacy
 		end
@@ -305,19 +374,6 @@ end
 function ns.IsLegacyImportPending()
 	return #legacyToTurnOn > 0
 end
-
-StaticPopupDialogs.GOODTOGO_LEGACY_RELOAD = {
-	text = L["POPUP_LEGACY_RELOAD_TURNED_OFF"],
-	button1 = L["POPUP_LEGACY_RELOAD_ACCEPT"],
-	button2 = L["POPUP_LEGACY_LATER"],
-	OnAccept = function()
-		ReloadUI()
-	end,
-	timeout = 0,
-	whileDead = true,
-	hideOnEscape = true,
-	preferredIndex = 3,
-}
 
 StaticPopupDialogs.GOODTOGO_LEGACY_IMPORT = {
 	text = L["POPUP_LEGACY_IMPORT_SETTINGS"],
@@ -343,22 +399,18 @@ StaticPopupDialogs.GOODTOGO_LEGACY_IMPORT = {
 	preferredIndex = 3,
 }
 
-local function JoinTitles(titles)
-	return table.concat(titles, L["LIST_SEPARATOR"])
-end
-
--- Asked once the player is in the world, after the welcome line.
+--[[
+    Asked once the player is in the world, after the welcome line, in place of
+    OfferReplacedReload. Returns whether it asked anything: when it didn't,
+    OfferReplacedReload offers the plain reload. A reload for an add-on just
+    turned off comes before the import question, which waits for the next login.
+]]
 local function OfferLegacySteps()
-	if #legacyTurnedOff > 0 then
-		local dialog = StaticPopupDialogs.GOODTOGO_LEGACY_RELOAD
-		if #legacyCopied > 0 then
-			dialog.text = L["POPUP_LEGACY_RELOAD_COPIED"]
-			StaticPopup_Show("GOODTOGO_LEGACY_RELOAD", JoinTitles(legacyCopied), JoinTitles(legacyTurnedOff))
-		else
-			dialog.text = L["POPUP_LEGACY_RELOAD_TURNED_OFF"]
-			StaticPopup_Show("GOODTOGO_LEGACY_RELOAD", JoinTitles(legacyTurnedOff))
-		end
-	elseif #legacyToTurnOn > 0 then
+	if #legacyCopied > 0 then
+		StaticPopupDialogs.GOODTOGO_REPLACED_RELOAD.text = L["POPUP_LEGACY_RELOAD_COPIED"]
+		StaticPopup_Show("GOODTOGO_REPLACED_RELOAD", JoinTitles(legacyCopied), JoinTitles(turnedOff))
+		return true
+	elseif #turnedOff == 0 and #legacyToTurnOn > 0 then
 		local titles = {}
 		local bringsLists = false
 		for index, legacy in ipairs(legacyToTurnOn) do
@@ -368,7 +420,9 @@ local function OfferLegacySteps()
 		StaticPopupDialogs.GOODTOGO_LEGACY_IMPORT.text = bringsLists and L["POPUP_LEGACY_IMPORT_LISTS"]
 			or L["POPUP_LEGACY_IMPORT_SETTINGS"]
 		StaticPopup_Show("GOODTOGO_LEGACY_IMPORT", JoinTitles(titles))
+		return true
 	end
+	return false
 end
 
 --------------------------------------------------------------------------------
@@ -431,29 +485,217 @@ local function MoveRenamedSettings()
 end
 
 --[[
+    MIGRATION (remove after 2026-12-08)
+    Automated Appreciation (Stranger Buffs, Sharing Good News, Combat Buffs,
+    Group Service Alerts and the Thank You buttons) is gone: thanking is
+    Thanks for the Buff's job, which is its own add-on again. Its settings go,
+    and so does the record of an import from it that no longer happens.
+
+    The Thank You macros this add-on made go too, since their commands no
+    longer answer: only one whose body is still exactly its button's command,
+    and only while no other add-on has taken that command, so a macro the
+    player rewrote, or one Thanks for the Buff still answers, stays. Macros
+    can't be deleted in combat; a login mid-fight leaves them for the next.
+]]
+local RETIRED_SETTINGS = {
+	"strangers",
+	"teammates",
+	"services",
+	"goodNews",
+	"watchedBuffs",
+	"slash",
+	"slash2",
+	"slash3",
+	"slash4",
+	"slash5",
+}
+
+local RETIRED_MACROS = {
+	["- Thank"] = "/thankyou",
+	["- GtG 2"] = "/thankyou2",
+	["- GtG 3"] = "/thankyou3",
+	["- GtG 4"] = "/thankyou4",
+	["- GtG 5"] = "/thankyou5",
+}
+
+local function IsSlashCommandTaken(command)
+	for key in pairs(SlashCmdList) do
+		local index = 1
+		local alias = _G["SLASH_" .. key .. index]
+		while alias do
+			if type(alias) == "string" and alias:lower() == command then
+				return true
+			end
+			index = index + 1
+			alias = _G["SLASH_" .. key .. index]
+		end
+	end
+	return false
+end
+
+local function RetireAutomatedAppreciation()
+	for _, key in ipairs(RETIRED_SETTINGS) do
+		ns.db.global[key] = nil
+	end
+	local imported = ns.db.global.legacyImported
+	if type(imported) == "table" then
+		imported.TFTBDB = nil
+	end
+
+	if InCombatLockdown() then
+		return
+	end
+	for name, command in pairs(RETIRED_MACROS) do
+		local index = GetMacroIndexByName(name)
+		if index > 0 then
+			local body = select(3, GetMacroInfo(index))
+			if body and strtrim(body) == command and not IsSlashCommandTaken(command) then
+				DeleteMacro(index)
+			end
+		end
+	end
+end
+
+--[[
+    Characters from another game version, dropped without a word. AceDB keys
+    a character "Name - Realm" on realm clients and "First Last" on the
+    realm-free ones (WoW Forever), so a saved key shaped the other way from
+    the one being played came from a copied WTF folder: its char section,
+    its profile choice and, unless someone still uses it, its own profile go.
+]]
+local REALM_KEY_SEPARATOR = " - "
+
+---@param characterKey any
+---@param realmClient boolean
+---@return boolean
+local function IsOtherClientKey(characterKey, realmClient)
+	if type(characterKey) ~= "string" then
+		return true
+	end
+	return (characterKey:find(REALM_KEY_SEPARATOR, 1, true) ~= nil) ~= realmClient
+end
+
+---@param sv table # the saved table, or one of its namespaces
+---@param realmClient boolean
+---@param profilesInUse table<string, boolean>
+---@return nil
+local function PruneSavedTable(sv, realmClient, profilesInUse)
+	local pruned = {}
+	for _, section in ipairs({ "char", "profileKeys" }) do
+		local characters = sv[section]
+		if type(characters) == "table" then
+			for characterKey in pairs(characters) do
+				if IsOtherClientKey(characterKey, realmClient) then
+					characters[characterKey] = nil
+					pruned[characterKey] = true
+				end
+			end
+		end
+	end
+	if type(sv.profiles) == "table" then
+		for characterKey in pairs(pruned) do
+			if not profilesInUse[characterKey] then
+				sv.profiles[characterKey] = nil
+			end
+		end
+	end
+end
+
+--[[
+    The same characters' account-wide leftovers on ns.db.global. A Restock
+    List choice is keyed by the AceDB name, so the shape test above settles
+    it; its list then has no chooser, and goes at the Restocker's login if it
+    is empty (ns.PruneEmptyOrphanRestockLists).
+
+    An Inventory Report record names the character and its realm apart, so
+    the name settles it instead. A realm client's names never hold a space,
+    and a Forever one is the first name and surname (ns.GetPlayerFullName),
+    so a realm client drops every record whose name has one. Forever drops
+    the records with no space only when they are on another realm too, so a
+    Forever character with no surname on this realm stays.
+]]
+---@param realmClient boolean
+---@return nil
+local function PruneOtherClientGlobals(realmClient)
+	local global = ns.db.global
+	local listChoices = type(global.restocker) == "table" and global.restocker.listChoices
+	if type(listChoices) == "table" then
+		for characterKey in pairs(listChoices) do
+			if IsOtherClientKey(characterKey, realmClient) then
+				listChoices[characterKey] = nil
+			end
+		end
+	end
+
+	local inventory = global.inventory
+	if type(inventory) ~= "table" then
+		return
+	end
+	local realm = GetRealmName()
+	for key, record in pairs(inventory) do
+		if type(record) == "table" and type(record.name) == "string" then
+			local hasSurname = record.name:find("%s") ~= nil
+			if realmClient and hasSurname or not realmClient and not hasSurname and record.realm ~= realm then
+				inventory[key] = nil
+			end
+		end
+	end
+end
+
+---@return nil
+local function PruneOtherClientCharacters()
+	local currentKey = ns.db.keys and ns.db.keys.char
+	local sv = ns.db.sv
+	if type(currentKey) ~= "string" or type(sv) ~= "table" then
+		return
+	end
+	local realmClient = currentKey:find(REALM_KEY_SEPARATOR, 1, true) ~= nil
+	local profilesInUse = { [ns.db.keys.profile or ""] = true }
+	for characterKey, profileName in pairs(sv.profileKeys or {}) do
+		if not IsOtherClientKey(characterKey, realmClient) then
+			profilesInUse[profileName] = true
+		end
+	end
+	PruneSavedTable(sv, realmClient, profilesInUse)
+	for _, namespace in pairs(sv.namespaces or {}) do
+		if type(namespace) == "table" then
+			PruneSavedTable(namespace, realmClient, profilesInUse)
+		end
+	end
+	PruneOtherClientGlobals(realmClient)
+end
+
+--[[
     One account-wide SavedVariable managed by AceDB-3.0, Per-Character: every
     character lands on a profile of its own, named as AceDB names the
     character (its first name and surname on WoW Forever, "Name - Realm" on
     every other flavor). What differs by character rides the profile; what the whole
     account shares -- the Restock Lists, every character's inventory, which
-    macros exist, Automated Appreciation's settings, presentation -- lives on
+    macros exist, Buff Duty's settings, presentation -- lives on
     ns.db.global, each with its reason (see Data/Default-Settings.lua).
 ]]
 local function InitializeDatabase()
 	-- MIGRATION (remove after 2026-12-03)
 	MoveRenamedSettings()
 
-	-- MIGRATION (remove after 2026-11-25)
+	-- MIGRATION (remove after 2026-12-08)
 	ImportLegacySettings()
 
 	ns.db = LibStub("AceDB-3.0"):New(ns.SAVED_VARIABLES_NAME, ns.DATABASE_DEFAULTS)
+	PruneOtherClientCharacters()
 	UseOwnProfileWhenUnnamed()
 
+	-- MIGRATION (remove after 2026-12-08)
+	RetireAutomatedAppreciation()
+
+	-- MIGRATION (remove after 2026-12-08)
+	ns.RetireSavedItemCache()
+
 	--[[
-	    MIGRATION (remove after 2026-11-25)
+	    MIGRATION (remove after 2026-12-08)
 	    Connoisseur & Restocker's saved-data repairs, run on what it copied in:
-	    first each Forever character's list choice, staples answer and
-	    Inventory Report record move to its whole-name key, then every
+	    first each Forever character's list choice and Inventory Report
+	    record move to its whole-name key, then every
 	    character still on the shared Default profile gets one of its own. Both
 	    run before the callbacks below are wired, so their profile switch fires
 	    no handler halfway through login. Features/Macros-for-Consumables/Character-Key-Migration.lua
@@ -479,8 +721,8 @@ function ns:ApplyProfile()
 	if ns.ApplyConsumableMacrosProfile then
 		ns.ApplyConsumableMacrosProfile()
 	end
-	if ns.ApplyAutomatedAppreciationProfile then
-		ns.ApplyAutomatedAppreciationProfile()
+	if ns.ApplyBuffDutyProfile then
+		ns.ApplyBuffDutyProfile()
 	end
 	if ns.ApplySpellbookProfile then
 		ns.ApplySpellbookProfile()
@@ -505,12 +747,14 @@ function ns:PrintWelcome()
 	if ns.db.global.showWelcome then
 		ns:PrintMessage(L["CHAT_LOADED"]:format(ns.Version))
 	end
-	-- MIGRATION (remove after 2026-11-25)
+	-- MIGRATION (remove after 2026-12-08)
 	for _, notice in ipairs(legacyNotices) do
 		ns:PrintMessage(notice)
 	end
-	-- MIGRATION (remove after 2026-11-25)
-	OfferLegacySteps()
+	-- MIGRATION (remove after 2026-12-08): the OfferLegacySteps test, leaving the OfferReplacedReload call.
+	if not OfferLegacySteps() then
+		OfferReplacedReload()
+	end
 end
 
 --------------------------------------------------------------------------------
@@ -532,6 +776,7 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
 	end
 
 	if event == "PLAYER_LOGIN" then
+		TurnOffReplacedAddons()
 		InitializeDatabase()
 		ns.RegisterOptionsPanels()
 		-- The one mini-map button every feature shares; LibDBIcon reads its saved position from ns.db.

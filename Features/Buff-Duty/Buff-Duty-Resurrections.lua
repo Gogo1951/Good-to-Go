@@ -22,7 +22,7 @@ local RESURRECT_PENDING_SECONDS = 60
 local pendingResurrects = {} -- GUID -> GetTime() the offer runs out
 
 --[[
-    Called from Buff-Tracking-Combat-Log.lua on every SPELL_RESURRECT, which
+    Called from Buff-Duty-Events.lua on every SPELL_RESURRECT, which
     fires as the cast lands, before the dead player accepts, and on Forever,
     which has no combat log, from your own resurrection going off
     (ns.OnResurrectCastSucceeded, in Buff-Duty-Cast-Results.lua). Without it

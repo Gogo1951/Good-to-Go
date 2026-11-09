@@ -38,7 +38,7 @@ ns.POISON_DATA = {
 How We Got the Data
 
 Last Validated
-	2026-10-16, WoW Forever 1.60.1.70450
+	2026-11-08, WoW Forever 1.60.1.70862
 
 Notes
 	- ns.POISON_DATA holds every rogue poison the Poisons macro can apply, read by Features/Macros-for-Consumables/Macros/Tools-Rogues.lua: Required Level is the level the tooltip requires, and Poison Group is ns.POISON_GROUPS' numbering (Data/Data.lua), which carries no game IDs and so lives there.
@@ -57,6 +57,12 @@ wago.tools
 	https://wago.tools/db2/ItemSparse?build=1.60.1.70450
 	https://wago.tools/db2/SkillLineAbility?build=1.60.1.70450
 	https://wago.tools/db2/SpellEffect?build=1.60.1.70450
+	https://wago.tools/db2/Item?build=1.60.1.70862
+	https://wago.tools/db2/ItemSparse?build=1.60.1.70862
+	https://wago.tools/db2/ItemEffect?build=1.60.1.70862
+	https://wago.tools/db2/ItemXItemEffect?build=1.60.1.70862
+	https://wago.tools/db2/SpellEffect?build=1.60.1.70862
+	https://wago.tools/db2/SkillLineAbility?build=1.60.1.70862
 
 QuestieDB
 	None.

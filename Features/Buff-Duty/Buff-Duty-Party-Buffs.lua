@@ -7,34 +7,40 @@ local GetColor = ns.GetColor
 --[[
     Buff-Duty-Party-Buffs -- the Buff Duty window's Party-Buffs icons: a raid
     buff, any class's, numbered with how many in your group need it
-    (Buff-Duty-Other-Classes.lua counts). Hovering lists them; a Left-Click
-    asks the party or raid for it, and a Right-Click whispers that class's
-    players. Buff-Duty-Frame.lua places the icons on the Party-Buffs header.
+    (Buff-Duty-Other-Classes.lua counts). Hovering an icon opens its menu:
+    who needs the buff, then a row that asks the party or raid for it and,
+    when someone else can cast it, a row that whispers them. Clicking the
+    icon itself does nothing, so nothing is sent by accident.
+    Buff-Duty-Frame.lua places the icons on the Party-Buffs header.
 
-    The list is laid out like the window, two parties to a row, and
+    The roster is laid out like the window, two parties to a row, and
     GameTooltip can't line up a second column (its right-hand text hugs the
-    right edge), so the icons share a small tooltip of their own, built
-    from pooled font strings in GameTooltip's fonts.
+    right edge), so the icons share a small menu of their own, built from
+    pooled font strings in GameTooltip's fonts. It stays open while the
+    mouse is on the icon or the menu, closes a moment after it leaves both,
+    and closes on Escape.
 ]]
 
 local ICON_SIZE = Data.BUFF_DUTY_ICON_SIZE
 local BACKDROP = Data.BUFF_DUTY_BACKDROP
-local ROSTER_PADDING = 8
-local ROSTER_LINE_HEIGHT = 14
-local ROSTER_TITLE_HEIGHT = 18
-local ROSTER_COLUMN_GAP = 16
+local MENU_NAME = "GoodToGoBuffDutyPartyMenu"
+local MENU_PADDING = 8
+local LINE_HEIGHT = 16
+local COLUMN_GAP = 16
+local DIVIDER_GAP = 4
+local CLOSE_DELAY = 0.2
 
-local roster
-local rosterStrings, usedRosterStrings = {}, 0
+local menu
+local menuStrings, usedMenuStrings = {}, 0
 -- The Party-Buffs icons: plain buttons, since a whisper isn't protected.
 local otherIcons, usedOtherIcons = {}, 0
 
-local function AcquireRosterString(font)
-	usedRosterStrings = usedRosterStrings + 1
-	local text = rosterStrings[usedRosterStrings]
+local function AcquireMenuString(font)
+	usedMenuStrings = usedMenuStrings + 1
+	local text = menuStrings[usedMenuStrings]
 	if not text then
-		text = roster:CreateFontString(nil, "OVERLAY")
-		rosterStrings[usedRosterStrings] = text
+		text = menu:CreateFontString(nil, "OVERLAY")
+		menuStrings[usedMenuStrings] = text
 	end
 	text:SetFontObject(font)
 	text:SetJustifyH("LEFT")
@@ -46,30 +52,99 @@ local function AcquireRosterString(font)
 end
 
 function ns.HideBuffDutyRoster()
-	if roster then
-		roster:Hide()
+	if menu then
+		menu:Hide()
 	end
 end
 
-local function ShowRoster(owner, spec)
-	if not roster then
-		roster = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
-		roster:SetFrameStrata("TOOLTIP")
-		roster:SetClampedToScreen(true)
-		roster:SetBackdrop(BACKDROP)
-		roster:SetBackdropColor(0, 0, 0, 0.9)
-		roster:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
+-- Closes the menu once the mouse is on neither it nor the icon that opened it.
+local function CloseIfLeft()
+	if not menu or not menu:IsShown() then
+		return
 	end
-	for i = 1, usedRosterStrings do
-		rosterStrings[i]:Hide()
+	local owner = menu.owner
+	if menu:IsMouseOver() or (owner and owner:IsShown() and owner:IsMouseOver()) then
+		return
 	end
-	usedRosterStrings = 0
+	menu:Hide()
+end
+
+local function ScheduleClose()
+	C_Timer.After(CLOSE_DELAY, CloseIfLeft)
+end
+
+-- An action row: its label on the left, a highlight under the mouse, muted while it can't run.
+local function CreateRow()
+	local row = CreateFrame("Button", nil, menu)
+	row:SetHeight(LINE_HEIGHT)
+	row.label = row:CreateFontString(nil, "OVERLAY", "GameTooltipText")
+	row.label:SetPoint("LEFT", row, "LEFT", 0, 0)
+	row.label:SetJustifyH("LEFT")
+	row.label:SetWordWrap(false)
+	row:SetHighlightTexture("Interface/QuestFrame/UI-QuestTitleHighlight", "ADD")
+	row:SetScript("OnLeave", ScheduleClose)
+	row:SetScript("OnClick", function(self)
+		local spec = menu.spec
+		menu:Hide()
+		if spec then
+			self.action(spec)
+		end
+	end)
+	return row
+end
+
+local function CreateMenu()
+	menu = CreateFrame("Frame", MENU_NAME, UIParent, "BackdropTemplate")
+	menu:SetFrameStrata("TOOLTIP")
+	menu:SetClampedToScreen(true)
+	menu:EnableMouse(true)
+	menu:SetBackdrop(BACKDROP)
+	menu:SetBackdropColor(0, 0, 0, 0.9)
+	menu:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
+	menu:SetScript("OnLeave", ScheduleClose)
+	menu:Hide()
+	table.insert(UISpecialFrames, MENU_NAME)
+
+	menu.dividers = {}
+	for index = 1, 2 do
+		local divider = menu:CreateTexture(nil, "ARTWORK")
+		divider:SetHeight(1)
+		divider:SetColorTexture(0.4, 0.4, 0.4, 1)
+		menu.dividers[index] = divider
+	end
+
+	menu.askRow = CreateRow()
+	menu.askRow.action = ns.AskGroupForBuff
+	menu.whisperRow = CreateRow()
+	menu.whisperRow.action = ns.WhisperOtherClassBuff
+end
+
+-- Lays a row's label out and greys it while the same ask is still cooling down.
+local function SetRow(row, text, ready, y)
+	row.label:SetText((ready and GetColor("TEXT") or GetColor("MUTED")) .. text .. "|r")
+	row:SetEnabled(ready)
+	row:ClearAllPoints()
+	row:SetPoint("TOPLEFT", menu, "TOPLEFT", MENU_PADDING, -(MENU_PADDING + y))
+	row:SetPoint("TOPRIGHT", menu, "TOPRIGHT", -MENU_PADDING, -(MENU_PADDING + y))
+	row:Show()
+	return row.label:GetStringWidth()
+end
+
+local function ShowMenu(owner, spec)
+	if not menu then
+		CreateMenu()
+	end
+	for i = 1, usedMenuStrings do
+		menuStrings[i]:Hide()
+	end
+	usedMenuStrings = 0
+	menu.owner, menu.spec = owner, spec
 
 	--[[
 	    How far down the lowest text reaches, so the padding under it matches
-	    the padding over the title. A line can stand taller than
-	    ROSTER_LINE_HEIGHT, and sizing by the line count alone let the last one
-	    sink into the bottom padding.
+	    the padding over the title. A line can stand taller than LINE_HEIGHT,
+	    and sizing by the line count alone let the last one sink into the
+	    bottom padding.
 	]]
 	local bottom = 0
 	local function Track(line, y)
@@ -78,17 +153,34 @@ local function ShowRoster(owner, spec)
 
 	-- `x` and `y` measured in from the top-left padding; returns the text's width.
 	local function Put(text, font, x, y)
-		local line = AcquireRosterString(font)
+		local line = AcquireMenuString(font)
 		line:SetText(text)
-		line:SetPoint("TOPLEFT", roster, "TOPLEFT", ROSTER_PADDING + x, -(ROSTER_PADDING + y))
+		line:SetPoint("TOPLEFT", menu, "TOPLEFT", MENU_PADDING + x, -(MENU_PADDING + y))
 		Track(line, y)
 		return x + line:GetStringWidth()
 	end
 
-	local width = Put(spec.spellName, "GameTooltipHeaderText", 0, 0)
-	local y = ROSTER_TITLE_HEIGHT
-	width = math.max(width, Put(L["BUFF_DUTY_OTHERS_TOOLTIP_COUNT"]:format(spec.count), "GameTooltipText", 0, y))
-	y = y + ROSTER_LINE_HEIGHT
+	local function PutDivider(divider, y)
+		divider:ClearAllPoints()
+		divider:SetPoint("TOPLEFT", menu, "TOPLEFT", MENU_PADDING, -(MENU_PADDING + y))
+		divider:SetPoint("TOPRIGHT", menu, "TOPRIGHT", -MENU_PADDING, -(MENU_PADDING + y))
+		return y + 1 + DIVIDER_GAP
+	end
+
+	-- The header: the buff's name in gold, the Short Name muted against the right edge.
+	local width = Put(GetColor("TITLE") .. spec.spellName .. "|r", "GameTooltipText", 0, 0)
+	local short = AcquireMenuString("GameTooltipText")
+	short:SetJustifyH("RIGHT")
+	short:SetText(GetColor("MUTED") .. L["ADDON_SHORT_NAME"] .. "|r")
+	short:SetPoint("TOPRIGHT", menu, "TOPRIGHT", -MENU_PADDING, -MENU_PADDING)
+	width = width + COLUMN_GAP + short:GetStringWidth()
+	local y = PutDivider(menu.dividers[1], LINE_HEIGHT + DIVIDER_GAP)
+
+	width = math.max(
+		width,
+		Put(GetColor("HELP") .. L["BUFF_DUTY_OTHERS_TOOLTIP_COUNT"]:format(spec.count) .. "|r", "GameTooltipText", 0, y)
+	)
+	y = y + LINE_HEIGHT
 
 	--[[
 	    Party by party, two to a row reading across like the window: the
@@ -100,19 +192,16 @@ local function ShowRoster(owner, spec)
 		local right = Put(GetColor("TITLE") .. group.label .. "|r", "GameTooltipText", x, top)
 		for index, name in ipairs(group.names) do
 			local color = ns.GetClassColor(group.classes[index]) or GetColor("TEXT")
-			right = math.max(
-				right,
-				Put(" " .. color .. name .. "|r", "GameTooltipText", x, top + index * ROSTER_LINE_HEIGHT)
-			)
+			right = math.max(right, Put(" " .. color .. name .. "|r", "GameTooltipText", x, top + index * LINE_HEIGHT))
 		end
 		return right
 	end
 	local groups, rowTops = spec.groups, {}
 	for index = 1, #groups, 2 do
-		y = y + ROSTER_LINE_HEIGHT
+		y = y + DIVIDER_GAP
 		rowTops[index] = y
 		local lines = 1 + math.max(#groups[index].names, groups[index + 1] and #groups[index + 1].names or 0)
-		y = y + lines * ROSTER_LINE_HEIGHT
+		y = y + lines * LINE_HEIGHT
 	end
 	local leftWidth = 0
 	for index = 1, #groups, 2 do
@@ -120,53 +209,50 @@ local function ShowRoster(owner, spec)
 	end
 	width = math.max(width, leftWidth)
 	for index = 2, #groups, 2 do
-		width = math.max(width, PutGroup(groups[index], leftWidth + ROSTER_COLUMN_GAP, rowTops[index - 1]))
+		width = math.max(width, PutGroup(groups[index], leftWidth + COLUMN_GAP, rowTops[index - 1]))
 	end
 
 	--[[
-	    What each click does, the click on the left and its action against
-	    the right edge, like GameTooltip's double lines, a blank line
-	    between the two. Your own class's buff, with nobody else of it in
-	    the group, has no one to whisper.
+	    The actions. Your own class's buff, with nobody else of it in the
+	    group, has no one to whisper, so that row is left out.
 	]]
-	y = y + ROSTER_LINE_HEIGHT
-	local function PutHint(keybind, action)
-		local right = Put(GetColor("INFO") .. keybind .. "|r", "GameTooltipText", 0, y)
-		local text = AcquireRosterString("GameTooltipText")
-		text:SetJustifyH("RIGHT")
-		text:SetText(GetColor("INFO") .. action .. "|r")
-		text:SetPoint("TOPRIGHT", roster, "TOPRIGHT", -ROSTER_PADDING, -(ROSTER_PADDING + y))
-		Track(text, y)
-		width = math.max(width, right + ROSTER_COLUMN_GAP + text:GetStringWidth())
-		y = y + ROSTER_LINE_HEIGHT
-	end
-	PutHint(L["MINIMAP_LEFT_CLICK"], L["BUFF_DUTY_OTHERS_TOOLTIP_ASK_GROUP"])
+	y = PutDivider(menu.dividers[2], y + DIVIDER_GAP)
+	width = math.max(
+		width,
+		SetRow(
+			menu.askRow,
+			L["BUFF_DUTY_OTHERS_MENU_ASK_GROUP"]:format(spec.spellName),
+			ns.CanAskForBuff("group", spec.key),
+			y
+		)
+	)
+	y = y + LINE_HEIGHT
 	if spec.recipientNames[1] then
-		y = y + ROSTER_LINE_HEIGHT
-		PutHint(L["MINIMAP_RIGHT_CLICK"], L["BUFF_DUTY_OTHERS_TOOLTIP_ASK_WHISPER"])
+		width = math.max(
+			width,
+			SetRow(
+				menu.whisperRow,
+				L["BUFF_DUTY_OTHERS_MENU_WHISPER"]:format(table.concat(spec.recipientNames, L["LIST_SEPARATOR"])),
+				ns.CanAskForBuff("whisper", spec.key),
+				y
+			)
+		)
+		y = y + LINE_HEIGHT
+	else
+		menu.whisperRow:Hide()
 	end
+	bottom = math.max(bottom, y)
 
-	roster:SetSize(math.ceil(width) + ROSTER_PADDING * 2, math.ceil(bottom) + ROSTER_PADDING * 2)
+	menu:SetSize(math.ceil(width) + MENU_PADDING * 2, math.ceil(bottom) + MENU_PADDING * 2)
 	-- Where GameTooltip's ANCHOR_RIGHT would put it: up and to the right of the icon.
-	roster:ClearAllPoints()
-	roster:SetPoint("BOTTOMLEFT", owner, "TOPRIGHT")
-	roster:Show()
+	menu:ClearAllPoints()
+	menu:SetPoint("BOTTOMLEFT", owner, "TOPRIGHT")
+	menu:Show()
 end
 
 local function OnOtherIconEnter(self)
 	if self.spec then
-		ShowRoster(self, self.spec)
-	end
-end
-
-local function OnOtherIconClick(self, button)
-	if not self.spec then
-		return
-	end
-	if button == "RightButton" then
-		ns.WhisperOtherClassBuff(self.spec)
-	else
-		ns.AskGroupForBuff(self.spec)
+		ShowMenu(self, self.spec)
 	end
 end
 
@@ -187,9 +273,7 @@ function ns.AcquireBuffDutyOtherIcon(parent)
 		button.count:SetTextColor(red.r, red.g, red.b)
 		button:SetHighlightTexture("Interface/Buttons/ButtonHilight-Square", "ADD")
 		button:SetScript("OnEnter", OnOtherIconEnter)
-		button:SetScript("OnLeave", ns.HideBuffDutyRoster)
-		button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-		button:SetScript("OnClick", OnOtherIconClick)
+		button:SetScript("OnLeave", ScheduleClose)
 		otherIcons[usedOtherIcons] = button
 	end
 	return button

@@ -203,7 +203,7 @@ local function AddRestockerReport(tooltip)
 		for _, entry in ipairs(groceries) do
 			local icon = entry.itemID and C_Item.GetItemIconByID(entry.itemID) or ns.QUESTION_MARK_ICON
 			tooltip:AddDoubleLine(
-				format("|T%s:14:14|t %s", icon, ns.GetItemLabel(entry.itemID, entry.itemName)),
+				format("|T%s:14:14|t %s", icon, ns.GetItemLabel(entry.itemID)),
 				GetColor("BODY") .. format(L["MINIMAP_RESTOCKER_ITEM_COUNT"], entry.have, entry.wanted) .. "|r"
 			)
 		end

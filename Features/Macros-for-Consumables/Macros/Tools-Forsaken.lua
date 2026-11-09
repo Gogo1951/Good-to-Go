@@ -67,36 +67,37 @@ function ns.CannibalizeSwitchedOn()
 end
 
 --------------------------------------------------------------------------------
--- Cooldown
+-- Cooldown (shared with Tools-Troll.lua)
 --------------------------------------------------------------------------------
 
--- When the pending rebuild timer fires, so a second read of the same cooldown never stacks another.
-local rebuildAt
+-- When each spell's pending rebuild timer fires, so a second read of the same cooldown never stacks another.
+local rebuildAt = {}
 
-local function RebuildWhenReady(readyAt)
-	if rebuildAt == readyAt then
+local function RebuildWhenReady(spellID, readyAt)
+	if rebuildAt[spellID] == readyAt then
 		return
 	end
-	rebuildAt = readyAt
+	rebuildAt[spellID] = readyAt
 	C_Timer.After(math.max(readyAt - GetTime(), 0) + 0.1, function()
-		if rebuildAt == readyAt then
-			rebuildAt = nil
+		if rebuildAt[spellID] == readyAt then
+			rebuildAt[spellID] = nil
 			ns.RequestUpdate()
 		end
 	end)
 end
 
 --[[
-    True when Cannibalize is off cooldown. While it is on one, a rebuild is
-    timed for the moment it comes off, which is when the body should gain the
-    cast again. A hidden reading, asked of C_Secrets before the read, counts
-    as on cooldown: the usual body is always safe.
+    True when a racial a macro casts in place of eating or drinking
+    (Cannibalize, Rapid Regeneration) is off cooldown. While it is on one, a
+    rebuild is timed for the moment it comes off, which is when the body
+    should gain the cast again. A hidden reading, asked of C_Secrets before
+    the read, counts as on cooldown: the usual body is always safe.
 ]]
-local function CannibalizeReady()
-	if ns.IsSpellCooldownSecret(ns.CANNIBALIZE_SPELL_ID) then
+function ns.RacialSpellReady(spellID)
+	if ns.IsSpellCooldownSecret(spellID) then
 		return false
 	end
-	local cooldown = C_Spell.GetSpellCooldown(ns.CANNIBALIZE_SPELL_ID)
+	local cooldown = C_Spell.GetSpellCooldown(spellID)
 	if not cooldown then
 		return true
 	end
@@ -109,7 +110,7 @@ local function CannibalizeReady()
 	if readyAt <= GetTime() then
 		return true
 	end
-	RebuildWhenReady(readyAt)
+	RebuildWhenReady(spellID, readyAt)
 	return false
 end
 
@@ -141,7 +142,7 @@ function ns.CannibalizeCast(settingKey, entry)
 	if not ns.TargetIsCannibalizable() then
 		return nil
 	end
-	if not CannibalizeReady() then
+	if not ns.RacialSpellReady(ns.CANNIBALIZE_SPELL_ID) then
 		return nil
 	end
 	return ns.cannibalizeSpellName

@@ -1,15 +1,15 @@
 local _, ns = ...
 
--- [ID] = {Healthstone Amount, Required Level}, -- Name
+-- [ID] = {Healthstone Amount, Required Level, Min Level, Vendor Price, Max Stack, Bind Type}, -- Name
 ns.HEALTHSTONES = {
-	[5512] = { 20, 1 }, -- Healthstone
+	[5512] = { 20, 1, 1, 0, 1, 0 }, -- Healthstone
 }
 
 --[[
 How We Got the Data
 
 Last Validated
-	2026-11-04, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-08, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- Every item that heals instantly on the healthstone cooldown, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Healthstone and Health Potion macros. Required Level is the level the tooltip requires (0 for none).

@@ -223,6 +223,8 @@ local function MacroToggle(macroName, key, order)
 		dialogControl = ns.ICON_CHECKBOX_WIDGET_TYPE,
 		order = order,
 		width = "normal",
+		-- Mists has no Poisons skill, so no Poisons macro to turn on.
+		hidden = key == "Poisons" and ns.POISONS_SPELL_ID == nil,
 		get = function()
 			return ns.IsMacroEnabled(key)
 		end,

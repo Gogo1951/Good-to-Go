@@ -12,32 +12,13 @@ local EVENT_LOG_MAX_ARG_LENGTH = 255
 
 --[[
     Events ns:LogEvent drops before recording. The dispatcher only ever hands
-    LogEvent the events the add-on registers (Core's ns.EVENT_NAMES), and the
-    handlers that act on them write their signal firings themselves, decoded,
-    through ns:LogEventNow:
-
-    - COMBAT_LOG_EVENT_UNFILTERED, registered on every flavor but Forever: raw
-      combat-log traffic would bury the signal, so every aura landing on you
-      and every cast or revive Automated Appreciation tracks is logged in full
-      instead, and every other cast is counted by spell id in the summary (see
-      ns:LogCombatCast).
-    - UNIT_AURA, registered for every unit while Buff Duty is on (its window
-      reads the whole group), for you alone on Forever while praise is
-      on, and by Consumable Macros for you and your pet while a macro needs it
-      (ns.UpdateAuraTracking): its update table can't be logged as text, and on
-      Forever each added aura on you is logged with the gate that decided it
-      instead (see ns:LogAuraUpdate). Consumable Macros logs each firing on you or
-      your pet that changes a macro, with what changed (ns.OnUnitAura in
-      Features/Macros-for-Consumables/Scanner/Scanner-Auras.lua). The Buff Duty
-      window's own reads show on the Buff Duty Context report.
-
+    LogEvent the events the add-on registers (Core's ns.EVENT_NAMES).
     SPELL_UPDATE_COOLDOWN is dropped outright: it fires on every global
     cooldown and carries no id to classify by, and all it drives is the Buff
-    Duty window's cooldown swipes, which show on the window itself.
+    Duty window's cooldown swipes, which show on the window itself. The other
+    firehoses are classified per firing below, never dropped.
 ]]
 ns.DIAGNOSTIC_EVENT_EXCLUDE = {
-	COMBAT_LOG_EVENT_UNFILTERED = true,
-	UNIT_AURA = true,
 	SPELL_UPDATE_COOLDOWN = true,
 }
 
@@ -45,14 +26,14 @@ ns.DIAGNOSTIC_EVENT_EXCLUDE = {
     Events that carry an id worth classifying, and the argument position it
     arrives in, for ns:SuppressUncorrelatedMessage to classify per firing
     rather than drop wholesale. A firing logs in full when a feature
-    correlates it (Automated Appreciation's ns.IsCorrelatedMessage, or
-    Consumable Macros' checks below), and every other firing is counted.
+    correlates it (Buff Duty's ns.IsCorrelatedMessage, or Consumable Macros'
+    and Rank Watch's checks below), and every other firing is counted.
 
     - UNIT_SPELLCAST_SUCCEEDED fires for every unit the client tracks, so in a
       group or a city it is a firehose; its id is the spell id.
     - GET_ITEM_INFO_RECEIVED fires for every item any add-on or the game's own
       UI loads, so a bag or auction add-on can send hundreds; its id is the
-      item id, and only a tracked item's or a consumable's matters.
+      item id, and only a consumable's matters.
     - UI_ERROR_MESSAGE fires on every red error the game shows; its id is the
       error type. "A more powerful spell is already active" matters, which
       Buff Duty acts on, and so do the two the consumable macros read by text.
@@ -69,17 +50,128 @@ local SECRET_ID = 0
 -- The counter id a gated firehose's ignored firings fold into, with the reason as their text.
 local GATED_ID = -1
 
+-- Whether Rank Watch is loaded on this flavor and watching right now (Features/Rank-Watch/Rank-Watch-Core.lua).
+local function RankWatchListening()
+	return ns.db ~= nil and ns.IsRankWatchActive ~= nil and ns.IsRankWatchActive()
+end
+
+-- A Rank Watch rank with a higher one above it, the only casts Rank Watch's detection ever acts on.
+local function IsRankWatchReportable(spellID)
+	return ns.IsPlain(spellID) and type(spellID) == "number" and ns.RankWatchReportableLookup(spellID) ~= nil
+end
+
+--[[
+    Rank Watch's correlation, beside Buff Duty's and Consumable Macros': on
+    WoW Forever, Features/Rank-Watch/Rank-Watch-Detection-Forever.lua checks
+    your own and your pet's UNIT_SPELLCAST_SUCCEEDED for a rank it watches.
+]]
+local function RankWatchCorrelates(event, id)
+	return event == "UNIT_SPELLCAST_SUCCEEDED"
+		and ns.FLAVOR == "Camelot"
+		and RankWatchListening()
+		and IsRankWatchReportable(id)
+end
+
+local band = bit.band
+local GROUP_AFFILIATION = 0x00000007 -- COMBATLOG_OBJECT_AFFILIATION_MINE, _PARTY and _RAID
+
+-- The combat-log firings a handler acts on, decoded: Buff Duty's resurrects and strangers' buffs, Rank Watch's casts.
+local function DecodeCombatLog()
+	local _, subevent, _, sourceGUID, sourceName, sourceFlags, _, destGUID, destName, _, _, spellID, spellName, _, auraType =
+		CombatLogGetCurrentEventInfo()
+	local flags = sourceFlags or 0
+	if ns.db ~= nil and ns.IsBuffDutyOnForClass() and ns.IsBuffDutyReady() then
+		if subevent == "SPELL_RESURRECT" then
+			return { n = 5, "Buff Duty", subevent, sourceName, destName, spellName }
+		end
+		if
+			(subevent == "SPELL_AURA_APPLIED" or subevent == "SPELL_AURA_REFRESH")
+			and auraType == "BUFF"
+			and sourceGUID
+			and sourceGUID ~= destGUID
+			and destGUID == UnitGUID("player")
+			and band(flags, COMBATLOG_OBJECT_REACTION_FRIENDLY) ~= 0
+			and band(flags, COMBATLOG_OBJECT_AFFILIATION_OUTSIDER) ~= 0
+		then
+			return { n = 5, "Buff Duty", subevent, sourceName, destName, spellName }
+		end
+	end
+	if
+		subevent == "SPELL_CAST_SUCCESS"
+		and band(flags, GROUP_AFFILIATION) ~= 0
+		and RankWatchListening()
+		and IsRankWatchReportable(spellID)
+	then
+		return { n = 6, "Rank Watch", subevent, sourceName, destName, spellID, spellName }
+	end
+	return nil
+end
+
+-- A group member's unit token, the only bearers Rank Watch's aura detection reads.
+local function IsGroupUnit(unit)
+	return unit == "player" or unit:find("^party%d$") ~= nil or unit:find("^raid%d+$") ~= nil
+end
+
+-- On WoW Forever, the ranks Rank Watch watches among a group member's added auras, each with who cast it.
+local function DecodeRankWatchAuras(unit, updateInfo)
+	if ns.FLAVOR ~= "Camelot" or not RankWatchListening() then
+		return nil
+	end
+	if not ns.IsPlain(unit) or type(unit) ~= "string" or not IsGroupUnit(unit) then
+		return nil
+	end
+	if ns.AreAurasSecret() or not ns.IsPlain(updateInfo) or type(updateInfo) ~= "table" then
+		return nil
+	end
+	local added = updateInfo.addedAuras
+	if not ns.IsPlain(added) or type(added) ~= "table" then
+		return nil
+	end
+	local found = {}
+	for _, aura in ipairs(added) do
+		if type(aura) == "table" then
+			local spellID, source = aura.spellId, aura.sourceUnit
+			if ns.IsPlain(source) and type(source) == "string" and IsRankWatchReportable(spellID) then
+				found[#found + 1] = spellID .. " from " .. source
+			end
+		end
+	end
+	if #found == 0 then
+		return nil
+	end
+	return { n = 3, "Rank Watch", unit, table.concat(found, "; ") }
+end
+
 --[[
     Firehoses that carry no id, each with the test its handler makes before
     acting on a firing. A firing the handler would ignore folds into the
-    counters under GATED_ID with the reason; one it acts on logs in full.
-    UPDATE_MOUSEOVER_UNIT fires for every unit the cursor crosses, and the
-    Spellbook's Features/Spellbook/Dynamic-Rank.lua queues a rewrite only
-    while the Spellbook is on, out of combat, and any macro has Dynamic Rank
-    on, by its own setting or its kind's default (its RanksRewritable), so the
-    test makes those same calls. RanksRewritable's last check, a placed macro
-    that tries the mouseover, is private to that file, so a firing it would
-    still turn away logs in full rather than being lost.
+    counters under GATED_ID with the reason. One it acts on logs in full, or,
+    for an event whose arguments say nothing as text, is written decoded
+    through ns:LogEventNow, led by the feature that acts on it.
+
+    - UPDATE_MOUSEOVER_UNIT fires for every unit the cursor crosses, and the
+      Spellbook's Features/Enhanced-Spellbook/Dynamic-Rank.lua queues a
+      rewrite only while the Spellbook is on, out of combat, and any macro has
+      Dynamic Rank on, by its own setting or its kind's default (its
+      RanksRewritable), so the test makes those same calls. RanksRewritable's
+      last check, a placed macro that tries the mouseover, is private to that
+      file, so a firing it would still turn away logs in full rather than
+      being lost.
+    - COMBAT_LOG_EVENT_UNFILTERED, registered on every flavor but Forever while
+      Buff Duty or Rank Watch is on, carries its payload in
+      CombatLogGetCurrentEventInfo: Buff Duty acts on a resurrect and on a
+      stranger's buff landing on you (Buff-Duty-Events.lua,
+      ns.NoteFavorFromCombatLog), Rank Watch on a group member's cast of a
+      rank it watches (Rank-Watch-Detection-Combat-Log.lua).
+    - UNIT_AURA, registered for every unit while Buff Duty or Rank Watch is on,
+      and by Consumable Macros for you and your pet while a macro needs it:
+      its update table can't be logged as text. On Forever, Rank Watch reads
+      the ranks it watches among a group member's added auras
+      (Rank-Watch-Detection-Forever.lua). Consumable Macros logs each firing
+      that changes a macro itself (ns.OnUnitAura in Scanner-Auras.lua), and
+      the Buff Duty window's reads show on the Buff Duty Context report.
+    - CHAT_MSG_ADDON fires for every add-on message any add-on in the group
+      sends; Rank Watch reads only its own prefix (Rank-Watch-Cluster.lua).
 ]]
 local GATED_EVENTS = {
 	UPDATE_MOUSEOVER_UNIT = {
@@ -88,10 +180,24 @@ local GATED_EVENTS = {
 			return ns.db ~= nil and ns.IsSpellbookEnabled() and not InCombatLockdown() and ns.AnyTargetRank()
 		end,
 	},
+	COMBAT_LOG_EVENT_UNFILTERED = {
+		reason = "not a resurrect, a stranger's buff on you, or a Rank Watch cast",
+		decode = DecodeCombatLog,
+	},
+	UNIT_AURA = {
+		reason = "no Rank Watch rank added (Consumable Macros logs its own)",
+		decode = DecodeRankWatchAuras,
+	},
+	CHAT_MSG_ADDON = {
+		reason = "another add-on's message",
+		acts = function(prefix)
+			return RankWatchListening() and ns.IsPlain(prefix) and prefix == ns.Data.RANK_WATCH.COMM_PREFIX
+		end,
+	},
 }
 
 --[[
-    Consumable Macros' correlations, beside Automated Appreciation's
+    Consumable Macros' correlations, beside Buff Duty's
     ns.IsCorrelatedMessage, each the exact test its live handler makes: the
     two errors the consumable macros read by text, ERR_ITEM_WRONG_ZONE
     (Features/Macros-for-Consumables/Macros/Runtime.lua) and SPELL_FAILED_TARGETS_DEAD
@@ -156,8 +262,17 @@ end
 ]]
 function ns:SuppressUncorrelatedMessage(event, ...)
 	local gated = GATED_EVENTS[event]
+	if gated and gated.decode then
+		local decoded = gated.decode(...)
+		if decoded then
+			ns:LogEventNow(event, unpack(decoded, 1, decoded.n))
+		else
+			ns:CountUncorrelated(event, GATED_ID, gated.reason)
+		end
+		return true
+	end
 	if gated then
-		if gated.acts() then
+		if gated.acts(...) then
 			return false
 		end
 		ns:CountUncorrelated(event, GATED_ID, gated.reason)
@@ -176,7 +291,11 @@ function ns:SuppressUncorrelatedMessage(event, ...)
 		if type(messageID) ~= "number" then
 			return false
 		end
-		if ns.IsCorrelatedMessage(event, messageID) or ConnoisseurCorrelates(event, messageID, text) then
+		if
+			ns.IsCorrelatedMessage(event, messageID)
+			or ConnoisseurCorrelates(event, messageID, text)
+			or RankWatchCorrelates(event, messageID)
+		then
 			return false
 		end
 	end

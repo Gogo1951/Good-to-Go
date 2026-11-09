@@ -36,5 +36,6 @@ ignore:
   - README-Technical.md
   - README-Testing.md
   - Tests
+  - Tools
   - Data/Wrath
   - Data/Mainline

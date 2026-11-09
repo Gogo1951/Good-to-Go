@@ -23,16 +23,28 @@ ns.SAVED_VARIABLES_NAME = "GoodToGoDB"
 ns.OLD_SAVED_VARIABLES_NAME = "BagsBuffsButtonsDB"
 
 --[[
-    MIGRATION (remove after 2026-11-25): the add-ons Good to Go
+    The add-ons Good to Go replaces that rewrite its macros if both run, by
+    installed folder. Features/Core.lua turns any of them that is running off at
+    login and offers a reload. This is no migration and has no end date: a
+    player can install Good to Go, or turn the old add-on back on, long after
+    the settings import below is gone.
+]]
+ns.REPLACED_ADDONS = { "Consumable-Connoisseur" }
+
+--[[
+    MIGRATION (remove after 2026-12-08): the add-ons Good to Go
     replaces, by installed folder. Features/Core.lua copies the settings of the
     ones with a saved-variables table here from their own table, which the
     client loads only while that add-on is enabled, then turns every one of
-    them off itself and offers a reload.
+    them off itself and offers a reload. The ones also in ns.REPLACED_ADDONS
+    are turned off by that, which stays when this goes.
 ]]
 ns.LEGACY_ADDONS = {
 	{ folder = "Consumable-Connoisseur", savedVariables = "ConnoisseurDB" },
-	{ folder = "TFTB", savedVariables = "TFTBDB" },
 	{ folder = "MacroSpellbook" },
+	-- Rank Sentinel, under either folder name it has shipped with (Data.RANK_WATCH.STANDALONE_FOLDERS).
+	{ folder = "Rank-Sentinel" },
+	{ folder = "RankSentinel" },
 }
 
 --------------------------------------------------------------------------------
@@ -74,9 +86,6 @@ ns.CLASS_COLORS = {
 	WARLOCK = "8788EE",
 	WARRIOR = "C69B6D",
 }
-
--- Automated Appreciation reads the same table through ns.Data.
-Data.CLASS_COLORS = ns.CLASS_COLORS
 
 --------------------------------------------------------------------------------
 -- Sample Names
@@ -155,16 +164,11 @@ ns.OPTIONS_REGISTRY = {
 	Macros = ADDON_NAME .. "_Macros",
 	ClassRace = ADDON_NAME .. "_ClassRace",
 	IgnoreList = ADDON_NAME .. "_IgnoreList",
+	RankWatch = ADDON_NAME .. "_RankWatch",
+	RankWatchTracked = ADDON_NAME .. "_RankWatchTracked",
+	RankWatchIgnored = ADDON_NAME .. "_RankWatchIgnored",
 	InventoryReport = ADDON_NAME .. "_InventoryReport",
 	ReadinessReport = ADDON_NAME .. "_ReadinessReport",
-	StrangerBuffs = ADDON_NAME .. "_StrangerBuffs",
-	SendGoodNews = ADDON_NAME .. "_SendGoodNews",
-	SendGoodNewsTracked = ADDON_NAME .. "_SendGoodNewsTracked",
-	TeammateBuffs = ADDON_NAME .. "_TeammateBuffs",
-	TeammateBuffsTracked = ADDON_NAME .. "_TeammateBuffsTracked",
-	ServiceAlerts = ADDON_NAME .. "_ServiceAlerts",
-	ServiceAlertsTracked = ADDON_NAME .. "_ServiceAlertsTracked",
-	ThankYouButton = ADDON_NAME .. "_ThankYouButton",
 
 	Profiles = ADDON_NAME .. "_Profiles",
 	FeedbackSupport = ADDON_NAME .. "_FeedbackSupport",
@@ -209,7 +213,7 @@ ns.OPTIONS_PROMOTE_WIDTH = 0.9
     paired constant. The tree stays drag-resizable, and a drag wins over this
     seed.
 ]]
-ns.OPTIONS_TREE_WIDTH = 180
+ns.OPTIONS_TREE_WIDTH = 176
 ns.OPTIONS_TREE_ROW_WIDTH = 2.5
 
 --[[
@@ -436,7 +440,7 @@ ns.RESTOCK_ALERT_SOUND = "Interface\\AddOns\\" .. ADDON_NAME .. "\\Includes\\Sou
     The amounts, in whole gold, the Restocker panel's Gold Reserve dropdown
     offers: the Fibonacci run, so the steps widen as a purse does, from the
     1 gold the setting ships on to 55. The merchant restock never spends below
-    the one chosen (Features/Inventory-Restocker/Restocker-Merchant.lua).
+    the one chosen (Features/Restocker/Restocker-Merchant.lua).
 ]]
 ns.GOLD_RESERVE_AMOUNTS = { 1, 2, 3, 5, 8, 13, 21, 34, 55 }
 
@@ -536,7 +540,7 @@ ns.SCROLL_CHECK_ORDER = {
 
 --[[
     What the staples pop-up can offer, one row per checkbox.
-    Features/Inventory-Restocker/Restocker-Starter-List.lua owns every decision made about
+    Features/Restocker/Restocker-Starter-List.lua owns every decision made about
     these rows -- which ladder each resolves to, who is offered it, what a tick
     adds. This table only says what exists.
 
@@ -552,7 +556,7 @@ ns.SCROLL_CHECK_ORDER = {
     so no row below carries a size: the staples do not share one, and some
     differ by client. A Symbol of Divinity stacks to 5, a Symbol of Kings to
     100, and an Ankh to 5 on Classic Era but 10 on TBC.
-    Features/Inventory-Restocker/Restocker-Starter-List.lua reads the size off the item.
+    Features/Restocker/Restocker-Starter-List.lua reads the size off the item.
 
     A tick defaults to one stack -- or to defaultStacks, where one is the
     wrong opening offer -- and the dropdown beside it runs to a per-category
@@ -625,11 +629,11 @@ local MANA_CLASSES =
 
     The order HERE is for the maintainer's eye -- grouped by section, then
     by class. Display order is the popup's to compute (SectionCategories in
-    Features/Inventory-Restocker/Restocker-Starter-Window.lua): dropdown staples first, fixed-amount
+    Features/Restocker/Restocker-Starter-Window.lua): dropdown staples first, fixed-amount
     singles after, each run alphabetical by the name it shows.
 
     A category whose ladder went missing is dropped by
-    Features/Inventory-Restocker/Restocker-Starter-List.lua rather than crashing the popup
+    Features/Restocker/Restocker-Starter-List.lua rather than crashing the popup
     open.
 ]]
 ns.STARTER_LIST_CATEGORIES = {
@@ -995,7 +999,7 @@ ns.STARTER_LIST_CATEGORIES = {
 -- Spellbook
 --------------------------------------------------------------------------------
 
--- The sections from here to Automated Appreciation are the Spellbook's.
+-- The sections from here to Buff Duty are the Spellbook's.
 
 --------------------------------------------------------------------------------
 -- Macro Names
@@ -1065,25 +1069,25 @@ ns.WHATS_NEXT_BRIGHT = {
 --[[
     A spell's ranks wherever they're listed: the ranks section of a spell's
     tooltip ("GtG // Fear Ranks"), the macro menu's Rank and Grouped Spells
-    submenus, and the Spell Book tile's note. White (TEXT) once known; red
-    (OFF) for one the character could have now and doesn't, the one thing to
-    go and fix; gray (MUTED) for one it can't learn yet, like a disabled
+    submenus, and the Spell Book tile's note. White (TEXT) once known; green
+    (ON) for one the character could have now and doesn't, the one thing to
+    go and fix, green like What's Next?'s Available Now; gray (MUTED) for one it can't learn yet, like a disabled
     entry, since a level still to come isn't an error. The note beside each
     (its level, or where to learn it) is silver (HELP) for a known rank and
     takes the rank's own color otherwise. Keys are ns.RankState's. The
     tooltip's hovered rank and its arrow are blue (INFO) instead, reading
     as "selected"; its note keeps the state color, so its state still shows.
 ]]
-ns.SPELL_RANK_COLORS = { KNOWN = "TEXT", LEARNABLE = "OFF", NOT_YET = "MUTED" }
+ns.SPELL_RANK_COLORS = { KNOWN = "TEXT", LEARNABLE = "ON", NOT_YET = "MUTED" }
 ns.SPELL_RANK_SELECTED_COLOR = "INFO"
-ns.SPELL_RANK_NOTE_COLORS = { KNOWN = "HELP", LEARNABLE = "OFF", NOT_YET = "MUTED" }
+ns.SPELL_RANK_NOTE_COLORS = { KNOWN = "HELP", LEARNABLE = "ON", NOT_YET = "MUTED" }
 
 --[[
     The Conditionals panel's own dark leather beside the parchment, so it reads
     as part of the window: its fill and edge, each row's, each dropdown's and
     spell slot's field, the footer's edge, the muted and arrow inks, and the
     length meter's track. Raw hex like ns.PALETTE, converted with ns.HexToRGB
-    for both docked panels in Features/Spellbook/Macro-Builder/Panel-Widgets.lua.
+    for both docked panels in Features/Enhanced-Spellbook/Macro-Builder/Panel-Widgets.lua.
 ]]
 ns.CONDITIONALS_COLORS = {
 	PANEL_FILL = "2A241C",
@@ -1099,10 +1103,10 @@ ns.CONDITIONALS_COLORS = {
 }
 
 --------------------------------------------------------------------------------
--- Automated Appreciation
+-- Buff Duty
 --------------------------------------------------------------------------------
 
--- The sections from here to the end are Automated Appreciation's, kept on ns.Data.
+-- The sections from here to the end are Buff Duty's and Rank Watch's.
 
 --------------------------------------------------------------------------------
 -- Buff Duty Audiences
@@ -1142,41 +1146,32 @@ Data.NO_MANA_CLASSES = {
 -- Constants
 --------------------------------------------------------------------------------
 
+-- Seconds Buff Duty ignores the combat log after login and every loading screen.
 Data.SAFETY_PAUSE = 3
 
 --[[
-    The Thank You buttons. One row each: the settings key it stores under, the
-    macro it offers to create, and the slash command that macro runs.
+    Rank Watch (Features/Rank-Watch/), the standalone Rank Sentinel add-on brought home.
 
-    Everything else about a button -- its options section, its macro, its command
-    -- is generated from this list, so the count is a property of the data.
-    Button 1 keeps its "- Thank" macro name and its on-by-default settings; 2
-    through 5 start switched off. Every name leads with a dash, so the whole
-    family sorts together at the top of the macro list.
+    COMM_PREFIX stays the standalone Rank Sentinel add-on's own prefix, string.upper of its name, so Good to Go
+    and anyone still running Rank Sentinel elect one whisperer between them and never both whisper.
+    COMM_RELEASE is the version number sent with LEAD and JOIN: Rank Sentinel reads 999 as a development build
+    equal to its own, so it never tells its players to update.
+
+    TARGET_LEVEL_RANGE is the game's own rule for a buff cast on someone else: a rank lands only on a target no
+    more than 10 levels below the rank's learn level, and the game picks the highest rank that fits by itself.
+    A low rank on a low-level player is the game's choice, not the caster's, so it is never reported.
 ]]
-Data.THANK_YOU_BUTTONS = {
-	--[[
-	    singleEmote: the button fires ONE chosen emote, picked from a dropdown,
-	    instead of a random one from a checklist. It changes the stored shape too --
-	    `emote` (a single token) rather than `emotes` (a set) -- which is what the
-	    options panel and RunThankYou branch on. A button without it performs a
-	    random emote from its checklist.
-	]]
-	{ profileKey = "slash", macroName = "- Thank", command = "/thankyou" },
-	{ profileKey = "slash2", macroName = "- GtG 2", command = "/thankyou2", singleEmote = true },
-	{ profileKey = "slash3", macroName = "- GtG 3", command = "/thankyou3", singleEmote = true },
-	{ profileKey = "slash4", macroName = "- GtG 4", command = "/thankyou4", singleEmote = true },
-	{ profileKey = "slash5", macroName = "- GtG 5", command = "/thankyou5", singleEmote = true },
+Data.RANK_WATCH = {
+	COMM_PREFIX = "RANKSENTINEL",
+	COMM_RELEASE = 999,
+	TARGET_LEVEL_RANGE = 10,
+	METER_POLL = 15, -- seconds between damage meter reads on WoW Forever
+	AFTER_COMBAT = 5, -- seconds after combat (or a release) before held whispers go out
+	TARGET_BUSY_RETRY = 10, -- seconds before a whisper held for a target in combat is tried again
+	PENDING_TTL = 15, -- seconds a cast of yours waits for its success
+	JOIN_DELAY = 2, -- seconds after joining a group before asking who whispers
+	STANDALONE_FOLDERS = { "Rank-Sentinel", "RankSentinel" },
 }
-
--- The account-wide macro cap; the add-on stops creating Thank You macros once the list holds this many.
-Data.MAX_GLOBAL_MACROS = 120
-
---[[
-    The Thank You macros' own icon, a texture file ID (inv_misc_ribbon_01): the
-    Icon dropdown's Default. ns.THANK_YOU_MACRO_ICONS holds the rest.
-]]
-Data.THANK_YOU_DEFAULT_ICON = 134411
 
 --[[
     When a class, or pets, count as tanks on the Buff Duty window ("Count as
@@ -1237,6 +1232,14 @@ Data.WEAPON_ITEM_KINDS = { "OIL", "STONE", "LURE" }
 Data.WEAPON_ITEM_KIND_HANDS = { LURE = { "MAIN" } }
 
 --[[
+    The temporary enchants a weapon holds side by side, each asked about on
+    its own. On WoW Forever (ns.WEAPON_ENCHANTS_STACK) an IMBUE (a poison, a
+    shaman imbue, a Firestone) sits beside a TEMPORARY oil or stone. Every
+    other client has the one slot, and everything goes in TEMPORARY.
+]]
+Data.WEAPON_LAYERS = { IMBUE = "IMBUE", TEMPORARY = "TEMPORARY" }
+
+--[[
     Buff Duty's "Refresh Under" choices, in minutes: a buff with
     less than this left is offered again.
 ]]
@@ -1252,7 +1255,7 @@ Data.BUFF_DUTY_FAVOR_CHOICES = { 20, 40, 60 }
 Data.BUFF_DUTY_FAVOR_MAX = 5
 
 -- The Buff Duty window's buff buttons, and the role icon in front of each name.
-Data.BUFF_DUTY_ICON_SIZE = 20
+Data.BUFF_DUTY_ICON_SIZE = 16
 
 -- The Buff Duty window's frame, and the Party-Buffs hover list of who needs a buff.
 Data.BUFF_DUTY_BACKDROP = {
@@ -1260,66 +1263,4 @@ Data.BUFF_DUTY_BACKDROP = {
 	edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
 	edgeSize = 12,
 	insets = { left = 3, right = 3, top = 3, bottom = 3 },
-}
-
---[[
-    Praise Delay lengths, in seconds. Doubles as the dropdown's display order; the
-    labels themselves come from the client's own duration strings at panel-build
-    time (see ns.DefinePraiseDelaySelect).
-]]
-Data.PRAISE_DELAY_CHOICES = { 1, 2, 3, 4 }
-
---[[
-    The seconds scale behind the cooldown and duration dropdowns.
-
-    Straight Fibonacci, and every entry is labeled in SECONDS -- 144 stays 144,
-    not "2 Minutes". Mixing units inside one list makes two adjacent options look
-    like different kinds of thing, and the reader has to convert to compare them.
-
-    The point of the curve is resolution where the choice matters: the difference
-    between 1 and 2 seconds is a real decision, the difference between 88 and 89
-    is not.
-]]
-Data.SECONDS_CHOICES = { 0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89, 144 }
-
---------------------------------------------------------------------------------
--- Tracking Codes
---------------------------------------------------------------------------------
-
--- How the thank-you reads, and which panel the toggle lives on.
-Data.BUFF = {
-	SOLO = "SOLO", -- cast on you            -> "gave you ..."        (Combat Buffs)
-	GROUP = "GROUP", -- party/raid-wide        -> "gave your group ..." (Combat Buffs)
-	SERVICE = "SERVICE", -- set out for the group  -> "set out a ..."       (Service Alerts)
-}
-
--- How the combat log is matched.
-Data.DETECT = {
-	AURA = "AURA", -- SPELL_AURA_APPLIED lands on you
-	CAST = "CAST", -- SPELL_CAST_SUCCESS fires
-	--[[
-	    SPELL_RESURRECT fires. For the ones that can FAIL: a cast succeeding only
-	    means the attempt happened, so the cast event proves nothing worth saying.
-	]]
-	RESURRECT = "RESURRECT",
-}
-
---------------------------------------------------------------------------------
--- Emotes
---------------------------------------------------------------------------------
-
-Data.EMOTES = {
-	{ token = "CHEER", desc = L["EMOTE_CHEER_DESCRIPTION"] },
-	{ token = "DRINK", desc = L["EMOTE_DRINK_DESCRIPTION"] },
-	{ token = "FLEX", desc = L["EMOTE_FLEX_DESCRIPTION"] },
-	{ token = "GRIN", desc = L["EMOTE_GRIN_DESCRIPTION"] },
-	{ token = "HIGHFIVE", desc = L["EMOTE_HIGHFIVE_DESCRIPTION"] },
-	{ token = "PRAISE", desc = L["EMOTE_PRAISE_DESCRIPTION"] },
-	{ token = "SALUTE", desc = L["EMOTE_SALUTE_DESCRIPTION"] },
-	{ token = "SMILE", desc = L["EMOTE_SMILE_DESCRIPTION"] },
-	{ token = "THANK", desc = L["EMOTE_THANK_DESCRIPTION"] },
-	{ token = "WHOA", desc = L["EMOTE_WHOA_DESCRIPTION"] },
-	{ token = "WINK", desc = L["EMOTE_WINK_DESCRIPTION"] },
-	-- Token is NOD: /yes is one of its command aliases, and no client has a YES token.
-	{ token = "NOD", desc = L["EMOTE_YES_DESCRIPTION"] },
 }
