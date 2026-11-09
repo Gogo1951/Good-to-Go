@@ -12,15 +12,6 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 * **Never Let a Buff Drop** // Missing or fading buffs show up right away, and one click puts them back.
 * **Gentle Reminders for the Group** // See which buffs your group is missing, then ask the group, or whisper the class that can cast them.
 
-### Enhanced Spellbook
-
-<img width="800" src="https://github.com/user-attachments/assets/e3e65c7c-04df-45c4-8564-f613da0b2746" />
-
-* **Pro Macros, Zero Typing** // Every class spell becomes a smart button in one click, and it stays up to date as you level and train.
-* **The Right Rank** // Buffing a lower-level player? The macro casts the rank that fits their level.
-* **One Button, Many Jobs** // Heal whoever your mouse is over, swap spells with a modifier key, or pop a trinket and send in your pet, all from the same button.
-* **What's Next?** // See the spells you can learn now and the ones coming soon, so you know when to visit your trainer.
-
 ### Restocker
 
 <img width="800" src="https://github.com/user-attachments/assets/fa63db86-8638-4483-9f18-f47765ba8a8f" />
@@ -29,6 +20,8 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 * **Your List Levels With You** // Food, water, ammo, poisons, and reagents climb to the next tier as you level.
 * **Rogues Get a Bonus** // List the poison you want, and the ingredients buy themselves.
 * **Skip a Visit** // Hold Shift while opening a merchant or the bank to skip restocking that time.
+
+> **Back in Town, 🔊 & Self:** Good to Go // Don't forget to restock while you're in town!
 
 ### Consumable Macros
 
@@ -59,15 +52,16 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 * **No False Alarms** // A buff the game lowers for a low-level player is never reported, and you pick which ranks are worth a mention.
 * **One Voice Per Group** // When several players run Rank Watch or RankSentinel, only one of them whispers.
 
-### Example Messages
-
-> **Ready Check, Self:** Good to Go // Missing Buffs : Well Fed, Main Hand
-
-> **Back in Town, 🔊 & Self:** Good to Go // Don't forget to restock while you're in town!
-
-> **Level Up, Self:** Good to Go // [Ice Cold Milk]x20 upgrades to [Melon Juice]x20.
-
 > **Low Rank Cast, Message To Portalrico:** ⭐ FYI, no biggie, but you used [Fireball] (Rank 5). There's a newer rank at level 30. Update your action bars or visit your trainer and you'll be Good to Go // GtG
+
+### Enhanced Spellbook
+
+<img width="800" src="https://github.com/user-attachments/assets/e3e65c7c-04df-45c4-8564-f613da0b2746" />
+
+* **Pro Macros, Zero Typing** // Every class spell becomes a smart button in one click, and it stays up to date as you level and train.
+* **The Right Rank** // Buffing a lower-level player? The macro casts the rank that fits their level.
+* **One Button, Many Jobs** // Heal whoever your mouse is over, swap spells with a modifier key, or pop a trinket and send in your pet, all from the same button.
+* **What's Next?** // See the spells you can learn now and the ones coming soon, so you know when to visit your trainer.
 
 ## Setup
 
