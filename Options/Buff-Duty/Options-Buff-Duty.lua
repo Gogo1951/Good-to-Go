@@ -48,8 +48,8 @@ function ns.BuildBuffDutyOptions()
 	end
 
 	--[[
-	    The Example line for the ask a Party-Buffs Left-Click sends, as the
-	    group reads it: for the Mage's raid buff where this client has one, else
+	    The Example line for the ask the Party-Buffs hover menu's Ask row
+	    sends, as the group reads it: for the Mage's raid buff where this client has one, else
 	    the first raid buff in its data, linked at its top rank the way the
 	    window links it, with two of the sample names missing it.
 	]]

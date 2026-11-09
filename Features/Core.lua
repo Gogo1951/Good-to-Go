@@ -565,12 +565,34 @@ end
 ]]
 local REALM_KEY_SEPARATOR = " - "
 
+--[[
+    MIGRATION (remove after 2026-12-08, with Default-Profile-Migration.lua)
+    One "Name - Realm" shape is Forever's own: an older AceDB's name for a
+    Forever character, its first name and the rule set ("Gogodruid - PvE").
+    Forever's Older Names in that file reads it after this prune, and every
+    character on the account takes its copy at its own login, so every rule
+    set's keys stay, not just this one's. These are the vendored AceDB's own
+    rule-set names. Once this comes out, the next login prunes them.
+]]
+local FOREVER_RULE_SETS = { Hardcore = true, ["RP-PvP"] = true, RP = true, PvP = true, PvE = true }
+
+---@param characterKey string
+---@return boolean
+local function IsOlderForeverKey(characterKey)
+	local firstName, ruleSet = characterKey:match("^(%S+) %- (.+)$")
+	return firstName ~= nil and FOREVER_RULE_SETS[ruleSet] == true
+end
+
 ---@param characterKey any
 ---@param realmClient boolean
 ---@return boolean
 local function IsOtherClientKey(characterKey, realmClient)
 	if type(characterKey) ~= "string" then
 		return true
+	end
+	-- MIGRATION (remove after 2026-12-08)
+	if not realmClient and IsOlderForeverKey(characterKey) then
+		return false
 	end
 	return (characterKey:find(REALM_KEY_SEPARATOR, 1, true) ~= nil) ~= realmClient
 end

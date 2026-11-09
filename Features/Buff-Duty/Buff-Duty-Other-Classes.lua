@@ -209,7 +209,7 @@ function ns.WhisperOtherClassBuff(spec)
 	if not spec.recipients[1] or not ReadyToAsk("whisper", spec.key) then
 		return
 	end
-	local message = ns:BuildBuffRequestMessage(spec.missing, spec.count, spec.link)
+	local message = ns:BuildBuffRequestMessage(spec.missing, spec.count, spec.link, true)
 	for _, target in ipairs(spec.recipients) do
 		ns:WhisperBuffRequest(target, message)
 	end

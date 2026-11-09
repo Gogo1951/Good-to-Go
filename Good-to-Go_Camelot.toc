@@ -139,7 +139,7 @@ Features/Readiness-Report/Readiness-Report-Probes.lua
 Features/Readiness-Report/Readiness-Report.lua
 Features/Readiness-Report/Readiness-Report-Example.lua
 
-# Inventory Restocker
+# Restocker
 Features/Restocker/Restocker-Core.lua
 Features/Restocker/Restocker-List.lua
 Features/Restocker/Restocker-Saved-Lists.lua

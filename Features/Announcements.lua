@@ -163,19 +163,6 @@ local function Deliver(channel, target, message)
 end
 
 --[[
-    Builds a sent line and sends it: a whisper takes the whisper marker and the
-    queue. Does nothing on a nil channel (ns:GetGroupChatChannel outside a
-    group) or a key with no text.
-]]
-function ns:Announce(channel, target, formatKey, ...)
-	if not channel then
-		return
-	end
-	local isWhisper = channel == "WHISPER"
-	Deliver(channel, target, BuildSent(isWhisper, formatKey, ...))
-end
-
---[[
     Resolve the client's plural escape to plain text.
 
     Trap: WoW's own duration strings (D_MINUTES == "%d |4minute:minutes;") carry
@@ -271,15 +258,18 @@ end
     people are missing the [Arcane Intellect] buff // GtG" past that. `names`
     are the missing players' names without their realms, `count` how many.
     A statement, not a question, so the sign-off reads cleanly after it.
+    `isWhisper` builds the whispered ask, which leads with the marker on
+    WoW Forever too; the group's follows the group-chat rule (MarkerPrefix).
 ]]
-function ns:BuildBuffRequestMessage(names, count, link)
+function ns:BuildBuffRequestMessage(names, count, link, isWhisper)
 	names = names or {}
+	local build = isWhisper and ns.BuildWhisperMessage or ns.BuildAnnounceMessage
 	if count > ASK_MAX_NAMES or #names ~= count or count == 0 then
-		return ns:BuildAnnounceMessage("BUFF_DUTY_OTHERS_ASK_COUNT", count, link)
+		return build(ns, "BUFF_DUTY_OTHERS_ASK_COUNT", count, link)
 	elseif count == 1 then
-		return ns:BuildAnnounceMessage("BUFF_DUTY_OTHERS_ASK_ONE", names[1], link)
+		return build(ns, "BUFF_DUTY_OTHERS_ASK_ONE", names[1], link)
 	end
-	return ns:BuildAnnounceMessage("BUFF_DUTY_OTHERS_ASK_NAMES", JoinNames(names), link)
+	return build(ns, "BUFF_DUTY_OTHERS_ASK_NAMES", JoinNames(names), link)
 end
 
 ns.BUFF_ASK_MAX_NAMES = ASK_MAX_NAMES
@@ -300,14 +290,14 @@ function ns:GetGroupChatChannel()
 	return nil
 end
 
--- A Left-Click's ask, to the whole group.
+-- The Party-Buffs hover menu's Ask row, to the whole group.
 function ns:SayBuffRequest(message)
 	Deliver(ns:GetGroupChatChannel(), nil, message)
 end
 
 --[[
-    A Right-Click's ask, to one of the class's players. Queued, since one
-    click whispers every player of the class at once.
+    The Party-Buffs hover menu's Whisper row, to one of the class's players.
+    Queued, since one pick whispers every player of the class at once.
 ]]
 function ns:WhisperBuffRequest(target, message)
 	Deliver("WHISPER", target, message)
