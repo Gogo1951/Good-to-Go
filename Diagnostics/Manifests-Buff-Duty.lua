@@ -124,10 +124,14 @@ local function PetState(BW, pet)
 		return "none"
 	end
 	if BW.CanBuffPet(pet) then
-		return "buffable"
+		BW.ReadAuras(pet)
+		return "buffable aurasReadable=" .. tostring(BW.AurasReadable())
 	end
 	return string.format(
-		"not buffable (dead=%s phaseShifted=%s charmed=%s ownerClass=%s family=%s)",
+		"not buffable (identitySecret=%s visible=%s canAssist=%s dead=%s phaseShifted=%s charmed=%s ownerClass=%s family=%s)",
+		tostring(ns.IsUnitIdentitySecret(pet) and true or false),
+		PlainText(UnitIsVisible(pet)),
+		PlainText(UnitCanAssist("player", pet)),
 		PlainText(UnitIsDeadOrGhost(pet)),
 		tostring(BW.IsPhaseShifted(pet)),
 		PlainText(UnitIsCharmed(pet)),

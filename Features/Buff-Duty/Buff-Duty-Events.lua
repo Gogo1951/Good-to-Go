@@ -106,6 +106,7 @@ end
 local function OnUnitSpellcastSucceeded(unitTarget, _, spellID)
 	ns.OnBuffKeyCastSucceeded(unitTarget, spellID)
 	ns.OnResurrectCastSucceeded(unitTarget, spellID)
+	ns.OnBuffCastSucceeded(unitTarget, spellID)
 end
 ns.SetBuffDutyEventHandler("UNIT_SPELLCAST_SUCCEEDED", OnUnitSpellcastSucceeded)
 
