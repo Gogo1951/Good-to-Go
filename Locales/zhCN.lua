@@ -1729,13 +1729,11 @@ L["BUFF_DUTY_TOOLTIP_USE"] = "你的队伍中没有人有灵魂石。对 %s 使�
 L["BUFF_DUTY_TOOLTIP_CREATE"] = "你的队伍中没有人有灵魂石。制造一块。"
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "对 %s 及其小队施放。"
 L["BUFF_DUTY_TOOLTIP_FAVOR"] = "选中 %s 为目标并施放。"
--- A Party Buffs icon's menu: a raid buff your group is missing, and its count.
-L["BUFF_DUTY_OTHERS_TOOLTIP_COUNT"] = "缺少或即将消失：%d"
--- The menu's rows: the first asks the party or raid for the buff (its name), the second whispers the players who can cast it (their names).
-L["BUFF_DUTY_OTHERS_MENU_ASK_GROUP"] = "向队伍请求%s"
-L["BUFF_DUTY_OTHERS_MENU_WHISPER"] = "密语 %s"
+-- A Party Buffs icon's tooltip, its click hints: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it.
+L["BUFF_DUTY_OTHERS_HINT_ASK"] = "在%s中请求增益"
+L["BUFF_DUTY_OTHERS_HINT_WHISPER"] = "密语可施放者"
 --[[
-    The ask either row sends, signed off like every sent message ({star} ... // GtG), so it
+    The ask either click sends, signed off like every sent message ({star} ... // GtG), so it
     ends as a statement, not a question. Up to five missing players are named (ONE for one,
     NAMES for two to five, joined with LIST_PAIR_FORMAT or LIST_LAST_FORMAT), then the buff's link;
     past five, COUNT gives how many, then the link.
@@ -1743,8 +1741,6 @@ L["BUFF_DUTY_OTHERS_MENU_WHISPER"] = "密语 %s"
 L["BUFF_DUTY_OTHERS_ASK_ONE"] = "%s缺少%s。"
 L["BUFF_DUTY_OTHERS_ASK_NAMES"] = "%s缺少%s。"
 L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "%d名玩家缺少%s增益。"
--- Your own chat, after the Whisper row: who was whispered, then the buff's link.
-L["BUFF_DUTY_OTHERS_SENT"] = "已向 %s 发送%s的密语。"
 --[[
     The window's close button: the class name, the class name again for its
     checkbox, the When to Show header, then the options command.

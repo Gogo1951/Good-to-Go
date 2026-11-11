@@ -299,14 +299,14 @@ function ns:Announce(channel, target, formatKey, ...)
 	Deliver(channel, target, BuildSent(channel == "WHISPER", formatKey, ...))
 end
 
--- The Party-Buffs hover menu's Ask row, to the whole group: a line already built, so its length was measured.
+-- A Party-Buffs icon's click, to the whole group: a line already built, so its length was measured.
 function ns:SayBuffRequest(message)
 	Deliver(ns:GetGroupChatChannel(), nil, message)
 end
 
 --[[
-    An automated whisper already built (a buff ask from the Party-Buffs menu's
-    Whisper row, a Rank Watch report), queued so a burst of them is spaced out.
+    An automated whisper already built (a buff ask from a Party-Buffs icon's
+    right-click, a Rank Watch report), queued so a burst of them is spaced out.
 ]]
 function ns:QueueAutomatedWhisper(target, message)
 	Deliver("WHISPER", target, message)

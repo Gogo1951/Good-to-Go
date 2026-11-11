@@ -1768,13 +1768,11 @@ L["BUFF_DUTY_TOOLTIP_USE"] = "Niemand in deiner Gruppe hat einen Seelenstein. We
 L["BUFF_DUTY_TOOLTIP_CREATE"] = "Niemand in deiner Gruppe hat einen Seelenstein. Stellt einen her."
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "Wirkt auf %s samt Gruppe."
 L["BUFF_DUTY_TOOLTIP_FAVOR"] = "Nimmt %s ins Ziel und wirkt."
--- A Party Buffs icon's menu: a raid buff your group is missing, and its count.
-L["BUFF_DUTY_OTHERS_TOOLTIP_COUNT"] = "Fehlt oder läuft bald ab: %d"
--- The menu's rows: the first asks the party or raid for the buff (its name), the second whispers the players who can cast it (their names).
-L["BUFF_DUTY_OTHERS_MENU_ASK_GROUP"] = "Gruppe um %s bitten"
-L["BUFF_DUTY_OTHERS_MENU_WHISPER"] = "%s anflüstern"
+-- A Party Buffs icon's tooltip, its click hints: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it.
+L["BUFF_DUTY_OTHERS_HINT_ASK"] = "Buff anfragen (%s)"
+L["BUFF_DUTY_OTHERS_HINT_WHISPER"] = "Buffer direkt anflüstern"
 --[[
-    The ask either row sends, signed off like every sent message ({star} ... // GtG), so it
+    The ask either click sends, signed off like every sent message ({star} ... // GtG), so it
     ends as a statement, not a question. Up to five missing players are named (ONE for one,
     NAMES for two to five, joined with LIST_PAIR_FORMAT or LIST_LAST_FORMAT), then the buff's link;
     past five, COUNT gives how many, then the link.
@@ -1782,8 +1780,6 @@ L["BUFF_DUTY_OTHERS_MENU_WHISPER"] = "%s anflüstern"
 L["BUFF_DUTY_OTHERS_ASK_ONE"] = "%s fehlt %s."
 L["BUFF_DUTY_OTHERS_ASK_NAMES"] = "%s fehlt %s."
 L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "%d Spielern fehlt der Buff %s."
--- Your own chat, after the Whisper row: who was whispered, then the buff's link.
-L["BUFF_DUTY_OTHERS_SENT"] = "%s wegen %s angeflüstert."
 --[[
     The window's close button: the class name, the class name again for its
     checkbox, the When to Show header, then the options command.

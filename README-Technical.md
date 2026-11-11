@@ -51,7 +51,7 @@ Good-to-Go/
 │   │   ├── Buff-Duty-Lookups.lua                   Data rows to live entries, weapon layers, BuildCategories
 │   │   ├── Buff-Duty-Other-Classes.lua             Party-Buffs counts, ask cooldowns, ask and whisper senders
 │   │   ├── Buff-Duty-Outsiders.lua                 Target and Return the Favor sections
-│   │   ├── Buff-Duty-Party-Buffs.lua               Party-Buffs plain icons and their hover menu
+│   │   ├── Buff-Duty-Party-Buffs.lua               Party-Buffs plain icons, their clicks and tooltip
 │   │   ├── Buff-Duty-Pets.lua                      Pet and friendly-NPC rows, pet holds, the NPC buff cycle, owner class, charmed check
 │   │   ├── Buff-Duty-Position.lua                  Position saved by the top-right corner, and its migration
 │   │   ├── Buff-Duty-Resurrections.lua             Resurrection icon and pending suppression
@@ -616,7 +616,7 @@ The feature is "Restocker"; its window is the Restock List; its starter popup is
 #### Other Sections
 
 - **Weapons** (`Buff-Duty-Weapons.lua`): each hand is asked about the layers in `Data.WEAPON_LAYERS`. Where `ns.WEAPON_ENCHANTS_STACK` (Camelot) holds, poisons, Shaman imbues and `ns.BUFF_DUTY_WEAPON_IMBUE_ITEMS` fill IMBUE and other items fill TEMPORARY; elsewhere it is one layer. `ReadWeaponEnchants` reads `C_Item.GetWeaponEnchantInfo` on Forever. Shaman imbues are offered only where they land. `REPLACE_ENCHANT` is auto-accepted within `REPLACE_WINDOW` of a weapon click.
-- **Party-Buffs** (`Buff-Duty-Other-Classes.lua`, `-Party-Buffs.lua`): counts non-exclusive `group` rows the player can't cast that the group lacks. Its icons are plain buttons whose click does nothing, so nothing is sent by accident. A hover menu offers Ask (group) and Whisper (every other player of that class), each with its own `ASK_COOLDOWN`.
+- **Party-Buffs** (`Buff-Duty-Other-Classes.lua`, `-Party-Buffs.lua`): counts non-exclusive `group` rows the player can't cast that the group lacks. Its icons are plain buttons: Click asks the group, Right-Click whispers every other player of that class, each with its own `ASK_COOLDOWN`. Hovering shows a mouse-less panel in GameTooltip's look: each name left, the buff's icon right (grey and faded when missing, the window's reversed sliver when running low), the two clicks as blue hints at the foot. It's a frame, not GameTooltip, because a cooldown swipe can't sit in a tooltip line. An earlier hover menu with clickable rows closed before the mouse could reach it, so the actions live on the icon.
 - **Return the Favor** (`Buff-Duty-Favors.lua`):
   - Off Camelot: combat-log `BUFF` events on the player from a friendly, outsider-flagged player GUID. Affiliation, because cross-realm names break name lookups.
   - On Camelot: the player's own `UNIT_AURA` `addedAuras`, with the caster from `sourceUnit` or `C_UnitAuras.GetAuraCasterGUID`, skipped in combat or while secret.
