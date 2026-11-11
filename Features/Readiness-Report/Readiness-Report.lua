@@ -91,11 +91,11 @@ local Line = ns.ReadinessLine
     never shows a line the real report would keep quiet about.
 ]]
 function ns.ReadinessAsksWellFed(settings, reports)
-	return reports.readinessWellFed and settings.useBuffFood and ns.IsModeActive(settings.buffFoodMode) or false
+	return reports.readinessWellFed and settings.useBuffFood and ns.IsUseWhenActive(settings, "buffFood") or false
 end
 
 function ns.ReadinessAsksScrolls(settings, reports)
-	return reports.readinessScrolls and settings.useScrolls and ns.IsModeActive(settings.scrollsMode) or false
+	return reports.readinessScrolls and settings.useScrolls and ns.IsUseWhenActive(settings, "scrolls") or false
 end
 
 function ns.ReadinessAsksSoulstone(reports)
@@ -463,7 +463,7 @@ end
 ]]
 local MODULE = "ReadinessReport"
 
--- Called at login and by the report's switch (Options/Options-Utilities.lua).
+-- Called at login and by the report's switch (Options/Options-Feature-Switches.lua).
 function ns.SyncReadinessReportEvents()
 	local reports = ns.db and ns.db.global
 	ns.SetModuleEvent(MODULE, "READY_CHECK", reports and reports.readinessReportEnabled and true or false)

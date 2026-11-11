@@ -56,9 +56,13 @@ end
 	rebuilds and rewrites now, so that macro works straight away.
 ]]
 local spellsPending = false
+-- the learned professions the last refresh read (OnSpellbookSkillLinesChanged, below)
+local lastProfessionsKey
+local CurrentProfessionsKey
 
 local function RefreshForSpells()
 	spellsPending = false
+	lastProfessionsKey = CurrentProfessionsKey()
 	ns.InvalidateSpellRankRows()
 	if ns.RefreshWhatsNext then
 		ns.RefreshWhatsNext()
@@ -76,6 +80,45 @@ function ns:OnSpellsChanged()
 	if not spellsPending then
 		spellsPending = true
 		C_Timer.After(0, RefreshForSpells)
+	end
+end
+
+--[[
+	The Retail engine's book reads professions through GetProfessions (Class-Spells.lua), and a profession
+	learned or dropped reaches that list only by SKILL_LINES_CHANGED, after SPELLS_CHANGED has already redrawn
+	the page without it. That event also fires on every weapon skill-up, so the page redraws only when the
+	learned professions, or the spells each holds, differ from the last read. The Classic engine keeps
+	professions in its spell tabs, which SPELLS_CHANGED covers.
+]]
+local function ProfessionsKey(...)
+	local key = ""
+	for i = 1, select("#", ...) do
+		local index = select(i, ...)
+		if index then
+			local _, _, _, _, numAbilities, spellOffset, skillLine = GetProfessionInfo(index)
+			key = key .. (skillLine or 0) .. ":" .. (numAbilities or 0) .. ":" .. (spellOffset or 0) .. ";"
+		else
+			key = key .. "-;"
+		end
+	end
+	return key
+end
+
+local READS_PROFESSIONS = ns.READS_PROFESSIONS
+
+function CurrentProfessionsKey()
+	return READS_PROFESSIONS and ProfessionsKey(GetProfessions()) or nil
+end
+
+function ns:OnSpellbookSkillLinesChanged()
+	if not READS_PROFESSIONS then
+		return
+	end
+	local key = CurrentProfessionsKey()
+	if lastProfessionsKey == nil then
+		lastProfessionsKey = key
+	elseif key ~= lastProfessionsKey then
+		ns:OnSpellsChanged()
 	end
 end
 

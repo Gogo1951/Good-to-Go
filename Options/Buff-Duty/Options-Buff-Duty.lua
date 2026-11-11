@@ -74,15 +74,20 @@ function ns.BuildBuffDutyOptions()
 	end
 
 	--[[
-	    The right half of a Solo, In Party or In Raid row: where the window
-	    shows, Always or In Instance. Like Return the Favor's, it appears only
-	    while the toggle beside it is on.
+	    When to Show's rows: the shared group context checkboxes
+	    (ns.OptionsGroupContextToggle), one to a row. Solo, Party and Raid each
+	    take a where dropdown on their row, Anywhere or In Instance, shown only
+	    while the box beside it is ticked, like Return the Favor's. Battleground
+	    has none: a battleground or arena is always an instance.
 	]]
+	local function ShowIn()
+		return Settings().showIn
+	end
 	local whereValues = {}
 	for _, value in ipairs(Data.BUFF_DUTY_WHERE_ORDER) do
 		whereValues[value] = L["BUFF_DUTY_WHERE_" .. value]
 	end
-	local function Where(toggleKey, key, order)
+	local function Where(context, order)
 		return {
 			type = "select",
 			name = "",
@@ -92,16 +97,19 @@ function ns.BuildBuffDutyOptions()
 			width = ns.OPTIONS_CONTROL_WIDTH,
 			order = order,
 			hidden = function()
-				return Hidden() or not Settings()[toggleKey]
+				return Hidden() or not ns.IsGroupContextOn(ShowIn(), context)
 			end,
 			get = function()
-				return Settings()[key]
+				return Settings().showWhere[context]
 			end,
 			set = function(_, value)
-				Settings()[key] = value
+				Settings().showWhere[context] = value
 				ns.RefreshBuffDuty()
 			end,
 		}
+	end
+	local function ShowInToggle(context, order, width)
+		return ns.OptionsGroupContextToggle(context, order, width, ShowIn, ns.RefreshBuffDuty, Hidden)
 	end
 
 	local options = {
@@ -127,41 +135,25 @@ function ns.BuildBuffDutyOptions()
 			space1 = ns.OptionsSpacer(5, Hidden),
 
 			--[[
-			    When the window may show at all: solo, in a party or in a raid,
-			    and on which classes. The class toggles are added to `classes`
-			    below.
+			    When the window may show at all: in which group contexts, and on
+			    which classes. The class toggles are added to `classes` below.
 			]]
 			headerWhen = ns.OptionsHeader(L["BUFF_DUTY_WHEN_HEADER"], 5.1, Hidden),
 			spaceWhen0 = ns.OptionsSpacer(5.11, Hidden),
 			descWhen = ns.OptionsDesc(L["BUFF_DUTY_WHEN_DESCRIPTION"], 5.12, Hidden),
 			spaceWhen1 = ns.OptionsSpacer(5.13, Hidden),
-			showSolo = Toggle(
-				"showSolo",
-				L["BUFF_DUTY_WHEN_SOLO"],
-				L["BUFF_DUTY_WHEN_SOLO_DESCRIPTION"],
-				5.14,
-				ns.OPTIONS_LABEL_WIDTH
-			),
-			showSoloWhere = Where("showSolo", "showSoloWhere", 5.15),
+			showSolo = ShowInToggle("solo", 5.14, ns.OPTIONS_LABEL_WIDTH),
+			showSoloWhere = Where("solo", 5.15),
 			spaceWhen2 = ns.OptionsSpacer(5.16, Hidden),
-			showParty = Toggle(
-				"showParty",
-				L["BUFF_DUTY_WHEN_PARTY"],
-				L["BUFF_DUTY_WHEN_PARTY_DESCRIPTION"],
-				5.17,
-				ns.OPTIONS_LABEL_WIDTH
-			),
-			showPartyWhere = Where("showParty", "showPartyWhere", 5.175),
+			showParty = ShowInToggle("party", 5.17, ns.OPTIONS_LABEL_WIDTH),
+			showPartyWhere = Where("party", 5.175),
 			spaceWhen3 = ns.OptionsSpacer(5.18, Hidden),
-			showRaid = Toggle(
-				"showRaid",
-				L["BUFF_DUTY_WHEN_RAID"],
-				L["BUFF_DUTY_WHEN_RAID_DESCRIPTION"],
-				5.185,
-				ns.OPTIONS_LABEL_WIDTH
-			),
-			showRaidWhere = Where("showRaid", "showRaidWhere", 5.19),
-			spaceWhen4 = ns.OptionsSpacer(5.195, Hidden),
+			showRaid = ShowInToggle("raid", 5.185, ns.OPTIONS_LABEL_WIDTH),
+			showRaidWhere = Where("raid", 5.19),
+			spaceWhen4 = ns.OptionsSpacer(5.1925, Hidden),
+			showBattleground = ShowInToggle("battleground", 5.1935, "full"),
+			noneWhen = ns.OptionsGroupContextNone(L["BUFF_DUTY_WHEN_NONE"], 5.194, ShowIn, Hidden),
+			spaceWhen5 = ns.OptionsSpacer(5.195, Hidden),
 			descClasses = ns.OptionsDesc(L["BUFF_DUTY_CLASSES_DESCRIPTION"], 5.2, Hidden),
 			spaceClasses0 = ns.OptionsSpacer(5.21, Hidden),
 			classes = {
@@ -284,6 +276,10 @@ function ns.BuildBuffDutyOptions()
 			end,
 			set = function(_, value)
 				Settings().showClasses[class] = value
+				-- Ticking your own class brings back a window its close button hid this session.
+				if value and class == select(2, UnitClass("player")) then
+					ns.ShowBuffDutyAgain()
+				end
 				ns.RefreshBuffDuty()
 			end,
 		}

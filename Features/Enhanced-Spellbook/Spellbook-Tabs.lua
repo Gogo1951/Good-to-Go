@@ -57,12 +57,18 @@ end
 
 --[[
 	left, bottom, right, top in screen pixels, so frames with different scales compare. Nothing for an unplaced
-	frame, or one whose rect is secret on Forever (the game's own aura container): its numbers can't be used.
+	frame, one whose rect is secret on Forever (the game's own aura container), or one anchored to a restricted
+	region (the ping system's PingPin, shown in controller mode): the game refuses to measure those and raises
+	an error, so they're skipped before asking and the ask itself is guarded.
 ]]
 local function ScreenRect(frame)
-	local left, bottom, width, height = frame:GetRect()
+	if frame.IsAnchoringRestricted and frame:IsAnchoringRestricted() then
+		return
+	end
+	local ok, left, bottom, width, height = pcall(frame.GetRect, frame)
 	if
-		not left
+		not ok
+		or not left
 		or ns.IsSecretValue(left)
 		or ns.IsSecretValue(bottom)
 		or ns.IsSecretValue(width)

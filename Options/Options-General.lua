@@ -15,7 +15,8 @@ local Spacer = ns.OptionsSpacer
     button that opens the game's Key Bindings list through ns:OpenKeyBindings
     (Features/Key-Bindings.lua), so the key is set where the game's own are.
     The binding name is Bindings.xml's name attribute; the caption is the same
-    string the Key Bindings list prints. ns:OnUpdateBindings repaints this panel
+    string the Key Bindings list prints. OnUpdateBindings (Features/Key-Bindings.lua)
+    repaints this panel
     when the player changes a key.
 
     The descKey line says what the key does. The Buff Button's names the macro
@@ -152,7 +153,7 @@ function ns.BuildGeneralOptions()
 			end,
 		},
 
-		-- Features: three groups of pairs fill 23 through 50.
+		-- Features: two groups of pairs fill 23 through 50.
 		spaceFeatures0 = Spacer(20),
 		headerFeatures = Header(L["OPTIONS_FEATURES_HEADER"], 21),
 		spaceFeatures1 = Spacer(22),

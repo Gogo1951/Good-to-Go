@@ -57,7 +57,7 @@ function ns.BuildBuffDutyBuffsOptions()
 	}
 	--[[
 	    Count as Tanks: one row per class this client's data carries, then Pets,
-	    each a caption beside a Never / When Not in a Group / Always dropdown.
+	    each a caption beside a Never / When Solo / Always dropdown.
 	    It decides only for a player with no role of their own (RoleOf), so it
 	    sits apart from the role note above rather than inside it. Captions take
 	    the aligned width so the dropdowns line up with the boxed ones below.
@@ -97,7 +97,10 @@ function ns.BuildBuffDutyBuffsOptions()
 		TankRow(class, ns.ClassName(class), L["BUFF_DUTY_TANKS_CLASS_DESCRIPTION"], tankOrder)
 		tankOrder = tankOrder + 1
 	end
-	TankRow(Data.TANK_WHEN_PET, L["BUFF_DUTY_TANKS_PETS"], L["BUFF_DUTY_TANKS_PETS_DESCRIPTION"], tankOrder)
+	-- No pets on WoW Forever's list (they take their owner's buffs), so no Pets row either.
+	if ns.FLAVOR ~= "Camelot" then
+		TankRow(Data.TANK_WHEN_PET, L["BUFF_DUTY_TANKS_PETS"], L["BUFF_DUTY_TANKS_PETS_DESCRIPTION"], tankOrder)
+	end
 	options.args.spaceTanks3 = ns.OptionsSpacer(tankOrder + 1)
 
 	local audienceValues = {}

@@ -38,14 +38,17 @@ ns.macros = {}
 --[[
 	The spell's Rank 1 ID, which the macro's saved settings, tag and Duplicates are keyed by (ns.SettingsKey), so
 	they outlast a rank trained and a change of game language: the ID its SPELL_GROUPS group lists it by, else
-	its lowest rank's, learned or not, else the one ID it has. An unlearned spell's id is already its Rank 1
-	(ns.ForEachUnlearnedSpell).
+	its lowest rank's (ranks.baseID, recorded before replaced ranks are dropped), learned or not, else the one
+	ID it has. An unlearned spell's id is already its Rank 1 (ns.ForEachUnlearnedSpell).
 ]]
 local function BaseSpellID(name, id, ranks, members)
 	for _, member in ipairs(members or NO_IDS) do
 		if member.name == name then
 			return member.id
 		end
+	end
+	if ranks and ranks.baseID then
+		return ranks.baseID
 	end
 	local lowest
 	for _, list in ipairs({ ranks and ranks.known or NO_IDS, ranks and ranks.unknown or NO_IDS }) do

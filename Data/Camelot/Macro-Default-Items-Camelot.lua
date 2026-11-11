@@ -19,7 +19,7 @@ ns.MACRO_DEFAULT_ITEM_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-11-08, WoW Forever 1.60.1.70862
+	2026-11-11, WoW Forever 1.60.1.70888
 
 Notes
 	- The item each macro shows (#showtooltip) while the bags hold nothing it can use, keyed by ns.MACRO_CONFIG's macro type (Data/Data.lua). Read by the macro body builder, the mini-map tooltip, the rogue tools and the Macros options panel.

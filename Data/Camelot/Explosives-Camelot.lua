@@ -12,7 +12,7 @@ ns.EXPLOSIVES = {
 	[10646] = { 450, 750, 205, nil, 0, 500, 10, 0 }, -- Goblin Sapper Charge
 	[4378] = { 128, 172, 125, nil, 0, 350, 20, 0 }, -- Heavy Dynamite
 	[10562] = { 255, 345, 235, nil, 0, 750, 10, 0 }, -- Hi-Explosive Bomb
-	[4390] = { 132, 218, 175, nil, 0, 500, 10, 0 }, -- Iron Grenade
+	[4390] = { 132, 218, 175, nil, 0, 125, 10, 0 }, -- Iron Grenade
 	[4370] = { 43, 57, 105, nil, 0, 175, 10, 0 }, -- Large Copper Bomb
 	[10514] = { 149, 201, 205, nil, 0, 750, 10, 0 }, -- Mithril Frag Bomb
 	[4360] = { 22, 28, 30, nil, 0, 60, 10, 0 }, -- Rough Copper Bomb
@@ -39,7 +39,7 @@ ns.EXPLOSIVES = {
 How We Got the Data
 
 Last Validated
-	2026-11-08, WoW Forever 1.60.1.70862
+	2026-11-11, WoW Forever 1.60.1.70888
 
 Notes
 	- Every Engineering explosive this client knows that deals damage, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Explosive macro. The family is the items sharing Coarse Dynamite's (4365) use category, which on this client is class 0, subclass 0.

@@ -178,7 +178,13 @@ local function RunRestockLogic()
 	    A declined rescan (the player is holding something of their own) is a skipped tick,
 	    not a stalled run: nothing below has read this step's inventories yet, and the step
 	    is deliberately not counted against the watchdog, since no move was attempted.
+
+	    Forever's bank tab list can still be empty when the bank opens (ns.BankBagIDs), so
+	    while it is, every step asks for it again.
 	]]
+	if #ns.GetRestockBankBags() == 0 then
+		ns.LoadRestockBankBags()
+	end
 	if not state:Rescan() then
 		return false
 	end
@@ -221,12 +227,14 @@ local function RunRestockLogic()
 		--[[
 		    Watchdog. We normally get here with locks already settled (OnBankRestockUpdate gates on
 		    that, until one of ours has stayed locked for MAX_STUCK_STEPS ticks), so if the
-		    outstanding work did NOT shrink since last step, the last move genuinely didn't land --
-		    a rejected split, an item stuck locked, or something we can't place. Retry a few times to absorb
+		    outstanding work is UNCHANGED since last step, the last move genuinely didn't land --
+		    a rejected split, an item stuck locked, or something we can't place. Work that grew
+		    changed rather than stalled: the bank's contents arriving a beat late, or a whole
+		    stack overshooting into stash work. Retry a few times to absorb
 		    transient races, then give up with a clear message. With it the run neither spins
 		    forever on a move that never lands nor reports success while still short.
 		]]
-		if remaining < state.lastRemainingWork then
+		if remaining ~= state.lastRemainingWork then
 			state.stuckSteps = 0
 		else
 			state.stuckSteps = state.stuckSteps + 1
@@ -411,7 +419,8 @@ restockUpdateFrame:Hide()
 --[[
     There is no manual re-trigger for a restock, and there must not be one on the
     Diagnostic Tools panel: that panel is read-only by rule, and a restock moves
-    the player's items. Closing and reopening the bank restarts a run, and the
+    the player's items. Closing and reopening the bank, editing a Keep or
+    switching lists restarts a run (ns.StartRestockBankRun), and the
     step-by-step trace behind ns.RestockerDebug is what actually explains a stuck
     one.
 ]]

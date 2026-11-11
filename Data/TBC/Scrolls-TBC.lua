@@ -1,8 +1,9 @@
 local _, ns = ...
 
--- [scrollType] = { items = { ... }, conflictSpells = { ... } }
+-- [scrollType] = { classes = "ALL" or { classToken, ... }, items = { ... }, conflictSpells = { ... } }
 ns.SCROLL_DATA = {
 	Agility = {
+		classes = { "DRUID", "HUNTER", "PALADIN", "ROGUE", "WARRIOR" },
 		-- {itemID, buffID, requiredLevel, amount}, -- Name
 		items = {
 			{ 27498, 33077, 60, 20 }, -- Scroll of Agility V
@@ -25,6 +26,7 @@ ns.SCROLL_DATA = {
 		},
 	},
 	Intellect = {
+		classes = { "DRUID", "HUNTER", "MAGE", "PALADIN", "PRIEST", "SHAMAN", "WARLOCK" },
 		-- {itemID, buffID, requiredLevel, amount}, -- Name
 		items = {
 			{ 27499, 33078, 60, 20 }, -- Scroll of Intellect V
@@ -55,6 +57,7 @@ ns.SCROLL_DATA = {
 		},
 	},
 	Protection = {
+		classes = "ALL",
 		-- {itemID, buffID, requiredLevel, amount}, -- Name
 		items = {
 			{ 27500, 33079, 60, 300 }, -- Scroll of Protection V
@@ -74,6 +77,7 @@ ns.SCROLL_DATA = {
 		},
 	},
 	Stamina = {
+		classes = "ALL",
 		-- {itemID, buffID, requiredLevel, amount}, -- Name
 		items = {
 			{ 27502, 33081, 60, 20 }, -- Scroll of Stamina V
@@ -102,6 +106,7 @@ ns.SCROLL_DATA = {
 		},
 	},
 	Spirit = {
+		classes = { "DRUID", "MAGE", "PALADIN", "PRIEST", "SHAMAN" },
 		-- {itemID, buffID, requiredLevel, amount}, -- Name
 		items = {
 			{ 27501, 33080, 60, 30 }, -- Scroll of Spirit V
@@ -129,6 +134,7 @@ ns.SCROLL_DATA = {
 		},
 	},
 	Strength = {
+		classes = { "DRUID", "PALADIN", "SHAMAN", "WARRIOR" },
 		-- {itemID, buffID, requiredLevel, amount}, -- Name
 		items = {
 			{ 27503, 33082, 60, 20 }, -- Scroll of Strength V
@@ -157,10 +163,11 @@ ns.SCROLL_DATA = {
 How We Got the Data
 
 Last Validated
-	2026-11-08, TBC Anniversary 2.5.6.70577
+	2026-11-11, TBC Anniversary 2.5.6.70577
 
 Notes
 	- The stat scrolls, read by Features/Macros-for-Consumables/Scanner/Scanner-Auras.lua (FindBestScroll) to pick a scroll whose buff the player lacks. Each type lists its scrolls as { itemID, buffID, requiredLevel, amount }: the buff is the aura the scroll leaves, requiredLevel the level the tooltip requires, amount the stat it grants.
+	- classes is who the type is on for by default (Data/Default-Settings.lua, scrollTypes): "ALL", or the class tokens whose characters get use from the stat, by class and never by spec. It follows Play It Forward's CONSUMABLE_CLASSES (Data/{Game}/Match-Classes-{Game}.lua there), the stat each class's gear wants, with Paladins added to Agility: Stamina and Protection go to everyone; Strength to Druids, Paladins, Shamans and Warriors; Agility to Druids, Hunters, Paladins, Rogues and Warriors; Intellect to every mana user, Hunters included; Spirit to Druids, Mages, Paladins, Priests and Shamans. The player can still tick any type on or off.
 	- conflictSpells lists the buffs a scroll can't stack with, keyed by spell ID, with the amount each grants; a scroll is skipped while the player has a conflicting buff at least as strong. Class buffs come first. Agility, Protection and Strength list no class buffs; Protection stacks with Devotion Aura, Stoneskin and the like.
 	- After the class buffs come every elixir, flask and other consumable buff in ns.ELIXIR_BUFF_IDS and ns.FLASK_BUFF_IDS (Data/{Game}/Elixirs-{Game}.lua) that raises the same stat: a SpellEffect Mod Stat aura (29) for the stat, or a Mod Resistance aura (22) on armor for Protection, at its amount on this build. A buff that raises two stats, such as Elixir of the Sages, is listed under both. Only Elixir of the Mongoose blocking Scroll of Agility is confirmed in game (GitHub issue #3); the rest follow the same rule without an in-game check. That errs toward skipping a scroll that would have stacked rather than building a scroll line that fails on use.
 	- Buff 11328 is the Elixir of Agility's, whose spell is named Deprecated Alchemy Elixir Template; it's listed by the item.

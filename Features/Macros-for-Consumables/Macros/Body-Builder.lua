@@ -65,6 +65,15 @@ local function CorpseBlock(corpseName)
 	return "/cast [dead] " .. corpseName .. "\n"
 end
 
+--[[
+    The Food macro's combat cast (its definition's combatSpell: Troll Rapid
+    Regeneration). Nobody eats in combat, so a press there casts the spell and
+    stops before the eating, or the no-item message, below it.
+]]
+local function CombatBlock(combatName)
+	return "/cast [combat] " .. combatName .. "\n/stopmacro [combat]\n"
+end
+
 -- A press on a corpse with nothing in the bags cast the corpse spell, so it skips the no-item message.
 local function NoItemStop(corpseName)
 	return corpseName and "/stopmacro [dead]\n" or ""
@@ -184,6 +193,10 @@ end
       /cast [dead] <spell>    -- definition.corpseSpell (Forsaken Cannibalize), below the
                                  conjure clicks so they still work; a press that
                                  cannot cast it falls through to the action
+      /cast [combat] <spell>  -- definition.combatSpell (Troll Rapid Regeneration), with
+      /stopmacro [combat]        its stop, so a press in combat casts it and
+                                 eats nothing; the tooltip line then shows the
+                                 spell in combat and the item out of it
       /run GtGFire(<id>)     -- StateWriteLine (macro-fire context for the
                                  zone-error handler); only when an item exists
       /cast [nocombat,dead] <spell>  -- definition.outOfCombatTypeName's best item,
@@ -217,7 +230,7 @@ end
     the one extra that is a convenience rather than a consumable, then stacked
     healthstone lines, then ranked fallback /use lines from the bottom up,
     then the stealth line and the out-of-combat block, then the appended
-    Stealth or Shadowmeld line.
+    Stealth or Shadowmeld line, and last the combat cast.
 ]]
 function ns.BuildStandardBody(
 	definition,
@@ -230,7 +243,8 @@ function ns.BuildStandardBody(
 	outOfCombatStealth,
 	corpseCast,
 	outOfCombatCorpse,
-	leadCast
+	leadCast,
+	combatCast
 )
 	-- A lead cast stands in for the whole action, so a press casts it and nothing else; the conjure clicks still work.
 	if leadCast then
@@ -292,6 +306,13 @@ function ns.BuildStandardBody(
 	if outOfCombatID then
 		tooltipLine = ns.OutOfCombatTooltipLine(itemID or ns.MACRO_DEFAULT_ITEM_IDS[definition.typeName], outOfCombatID)
 			.. "\n"
+	elseif combatCast then
+		-- The spell's icon in combat, so the button shows what a press will do.
+		tooltipLine = "#showtooltip [combat] "
+			.. combatCast
+			.. "; item:"
+			.. (itemID or ns.MACRO_DEFAULT_ITEM_IDS[definition.typeName])
+			.. "\n"
 	elseif corpseCast then
 		-- The spell's icon while the target is dead, so the button shows what a press will do.
 		tooltipLine = "#showtooltip [dead] "
@@ -307,6 +328,9 @@ function ns.BuildStandardBody(
 	end
 	if corpseCast then
 		conjureBlock = conjureBlock .. CorpseBlock(corpseCast)
+	end
+	if combatCast then
+		conjureBlock = conjureBlock .. CombatBlock(combatCast)
 	end
 
 	local appendedBlock = appendText or ""
@@ -327,7 +351,11 @@ function ns.BuildStandardBody(
 			conjureInfo,
 			appendText,
 			outOfCombatID,
-			outOfCombatStealth
+			outOfCombatStealth,
+			nil,
+			nil,
+			nil,
+			combatCast
 		)
 	end
 
@@ -372,10 +400,36 @@ function ns.BuildStandardBody(
 	    the out-of-combat food or water, each by building again without it.
 	]]
 	if #body > ns.MACRO_BODY_MAX_LENGTH and outOfCombatStealth then
-		return ns.BuildStandardBody(definition, itemID, useIDs, stackIDs, conjureInfo, appendText, outOfCombatID, nil)
+		return ns.BuildStandardBody(
+			definition,
+			itemID,
+			useIDs,
+			stackIDs,
+			conjureInfo,
+			appendText,
+			outOfCombatID,
+			nil,
+			nil,
+			nil,
+			nil,
+			combatCast
+		)
 	end
 	if #body > ns.MACRO_BODY_MAX_LENGTH and outOfCombatID then
-		return ns.BuildStandardBody(definition, itemID, useIDs, stackIDs, conjureInfo, appendText, nil, nil)
+		return ns.BuildStandardBody(
+			definition,
+			itemID,
+			useIDs,
+			stackIDs,
+			conjureInfo,
+			appendText,
+			nil,
+			nil,
+			nil,
+			nil,
+			nil,
+			combatCast
+		)
 	end
 
 	--[[
@@ -385,6 +439,23 @@ function ns.BuildStandardBody(
 	    cuts off its end, and the player is told once per macro.
 	]]
 	if #body > ns.MACRO_BODY_MAX_LENGTH and appendText and appendText ~= "" then
+		return ns.BuildStandardBody(
+			definition,
+			itemID,
+			useIDs,
+			stackIDs,
+			conjureInfo,
+			nil,
+			nil,
+			nil,
+			nil,
+			nil,
+			nil,
+			combatCast
+		)
+	end
+	-- Then the combat cast, the last line that is not the consumable itself.
+	if #body > ns.MACRO_BODY_MAX_LENGTH and combatCast then
 		return ns.BuildStandardBody(definition, itemID, useIDs, stackIDs, conjureInfo, nil, nil, nil)
 	end
 	if #body > ns.MACRO_BODY_MAX_LENGTH then
@@ -405,7 +476,7 @@ end
 --[[
     State encoding — captures every input that affects the written body.
     Format:
-      ITEMIDS(+HS:stackIDs)?(_C(_M:mid)?(_R:rid)?(_MR:key)?(_MM:key)?(_NI:key)?)?(_EX:mode)?(_SM|_SE)?(_OOC:id(:S)?(:CN)?)?(_CN)?(_RR)?
+      ITEMIDS(+HS:stackIDs)?(_C(_M:mid)?(_R:rid)?(_MR:key)?(_MM:key)?(_NI:key)?)?(_EX:mode)?(_SM|_SE)?(_OOC:id(:S)?(:CN)?)?(_CN)?(_RR)?(_RC)?
     where ITEMIDS is the single itemID, or a comma-joined ranked list for
     multi-use types so a change in any fallback rank also triggers a
     rewrite. +HS: carries the stacked Healthstone ids (Health Potion's
@@ -415,7 +486,8 @@ end
     Eating line). _OOC:id is the food or water a potion macro uses out of
     combat, with :S added while it stealths as it does and :CN while it
     cannibalizes on a dead target. _CN marks the Food or Water macro's own
-    Cannibalize lines, and _RR the Food macro's Rapid Regeneration body. Mode overrides use their own prefix
+    Cannibalize lines, _RR the Food macro's Rapid Regeneration body, and _RC
+    its combat Rapid Regeneration line. Mode overrides use their own prefix
     ("SCROLLS:...") instead, so the key spaces never collide and a
     transition between modes always triggers a rewrite. Every input that
     affects the body MUST appear in the key — a lossy key causes stale
@@ -432,7 +504,8 @@ function ns.BuildStateKey(
 	outOfCombatStealth,
 	corpseCast,
 	outOfCombatCorpse,
-	leadCast
+	leadCast,
+	combatCast
 )
 	local itemKey = itemID and tostring(itemID) or "none"
 	if useIDs then
@@ -486,6 +559,9 @@ function ns.BuildStateKey(
 	end
 	if leadCast then
 		stateParts[#stateParts + 1] = "RR"
+	end
+	if combatCast then
+		stateParts[#stateParts + 1] = "RC"
 	end
 	return table.concat(stateParts, "_")
 end

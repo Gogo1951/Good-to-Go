@@ -44,7 +44,18 @@ ns.MESSAGE_ID_FILTERED_EVENTS = {
 	UI_ERROR_MESSAGE = 1,
 }
 
--- The counter id a secret id (WoW Forever) folds into, since a secret can't key a table.
+--[[
+    A secret value (WoW Forever) errors when compared, concatenated or used as
+    a table key, so the log never turns one into text. Clients without secret
+    values have no issecretvalue, and every value there is plain.
+]]
+local IsSecretValue = rawget(_G, "issecretvalue")
+
+local function IsPlain(value)
+	return not (IsSecretValue and IsSecretValue(value))
+end
+
+-- The counter id a secret message id folds into, since a secret can't key a table.
 local SECRET_ID = 0
 
 -- The counter id a gated firehose's ignored firings fold into, with the reason as their text.
@@ -57,7 +68,7 @@ end
 
 -- A Rank Watch rank with a higher one above it, the only casts Rank Watch's detection ever acts on.
 local function IsRankWatchReportable(spellID)
-	return ns.IsPlain(spellID) and type(spellID) == "number" and ns.RankWatchReportableLookup(spellID) ~= nil
+	return IsPlain(spellID) and type(spellID) == "number" and ns.RankWatchReportableLookup(spellID) ~= nil
 end
 
 --[[
@@ -117,21 +128,21 @@ local function DecodeRankWatchAuras(unit, updateInfo)
 	if ns.FLAVOR ~= "Camelot" or not RankWatchListening() then
 		return nil
 	end
-	if not ns.IsPlain(unit) or type(unit) ~= "string" or not IsGroupUnit(unit) then
+	if not IsPlain(unit) or type(unit) ~= "string" or not IsGroupUnit(unit) then
 		return nil
 	end
-	if ns.AreAurasSecret() or not ns.IsPlain(updateInfo) or type(updateInfo) ~= "table" then
+	if ns.AreAurasSecret() or not IsPlain(updateInfo) or type(updateInfo) ~= "table" then
 		return nil
 	end
 	local added = updateInfo.addedAuras
-	if not ns.IsPlain(added) or type(added) ~= "table" then
+	if not IsPlain(added) or type(added) ~= "table" then
 		return nil
 	end
 	local found = {}
 	for _, aura in ipairs(added) do
 		if type(aura) == "table" then
 			local spellID, source = aura.spellId, aura.sourceUnit
-			if ns.IsPlain(source) and type(source) == "string" and IsRankWatchReportable(spellID) then
+			if IsPlain(source) and type(source) == "string" and IsRankWatchReportable(spellID) then
 				found[#found + 1] = spellID .. " from " .. source
 			end
 		end
@@ -191,7 +202,7 @@ local GATED_EVENTS = {
 	CHAT_MSG_ADDON = {
 		reason = "another add-on's message",
 		acts = function(prefix)
-			return RankWatchListening() and ns.IsPlain(prefix) and prefix == ns.Data.RANK_WATCH.COMM_PREFIX
+			return RankWatchListening() and IsPlain(prefix) and prefix == ns.Data.RANK_WATCH.COMM_PREFIX
 		end,
 	},
 }
@@ -207,7 +218,7 @@ local GATED_EVENTS = {
 ]]
 local function ConnoisseurCorrelates(event, id, text)
 	if event == "UI_ERROR_MESSAGE" then
-		return ns.IsPlain(text) and (text == ERR_ITEM_WRONG_ZONE or text == SPELL_FAILED_TARGETS_DEAD)
+		return IsPlain(text) and (text == ERR_ITEM_WRONG_ZONE or text == SPELL_FAILED_TARGETS_DEAD)
 	end
 	if event == "GET_ITEM_INFO_RECEIVED" then
 		return ns.HasRawData(id)
@@ -220,19 +231,18 @@ end
 
 --[[
     Folds one uncorrelated firing into its counter: the first-seen text plus a
-    count, rendered as one block at the end of the report. Counters are keyed
-    by event, then id, so one id arriving on two events stays two rows. A
-    secret id counts under SECRET_ID with the text <secret>. Counts only while
-    logging, like ns:LogEventNow.
+    count. Counters are keyed by event, then id, so one id arriving on two
+    events stays two rows. A secret id counts under SECRET_ID with the text
+    <secret>.
 ]]
-function ns:CountUncorrelated(event, id, text)
+local function CountUncorrelated(event, id, text)
 	local suppressed = ns.diagnostics.suppressed
-	if not suppressed or not ns.diagnostics.logging then
+	if not suppressed then
 		return
 	end
-	if not ns.IsPlain(id) then
+	if not IsPlain(id) then
 		id, text = SECRET_ID, "<secret>"
-	elseif not ns.IsPlain(text) then
+	elseif not IsPlain(text) then
 		text = "<secret>"
 	end
 	local counters = suppressed[event]
@@ -267,7 +277,7 @@ function ns:SuppressUncorrelatedMessage(event, ...)
 		if decoded then
 			ns:LogEventNow(event, unpack(decoded, 1, decoded.n))
 		else
-			ns:CountUncorrelated(event, GATED_ID, gated.reason)
+			CountUncorrelated(event, GATED_ID, gated.reason)
 		end
 		return true
 	end
@@ -275,7 +285,7 @@ function ns:SuppressUncorrelatedMessage(event, ...)
 		if gated.acts(...) then
 			return false
 		end
-		ns:CountUncorrelated(event, GATED_ID, gated.reason)
+		CountUncorrelated(event, GATED_ID, gated.reason)
 		return true
 	end
 	local idPosition = ns.MESSAGE_ID_FILTERED_EVENTS[event]
@@ -287,7 +297,7 @@ function ns:SuppressUncorrelatedMessage(event, ...)
 	if select("#", ...) > idPosition then
 		text = select(idPosition + 1, ...)
 	end
-	if ns.IsPlain(messageID) then
+	if IsPlain(messageID) then
 		if type(messageID) ~= "number" then
 			return false
 		end
@@ -299,7 +309,7 @@ function ns:SuppressUncorrelatedMessage(event, ...)
 			return false
 		end
 	end
-	ns:CountUncorrelated(event, messageID, text)
+	CountUncorrelated(event, messageID, text)
 	return true
 end
 
@@ -337,7 +347,7 @@ local function AppendEntry(event, ...)
 			break
 		end
 		local value = select(index, ...)
-		if ns.IsPlain(value) then
+		if IsPlain(value) then
 			local raw = string.sub(tostring(value), 1, EVENT_LOG_MAX_ARG_LENGTH)
 			parts[index] = (raw:gsub("|", "||"))
 		else

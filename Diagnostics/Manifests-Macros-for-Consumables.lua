@@ -49,7 +49,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(C_AddOns) == "table" and type(C_AddOns.EnableAddOn) == "function"
 		end,
 	},
-	-- The options' item lists ask whether a row's item is cached before naming it (Options/Options-Utilities.lua).
+	-- The options' item lists ask whether a row's item is cached before naming it (Options/Options-Item-Lists.lua).
 	{
 		"C_Item.IsItemDataCachedByID",
 		function()
@@ -190,7 +190,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 		end,
 	},
 	--[[
-	    Called by ns.WarmItemCache (Options/Options-Utilities.lua): without it an
+	    Called by ns.WarmItemCache (Options/Options-Item-Lists.lua): without it an
 	    options item list can only show ids the client already cached, so the
 	    rows sit on their loading text until something else pulls the data.
 	]]
@@ -927,8 +927,13 @@ local function AppendCharacter(lines)
 	-- Until the login setup runs, every flag above reads "no" and no macro knows its spells.
 	lines[#lines + 1] = string.format("Character setup run: %s", YesNo(ns.spellCache ~= nil))
 
-	-- The Party, Raid and Solo modes of every when-to-use dropdown read these (ns.IsModeActive).
-	lines[#lines + 1] = string.format("In group: %s // In raid: %s", YesNo(IsInGroup()), YesNo(IsInRaid()))
+	-- Every When to Use's checkboxes read the group context (ns.IsUseWhenActive).
+	lines[#lines + 1] = string.format(
+		"In group: %s // In raid: %s // Group context: %s",
+		YesNo(IsInGroup()),
+		YesNo(IsInRaid()),
+		ns.GetGroupContext()
+	)
 
 	-- Zone-locked and arena-only items read the cached map and the instance type.
 	lines[#lines + 1] = string.format(
@@ -1099,7 +1104,7 @@ end
 
 --[[
     Each ticked scroll type: the best scroll the last scan's bags hold for it,
-    by Scanner-Scrolls.lua's rules (level, class, Ignore List), and the
+    by Scanner-Scrolls.lua's rules (class, Ignore List; never level), and the
     snapshot readings that say whether its buff is already covered -- the
     scroll's own buff, or a conflicting buff at least as large. While aura
     data is restricted the snapshot holds its last reading.
@@ -1110,24 +1115,11 @@ local function AppendScrollTypes(lines, profile)
 	if not (profile.useScrolls and profile.scrollTypes) then
 		return
 	end
-	local _, classToken = UnitClass("player")
-	local playerLevel = ns.cachedPlayerLevel or 1
 	local counts = ns.scannedItemCounts or {}
 	for _, scrollType in ipairs(ns.SCROLL_CHECK_ORDER) do
 		local data = ns.SCROLL_DATA[scrollType]
 		if profile.scrollTypes[scrollType] and data then
-			local bestID, bestAmount
-			for _, entry in ipairs(data.items) do
-				if
-					entry[3] <= playerLevel
-					and (entry[5] == nil or entry[5] == classToken)
-					and not ns.IsIgnored(entry[1])
-					and (counts[entry[1]] or 0) > 0
-				then
-					bestID, bestAmount = entry[1], entry[4]
-					break
-				end
-			end
+			local bestID, bestAmount = ns.FindBestScroll(scrollType, counts)
 			local aura = snapshot.scrolls[scrollType] or {}
 			lines[#lines + 1] = string.format(
 				"  %s: best scroll in bags %s, amount %s // its buff %s // largest conflicting buff %s",
@@ -1141,6 +1133,17 @@ local function AppendScrollTypes(lines, profile)
 	end
 end
 
+-- A When to Use as saved: the contexts ticked, then the level filter.
+local function UseWhenText(profile, prefix)
+	local ticked = {}
+	for _, context in ipairs(ns.GROUP_CONTEXTS) do
+		if ns.IsGroupContextOn(profile[prefix .. "In"], context) then
+			ticked[#ticked + 1] = context
+		end
+	end
+	return (#ticked > 0 and table.concat(ticked, ",") or "none") .. "; " .. tostring(profile[prefix .. "Level"])
+end
+
 local function AppendChoices(lines)
 	local profile = ns.db and ns.db.profile
 	if not profile then
@@ -1151,7 +1154,7 @@ local function AppendChoices(lines)
 	lines[#lines + 1] = string.format(
 		"Buff food: %s (%s) // in force now: %s",
 		OnOff(profile.useBuffFood),
-		tostring(profile.buffFoodMode),
+		UseWhenText(profile, "buffFood"),
 		YesNo(ns.allowBuffFood)
 	)
 
@@ -1169,7 +1172,7 @@ local function AppendChoices(lines)
 	lines[#lines + 1] = string.format(
 		"Conjured first: %s (%s) // in force now: %s",
 		OnOff(profile.useConjuredFirst),
-		tostring(profile.conjuredFirstMode),
+		UseWhenText(profile, "conjuredFirst"),
 		YesNo(ns.allowConjuredFirst)
 	)
 	-- Restock List last reads the list the Restocker has loaded, so it does nothing until that list is in.
@@ -1182,7 +1185,7 @@ local function AppendChoices(lines)
 	lines[#lines + 1] = string.format(
 		"Scrolls: %s (%s) // types: %s // picked now: %s",
 		OnOff(profile.useScrolls),
-		tostring(profile.scrollsMode),
+		UseWhenText(profile, "scrolls"),
 		EnabledKeys(profile.scrollTypes),
 		(ns.scrollOverrideIDs and #ns.scrollOverrideIDs > 0) and table.concat(ns.scrollOverrideIDs, ", ") or "(none)"
 	)
@@ -1191,7 +1194,7 @@ local function AppendChoices(lines)
 	lines[#lines + 1] = string.format(
 		"Pet buff food: %s (%s) // types: %s // tracked now: %s // picked now: %s",
 		OnOff(profile.usePetBuffFood),
-		tostring(profile.petBuffFoodMode),
+		UseWhenText(profile, "petBuffFood"),
 		EnabledKeys(profile.petBuffTypes),
 		YesNo(ns.ShouldTrackPetFood()),
 		tostring(ns.petBuffOverrideID)
@@ -1951,11 +1954,11 @@ function ns:BuildReadinessDiagnosticReport()
 					YesNo(ns.ReadinessAsksManaGem(reports))
 				),
 				string.format(
-					"Well Fed: buff food %s, mode active %s // Scrolls: %s, mode active %s",
+					"Well Fed: buff food %s, When to Use holds %s // Scrolls: %s, When to Use holds %s",
 					OnOff(profile.useBuffFood),
-					YesNo(ns.IsModeActive(profile.buffFoodMode)),
+					YesNo(ns.IsUseWhenActive(profile, "buffFood")),
 					OnOff(profile.useScrolls),
-					YesNo(ns.IsModeActive(profile.scrollsMode))
+					YesNo(ns.IsUseWhenActive(profile, "scrolls"))
 				),
 				-- Any Well Fed aura or pet food buff counts, however little of it is left.
 				string.format(
@@ -2415,6 +2418,7 @@ ns.DIAGNOSTIC_SPELL_ID_CONSTANTS = {
 	"GOBLIN_ENGINEER_SPELL_ID",
 	"MEND_PET_SPELL_ID",
 	"POISONS_SPELL_ID",
+	"RAPID_REGENERATION_SPELL_ID",
 	"REVIVE_PET_SPELL_ID",
 	"SHADOWMELD_SPELL_ID",
 	"SHOOT_SPELL_ID",

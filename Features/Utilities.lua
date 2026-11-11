@@ -324,6 +324,10 @@ end
 ns.ExpandSkillHeader = (C_SkillInfo and C_SkillInfo.ExpandSkillHeader) or ExpandSkillHeader
 ns.CollapseSkillHeader = (C_SkillInfo and C_SkillInfo.CollapseSkillHeader) or CollapseSkillHeader
 
+-- Whether the client keeps professions apart from the spell tabs, readable through GetProfessions.
+ns.READS_PROFESSIONS = (GetProfessions and GetProfessionInfo and C_SpellBook.GetNumSpellBookSkillLines) and true
+	or false
+
 if C_PetInfo and C_PetInfo.GetPetFoodTypes then
 	ns.GetPetFoodTypes = C_PetInfo.GetPetFoodTypes
 else
@@ -654,6 +658,27 @@ function ns.ReadTooltipLines(getter, setter, ...)
 	return lines
 end
 
+--[[
+	The spell ID of a trainer window's service. Forever and Retail hand it over through
+	C_TooltipInfo.GetTrainerService; the Classic engine shows the service on the hidden tooltip and reads
+	the spell back with GetSpell.
+]]
+if C_TooltipInfo and C_TooltipInfo.GetTrainerService then
+	function ns.GetTrainerServiceSpellId(index)
+		local data = C_TooltipInfo.GetTrainerService(index)
+		return data and data.id
+	end
+else
+	function ns.GetTrainerServiceSpellId(index)
+		ns.GetScanTooltip()
+		scanTooltip:SetOwner(WorldFrame, "ANCHOR_NONE")
+		scanTooltip:SetTrainerService(index)
+		local _, spellId = scanTooltip:GetSpell()
+		scanTooltip:Hide()
+		return spellId
+	end
+end
+
 --------------------------------------------------------------------------------
 -- Character Profile Names
 --------------------------------------------------------------------------------
@@ -819,25 +844,44 @@ function ns.IsInPvPInstance()
 end
 
 --------------------------------------------------------------------------------
--- Aura API Compatibility
+-- Group Context
 --------------------------------------------------------------------------------
 
 --[[
-    Duration of a HELPFUL aura on `unit` for `spellId`, or nil when absent. A live
-    buff can legitimately report 0 (no timer), so callers must nil-check the result,
-    not test it for truthiness. 40 is the aura cap the client exposes.
+    Where the player is, for every setting that turns on or off by group: the
+    first of these that holds, as one of ns.GROUP_CONTEXTS.
+      battleground  inside a battleground or an arena, whatever the group
+      raid          in a raid group, home or instance (LFR included)
+      party         in any other group (group finder dungeons included)
+      solo          in no group
+    A battleground's raid is a Battleground, never a Raid. A feature asks
+    ns.IsGroupContextOn rather than reading IsInGroup or IsInRaid to decide
+    when it acts; plumbing that only picks a chat channel or a unit prefix
+    (raid1 or party1) still reads them itself.
 ]]
-function ns.GetBuffDuration(unit, spellId)
-	for i = 1, 40 do
-		local data = C_UnitAuras.GetBuffDataByIndex(unit, i, "HELPFUL")
-		if not data then
-			return nil
-		end
-		if ns.IsPlain(data.spellId) and data.spellId == spellId then
-			return data.duration or 0
-		end
+function ns.GetGroupContext()
+	if ns.IsInPvPInstance() then
+		return "battleground"
 	end
-	return nil
+	if IsInRaid() then
+		return "raid"
+	end
+	if IsInGroup() then
+		return "party"
+	end
+	return "solo"
+end
+
+--[[
+    Whether a setting's { solo, party, raid, battleground } table is ticked for
+    `context`, or for where the player is now. A missing table or entry reads
+    as ticked, the way every such setting starts.
+]]
+function ns.IsGroupContextOn(showIn, context)
+	if type(showIn) ~= "table" then
+		return true
+	end
+	return showIn[context or ns.GetGroupContext()] ~= false
 end
 
 --------------------------------------------------------------------------------

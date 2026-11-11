@@ -3,7 +3,8 @@ local L = ns.L
 
 --[[
     The two lists above the parties are players outside your group: strangers
-    who just buffed you (Return the Favor) and your target. Each player is
+    who just buffed you (Return the Favor) and your target -- who may also be a
+    friendly NPC, for quests that ask you to buff one. Each player is
     listed once, and Target claims them first, so the list you asked for by
     targeting is never the one that loses them.
 
@@ -169,6 +170,10 @@ local function TargetSection(listed)
 	if not ns.db.global.buffWindow.targetEnabled then
 		return nil
 	end
+	-- On WoW Forever a target whose identity is secret can't be asked who they are.
+	if ns.IsUnitIdentitySecret("target") then
+		return nil
+	end
 
 	--[[
 	    A dead target is one row with the resurrection alone: no buff takes on
@@ -188,7 +193,8 @@ local function TargetSection(listed)
 	end
 
 	local isPet = IsOutsiderPet("target")
-	if not isPet and not IsOutsider("target") then
+	local isNPC = not isPet and BuffDuty.CanBuffNPC("target")
+	if not isPet and not isNPC and not IsOutsider("target") then
 		return nil
 	end
 	local guid = UnitGUID("target")
@@ -196,6 +202,15 @@ local function TargetSection(listed)
 		return nil
 	end
 	listed[guid] = true
+
+	-- A friendly NPC (a quest's wounded soldier) is one row of its own, named plainly.
+	if isNPC then
+		local npcRow = BuffDuty.NPCRow("target", "target")
+		if not npcRow then
+			return nil
+		end
+		return { kind = "target", label = L["BUFF_DUTY_TARGET_HEADER"], icons = {}, rows = { npcRow } }
+	end
 
 	--[[
         A targeted pet is one row, named for its owner -- "Valko (Kiib)" -- with

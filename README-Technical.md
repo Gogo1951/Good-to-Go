@@ -43,7 +43,7 @@ Good-to-Go/
 │   │   ├── Buff-Duty-Castable.lua                  Creates ns.BuffDuty; BuildBuffs, RankFor, HasAnythingToOffer
 │   │   ├── Buff-Duty-Events.lua                    Event module, ns.SetBuffDutyEventHandler, subscriptions, safety pause; loads first
 │   │   ├── Buff-Duty-Favors.lua                    Return the Favor memory; combat-log and Forever aura detection
-│   │   ├── Buff-Duty-Frame.lua                     Anchor and content frames, secure icon pool, grids, signature, Hide in Combat
+│   │   ├── Buff-Duty-Frame.lua                     Anchor and content frames, secure icon pool, grids, signature, Hide in Combat, Buff Key tip
 │   │   ├── Buff-Duty-Groups.lua                    Party sections, group icons, member and pet rows
 │   │   ├── Buff-Duty-Icon-State.lua                Icon pool table, swipes and time-left sliver, range ticker, stale dim
 │   │   ├── Buff-Duty-Key-Picker.lua                What the Buff Key casts next
@@ -52,12 +52,12 @@ Good-to-Go/
 │   │   ├── Buff-Duty-Other-Classes.lua             Party-Buffs counts, ask cooldowns, ask and whisper senders
 │   │   ├── Buff-Duty-Outsiders.lua                 Target and Return the Favor sections
 │   │   ├── Buff-Duty-Party-Buffs.lua               Party-Buffs plain icons and their hover menu
-│   │   ├── Buff-Duty-Pets.lua                      Pet rows, owner class, charmed and phase-shift checks
+│   │   ├── Buff-Duty-Pets.lua                      Pet and friendly-NPC rows, pet holds, the NPC buff cycle, owner class, charmed check
 │   │   ├── Buff-Duty-Position.lua                  Position saved by the top-right corner, and its migration
 │   │   ├── Buff-Duty-Resurrections.lua             Resurrection icon and pending suppression
 │   │   ├── Buff-Duty-Self.lua                      Self Buffs section and the Soulstone icon
 │   │   ├── Buff-Duty-Settings.lua                  Seeds and cleans audience, selfRefresh, tankWhen, weapon choices; migrations
-│   │   ├── Buff-Duty-Units.lua                     Who can be buffed, roles, range, labels, SingleIcon
+│   │   ├── Buff-Duty-Units.lua                     Who can be buffed, roles, range, phase shift, labels, SingleIcon
 │   │   ├── Buff-Duty-Weapons.lua                   Enchant reads, layers, imbue landing, weapon rows, REPLACE_ENCHANT accept
 │   │   └── Buff-Duty.lua                           Refresh, ShowsHere, debounce, backstop, per-class switch, setup
 │   ├── Core.lua                                    ns.EVENT_NAMES, the one event frame, replaced and legacy add-ons, database init, prunes, ApplyProfile, welcome
@@ -117,7 +117,6 @@ Good-to-Go/
 │   │   ├── Spellbook-Widgets.lua                   Filter box, dropdown, menu tooltip, ElvUI skin
 │   │   ├── Spellbook-Window.lua                    GoodToGoSpellbookFrame, tabs, fit-to-screen, docking
 │   │   ├── Target-Priority.lua                     The target-priority option
-│   │   ├── Trainer-Lookup.lua                      A trainer service's spell ID
 │   │   ├── Trainer-Recording.lua                   Records class trainer services into the profile
 │   │   ├── Unlearned-Spells.lua                    ns.ForEachUnlearnedSpell
 │   │   ├── Usable-Items.lua                        Equipped Use: items
@@ -129,11 +128,12 @@ Good-to-Go/
 │   │       ├── Whats-Next-Page.lua                 Shared page builder
 │   │       ├── Whats-Next-Pet.lua                  Pet and demon ability rows
 │   │       └── Whats-Next.lua                      Class rows, sources, statuses
+│   ├── Group-Context-Migration.lua                 MIGRATION only: old group settings onto the four checkboxes
 │   ├── Inventory-Report/                           Every character's bags and bank in item tooltips
 │   │   ├── Inventory-Report-Recording.lua          Snapshots and packed format; handlers run by the Restocker module
 │   │   └── Inventory-Report-Tooltip.lua            Tooltip block and its delayed hook
 │   ├── Item-Info.lua                               Session item memo, remembered misses, GET_ITEM_INFO_RECEIVED waiters, hand-built links
-│   ├── Key-Bindings.lua                            Binding header, ns:OpenKeyBindings, General panel binding repaint
+│   ├── Key-Bindings.lua                            Binding section header, ns:OpenKeyBindings, binding repaints
 │   ├── Macros-for-Consumables/                     The consumable macros: scan, rank, compose, write
 │   │   ├── Action-Button-Text.lua                  Macro-name text on action buttons, by font-string alpha
 │   │   ├── Character-Key-Migration.lua             MIGRATION only: Forever characters re-keyed by whole name
@@ -161,12 +161,12 @@ Good-to-Go/
 │   │   │   ├── Tools-Hunters.lua                   Feed Pet macro tiers, dead-pet detection
 │   │   │   ├── Tools-Mages.lua                     Mage conjure resolvers
 │   │   │   ├── Tools-Rogues.lua                    The Poisons macro
-│   │   │   ├── Tools-Troll.lua                     Rapid Regeneration lead cast
+│   │   │   ├── Tools-Troll.lua                     Rapid Regeneration lead cast and combat line
 │   │   │   ├── Tools-Warlocks.lua                  Healthstone and Soulstone resolvers
 │   │   │   ├── Water.lua                           Shadowmeld drinking
 │   │   │   └── Writer.lua                          ns.WriteMacroBody, ns.TryCreateMacro, delete
 │   │   ├── Macros-for-Consumables-Core.lua         Event module, two-flag throttle, combat-guard ordering, profile re-apply
-│   │   ├── Macros-for-Consumables-Utilities.lua    Mode test, max level, Well Fed and First Aid names
+│   │   ├── Macros-for-Consumables-Utilities.lua    When to Use test, max level, Well Fed and First Aid names
 │   │   └── Scanner/                                Bag scan, auras, ranking ladder
 │   │       ├── Scanner-Auras.lua                   Shared aura snapshot, early re-application, baselines, UNIT_AURA
 │   │       ├── Scanner-Character.lua               Class and race flags, spell names, profession ranks
@@ -198,7 +198,8 @@ Good-to-Go/
 │   │   ├── Restocker-Events.lua                    Handler table, WhileEnabled, module dispatcher (Inventory Report's too)
 │   │   ├── Restocker-Inventory-Model.lua           The summary and slots model a scan returns
 │   │   ├── Restocker-List.lua                      Add, remove, undo, New flags, cold-item queues
-│   │   ├── Restocker-Merchant.lua                  Purchase orders, reagent gate, buy loop, delivery report
+│   │   ├── Restocker-Merchant-Report.lua           Delivery wait, the run's report, out-of-gold line
+│   │   ├── Restocker-Merchant.lua                  Purchase orders, reagent gate, buy loop
 │   │   ├── Restocker-Purchase-Space.lua            The bag-space budget a merchant run spends down
 │   │   ├── Restocker-Reminders.lua                 Reminder lines and the in-town arrival reminder
 │   │   ├── Restocker-Saved-Format.lua              One-line row codec, inflated at login, packed at logout
@@ -224,7 +225,7 @@ Good-to-Go/
 │   │   ├── Restocker-Window-Rows.lua               Pooled rows: Keep box, toggle cells, remove
 │   │   ├── Restocker-Window-Widgets.lua            CloseRestockMenus, cursor drop-add, tooltips
 │   │   └── Restocker-Window.lua                    Window build, geometry, show, hide, toggle
-│   └── Utilities.lua                               Colors, client-difference accessors, secret-value tests, character names and keys, spell links
+│   └── Utilities.lua                               Colors, client-difference accessors, secret-value tests, group context, character names and keys, spell links
 ├── Good-to-Go_Camelot.toc                          WoW Forever
 ├── Good-to-Go_Mists.toc                            Mists of Pandaria Classic
 ├── Good-to-Go_TBC.toc                              TBC Anniversary
@@ -240,10 +241,13 @@ Good-to-Go/
 │   ├── Enhanced-Spellbook/                         Switch, tooltip ranks, Delete Macros
 │   ├── Inventory-Report/                           Switch and Recorded Characters
 │   ├── Macros-for-Consumables/                     Consumable Macros, Class & Race, Ignore List
+│   ├── Options-Feature-Switches.lua                FEATURE_SWITCHES, ns.FEATURE_GROUPS, toggle pairs
 │   ├── Options-Feedback-Support.lua                Level Up note, links, version line
 │   ├── Options-General.lua                         Root panel: welcome, mini-map, feature switches, key bindings, /Commands
+│   ├── Options-Item-Lists.lua                      Item-cache warming, failedItemIDs, ns.BuildItemListOptions
 │   ├── Options-Profiles.lua                        Stock AceDBOptions table with the migration's noDefaultProfiles
-│   ├── Options-Utilities.lua                       Row builders, FEATURE_SWITCHES, item lists, item-cache warming, custom widgets
+│   ├── Options-Utilities.lua                       Row builders, Example lines, group context checkboxes, LEVEL_FILTER_VALUES, panel helpers
+│   ├── Options-Widgets.lua                         Custom AceGUI widgets: item link row, icon checkbox
 │   ├── Options.lua                                 Registration and tree order, ns:OpenOptionsPanel and its combat guard, slash commands
 │   ├── Rank-Watch/                                 Rank Watch, Tracked Abilities and Ignored Players; no Mists TOC loads it
 │   ├── Readiness-Report/                           Readiness switches built from SECTIONS; Reset
@@ -252,9 +256,13 @@ Good-to-Go/
 ├── README-Technical.md                             This document
 ├── README-Testing.md                               Manual test plan
 ├── README.md                                       Player documentation
-└── Tools/                                          Rank Watch data builders; .pkgmeta keeps them out of the zip
+└── Tools/                                          Data builders and checks; .pkgmeta keeps them out of the zip
     ├── Build-Rank-Watch-Abilities.py               Merges Rank Sentinel onto Rank-Watch-Abilities-{Game}.lua; the file's rows win
-    └── Build-Rank-Watch-Pet-Abilities.py           Writes Rank-Watch-Pet-Abilities-{Game}.lua; Camelot only with --wago
+    ├── Build-Rank-Watch-Pet-Abilities.py           Writes Rank-Watch-Pet-Abilities-{Game}.lua; Camelot only with --wago
+    ├── Check-Scroll-Conflicts.py                   Diffs Scrolls-{Game}.lua conflictSpells against wago.tools stat auras; writes nothing to Data
+    ├── Group-Context-Rules.html                    Design page for the group context checkboxes; the code wins where they differ
+    ├── Scroll-Conflicts-Report.md                  Its generated per-flavor report
+    └── Scroll-Conflicts-Review.md                  Findings, stacking research and in-game tests for that report
 ```
 
 ## Architecture
@@ -296,6 +304,18 @@ Good-to-Go/
 | Restocker | None per event; a 1 s literal guard against a doubled `MERCHANT_SHOW`; a ping-paced OnUpdate for the bank run |
 | Rank Watch (Forever) | `METER_POLL` damage-meter poll out of combat and after it |
 
+### Group Contexts
+
+Every setting that turns a feature on or off by group follows the same rules.
+
+- **One answer.** `ns.GetGroupContext()` returns one of `ns.GROUP_CONTEXTS`, the first that holds of `battleground` (`ns.IsInPvPInstance`: a battleground or an arena, whatever the group), `raid`, `party`, `solo`. A battleground's raid is a Battleground, never a Raid. Instance groups count like home groups.
+- **One shape.** A setting saves `{ solo, party, raid, battleground }` booleans, all `true` by default, read through `ns.IsGroupContextOn(table)`. A missing table or entry reads as ticked.
+- **One control.** Four checkboxes in that order with the shared `GROUP_CONTEXT_*` labels and hover text: `ns.OptionsGroupContextRow` (a sub-option row) or `ns.OptionsGroupContextToggle` (one box, for a row that carries more). `ns.OptionsGroupContextNone` adds the red line shown while none is ticked.
+- **Extra filters narrow, never replace.** Buff Duty's Anywhere / In Instance (`showWhere`, no Battleground entry) and the consumables' level filter (`<prefix>Level`, `ns.LEVEL_FILTER_ORDER`) can only switch off a ticked context.
+- **Who uses it.** Buff Duty's When to Show (`buffWindow.showIn`, `BuffDuty.ShowsHere`); every consumable's When to Use (`<prefix>In` + `<prefix>Level`, `ns.IsUseWhenActive(settings, prefix)` for `buffFood`, `scrolls`, `petBuffFood`, `conjuredFirst`); Count as Tanks' When Solo. Plumbing that only picks a chat channel or a unit prefix reads `IsInRaid` / `IsInGroup` itself.
+- **Change detection.** `ns.GroupSignatureChanged` diffs the context itself, so entering or leaving a battleground rescans the macros. Buff Duty re-checks on `GROUP_ROSTER_UPDATE` and every `PLAYER_ENTERING_WORLD`.
+- **A ticked box that can't work says so.** Where the game hides auras (`ns.AreAurasSecret()`, Forever in places such as battlegrounds), Buff Duty prints `BUFF_DUTY_AURAS_HIDDEN` once a session (`ns.WarnOnce`) when When to Show would otherwise show the window.
+
 ### Combat Lockdown
 
 - **Refuse, never queue.** `ns:OpenOptionsPanel` is the one gate for `/gtg`, `/restock config` and Shift + Middle-Click. `ns:OpenKeyBindings` refuses the same way with `CHAT_KEY_BINDINGS_IN_COMBAT`.
@@ -307,7 +327,7 @@ Good-to-Go/
 - **The Enhanced Spellbook defers syncs and refuses actions.**
   - `ns.SyncAllMacros` in combat calls `ns.QueueMacroSync`; `ns:OnPlayerRegenEnabled` (`Macro-Sync.lua`) runs `RefreshMacros`.
   - `ns.PickupMacro`, the three deletes and `ns.StartSpellPick` refuse with `ERR_NOT_IN_COMBAT`.
-  - Dynamic Rank, tooltip ranks, `CloseGameSpellbook` and the binding migration skip silently.
+  - Tooltip ranks, `CloseGameSpellbook` and the binding migration skip silently. Dynamic Rank skips too, and `ns:OnPlayerRegenEnabled` catches every macro up (`ns.QueueRankRewriteAll`), since the target or mouseover may have changed meanwhile.
   - `PLAYER_REGEN_DISABLED` runs `ns.RewriteRanksBeforeCombat`, the last moment Dynamic Rank macros can change, and cancels spell pick.
 - **Buff Duty's buttons are secure.**
   - Refresh, render, hide, the settings apply and drag-start all refuse. A settings change queues behind `settingsPending`.
@@ -322,7 +342,7 @@ Good-to-Go/
 
 - **Session memo** (`ns.GetItemData`, `Features/Item-Info.lua`). It is keyed by whatever the caller asked with (an ID on hot paths, a link at a merchant) and thrown away at logout.
   - `ns.GetItemHyperlink` builds a white `|Hitem:ID|h[name]|h` link by hand while the item is cold, which the client resolves on hover.
-  - `failedItemIDs` (`Options-Utilities.lua`) keeps IDs the server refused, so they are never requested again.
+  - `failedItemIDs` (`Options-Item-Lists.lua`) keeps IDs the server refused, so they are never requested again.
 - **Waiters.** `ns.RequestItemInfoEvents(key)` and `ns.ReleaseItemInfoEvents(key)` are keyed, not counted. `GET_ITEM_INFO_RECEIVED` floods at login, so it stays registered only while a waiter exists.
   - Keys: `"scan"` (consumable retry), `"restocker"`, `"options:<registryName>"` through `ns.WarmItemCache`, and the Staples window's own key.
   - Answers fan out in order: `ns.OnRestockerItemInfoReceived`, then `ns.OnOptionsItemInfoReceived`, then `ns.OnConsumableItemInfoReceived`. The last rebuilds only when `ns.HasRawData`.
@@ -380,7 +400,7 @@ Good-to-Go/
    - Selection tables build lazily on the first scan, because definitions register after the scanner loads. Winners publish as `ns.bestSelection`.
 3. **Compose.**
    - With `macrosEnabled` off the scan still runs (plus `ns.ScanPetFood` and the mini-map icon), because the Readiness Report and the mini-map read it. Nothing is created, rewritten or deleted.
-   - Per standard definition: delete the macro if its `enabledMacros` entry is off. Otherwise run, in order: `modifyItem`; `corpseSpell` / `leadSpell`; ranked `useIDs` (types in `ns.MULTI_USE_MACRO_TYPES` only); `getStackIDs`; the `outOfCombatTypeName` item behind `potionsUseFoodAndWater`; `ns.BuildDruidMacroOverride`; `buildModeOverride`.
+   - Per standard definition: delete the macro if its `enabledMacros` entry is off. Otherwise run, in order: `modifyItem`; `corpseSpell` / `leadSpell` / `combatSpell` (each only while the body uses the scanned pick); ranked `useIDs` (types in `ns.MULTI_USE_MACRO_TYPES` only); `getStackIDs`; the `outOfCombatTypeName` item behind `potionsUseFoodAndWater`; `ns.BuildDruidMacroOverride`; `buildModeOverride`.
    - The body is the first of: the mode body, the class (DruidMacroHelper) body, the standard body (`Body-Builder.lua`).
    - Custom definitions run afterward with their own state: Feed Pet (`Tools-Hunters.lua`, `currentPetFoodState`) and Poisons (`Tools-Rogues.lua`, `currentPoisonState`).
 4. **Write** (`Macros/Writer.lua`). `ns.WriteMacroBody` is the one writer.
@@ -397,19 +417,21 @@ Good-to-Go/
 
 ```
 #showtooltip item:<id>
-<conjure block>
+<conjure block>   (then /cast [dead] corpse spell, /cast [combat] combat spell + /stopmacro [combat])
 /run GtGFire(<id>[,<oocID>])
 <OOC block>
 /use item:<id>   (up to ns.MULTI_USE_MAX_ITEMS ranked lines)
 ```
 
   With nothing in bags the item line becomes `/run GtGNoItem("<type>"[,1])`, or a `GtGTip` when the class can conjure one.
-- **Byte trims** against `ns.MACRO_BODY_MAX_LENGTH`, in order: Cannibalize lines, stacked healthstones, ranked fallbacks from the bottom (never rank 1), out-of-combat stealth, the out-of-combat block, the appended line. A body still too long is written anyway, with one `ns.WarnOnce` per macro. DruidMacroHelper trims its own `/use` lines, stealth and OOC block, then falls back to the standard body. Feed Pet sheds Dismiss, then Revive.
+- **Byte trims** against `ns.MACRO_BODY_MAX_LENGTH`, in order: Cannibalize lines, stacked healthstones, ranked fallbacks from the bottom (never rank 1), out-of-combat stealth, the out-of-combat block, the appended line, the combat cast. Each trim rebuilds through `ns.BuildStandardBody` with that input dropped. A body still too long is written anyway, with one `ns.WarnOnce` per macro. DruidMacroHelper trims its own `/use` lines, stealth and OOC block, then falls back to the standard body. Feed Pet sheds Dismiss, then Revive.
 - **Multi-use macros** fall through to the next ranked item once the best runs out mid-combat, where the macro can't be rewritten. That is safe only because every item in those types shares one cooldown.
 - **`enabledMacros` is account-wide while the choices are per-character.** The macros live in the shared General tab, so which ones exist is one choice for the account; a character switch only rewrites bodies.
 - **Conjures** (`ns.GetSmartSpell`): the rank is pinned with `C_Spell.GetSpellSubtext` when the data row carries one. Food, Water and Healthstone downrank for a low-level friendly target; Mana Gem, Soulstone, Refreshment Table and Soulwell ignore the target. Healthstone and Mana Gem skip a tier already carried (`checkUnique`).
 - **Arenas** are detected live (`IsInInstance`), never by zone list.
 - **On Forever** scrolls trigger the GCD, so the scroll body fires one scroll per press.
+- **Scrolls: required level orders, never gates.** `ns.FindBestScroll` (`Scanner-Scrolls.lua`, shared with Diagnostics) takes the first carried scroll in the level-sorted list; only class and the Ignore List skip one. A scroll in the bags is meant to be read.
+- **Troll Rapid Regeneration** (`Tools-Troll.lua`). Out of combat it is a `leadSpell` that replaces the action while off cooldown (`ns.RapidRegenerationCast`). In combat, where nobody eats and the macro can't be rewritten, every Food body that eats its own pick or reads scrolls carries `/cast [combat]` + `/stopmacro [combat]` ahead of the food (`combatSpell`, `ns.RapidRegenerationCombatCast`), cooldown or not; the pet-food override body doesn't. State key flags `_RR` and `_RC`, and `:RC` on the `SCROLLS:` key.
 - **DruidMacroHelper's return form** is a setting, not tracked: a macro can't be rewritten after a mid-combat form change.
 
 **Macro runtime globals.** Macro `/run` lines can't see `ns`, so these are globals with short names:
@@ -476,13 +498,14 @@ The feature is "Restocker"; its window is the Restock List; its starter popup is
 - Every field is always written. Data starts at the first numeric field, and the leading name is a label that is never read back; `ns.RefreshRestockItemName` supplies the live name.
 - `buy` and `upgrade` are nil-means-on, `buyExtra` nil-means-off. A new field is a new trailing field with its own default.
 
-#### Merchant (`Restocker-Merchant.lua`)
+#### Merchant (`Restocker-Merchant.lua`, `-Merchant-Report.lua`)
 
 - On `MERCHANT_SHOW` (Shift skips), `RestockFromMerchant` builds the poison reagent order and gates it all-or-nothing (`VendorStocksAllReagents`), since half a recipe crafts nothing.
 - It then builds one order per Buy row, counting bags by item ID only, gated by the vendor's reaction (`UnitReaction("npc")`).
 - The budget is `GetMoney()` less the Gold Reserve, plus a `ns.NewBagSpace` snapshot (`Restocker-Purchase-Space.lua`), which fills partial stacks, then a matching specialty bag, then a general bag. Both are spent down locally, because nothing changes until the server answers.
 - `PurchaseMerchantItem` buys in stack-sized chunks, skips extended-cost slots, caps at a limited slot's stock, and lets Buy Extra take a limited slot's whole stock. It never sells.
-- The report waits for delivery: the run parks as `pendingRun` until `ns.SettleMerchantBuys` on `BAG_UPDATE_DELAYED` or `BUY_SETTLE_TIMEOUT`, and counts units delivered, not units sent. The close reminder waits behind it (`ns.AfterMerchantBuysLand`).
+- The report waits for delivery (`Restocker-Merchant-Report.lua`): `ns.AwaitMerchantRun` parks the run as `pendingRun` until `ns.SettleMerchantBuys` on `BAG_UPDATE_DELAYED` or `BUY_SETTLE_TIMEOUT`, and counts units delivered, not units sent. A new run first reports any pending one (`ns.ReportPendingMerchantRun`). The close reminder waits behind it (`ns.AfterMerchantBuysLand`).
+- Switching lists at an open merchant buys for the new list at once through `ns.ResetMerchantRestockThrottle` + `ns.RestockFromMerchant`, not `ns.OnRestockerMerchantShow`, whose doubled-`MERCHANT_SHOW` throttle and Shift check would swallow it.
 - `ns.merchantIsOpen` is the hard gate the bank run reads. `ns.REPUTATION_STANDINGS` discounts are labels only; the reaction gate is the only enforcement.
 
 #### Bank Run (`Restocker-Bank-State.lua`, `-Bank-Visit.lua`, `-Bank-Moves.lua`, `-Bank-Tidy.lua`, `-Bags.lua`)
@@ -490,13 +513,13 @@ The feature is "Restocker"; its window is the Restock List; its starter popup is
 - On `BANKFRAME_OPENED` (Shift or an empty list skips), `ns.StartRestockBankRun` reloads the bank bags every time (`ns.LoadRestockBankBags`; on Forever, the `C_Bank` tabs the player bought) and starts a coroutine.
 - An OnUpdate ticks at `ComputeUpdateInterval()`: 3× the higher ping with a floor, both literals.
 - Each step of `RunRestockLogic`:
-  1. Aborts while `ns.merchantIsOpen`.
+  1. Aborts while `ns.merchantIsOpen`. Reloads the bank bags while the run holds none: Forever's tab list can still be empty when the bank opens.
   2. Rescans. A foreign item on the cursor is waited out for `MAX_STUCK_STEPS`, then cleared.
   3. Waits up to `MAX_INFLIGHT_STEPS` while a bag-plus-bank total has dropped (a move in flight). Also waits while any list item is locked.
-  4. Stops with `StuckMessage` after `MAX_STUCK_STEPS` with no fall in remaining work.
+  4. Stops with `StuckMessage` after `MAX_STUCK_STEPS` with remaining work unchanged. Work that grew counts as change, not a stall: late-arriving bank contents, or an overshoot adding stash work.
   5. Makes one move: stash first if the bank has a free general slot, else pull first.
   6. Never finishes inside `BANK_SETTLE_DELAY`, since the bank may still read empty.
-- Keep amounts freeze per run (`RestockState:Wanted`). Enter in a Keep box restarts the run.
+- Keep amounts freeze per run (`RestockState:Wanted`). Reopening the bank, Enter in a Keep box or switching lists restarts the run (`ns.StartRestockBankRun`).
 - After a stuck step, a pull overshoots with a whole stack, and the excess is stashed back even without Store (`overshotItems`).
 - Placement always names an empty slot (`BagDefinition:PutCursorItem`), and every path ends in `ClearCursor()`.
 - The tidy phase merges partial stacks within the bags, then within the bank, never across, until `CountRestockPartialStacks` stops falling. `RESTOCKER_COMPLETE` prints only if something moved.
@@ -504,7 +527,7 @@ The feature is "Restocker"; its window is the Restock List; its starter popup is
 
 #### Shortfall, Reminders, Upgrades
 
-- `ns.BuildGroceryList` (`Restocker-Shortfall.lua`) is the one source for the mini-map report, every reminder and the footer. It counts bags only, includes Buy rows only and leaves out reagents. `ns.IsRestockItemShort` drives the Keep mark.
+- `ns.BuildGroceryList` (`Restocker-Shortfall.lua`) is the one source for the mini-map report, every reminder and the footer's tooltip; the footer's count is `ns.CountRestockOrders`, by the same rules. It counts bags only, includes Buy rows only and leaves out reagents. `ns.IsRestockItemShort` drives the Keep mark.
 - Town reminder (`Restocker-Reminders.lua`): fires on a not-resting to resting edge (a taxi forces not-resting), with `REMINDER_COOLDOWN`, `ARRIVAL_SETTLE_DELAY` and `LOGIN_SETTLE_DELAY`. A `/reload` seeds silently (`ns.ArmRestockerReminders`). The sound is `ns.RESTOCK_ALERT_SOUND`. Close reminders wait `SETTLE_DELAY`; the bank reminder fires only if that visit's run started.
 - Upgrades (`Restocker-Upgrade.lua`): `ns.CONSUMABLE_UPGRADE_CHAINS`, sorted by rank at load. A row moves only forward to the best tier at or below the level; merging into an existing row sums amounts. They run on `PLAYER_LEVEL_UP` with the event's level and as a catch-up on `PLAYER_ENTERING_WORLD`. A cold target parks as `pendingUpgrade`.
 
@@ -529,6 +552,7 @@ The feature is "Restocker"; its window is the Restock List; its starter popup is
 - Every automated line is `{rt1} body // GtG`, built by `SignOff`. `ns:BuildWhisperMessage` (Rank Watch, whispered Buff Duty asks) and `ns:BuildAnnounceMessage` (Buff Duty's group ask) wrap it.
 - `MarkerPrefix` drops `ns.TARGET_MARKER` from non-whispers on Forever, which blocks raid-marker tokens in group chat.
 - `TrimSentBody` trims closing punctuation as whole UTF-8 sequences (`CLOSING_MARKS`) and drops leading `¡ ¿` (`OPENING_MARKS`). Bodies carry links, so pipes stay.
+- Senders: `ns:Announce(channel, target, formatKey, ...)` is the one entry for a line built from a locale key (format, sign-off, deliver). A line already built, and measured, goes through `ns:SayBuffRequest` (group) or `ns:QueueAutomatedWhisper`.
 - Whispers queue `WHISPER_GAP` apart (`QueueWhisper`); an empty queue sends at once. Group channel: `ns:GetGroupChatChannel`.
 - `ns:BuildBuffRequestMessage` names up to `ASK_MAX_NAMES` players, else counts them.
 - `ResolvePlurals` resolves the client's `|4` plural escapes, but only inside `ns.FormatDuration`. Nothing on the send path resolves them.
@@ -538,20 +562,24 @@ The feature is "Restocker"; its window is the Restock List; its starter popup is
 #### Events and Flow
 
 - Module `BuffDuty`. Each event has one handler, set through `ns.SetBuffDutyEventHandler` (`Buff-Duty-Events.lua`).
-- `PLAYER_LOGIN`, `PLAYER_ENTERING_WORLD` and the regen events are always on. `WINDOW_EVENTS` subscribe only while `ns.IsBuffDutyOnForClass()` (`ns.UpdateBuffDutyEvents`), which also runs the backstop.
+- **Two predicates.** `ns.IsBuffDutyTrackingForClass()` is the switch plus your class ticked; `ns.IsBuffDutyOnForClass()` adds "window not closed this session". `WINDOW_EVENTS` (`ns.UpdateBuffDutyEvents`), the backstop, the aura handler and the Buff Key follow Tracking, so a closed window still keeps fresh auras for the key. Only `Refresh` and the mini-map button gate on OnForClass.
+- `PLAYER_LOGIN`, `PLAYER_ENTERING_WORLD` and the regen events are always on. `UPDATE_BINDINGS` reaches Buff Duty through the `KeyBindings` module (`Features/Key-Bindings.lua`), which calls `ns.RequestBuffDutyRefresh` for the Buff Key tip.
 - `UNIT_AURA` is unfiltered: nameplate units arrive and are dropped by string in `ns.OnBuffDutyUnitAura`.
 - `Data.SAFETY_PAUSE` after every `PLAYER_ENTERING_WORLD` (`StartSafetyPause`, token-voided, read by `ns.IsBuffDutyReady`) gates resurrect and favor detection.
 - `ns.SetupBuffDuty` runs once at login: `BuildLookup` (drops IDs the client lacks), `BuildCategories`, `PopulateBuffDutyAudience`, `BuildBuffs`, the frame, the settings apply, `ns.MigrateBuffKeys`.
-- `Refresh` hides the window while the switch is off, nothing is on offer, `ns.AreAurasSecret()`, or `ShowsHere` fails. Otherwise:
+- `Refresh` hides the window while `ns.IsBuffDutyOnForClass()` fails, nothing is on offer, or `ShowsHere` fails (Group Contexts, above). It also hides while `ns.AreAurasSecret()`, printing `BUFF_DUTY_AURAS_HIDDEN` once a session. Otherwise:
   1. `BuffDuty.BuildSections`: Self (self buffs, Soulstone, weapons), Target then Return the Favor (Target claims a GUID first), then one section per subgroup and pets.
   2. Party-Buffs.
   3. `ns.RenderBuffDuty`.
+- Build and render each run under `xpcall(…, geterrorhandler())`: an error hides the window instead of leaving the last one up, whose buttons would cast at whoever `target` names now. The error still reaches BugSack and the like.
+- **Target change** out of combat: `ns.DropBuffDutyTargetIcons` strips and hides every icon aimed at `target` / `targetpet`, then `Refresh` runs at once rather than after `REFRESH_DELAY`, so no click lands on the new target with the old target's buff. In combat it only dims (Combat Lockdown).
 - Sections are plain tables; only `Buff-Duty-Frame.lua` draws. The redraw is skipped when `Signature()` is unchanged. A `held` layout keeps the width stable until the roster key changes.
+- **Buff Key tip**: while `ns.BUFF_KEY_COMMAND` has no key, the window's last line (after a blank row) points at Key Bindings (`KeyHintText`, `BUFF_DUTY_KEY_HINT`). It wraps to the window's width, never widens it, and joins the signature (`|?keyHint`) so binding a key redraws.
 
 #### The Window and Casting
 
 - Two frames: `anchor` on `UIParent`, owned by the Hide in Combat driver, and `content` inside it. Icons are pooled `SecureActionButtonTemplate` buttons.
-- The close button runs `ns.CloseBuffDuty` (off for this class only); the template's click would hide a protected parent. The title uses the Short Name (README-Notes).
+- The close button runs `ns.CloseBuffDuty`, which hides the window for the rest of the session through an unsaved flag in `ns.IsBuffDutyOnForClass`, while tracking and the Buff Key carry on; the template's click would hide a protected parent. A login or reload, or anything that turns Buff Duty on (`ns.SetBuffDutyOn(true)`, so the mini-map button too, or ticking your own class), clears it. Only the Classes checkboxes save a class as off. The title uses the Short Name (README-Notes).
 - `ns.SetBuffButtonAttributes` writes every key, nil included, on every use, because buttons are pooled. Only `type1` is set, so right-click dismisses a favor instead of casting.
 - Spells cast by rank text, `Name(Rank N)` from `C_Spell.GetSpellSubtext`: on Classic Era a lower rank's ID casts nothing, and a bare group-buff name casts Rank 1. Resurrections and Create Soulstone cast by bare name, since each tier is its own spell. Weapon items use `item` + `target-slot`.
 - An outsider out of sight gets `/cleartarget` / `/targetexact NAME` / `/cast [help] Name(Rank N)`.
@@ -566,14 +594,20 @@ The feature is "Restocker"; its window is the Restock List; its starter popup is
 #### Who Gets What
 
 - `RoleOf` checks, in order: the Main Tank mark, the assigned role (tank only outside a raid), the player's own LFG roles, `tankWhen[class]`.
+- On Forever (Camelot) pets are never listed: `CanBuffPet` returns false, since pets take their owner's buffs there, and the Count as Tanks Pets row is hidden.
 - Pets take `ALL` buffs, plus `TANK` per `tankWhen.PET`, never `HEALER`. `manaOnly` is judged by the pet's power type. Charmed or phase-shifted pets are skipped, and so are pets out of sight (`UnitIsVisible`), ones `UnitCanAssist` refuses, ones whose identity is secret on Forever, and ones with any unreadable aura (`BuffDuty.AurasReadable`); only a readable "no" skips.
+- **Friendly NPCs** (a quest's wounded soldier) get the Target section's row (`BuffDuty.NPCRow`, gated by `BuffDuty.CanBuffNPC`): not a player or a pet, alive, in sight, assistable, identity readable. The whole Target section is skipped while the target's identity is secret on Forever.
+  - **A cycle, not aura reads.** Quests want the same buff cast again and again, and an NPC's auras say little. `cycled[guid]` records each buff cast on it (`BuffDuty.NoteNPCCast`, from `ns.OnBuffCastSucceeded` when the attempt was `isNPC`: not a player and not player-controlled). The row offers what this round hasn't had, and starts over once all are cast.
+  - A refusal still holds that buff while the NPC is around, as for a pet. `BuffDuty.PrunePetHolds` drops cycles and holds on unwatched GUIDs alike.
+  - The row carries `npc = true`, and the Buff Key casts it after everyone else.
 - Pet holds (`Buff-Duty-Pets.lua`): a cast the window or key aimed at a pet that goes off (`ns.OnBuffCastSucceeded`) holds that buff for your cast's learned duration (`BuffDuty.MyDuration`, else `PET_HOLD_FALLBACK`) less the refresh time; a bad-target refusal (`PET_REFUSALS`) holds it while the pet stays around. `Has` agreeing clears a hold; `PruneAuraCache` drops holds on GUIDs no longer watched.
 - `ns.IsBuffInRange` tries spell range, then `UnitIsVisible`, then `UnitInRange`. An unknown or secret answer reads as in range.
 
 #### Buff Key (`Buff-Duty-Keys.lua`, `Buff-Duty-Key-Picker.lua`)
 
 - A hidden `GtGBuffKey` secure button bound to `ns.BUFF_KEY_COMMAND`, because a slash command can't cast. PreClick picks a spec and writes attributes, the template casts, PostClick clears them. The up half reuses the down pick within `PRESS_REUSE_SECONDS`.
-- Candidate order: dead target, group dead, favors, target, self, parties (target's subgroup first).
+- Candidate order: dead target, group dead, favors, target, self, parties (target's subgroup first), then a targeted NPC's row last, since its cycle never ends and would otherwise keep the key from reaching the group.
+- With nothing to cast, PreClick shows why in a UI notice: waiting on someone, off (Tracking fails), auras hidden (`BUFF_DUTY_AURAS_HIDDEN`), or done.
 - `GroupChoices` takes the group version when it is cheaper by mana, when a member can take no single rank, or when costs are unknown and it reaches two or more. A group buff waits until every member is in sight.
 - Weapon icons and `hasCooldown` icons (using a soulstone) are never picked; Create Soulstone is.
 - Skip memory: `BUFF_SKIP_SECONDS`, `RESURRECTION_SKIP_SECONDS`, `FAVOR_RETRY_SECONDS`.
@@ -657,8 +691,9 @@ The standalone Rank Sentinel add-on, brought home. It reports a spell cast at a 
 
 #### Macros per Spell
 
-- **Settings keys** (`Macro-Options.lua`): the Rank 1 ID (`BaseSpellID`), `id#n` for a Duplicate, `id@rankID` for a rank copy, `consumable:<type>` for a Consumable Macros tile. A key survives rank-ups and locale changes.
+- **Settings keys** (`Macro-Options.lua`): the Rank 1 ID (`BaseSpellID`, which prefers `ranks.baseID` from `ReadSpellbook`), `id#n` for a Duplicate, `id@rankID` for a rank copy, `consumable:<type>` for a Consumable Macros tile. A key survives rank-ups and locale changes.
 - An option is stored only where it differs from its kind default (`SetOption`). Choices of one are stored whole, and `kindDefaults` values are stored as true or false, never nil.
+- **Icons** (`ns.WowMacroIcon`): the question mark, so `#showtooltip` picks the spell's icon. A profession's macro is written with its tile's icon instead, because Forever resolves a profession's name to the wrong icon; the sync sets that icon on existing macros too and leaves every other macro's icon to the player.
 - **Names**: `ns.MACRO_NAME_PREFIX` plus the name trimmed to `ns.MACRO_NAME_MAX_LENGTH` by `ns.TrimMacroName`, which never splits a UTF-8 character. The suffixes come from the locale (`MACRO_NAME_FOCUS_SUFFIX`, `MACRO_NAME_RANK_SUFFIX`).
 - **Kinds**: `ns.MACRO_KINDS` / `ns.MacroKind` (`Macro-Kinds.lua`) decide the offered options (`OFFERED`) and defaults (`ns.DEFAULTABLE_OPTIONS`).
 - **Body order** (`Macro-Body.lua`):
@@ -672,7 +707,7 @@ The standalone Rank Sentinel add-on, brought home. It reports a spell cast at a 
 
   Shape: `/cast [mod:shift] Frost Nova; [@mouseover,harm,nodead][] Fireball` then `#a7`.
 - Limits: `ns.CONDITIONALS_MAX_ROWS`, `ns.CONDITIONALS_MAX_CONDITIONS`, `ns.CAST_SEQUENCE_MAX_STEPS`. `oncePerCombat` / `oncePerTarget` become a `/castsequence reset=… X, NULL`.
-- **Dynamic Rank** (`RankFor`, `RANK_LEVEL_GAP`) writes the highest rank fit for the target's level. It rewrites only while such a macro is on a bar (`PlacedRankMacros`), and never in combat. Mouseover leaving fires no event, so it is polled. Secret units fall back to the top rank.
+- **Dynamic Rank** (`RankFor`, `RANK_LEVEL_GAP`) writes the highest rank fit for the target's level. It rewrites only while such a macro is on a bar (`PlacedRankMacros`), and never in combat; `PLAYER_REGEN_ENABLED` catches up every one (`ns.QueueRankRewriteAll`). Mouseover leaving fires no event, so it is polled, and a mouseover whose identity is secret (Forever, in combat) counts as gone. Secret units fall back to the top rank.
 
 #### Tags and Ownership (`Macro-Tags.lua`, `Macro-Lookup.lua`, `Macro-Delete.lua`)
 
@@ -686,7 +721,7 @@ The standalone Rank Sentinel add-on, brought home. It reports a spell cast at a 
 #### Ranks, Trainers, What's Next
 
 - Ranks exist where `ns.HAS_SPELL_RANKS` (not Mists).
-- Learn levels come, in order, from `ns.ClassTrainerRows` (filtered by faction and race), then `profile.trainerSpells[class]` (recorded at class trainers by `Trainer-Recording.lua`), then `C_Spell.GetSpellLevelLearned`.
+- Learn levels come, in order, from `ns.ClassTrainerRows` (filtered by faction and race), then `profile.trainerSpells[class]` (recorded at class trainers by `Trainer-Recording.lua` through `ns.GetTrainerServiceSpellId` in `Features/Utilities.lua`), then `C_Spell.GetSpellLevelLearned`.
 - `Class-Config.lua` empties every other class in `CLASS_SPELL_LISTS` and `TRAINER_SPELLS` at load.
 - Forever's book keeps only the top rank, so a rank at or below the highest known counts as known.
 - What's Next is computed live: statuses `ns.WHATS_NEXT_STATUSES`, sources `ns.WHATS_NEXT_SOURCES`. The three pages differ only by model (`ns.WHATS_NEXT_MODELS`). The Pet What's Next tooltip names beasts in English from data (README-Notes).
@@ -715,8 +750,8 @@ The standalone Rank Sentinel add-on, brought home. It reports a spell cast at a 
 ### Options Shell (`Options/`)
 
 - `ns.RegisterOptionsPanels` (called from Core once `ns.db` exists) registers the General root, then each feature in `ns.FEATURE_GROUPS` order with sub-panels nested by category ID, then Profiles, Feedback & Support, and Diagnostics. Most panels register a builder function, so they rebuild on open.
-- `FEATURE_SWITCHES` (`Options-Utilities.lua`) draws each master switch on the root and atop its panel. `confirmOff` applies to the Spellbook and Consumable Macros switches.
-- Shared builders: `ns.BuildItemListOptions`, `ns.OptionsSubRow` (load-bearing for layout), the Example-line builders, `ns.MODE_VALUES`.
+- `FEATURE_SWITCHES` (`Options-Feature-Switches.lua`) draws each master switch on the root and atop its panel. `confirmOff` applies to the Spellbook and Consumable Macros switches.
+- Shared builders, loaded first in this order: `Options-Utilities.lua` (`ns.OptionsSubRow`, load-bearing for layout; the Example-line builders; the group context checkboxes; `ns.LEVEL_FILTER_VALUES`), `Options-Widgets.lua` (AceGUI widget types), `Options-Feature-Switches.lua`, `Options-Item-Lists.lua` (`ns.BuildItemListOptions`, `ns.WarmItemCache`).
 - Slash commands (`Options.lua`): `/gtg`, where `/gtg ignore Name` goes to Rank Watch (README-Notes), and `/restock` (`ns.HandleRestockerCommand`).
 
 ### Diagnostics
@@ -732,14 +767,16 @@ The standalone Rank Sentinel add-on, brought home. It reports a spell cast at a 
 - **New event module**: `ns.RegisterEventModule` in a file whose TOC position sets its dispatch order, in every TOC that should load it.
 - **New data table**: a file in all seven `Data/{Game}/` folders (empty where no rows; Vanilla and Discovery files carry the guard); listed in all four TOCs between `Data/Data.lua` and `Data/Default-Settings.lua`; a `ns.DIAGNOSTIC_DATA_SOURCES` row.
 - **New saved setting**: its `ns.DATABASE_DEFAULTS` key (or the feature's `AddDefaults` block) with its scope reason beside it; its options row; its locale keys in `Locales/enUS.lua`; a hook in `ns:ApplyProfile` if it is applied imperatively; a Diagnostics context line.
-- **New feature master switch**: `FEATURE_SWITCHES` + `ns.FEATURE_GROUPS` (`Options-Utilities.lua`); a global default; `SWITCH_*` locale keys.
+- **New feature master switch**: `FEATURE_SWITCHES` + `ns.FEATURE_GROUPS` (`Options-Feature-Switches.lua`); a global default; `SWITCH_*` locale keys.
+- **New setting that acts by group**: a `{ solo, party, raid, battleground }` default, all `true`; read through `ns.IsGroupContextOn` (or `ns.IsUseWhenActive` for a consumable's `<prefix>In` + `<prefix>Level` pair); `ns.OptionsGroupContextRow` or `ns.OptionsGroupContextToggle` plus `ns.OptionsGroupContextNone` on its panel; the mini-map's `SwitchState` prefix if it shows there; a Diagnostics context line. Consumable group reads are already in `ns.GroupSignatureChanged`.
 - **New options panel**: `ns.OPTIONS_REGISTRY` key (`Data/Data.lua`); `RegisterChild` in `ns.RegisterOptionsPanels`; the builder file in each TOC before `Options/Options.lua`; a locale title.
-- **New key binding**: `Bindings.xml`; `BINDING_NAME_*` in the feature file and `.luacheckrc`; a row in `KeyBindings()` (`Options-General.lua`).
+- **New key binding**: `Bindings.xml` with `category="BINDING_HEADER_GOODTOGO"` (the add-on's own Key Bindings section; `"ADDONS"` would bury it under the shared AddOns header); `BINDING_NAME_*` in the feature file and `.luacheckrc`; a row in `KeyBindings()` (`Options-General.lua`).
 - **New client-divergent API**: an accessor in `Features/Utilities.lua` that answers nil where missing; an API row in the feature's `Diagnostics/Manifests-*.lua`; `.luacheckrc` read globals.
 - **New slash command, popup or macro global**: the code, plus the `.luacheckrc` `SLASH_*`, `SlashCmdList`, `StaticPopupDialogs` field or global.
 - **New consumable macro**: `ns.MACRO_CONFIG` (`Data/Data.lua`) with `MACRO_*` / `LABEL_*` keys (a shipped name never changes); `ns.MACRO_DEFAULT_ITEM_IDS` in every `Macro-Default-Items-{Game}.lua`; `Macros/<Name>.lua` calling `ns.RegisterMacroType`, listed in all four TOCs among the definition files; `enabledMacros[type]` in `Data/Default-Settings.lua`; a toggle row in `Options-Macros.lua`; multi-use needs both `ranked = true` and `ns.MULTI_USE_MACRO_TYPES`; conjures need `CONJURE_SHAPES` (`Message-Length-Macros-for-Consumables.lua`); class-only custom macros need `CLASS_ONLY_MACROS` (Manifests); DruidMacroHelper needs `ns.DRUID_MACRO_HELPER_TYPES` / `GUARDS`.
 - **New consumable item type**: the table in every flavor folder and TOC; a `CONSUMABLE_TABLES` entry (`Item-Cache.lua`); a branch in `ns.CacheItemData`; any new gate in `ns.ScanBags` mirrored in `FailedGate` (Manifests); a data-source row.
 - **New ranking step**: `RANKING_PRIORITY`, `FillRecord`, `ResetBest` (`Scanner-Ranking.lua`) and `CopyCandidateRecord` (`Scanner-Diagnostics.lua`), as a real boolean.
+- **New standard-body input** (a definition hook like `combatSpell`): the protocol comment in `Definitions.lua`; the hook call in `ns.UpdateMacros`, passed to both `ns.BuildStandardBody` and `ns.BuildStateKey`; a state-key flag; every recursive trim call in `ns.BuildStandardBody` passing it on, plus its own place in the trim order; the mode body too if it applies there.
 - **New body-shaping consumable setting**: profile default; panel row whose setter calls `ns.ResetMacroState()` + `ns.RequestUpdate()` or uses `ns.ToggleMacroSetting`; folded into the state key (`stateExtras`, an `appendBlock` flag, or `ns.BuildStateKey`); `AURA_TRACKED_SETTINGS` (`Engine.lua`) if it changes aura tracking; `ns.TargetSignatureChanged` or `ns.GroupSignatureChanged` if it reads target or group state.
 - **New Readiness switch**: a `readiness*` global default (the prefix is what Reset reaches); a `SECTIONS` row (`Options-Readiness-Report.lua`); `READINESS_SWITCHES` (Manifests); the check (`Readiness-Report.lua`); the sample (`Readiness-Report-Example.lua`), sharing a `ns.ReadinessAsks*` gate.
 - **New Restocker row field**: `ItemToString` / `ItemFromString` as a trailing field with its default; `ns.AddRestockItem` and `ns.AddStarterCategory` defaults; for a column, `COLUMNS`, `COLUMN_STATE`, `COLUMN_TOGGLE`, `COLUMN_SET`; the row counts in `Manifests-Restocker.lua`.
@@ -767,12 +804,12 @@ The standalone Rank Sentinel add-on, brought home. It reports a spell cast at a 
   - **Global** holds, each with its reason beside its key: presentation (`showWelcome`, `showMacroNames`, `minimap`, `abilityTooltipRanks`); master switches and `readiness*`; what every character shares on the client (`enabledMacros`, `ownedMacros`, `macroTags`, `macroTagCount`); data the player built or the add-on gathered (`restocker`, `inventory`, the Ignore List's Global half); `buffWindow`; `rankWatch`. `legacyImported` is written raw, before AceDB opens.
   - Two README-Notes exceptions keep per-character records off the profile so Reset Profile can't reach them: `restocker.listChoices` on global, and `char.ownedMacros`.
   - Rank Watch's reset listener resets `RESET_KEYS` and wipes `untracked` on `OnProfileReset`, even though `rankWatch` is global.
-- **Seeding.** Nothing seeds a list on empty. `buffWindow.audience` and `selfRefresh` fill only keys the player never saved, from the rows' defaults (`PopulateBuffDutyAudience`). Values the dropdowns don't offer are dropped, but keys this client lacks are kept, since Era and Season of Discovery share the file. Staples writes its pre-ticks only when it opens. The Readiness panel's Reset writes every `readiness*` default back except the master switch.
+- **Seeding.** Nothing seeds a list on empty. `buffWindow.audience` and `selfRefresh` fill only keys the player never saved, from the rows' defaults (`PopulateBuffDutyAudience`). Values the dropdowns don't offer are dropped, but keys this client lacks are kept, since Era and Season of Discovery share the file. Staples writes its pre-ticks only when it opens. `scrollTypes`' defaults are built at file load by `DefaultScrollTypes` from each `ns.SCROLL_DATA` type's `classes` and the logged-in class, so the defaults table differs by class: a profile stores only the types its player changed, and every other type follows whoever plays it. The Readiness panel's Reset writes every `readiness*` default back except the master switch.
 - AceDB strips every value equal to its default at logout, so an empty default subtable is nil by the time the add-on's own logout handler runs.
 
 ### Migration Chain
 
-Every piece is tagged `MIGRATION (remove after YYYY-MM-DD)` where it sits. In run order within `InitializeDatabase`: `MoveRenamedSettings`, `ImportLegacySettings`, `AceDB:New`, the prune, `UseOwnProfileWhenUnnamed`, `RetireAutomatedAppreciation`, `ns.RetireSavedItemCache`, `ns.RekeyCharactersByFullName`, `ns.MoveCharactersOntoOwnProfiles`, then the callbacks. The feature migrations run at login or on first use.
+Every piece is tagged `MIGRATION (remove after YYYY-MM-DD)` where it sits. In run order within `InitializeDatabase`: `MoveRenamedSettings`, `ImportLegacySettings`, `AceDB:New`, the prune, `UseOwnProfileWhenUnnamed`, `ns.MoveGroupSettingsOntoCheckboxes`, `RetireAutomatedAppreciation`, `ns.RetireSavedItemCache`, `ns.RekeyCharactersByFullName`, `ns.MoveCharactersOntoOwnProfiles`, then the callbacks. The feature migrations run at login or on first use.
 
 - **2026-11-18**: Buff Duty `petsAsTanks` / `petsAsTanksWhen` become `tankWhen.PET` (`Buff-Duty-Settings.lua`).
 - **2026-11-21**:
@@ -795,6 +832,7 @@ Every piece is tagged `MIGRATION (remove after YYYY-MM-DD)` where it sits. In ru
   - **Rank Watch**: `ImportStandaloneSettings`, `StandaloneProfile`, `importedStandalone`, the `maxLevelOnly` removal in `ns.RankWatchSettings`, `RankSentinelDB` in `.luacheckrc`.
   - **Restocker**: the type-before-name saved line, empty legacy `Name-Realm` lists kept by the prune, `starterListDismissed` cleared, the guarded `ns.InitializeInventoryReport` call.
   - **Spellbook**: `markedPlaced` keyed by WoW macro name (`Page-Settings.lua`).
+- **2026-12-11**: Group settings onto the four checkboxes (`ns.MoveGroupSettingsOntoCheckboxes`, `Features/Group-Context-Migration.lua`, its TOC line, the call in `InitializeDatabase`). Buff Duty's `showSolo` / `showParty` / `showRaid` become `showIn` (Battleground takes Raid's answer) and the `*Where` keys move into `showWhere`; each profile's `<prefix>Mode` becomes `<prefix>In` + `<prefix>Level`. It runs before any profile is copied, so every copy is already in the new shape.
 
 ## Pitfalls & Why
 
@@ -812,6 +850,8 @@ Every piece is tagged `MIGRATION (remove after YYYY-MM-DD)` where it sits. In ru
 - **Holding the aura snapshot**: `ns.GetPlayerBuffSnapshot()` returns one shared buffer the next call overwrites. Take one per pass and pass it down. While auras are secret it returns the last readable snapshot; never reset it to empty, which reads as "no buffs".
 - **Keeping or writing scan output**: `ns.scannedItemCounts`, `ns.scannedItemLinks`, `ns.scannedIgnoredTypes` and `ns.bestSelection` are wiped and refilled in place every scan.
 - **A new cast trigger for Consumable Macros**: `UNIT_SPELLCAST_SUCCEEDED` registration is decided once at login by class and race. Change both `ns.SpellCastChangesMacros` and that registration.
+- **Adding a `ns.BuildStandardBody` input without threading it through the trims**: each byte trim rebuilds by calling itself with one input dropped, so a trim that forgets the new argument silently writes a body without it. Every recursive call passes every later input.
+- **Gating a scroll on its required level**: deliberate that it doesn't. The level only sorts the list; a scroll in the bags is meant to be used.
 - **Iteration order in a pick**: `pairs()` order churns rewrites. `RANKING_PRIORITY` and the pet food pick both end on item ID.
 - **Localizing `ns.IsOptionOn`, `ns.UseItemSlots`, `ns.WarnOnce` or `ns.HandOverMacro` as file locals in the Spellbook**: it breaks Message Length, which swaps those `ns` fields for one build.
 - **Editing a Conditionals row or Cast Sequence step in place**: Duplicates share rows (`ns.DuplicateMacro` copies shallowly). Setters copy (`CopyRows`, `CopySteps`) and store fresh tables.
@@ -820,6 +860,7 @@ Every piece is tagged `MIGRATION (remove after YYYY-MM-DD)` where it sits. In ru
 - **Deleting by tag alone**: a player's own `#end` line looks like a tag. Delete requires a handed-out tag and an ownership record.
 - **Reading a bar macro through `GetActionInfo`**: a macro showing a spell returns the spell ID. Use `GetActionText` (`ns.ActionMacroName`).
 - **Matching stances or forms by tooltip text**: some locales name forms apart from their spells. Use the class lists' IDs.
+- **Keying a spell's settings by its lowest known rank**: on Forever a replaced Rank 1 is in neither the known nor unknown list, so the key would move and the settings vanish. `ReadSpellbook` records `baseID` before that filter, and `BaseSpellID` prefers it.
 - **Reading another class's `CLASS_SPELL_LISTS` or `TRAINER_SPELLS`**: `Class-Config.lua` empties them at load.
 - **Turning the Spellbook off**: `RefreshMacros` no-ops for every caller, so macros freeze as written. Deliberate.
 - **Right-Click For with a Conditionals `rightClick` row**: the two block each other. `MakeDefault` keeps it off per macro (`keepOff`).
@@ -829,12 +870,16 @@ Every piece is tagged `MIGRATION (remove after YYYY-MM-DD)` where it sits. In ru
 - **Changing a Buff Duty button outside `ns.SetBuffButtonAttributes`, or in combat**: pooled buttons keep stale attributes, and protected changes are blocked.
 - **Casting a buff by spell ID or bare name**: on Classic Era a lower rank's ID casts nothing, and a bare group-buff name casts Rank 1. Cast by rank text; only resurrections and Create Soulstone go by bare name.
 - **Closing Buff Duty through the template's close click**: it hides a protected parent. The button runs `ns.CloseBuffDuty`.
+- **Gating Buff Duty's data on `ns.IsBuffDutyOnForClass`**: after a close the Buff Key would cast from stale auras. Events, backstop, aura handler and key follow `ns.IsBuffDutyTrackingForClass`; only the window's visibility follows OnForClass.
+- **Leaving Buff Duty's target icons up past a target change, or after a failed redraw**: their buttons cast at whoever `target` now names, an NPC's buff on a player included. `ns.DropBuffDutyTargetIcons` strips them before the immediate `Refresh`, and `Refresh` hides the window when build or render errors.
+- **Moving a targeted NPC's row up the Buff Key's order**: its cycle never empties, so the key would never reach the group.
 - **Shuffling the Buff Duty TOC order**: files capture earlier files' functions and tables at load (`Buff-Duty-Frame.lua` captures Icon-State and Party-Buffs, most files capture Castable's `ns.BuffDuty` and `RankFor`, several call `ns.SetBuffDutyEventHandler` at load). `Buff-Duty-Key-Picker.lua` looks up `BuffDuty.BuffKeySkipped` at call time on purpose, because Keys loads after it.
 - **Shuffling the scanner TOC order**: `Scanner-Inventory.lua` captures `ns.ScanRanking` fields at load. Keep Ranking, Diagnostics, Inventory; `Engine.lua` captures `ns.MACRO_CONFIG`.
-- **Aliasing `ns.MODE_VALUES` at load in `Minimap-Button.lua`**: it is nil there, since `Options-Utilities.lua` loads later. It is read at call time.
+- **Aliasing `ns.LEVEL_FILTER_VALUES` at load in `Minimap-Button.lua`**: it is nil there, since `Options-Utilities.lua` loads later. It is read at call time.
 - **A list of possibly-nil sections in `ipairs`**: it stops at the first nil, dropping Return the Favor after an empty Target. Append sections one by one.
 - **Parenting a frame to a Blizzard panel**: it stays protected for good. Parent to `UIParent` and anchor beside it, as every Spellbook launcher does.
 - **`UIDropDownMenu` in the Restock List**: its shared globals leave taint. Use an AceGUI pullout that joins `ns.CloseRestockMenus`.
+- **Reading `IsInGroup` / `IsInRaid` to decide whether a feature acts**: a battleground's raid would read as Raid. Use `ns.GetGroupContext` / `ns.IsGroupContextOn`; only channel and unit-prefix plumbing reads them directly.
 - **Registering `COMBAT_LOG_EVENT_UNFILTERED` on Forever**: `ADDON_ACTION_FORBIDDEN`, which `pcall` can't catch. It is in `ns.EVENT_NAMES` only off Camelot, and the combat-log files stay out of the Camelot TOC.
 - **Calling `GetItemInfo`, `GetSpellInfo`, `UnitBuff`, `IsSpellKnown` or `IsPlayerSpell` as globals**: Forever has dropped them or keeps them only in a deprecation layer. Use `C_Item`, `C_Spell`, `C_UnitAuras`, `ns.IsSpellKnown`, `ns.IsPlayerSpell`.
 - **An API one client lacks**: put it behind a `Features/Utilities.lua` accessor that answers nil there, with a Diagnostics row. `ns.OnReadyCheck` calls its probes unguarded, so one error silences the whole report on that client.
@@ -852,6 +897,7 @@ Every piece is tagged `MIGRATION (remove after YYYY-MM-DD)` where it sits. In ru
 - **`PutItemInBag` or `PutItemInBackpack` in the bank run**: both clear the cursor even when the server refuses, so "did it land" always reads yes. Name an empty slot (`BagDefinition:PutCursorItem`).
 - **Leaving a split on the cursor**: the next split fails. Every placement path ends in `ClearCursor()`.
 - **Deducting from a plan optimistically**: a move that didn't land goes unnoticed. The run rescans every step, and the watchdog stops it.
+- **Counting only a fall in remaining work as progress**: on Forever the bank's contents can arrive a beat late, and an overshoot adds stash work, so the work grows and the run would stop as stuck. The watchdog counts any change.
 - **Live-reading Keep during a bank run**: a half-typed number would move stock, and an empty box saves 0 (store everything). Read `RestockState:Wanted`; Enter restarts the run.
 - **Treating a row as a table after `DeflateRestockItemsForSave`**: it is a string by then, which is why it runs last at logout.
 - **Folding a default-on flag into `x and false or nil`**: it yields nil for every input, so the off state never saves (see `ItemFromString`).
@@ -868,6 +914,7 @@ Every piece is tagged `MIGRATION (remove after YYYY-MM-DD)` where it sits. In ru
 - **The prune runs before the Connoisseur & Restocker repairs**: a key shape the prune reads as another client's is gone before any migration sees it. Forever's older `First - RuleSet` keys survive only through `IsOlderForeverKey` (`Features/Core.lua`); a new migration reading another such key needs the same exemption.
 - **Indexing a default subtable at logout**: AceDB has already stripped empty defaults. Write whole values, as `ns.SaveRestockWindowGeometry` does.
 - **Changing a shipped default**: AceDB stripped every value equal to the old default, so every player still on it moves to the new one.
+- **Treating `scrollTypes`' defaults as fixed**: they are built per logged-in class at load (`DefaultScrollTypes`). Nothing may compare a saved value against them across characters.
 - **Reusing a retired key's name**: whatever players saved under the old meaning reads straight back.
 - **Mixing the two character keys**: AceDB profile names and `ns.GetCharacterKey()` differ in shape. Go through the readers in `Features/Utilities.lua`.
 - **Naming a character with `UnitName` alone**: on Forever that is the first name only. Use `ns.GetPlayerFullName` / `ns.GetCharacterKey`.

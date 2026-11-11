@@ -12,18 +12,20 @@ local _, ns = ...
 --------------------------------------------------------------------------------
 
 --[[
-    Finds the best available scroll for a type from bag contents.
+    Finds the best scroll for a type in the bags: the strongest one carried.
     Scroll entries: {[1] itemID, [2] buffID, [3] requiredLevel, [4] amount,
-    [5] class token or nil}; a scroll with a class token is skipped for every
-    other class, since anyone can carry one but only that class can read it.
-    Returns itemID, amount (or nil, nil if nothing usable is found).
+    [5] class token or nil}. The required level only orders the list
+    (Scanner-Auras.lua sorts it highest first); it never gates a scroll, so
+    a scroll in the bags is a scroll the macro uses, at any level. A scroll
+    with a class token is skipped for every other class, since anyone can
+    carry one but only that class can read it. Returns itemID, amount (or
+    nil, nil if nothing usable is found). Diagnostics reads the same pick.
 ]]
-local function FindBestScroll(scrollType, bagItemCounts)
+function ns.FindBestScroll(scrollType, bagItemCounts)
 	if not ns.SCROLL_DATA[scrollType] then
 		return nil, nil
 	end
 
-	local playerLevel = ns.cachedPlayerLevel or 1
 	local _, playerClass = UnitClass("player")
 	local items = ns.SCROLL_DATA[scrollType].items
 	for _, entry in ipairs(items) do
@@ -31,7 +33,7 @@ local function FindBestScroll(scrollType, bagItemCounts)
 		    The scroll override path never passes the scanner's ignore filter
 		    (it reads the raw bag counts), so it honors the Ignore List itself.
 		]]
-		if entry[3] <= playerLevel and (entry[5] == nil or entry[5] == playerClass) and not ns.IsIgnored(entry[1]) then
+		if (entry[5] == nil or entry[5] == playerClass) and not ns.IsIgnored(entry[1]) then
 			if bagItemCounts[entry[1]] and bagItemCounts[entry[1]] > 0 then
 				return entry[1], entry[4]
 			end
@@ -58,7 +60,7 @@ function ns.FindScrollOverrides(bagItemCounts, currentSnapshot)
 	if not settings or not settings.useScrolls then
 		return nil
 	end
-	if not ns.IsModeActive(settings.scrollsMode) then
+	if not ns.IsUseWhenActive(settings, "scrolls") then
 		return nil
 	end
 
@@ -79,7 +81,7 @@ function ns.FindScrollOverrides(bagItemCounts, currentSnapshot)
 
 	for _, scrollType in ipairs(ns.SCROLL_CHECK_ORDER) do
 		if scrollTypes[scrollType] then
-			local scrollItemID, scrollAmount = FindBestScroll(scrollType, bagItemCounts)
+			local scrollItemID, scrollAmount = ns.FindBestScroll(scrollType, bagItemCounts)
 			if scrollItemID and not ns.HasScrollBuff(scrollType, scrollAmount, currentSnapshot) then
 				results = results or {}
 				results[#results + 1] = scrollItemID

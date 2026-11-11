@@ -68,10 +68,11 @@ function BuffDuty.BuildSections()
 end
 
 --[[
-    When to Show: your class ticked, then Solo, In Party or In Raid, whichever
-    you are now, switched on, and In Instance kept to dungeons, raids,
-    battlegrounds and arenas. The Buff Key asks the same, so it casts nothing the window
-    hides.
+    When to Show: your class ticked, then the group context you are in now
+    (ns.GetGroupContext: Solo, Party, Raid or Battleground) ticked, and for
+    the first three, In Instance kept to inside an instance. A battleground is
+    always one, so it has no where of its own. The Buff Key asks the same, so
+    it casts nothing the window hides.
 ]]
 function BuffDuty.ShowsHere()
 	local db = ns.db.global.buffWindow
@@ -79,18 +80,11 @@ function BuffDuty.ShowsHere()
 	if db.showClasses[class] == false then
 		return false
 	end
-	local show, where
-	if IsInRaid() then
-		show, where = db.showRaid, db.showRaidWhere
-	elseif IsInGroup() then
-		show, where = db.showParty, db.showPartyWhere
-	else
-		show, where = db.showSolo, db.showSoloWhere
-	end
-	if not show then
+	local context = ns.GetGroupContext()
+	if not ns.IsGroupContextOn(db.showIn, context) then
 		return false
 	end
-	return where ~= Data.BUFF_DUTY_WHERE.INSTANCE or (IsInInstance())
+	return db.showWhere[context] ~= Data.BUFF_DUTY_WHERE.INSTANCE or (IsInInstance())
 end
 
 --[[
@@ -111,25 +105,44 @@ local function Refresh()
 		return
 	end
 
-	local db = ns.db.global.buffWindow
+	-- The close button hides the window for the session (ns.IsBuffDutyOnForClass) while its data keeps up.
 	if
-		not db.enabled
+		not ns.IsBuffDutyOnForClass()
 		or not (HasAnythingToOffer() or WatchesPartyBuffs())
-		or ns.AreAurasSecret()
 		or not BuffDuty.ShowsHere()
 	then
 		ns.HideBuffDuty()
 		return
 	end
-
-	local sections = BuffDuty.BuildSections()
-	-- The raid buffs the group is missing ride along as Party-Buffs (Buff-Duty-Other-Classes.lua).
-	local otherBuffs = BuffDuty.BuildOtherClassBuffs()
-	-- Either one keeps the window up: Party-Buffs alone still shows it.
-	if #sections == 0 and #otherBuffs == 0 then
+	--[[
+	    Where the game hides auras from add-ons (WoW Forever, in places such as
+	    battlegrounds), the window can't tell who is missing what. A window
+	    that When to Show lets appear, and that its close button hasn't hidden
+	    this session, says so once a session instead of staying away without
+	    a word.
+	]]
+	if ns.AreAurasSecret() then
+		ns.WarnOnce(L["BUFF_DUTY_AURAS_HIDDEN"], "BUFF_DUTY_AURAS_HIDDEN")
 		ns.HideBuffDuty()
-	else
-		ns.RenderBuffDuty(sections, otherBuffs)
+		return
+	end
+
+	--[[
+	    A read or redraw that errors hides the window rather than leave the
+	    last one up: its buttons would cast at whoever "target" names now.
+	    The error still reaches the error handler (BugSack and the like).
+	]]
+	local sections, otherBuffs
+	local built = xpcall(function()
+		sections = BuffDuty.BuildSections()
+		-- The raid buffs the group is missing ride along as Party-Buffs (Buff-Duty-Other-Classes.lua).
+		otherBuffs = BuffDuty.BuildOtherClassBuffs()
+	end, geterrorhandler())
+	-- Either one keeps the window up: Party-Buffs alone still shows it.
+	if not built or (#sections == 0 and #otherBuffs == 0) then
+		ns.HideBuffDuty()
+	elseif not xpcall(ns.RenderBuffDuty, geterrorhandler(), sections, otherBuffs) then
+		ns.HideBuffDuty()
 	end
 end
 
@@ -168,9 +181,21 @@ function ns.RefreshBuffDuty()
 end
 
 --[[
+    Whether the window's close button hid Buff Duty for the rest of this
+    session. Never saved: a login or reload brings the window back, and so does
+    turning Buff Duty on by any switch (the mini-map button, the feature switch,
+    or ticking your class).
+]]
+local hiddenThisSession = false
+
+function ns.ShowBuffDutyAgain()
+	hiddenThisSession = false
+end
+
+--[[
     Buff Duty's feature switch, the one setter both copies of its options
     toggle and the per-class calls below use: it redraws the window and
-    repaints every open panel.
+    repaints every open panel. Turning it on clears the close button's hide.
 ]]
 function ns.IsBuffDutyOn()
 	return ns.db.global.buffWindow.enabled and true or false
@@ -178,6 +203,9 @@ end
 
 function ns.SetBuffDutyOn(value)
 	ns.db.global.buffWindow.enabled = value
+	if value then
+		hiddenThisSession = false
+	end
 	ns.RefreshBuffDuty()
 	local registry = LibStub("AceConfigRegistry-3.0")
 	for _, name in pairs(ns.OPTIONS_REGISTRY) do
@@ -186,14 +214,24 @@ function ns.SetBuffDutyOn(value)
 end
 
 --[[
-    Buff Duty on the class you're playing: the feature switch on and your
-    class ticked under Classes. The close button and the mini-map button work
-    per class through these, so closing the window on a rogue leaves it up on
-    a druid. Turning it on ticks your class and flips the switch on with it.
+    Whether Buff Duty keeps its data up for the class you're playing: the
+    feature switch on and your class ticked under Classes. The window's
+    events, its backstop and the Buff Key follow this, so the key still casts
+    from fresh auras after the close button hides the window.
 ]]
-function ns.IsBuffDutyOnForClass()
+function ns.IsBuffDutyTrackingForClass()
 	local _, class = UnitClass("player")
 	return ns.IsBuffDutyOn() and ns.db.global.buffWindow.showClasses[class] ~= false
+end
+
+--[[
+    Buff Duty's window on the class you're playing: tracking, and the window
+    not closed this session. The mini-map button works per class through
+    these, so turning it off on a rogue leaves it up on a druid. Turning it on
+    ticks your class and flips the switch on with it, which also undoes a close.
+]]
+function ns.IsBuffDutyOnForClass()
+	return not hiddenThisSession and ns.IsBuffDutyTrackingForClass()
 end
 
 function ns.SetBuffDutyForClass(on)
@@ -216,12 +254,14 @@ function ns.ApplyBuffDutyProfile()
 end
 
 --[[
-    The window's close button. Turns Buff Duty off for your class and says
-    how to turn it back on. In combat the window stays up until combat ends,
-    like any other change to it.
+    The window's close button. Hides Buff Duty until the next login or reload,
+    saving nothing, and says how to bring it back now or keep it off for your
+    class. In combat the window stays up until combat ends, like any other
+    change to it.
 ]]
 function ns.CloseBuffDuty()
-	ns.SetBuffDutyForClass(false)
+	hiddenThisSession = true
+	ns.RefreshBuffDuty()
 	local _, class = UnitClass("player")
 	ns:PrintMessage(
 		L["BUFF_DUTY_CLOSED"]:format(
@@ -245,9 +285,9 @@ end
 
 --[[
     Called from Buff-Duty-Events.lua's UNIT_AURA handler. It is
-    subscribed unfiltered while Buff Duty is on for your class, so nameplates
+    subscribed unfiltered while Buff Duty tracks your class, so nameplates
     arrive here too; only the units the window reads are worth a refresh.
-    Nothing is queued while the window is off for your class or in combat:
+    Nothing is queued while Buff Duty is off for your class or in combat:
     turning it on and PLAYER_REGEN_ENABLED each request a fresh read.
 ]]
 function ns.OnBuffDutyUnitAura(unit)
@@ -269,19 +309,19 @@ function ns.OnBuffDutyUnitAura(unit)
 	then
 		return
 	end
-	if ns.IsBuffDutyOnForClass() and (HasAnythingToOffer() or WatchesPartyBuffs()) then
+	if ns.IsBuffDutyTrackingForClass() and (HasAnythingToOffer() or WatchesPartyBuffs()) then
 		MarkAurasDirty(unit)
 		ns.RequestBuffDutyRefresh()
 	end
 end
 
 --[[
-    Whether the window has anything to keep up: set up, and Buff Duty on for your
-    class. Turning it on runs ns.RefreshBuffDuty, which re-reads everyone, so
-    nothing these handlers skip while it is off is missed.
+    Whether Buff Duty has anything to keep up: set up, and tracking your
+    class, closed window or not. Turning it on runs ns.RefreshBuffDuty, which
+    re-reads everyone, so nothing these handlers skip while it is off is missed.
 ]]
 local function IsWatching()
-	return BuffDuty.isSetUp and ns.IsBuffDutyOnForClass()
+	return BuffDuty.isSetUp and ns.IsBuffDutyTrackingForClass()
 end
 
 --[[
@@ -315,7 +355,12 @@ local function OnUnitPet(unit)
 	ns.RequestBuffDutyRefresh()
 end
 
--- A new target mid-fight dims the icons as a roster change does: the target's row still names the old one.
+--[[
+    A new target mid-fight dims the icons as a roster change does: the target's
+    row still names the old one. Out of combat the old target's icons go at
+    once and the window redraws now, not after REFRESH_DELAY: in between, a
+    click on them would cast at the new target.
+]]
 local function OnPlayerTargetChanged()
 	if not IsWatching() then
 		return
@@ -329,7 +374,8 @@ local function OnPlayerTargetChanged()
 			MarkAurasDirty(unit)
 		end
 	end
-	ns.RequestBuffDutyRefresh()
+	ns.DropBuffDutyTargetIcons()
+	Refresh()
 end
 
 local function OnSpellsChanged()
@@ -375,9 +421,9 @@ local function OnPlayerRegenEnabled()
 	RequestFullRefresh()
 end
 
--- The backstop's tick, which skips the redraw while the window is off for your class or in combat.
+-- The backstop's tick, which skips the redraw while Buff Duty is off for your class or in combat.
 local function OnBackstopTick()
-	if inCombat or not ns.IsBuffDutyOnForClass() then
+	if inCombat or not ns.IsBuffDutyTrackingForClass() then
 		return
 	end
 	BuffDuty.PruneAuraCache()
@@ -391,8 +437,8 @@ end
 local backstop
 
 --[[
-    Starts the backstop while Buff Duty is on for your class and stops it while
-    it is off, for ns.UpdateBuffDutyEvents, which drops the window's
+    Starts the backstop while Buff Duty tracks your class and stops it while
+    it doesn't, for ns.UpdateBuffDutyEvents, which drops the window's
     events along with it. Coming back on, the window re-reads your spells,
     since SPELLS_CHANGED was not heard while it was off.
 ]]

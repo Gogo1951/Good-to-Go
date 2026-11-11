@@ -57,20 +57,34 @@ function ns.NoteBuffCastAttempt(spec)
 	local guid = spec.favorGUID or (spec.unit and UnitGUID(spec.unit))
 	if ns.IsPlain(guid) and guid then
 		--[[
-		    A pet (anything not a player: a party pet's token, or a targeted
-		    one) has its cast followed through below, since its buffs reach
-		    the client less reliably than a player's.
+		    A pet (anything not a player: a party pet's token, a targeted
+		    one, or a targeted friendly NPC) has its cast followed through
+		    below, since its buffs reach the client less reliably than a
+		    player's, and a refusal holds that buff off it.
 		]]
-		local isPet = false
+		local isPet, isNPC = false, false
 		if spec.unit and not spec.isGroup and not spec.favorGUID then
 			local isPlayer = UnitIsPlayer(spec.unit)
 			isPet = ns.IsPlain(isPlayer) and not isPlayer
+			-- A friendly NPC is buffed in a cycle (BuffDuty.NoteNPCCast), not held off like a pet.
+			if isPet then
+				local controlled = UnitPlayerControlled(spec.unit)
+				isNPC = ns.IsPlain(controlled) and not controlled
+			end
 		end
 		local ids = {}
 		for _, id in ipairs(spec.castIds or { spec.spellId }) do
 			ids[id] = true
 		end
-		lastAttempt = { guid = guid, unit = spec.unit, key = spec.buffKey, ids = ids, isPet = isPet, at = GetTime() }
+		lastAttempt = {
+			guid = guid,
+			unit = spec.unit,
+			key = spec.buffKey,
+			ids = ids,
+			isPet = isPet,
+			isNPC = isNPC,
+			at = GetTime(),
+		}
 	end
 end
 
@@ -78,6 +92,7 @@ end
     The player's cast going off. One the window or key just aimed at a pet is
     taken at its word (BuffDuty.NotePetCast): the pet isn't offered that buff
     again until it would need a refresh, whether or not its aura ever shows.
+    One aimed at a friendly NPC moves its cycle on to the next buff instead.
 ]]
 function ns.OnBuffCastSucceeded(unit, spellID)
 	local attempt = lastAttempt
@@ -89,7 +104,11 @@ function ns.OnBuffCastSucceeded(unit, spellID)
 	end
 	if attempt.ids[spellID] then
 		lastAttempt = nil
-		BuffDuty.NotePetCast(attempt.guid, attempt.key)
+		if attempt.isNPC then
+			BuffDuty.NoteNPCCast(attempt.guid, attempt.key)
+		else
+			BuffDuty.NotePetCast(attempt.guid, attempt.key)
+		end
 		ns.RequestBuffDutyRefresh()
 	end
 end

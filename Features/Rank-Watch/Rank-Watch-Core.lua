@@ -298,7 +298,7 @@ end
     Reset Profile on the Profiles panel puts Rank Watch back to its defaults too: switched off, both messages on,
     the default grace periods, and every rank on Tracked Abilities following the data again. Rank Watch's settings
     are account-wide, so AceDB's reset, which clears the profile alone, never reaches them by itself. Kept: the
-    Ignored Players list (a list the player built, with its own Clear button), the casts already reported, the
+    Ignored Players list (a list the player built, one name at a time), the casts already reported, the
     players already offered the opt-out, and the migration's own bookkeeping.
 ]]
 local RESET_KEYS = { "enabled", "whisper", "print", "graceMaxLevel", "graceLeveling" }

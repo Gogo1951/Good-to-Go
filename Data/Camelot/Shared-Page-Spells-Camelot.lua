@@ -27,7 +27,7 @@ ns.SHARED_PAGE_SPELLS = {
 		2550, -- Cooking
 		3273, -- First Aid
 		7620, -- Fishing
-		2366, -- Herb Gathering
+		2366, -- Herbalism
 		2575, -- Mining
 		2656, -- Smelting
 		8613, -- Skinning
@@ -76,7 +76,7 @@ ns.PROFESSION_SPECIALIZATIONS = {
 How We Got the Data
 
 Last Validated
-	2026-11-08, WoW Forever 1.60.1.70862
+	2026-11-11, WoW Forever 1.60.1.70888
 
 Notes
 	- SHARED_PAGE_SPELLS holds the spells every class shares, which the Spell Book page files under its own headings whatever their spellbook tab: each race's spells (racials, which Sort By Category gives a Racials section), the profession and tracking spells the General tab lists (professions, tracking), and its Attack (attacks). ns.PageCategory and the page-tag lookup in Features/Enhanced-Spellbook/Macro-Builder/Macro-Builder.lua read it.

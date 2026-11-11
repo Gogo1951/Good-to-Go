@@ -32,8 +32,8 @@ local _, ns = ...
                           shared by every character.
       * restockerEnabled -- the Restocker master switch, kept with the Restock
                           Lists it governs, which are account-wide too.
-      * readinessReportEnabled -- a behavior preference (do the Consumable Macros speak
-                          up on a ready check?) rather than a consumable choice.
+      * readinessReportEnabled -- a behavior preference (does the Readiness
+                          Report speak up on a ready check?) rather than a consumable choice.
       * enabledMacros  -- the macros themselves are account-wide: they live in
                           the shared General macro tab, so which ones exist has
                           to be one choice for the whole account. Keeping the
@@ -65,6 +65,27 @@ local _, ns = ...
     (Features/Restocker/Restocker-Saved-Lists.lua) gives a character without
     one a list named for its class.
 ]]
+--[[
+    Which scroll types start ticked: the ones the character's class gets use
+    from, by each type's classes in Data/{Game}/Scrolls-{Game}.lua ("ALL" or
+    class tokens). Stamina and Protection suit everyone; the rest go by class,
+    never by spec. Read once at load, so the defaults are the logged-in
+    character's: a profile only stores the types its player changed, and every
+    other type follows the class of whoever is playing it. Every type in
+    ns.SCROLL_CHECK_ORDER gets a key, so an untouched off type reads false
+    rather than nil.
+]]
+local function DefaultScrollTypes()
+	local _, classToken = UnitClass("player")
+	local types = {}
+	for _, scrollType in ipairs(ns.SCROLL_CHECK_ORDER) do
+		local data = ns.SCROLL_DATA[scrollType]
+		local classes = data and data.classes
+		types[scrollType] = classes == "ALL" or (type(classes) == "table" and tContains(classes, classToken)) or false
+	end
+	return types
+end
+
 ns.DATABASE_DEFAULTS = {
 	profile = {
 		--[[
@@ -77,15 +98,19 @@ ns.DATABASE_DEFAULTS = {
 		--[[
 		    Use Conjured Food & Water First: the Food and Water macros rank
 		    conjured items above anything that restores more (buff food still
-		    comes first). On by default, applying only while leveling
-		    ("leveling", below max level) unless the player picks another mode
-		    from the shared list: leveling is when
-		    free conjured food matters, solo or in a dungeon with a Mage friend,
-		    while at max level a raider wants the best. Per-character like the
-		    other consumable choices.
+		    comes first). On by default, in every group context but only while
+		    leveling (level filter "leveling", below max level): leveling is
+		    when free conjured food matters, solo or in a dungeon with a Mage
+		    friend, while at max level a raider wants the best. Per-character
+		    like the other consumable choices.
+
+		    Every consumable's When to Use is a pair: <prefix>In, ticked per
+		    group context (ns.GROUP_CONTEXTS), and <prefix>Level, one of
+		    ns.LEVEL_FILTER_ORDER. ns.IsUseWhenActive reads both.
 		]]
 		useConjuredFirst = true,
-		conjuredFirstMode = "leveling",
+		conjuredFirstIn = { solo = true, party = true, raid = true, battleground = true },
+		conjuredFirstLevel = "leveling",
 		--[[
 		    Use Restock List Food & Water Last: between two items that restore
 		    the same amount, the Food and Water macros pick the one not on the
@@ -112,17 +137,18 @@ ns.DATABASE_DEFAULTS = {
 		earlyReapplyThreshold = 180,
 		-- Prioritize Buff Food: on by default, at every level.
 		useBuffFood = true,
-		buffFoodMode = "always",
-		useScrolls = false,
-		scrollsMode = "always",
-		scrollTypes = {
-			Agility = true,
-			Intellect = true,
-			Protection = true,
-			Spirit = true,
-			Stamina = true,
-			Strength = true,
-		},
+		buffFoodIn = { solo = true, party = true, raid = true, battleground = true },
+		buffFoodLevel = "any",
+		--[[
+		    Scrolls: on by default, at every level, for the types the class
+		    can use (DefaultScrollTypes above). A scroll in the bags is there
+		    to be read, and the Food macro only turns to scrolls while their
+		    buff is missing.
+		]]
+		useScrolls = true,
+		scrollsIn = { solo = true, party = true, raid = true, battleground = true },
+		scrollsLevel = "any",
+		scrollTypes = DefaultScrollTypes(),
 		--[[
 		    Off by default. Pet buff food
 		    is a min-maxer's tool -- it needs level 55+, a live pet, and a
@@ -130,7 +156,8 @@ ns.DATABASE_DEFAULTS = {
 		    should never meet it uninvited. Leave this false.
 		]]
 		usePetBuffFood = false,
-		petBuffFoodMode = "always",
+		petBuffFoodIn = { solo = true, party = true, raid = true, battleground = true },
+		petBuffFoodLevel = "any",
 		petBuffTypes = {
 			KiblersBits = true,
 			SporelingSnacks = true,
@@ -264,7 +291,7 @@ ns.DATABASE_DEFAULTS = {
 		--[[
 		    The Readiness Report: on a ready check, a private report naming what
 		    still needs fixing. A behavior preference -- whether you want
-		    the Consumable Macros speaking up at all -- rather than a consumable choice, so
+		    the report speaking up at all -- rather than a consumable choice, so
 		    it is answered once for the account rather than per character, and so
 		    is every category switch under it.
 
@@ -504,18 +531,15 @@ AddDefaults("global", {
 	buffWindow = {
 		enabled = true,
 		--[[
-			    When to Show: whether the window shows solo, in a party and in
-			    a raid, each with where (one of Data.BUFF_DUTY_WHERE), and
-			    which of your classes it shows on, keyed by class token. An
-			    unset class reads as ticked. Paladins start off: most of them
-			    run Pally Power for their blessings.
+			    When to Show: whether the window shows in each group context
+			    (ns.GROUP_CONTEXTS), where it shows in the first three (one of
+			    Data.BUFF_DUTY_WHERE; a battleground is always an instance),
+			    and which of your classes it shows on, keyed by class token.
+			    An unset class reads as ticked. Paladins start off: most of
+			    them run Pally Power for their blessings.
 			]]
-		showSolo = true,
-		showSoloWhere = "ALWAYS",
-		showParty = true,
-		showPartyWhere = "ALWAYS",
-		showRaid = true,
-		showRaidWhere = "INSTANCE",
+		showIn = { solo = true, party = true, raid = true, battleground = true },
+		showWhere = { solo = "ALWAYS", party = "ALWAYS", raid = "INSTANCE" },
 		showClasses = {
 			PALADIN = false,
 		},

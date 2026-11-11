@@ -2,7 +2,7 @@ local _, ns = ...
 
 -- [ID] = {Healing Amount, Mana Amount, {Allowed Zones} or nil, requiredAlchemy or nil, Min Level, Vendor Price, Max Stack, Bind Type}, -- Name
 ns.POTIONS = {
-	[76094] = { 114000, 28500, nil, 500, 85, 250, 20, 0 }, -- Alchemist's Rejuvenation
+	[76094] = { 38000, 9500, nil, 500, 85, 250, 20, 0 }, -- Alchemist's Rejuvenation
 	[32947] = { 1500, 0, nil, nil, 55, 0, 20, 0 }, -- Auchenai Healing Potion
 	[32948] = { 0, 1800, nil, nil, 55, 0, 20, 0 }, -- Auchenai Mana Potion
 	[63144] = { 6750, 0, { 244, 245 }, nil, 0, 460, 20, 1 }, -- Baradin's Wardens Healing Potion
@@ -14,7 +14,7 @@ ns.POTIONS = {
 	[32904] = { 1500, 0, { 332, 1554, 263, 264, 262, 265 }, nil, 55, 0, 20, 1 }, -- Cenarion Healing Salve
 	[32903] = { 0, 1800, { 332, 1554, 263, 264, 262, 265 }, nil, 55, 0, 20, 1 }, -- Cenarion Mana Salve
 	[18839] = { 861, 0, nil, nil, 35, 250, 20, 1 }, -- Combat Healing Potion
-	[18841] = { 0, 928, nil, nil, 41, 250, 20, 1 }, -- Combat Mana Potion
+	[18841] = { 0, 929, nil, nil, 41, 250, 20, 1 }, -- Combat Mana Potion
 	[40077] = { 3100, 4200, nil, 400, 70, 2500, 20, 0 }, -- Crazy Alchemist's Potion
 	[33934] = { 1500, 0, nil, nil, 55, 0, 20, 1 }, -- Crystal Healing Potion
 	[33935] = { 0, 1800, nil, nil, 55, 0, 20, 1 }, -- Crystal Mana Potion
@@ -22,16 +22,16 @@ ns.POTIONS = {
 	[67415] = { 22500, 9250, { 91, 92, 93, 112, 128, 169, 206, 275, 397, 417, 423, 449, 519 }, nil, 80, 6000, 20, 0 }, -- Draught of War
 	[43569] = { 1500, 0, nil, 400, 0, 0, 1, 1 }, -- Endless Healing Potion
 	[43570] = { 0, 1800, nil, 400, 0, 0, 1, 1 }, -- Endless Mana Potion
-	[80040] = { 120000, 0, nil, 550, 85, 0, 1, 1 }, -- Endless Master Healing Potion
+	[80040] = { 40000, 0, nil, 550, 85, 0, 1, 1 }, -- Endless Master Healing Potion
 	[1710] = { 493, 0, nil, nil, 21, 125, 20, 0 }, -- Greater Healing Potion
-	[6149] = { 0, 704, nil, nil, 31, 300, 20, 0 }, -- Greater Mana Potion
-	[929] = { 279, 0, nil, nil, 12, 75, 20, 0 }, -- Healing Potion
+	[6149] = { 0, 705, nil, nil, 31, 300, 20, 0 }, -- Greater Mana Potion
+	[929] = { 280, 0, nil, nil, 12, 75, 20, 0 }, -- Healing Potion
 	[33092] = { 1500, 0, nil, nil, 55, 5000, 20, 0 }, -- Healing Potion Injector
 	[64994] = { 6750, 0, { 244, 245 }, nil, 0, 460, 20, 1 }, -- Hellscream's Reach Healing Potion
 	[64993] = { 0, 6750, { 244, 245 }, nil, 0, 0, 20, 1 }, -- Hellscream's Reach Mana Potion
 	[40067] = { 0, 1800, nil, nil, 65, 5000, 20, 0 }, -- Icy Mana Potion
 	[858] = { 140, 0, nil, nil, 3, 25, 20, 0 }, -- Lesser Healing Potion
-	[3385] = { 0, 333, nil, nil, 14, 30, 20, 0 }, -- Lesser Mana Potion
+	[3385] = { 0, 334, nil, nil, 14, 30, 20, 0 }, -- Lesser Mana Potion
 	[34440] = { 1650, 1650, nil, 315, 60, 7000, 20, 0 }, -- Mad Alchemist's Potion
 	[31838] = { 1050, 0, nil, nil, 61, 0, 20, 1 }, -- Major Combat Healing Potion
 	[31839] = { 1050, 0, nil, nil, 61, 0, 20, 1 }, -- Major Combat Healing Potion
@@ -48,8 +48,8 @@ ns.POTIONS = {
 	[18253] = { 766, 766, nil, nil, 50, 1000, 20, 0 }, -- Major Rejuvenation Potion
 	[3827] = { 0, 455, nil, nil, 22, 120, 20, 0 }, -- Mana Potion
 	[33093] = { 0, 1800, nil, nil, 55, 5000, 20, 0 }, -- Mana Potion Injector
-	[76097] = { 120000, 0, nil, nil, 85, 6000, 20, 0 }, -- Master Healing Potion
-	[76098] = { 0, 28500, nil, nil, 85, 6000, 20, 0 }, -- Master Mana Potion
+	[76097] = { 40000, 0, nil, nil, 85, 6000, 20, 0 }, -- Master Healing Potion
+	[76098] = { 0, 9500, nil, nil, 85, 6000, 20, 0 }, -- Master Mana Potion
 	[57193] = { 9000, 9000, nil, nil, 80, 5000, 20, 0 }, -- Mighty Rejuvenation Potion
 	[118] = { 70, 0, nil, nil, 1, 5, 20, 0 }, -- Minor Healing Potion
 	[2455] = { 0, 140, nil, nil, 5, 10, 20, 0 }, -- Minor Mana Potion
@@ -65,7 +65,7 @@ ns.POTIONS = {
 	[63300] = { 22500, 0, nil, nil, 80, 6000, 20, 1 }, -- Rogue's Draught
 	[41166] = { 2700, 0, nil, nil, 70, 3750, 20, 0 }, -- Runic Healing Injector
 	[33447] = { 2700, 0, nil, nil, 70, 6000, 20, 0 }, -- Runic Healing Potion
-	[42545] = { 0, 4199, nil, nil, 70, 3750, 20, 0 }, -- Runic Mana Injector
+	[42545] = { 0, 4200, nil, nil, 70, 3750, 20, 0 }, -- Runic Mana Injector
 	[33448] = { 0, 4200, nil, nil, 70, 6000, 20, 0 }, -- Runic Mana Potion
 	[22829] = { 1500, 0, nil, nil, 55, 5000, 20, 0 }, -- Super Healing Potion
 	[22832] = { 0, 1800, nil, nil, 55, 5000, 20, 0 }, -- Super Mana Potion
@@ -73,7 +73,7 @@ ns.POTIONS = {
 	[17349] = { 564, 0, { 91, 92, 93, 112, 128, 169, 206, 275, 397, 417, 423, 449, 519 }, nil, 35, 125, 20, 1 }, -- Superior Healing Draught
 	[3928] = { 861, 0, nil, nil, 35, 250, 20, 0 }, -- Superior Healing Potion
 	[17352] = { 0, 644, { 91, 92, 93, 112, 128, 169, 206, 275, 397, 417, 423, 449, 519 }, nil, 35, 125, 20, 1 }, -- Superior Mana Draught
-	[13443] = { 0, 928, nil, nil, 41, 400, 20, 0 }, -- Superior Mana Potion
+	[13443] = { 0, 929, nil, nil, 41, 400, 20, 0 }, -- Superior Mana Potion
 	[28101] = { 0, 1350, nil, nil, 55, 1500, 20, 0 }, -- Unstable Mana Potion
 	[28100] = { 1050, 0, nil, nil, 55, 1000, 20, 0 }, -- Volatile Healing Potion
 	[9144] = { 759, 759, nil, nil, 35, 250, 20, 0 }, -- Wildvine Potion
@@ -83,11 +83,12 @@ ns.POTIONS = {
 How We Got the Data
 
 Last Validated
-	2026-11-08, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-11, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- Every potion this client knows that restores health or mana instantly on the potion cooldown (category 4), read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Health Potion and Mana Potion macros. requiredAlchemy is the Alchemy rank the item requires (the Endless potions and the Alchemist's potions).
-	- Healing Amount and Mana Amount are each effect's low end: the effect's value times one minus half its variance. From Cataclysm on the value is scaled, the coefficient times the SpellScaling game table (gametables/spellscaling.txt, file 1391660) at the spell's MaxScalingLevel, which is at or below the potion's required level; this reproduces the older clients' numbers (Major Healing Potion 1050, Super Healing Potion 1500) and Master Healing Potion's 120000. Where SpellLevels gives the spell a lower BaseLevel or MaxLevel, the scaling stops there instead, as the client's tooltips show: Major Healing Draught (21393) and Major Rejuvenation Potion (22729) scale to 45 and 50 but restore level 35's amount. Major Healing Draught carries the client's 705, a point above the tables' 704.
+	- Healing Amount and Mana Amount are each effect's low end: the effect's value times one minus half its variance. From Cataclysm on the value is scaled, the coefficient times the SpellScaling game table (gametables/spellscaling.txt, file 1391660) at the spell's MaxScalingLevel, which is at or below the potion's required level; this reproduces the older clients' numbers (Major Healing Potion 1050, Super Healing Potion 1500). Where SpellLevels gives the spell a lower BaseLevel or MaxLevel, the scaling stops there instead, as the client's tooltips show: Major Healing Draught (21393) and Major Rejuvenation Potion (22729) scale to 45 and 50 but restore level 35's amount. Major Healing Draught carries the client's 705, a point above the tables' 704.
+	- Where this client's text states a different low end, the row carries the client's, as Validate Data reported on build 5.5.4.70631: a point off on a few older potions, and a third of the tables' figure on the level-85 potions (Master Healing Potion and Endless Master Healing Potion 40,000, Master Mana Potion 9,500, Alchemist's Rejuvenation 38,000 and 9,500).
 	- Allowed Zones are uiMapIDs. The Tol Barad potions carry a required area (244 Tol Barad, 245 Tol Barad Peninsula). The rest come from their text, as on the other clients. The draughts say PvP Battlegrounds: every battleground map this client has (91 Alterac Valley, 92 Warsong Gulch, 93 Arathi Basin, 112 and 397 Eye of the Storm, 128 Strand of the Ancients, 169 Isle of Conquest, 206 Twin Peaks, 275 The Battle for Gilneas, 417 and 449 Temple of Kotmogu, 423 Silvershard Mines, 519 Deepwind Gorge). Draught of War says non-rated battlegrounds and carries the same list: a rated battleground is played on the same maps, and nothing in the data tells the two apart. Bottled Nethergon Energy and Vapor work inside Tempest Keep's four wings, the Cenarion salves inside Coilfang's four.
 	- The Ogre Brews say only the Blade's Edge Plateaus, which have no map of their own on this client (Classic's 1949 is gone and 105 is all of Blade's Edge Mountains), so they keep only Gruul's Lair (330), where they also work. Outside it the macro never offers them.
 	- Left out: Holy Spring Water (737), an oddball on the potion cooldown, and potions that do something else (rage, speed, protection, invisibility). Items named Deprecated, DEPCREATED or PLACEHOLDER are left out.

@@ -128,8 +128,12 @@ local function ReadSpellbook()
 					table.insert(unknown, rank)
 				end
 			end
+			--[[
+				baseID is the lowest rank's, taken before the filter above: on Forever a replaced Rank 1 is in
+				neither list, and the Spellbook keys a spell's settings by it (BaseSpellID, Macro-Builder.lua).
+			]]
 			if #known > 0 then
-				ranks[name] = { known = known, unknown = #unknown > 0 and unknown or nil }
+				ranks[name] = { known = known, unknown = #unknown > 0 and unknown or nil, baseID = list[#list].id }
 			end
 		end
 	end

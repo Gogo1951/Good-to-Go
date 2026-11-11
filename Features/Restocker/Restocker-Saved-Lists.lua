@@ -455,8 +455,14 @@ function ns.SwitchRestockList(newListName)
 		ns.StartRestockBankRun()
 	end
 
+	--[[
+	    Buys for the new list straight away: not through ns.OnRestockerMerchantShow, whose
+	    doubled-MERCHANT_SHOW throttle and Shift check would swallow a switch made just
+	    after the merchant opened, or with Shift held while clicking.
+	]]
 	if ns.merchantIsOpen and not ns.merchantBuyingSkipped then
-		ns.OnRestockerMerchantShow()
+		ns.ResetMerchantRestockThrottle()
+		ns.RestockFromMerchant()
 	end
 end
 

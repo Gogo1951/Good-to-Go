@@ -30,7 +30,7 @@ ns.SPELL_GROUPS = {}
 How We Got the Data
 
 Last Validated
-	2026-11-08, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-11, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- Each row pairs a single-target spell with its group version, as [singleSpellId] = groupSpellId. On this client that is only each mage Teleport with its Portal: Mark of the Wild, Arcane Brilliance, the paladin Blessings and Power Word: Fortitude already reach the whole group, and Gift of the Wild, Arcane Intellect, the Greater Blessings and the priest Prayers are gone.

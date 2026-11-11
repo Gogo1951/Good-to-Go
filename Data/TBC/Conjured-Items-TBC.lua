@@ -19,7 +19,7 @@ ns.CONJURED_ITEM_IDS_BY_SPELL = {
 How We Got the Data
 
 Last Validated
-	2026-11-08, TBC Anniversary 2.5.6.70577
+	2026-11-11, TBC Anniversary 2.5.6.70577
 
 Notes
 	- Conjure spell ID to the items it makes, read by GetSmartSpell (Features/Macros-for-Consumables/Macros/Smart-Spell.lua) when it is called with checkUnique. Conjured stones are unique in bags, so a rank whose item the player already holds is skipped and the macro conjures the next rank down instead of failing on a duplicate.

@@ -27,8 +27,8 @@ local UpdateRange = ns.UpdateBuffDutyRange
     Two frames stack so combat visibility and our own never fight: the anchor
     belongs to a secure state driver (Hide in Combat), and the content inside it
     is shown and hidden by this file, out of combat only. The content carries a
-    title bar whose close button turns Buff Duty off for the class you're
-    playing (ns.CloseBuffDuty).
+    title bar whose close button hides Buff Duty until the next login or
+    reload, saving nothing (ns.CloseBuffDuty).
 ]]
 
 --------------------------------------------------------------------------------
@@ -91,7 +91,7 @@ local BACKDROP = Data.BUFF_DUTY_BACKDROP
 -- State
 --------------------------------------------------------------------------------
 
-local anchor, content, title
+local anchor, content, title, keyHint
 local labels, usedLabels = {}, 0
 -- The list's icons, shared with the cooldown and range passes (Buff-Duty-Icon-State.lua).
 local pool = ns.buffDutyIconPool
@@ -421,6 +421,24 @@ end
 ]]
 local PARTY_BUFFS_GRID = "partyBuffs"
 
+--[[
+    The window's last line while the Buff Button has no key: a blank row under
+    everything else, then a tip pointing at the Key Bindings section. It wraps
+    to the window's width rather than widening it, and goes away once a key is
+    bound (UPDATE_BINDINGS asks for a redraw, Features/Key-Bindings.lua).
+]]
+local function KeyHintText()
+	local info = GetColor("INFO")
+	local help = GetColor("HELP")
+	return help
+		.. L["BUFF_DUTY_KEY_HINT"]:format(
+			info .. L["BUFF_KEY"] .. "|r" .. help,
+			L["OPTIONS_KEY_BINDINGS_HEADER"],
+			info .. L["OPTIONS_COMMAND"] .. "|r" .. help
+		)
+		.. "|r"
+end
+
 function ns.RenderBuffDuty(sections, otherBuffs)
 	if InCombatLockdown() or not content then
 		return
@@ -434,7 +452,8 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 		lastSignature = nil
 	end
 
-	local signature = Signature(sections, otherBuffs)
+	local showKeyHint = not GetBindingKey(ns.BUFF_KEY_COMMAND)
+	local signature = Signature(sections, otherBuffs) .. (showKeyHint and "|?keyHint" or "")
 	if signature ~= lastSignature then
 		lastSignature = signature
 		ReleaseAll()
@@ -552,6 +571,19 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 			y = nextY
 		end
 
+		-- A blank row, then the tip, its top where that row's content would end.
+		if showKeyHint then
+			local hintTop = bottom - ROW_HEIGHT - ICON_GAP
+			keyHint:ClearAllPoints()
+			keyHint:SetPoint("TOPLEFT", content, "TOPLEFT", PADDING, hintTop)
+			keyHint:SetWidth(width)
+			keyHint:SetText(KeyHintText())
+			keyHint:Show()
+			bottom = hintTop - math.ceil(keyHint:GetStringHeight())
+		else
+			keyHint:Hide()
+		end
+
 		anchor:SetSize(PADDING * 2 + width, -bottom + PADDING)
 		-- MIGRATION (remove after 2026-11-29)
 		ns.MigrateBuffDutyPosition(anchor)
@@ -562,6 +594,28 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 	UpdateCooldowns()
 	UpdateRange()
 	ns.StartBuffDutyRangeTicker()
+end
+
+--[[
+    Your target changed: every icon that casts at "target" or "targetpet" now
+    aims at someone the window never looked at, so each is stripped and hidden
+    before the redraw. If the redraw then fails, no button is left behind to
+    cast an NPC's buff on the player you targeted next.
+]]
+function ns.DropBuffDutyTargetIcons()
+	if InCombatLockdown() or not content then
+		return
+	end
+	for i = 1, pool.used do
+		local button = icons[i]
+		local unit = button.spec and button.spec.unit
+		if unit == "target" or unit == "targetpet" then
+			ns.SetBuffButtonAttributes(button, nil)
+			button.spec = nil
+			button:Hide()
+		end
+	end
+	lastSignature = nil
 end
 
 function ns.HideBuffDuty()
@@ -658,16 +712,23 @@ function ns.CreateBuffDutyFrame()
 	)
 
 	--[[
-	    Closing turns Buff Duty off rather than hiding the window for the
-	    session, since the window reopens itself on the next roster or aura
-	    change. The template's own click hides its parent, which is protected
-	    (it holds the secure icons), so the script is replaced outright.
+	    Closing hides the window for the session (ns.CloseBuffDuty) through the
+	    redraw's own gate, so the next roster or aura change can't reopen it.
+	    The template's own click hides its parent, which is protected (it holds
+	    the secure icons), so the script is replaced outright.
 	]]
 	local close = CreateFrame("Button", nil, content, "UIPanelCloseButton")
 	close:SetSize(CLOSE_SIZE, CLOSE_SIZE)
 	-- Centered over the far-right icon column, which ends PADDING from the edge.
 	close:SetPoint("CENTER", content, "TOPRIGHT", -(PADDING + ICON_SIZE / 2), -(PADDING + TITLE_HEIGHT / 2))
 	close:SetScript("OnClick", ns.CloseBuffDuty)
+
+	-- The Buff Button tip under the list (KeyHintText); placed and shown by RenderBuffDuty.
+	keyHint = content:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	keyHint:SetJustifyH("LEFT")
+	keyHint:SetJustifyV("TOP")
+	keyHint:SetWordWrap(true)
+	keyHint:Hide()
 
 	content:Hide()
 end

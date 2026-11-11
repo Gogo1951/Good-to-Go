@@ -123,6 +123,10 @@ local function PetState(BW, pet)
 	if not (pet and UnitExists(pet)) then
 		return "none"
 	end
+	-- On WoW Forever a pet takes its owner's buffs, so the window never lists one.
+	if ns.FLAVOR == "Camelot" then
+		return "not listed on this client"
+	end
 	if BW.CanBuffPet(pet) then
 		BW.ReadAuras(pet)
 		return "buffable aurasReadable=" .. tostring(BW.AurasReadable())
@@ -249,9 +253,9 @@ end
     Soulstone and who already carries one, and the Buff Key's binding and any
     override taking its key; then every group member and your target as the
     window reads them, each with which of your buffs they have on or are
-    missing, and what feeds Return the Favor. The group read is skipped in
-    combat, as the window skips it. Existence/value reads only: nothing is cast, targeted or
-    redrawn.
+    missing (a friendly NPC target too), and what feeds Return the Favor.
+    The group read is skipped in combat, as the window skips it.
+    Existence/value reads only: nothing is cast, targeted or redrawn.
 ]]
 function ns:BuildBuffDutyContextReport()
 	local lines = { GetClientHeader(), "" }
@@ -273,11 +277,19 @@ function ns:BuildBuffDutyContextReport()
 		tostring(class),
 		tostring(ns.BuffDutyHasClassRows and ns.BuffDutyHasClassRows())
 	)
-	-- On for your class: the switch, and your class not turned off (the close button, Shift+Click on the mini-map button).
+	--[[
+	    On for your class: the switch, your class not turned off (Classes, or
+	    Shift+Click on the mini-map button), and the window not closed this
+	    session. The close button saves nothing, so a switch on and your class
+	    ticked yet off for your class is that close, until a login or reload.
+	]]
+	local onForClass = ns.IsBuffDutyOnForClass and ns.IsBuffDutyOnForClass()
+	local classTicked = (db.showClasses or {})[class] ~= false
 	lines[#lines + 1] = string.format(
-		"Switches: enabled=%s onForYourClass=%s hideInCombat=%s locked=%s selfBuffs=%s returnTheFavor=%s target=%s askOtherClasses=%s",
+		"Switches: enabled=%s onForYourClass=%s closedThisSession=%s hideInCombat=%s locked=%s selfBuffs=%s returnTheFavor=%s target=%s askOtherClasses=%s",
 		tostring(db.enabled),
-		tostring(ns.IsBuffDutyOnForClass and ns.IsBuffDutyOnForClass()),
+		tostring(onForClass),
+		tostring((db.enabled and classTicked and not onForClass) and true or false),
 		tostring(db.hideInCombat),
 		tostring(db.locked),
 		tostring(db.selfEnabled),
@@ -294,15 +306,18 @@ function ns:BuildBuffDutyContextReport()
 	table.sort(hiddenClasses)
 	-- The read BW.ShowsHere's In Instance takes, and the kind of instance it says this is.
 	local inInstance, instanceType = IsInInstance()
+	local showIn, showWhere = db.showIn or {}, db.showWhere or {}
 	lines[#lines + 1] = string.format(
-		"When to Show: solo=%s (%s) party=%s (%s) raid=%s (%s) hiddenClasses=%s inGroup=%s inRaid=%s inInstance=%s (%s) shows here now=%s",
-		tostring(db.showSolo),
-		tostring(db.showSoloWhere),
-		tostring(db.showParty),
-		tostring(db.showPartyWhere),
-		tostring(db.showRaid),
-		tostring(db.showRaidWhere),
+		"When to Show: solo=%s (%s) party=%s (%s) raid=%s (%s) battleground=%s hiddenClasses=%s context=%s inGroup=%s inRaid=%s inInstance=%s (%s) shows here now=%s",
+		tostring(ns.IsGroupContextOn(showIn, "solo")),
+		tostring(showWhere.solo),
+		tostring(ns.IsGroupContextOn(showIn, "party")),
+		tostring(showWhere.party),
+		tostring(ns.IsGroupContextOn(showIn, "raid")),
+		tostring(showWhere.raid),
+		tostring(ns.IsGroupContextOn(showIn, "battleground")),
 		#hiddenClasses > 0 and table.concat(hiddenClasses, ",") or "none",
+		ns.GetGroupContext(),
 		tostring(IsInGroup() and true or false),
 		tostring(IsInRaid() and true or false),
 		tostring(inInstance and true or false),
@@ -759,6 +774,23 @@ function ns:BuildBuffDutyContextReport()
 			local _, targetClass = UnitClass("target")
 			lines[#lines + 1] = aurasSecret and "    buffs: (auras secret)"
 				or BuffStates(BW, "target", targetClass, BW.buffs)
+		end
+		--[[
+		    A friendly NPC (a quest's wounded soldier) gets the Target list's
+		    row: not a player or anyone's pet, alive, in sight, and one you can
+		    help. It is offered every buff you have on, so its states skip the
+		    audience check; a Mana-only buff still wants a mana bar, and a buff
+		    the game refused on it stays held off while it's around.
+		]]
+		local canBuffNPC = BW.CanBuffNPC and BW.CanBuffNPC("target") or false
+		lines[#lines + 1] = string.format(
+			"  npc: canBuffNPC=%s powerType=%s class=%s",
+			tostring(canBuffNPC),
+			PlainText(UnitPowerType("target")),
+			PlainText((select(2, UnitClass("target"))))
+		)
+		if canBuffNPC then
+			lines[#lines + 1] = aurasSecret and "    buffs: (auras secret)" or BuffStates(BW, "target", nil, BW.buffs)
 		end
 	end
 	lines[#lines + 1] = string.format(
@@ -1548,3 +1580,30 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_DATA_SOURCES, {
 		},
 	},
 })
+
+--[[
+    Only a client whose weapons carry an imbue beside an oil or stone
+    (ns.WEAPON_ENCHANTS_STACK, WoW Forever) ships the items that put on an
+    imbue, so only there does the table get its row: elsewhere it is rightly
+    absent, not a missing table.
+]]
+if ns.WEAPON_ENCHANTS_STACK then
+	ns.AppendDiagnosticRows(ns.DIAGNOSTIC_DATA_SOURCES, {
+		{
+			label = "Buff-Duty-Spells",
+			sources = {
+				{
+					table = "BUFF_DUTY_WEAPON_IMBUE_ITEMS",
+					kind = "item",
+					collect = function(itemIds)
+						local found = {}
+						for _, id in ipairs(itemIds) do
+							found[#found + 1] = { id = id, row = id }
+						end
+						return found
+					end,
+				},
+			},
+		},
+	})
+end

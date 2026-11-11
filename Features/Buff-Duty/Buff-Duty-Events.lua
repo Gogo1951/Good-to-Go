@@ -90,12 +90,16 @@ function ns.IsBuffDutyReady()
 	return isReady
 end
 
--- Subscribes the window's events while Buff Duty is on for your class and releases them while it is off.
+--[[
+    Subscribes the window's events while Buff Duty tracks your class and
+    releases them while it doesn't. A closed window keeps them, so the Buff
+    Key still reads fresh auras.
+]]
 function ns.UpdateBuffDutyEvents()
 	if not (ns.db and ns.db.global) then
 		return
 	end
-	local on = ns.IsBuffDutyOnForClass()
+	local on = ns.IsBuffDutyTrackingForClass()
 	for _, event in ipairs(WINDOW_EVENTS) do
 		ns.SetModuleEvent(MODULE, event, on, unpack(EVENT_UNITS[event] or {}))
 	end

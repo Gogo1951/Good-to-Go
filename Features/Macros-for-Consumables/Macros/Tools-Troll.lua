@@ -19,7 +19,20 @@ local _, ns = ...
     So every press while the spell is ready casts it instead of eating, and
     once it is on cooldown the macro eats as usual. Scrolls come first
     (scroll-only mode replaces the body), and so does buff food: a buff food
-    pick keeps the usual body, since only eating it gives Well Fed.
+    pick keeps the usual body, since only eating it gives Well Fed. Out of
+    combat a press therefore goes scrolls, then buff food, then Rapid
+    Regeneration, then plain food.
+
+    Nobody eats in combat, and a macro cannot be rewritten there, so every
+    body that eats the Food macro's own pick or reads scrolls also carries a
+    combat line ahead of it (ns.RapidRegenerationCombatCast); the pet-food
+    override body does not:
+
+          /cast [combat] Rapid Regeneration
+          /stopmacro [combat]
+
+    A press in combat casts it, or shows the game's cooldown error while it
+    is cooling down, and never reaches the food or scrolls below.
 
     What keeps the body current: the cast itself rebuilds through
     UNIT_SPELLCAST_SUCCEEDED (Macros-for-Consumables-Core.lua), and the end of
@@ -47,6 +60,24 @@ function ns.RapidRegenerationCast(entry)
 		return nil
 	end
 	if not ns.RacialSpellReady(ns.RAPID_REGENERATION_SPELL_ID) then
+		return nil
+	end
+	return ns.rapidRegenerationSpellName
+end
+
+--[[
+    The Rapid Regeneration name the Food body casts on a press in combat, or
+    nil while the option is off or the character has no Rapid Regeneration.
+    Unlike the out-of-combat cast it ignores the cooldown and the buff food
+    pick: no food can be eaten in combat, and the body written before the
+    pull is the one the press meets, whatever the cooldown does meanwhile.
+]]
+function ns.RapidRegenerationCombatCast()
+	if not ns.isTroll or not ns.rapidRegenerationSpellName then
+		return nil
+	end
+	local settings = ns.db and ns.db.profile
+	if not settings or not settings.enableRapidRegenerationEating then
 		return nil
 	end
 	return ns.rapidRegenerationSpellName

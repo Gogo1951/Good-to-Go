@@ -44,7 +44,7 @@ ns.CLASS_SPELL_LISTS = {
 			{ 2637, 18657, 18658 }, -- Hibernate
 			{ 5211, 6798, 8983 }, -- Bash
 			{ 9005, 9823, 9827 }, -- Pounce
-			16979, -- Feral Charge
+			16979, -- Feral Charge (Bear)
 			{ 99, 1735, 9490, 9747, 9898 }, -- Demoralizing Roar
 		},
 		offensives = {
@@ -1064,7 +1064,7 @@ ns.CLASS_SPELL_LISTS = {
 How We Got the Data
 
 Last Validated
-	2026-11-08, WoW Forever 1.60.1.70862
+	2026-11-11, WoW Forever 1.60.1.70888
 
 Notes
 	- Each class's lists for the spellbook page: the spells whose macros get the mouseover, cursor, channeled and stealth options; the stance bar order and the stances each spell needs; the ability each demon or pet summon's macro can cast; the spells listed until learned that no trainer row covers (extraSpells: quest-learned spells and talents without trainer ranks). Features/Enhanced-Spellbook/Macro-Builder/Macro-Builder.lua reads them.

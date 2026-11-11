@@ -24,10 +24,6 @@ L["OPTIONS_LEVEL_UP_TITLE"] = "幫助 Good to Go 升級"
 L["OPTIONS_LEVEL_UP_THANKS"] = "感謝你選擇 Good to Go！"
 
 --------------------------------------------------------------------------------
--- Consumable Macros & Restocker
---------------------------------------------------------------------------------
-
---------------------------------------------------------------------------------
 -- Macro Names
 --------------------------------------------------------------------------------
 
@@ -379,31 +375,54 @@ L["MINIMAP_MIDDLE_CLICK"] = "中鍵點擊"
 L["MINIMAP_SHIFT_LEFT"] = "Shift + 左鍵點擊"
 
 --------------------------------------------------------------------------------
--- Mode Values
+-- Group Contexts
 --------------------------------------------------------------------------------
 
 --[[
-    The one when-to-use list, offered by every mode dropdown: Prioritize Buff
-    Food, Enable Scroll Buffs, Use Pet Food Buffs, and Use Conjured Food &
-    Water First. %s in OPTIONS_MODE_DESCRIPTION is the feature's name,
+    The checkboxes for when a feature acts by group, on every panel that has
+    them, always in this order. Each description is the checkbox's hover text,
+    saying when that context holds: a battleground or arena is always
+    Battleground, even though its group is a raid. GROUP_CONTEXT_NEVER is the
+    mini-map tooltip's label for a feature on with none of them ticked.
+]]
+L["GROUP_CONTEXT_SOLO"] = "單人"
+L["GROUP_CONTEXT_SOLO_DESCRIPTION"] = "不在隊伍或團隊中時。"
+L["GROUP_CONTEXT_PARTY"] = "隊伍"
+L["GROUP_CONTEXT_PARTY_DESCRIPTION"] = "在隊伍中時，包括透過地城搜尋器進入的地城。"
+L["GROUP_CONTEXT_RAID"] = "團隊"
+L["GROUP_CONTEXT_RAID_DESCRIPTION"] = "在團隊中時。戰場中的團隊算作戰場。"
+L["GROUP_CONTEXT_BATTLEGROUND"] = "戰場"
+L["GROUP_CONTEXT_BATTLEGROUND_DESCRIPTION"] = "在戰場或競技場內時，無論你在哪種隊伍中。"
+L["GROUP_CONTEXT_NEVER"] = "從不"
+
+--------------------------------------------------------------------------------
+-- When to Use
+--------------------------------------------------------------------------------
+
+--[[
+    Every consumable's When to Use (Prioritize Buff Food, Enable Scroll
+    Buffs, Use Pet Food Buffs, and Use Conjured Food & Water First): the level
+    filter dropdown, then the group context checkboxes (GROUP_CONTEXT_*) under
+    it. %s in OPTIONS_MODE_DESCRIPTION is the feature's name,
     FEATURE_BUFF_FOOD, FEATURE_SCROLL_BUFFS or OPTIONS_PET_HEADER; the
-    conjured dropdown has hover text of its own. Each value carries its own
-    "when", since most dropdowns sit beside their toggle with no caption.
-    Leveling means below the client's max level.
+    conjured dropdown has hover text of its own. Each level value carries its
+    own "when", since most dropdowns sit beside their toggle with no caption.
+    Leveling means below the client's max level. OPTIONS_GROUPS_NONE shows in
+    red under the checkboxes while none is ticked.
 
     In the mini-map tooltip, the Buff Food & Scrolls block, while a switch is
-    on but no choice applies, shows that choice's label in place of
-    MINIMAP_ENABLED, so every label has to read as a state too.
+    on but its When to Use doesn't hold, shows the level label holding it back
+    in place of MINIMAP_ENABLED, so every level label has to read as a state
+    too. When the checkboxes hold it back, it lists the ticked contexts'
+    labels instead, or GROUP_CONTEXT_NEVER with none.
 ]]
 L["OPTIONS_MODE_DESCRIPTION"] =
-	"選擇你的食物巨集何時提供%s：總是提供，或僅在單人時、隊伍或團隊中、團隊中、練等時或滿等時提供。"
+	"選擇你的食物巨集在哪些等級提供%s：任何等級、僅練等時或僅滿等時。下方的核取方塊選擇在哪些隊伍中。"
 L["OPTIONS_MODE_CAPTION"] = "使用時機"
-L["MODE_ALWAYS"] = "總是"
-L["MODE_SOLO"] = "單人時"
-L["MODE_PARTY"] = "在隊伍或團隊中時"
-L["MODE_RAID"] = "在團隊中時"
-L["MODE_LEVELING"] = "練等時"
-L["MODE_MAX_LEVEL"] = "滿等時"
+L["OPTIONS_GROUPS_NONE"] = "沒有勾選任何項目，因此永遠不會使用。"
+L["LEVEL_FILTER_ANY"] = "任何等級"
+L["LEVEL_FILTER_LEVELING"] = "練等時"
+L["LEVEL_FILTER_MAX_LEVEL"] = "滿等時"
 
 --------------------------------------------------------------------------------
 -- Inventory Report
@@ -436,7 +455,7 @@ L["INVENTORY_REPORT_TOTAL"] = "總計 %s"
 L["OPTIONS_DESCRIPTION"] =
 	"自動更新的巨集，總是使用你最好的食物、水、藥水和治療石；自動購買材料與彈藥並存入銀行的補貨清單；一鍵施放缺少的增益；以及為每個法術產生的滑鼠指向巨集。"
 
--- Options: tree labels
+-- Enhanced Spellbook: its tree label, its panel's description, and the print when it's off.
 L["TAB_ENHANCED_SPELLBOOK"] = "強化法術書"
 L["OPTIONS_SPELLBOOK_DESCRIPTION"] =
 	"從法術書的新分頁一鍵為每個職業法術建立滑鼠指向、游標施放與自我施放巨集，不需要任何巨集語法。巨集會隨你升級、訓練和切換天賦自動更新。右鍵點擊即可加入專注目標、停止施法、自動攻擊、寵物攻擊或飾品。"
@@ -592,7 +611,7 @@ L["OPTIONS_CONJURED_FIRST"] = "優先使用魔法製造的食物與水"
 L["OPTIONS_CONJURED_FIRST_DESCRIPTION"] =
 	'魔法製造的食物和水不花錢，並會在你離線後不久消失，因此你的食物和水巨集會優先使用它們，即使背包裡有恢復量更高的物品。開啟"優先增益食物"時，增益食物仍然最先使用。'
 L["OPTIONS_CONJURED_FIRST_MODE_DESCRIPTION"] =
-	"選擇魔法製造的食物和水何時優先：總是優先，或僅在單人時、隊伍或團隊中、團隊中、練等時或滿等時優先。"
+	"選擇魔法製造的食物和水在哪些等級優先：任何等級、僅練等時或僅滿等時。下方的核取方塊選擇在哪些隊伍中。"
 
 -- Use Restock List Food & Water Last, the fourth option under Food & Water.
 L["OPTIONS_RESTOCK_LAST"] = "最後使用補貨清單中的食物與水"
@@ -726,7 +745,7 @@ L["OPTIONS_RAPID_REGENERATION_DESCRIPTION"] =
 	"當%s冷卻完畢時，你的食物巨集會施放它而不是進食，以節省食物。冷卻期間，巨集會照常進食。"
 L["OPTIONS_RAPID_REGENERATION_EATING"] = "使用%s代替進食"
 L["OPTIONS_RAPID_REGENERATION_EATING_DESCRIPTION"] =
-	"當%s冷卻完畢時，你的食物巨集會施放它而不是進食。否則照常進食。卷軸和增益食物仍然優先。"
+	"當%s冷卻完畢時，你的食物巨集會施放它而不是進食。否則照常進食。卷軸和增益食物仍然優先。戰鬥中無法進食，每次按下都會施放它。"
 
 --[[
     Ignore List panel (Options-Ignore-List.lua). One tree scope per list: the
@@ -1018,7 +1037,7 @@ L["RANK_WATCH_GRACE_DESCRIPTION"] =
 	"新的法術等級要等施法者超過其學習等級若干級（由此處設定）後才會回報，這樣就不會有人因為剛剛達到、還來不及訓練的法術等級而收到提醒。"
 L["RANK_WATCH_GRACE_MAX_LEVEL"] = "滿等寬限期"
 L["RANK_WATCH_GRACE_MAX_LEVEL_DESCRIPTION"] =
-	"對於已滿等的角色，學習等級在滿等以下這麼多級以內的法術等級不會被回報。設為 0 時，他們可擁有的每個法術等級都會被回報。"
+	"對於已滿等的角色，學習等級距滿等在這麼多級以內的法術等級不會被回報。設為 0 時，他們可擁有的每個法術等級都會被回報。"
 L["RANK_WATCH_GRACE_LEVELING"] = "練等寬限期"
 L["RANK_WATCH_GRACE_LEVELING_DESCRIPTION"] =
 	"對於仍在練等的角色，學習等級與其目前等級相差在這麼多級以內的法術等級不會被回報，讓他們有時間去找訓練師。"
@@ -1077,6 +1096,8 @@ L["RESTOCKER_PROFILE_EXISTS"] = '已存在名為"%s"的清單。'
 ]]
 L["RESTOCKER_UNKNOWN_ITEM"] = "沒有 ID 為 %d 的物品。"
 L["RESTOCKER_DISABLED"] = "Restocker 已關閉。請在 選項 > 插件 > Good to Go > Restocker 中開啟。"
+-- %s is the list name the player typed after /restock profile use, delete or copy.
+L["RESTOCKER_LIST_NOT_FOUND"] = "沒有名為 %s 的補貨清單。"
 --[[
     %s is the /restock slash command, colored at the call site. Only the bank flow
     prints this, so the Shift hint names the bank; Shift is read as the window
@@ -1592,18 +1613,15 @@ L["BUFF_DUTY_DESCRIPTION"] = "顯示誰缺少你的增益。點擊圖示即可�
 L["BUFF_DUTY_ENABLE"] = "啟用增益值班"
 L["BUFF_DUTY_NO_BUFFS"] =
 	"你的職業沒有此列表中的增益，因此該視窗在這個角色上永遠不會出現。"
--- When to Show: Solo, In Party and In Raid, each with Always or In Instance, then the classes.
+-- When to Show: the group context checkboxes (GROUP_CONTEXT_*), Anywhere or In Instance beside the first three, then the classes.
 L["BUFF_DUTY_WHEN_HEADER"] = "顯示時機"
 L["BUFF_DUTY_WHEN_DESCRIPTION"] = "選擇視窗何時可以出現。"
-L["BUFF_DUTY_WHEN_SOLO"] = "單人"
-L["BUFF_DUTY_WHEN_SOLO_DESCRIPTION"] = "不在隊伍或團隊中時顯示視窗。"
-L["BUFF_DUTY_WHEN_PARTY"] = "在隊伍中"
-L["BUFF_DUTY_WHEN_PARTY_DESCRIPTION"] = "在隊伍中時顯示視窗。"
-L["BUFF_DUTY_WHEN_RAID"] = "在團隊中"
-L["BUFF_DUTY_WHEN_RAID_DESCRIPTION"] = "在團隊中時顯示視窗。"
+L["BUFF_DUTY_WHEN_NONE"] = "沒有勾選任何項目，因此視窗永遠不會出現。"
+L["BUFF_DUTY_AURAS_HIDDEN"] =
+	"增益值班在此處隱藏。遊戲不允許插件在這個區域查看增益，因此無法判斷誰缺少增益。"
 L["BUFF_DUTY_WHERE_DESCRIPTION"] =
-	"設定視窗在哪裡顯示：任何地方，或僅在地城、團隊副本、戰場和競技場內。"
-L["BUFF_DUTY_WHERE_ALWAYS"] = "總是"
+	"設定視窗在哪裡顯示：任何地方，或僅在副本內，例如地城或團隊副本。"
+L["BUFF_DUTY_WHERE_ALWAYS"] = "任何地方"
 L["BUFF_DUTY_WHERE_INSTANCE"] = "在副本中"
 L["BUFF_DUTY_CLASSES_DESCRIPTION"] = "在玩這些職業時顯示視窗。"
 L["BUFF_DUTY_CLASS_DESCRIPTION"] = "在玩此職業時顯示視窗。"
@@ -1640,7 +1658,7 @@ L["BUFF_DUTY_TANKS_PETS"] = "寵物"
 L["BUFF_DUTY_TANKS_PETS_DESCRIPTION"] =
 	"設定寵物何時視為坦克。寵物也會獲得你提供給所有人的增益。"
 L["BUFF_DUTY_TANKS_NEVER"] = "從不"
-L["BUFF_DUTY_TANKS_SOLO"] = "不在隊伍中時"
+L["BUFF_DUTY_TANKS_SOLO"] = "單人時"
 L["BUFF_DUTY_TANKS_ALWAYS"] = "總是"
 -- Who each buff is offered to: one dropdown per buff, these four choices.
 L["BUFF_DUTY_AUDIENCE_OFF"] = "關閉"
@@ -1653,6 +1671,8 @@ L["BUFF_DUTY_AUDIENCE_DESCRIPTION"] = "設定 %s 提供給誰。"
 L["BUFF_DUTY_BUFFS_DESCRIPTION"] =
 	"選擇每個增益提供給誰。坦克和治療者依隊伍職責判定，但在團隊中只有被設為%s的玩家才算坦克。沒有職責的人視為傷害輸出，除非下方的視為坦克另有設定。"
 
+-- The Self-Buffs panel, under Buff Duty: its name and description.
+L["BUFF_DUTY_SELF_HEADER"] = "自身增益"
 L["BUFF_DUTY_SELF_DESCRIPTION"] = "你自己的增益，固定在視窗頂部。"
 --[[
     Muted note after a class name on the Self-Buffs panel, for a family of self
@@ -1696,7 +1716,6 @@ L["BUFF_DUTY_WEAPON_ENABLE_DESCRIPTION"] =
 	"將武器上缺失或即將結束的毒藥、武器強化、油、磨刀石和魚餌，與你的自身增益一起顯示在視窗頂部。點擊即可施加。可在武器增益中選擇要顯示哪些。"
 
 -- The window itself
-L["BUFF_DUTY_SELF_HEADER"] = "自身增益"
 -- The window's header over your own buffs and weapon rows (BUFF_DUTY_SELF_HEADER names the options panel).
 L["BUFF_DUTY_MISSING_SELF_HEADER"] = "缺少的自身增益"
 L["BUFF_DUTY_PARTY_BUFFS_HEADER"] = "缺少的隊伍增益"
@@ -1710,7 +1729,7 @@ L["BUFF_DUTY_TOOLTIP_USE"] = "你的隊伍中沒有人有靈魂石。對 %s 使�
 L["BUFF_DUTY_TOOLTIP_CREATE"] = "你的隊伍中沒有人有靈魂石。製造一顆。"
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "對 %s 及其隊伍施放。"
 L["BUFF_DUTY_TOOLTIP_FAVOR"] = "選取 %s 為目標並施放。"
--- A Party-Buffs icon's menu: a raid buff your group is missing, and its count.
+-- A Party Buffs icon's menu: a raid buff your group is missing, and its count.
 L["BUFF_DUTY_OTHERS_TOOLTIP_COUNT"] = "缺少或即將消失：%d"
 -- The menu's rows: the first asks the party or raid for the buff (its name), the second whispers the players who can cast it (their names).
 L["BUFF_DUTY_OTHERS_MENU_ASK_GROUP"] = "向隊伍請求%s"
@@ -1726,10 +1745,12 @@ L["BUFF_DUTY_OTHERS_ASK_NAMES"] = "%s缺少%s。"
 L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "%d名玩家缺少%s增益。"
 -- Your own chat, after the Whisper row: who was whispered, then the buff's link.
 L["BUFF_DUTY_OTHERS_SENT"] = "已向 %s 發送%s的密語。"
--- The window's close button: the class name, the class name again for its checkbox, the When to Show
--- header, then the options command.
+--[[
+    The window's close button: the class name, the class name again for its
+    checkbox, the When to Show header, then the options command.
+]]
 L["BUFF_DUTY_CLOSED"] =
-	'已為%1$s職業關閉增益值班。要重新開啟，請 Shift + 左鍵點擊小地圖按鈕，或在 %4$s 的"%3$s"下勾選"%2$s"。'
+	'增益值班已隱藏，直到下次登入或重新載入介面。要立即恢復，請 Shift + 左鍵點擊小地圖按鈕。要為%1$s職業保持關閉，請在 %4$s 的"%3$s"下取消勾選"%2$s"。'
 
 -- The Buff Button key: its name in the game's Key Bindings list and the root panel's Key Bindings section, then the notices a press shows.
 L["BUFF_KEY"] = "增益按鈕"
@@ -1737,6 +1758,13 @@ L["BUFF_KEY"] = "增益按鈕"
 L["BUFF_KEY_WAITING"] = "正在等待 %s 進入範圍。"
 L["BUFF_KEY_DONE"] = "沒有需要施放的增益了。"
 L["BUFF_KEY_OFF"] = "增益值班已關閉。"
+--[[
+    The Buff Duty window's last line while the Buff Button has no key: the Buff
+    Button's name (BUFF_KEY), the root panel's Key Bindings header
+    (OPTIONS_KEY_BINDINGS_HEADER), then the options command.
+]]
+L["BUFF_DUTY_KEY_HINT"] =
+	'你知道嗎？為%s綁定一個按鍵，每按一次就會施放清單中的下一個增益。可在"%s"中設定（%s）。'
 
 --------------------------------------------------------------------------------
 -- Spellbook
@@ -2101,8 +2129,8 @@ L["TOOLTIP_MACRO_SLOTS"] =
 L["PAGE_MACRO_GENERAL"] = "一般"
 L["PAGE_MACRO_CHARACTER"] = "角色"
 L["PAGE_NO_MATCHES_FOR"] = '沒有符合"%s"的法術。'
--- TRANSLATORS: %d is how many spells the category lists, %s its name ("Settings for All 6 Heals").
-L["PAGE_CATEGORY_SETTINGS"] = "全部 %d 個%s的設定"
+-- TRANSLATORS: %d is how many spells the category lists, %s its name ("Options for All 6 Heals").
+L["PAGE_CATEGORY_SETTINGS"] = "全部 %d 個%s的選項"
 L["PAGE_CATEGORY_SETTINGS_DESCRIPTION"] =
 	"一次為此類別中的每個法術開啟或關閉某個選項。尚未放到快捷列上的法術會保留該設定，等你放置時套用。"
 -- after a category's count, where it carries on from the column before

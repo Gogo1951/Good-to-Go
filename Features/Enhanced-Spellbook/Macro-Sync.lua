@@ -74,8 +74,11 @@ local function SyncAt(macro, index)
 	if index == 0 then
 		return 0
 	end
-	local name, _, body = GetMacroInfo(index)
+	local name, icon, body = GetMacroInfo(index)
 	local newBody = body ~= macro.body and Fits(macro) and macro.body or nil
+	-- only a profession's icon is the add-on's to set (see ns.WowMacroIcon); any other keeps the player's
+	local wantIcon = ns.WowMacroIcon(macro)
+	local newIcon = wantIcon ~= macro.macroIcon and icon ~= wantIcon and wantIcon or nil
 	local renamed = IsReplacedSpellsName(macro, name)
 	-- MIGRATION (remove after 2026-11-23)
 	renamed = renamed or name == LegacyMacroName(macro)
@@ -86,8 +89,8 @@ local function SyncAt(macro, index)
 		if owned[name] == nil and ns.BodyTag(body) == ns.MacroTag(macro) then
 			owned[name] = OwnerRecord(index)
 		end
-		if newBody then
-			EditMacro(index, nil, nil, newBody)
+		if newBody or newIcon then
+			EditMacro(index, nil, newIcon, newBody)
 		end
 		return index
 	end
@@ -95,7 +98,7 @@ local function SyncAt(macro, index)
 	local owned = OwnedList(index)
 	owned[name] = nil
 	owned[wowName] = OwnerRecord(index)
-	return EditMacro(index, wowName, nil, newBody) or index
+	return EditMacro(index, wowName, newIcon, newBody) or index
 end
 
 --[[
@@ -194,7 +197,7 @@ function ns.PickupMacro(macro)
 		if not Fits(macro) then
 			return
 		end
-		index = CreateMacro(ns.WowMacroName(macro), macro.macroIcon, macro.body, perCharacter)
+		index = CreateMacro(ns.WowMacroName(macro), ns.WowMacroIcon(macro), macro.body, perCharacter)
 		if not index or index == 0 then
 			return
 		end
@@ -218,6 +221,8 @@ function ns:OnPlayerRegenEnabled()
 		syncPending = false
 		ns:RefreshMacros()
 	end
+	-- Dynamic Rank rewrites wait out combat too, and the target or mouseover may have changed meanwhile.
+	ns.QueueRankRewriteAll()
 end
 
 --[[

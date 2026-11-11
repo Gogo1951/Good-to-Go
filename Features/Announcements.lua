@@ -44,9 +44,9 @@ end
 
 --[[
     Branded sent messages -- Rank Watch's whispers and Buff Duty's buff asks:
-    {rt1} Message // GtG. The body carries a spell link and the leading raid-
-    target marker; the chat system renders both on send (the marker becomes the
-    Star icon), so the pipes and braces pass through unchanged. WoW Forever blocks
+    {rt1} Message // GtG. The body carries a spell link, and MarkerPrefix adds
+    the leading raid-target marker; the chat system renders both on send (the
+    marker becomes the Star icon), so the pipes and braces pass through unchanged. WoW Forever blocks
     raid-marker tokens in group and channel chat but allows them in whispers, so
     there the marker leads whispers only.
 ]]
@@ -290,20 +290,24 @@ function ns:GetGroupChatChannel()
 	return nil
 end
 
--- The Party-Buffs hover menu's Ask row, to the whole group.
+--[[
+    The one entry point for a sent line built from a locale key: formatted,
+    signed off (a whisper by the whisper rule, MarkerPrefix) and delivered. A
+    nil channel, or a key with no text, sends nothing.
+]]
+function ns:Announce(channel, target, formatKey, ...)
+	Deliver(channel, target, BuildSent(channel == "WHISPER", formatKey, ...))
+end
+
+-- The Party-Buffs hover menu's Ask row, to the whole group: a line already built, so its length was measured.
 function ns:SayBuffRequest(message)
 	Deliver(ns:GetGroupChatChannel(), nil, message)
 end
 
 --[[
-    The Party-Buffs hover menu's Whisper row, to one of the class's players.
-    Queued, since one pick whispers every player of the class at once.
+    An automated whisper already built (a buff ask from the Party-Buffs menu's
+    Whisper row, a Rank Watch report), queued so a burst of them is spaced out.
 ]]
-function ns:WhisperBuffRequest(target, message)
-	Deliver("WHISPER", target, message)
-end
-
--- Any other feature's automated whisper, spaced on the same clock as the asks.
 function ns:QueueAutomatedWhisper(target, message)
 	Deliver("WHISPER", target, message)
 end

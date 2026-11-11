@@ -50,8 +50,11 @@ end
 -- Slash Commands
 --------------------------------------------------------------------------------
 
+-- The subcommands that name an existing list, which say so when the name matches none.
+local NAMES_EXISTING_LIST = { delete = true, copy = true, use = true }
+
 function ns.HandleRestockerCommand(args)
-	local command, rest = strsplit(" ", args, 2)
+	local command, rest = strtrim(args or ""):match("^(%S*)%s*(.-)$")
 	command = command:lower()
 
 	-- The master switch stops every command but help and config, which opens the panel that turns it back on.
@@ -63,20 +66,25 @@ function ns.HandleRestockerCommand(args)
 	if command == "show" then
 		ns.ShowRestockWindow()
 	elseif command == "profile" then
-		if rest == "" or rest == nil then
+		if rest == "" then
 			PrintProfileHelp()
 			return
 		end
 
-		local subcommand, name = strsplit(" ", rest, 2)
+		local subcommand, name = rest:match("^(%S*)%s*(.-)$")
 		subcommand = subcommand:lower()
 
 		--[[
 		    Every /restock profile subcommand needs a name; print its usage line instead of
 		    erroring on a nil table key when the name is missing.
 		]]
-		if (name == nil or name == "") and RESTOCKER_COMMANDS.profile[subcommand] then
+		if name == "" and RESTOCKER_COMMANDS.profile[subcommand] then
 			ns:PrintMessage(RESTOCKER_COMMANDS.profile[subcommand])
+			return
+		end
+
+		if NAMES_EXISTING_LIST[subcommand] and ns.restockSettings.lists[name] == nil then
+			ns:PrintMessage(L["RESTOCKER_LIST_NOT_FOUND"]:format(name))
 			return
 		end
 

@@ -1,8 +1,9 @@
 local _, ns = ...
 
--- [scrollType] = { items = { ... }, conflictSpells = { ... } }
+-- [scrollType] = { classes = "ALL" or { classToken, ... }, items = { ... }, conflictSpells = { ... } }
 ns.SCROLL_DATA = {
 	Agility = {
+		classes = { "DRUID", "HUNTER", "PALADIN", "ROGUE", "WARRIOR" },
 		-- {itemID, buffID, requiredLevel, amount}, -- Name
 		items = {
 			{ 10309, 12174, 55, 17 }, -- Scroll of Agility IV
@@ -23,6 +24,7 @@ ns.SCROLL_DATA = {
 		},
 	},
 	Intellect = {
+		classes = { "DRUID", "HUNTER", "MAGE", "PALADIN", "PRIEST", "SHAMAN", "WARLOCK" },
 		-- {itemID, buffID, requiredLevel, amount, class token or nil}, -- Name
 		items = {
 			{ 10308, 12176, 50, 16 }, -- Scroll of Intellect IV
@@ -53,6 +55,7 @@ ns.SCROLL_DATA = {
 		},
 	},
 	Protection = {
+		classes = "ALL",
 		-- {itemID, buffID, requiredLevel, amount}, -- Name
 		items = {
 			{ 10305, 12175, 45, 240 }, -- Scroll of Protection IV
@@ -71,6 +74,7 @@ ns.SCROLL_DATA = {
 		},
 	},
 	Stamina = {
+		classes = "ALL",
 		-- {itemID, buffID, requiredLevel, amount}, -- Name
 		items = {
 			{ 10307, 12178, 50, 16 }, -- Scroll of Stamina IV
@@ -98,6 +102,7 @@ ns.SCROLL_DATA = {
 		},
 	},
 	Spirit = {
+		classes = { "DRUID", "MAGE", "PALADIN", "PRIEST", "SHAMAN" },
 		-- {itemID, buffID, requiredLevel, amount}, -- Name
 		items = {
 			{ 10306, 12177, 45, 15 }, -- Scroll of Spirit IV
@@ -125,6 +130,7 @@ ns.SCROLL_DATA = {
 		},
 	},
 	Strength = {
+		classes = { "DRUID", "PALADIN", "SHAMAN", "WARRIOR" },
 		-- {itemID, buffID, requiredLevel, amount}, -- Name
 		items = {
 			{ 10310, 12179, 55, 17 }, -- Scroll of Strength IV
@@ -152,10 +158,11 @@ ns.SCROLL_DATA = {
 How We Got the Data
 
 Last Validated
-	2026-11-08, WoW Forever 1.60.1.70862
+	2026-11-11, WoW Forever 1.60.1.70888
 
 Notes
 	- The stat scrolls, read by Features/Macros-for-Consumables/Scanner/Scanner-Auras.lua (FindBestScroll) to pick a scroll whose buff the player lacks. Each type lists its scrolls as { itemID, buffID, requiredLevel, amount }: the buff is the aura the scroll leaves, requiredLevel the level the tooltip requires, amount the stat it grants.
+	- classes is who the type is on for by default (Data/Default-Settings.lua, scrollTypes): "ALL", or the class tokens whose characters get use from the stat, by class and never by spec. It follows Play It Forward's CONSUMABLE_CLASSES (Data/{Game}/Match-Classes-{Game}.lua there), the stat each class's gear wants, with Paladins added to Agility: Stamina and Protection go to everyone; Strength to Druids, Paladins, Shamans and Warriors; Agility to Druids, Hunters, Paladins, Rogues and Warriors; Intellect to every mana user, Hunters included; Spirit to Druids, Mages, Paladins, Priests and Shamans. The player can still tick any type on or off.
 	- conflictSpells lists the buffs a scroll can't stack with, keyed by spell ID, with the amount each grants; a scroll is skipped while the player has a conflicting buff at least as strong. Class buffs come first. Agility, Protection and Strength list no class buffs; Protection stacks with Devotion Aura, Stoneskin and the like.
 	- After the class buffs come every elixir, flask and other consumable buff in ns.ELIXIR_BUFF_IDS and ns.FLASK_BUFF_IDS (Data/{Game}/Elixirs-{Game}.lua) that raises the same stat: a SpellEffect Mod Stat aura (29) for the stat, or aura 674 on armor (this client's armor aura) for Protection, at its amount on this build. A buff that raises two stats, such as Elixir of the Sages, is listed under both. Only Elixir of the Mongoose blocking Scroll of Agility is confirmed in game (GitHub issue #3); the rest follow the same rule without an in-game check. That errs toward skipping a scroll that would have stacked rather than building a scroll line that fails on use.
 	- The three Mage familiar scrolls carry a fifth column, the class that can use them (MAGE), because they don't bind and another class could carry one. Each one's buff is its use spell, which summons the familiar and puts the Intellect aura on the caster. Whether that aura stacks with Scroll of Intellect or Arcane Intellect is unchecked in game; counting them as one Intellect buff never builds a line that fails.

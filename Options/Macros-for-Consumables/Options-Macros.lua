@@ -16,7 +16,9 @@ local RowLabel = ns.OptionsRowLabel
     then appears on its toggle's line (see the Options Layout Grid in
     Data/Data.lua). Scroll Buffs and Pet Food Buffs, which also carry a block
     of type checkboxes, put their dropdown on a captioned sub-option row under
-    the toggle (ModeSubRow), with the checkboxes beneath it. These read the profile's settings
+    the toggle (ModeSubRow), with the checkboxes beneath it. Every When to Use
+    dropdown has the group context checkboxes on a row under it
+    (UseWhenGroups). These read the profile's settings
     table that InitializeDatabase in Features/Core.lua guarantees.
 
     Settings live on the AceDB profile, which is the character's own unless
@@ -63,15 +65,23 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The when-to-use dropdown behind every mode setting -- Buff Food, Scroll
-    Buffs, Pet Food Buffs, and conjured food and water first -- so all four
-    offer the one list, ns.MODE_VALUES in ns.MODE_ORDER. It sits on its
-    toggle's line, or on a sub-option row through ModeSubRow below, and hides
-    until the toggle is on. Pet Food Buffs' section hides whole on a flavor
-    with no pet buff food. Selecting a mode rewrites the macros under the
-    throttle.
+    Every consumable's When to Use -- Buff Food, Scroll Buffs, Pet Food Buffs,
+    and conjured food and water first -- is the same pair, named by its
+    settings' prefix (ns.IsUseWhenActive): the level filter dropdown,
+    ns.LEVEL_FILTER_VALUES in ns.LEVEL_FILTER_ORDER, on its toggle's line or
+    on a sub-option row through ModeSubRow below, then the shared group
+    context checkboxes on a sub-option row of their own (UseWhenGroups), with
+    a red line under them while none is ticked. All of it hides until the
+    toggle is on. Pet Food Buffs' section hides whole on a flavor with no pet
+    buff food. Any change rewrites the macros under the throttle.
 ]]
-local function FeatureModeSelect(settingKey, description, isActive, order)
+local function UseWhenChanged()
+	ns.ResetMacroState()
+	ns.RequestUpdate()
+end
+
+local function FeatureModeSelect(prefix, description, isActive, order)
+	local settingKey = prefix .. "Level"
 	return {
 		type = "select",
 		name = "",
@@ -81,17 +91,28 @@ local function FeatureModeSelect(settingKey, description, isActive, order)
 		hidden = function()
 			return not isActive()
 		end,
-		values = ns.MODE_VALUES,
-		sorting = ns.MODE_ORDER,
+		values = ns.LEVEL_FILTER_VALUES,
+		sorting = ns.LEVEL_FILTER_ORDER,
 		get = function()
 			return ns.db.profile[settingKey]
 		end,
 		set = function(_, value)
 			ns.db.profile[settingKey] = value
-			ns.ResetMacroState()
-			ns.RequestUpdate()
+			UseWhenChanged()
 		end,
 	}
+end
+
+-- The group context checkboxes and their none-ticked warning, at `order` and just after it.
+local function UseWhenGroups(args, prefix, isActive, order)
+	local function GetTable()
+		return ns.db.profile[prefix .. "In"]
+	end
+	local function Inactive()
+		return not isActive()
+	end
+	args[prefix .. "In"] = ns.OptionsGroupContextRow(order, Inactive, GetTable, UseWhenChanged)
+	args[prefix .. "InNone"] = ns.OptionsGroupContextNone(L["OPTIONS_GROUPS_NONE"], order + 0.01, GetTable, Inactive)
 end
 
 --[[
@@ -100,8 +121,8 @@ end
     toggle's line. The caption and the dropdown together end where every other
     row ends.
 ]]
-local function ModeSubRow(settingKey, description, isActive, order)
-	local dropdown = FeatureModeSelect(settingKey, description, isActive, 0)
+local function ModeSubRow(prefix, description, isActive, order)
+	local dropdown = FeatureModeSelect(prefix, description, isActive, 0)
 	dropdown.hidden = nil
 	return ns.OptionsSubRow(order, function()
 		return not isActive()
@@ -115,7 +136,7 @@ local function ModeSubRow(settingKey, description, isActive, order)
 	})
 end
 
--- Hover text for a mode dropdown choosing when the Food macro offers a feature.
+-- Hover text for a level filter dropdown choosing when the Food macro offers a feature.
 local function ModeDescription(featureName)
 	return string.format(L["OPTIONS_MODE_DESCRIPTION"], featureName)
 end
@@ -163,7 +184,7 @@ end
 --[[
     One pet food toggle per row of the flavor folder's ns.PET_BUFF_FOODS, best
     rank first. Each stands for an item, so it wears the item's icon on the
-    icon checkbox (Options-Utilities.lua) and names it in its quality color,
+    icon checkbox (Options-Widgets.lua) and names it in its quality color,
     as the Which Macros to Create rows do. A name still uncached shows as loading text
     and is warmed so the panel repaints.
 ]]
@@ -208,7 +229,7 @@ end
     icon of the item the macro shows while the bags hold nothing it can use
     (ns.MACRO_DEFAULT_ITEM_IDS, keyed by the same macro type as `key`), which
     is how the macro looks on a fresh character's action bar. The checkbox is
-    the icon checkbox (Options-Utilities.lua), for the gap between the two.
+    the icon checkbox (Options-Widgets.lua), for the gap between the two.
 ]]
 local function MacroToggle(macroName, key, order)
 	return {
@@ -373,7 +394,7 @@ function ns.BuildMacrosOptions()
 				ns.ToggleMacroSetting("useBuffFood", value)
 			end,
 		},
-		buffFoodMode = FeatureModeSelect("buffFoodMode", ModeDescription(L["FEATURE_BUFF_FOOD"]), BuffFoodActive, 26),
+		buffFoodLevel = FeatureModeSelect("buffFood", ModeDescription(L["FEATURE_BUFF_FOOD"]), BuffFoodActive, 26),
 		spaceBuffFood = Spacer(27),
 		toggleScrolls = {
 			type = "toggle",
@@ -388,7 +409,7 @@ function ns.BuildMacrosOptions()
 				ns.ToggleMacroSetting("useScrolls", value)
 			end,
 		},
-		scrollsMode = ModeSubRow("scrollsMode", ModeDescription(L["FEATURE_SCROLL_BUFFS"]), ScrollsActive, 29),
+		scrollsLevel = ModeSubRow("scrolls", ModeDescription(L["FEATURE_SCROLL_BUFFS"]), ScrollsActive, 29),
 		spaceScrolls = Spacer(30),
 		scrollTypesGroup = {
 			type = "group",
@@ -423,8 +444,8 @@ function ns.BuildMacrosOptions()
 				ns.ToggleMacroSetting("useConjuredFirst", value)
 			end,
 		},
-		conjuredFirstMode = FeatureModeSelect(
-			"conjuredFirstMode",
+		conjuredFirstLevel = FeatureModeSelect(
+			"conjuredFirst",
 			L["OPTIONS_CONJURED_FIRST_MODE_DESCRIPTION"],
 			ConjuredFirstActive,
 			34
@@ -596,7 +617,7 @@ function ns.BuildMacrosOptions()
 				ns.RequestUpdate()
 			end,
 		},
-		petBuffFoodMode = ModeSubRow("petBuffFoodMode", ModeDescription(L["OPTIONS_PET_HEADER"]), PetBuffActive, 306),
+		petBuffFoodLevel = ModeSubRow("petBuffFood", ModeDescription(L["OPTIONS_PET_HEADER"]), PetBuffActive, 306),
 		spacePetTypes0 = Spacer(307, function()
 			return not PetBuffActive()
 		end),
@@ -639,6 +660,12 @@ function ns.BuildMacrosOptions()
 			end,
 		},
 	}
+
+	-- Each When to Use's group context checkboxes, under its level filter.
+	UseWhenGroups(args, "buffFood", BuffFoodActive, 26.5)
+	UseWhenGroups(args, "scrolls", ScrollsActive, 29.5)
+	UseWhenGroups(args, "conjuredFirst", ConjuredFirstActive, 34.5)
+	UseWhenGroups(args, "petBuffFood", PetBuffActive, 306.5)
 
 	return {
 		type = "group",

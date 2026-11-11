@@ -211,7 +211,7 @@ function ns.WhisperOtherClassBuff(spec)
 	end
 	local message = ns:BuildBuffRequestMessage(spec.missing, spec.count, spec.link, true)
 	for _, target in ipairs(spec.recipients) do
-		ns:WhisperBuffRequest(target, message)
+		ns:QueueAutomatedWhisper(target, message)
 	end
 	-- Every recipient is of the buff's class, so each name takes its color.
 	local names = {}

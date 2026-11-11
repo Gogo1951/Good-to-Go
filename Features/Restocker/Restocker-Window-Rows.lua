@@ -163,7 +163,7 @@ end
 
 --[[
     The group-loot pass mark is the game's own "get rid of this" icon, and the
-    same texture the options panels' item lists (Options/Options-Utilities.lua)
+    same texture the options panels' item lists (Options/Options-Item-Lists.lua)
     use for their remove column -- so removal looks the same everywhere. Never a
     UIPanelCloseButton: its red X reads as "close the window" on a row, and its
     30px frame is mostly transparent padding.

@@ -19,8 +19,9 @@ local GetColor = ns.GetColor
     mini-map's Restocker Report does -- icon, name, have/wanted -- capped, so a
     long list cannot run the tooltip off the screen.
 
-    It is read straight off ns.BuildGroceryList, like the mini-map tooltip and
-    every reminder, so none of them can disagree about what is outstanding. An
+    The count comes from ns.CountRestockOrders and the tooltip from
+    ns.BuildGroceryList, which count by the same rules as the mini-map tooltip
+    and every reminder, so none of them can disagree about what is outstanding. An
     order is a row with Buy on that the bags are short of, and the count is
     drawn in the yellow of the Keep marks it counts (KEEP_SHORT in
     Data/Data.lua): the line is where a player learns what a yellow Keep
