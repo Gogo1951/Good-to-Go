@@ -1,6 +1,5 @@
 local _, ns = ...
 local Data = ns.Data
-local L = ns.L
 
 --[[
     The group's raid buffs, counted under the window's Party-Buffs: one icon
@@ -19,10 +18,11 @@ local L = ns.L
     raid with no priest who can cast it would otherwise count everyone, for
     good.
 
-    An icon's menu (Buff-Duty-Party-Buffs.lua) asks the party or raid for the
-    buff, or whispers the same ask to every other player of that class in
-    the group (Features/Announcements.lua builds and sends both); one of your
-    own class's, with nobody else of it in the group, has no one to whisper.
+    Clicking an icon (Buff-Duty-Party-Buffs.lua) asks the party or raid for
+    the buff; right-clicking whispers the same ask to every other player of
+    that class in the group (Features/Announcements.lua builds and sends
+    both). One of your own class's, with nobody else of it in the group, has
+    no one to whisper.
     The whole row is the panel's Ask Other Classes for Buffs switch. The
     frame draws the icons; this file counts and asks.
 ]]
@@ -79,6 +79,8 @@ local function Candidates()
 				count = 0,
 				names = {}, -- subgroup -> the names missing it there
 				classes = {}, -- subgroup -> each of those names' class, in step
+				expires = {}, -- subgroup -> when each one's low buff runs out (GetTime), 0 when missing, in step
+				durations = {}, -- subgroup -> that low buff's full duration, 0 when missing, in step
 			}
 		end
 	end
@@ -87,9 +89,10 @@ end
 
 --[[
     The icons to draw, in data order (druids, mages, priests), each one
-    { key, spellId, spellName, link, class, count, groups, missing, recipients,
-    recipientNames }: `groups` the names missing it, party by party, each
-    { label, names, classes }, for the menu; `missing` the same names in
+    { key, spellId, spellName, link, class, count, groups, missing, recipients }: `groups` the names missing it, party by party, each
+    { label, names, classes, expires, durations }, for the tooltip, `expires`
+    and `durations` holding when each one's low buff runs out and how long it
+    lasts, or 0 for none at all; `missing` the same names in
     one list, for the ask; and `recipients` the other
     players of its class to whisper, which may be none for your own class.
     Empty outside a group, and asked after BuildSections, which sets the
@@ -105,32 +108,43 @@ function BuffDuty.BuildOtherClassBuffs()
 		return summary
 	end
 
-	local buffers, buffersShort = {}, {}
+	local buffers = {}
 	for _, member in ipairs(BuffDuty.GroupMembers()) do
 		local unit = member.unit
 		local _, class = UnitClass(unit)
 		if class and BuffDuty.CanBuff(unit) then
 			local name = GetUnitName(unit, false) or ""
 			if not UnitIsUnit(unit, "player") then
-				-- The whisper needs the realm of a player from another one; the list doesn't.
+				-- The whisper needs the realm of a player from another one.
 				buffers[class] = buffers[class] or {}
-				buffersShort[class] = buffersShort[class] or {}
 				table.insert(buffers[class], GetUnitName(unit, true) or name)
-				table.insert(buffersShort[class], name)
 			end
 			BuffDuty.ReadAuras(unit)
 			local role = BuffDuty.RoleOf(unit, class)
 			for _, candidate in ipairs(candidates) do
 				local buff = candidate.buff
 				candidate.carried = candidate.carried or BuffDuty.Carries(buff)
-				if BuffDuty.Wants(buff, class, role) and not BuffDuty.Has(buff, unit) then
+				local has, lowExpires, lowDuration
+				if BuffDuty.Wants(buff, class, role) then
+					has, lowExpires, lowDuration = BuffDuty.Has(buff, unit)
+				else
+					has = true
+				end
+				if not has then
 					candidate.count = candidate.count + 1
-					local names = candidate.names[member.subgroup] or {}
-					local classes = candidate.classes[member.subgroup] or {}
-					candidate.names[member.subgroup] = names
-					candidate.classes[member.subgroup] = classes
+					local subgroup = member.subgroup
+					local names = candidate.names[subgroup] or {}
+					local classes = candidate.classes[subgroup] or {}
+					local expires = candidate.expires[subgroup] or {}
+					local durations = candidate.durations[subgroup] or {}
+					candidate.names[subgroup] = names
+					candidate.classes[subgroup] = classes
+					candidate.expires[subgroup] = expires
+					candidate.durations[subgroup] = durations
 					names[#names + 1] = name
 					classes[#classes + 1] = class
+					expires[#expires + 1] = lowExpires or 0
+					durations[#durations + 1] = lowDuration or 0
 				end
 			end
 		end
@@ -151,6 +165,8 @@ function BuffDuty.BuildOtherClassBuffs()
 						label = raid and GROUP_NUMBER:format(subgroup) or GROUP,
 						names = names,
 						classes = candidate.classes[subgroup],
+						expires = candidate.expires[subgroup],
+						durations = candidate.durations[subgroup],
 					}
 					for _, name in ipairs(names) do
 						missing[#missing + 1] = name
@@ -168,7 +184,6 @@ function BuffDuty.BuildOtherClassBuffs()
 				groups = groups,
 				missing = missing,
 				recipients = buffers[candidate.class] or {},
-				recipientNames = buffersShort[candidate.class] or {},
 			}
 		end
 	end
@@ -179,7 +194,7 @@ end
 -- Asking
 --------------------------------------------------------------------------------
 
--- False while the same ask went out the same way under ASK_COOLDOWN ago. The Party-Buffs menu greys its rows by it.
+-- False while the same ask went out the same way under ASK_COOLDOWN ago. The Party-Buffs tooltip greys its hints by it.
 function ns.CanAskForBuff(way, key)
 	local last = lastAsked[way][key]
 	return not (last and GetTime() - last < ASK_COOLDOWN)
@@ -194,7 +209,7 @@ local function ReadyToAsk(way, key)
 	return true
 end
 
--- The menu's Ask row: the ask, said to the party or raid.
+-- A Party-Buffs icon's click: the ask, said to the party or raid.
 function ns.AskGroupForBuff(spec)
 	if ReadyToAsk("group", spec.key) then
 		ns:SayBuffRequest(ns:BuildBuffRequestMessage(spec.missing, spec.count, spec.link))
@@ -202,8 +217,8 @@ function ns.AskGroupForBuff(spec)
 end
 
 --[[
-    The menu's Whisper row: the same ask whispered to every other player of
-    the class, then a line in your own chat saying who heard.
+    A Party-Buffs icon's right-click: the same ask whispered to every other
+    player of the class. Nothing is printed: the whispers show in your own chat.
 ]]
 function ns.WhisperOtherClassBuff(spec)
 	if not spec.recipients[1] or not ReadyToAsk("whisper", spec.key) then
@@ -213,10 +228,4 @@ function ns.WhisperOtherClassBuff(spec)
 	for _, target in ipairs(spec.recipients) do
 		ns:QueueAutomatedWhisper(target, message)
 	end
-	-- Every recipient is of the buff's class, so each name takes its color.
-	local names = {}
-	for index, name in ipairs(spec.recipientNames) do
-		names[index] = ns.ClassColoredName(name, spec.class)
-	end
-	ns:PrintMessage(L["BUFF_DUTY_OTHERS_SENT"]:format(table.concat(names, L["LIST_SEPARATOR"]), spec.link))
 end

@@ -397,6 +397,9 @@ local function PlaceLines(lines, x, y, nameWidth, offsetsByGrid)
 		if line.sectionEnd then
 			y = y - SECTION_GAP
 		end
+		if line.spaceAfter then
+			y = y - ROW_HEIGHT
+		end
 	end
 	return y, bottom
 end
@@ -482,6 +485,8 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 				sectionEnd = true,
 				-- a blank row between Self-Buffs and Party-Buffs, as under the title
 				spaceBefore = #top > 0,
+				-- and one under it, before the list that follows
+				spaceAfter = true,
 			}
 			nameWidth = math.max(nameWidth, labelWidth)
 		end
@@ -671,7 +676,7 @@ function ns.CreateBuffDutyFrame()
 	pool.content = content
 	content:SetAllPoints(anchor)
 	content:SetBackdrop(BACKDROP)
-	content:SetBackdropColor(0, 0, 0, 0.75)
+	content:SetBackdropColor(0, 0, 0, Data.BUFF_DUTY_BACKDROP_ALPHA)
 	content:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
 	content:EnableMouse(true)
 	content:RegisterForDrag("LeftButton")

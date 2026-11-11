@@ -1760,13 +1760,11 @@ L["BUFF_DUTY_TOOLTIP_USE"] = "Nessuno nel tuo gruppo ha una Pietra dell'Anima. N
 L["BUFF_DUTY_TOOLTIP_CREATE"] = "Nessuno nel tuo gruppo ha una Pietra dell'Anima. Ne crea una."
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "Lo lancia su %s e sul suo gruppo."
 L["BUFF_DUTY_TOOLTIP_FAVOR"] = "Seleziona %s come bersaglio e lancia."
--- A Party Buffs icon's menu: a raid buff your group is missing, and its count.
-L["BUFF_DUTY_OTHERS_TOOLTIP_COUNT"] = "Mancante o in scadenza: %d"
--- The menu's rows: the first asks the party or raid for the buff (its name), the second whispers the players who can cast it (their names).
-L["BUFF_DUTY_OTHERS_MENU_ASK_GROUP"] = "Chiedi %s al tuo gruppo"
-L["BUFF_DUTY_OTHERS_MENU_WHISPER"] = "Sussurra a %s"
+-- A Party Buffs icon's tooltip, its click hints: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it.
+L["BUFF_DUTY_OTHERS_HINT_ASK"] = "Chiedi il beneficio (%s)"
+L["BUFF_DUTY_OTHERS_HINT_WHISPER"] = "Sussurra a chi può lanciarlo"
 --[[
-    The ask either row sends, signed off like every sent message ({star} ... // GtG), so it
+    The ask either click sends, signed off like every sent message ({star} ... // GtG), so it
     ends as a statement, not a question. Up to five missing players are named (ONE for one,
     NAMES for two to five, joined with LIST_PAIR_FORMAT or LIST_LAST_FORMAT), then the buff's link;
     past five, COUNT gives how many, then the link.
@@ -1774,8 +1772,6 @@ L["BUFF_DUTY_OTHERS_MENU_WHISPER"] = "Sussurra a %s"
 L["BUFF_DUTY_OTHERS_ASK_ONE"] = "A %s manca %s."
 L["BUFF_DUTY_OTHERS_ASK_NAMES"] = "A %s manca %s."
 L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "A %d giocatori manca il potenziamento %s."
--- Your own chat, after the Whisper row: who was whispered, then the buff's link.
-L["BUFF_DUTY_OTHERS_SENT"] = "Sussurrato a %s riguardo a %s."
 --[[
     The window's close button: the class name, the class name again for its
     checkbox, the When to Show header, then the options command.

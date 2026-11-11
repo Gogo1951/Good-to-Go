@@ -1781,13 +1781,11 @@ L["BUFF_DUTY_TOOLTIP_USE"] =
 L["BUFF_DUTY_TOOLTIP_CREATE"] = "파티에 영혼석을 지닌 사람이 없습니다. 영혼석을 만듭니다."
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "%s와(과) 그 파티에게 시전합니다."
 L["BUFF_DUTY_TOOLTIP_FAVOR"] = "%s을(를) 대상으로 지정하고 시전합니다."
--- A Party Buffs icon's menu: a raid buff your group is missing, and its count.
-L["BUFF_DUTY_OTHERS_TOOLTIP_COUNT"] = "없거나 곧 사라짐: %d"
--- The menu's rows: the first asks the party or raid for the buff (its name), the second whispers the players who can cast it (their names).
-L["BUFF_DUTY_OTHERS_MENU_ASK_GROUP"] = "그룹에 %s 요청"
-L["BUFF_DUTY_OTHERS_MENU_WHISPER"] = "%s에게 귓속말"
+-- A Party Buffs icon's tooltip, its click hints: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it.
+L["BUFF_DUTY_OTHERS_HINT_ASK"] = "%s에 버프 요청"
+L["BUFF_DUTY_OTHERS_HINT_WHISPER"] = "시전 가능한 플레이어에게 귓속말"
 --[[
-    The ask either row sends, signed off like every sent message ({star} ... // GtG), so it
+    The ask either click sends, signed off like every sent message ({star} ... // GtG), so it
     ends as a statement, not a question. Up to five missing players are named (ONE for one,
     NAMES for two to five, joined with LIST_PAIR_FORMAT or LIST_LAST_FORMAT), then the buff's link;
     past five, COUNT gives how many, then the link.
@@ -1795,8 +1793,6 @@ L["BUFF_DUTY_OTHERS_MENU_WHISPER"] = "%s에게 귓속말"
 L["BUFF_DUTY_OTHERS_ASK_ONE"] = "%s 님에게 %s 버프가 없습니다."
 L["BUFF_DUTY_OTHERS_ASK_NAMES"] = "%s 님에게 %s 버프가 없습니다."
 L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "%d명에게 %s 버프가 없습니다."
--- Your own chat, after the Whisper row: who was whispered, then the buff's link.
-L["BUFF_DUTY_OTHERS_SENT"] = "%s에게 %s 관련 귓속말을 보냈습니다."
 --[[
     The window's close button: the class name, the class name again for its
     checkbox, the When to Show header, then the options command.
