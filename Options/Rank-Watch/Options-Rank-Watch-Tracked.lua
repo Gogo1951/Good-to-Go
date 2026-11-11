@@ -14,8 +14,8 @@ local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
     the data marks off (Rank 1 Scorch and the like) start unticked; see ns.IsRankWatchRankTracked.
 
     Every ability the class has is listed, one-rank spells and talents too; those Rank Sentinel never watched
-    (heals, Shadowform, utility) start with every rank unticked. A ladder's top rank is listed greyed: nothing is
-    higher, so it is never reported, but leaving it off made a two-rank ability read as one rank. Spells joined by ns.SPELL_GROUPS
+    (heals, Shadowform, utility) start with every rank unticked. A ladder's top rank is listed grayed: nothing is
+    higher, so it is never reported, but it shows how many ranks the ability has. Spells joined by ns.SPELL_GROUPS
     share one box, the Enhanced Spellbook's own groups, and their ranks carry the spell's name too.
 
     Not hidden behind the Rank Watch switch, like the other Tracked Abilities panels: these are choices worth
@@ -74,7 +74,7 @@ local function SetLadder(ladder, tracked)
 end
 
 --[[
-    The top rank's row is greyed, since nothing above it can be reported, and checked while any rank below it is:
+    The top rank's row is grayed, since nothing above it can be reported, and checked while any rank below it is:
     it reads as the ability being watched. A one-rank ability, or one whose ranks all start off (heals, talents,
     everything Rank Sentinel never watched), shows it unchecked.
 ]]

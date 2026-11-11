@@ -199,7 +199,7 @@ local function OnChatMessage(isWhisper, text, sender, ...)
 	settings.ignoredClasses[guid] = class
 	-- Only a whisper is answered: said in group chat, every Rank Watch in the group would answer at once.
 	if isWhisper then
-		ns:QueueAutomatedWhisper(sender, ns:BuildWhisperMessage("RANK_WATCH_MESSAGE_OPT_OUT_DONE"))
+		ns:Announce("WHISPER", sender, "RANK_WATCH_MESSAGE_OPT_OUT_DONE")
 	end
 	ns:PrintMessage(L["RANK_WATCH_OPT_OUT_ADDED"]:format(ns.ClassColoredName(name, class)))
 	LibStub("AceConfigRegistry-3.0"):NotifyChange(ns.OPTIONS_REGISTRY.RankWatchIgnored)

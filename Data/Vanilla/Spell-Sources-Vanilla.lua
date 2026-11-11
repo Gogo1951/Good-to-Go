@@ -80,7 +80,7 @@ ns.EXTRA_SPELL_SOURCES = {
 How We Got the Data
 
 Last Validated
-	2026-11-08, Classic Era 1.15.9.70576
+	2026-11-11, Classic Era 1.15.9.70576
 
 Notes
 	- Where each class list's extraSpells entry (Data/Vanilla/Class-Spell-Lists-Vanilla.lua) is learned, and at what level, for the What's Next? tab (Features/Enhanced-Spellbook/Whats-Next/Whats-Next.lua). The trainer rows (Data/Vanilla/Trainer-Spells-Vanilla.lua) say their own source: a plain row is the trainer, book marks a book and talent a talent. extraSpells entries carry no source, so this table gives one.

@@ -42,7 +42,7 @@ end
     Every whisper Rank Watch sends, built through its own ns.BuildRankWatchWhisper with the rank whose name runs
     longest in this locale and a 12-letter pet name, each with its byte length against the chat limit, OVER past
     it. The builder links the spell, and names it unlinked when the link won't fit; the line says which it took.
-    It builds strings only: nothing is sent.
+    Then the opt-out offer and its answer. It builds strings only: nothing is sent.
 ]]
 function ns:BuildRankWatchMessageLengthReport()
 	local lines = { GetClientHeader(), "" }
@@ -82,6 +82,27 @@ function ns:BuildRankWatchMessageLengthReport()
 		else
 			lines[#lines + 1] = string.format("%s: no ability with two ranks on this client.", whisper.label)
 		end
+	end
+	--[[
+	    The opt-out offer and its answer, each built as Rank-Watch-Check.lua sends it: the offer with the
+	    four-digit code your own name gets, the answer through the whisper rule ns:Announce takes.
+	]]
+	for _, whisper in ipairs({
+		{ label = "Rank Watch opt-out offer", text = ns.BuildRankWatchOptOutWhisper(UnitName("player")) },
+		{
+			label = "Rank Watch opt-out answer",
+			text = ns:BuildWhisperMessage("RANK_WATCH_MESSAGE_OPT_OUT_DONE"),
+		},
+	}) do
+		local text = whisper.text or ""
+		lines[#lines + 1] = string.format(
+			"[%s] %s: %d / %d bytes",
+			#text > ns.CHAT_MESSAGE_MAX_LENGTH and "OVER" or "OK",
+			whisper.label,
+			#text,
+			ns.CHAT_MESSAGE_MAX_LENGTH
+		)
+		lines[#lines + 1] = "    " .. ShownText(text)
 	end
 	lines[#lines + 1] = ""
 	lines[#lines + 1] =

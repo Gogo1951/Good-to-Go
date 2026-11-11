@@ -248,7 +248,8 @@ end
     Every icon the key could cast, in the order it should: resurrections,
     Return the Favor, your target, self-buffs, then each party -- your
     target's first -- with its group buffs (GroupChoices) and then its
-    members' single ones, less those a group buff covers.
+    members' single ones, less those a group buff covers, and last a
+    targeted friendly NPC.
 ]]
 local function Candidates(sections, now)
 	local list, added = {}, {}
@@ -291,7 +292,19 @@ local function Candidates(sections, now)
 	end)
 
 	Each("favor", AddRows)
-	Each("target", AddRows)
+	--[[
+	    A targeted NPC's row cycles forever (BuffDuty.NPCRow), so it waits
+	    until the end: first, it would keep the key from ever reaching the group.
+	]]
+	Each("target", function(section)
+		for _, row in ipairs(section.rows) do
+			if not row.npc then
+				for _, spec in ipairs(row.icons) do
+					Add(spec)
+				end
+			end
+		end
+	end)
 	Each("self", function(section)
 		for _, spec in ipairs(section.icons) do
 			Add(spec)
@@ -320,6 +333,15 @@ local function Candidates(sections, now)
 	Each("party", function(section)
 		if section.subgroup ~= targetSubgroup then
 			AddParty(section)
+		end
+	end)
+	Each("target", function(section)
+		for _, row in ipairs(section.rows) do
+			if row.npc then
+				for _, spec in ipairs(row.icons) do
+					Add(spec)
+				end
+			end
 		end
 	end)
 	return list

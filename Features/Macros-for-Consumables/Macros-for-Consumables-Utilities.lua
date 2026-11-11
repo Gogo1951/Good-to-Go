@@ -26,7 +26,7 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The level cap on this client, which the Leveling and Max Level modes
+    The level cap on this client, which the Leveling and Max Level filters
     compare against: the smaller of the expansion's cap and the player's own,
     the rule Blizzard's GameRulesUtil.GetEffectiveMaxLevelForPlayer applies on
     all three clients, which ship both readers. Consumable Macros Context prints
@@ -37,31 +37,33 @@ function ns.GetMaxPlayerLevel()
 end
 
 --[[
-    The group-mode settings' shared test, behind every when-to-use dropdown
-    (Buff Food, Scroll Buffs, Pet Food Buffs, and Use Conjured Food & Water
-    First), which all offer the same six modes. Every group read here must
-    stay inside the group signature (ns.GroupSignatureChanged), or a join or
-    leave never rescans. The level modes need no signature: PLAYER_LEVEL_UP
-    already refreshes ns.cachedPlayerLevel and rebuilds every macro, and
-    leveling means below the client's own max level (ns.GetMaxPlayerLevel),
-    never a hard-coded one. An unknown mode counts as active.
+    The When to Use test behind Buff Food, Scroll Buffs, Pet Food Buffs, and
+    Use Conjured Food & Water First, named by its settings' prefix: the
+    profile's <prefix>In checkboxes, one per group context
+    (ns.IsGroupContextOn), then its <prefix>Level filter. Every group read
+    here must stay inside the group signature (ns.GroupSignatureChanged), or
+    a join, leave or battleground never rescans. The level filter needs no
+    signature: PLAYER_LEVEL_UP already refreshes ns.cachedPlayerLevel and
+    rebuilds every macro, and leveling means below the client's own max level
+    (ns.GetMaxPlayerLevel), never a hard-coded one. An unknown level counts as
+    any.
 ]]
-function ns.IsModeActive(mode)
-	if mode == "always" then
-		return true
+-- Each prefix's two setting keys, built once: this runs on every player aura change.
+local useWhenKeys = {}
+
+function ns.IsUseWhenActive(settings, prefix)
+	local keys = useWhenKeys[prefix]
+	if not keys then
+		keys = { prefix .. "In", prefix .. "Level" }
+		useWhenKeys[prefix] = keys
 	end
-	if mode == "party" then
-		return IsInGroup()
+	if not ns.IsGroupContextOn(settings[keys[1]]) then
+		return false
 	end
-	if mode == "raid" then
-		return IsInRaid()
-	end
-	if mode == "solo" then
-		return not IsInGroup()
-	end
-	if mode == "leveling" or mode == "maxlevel" then
+	local level = settings[keys[2]]
+	if level == "leveling" or level == "maxlevel" then
 		local atMaxLevel = (ns.cachedPlayerLevel or UnitLevel("player")) >= ns.GetMaxPlayerLevel()
-		if mode == "maxlevel" then
+		if level == "maxlevel" then
 			return atMaxLevel
 		end
 		return not atMaxLevel

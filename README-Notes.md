@@ -40,8 +40,38 @@
 - **Instead:** The hunter's Pet What's Next? tooltip names tameable beasts in English, from the data file, on every client.
 - **Why:** The client has no creature-name-by-ID lookup on every flavor, and an English name is more useful than none.
 
+### Other-client cleanup reaches account-wide records
+
+- **Departs from:** SAVED VARIABLES → Other-Client Characters, use this code as written.
+- **Instead:** The prune also drops other-client characters' Restock List choices and Inventory Report records from `ns.db.global`, telling a realm-free record by its name's shape and, for one with no surname, by its realm.
+- **Why:** Those records are keyed by character outside AceDB's `char` and `profileKeys`, so the stock prune leaves copied characters in the Restock List and the Inventory Report.
+
+### Older Forever character keys kept until 2026-12-08
+
+- **Departs from:** SAVED VARIABLES → Other-Client Characters, the prune carries no `MIGRATION` tag.
+- **Instead:** A tagged branch in `IsOtherClientKey` keeps Forever keys shaped "First Name - Rule Set" from an older AceDB.
+- **Why:** The Default-Profile migration reads those keys after the prune, and pruning them first would lose those characters' settings.
+
+### Rank Watch's reset reaches its account-wide settings
+
+- **Departs from:** SAVED VARIABLES → Reset, Reset Profile clears only the active profile.
+- **Instead:** Resetting a profile also turns Rank Watch off and clears its Reported Ranks choices in `ns.db.global`.
+- **Why:** Rank Watch's settings are shared by every character, and Reset Profile is the one place a player expects to put them back.
+
+### Readiness Report Example shows several lines
+
+- **Departs from:** OPTIONS PANEL → Example Lines, one sample line, never a title.
+- **Instead:** The Readiness Report's Example shows up to three of its lines, and its title when no check is switched on.
+- **Why:** The report's lines differ by check, so one line can't show what the chosen checks will print.
+
 ### Options command takes an ignore argument
 
 - **Departs from:** OPTIONS PANEL → Slash Commands, the options command takes no arguments.
 - **Instead:** `/gtg ignore Name` adds a player to Rank Watch's Ignored Players, and `/gtg` with anything else still opens the Options Interface.
 - **Why:** Ignoring a player is reached from the add-on's one command rather than a second literal.
+
+### Title Case keeps verb particles capitalized
+
+- **Departs from:** TONE AND COPY → English, Title Case's lowercase word list.
+- **Instead:** Titles capitalize "on", "off" and "yet" where the word belongs to a verb rather than acting as a preposition or conjunction.
+- **Why:** Lowercased, a word that belongs to the verb reads as a typo in game.

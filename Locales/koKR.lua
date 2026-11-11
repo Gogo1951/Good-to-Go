@@ -24,10 +24,6 @@ L["OPTIONS_LEVEL_UP_TITLE"] = "Good to Go의 레벨 업을 도와주세요"
 L["OPTIONS_LEVEL_UP_THANKS"] = "Good to Go를 선택해 주셔서 감사합니다!"
 
 --------------------------------------------------------------------------------
--- Consumable Macros & Restocker
---------------------------------------------------------------------------------
-
---------------------------------------------------------------------------------
 -- Macro Names
 --------------------------------------------------------------------------------
 
@@ -381,31 +377,55 @@ L["MINIMAP_MIDDLE_CLICK"] = "휠클릭"
 L["MINIMAP_SHIFT_LEFT"] = "Shift + 좌클릭"
 
 --------------------------------------------------------------------------------
--- Mode Values
+-- Group Contexts
 --------------------------------------------------------------------------------
 
 --[[
-    The one when-to-use list, offered by every mode dropdown: Prioritize Buff
-    Food, Enable Scroll Buffs, Use Pet Food Buffs, and Use Conjured Food &
-    Water First. %s in OPTIONS_MODE_DESCRIPTION is the feature's name,
+    The checkboxes for when a feature acts by group, on every panel that has
+    them, always in this order. Each description is the checkbox's hover text,
+    saying when that context holds: a battleground or arena is always
+    Battleground, even though its group is a raid. GROUP_CONTEXT_NEVER is the
+    mini-map tooltip's label for a feature on with none of them ticked.
+]]
+L["GROUP_CONTEXT_SOLO"] = "혼자"
+L["GROUP_CONTEXT_SOLO_DESCRIPTION"] = "파티나 공격대에 속하지 않았을 때."
+L["GROUP_CONTEXT_PARTY"] = "파티"
+L["GROUP_CONTEXT_PARTY_DESCRIPTION"] = "파티에 속했을 때. 파티 찾기로 들어간 던전도 포함됩니다."
+L["GROUP_CONTEXT_RAID"] = "공격대"
+L["GROUP_CONTEXT_RAID_DESCRIPTION"] = "공격대에 속했을 때. 전장의 공격대는 전장으로 칩니다."
+L["GROUP_CONTEXT_BATTLEGROUND"] = "전장"
+L["GROUP_CONTEXT_BATTLEGROUND_DESCRIPTION"] =
+	"전장이나 투기장 안에 있을 때. 어떤 그룹이든 상관없습니다."
+L["GROUP_CONTEXT_NEVER"] = "안 함"
+
+--------------------------------------------------------------------------------
+-- When to Use
+--------------------------------------------------------------------------------
+
+--[[
+    Every consumable's When to Use (Prioritize Buff Food, Enable Scroll
+    Buffs, Use Pet Food Buffs, and Use Conjured Food & Water First): the level
+    filter dropdown, then the group context checkboxes (GROUP_CONTEXT_*) under
+    it. %s in OPTIONS_MODE_DESCRIPTION is the feature's name,
     FEATURE_BUFF_FOOD, FEATURE_SCROLL_BUFFS or OPTIONS_PET_HEADER; the
-    conjured dropdown has hover text of its own. Each value carries its own
-    "when", since most dropdowns sit beside their toggle with no caption.
-    Leveling means below the client's max level.
+    conjured dropdown has hover text of its own. Each level value carries its
+    own "when", since most dropdowns sit beside their toggle with no caption.
+    Leveling means below the client's max level. OPTIONS_GROUPS_NONE shows in
+    red under the checkboxes while none is ticked.
 
     In the mini-map tooltip, the Buff Food & Scrolls block, while a switch is
-    on but no choice applies, shows that choice's label in place of
-    MINIMAP_ENABLED, so every label has to read as a state too.
+    on but its When to Use doesn't hold, shows the level label holding it back
+    in place of MINIMAP_ENABLED, so every level label has to read as a state
+    too. When the checkboxes hold it back, it lists the ticked contexts'
+    labels instead, or GROUP_CONTEXT_NEVER with none.
 ]]
 L["OPTIONS_MODE_DESCRIPTION"] =
-	"음식 매크로에서 %s 기능을 항상 사용할지, 아니면 혼자일 때, 파티 또는 공격대에 있을 때, 공격대에 있을 때, 레벨업 중일 때, 최고 레벨일 때만 사용할지 선택합니다."
+	"음식 매크로에서 %s 기능을 사용할 레벨을 선택합니다: 모든 레벨, 레벨업 중일 때만, 또는 최고 레벨일 때만. 아래 체크박스로 그룹을 선택합니다."
 L["OPTIONS_MODE_CAPTION"] = "사용 시점"
-L["MODE_ALWAYS"] = "항상"
-L["MODE_SOLO"] = "혼자일 때"
-L["MODE_PARTY"] = "파티 또는 공격대에 있을 때"
-L["MODE_RAID"] = "공격대에 있을 때"
-L["MODE_LEVELING"] = "레벨업 중일 때"
-L["MODE_MAX_LEVEL"] = "최고 레벨일 때"
+L["OPTIONS_GROUPS_NONE"] = "아무것도 체크되지 않아 사용되지 않습니다."
+L["LEVEL_FILTER_ANY"] = "모든 레벨에서"
+L["LEVEL_FILTER_LEVELING"] = "레벨업 중일 때"
+L["LEVEL_FILTER_MAX_LEVEL"] = "최고 레벨일 때"
 
 --------------------------------------------------------------------------------
 -- Inventory Report
@@ -438,7 +458,7 @@ L["INVENTORY_REPORT_TOTAL"] = "합계 %s"
 L["OPTIONS_DESCRIPTION"] =
 	"최고의 음식, 물, 물약, 생명석으로 자동 갱신되는 매크로, 재료와 탄약을 자동으로 구매하고 은행에 보관하는 보충 목록, 클릭 한 번으로 시전하는 빠진 버프, 그리고 모든 주문의 마우스오버 매크로."
 
--- Options: tree labels
+-- Enhanced Spellbook: its tree label, its panel's description, and the print when it's off.
 L["TAB_ENHANCED_SPELLBOOK"] = "향상된 마법책"
 L["OPTIONS_SPELLBOOK_DESCRIPTION"] =
 	"모든 직업 주문에 대한 마우스오버, 커서, 자신 시전 매크로를 새 마법책 탭에서 클릭 한 번으로 만들며, 매크로 문법은 몰라도 됩니다. 레벨업하거나 주문을 배우거나 특성을 바꾸면 자동으로 갱신됩니다. 우클릭하면 주시 대상, 시전 중지, 자동 공격, 소환수 공격, 장신구를 추가할 수 있습니다."
@@ -597,7 +617,7 @@ L["OPTIONS_CONJURED_FIRST"] = "창조된 음식 및 물 먼저 사용"
 L["OPTIONS_CONJURED_FIRST_DESCRIPTION"] =
 	'창조된 음식과 물은 비용이 들지 않고 접속을 종료하면 곧 사라지므로, 가방에 더 많이 회복하는 아이템이 있더라도 음식 및 물 매크로가 이를 가장 먼저 사용합니다. "버프 음식 우선"이 켜져 있으면 버프 음식이 여전히 가장 먼저입니다.'
 L["OPTIONS_CONJURED_FIRST_MODE_DESCRIPTION"] =
-	"창조된 음식과 물을 항상 먼저 사용할지, 아니면 혼자일 때, 파티 또는 공격대에 있을 때, 공격대에 있을 때, 레벨업 중일 때, 최고 레벨일 때만 먼저 사용할지 선택합니다."
+	"창조된 음식과 물을 먼저 사용할 레벨을 선택합니다: 모든 레벨, 레벨업 중일 때만, 또는 최고 레벨일 때만. 아래 체크박스로 그룹을 선택합니다."
 
 -- Use Restock List Food & Water Last, the fourth option under Food & Water.
 L["OPTIONS_RESTOCK_LAST"] = "보충 목록의 음식 및 물 나중에 사용"
@@ -736,7 +756,7 @@ L["OPTIONS_RAPID_REGENERATION_DESCRIPTION"] =
 	"%s이(가) 재사용 대기 중이 아니면 음식 매크로가 음식을 먹는 대신 이 주문을 시전하여 음식을 아낍니다. 재사용 대기 중이면 평소처럼 음식을 먹습니다."
 L["OPTIONS_RAPID_REGENERATION_EATING"] = "음식 대신 %s 사용"
 L["OPTIONS_RAPID_REGENERATION_EATING_DESCRIPTION"] =
-	"%s이(가) 재사용 대기 중이 아니면 음식 매크로가 음식을 먹는 대신 이 주문을 시전합니다. 그 외에는 평소처럼 음식을 먹습니다. 두루마리와 버프 음식이 여전히 먼저입니다."
+	"%s이(가) 재사용 대기 중이 아니면 음식 매크로가 음식을 먹는 대신 이 주문을 시전합니다. 그 외에는 평소처럼 음식을 먹습니다. 두루마리와 버프 음식이 여전히 먼저입니다. 음식을 먹을 수 없는 전투 중에는 누를 때마다 이 주문을 시전합니다."
 
 --[[
     Ignore List panel (Options-Ignore-List.lua). One tree scope per list: the
@@ -1046,7 +1066,7 @@ L["RANK_WATCH_GRACE_DESCRIPTION"] =
 	"시전자의 레벨이 새 주문 레벨의 습득 레벨을 이 값만큼 넘어서기 전까지는 알리지 않으므로, 막 도달해 아직 배울 시간이 없었던 레벨 때문에 알림을 받는 사람이 없습니다."
 L["RANK_WATCH_GRACE_MAX_LEVEL"] = "최고 레벨 유예 기간"
 L["RANK_WATCH_GRACE_MAX_LEVEL_DESCRIPTION"] =
-	"최고 레벨 캐릭터의 경우, 최고 레벨보다 이 값 이하로 낮은 레벨에서 배우는 주문 레벨은 알리지 않습니다. 0이면 배울 수 있는 모든 주문 레벨을 알립니다."
+	"최고 레벨 캐릭터의 경우, 최고 레벨과 이 값 이내로 차이 나는 레벨에서 배우는 주문 레벨은 알리지 않습니다. 0이면 배울 수 있는 모든 주문 레벨을 알립니다."
 L["RANK_WATCH_GRACE_LEVELING"] = "레벨업 중 유예 기간"
 L["RANK_WATCH_GRACE_LEVELING_DESCRIPTION"] =
 	"아직 레벨업 중인 캐릭터의 경우, 자기 레벨과 이 값 이내로 차이 나는 레벨에서 배우는 주문 레벨은 알리지 않아 상급자를 찾아갈 시간을 줍니다."
@@ -1108,6 +1128,8 @@ L["RESTOCKER_PROFILE_EXISTS"] = '"%s" 이름의 목록이 이미 있습니다.'
 L["RESTOCKER_UNKNOWN_ITEM"] = "ID %d인 아이템 없음"
 L["RESTOCKER_DISABLED"] =
 	"Restocker가 꺼져 있습니다. 설정 > 애드온 > Good to Go > Restocker에서 켜세요."
+-- %s is the list name the player typed after /restock profile use, delete or copy.
+L["RESTOCKER_LIST_NOT_FOUND"] = "%s(이)라는 보충 목록이 없습니다."
 --[[
     %s is the /restock slash command, colored at the call site. Only the bank flow
     prints this, so the Shift hint names the bank; Shift is read as the window
@@ -1640,18 +1662,15 @@ L["BUFF_DUTY_DESCRIPTION"] =
 L["BUFF_DUTY_ENABLE"] = "버프 당번 활성화"
 L["BUFF_DUTY_NO_BUFFS"] =
 	"당신의 직업에는 이 목록에 있는 버프가 없으므로 이 캐릭터에서는 창이 표시되지 않습니다."
--- When to Show: Solo, In Party and In Raid, each with Always or In Instance, then the classes.
+-- When to Show: the group context checkboxes (GROUP_CONTEXT_*), Anywhere or In Instance beside the first three, then the classes.
 L["BUFF_DUTY_WHEN_HEADER"] = "표시 조건"
 L["BUFF_DUTY_WHEN_DESCRIPTION"] = "창이 나타날 때를 선택합니다."
-L["BUFF_DUTY_WHEN_SOLO"] = "솔로"
-L["BUFF_DUTY_WHEN_SOLO_DESCRIPTION"] = "파티나 공격대에 속하지 않았을 때 창을 표시합니다."
-L["BUFF_DUTY_WHEN_PARTY"] = "파티"
-L["BUFF_DUTY_WHEN_PARTY_DESCRIPTION"] = "파티에 속했을 때 창을 표시합니다."
-L["BUFF_DUTY_WHEN_RAID"] = "공격대"
-L["BUFF_DUTY_WHEN_RAID_DESCRIPTION"] = "공격대에 속했을 때 창을 표시합니다."
+L["BUFF_DUTY_WHEN_NONE"] = "아무것도 체크되지 않아 창이 표시되지 않습니다."
+L["BUFF_DUTY_AURAS_HIDDEN"] =
+	"이곳에서는 버프 당번이 숨겨집니다. 이 지역에서는 게임이 애드온에 버프를 보여 주지 않아 누구에게 버프가 없는지 알 수 없습니다."
 L["BUFF_DUTY_WHERE_DESCRIPTION"] =
-	"창을 표시할 곳을 정합니다: 어디서나, 또는 던전, 공격대, 전장, 투기장 안에서만."
-L["BUFF_DUTY_WHERE_ALWAYS"] = "항상"
+	"창을 표시할 곳을 정합니다: 어디서나, 또는 던전이나 공격대 같은 인스턴스 안에서만."
+L["BUFF_DUTY_WHERE_ALWAYS"] = "어디서나"
 L["BUFF_DUTY_WHERE_INSTANCE"] = "인스턴스 안"
 L["BUFF_DUTY_CLASSES_DESCRIPTION"] = "이 직업들로 플레이할 때 창을 표시합니다."
 L["BUFF_DUTY_CLASS_DESCRIPTION"] = "이 직업으로 플레이할 때 창을 표시합니다."
@@ -1690,7 +1709,7 @@ L["BUFF_DUTY_TANKS_PETS"] = "소환수"
 L["BUFF_DUTY_TANKS_PETS_DESCRIPTION"] =
 	"소환수를 언제 방어 전담으로 간주할지 설정합니다. 소환수는 모두에게 제공하는 버프도 받습니다."
 L["BUFF_DUTY_TANKS_NEVER"] = "안 함"
-L["BUFF_DUTY_TANKS_SOLO"] = "그룹에 속하지 않을 때"
+L["BUFF_DUTY_TANKS_SOLO"] = "혼자일 때"
 L["BUFF_DUTY_TANKS_ALWAYS"] = "항상"
 -- Who each buff is offered to: one dropdown per buff, these four choices.
 L["BUFF_DUTY_AUDIENCE_OFF"] = "끄기"
@@ -1703,6 +1722,8 @@ L["BUFF_DUTY_AUDIENCE_DESCRIPTION"] = "%s을(를) 제공할 대상을 설정합�
 L["BUFF_DUTY_BUFFS_DESCRIPTION"] =
 	"각 버프를 누구에게 제공할지 선택합니다. 방어 전담과 치유 전담은 그룹 역할을 따르지만, 공격대에서는 %s(으)로 지정된 플레이어만 방어 전담으로 간주합니다. 역할이 없으면 공격 전담으로 간주합니다. 단, 아래 방어 전담으로 간주에서 다르게 설정했다면 그 설정을 따릅니다."
 
+-- The Self-Buffs panel, under Buff Duty: its name and description.
+L["BUFF_DUTY_SELF_HEADER"] = "자기 버프"
 L["BUFF_DUTY_SELF_DESCRIPTION"] = "자신의 버프로, 창 맨 위에 고정됩니다."
 --[[
     Muted note after a class name on the Self-Buffs panel, for a family of self
@@ -1746,7 +1767,6 @@ L["BUFF_DUTY_WEAPON_ENABLE_DESCRIPTION"] =
 	"무기에 없거나 곧 끝나는 독, 무기 강화, 오일, 숫돌, 미끼를 창 맨 위에 자기 버프와 함께 표시합니다. 클릭하면 적용합니다. 표시할 항목은 무기 버프에서 고르세요."
 
 -- The window itself
-L["BUFF_DUTY_SELF_HEADER"] = "자기 버프"
 -- The window's header over your own buffs and weapon rows (BUFF_DUTY_SELF_HEADER names the options panel).
 L["BUFF_DUTY_MISSING_SELF_HEADER"] = "누락된 자기 버프"
 L["BUFF_DUTY_PARTY_BUFFS_HEADER"] = "누락된 파티 버프"
@@ -1761,7 +1781,7 @@ L["BUFF_DUTY_TOOLTIP_USE"] =
 L["BUFF_DUTY_TOOLTIP_CREATE"] = "파티에 영혼석을 지닌 사람이 없습니다. 영혼석을 만듭니다."
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "%s와(과) 그 파티에게 시전합니다."
 L["BUFF_DUTY_TOOLTIP_FAVOR"] = "%s을(를) 대상으로 지정하고 시전합니다."
--- A Party-Buffs icon's menu: a raid buff your group is missing, and its count.
+-- A Party Buffs icon's menu: a raid buff your group is missing, and its count.
 L["BUFF_DUTY_OTHERS_TOOLTIP_COUNT"] = "없거나 곧 사라짐: %d"
 -- The menu's rows: the first asks the party or raid for the buff (its name), the second whispers the players who can cast it (their names).
 L["BUFF_DUTY_OTHERS_MENU_ASK_GROUP"] = "그룹에 %s 요청"
@@ -1777,8 +1797,10 @@ L["BUFF_DUTY_OTHERS_ASK_NAMES"] = "%s 님에게 %s 버프가 없습니다."
 L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "%d명에게 %s 버프가 없습니다."
 -- Your own chat, after the Whisper row: who was whispered, then the buff's link.
 L["BUFF_DUTY_OTHERS_SENT"] = "%s에게 %s 관련 귓속말을 보냈습니다."
--- The window's close button: the class name, the class name again for its checkbox, the When to Show
--- header, then the options command.
+--[[
+    The window's close button: the class name, the class name again for its
+    checkbox, the When to Show header, then the options command.
+]]
 L["BUFF_DUTY_CLOSED"] =
 	"버프 당번이 다음 접속이나 재시작 전까지 숨겨졌습니다. 지금 다시 보려면 미니맵 버튼을 Shift + 좌클릭하세요. %1$s 직업에서 계속 꺼 두려면 %4$s 설정의 %3$s에서 %2$s의 체크를 해제하세요."
 
@@ -1788,6 +1810,13 @@ L["BUFF_KEY"] = "버프 버튼"
 L["BUFF_KEY_WAITING"] = "%s님이 사거리 안에 들어오기를 기다리는 중입니다."
 L["BUFF_KEY_DONE"] = "더 걸 버프가 없습니다."
 L["BUFF_KEY_OFF"] = "버프 당번이 꺼져 있습니다."
+--[[
+    The Buff Duty window's last line while the Buff Button has no key: the Buff
+    Button's name (BUFF_KEY), the root panel's Key Bindings header
+    (OPTIONS_KEY_BINDINGS_HEADER), then the options command.
+]]
+L["BUFF_DUTY_KEY_HINT"] =
+	"알고 계셨나요? %s에 단축키를 지정하면 누를 때마다 여기 있는 다음 버프를 겁니다. 설정은 %s 항목(%s)에서 할 수 있습니다."
 
 --------------------------------------------------------------------------------
 -- Spellbook
@@ -2173,8 +2202,8 @@ L["TOOLTIP_MACRO_SLOTS"] =
 L["PAGE_MACRO_GENERAL"] = "일반"
 L["PAGE_MACRO_CHARACTER"] = "캐릭터"
 L["PAGE_NO_MATCHES_FOR"] = '"%s"와(과) 일치하는 주문이 없습니다.'
--- TRANSLATORS: %d is how many spells the category lists, %s its name ("Settings for All 6 Heals").
-L["PAGE_CATEGORY_SETTINGS"] = "%d개 %s 일괄 설정"
+-- TRANSLATORS: %d is how many spells the category lists, %s its name ("Options for All 6 Heals").
+L["PAGE_CATEGORY_SETTINGS"] = "%d개 %s 전체 옵션"
 L["PAGE_CATEGORY_SETTINGS_DESCRIPTION"] =
 	"이 분류의 모든 주문에 대해 옵션을 한 번에 켜거나 끕니다. 아직 단축바에 없는 주문은 나중에 배치할 때를 위해 설정을 기억합니다."
 -- after a category's count, where it carries on from the column before

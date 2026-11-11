@@ -7,7 +7,7 @@ ns.RANK_WATCH_ABILITIES = {}
 How We Got the Data
 
 Last Validated
-	2026-11-08, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-11, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- Empty: Rank Watch reports a rank lower than the caster could have, and this flavor has no ranks to compare, or no TOC lists this folder.

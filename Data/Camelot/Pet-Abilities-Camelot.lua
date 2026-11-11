@@ -10,7 +10,7 @@ ns.DEMON_ABILITIES = {}
 How We Got the Data
 
 Last Validated
-	2026-11-08, WoW Forever 1.60.1.70862
+	2026-11-11, WoW Forever 1.60.1.70888
 
 Notes
 	- The hunter pet ability ranks and the warlock's demon ability ranks for the Pet What's Next? tab (Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Pet.lua), which shows only where this table has rows.

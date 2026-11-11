@@ -2,7 +2,7 @@
 ## Notes: Auto-updating macros for your best food, water, potions, and healthstones, a Restock List that auto-buys and banks reagents and ammo, click-to-cast missing buffs, and mouseover macros for every spell.
 ## Author: Gogo1951
 
-## IconTexture: Interface/AddOns/Good-to-Go/Includes/Images/Connoisseur.tga
+## IconTexture: Interface/AddOns/Good-to-Go/Includes/Images/Good-to-Go.tga
 ## X-License: MIT
 
 ## Category-enUS: Buffs & Debuffs
@@ -89,6 +89,8 @@ Data/Default-Settings.lua
 # Good to Go
 Features/Core.lua
 Features/Utilities.lua
+# MIGRATION (remove after 2026-12-11)
+Features/Group-Context-Migration.lua
 Features/Announcements.lua
 Features/Key-Bindings.lua
 Features/Item-Info.lua
@@ -153,6 +155,7 @@ Features/Restocker/Restocker-Bank-Tidy.lua
 Features/Restocker/Restocker-Bank-State.lua
 Features/Restocker/Restocker-Bank-Visit.lua
 Features/Restocker/Restocker-Merchant.lua
+Features/Restocker/Restocker-Merchant-Report.lua
 Features/Restocker/Restocker-Shortfall.lua
 Features/Restocker/Restocker-Crafting-Reagents.lua
 Features/Restocker/Restocker-Upgrade.lua
@@ -217,7 +220,6 @@ Features/Buff-Duty/Buff-Duty-Keys.lua
 Features/Enhanced-Spellbook/Spellbook-Core.lua
 Features/Enhanced-Spellbook/Spellbook-Utilities.lua
 Features/Enhanced-Spellbook/Class-Spells.lua
-Features/Enhanced-Spellbook/Trainer-Lookup.lua
 Features/Enhanced-Spellbook/Macro-Kinds.lua
 Features/Enhanced-Spellbook/Macro-Options.lua
 Features/Enhanced-Spellbook/Page-Settings.lua
@@ -302,6 +304,9 @@ Diagnostics/Report-Runner.lua
 
 # Options
 Options/Options-Utilities.lua
+Options/Options-Widgets.lua
+Options/Options-Feature-Switches.lua
+Options/Options-Item-Lists.lua
 Options/Options-General.lua
 Options/Macros-for-Consumables/Options-Macros.lua
 Options/Macros-for-Consumables/Options-Class-Race.lua

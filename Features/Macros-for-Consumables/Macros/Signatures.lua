@@ -38,8 +38,8 @@ ns.HasFriendlyPlayerTarget = HasFriendlyPlayerTarget
     other firehoses.
 
     GROUP_ROSTER_UPDATE fires on every raid roster change, yet the only group
-    state a written body reads is whether the player is grouped and whether that
-    group is a raid (the group-restricted modes, ns.IsModeActive). Hunters'
+    state a written body reads is the group context (ns.GetGroupContext, behind
+    every When to Use's checkboxes in ns.IsUseWhenActive). Hunters'
     QUEST_LOG_UPDATE fires on every objective tick and is diffed by
     ns.PetFoodQuestsChanged in Tools-Hunters-Pet-Food.lua.
 
@@ -56,7 +56,7 @@ ns.HasFriendlyPlayerTarget = HasFriendlyPlayerTarget
     combat ends, so a target changed mid-fight still counts after it.
 ]]
 local lastTargetFriendly, lastTargetIsSelf, lastTargetLevel, lastTargetCannibalizable
-local lastInGroup, lastInRaid
+local lastGroupContext
 local targetReadPending = false
 
 -- Records this firing's target readings and reports whether any of the four moved.
@@ -98,16 +98,16 @@ function ns.RereadTargetIfPending()
 	return ns.TargetSignatureChanged()
 end
 
--- Records this firing's group readings and reports whether either moved.
+-- Records this firing's group context and reports whether it moved.
 function ns.GroupSignatureChanged()
-	local inGroup, inRaid = IsInGroup(), IsInRaid()
-	local changed = inGroup ~= lastInGroup or inRaid ~= lastInRaid
-	lastInGroup, lastInRaid = inGroup, inRaid
+	local context = ns.GetGroupContext()
+	local changed = context ~= lastGroupContext
+	lastGroupContext = context
 	return changed
 end
 
 function ns.ResetTargetTracking()
 	lastTargetFriendly, lastTargetIsSelf, lastTargetLevel, lastTargetCannibalizable = nil, nil, nil, nil
-	lastInGroup, lastInRaid = nil, nil
+	lastGroupContext = nil
 	targetReadPending = false
 end

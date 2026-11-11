@@ -221,6 +221,8 @@ function ns:OnPlayerRegenEnabled()
 		syncPending = false
 		ns:RefreshMacros()
 	end
+	-- Dynamic Rank rewrites wait out combat too, and the target or mouseover may have changed meanwhile.
+	ns.QueueRankRewriteAll()
 end
 
 --[[

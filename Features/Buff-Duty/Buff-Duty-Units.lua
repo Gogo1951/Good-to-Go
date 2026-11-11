@@ -42,10 +42,10 @@ function BuffDuty.GroupMembers()
 	return members
 end
 
--- Whether a Count as Tanks entry (a class token, or Data.TANK_WHEN_PET) applies right now.
+-- Whether a Count as Tanks entry (a class token, or Data.TANK_WHEN_PET) applies right now; SOLO is the Solo group context.
 local function CountsAsTank(key)
 	local when = key and ns.db.global.buffWindow.tankWhen[key]
-	return when == Data.TANK_WHEN.ALWAYS or (when == Data.TANK_WHEN.SOLO and not IsInGroup())
+	return when == Data.TANK_WHEN.ALWAYS or (when == Data.TANK_WHEN.SOLO and ns.GetGroupContext() == "solo")
 end
 BuffDuty.CountsAsTank = CountsAsTank
 
@@ -108,6 +108,24 @@ function BuffDuty.Wants(buff, class, role)
 end
 
 --[[
+    Duration of a HELPFUL aura on `unit` for `spellId`, or nil when absent. A live
+    buff can legitimately report 0 (no timer), so callers must nil-check the result,
+    not test it for truthiness. 40 is the aura cap the client exposes.
+]]
+local function GetBuffDuration(unit, spellId)
+	for i = 1, 40 do
+		local data = C_UnitAuras.GetBuffDataByIndex(unit, i, "HELPFUL")
+		if not data then
+			return nil
+		end
+		if ns.IsPlain(data.spellId) and data.spellId == spellId then
+			return data.duration or 0
+		end
+	end
+	return nil
+end
+
+--[[
     A pet in Phase Shift (a warlock's imp) can't be targeted, so no buff
     reaches it until it phases back in, however close it stands. Secret auras
     on WoW Forever read as not shifted. Each unit's answer is kept for the
@@ -131,7 +149,7 @@ local function IsPhaseShifted(unit)
 		phaseShiftedAt = now
 	end
 	if phaseShifted[unit] == nil then
-		phaseShifted[unit] = ns.GetBuffDuration(unit, spellId) ~= nil
+		phaseShifted[unit] = GetBuffDuration(unit, spellId) ~= nil
 	end
 	return phaseShifted[unit]
 end

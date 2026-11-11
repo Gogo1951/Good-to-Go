@@ -18,13 +18,20 @@
     binding, and declaring it twice warns on every login. A CLICK binding
     needs no declaration to keep a saved key, and the old button name stays
     an alias (Buff-Duty-Keys.lua), so the key still works until login moves it.
+
+    category names the game's Key Bindings section. A global's name gives the
+    section its own row, titled by that global's value, the way other add-ons
+    get theirs: BINDING_HEADER_GOODTOGO, set to the add-on's title in
+    Features/Key-Bindings.lua. "ADDONS" would file the keys under a header
+    inside the shared AddOns section instead. Moving between sections keeps
+    every saved key, since keys are saved against the binding's name.
 -->
 <Bindings>
-	<Binding name="GOODTOGO_TOGGLE_SPELLBOOK" header="GOODTOGO" category="ADDONS">
+	<Binding name="GOODTOGO_TOGGLE_SPELLBOOK" category="BINDING_HEADER_GOODTOGO">
 		GoodToGo_ToggleSpellbook()
 	</Binding>
-	<Binding name="CLICK GtGBuffKey:LeftButton" category="ADDONS" />
-	<Binding name="MACROSPELLBOOK_TOGGLE" category="ADDONS" hidden="true">
+	<Binding name="CLICK GtGBuffKey:LeftButton" category="BINDING_HEADER_GOODTOGO" />
+	<Binding name="MACROSPELLBOOK_TOGGLE" category="BINDING_HEADER_GOODTOGO" hidden="true">
 		GoodToGo_ToggleSpellbook()
 	</Binding>
 </Bindings>

@@ -189,7 +189,7 @@ ns.RANK_WATCH_PET_ABILITIES = {
 How We Got the Data
 
 Last Validated
-	2026-11-08, Season of Discovery 1.15.9.70576
+	2026-11-11, Season of Discovery 1.15.9.70576
 
 Notes
 	- Built by Tools/Build-Rank-Watch-Pet-Abilities.py from Pet-Abilities-Discovery.lua: PET_ABILITIES under HUNTER, DEMON_ABILITIES under WARLOCK, grouped by each row's comment.

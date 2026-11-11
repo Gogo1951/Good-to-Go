@@ -400,7 +400,7 @@ ns.CONSUMABLE_UPGRADE_CHAINS = {
 How We Got the Data
 
 Last Validated
-	2026-11-08, Season of Discovery 1.15.9.70576
+	2026-11-11, Season of Discovery 1.15.9.70576
 
 Notes
 	- The staple ladders, read by Features/Restocker/Restocker-Upgrade.lua and the Starter List (Restocker-Starter-List.lua). Each family goes up in fixed steps, so a Restock List entry can follow the player instead of going stale: at level 45 "Soft Banana Bread" is what you want, at 55 it is not.

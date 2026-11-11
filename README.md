@@ -12,6 +12,12 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 * **Never Let a Buff Drop** // Missing or fading buffs show up right away, and one click puts them back.
 * **Gentle Reminders for the Group** // See which buffs your group is missing, then ask the group, or whisper the class that can cast them.
 
+#### Example Messages
+
+> **Ask Your Group, Party:** Katz and Aero are missing [Arcane Intellect] // GtG
+
+> **Whisper Who Can Cast It, Message To Portalrico:** 7 people are missing the [Arcane Intellect] buff // GtG
+
 ### Restocker
 
 <img width="800" src="https://github.com/user-attachments/assets/fa63db86-8638-4483-9f18-f47765ba8a8f" />
@@ -21,13 +27,15 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 * **Rogues Get a Bonus** // List the poison you want, and the ingredients buy themselves.
 * **Skip a Visit** // Hold Shift while opening a merchant or the bank to skip restocking that time.
 
+#### Example Messages
+
 > **Back in Town, 🔊 & Self:** Good to Go // Don't forget to restock while you're in town!
 
 ### Consumable Macros
 
 <img width="800" src="https://github.com/user-attachments/assets/034cffa2-69f5-43dd-91f8-4cee48ec7d72" />
 
-* **Always the Best Item** // One button each for food, water, potions, and more, always using the best thing in your bags. Set them up once and forget them.
+* **Always the Best Item** // One button each for food, water, potions, and more, always using the best thing in your bags.
 * **Mages and Warlocks** // Right-Click the same button to conjure more, even sized for a lower-level friend.
 
 | Macro | Uses |
@@ -52,7 +60,9 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 * **No False Alarms** // A buff the game lowers for a low-level player is never reported, and you pick which ranks are worth a mention.
 * **One Voice Per Group** // When several players run Rank Watch or RankSentinel, only one of them whispers.
 
-> **Low Rank Cast, Message To Portalrico:** ⭐ FYI, no biggie, but you used [Fireball] (Rank 5). There's a newer rank at level 30. Update your action bars or visit your trainer and you'll be Good to Go // GtG
+#### Example Messages
+
+> **Low Rank Cast, Message To Portalrico:** FYI, no biggie, but you used [Fireball] (Rank 5). There's a newer rank at level 30. Update your action bars or visit your trainer and you'll be Good to Go // GtG
 
 ### Enhanced Spellbook
 
@@ -92,7 +102,7 @@ Hover it for your current food, notes on your class's macros, and what your Rest
 * **Readiness Report** // When a ready check starts, get a private list of anything you still need to fix, like a missing buff, potion, or damaged gear. Silent when you're ready.
 * **Inventory Report** // Item tooltips show how many you have in your bags, your bank, and on your other characters on the same realm.
 * **Druids** // Add DruidMacroHelper, and your potion buttons work from any form.
-* **Forsaken, Night Elves and Trolls** // Forsaken can Cannibalize instead of eating, Night Elves can slip into Shadowmeld before they eat or drink, and Trolls on WoW Forever can use Rapid Regeneration instead of eating.
+* **Forsaken, Night Elves and Trolls** // Forsaken can Cannibalize instead of eating, Night Elves can slip into Shadowmeld before they eat or drink, and Trolls on WoW Forever can use Rapid Regeneration instead of eating, and in combat.
 
 ## Testing & Localization Status
 
@@ -139,3 +149,19 @@ Hover it for your current food, notes on your class's macros, and what your Rest
 * Gogo1951's [Play It Forward](https://www.curseforge.com/wow/addons/play-it-forward)
 * Gogo1951's [Thanks for the Buff](https://www.curseforge.com/wow/addons/thanks-for-the-buff-revisited)
 * Gogo1951's [Water Dispenser](https://www.curseforge.com/wow/addons/water-dispenser-revisited)
+
+### 🟡 Overlaps
+
+* tekkub's [Buffet](https://www.curseforge.com/wow/addons/buffet)
+* Pupp3h's [Buffwatch Classic](https://www.curseforge.com/wow/addons/buffwatch-classic)
+* jnwhiteh's [Clique](https://www.curseforge.com/wow/addons/clique)
+* Venomisto's [Nova Spell Rank Checker](https://www.curseforge.com/wow/addons/nova-spell-rank-checker)
+* humfras's [Poisoner](https://www.curseforge.com/wow/addons/poisoner)
+
+### 🔴 Alternatives
+
+* ollidiemaus's [Auto Potion](https://www.curseforge.com/wow/addons/auto-potion)
+* MuffinManKen's [AutoBar Classic](https://www.curseforge.com/wow/addons/autobar-classic)
+* kvakvs's [Buffomat Classic](https://www.curseforge.com/wow/addons/buffomat-classic)
+* fpsacha's [Manners](https://www.curseforge.com/wow/addons/manners)
+* Codermik's [SmartBuff](https://www.curseforge.com/wow/addons/smartbuff-retail-burning-crusade-classic)

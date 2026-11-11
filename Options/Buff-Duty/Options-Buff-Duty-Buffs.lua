@@ -57,7 +57,7 @@ function ns.BuildBuffDutyBuffsOptions()
 	}
 	--[[
 	    Count as Tanks: one row per class this client's data carries, then Pets,
-	    each a caption beside a Never / When Not in a Group / Always dropdown.
+	    each a caption beside a Never / When Solo / Always dropdown.
 	    It decides only for a player with no role of their own (RoleOf), so it
 	    sits apart from the role note above rather than inside it. Captions take
 	    the aligned width so the dropdowns line up with the boxed ones below.

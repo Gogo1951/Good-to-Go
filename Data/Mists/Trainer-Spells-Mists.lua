@@ -7,7 +7,7 @@ ns.TRAINER_SPELLS = {}
 How We Got the Data
 
 Last Validated
-	2026-11-04, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-11, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- Empty on purpose. On this client every class spell is learned on reaching its level, and class trainers teach none, so there are no trainer rows to list.

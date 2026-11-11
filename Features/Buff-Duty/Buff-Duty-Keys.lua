@@ -228,8 +228,10 @@ local function OnKeyPreClick(self, _, down)
 		ns.NoteBuffCastAttempt(spec)
 	elseif waitingOn then
 		ns.ShowUINotice(L["BUFF_KEY_WAITING"]:format(waitingOn))
-	elseif not BuffDuty.isSetUp or not ns.IsBuffDutyOnForClass() then
+	elseif not BuffDuty.isSetUp or not ns.IsBuffDutyTrackingForClass() then
 		ns.ShowUINotice(L["BUFF_KEY_OFF"])
+	elseif ns.AreAurasSecret() then
+		ns.ShowUINotice(L["BUFF_DUTY_AURAS_HIDDEN"])
 	elseif BuffDuty.ShowsHere() and not UnitIsDeadOrGhost("player") then
 		-- Done only when the list was there to finish; hidden here or dead, the key stays quiet.
 		ns.ShowUINotice(L["BUFF_KEY_DONE"])

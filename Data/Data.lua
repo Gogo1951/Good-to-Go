@@ -189,7 +189,7 @@ ns.OPTIONS_REGISTRY = {
     A toggle with a dropdown that tunes it is the same row, the toggle standing
     in for the label: it takes ns.OPTIONS_LABEL_WIDTH and the dropdown
     ns.OPTIONS_CONTROL_WIDTH, on every panel. The dropdown carries no caption,
-    so its values must read on their own beside the toggle ("When in a Raid",
+    so its values must read on their own beside the toggle ("When Leveling",
     "20%"), and like every sub-option it hides until the toggle is on.
 ]]
 ns.OPTIONS_ROW_WIDTH = 3.4
@@ -405,11 +405,23 @@ ns.TIP_MESSAGES = {
 }
 
 --------------------------------------------------------------------------------
--- Mode Order
+-- Group Contexts and Level Filters
 --------------------------------------------------------------------------------
 
--- The one when-to-use list every mode dropdown offers: Always, then by group size, then by level.
-ns.MODE_ORDER = { "always", "solo", "party", "raid", "leveling", "maxlevel" }
+--[[
+    The four places a group setting can tick, in the order every panel draws
+    them: Solo, Party, Raid, Battleground (ns.GetGroupContext says which one
+    the player is in). A setting saves one boolean per context under these
+    keys, and its labels are GROUP_CONTEXT_<KEY> in the locale.
+]]
+ns.GROUP_CONTEXTS = { "solo", "party", "raid", "battleground" }
+
+--[[
+    The level filter a consumable's When to Use adds beneath its checkboxes:
+    any level, below the client's max level, or at it. It can only switch off
+    a context the checkboxes leave on (ns.IsUseWhenActive).
+]]
+ns.LEVEL_FILTER_ORDER = { "any", "leveling", "maxlevel" }
 
 --------------------------------------------------------------------------------
 -- Restock Reminders

@@ -394,13 +394,19 @@ function ns:BuildRestockerContextReport()
 		)
 	end
 
-	-- What the bank visit reads, while the bank is open (Restocker-Bags.lua).
+	--[[
+	    What the bank visit reads, while the bank is open (Restocker-Bags.lua):
+	    the containers this client names now, and how many the run loaded for
+	    itself. Forever's tab list can still be empty when the bank opens, so
+	    a run holding none asks for them again at every step.
+	]]
 	if ns.bankIsOpen and list then
 		local bankBags = ns.BankBagIDs()
 		lines[#lines + 1] = string.format(
-			"Bank containers: %s via %s // bank has a free plain slot: %s // a list item is locked: %s",
+			"Bank containers: %s via %s // loaded for the run: %d // bank has a free plain slot: %s // a list item is locked: %s",
 			table.concat(bankBags, ","),
 			ns.FetchPurchasedBankTabIDs() and "C_Bank tabs" or "BANK_CONTAINER and bank bags",
+			#ns.GetRestockBankBags(),
 			YesNo(ns.BankHasRestockSpace()),
 			YesNo(ns.IsRestockItemLocked(list))
 		)

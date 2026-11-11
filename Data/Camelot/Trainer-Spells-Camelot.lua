@@ -1322,7 +1322,7 @@ ns.TRAINER_SPELLS = {
 How We Got the Data
 
 Last Validated
-	2026-11-08, WoW Forever 1.60.1.70862
+	2026-11-11, WoW Forever 1.60.1.70888
 
 Notes
 	- Every class spell this client's class trainers teach, one row per rank, so the spellbook page can list the spells a character hasn't learned yet. Features/Enhanced-Spellbook/Unlearned-Spells.lua shows only each spell's rank 1; the higher ranks keep the list in level order and let it tell rank 1 apart.

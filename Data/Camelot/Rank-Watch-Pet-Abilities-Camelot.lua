@@ -250,7 +250,7 @@ ns.RANK_WATCH_PET_ABILITIES = {
 How We Got the Data
 
 Last Validated
-	2026-11-08, WoW Forever 1.60.1.70862
+	2026-11-11, WoW Forever 1.60.1.70888
 
 Notes
 	- Built by Tools/Build-Rank-Watch-Pet-Abilities.py --wago from the client's own DB2 tables: every ranked spell on a pet skill line in SkillLineAbility (each beast family's "Pet - " line and Pet - Generic under HUNTER, the Imp, Felhunter, Voidwalker, Succubus, Infernal, Doomguard and Felguard lines under WARLOCK), its rank from Spell's subtext and its level from SpellLevels.

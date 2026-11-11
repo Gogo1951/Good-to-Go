@@ -104,7 +104,7 @@ local function ProfessionsKey(...)
 	return key
 end
 
-local READS_PROFESSIONS = GetProfessions and GetProfessionInfo and C_SpellBook.GetNumSpellBookSkillLines and true
+local READS_PROFESSIONS = ns.READS_PROFESSIONS
 
 function CurrentProfessionsKey()
 	return READS_PROFESSIONS and ProfessionsKey(GetProfessions()) or nil

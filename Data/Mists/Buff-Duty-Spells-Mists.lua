@@ -360,7 +360,7 @@ ns.BUFF_DUTY_RESURRECTIONS = {
 How We Got the Data
 
 Last Validated
-	2026-11-08, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-11, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- Built offline from this client's game tables, not yet checked against a Validate Data run from a Mists client. Every ID below is in this build's SpellName or ItemSparse, under the name its comment gives.

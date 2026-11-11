@@ -62,7 +62,7 @@ function ns.ScanBags()
 
 	--[[
 	    Party/raid-restricted Buff Food, Scrolls, and Pet Food go stale when
-	    group composition or the mode dropdown changes — those flip whether a
+	    group composition, the group checkboxes or the level filter change — those flip whether a
 	    feature is active but have no dedicated UpdateAuraTracking call, so
 	    ns.wellFedState and UNIT_AURA registration would otherwise drift.
 	    ScanBags is the single point every rescan passes through, so reconcile
@@ -108,23 +108,23 @@ function ns.ScanBags()
 	    override resolvers are gated below.
 	]]
 	ns.allowBuffFood = settings.useBuffFood
-		and ns.IsModeActive(settings.buffFoodMode)
+		and ns.IsUseWhenActive(settings, "buffFood")
 		and not ns.wellFedState
 		and not targetingSelf
 		and not inArena
 
 	--[[
-	    Use Conjured Food & Water First: the setting and its mode, from the
-	    list Buff Food's shares (the default "leveling" means below max level).
-	    Group reads join the group signature and a level-up rebuilds every
-	    macro, so a mode flipping always rescans. It needs no arena or self-target exception: an arena already
+	    Use Conjured Food & Water First: the setting and its When to Use, the
+	    same checkboxes and level filter Buff Food's has (the default level is
+	    "leveling", below max level). Group reads join the group signature and
+	    a level-up rebuilds every macro, so a When to Use flipping always rescans. It needs no arena or self-target exception: an arena already
 	    leaves only conjured food and water and the arena drinks, and
 	    targeting yourself is the buff-food testing aid.
 	]]
-	ns.allowConjuredFirst = settings.useConjuredFirst and ns.IsModeActive(settings.conjuredFirstMode)
+	ns.allowConjuredFirst = settings.useConjuredFirst and ns.IsUseWhenActive(settings, "conjuredFirst")
 
 	--[[
-	    Use Restock List Food & Water Last: no mode, on whenever ticked. The
+	    Use Restock List Food & Water Last: no When to Use, on whenever ticked. The
 	    current list is captured here for FillRecord; every list edit redraws
 	    through ns.UpdateRestockList, which requests a rescan while it is on
 	    and the list's items have changed.

@@ -208,11 +208,33 @@ local function IsHeld(guid, key)
 	return false
 end
 
+--[[
+    GUID -> buff key -> true: the buffs a targeted friendly NPC has had from you
+    this time round. An NPC is buffed in a cycle, not by what it wears: quests
+    want the same buff cast on it again and again, and an NPC's auras say
+    little about that. Each cast moves its row on to the next buff; once every
+    one has been cast the cycle starts over (BuffDuty.NPCRow).
+]]
+local cycled = {}
+
+function BuffDuty.NoteNPCCast(guid, key)
+	if not (ns.IsPlain(guid) and guid and key) then
+		return
+	end
+	cycled[guid] = cycled[guid] or {}
+	cycled[guid][key] = true
+end
+
 -- Drops every hold but those on the GUIDs in `keep`, from BuffDuty.PruneAuraCache.
 function BuffDuty.PrunePetHolds(keep)
 	for guid in pairs(holds) do
 		if not keep[guid] then
 			holds[guid] = nil
+		end
+	end
+	for guid in pairs(cycled) do
+		if not keep[guid] then
+			cycled[guid] = nil
 		end
 	end
 end
@@ -332,22 +354,44 @@ local function NPCWants(buff, unit)
 	return true
 end
 
+-- The NPC's icons this time round: each buff it takes that it hasn't had from you yet in this cycle.
+local function CycleIcons(unit, castUnit, name, guid)
+	local done = guid and cycled[guid]
+	local icons = {}
+	for _, buff in ipairs(buffs) do
+		if buff.singleName and NPCWants(buff, unit) and not IsHeld(guid, buff.key) then
+			if not (done and done[buff.key]) then
+				icons[#icons + 1] = SingleIcon(buff, unit, castUnit, name)
+			end
+		end
+	end
+	return icons
+end
+
 --[[
-    A targeted NPC's row: its missing buffs, cast at `castUnit`. Nil when it
-    needs nothing. Casts on it are followed like a pet's (anything not a player
-    is, in Buff-Duty-Cast-Results.lua): one the game refuses outright holds
-    that buff for as long as the NPC is around, so a quest-giver who can't take
-    buffs doesn't keep offering them.
+    A targeted NPC's row, cast at `castUnit`: a cycle through every buff it
+    takes, whatever it already wears (see `cycled`), starting over once each
+    has been cast. Nil when it takes none of yours. Casts on it are followed
+    like a pet's (anything not a player is, in Buff-Duty-Cast-Results.lua): one
+    the game refuses outright holds that buff while the NPC stays targeted
+    (BuffDuty.PruneAuraCache drops the hold once it isn't), so a quest-giver
+    who can't take buffs doesn't keep offering them.
+    The row is marked `npc`, so the Buff Key casts it only after everyone else.
 ]]
 function BuffDuty.NPCRow(unit, castUnit)
 	if not BuffDuty.CanBuffNPC(unit) then
 		return nil
 	end
-	BuffDuty.ReadAuras(unit)
+	local guid = UnitGUID(unit)
+	guid = ns.IsPlain(guid) and guid or nil
 	local name = GetUnitName(unit, false) or ""
-	local icons = HeldIcons(unit, castUnit, name, NPCWants)
+	local icons = CycleIcons(unit, castUnit, name, guid)
+	if #icons == 0 and guid and cycled[guid] then
+		cycled[guid] = nil
+		icons = CycleIcons(unit, castUnit, name, guid)
+	end
 	if #icons == 0 then
 		return nil
 	end
-	return { label = ns.GetColor("HELP") .. name .. "|r", icons = icons }
+	return { label = ns.GetColor("HELP") .. name .. "|r", icons = icons, npc = true }
 end

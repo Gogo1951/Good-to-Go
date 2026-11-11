@@ -13,7 +13,8 @@ local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
 -- Header
 --------------------------------------------------------------------------------
 
-BINDING_HEADER_GOODTOGO = L["ADDON_TITLE"] -- heads every binding Bindings.xml declares
+-- Titles Good to Go's own section in the Key Bindings list: Bindings.xml names this global as every binding's category.
+BINDING_HEADER_GOODTOGO = L["ADDON_TITLE"]
 
 --------------------------------------------------------------------------------
 -- Opening Key Bindings
@@ -91,10 +92,12 @@ local MODULE = "KeyBindings"
 --[[
 	UPDATE_BINDINGS. The root panel's Key Bindings rows show each binding's key or Not Bound, and the player
 	changes it in the game's own Key Bindings list, so repaint the panel when they come back from it. Heard
-	whatever features are on, since the rows show every binding.
+	whatever features are on, since the rows show every binding. The Buff Duty window redraws too, since it
+	shows a Buff Button tip only while that key is unbound (Buff-Duty-Frame.lua).
 ]]
 local function OnUpdateBindings()
 	AceConfigRegistry:NotifyChange(ns.OPTIONS_REGISTRY.General)
+	ns.RequestBuffDutyRefresh()
 end
 
 ns.RegisterEventModule(MODULE, function(event)

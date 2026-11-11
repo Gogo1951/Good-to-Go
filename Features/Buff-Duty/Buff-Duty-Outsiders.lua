@@ -170,6 +170,10 @@ local function TargetSection(listed)
 	if not ns.db.global.buffWindow.targetEnabled then
 		return nil
 	end
+	-- On WoW Forever a target whose identity is secret can't be asked who they are.
+	if ns.IsUnitIdentitySecret("target") then
+		return nil
+	end
 
 	--[[
 	    A dead target is one row with the resurrection alone: no buff takes on

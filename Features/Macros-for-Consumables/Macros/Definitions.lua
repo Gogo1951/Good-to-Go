@@ -85,6 +85,10 @@ local _, ns = ...
                            or nil: Food's Troll Rapid Regeneration while off
                            cooldown. Asked under corpseSpell's rule, only
                            when the body uses the scanned pick
+      combatSpell(entry) -- a spell a press in combat casts in place of the
+                           action, which then stops, or nil: Food's Troll
+                           Rapid Regeneration, since nobody eats in combat.
+                           Asked under corpseSpell's rule
       buildModeOverride(context) -- full-body takeover; returns body, stateKey
                            or nil (Food's scroll-only mode). Mode state keys
                            MUST use their own prefix (e.g. "SCROLLS:") so they

@@ -707,6 +707,9 @@ local function InitializeDatabase()
 	PruneOtherClientCharacters()
 	UseOwnProfileWhenUnnamed()
 
+	-- MIGRATION (remove after 2026-12-11): group settings onto the Solo / Party / Raid / Battleground checkboxes.
+	ns.MoveGroupSettingsOntoCheckboxes()
+
 	-- MIGRATION (remove after 2026-12-08)
 	RetireAutomatedAppreciation()
 

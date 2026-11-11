@@ -134,12 +134,22 @@ local function QueueRankRewrite(scope)
 	end
 end
 
+-- Every rewrite skipped in combat is caught up here once it ends (ns:OnPlayerRegenEnabled, Macro-Sync.lua).
+function ns.QueueRankRewriteAll()
+	QueueRankRewrite("all")
+end
+
 local MOUSEOVER_POLL_SECONDS = 0.2
 local watchingMouseover = false
 
+-- Forever keeps unit identity secret in combat, so the mouseover counts as gone until it can be read.
+local function HasMouseover()
+	return not ns.IsUnitIdentitySecret("mouseover") and ns.IsPlainTrue(UnitExists("mouseover"))
+end
+
 -- Checks for the mouseover to have gone until it does, then rewrites the mouseover macros for no unit.
 local function PollMouseover()
-	if UnitExists("mouseover") and RanksRewritable("mouseover") then
+	if RanksRewritable("mouseover") and HasMouseover() then
 		C_Timer.After(MOUSEOVER_POLL_SECONDS, PollMouseover)
 		return
 	end
@@ -148,7 +158,7 @@ local function PollMouseover()
 end
 
 function WatchMouseover()
-	if not watchingMouseover and UnitExists("mouseover") and PlacedRankMacros().mouseover then
+	if not watchingMouseover and PlacedRankMacros().mouseover and HasMouseover() then
 		watchingMouseover = true
 		C_Timer.After(MOUSEOVER_POLL_SECONDS, PollMouseover)
 	end

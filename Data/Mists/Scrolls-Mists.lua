@@ -1,8 +1,9 @@
 local _, ns = ...
 
--- [scrollType] = { items = { ... }, conflictSpells = { ... } }
+-- [scrollType] = { classes = "ALL" or { classToken, ... }, items = { ... }, conflictSpells = { ... } }
 ns.SCROLL_DATA = {
 	Agility = {
+		classes = { "DRUID", "HUNTER", "MONK", "PALADIN", "ROGUE", "SHAMAN" },
 		-- {itemID, buffID, requiredLevel, amount}, -- Name
 		items = {
 			{ 63303, 89343, 80, 100 }, -- Scroll of Agility IX
@@ -38,6 +39,7 @@ ns.SCROLL_DATA = {
 		},
 	},
 	Intellect = {
+		classes = { "DRUID", "MAGE", "MONK", "PALADIN", "PRIEST", "SHAMAN", "WARLOCK" },
 		-- {itemID, buffID, requiredLevel, amount}, -- Name
 		items = {
 			{ 63305, 89347, 80, 100 }, -- Scroll of Intellect IX
@@ -71,6 +73,7 @@ ns.SCROLL_DATA = {
 		},
 	},
 	Protection = {
+		classes = "ALL",
 		-- {itemID, buffID, requiredLevel, amount}, -- Name
 		items = {
 			{ 63308, 89344, 80, 400 }, -- Scroll of Protection IX
@@ -98,6 +101,7 @@ ns.SCROLL_DATA = {
 		},
 	},
 	Stamina = {
+		classes = "ALL",
 		-- {itemID, buffID, requiredLevel, amount}, -- Name
 		items = {
 			{ 63306, 89345, 80, 150 }, -- Scroll of Stamina IX
@@ -130,6 +134,7 @@ ns.SCROLL_DATA = {
 		},
 	},
 	Spirit = {
+		classes = { "DRUID", "MONK", "PALADIN", "PRIEST", "SHAMAN" },
 		-- {itemID, buffID, requiredLevel, amount}, -- Name
 		items = {
 			{ 63307, 89342, 80, 100 }, -- Scroll of Spirit IX
@@ -169,6 +174,7 @@ ns.SCROLL_DATA = {
 		},
 	},
 	Strength = {
+		classes = { "DEATHKNIGHT", "DRUID", "PALADIN", "WARRIOR" },
 		-- {itemID, buffID, requiredLevel, amount}, -- Name
 		items = {
 			{ 63304, 89346, 80, 100 }, -- Scroll of Strength IX
@@ -208,10 +214,11 @@ ns.SCROLL_DATA = {
 How We Got the Data
 
 Last Validated
-	2026-11-08, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-11, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- The stat scrolls, read by Features/Macros-for-Consumables/Scanner/Scanner-Auras.lua and Scanner-Scrolls.lua (FindBestScroll) to pick a scroll whose buff the player lacks. Each type lists its scrolls as { itemID, buffID, requiredLevel, amount }: the buff is the aura the scroll leaves, requiredLevel the level the item requires, amount the stat it grants. This client keeps the scrolls through rank IX (Inscription).
+	- classes is who the type is on for by default (Data/Default-Settings.lua, scrollTypes): "ALL", or the class tokens whose characters get use from the stat, by class and never by spec. It follows Play It Forward's CONSUMABLE_CLASSES (Data/{Game}/Match-Classes-{Game}.lua there), the stat each class's gear wants, with Paladins added to Agility and Druids to Strength: Stamina and Protection go to everyone; Strength to Death Knights, Druids, Paladins and Warriors; Agility to Druids, Hunters, Monks, Paladins, Rogues and Shamans; Intellect to every mana user (Hunters run on focus here); Spirit to Druids, Monks, Paladins, Priests and Shamans. The player can still tick any type on or off.
 	- amount is the buff's scaled value: the coefficient times the SpellScaling game table (gametables/spellscaling.txt, file 1391660) at the spell's MaxScalingLevel. The client's data gives a few odd results (Scroll of Agility 6 against Scroll of Agility II 5, Scroll of Protection VI 20 against V's 60); they are kept as the client computes them. FindBestScroll ranks by required level first, so only the conflict check reads them.
 	- conflictSpells lists the buffs a scroll is skipped for while one at least as strong is up, keyed by spell ID with the amount each grants: every elixir and flask buff in ns.ELIXIR_BUFF_IDS and ns.FLASK_BUFF_IDS (Data/Mists/Elixirs-Mists.lua) whose own spell, or a spell its text quotes, has a Mod Stat aura (29) for the stat (or for all stats), or a Mod Resistance aura (22) on armor for Protection, at its amount on this build. The other scrolls' buffs are left out, since the scroll's own buff check covers them.
 	- No class buffs are listed: on this client Mark of the Wild, Blessing of Kings and Power Word: Fortitude raise stats by a percentage, not a flat amount, and stack with an elixir.

@@ -147,6 +147,7 @@ read_globals = {
 	"GetUnitName",
 	"GetWeaponEnchantInfo",
 	"GetZoneText",
+	"geterrorhandler",
 	"GROUP",
 	"GROUP_NUMBER",
 	"HasPetSpells",

@@ -200,6 +200,12 @@ function ns.UpdateMacros(forced)
 				leadCast = definition.leadSpell(bestEntry)
 			end
 
+			-- Definition hook: a spell a press in combat casts instead (Food's Rapid Regeneration), same rule.
+			local combatCast
+			if definition.combatSpell and itemID == (bestEntry and bestEntry.id) then
+				combatCast = definition.combatSpell(bestEntry)
+			end
+
 			--[[
 			    Ranked /use list for multi-use types; topIDs[1] is itemID
 			    itself, so the list only adds fallback lines below it.
@@ -329,7 +335,8 @@ function ns.UpdateMacros(forced)
 					outOfCombatStealth,
 					corpseCast,
 					outOfCombatCorpse,
-					leadCast
+					leadCast,
+					combatCast
 				)
 
 				if currentMacroState[typeName] ~= stateID or forced then
@@ -344,7 +351,8 @@ function ns.UpdateMacros(forced)
 						outOfCombatStealth,
 						corpseCast,
 						outOfCombatCorpse,
-						leadCast
+						leadCast,
+						combatCast
 					)
 					WriteMacro(config.macro, body, stateID, typeName)
 				end

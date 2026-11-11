@@ -90,26 +90,51 @@ local KnowsAny = ns.KnowsAny
 local LIST_MAX_ROWS = 8
 
 --[[
-    A block's state from its switches, each { enabled, mode }: Enabled while
-    any switch is on and its when-to-use choice holds, Disabled while all are
-    off. One that is on while its choice does not hold (When in a Raid, and the
-    player is solo) shows the choice instead of Enabled: the Food macro is not
-    acting on it, and the label says what it is waiting for. ns.MODE_VALUES is
-    read here rather than aliased at load, because Options/Options-Utilities.lua
-    builds it after this file.
+    What a switch that is on waits for while its When to Use does not hold:
+    the level filter's label when that is what fails (When Leveling), and
+    otherwise the contexts it is ticked for (Party, Raid), or Never with none.
+    ns.LEVEL_FILTER_VALUES is read here rather than aliased at load, because
+    Options/Options-Utilities.lua builds it after this file.
 ]]
-local function SwitchState(switches)
-	local waitingMode
-	for _, switch in ipairs(switches) do
-		if switch[1] then
-			if ns.IsModeActive(switch[2]) then
-				return GetColor("ON") .. L["MINIMAP_ENABLED"] .. "|r"
-			end
-			waitingMode = waitingMode or switch[2]
+local function WaitingLabel(settings, prefix)
+	if ns.IsGroupContextOn(settings[prefix .. "In"]) then
+		return ns.LEVEL_FILTER_VALUES[settings[prefix .. "Level"]] or L["MINIMAP_DISABLED"]
+	end
+	local ticked = {}
+	for _, context in ipairs(ns.GROUP_CONTEXTS) do
+		if ns.IsGroupContextOn(settings[prefix .. "In"], context) then
+			ticked[#ticked + 1] = L["GROUP_CONTEXT_" .. context:upper()]
 		end
 	end
-	if waitingMode then
-		return GetColor("SEPARATOR") .. ns.MODE_VALUES[waitingMode] .. "|r"
+	if #ticked == 0 then
+		return L["GROUP_CONTEXT_NEVER"]
+	end
+	return table.concat(ticked, L["LIST_SEPARATOR"])
+end
+
+--[[
+    A block's state from its switches, each { enabled, prefix }: Enabled while
+    any switch is on and its When to Use (ns.IsUseWhenActive, read from the
+    profile under `prefix`) holds, Disabled while all are off. A switch with
+    no prefix has no When to Use and holds whenever it is on. One that is on
+    while its When to Use does not hold (ticked for Raid only, and the player
+    is solo) shows what it waits for instead of Enabled: the Food macro is
+    not acting on it, and the label says when it will.
+]]
+local function SwitchState(switches)
+	local settings = ns.db.profile
+	local waiting
+	for _, switch in ipairs(switches) do
+		if switch[1] then
+			local prefix = switch[2]
+			if not prefix or ns.IsUseWhenActive(settings, prefix) then
+				return GetColor("ON") .. L["MINIMAP_ENABLED"] .. "|r"
+			end
+			waiting = waiting or WaitingLabel(settings, prefix)
+		end
+	end
+	if waiting then
+		return GetColor("SEPARATOR") .. waiting .. "|r"
 	end
 	return GetColor("OFF") .. L["MINIMAP_DISABLED"] .. "|r"
 end
@@ -529,8 +554,8 @@ UpdateTooltip = function(anchor)
 		tooltip,
 		L["MINIMAP_BUFF_FOOD_SCROLLS"],
 		SwitchState({
-			{ settings.useBuffFood, settings.buffFoodMode },
-			{ settings.useScrolls, settings.scrollsMode },
+			{ settings.useBuffFood, "buffFood" },
+			{ settings.useScrolls, "scrolls" },
 		}),
 		string.format(L["MINIMAP_BUFF_FOOD_SCROLLS_DESCRIPTION_FORMAT"], ns.GetWellFedName()),
 		L["MINIMAP_LEFT_CLICK"],
@@ -539,7 +564,7 @@ UpdateTooltip = function(anchor)
 	AddFeatureBlock(
 		tooltip,
 		L["TAB_BUFF_DUTY"],
-		SwitchState({ { ns.IsBuffDutyOnForClass(), "always" } }),
+		SwitchState({ { ns.IsBuffDutyOnForClass() } }),
 		L["BUFF_DUTY_DESCRIPTION"],
 		L["MINIMAP_SHIFT_LEFT"],
 		L["MINIMAP_TOGGLE"]

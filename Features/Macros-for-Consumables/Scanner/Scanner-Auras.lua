@@ -16,7 +16,7 @@ local _, ns = ...
     loads before this file). ns.SCROLL_ITEM_LOOKUP maps each scroll itemID to its
     scroll type so the bag scanners route scroll items away from normal
     consumable processing. Each type's items are sorted by required level,
-    highest first, so FindBestScroll's first usable hit is the best scroll
+    highest first, so ns.FindBestScroll's first usable hit is the best scroll
     whatever the data's row order. Every consumer reads these from inside a
     function (runtime), so the build only needs to finish before the first scan.
 ]]
@@ -303,7 +303,7 @@ function ns.ShouldTrackPetFood()
 	if not settings or not settings.usePetBuffFood then
 		return false
 	end
-	if not ns.IsModeActive(settings.petBuffFoodMode) then
+	if not ns.IsUseWhenActive(settings, "petBuffFood") then
 		return false
 	end
 	if (ns.cachedPlayerLevel or 1) < PET_BUFF_FOOD_MIN_LEVEL then
@@ -427,12 +427,12 @@ local auraEventRegistered
 
 --[[
     Whether each player-side aura feature is live: its switch is on and its
-    group mode holds. ns.UpdateAuraTracking and ns.OnUnitAura both ask, so what
+    When to Use holds. ns.UpdateAuraTracking and ns.OnUnitAura both ask, so what
     the scan tracks and what the aura handler diffs can never disagree.
 ]]
 local function PlayerAuraFeaturesActive(settings)
-	local buffFoodActive = (settings.useBuffFood and ns.IsModeActive(settings.buffFoodMode)) and true or false
-	local scrollsActive = (settings.useScrolls and ns.IsModeActive(settings.scrollsMode)) and true or false
+	local buffFoodActive = (settings.useBuffFood and ns.IsUseWhenActive(settings, "buffFood")) and true or false
+	local scrollsActive = (settings.useScrolls and ns.IsUseWhenActive(settings, "scrolls")) and true or false
 	return buffFoodActive, scrollsActive
 end
 
@@ -449,7 +449,7 @@ function ns.UpdateAuraTracking()
 	local settings = ns.db.profile
 
 	local buffFoodActive, scrollsActive = PlayerAuraFeaturesActive(settings)
-	local petBuffActive = HAS_PET_BUFF_FOODS and settings.usePetBuffFood and ns.IsModeActive(settings.petBuffFoodMode)
+	local petBuffActive = HAS_PET_BUFF_FOODS and settings.usePetBuffFood and ns.IsUseWhenActive(settings, "petBuffFood")
 
 	local currentSnapshot
 	if buffFoodActive or scrollsActive then

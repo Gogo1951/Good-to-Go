@@ -51,7 +51,7 @@ ns.POISON_DATA = {
 How We Got the Data
 
 Last Validated
-	2026-11-08, Season of Discovery 1.15.9.70576
+	2026-11-11, Season of Discovery 1.15.9.70576
 
 Notes
 	- ns.POISON_DATA holds every rogue poison the Poisons macro can apply, read by Features/Macros-for-Consumables/Macros/Tools-Rogues.lua: Required Level is the level the tooltip requires, and Poison Group is ns.POISON_GROUPS' numbering (Data/Data.lua), which carries no game IDs and so lives there.

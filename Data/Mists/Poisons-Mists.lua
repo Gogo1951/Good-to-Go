@@ -10,7 +10,7 @@ ns.POISON_DATA = {}
 How We Got the Data
 
 Last Validated
-	2026-11-04, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-11, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- Both tables are empty: this client has no rogue poison items. A rogue's poisons are spells in the Poisons flyout (SpellFlyout 66): Deadly Poison (2823), Wound Poison (8679), Crippling Poison (3408), Mind-numbing Poison (5761), and the talents Leeching Poison (108211) and Paralytic Poison (108215).

@@ -24,10 +24,6 @@ L["OPTIONS_LEVEL_UP_TITLE"] = "Help Good to Go Level Up"
 L["OPTIONS_LEVEL_UP_THANKS"] = "Thanks for choosing Good to Go!"
 
 --------------------------------------------------------------------------------
--- Consumable Macros & Restocker
---------------------------------------------------------------------------------
-
---------------------------------------------------------------------------------
 -- Macro Names
 --------------------------------------------------------------------------------
 
@@ -378,31 +374,54 @@ L["MINIMAP_MIDDLE_CLICK"] = "Middle-Click"
 L["MINIMAP_SHIFT_LEFT"] = "Shift + Left-Click"
 
 --------------------------------------------------------------------------------
--- Mode Values
+-- Group Contexts
 --------------------------------------------------------------------------------
 
 --[[
-    The one when-to-use list, offered by every mode dropdown: Prioritize Buff
-    Food, Enable Scroll Buffs, Use Pet Food Buffs, and Use Conjured Food &
-    Water First. %s in OPTIONS_MODE_DESCRIPTION is the feature's name,
+    The checkboxes for when a feature acts by group, on every panel that has
+    them, always in this order. Each description is the checkbox's hover text,
+    saying when that context holds: a battleground or arena is always
+    Battleground, even though its group is a raid. GROUP_CONTEXT_NEVER is the
+    mini-map tooltip's label for a feature on with none of them ticked.
+]]
+L["GROUP_CONTEXT_SOLO"] = "Solo"
+L["GROUP_CONTEXT_SOLO_DESCRIPTION"] = "While you're not in a party or raid."
+L["GROUP_CONTEXT_PARTY"] = "Party"
+L["GROUP_CONTEXT_PARTY_DESCRIPTION"] = "While you're in a party, including a group finder dungeon."
+L["GROUP_CONTEXT_RAID"] = "Raid"
+L["GROUP_CONTEXT_RAID_DESCRIPTION"] = "While you're in a raid. A battleground's raid counts as Battleground."
+L["GROUP_CONTEXT_BATTLEGROUND"] = "Battleground"
+L["GROUP_CONTEXT_BATTLEGROUND_DESCRIPTION"] = "While you're inside a battleground or an arena, whatever your group."
+L["GROUP_CONTEXT_NEVER"] = "Never"
+
+--------------------------------------------------------------------------------
+-- When to Use
+--------------------------------------------------------------------------------
+
+--[[
+    Every consumable's When to Use (Prioritize Buff Food, Enable Scroll
+    Buffs, Use Pet Food Buffs, and Use Conjured Food & Water First): the level
+    filter dropdown, then the group context checkboxes (GROUP_CONTEXT_*) under
+    it. %s in OPTIONS_MODE_DESCRIPTION is the feature's name,
     FEATURE_BUFF_FOOD, FEATURE_SCROLL_BUFFS or OPTIONS_PET_HEADER; the
-    conjured dropdown has hover text of its own. Each value carries its own
-    "when", since most dropdowns sit beside their toggle with no caption.
-    Leveling means below the client's max level.
+    conjured dropdown has hover text of its own. Each level value carries its
+    own "when", since most dropdowns sit beside their toggle with no caption.
+    Leveling means below the client's max level. OPTIONS_GROUPS_NONE shows in
+    red under the checkboxes while none is ticked.
 
     In the mini-map tooltip, the Buff Food & Scrolls block, while a switch is
-    on but no choice applies, shows that choice's label in place of
-    MINIMAP_ENABLED, so every label has to read as a state too.
+    on but its When to Use doesn't hold, shows the level label holding it back
+    in place of MINIMAP_ENABLED, so every level label has to read as a state
+    too. When the checkboxes hold it back, it lists the ticked contexts'
+    labels instead, or GROUP_CONTEXT_NEVER with none.
 ]]
 L["OPTIONS_MODE_DESCRIPTION"] =
-	"Chooses when your Food macro offers %s: always, or only while you're solo, in a party or raid, in a raid, still leveling, or at max level."
+	"Chooses the levels at which your Food macro offers %s: any level, only while leveling, or only at max level. The checkboxes below choose which groups."
 L["OPTIONS_MODE_CAPTION"] = "When to Use"
-L["MODE_ALWAYS"] = "Always"
-L["MODE_SOLO"] = "When Solo"
-L["MODE_PARTY"] = "When in a Party or Raid"
-L["MODE_RAID"] = "When in a Raid"
-L["MODE_LEVELING"] = "When Leveling"
-L["MODE_MAX_LEVEL"] = "When at Max Level"
+L["OPTIONS_GROUPS_NONE"] = "Nothing is checked, so this is never used."
+L["LEVEL_FILTER_ANY"] = "At Any Level"
+L["LEVEL_FILTER_LEVELING"] = "When Leveling"
+L["LEVEL_FILTER_MAX_LEVEL"] = "When at Max Level"
 
 --------------------------------------------------------------------------------
 -- Inventory Report
@@ -435,7 +454,7 @@ L["INVENTORY_REPORT_TOTAL"] = "Total %s"
 L["OPTIONS_DESCRIPTION"] =
 	"Auto-updating macros for your best food, water, potions, and healthstones, a Restock List that auto-buys and banks reagents and ammo, click-to-cast missing buffs, and mouseover macros for every spell."
 
--- Options: tree labels
+-- Enhanced Spellbook: its tree label, its panel's description, and the print when it's off.
 L["TAB_ENHANCED_SPELLBOOK"] = "Enhanced Spellbook"
 L["OPTIONS_SPELLBOOK_DESCRIPTION"] =
 	"Mouseover, cursor, and self-cast macros for every class spell, built in one click from a new spellbook tab with no macro syntax. They update as you level, train, and swap specs. Right-Click to add focus, stop casting, auto attack, pet attack, or trinkets."
@@ -592,7 +611,7 @@ L["OPTIONS_CONJURED_FIRST"] = "Use Conjured Food & Water First"
 L["OPTIONS_CONJURED_FIRST_DESCRIPTION"] =
 	"Your Food and Water macros use conjured food and water before anything else, even when something in your bags restores more, since it costs nothing and vanishes soon after you log out. Buff food still comes first while Prioritize Buff Food is on."
 L["OPTIONS_CONJURED_FIRST_MODE_DESCRIPTION"] =
-	"Chooses when conjured food and water come first: always, or only while you're solo, in a party or raid, in a raid, still leveling, or at max level."
+	"Chooses the levels at which conjured food and water come first: any level, only while leveling, or only at max level. The checkboxes below choose which groups."
 
 -- Use Restock List Food & Water Last, the fourth option under Food & Water.
 L["OPTIONS_RESTOCK_LAST"] = "Use Restock List Food & Water Last"
@@ -729,7 +748,7 @@ L["OPTIONS_RAPID_REGENERATION_DESCRIPTION"] =
 	"While %s is off cooldown, your Food macro casts it instead of eating, saving your food. Once it's on cooldown, the macro eats as usual."
 L["OPTIONS_RAPID_REGENERATION_EATING"] = "Use %s Instead of Eating"
 L["OPTIONS_RAPID_REGENERATION_EATING_DESCRIPTION"] =
-	"While %s is off cooldown, your Food macro casts it instead of eating. Otherwise it eats as usual. Scrolls and buff food still come first."
+	"While %s is off cooldown, your Food macro casts it instead of eating. Otherwise it eats as usual. Scrolls and buff food still come first. In combat, where nobody eats, every press casts it."
 
 --[[
     Ignore List panel (Options-Ignore-List.lua). One tree scope per list: the
@@ -1021,7 +1040,7 @@ L["RANK_WATCH_GRACE_DESCRIPTION"] =
 	"A new rank isn't reported until the caster has been past its level for this many levels, so nobody hears about a rank they only just reached and haven't had time to train."
 L["RANK_WATCH_GRACE_MAX_LEVEL"] = "Grace Period at Max Level"
 L["RANK_WATCH_GRACE_MAX_LEVEL_DESCRIPTION"] =
-	"For a character at the level cap, leaves alone any rank learned this many levels below the cap or closer. At 0, every rank they could have is reported."
+	"For a character at max level, leaves alone any rank learned within this many levels of it. At 0, every rank they could have is reported."
 L["RANK_WATCH_GRACE_LEVELING"] = "Grace Period While Leveling"
 L["RANK_WATCH_GRACE_LEVELING_DESCRIPTION"] =
 	"For a character still leveling, leaves alone any rank learned within this many levels of their own, giving them time to get to a trainer."
@@ -1080,6 +1099,8 @@ L["RESTOCKER_PROFILE_EXISTS"] = 'A list named "%s" already exists.'
 ]]
 L["RESTOCKER_UNKNOWN_ITEM"] = "No item has ID %d."
 L["RESTOCKER_DISABLED"] = "The Restocker is off. Turn it on under Options > AddOns > Good to Go > Restocker."
+-- %s is the list name the player typed after /restock profile use, delete or copy.
+L["RESTOCKER_LIST_NOT_FOUND"] = "No Restock List named %s."
 --[[
     %s is the /restock slash command, colored at the call site. Only the bank flow
     prints this, so the Shift hint names the bank; Shift is read as the window
@@ -1590,18 +1611,15 @@ L["TAB_BUFF_DUTY"] = "Buff Duty"
 L["BUFF_DUTY_DESCRIPTION"] = "Shows who's missing your buffs. Click an icon to cast."
 L["BUFF_DUTY_ENABLE"] = "Enable Buff Duty"
 L["BUFF_DUTY_NO_BUFFS"] = "Your class has no buffs on this list, so the window never appears on this character."
--- When to Show: Solo, In Party and In Raid, each with Always or In Instance, then the classes.
+-- When to Show: the group context checkboxes (GROUP_CONTEXT_*), Anywhere or In Instance beside the first three, then the classes.
 L["BUFF_DUTY_WHEN_HEADER"] = "When to Show"
 L["BUFF_DUTY_WHEN_DESCRIPTION"] = "Choose when the window can appear."
-L["BUFF_DUTY_WHEN_SOLO"] = "Solo"
-L["BUFF_DUTY_WHEN_SOLO_DESCRIPTION"] = "Shows the window while you're not in a party or raid."
-L["BUFF_DUTY_WHEN_PARTY"] = "In Party"
-L["BUFF_DUTY_WHEN_PARTY_DESCRIPTION"] = "Shows the window while you're in a party."
-L["BUFF_DUTY_WHEN_RAID"] = "In Raid"
-L["BUFF_DUTY_WHEN_RAID_DESCRIPTION"] = "Shows the window while you're in a raid."
+L["BUFF_DUTY_WHEN_NONE"] = "Nothing is checked, so the window never appears."
+L["BUFF_DUTY_AURAS_HIDDEN"] =
+	"Buff Duty is hidden here. The game doesn't let add-ons see buffs in this area, so it can't tell who is missing one."
 L["BUFF_DUTY_WHERE_DESCRIPTION"] =
-	"Sets where the window shows: everywhere, or only inside dungeons, raids, battlegrounds, and arenas."
-L["BUFF_DUTY_WHERE_ALWAYS"] = "Always"
+	"Sets where the window shows: anywhere, or only inside an instance, like a dungeon or raid."
+L["BUFF_DUTY_WHERE_ALWAYS"] = "Anywhere"
 L["BUFF_DUTY_WHERE_INSTANCE"] = "In Instance"
 L["BUFF_DUTY_CLASSES_DESCRIPTION"] = "Show the window when you're playing these classes."
 L["BUFF_DUTY_CLASS_DESCRIPTION"] = "Shows the window while you're playing this class."
@@ -1623,7 +1641,7 @@ L["BUFF_DUTY_TARGET_ENABLE_DESCRIPTION"] =
 	"Lists your target when they are a player outside your group missing a buff you can give."
 L["BUFF_DUTY_ASK_OTHERS"] = "Ask Other Classes for Buffs"
 L["BUFF_DUTY_ASK_OTHERS_DESCRIPTION"] =
-	"Under Missing Party-Buffs, shows the raid buffs your group needs and how many players need each. Left-Click one to ask your group for it, or Right-Click to whisper the players who can cast it."
+	"Under Missing Party Buffs, shows the raid buffs your group needs and how many players need each. Left-Click one to ask your group for it, or Right-Click to whisper the players who can cast it."
 L["BUFF_DUTY_REFRESH"] = "Refresh Under"
 L["BUFF_DUTY_REFRESH_DESCRIPTION"] =
 	"Sets how little time a buff can have left before it counts as missing, so you can top it up before it drops. A buff that lasts no longer than this only counts once it's gone."
@@ -1636,7 +1654,7 @@ L["BUFF_DUTY_TANKS_CLASS_DESCRIPTION"] =
 L["BUFF_DUTY_TANKS_PETS"] = "Pets"
 L["BUFF_DUTY_TANKS_PETS_DESCRIPTION"] = "Sets when pets count as tanks. Pets also get the buffs you offer to Everyone."
 L["BUFF_DUTY_TANKS_NEVER"] = "Never"
-L["BUFF_DUTY_TANKS_SOLO"] = "When Not in a Group"
+L["BUFF_DUTY_TANKS_SOLO"] = "When Solo"
 L["BUFF_DUTY_TANKS_ALWAYS"] = "Always"
 -- Who each buff is offered to: one dropdown per buff, these four choices.
 L["BUFF_DUTY_AUDIENCE_OFF"] = "Off"
@@ -1649,6 +1667,8 @@ L["BUFF_DUTY_AUDIENCE_DESCRIPTION"] = "Sets who %s is offered to."
 L["BUFF_DUTY_BUFFS_DESCRIPTION"] =
 	"Choose who's offered each buff. Tanks and Healers go by group role, but in a raid only players marked %s count as tanks. Anyone without a role counts as Damage, unless Count as Tanks below says otherwise."
 
+-- The Self-Buffs panel, under Buff Duty: its name and description.
+L["BUFF_DUTY_SELF_HEADER"] = "Self-Buffs"
 L["BUFF_DUTY_SELF_DESCRIPTION"] = "Your own buffs, pinned to the top of the window."
 --[[
     Muted note after a class name on the Self-Buffs panel, for a family of self
@@ -1692,10 +1712,9 @@ L["BUFF_DUTY_WEAPON_ENABLE_DESCRIPTION"] =
 	"Shows the poisons, imbues, oils, stones, and lures your weapons are missing or running low on, with your self-buffs at the top of the window. Click one to put it on. Pick which ones under Weapon Buffs."
 
 -- The window itself
-L["BUFF_DUTY_SELF_HEADER"] = "Self-Buffs"
 -- The window's header over your own buffs and weapon rows (BUFF_DUTY_SELF_HEADER names the options panel).
 L["BUFF_DUTY_MISSING_SELF_HEADER"] = "Missing Self-Buffs"
-L["BUFF_DUTY_PARTY_BUFFS_HEADER"] = "Missing Party-Buffs"
+L["BUFF_DUTY_PARTY_BUFFS_HEADER"] = "Missing Party Buffs"
 L["BUFF_DUTY_FAVOR_HEADER"] = "Return the Favor"
 L["BUFF_DUTY_TARGET_HEADER"] = "Target"
 -- A buff icon's tooltip ends with who the click lands on.
@@ -1706,7 +1725,7 @@ L["BUFF_DUTY_TOOLTIP_USE"] = "Nobody in your group has a Soulstone. Uses one on 
 L["BUFF_DUTY_TOOLTIP_CREATE"] = "Nobody in your group has a Soulstone. Creates one."
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "Casts on %s and their party."
 L["BUFF_DUTY_TOOLTIP_FAVOR"] = "Targets %s and casts."
--- A Party-Buffs icon's menu: a raid buff your group is missing, and its count.
+-- A Party Buffs icon's menu: a raid buff your group is missing, and its count.
 L["BUFF_DUTY_OTHERS_TOOLTIP_COUNT"] = "Missing or running low: %d"
 -- The menu's rows: the first asks the party or raid for the buff (its name), the second whispers the players who can cast it (their names).
 L["BUFF_DUTY_OTHERS_MENU_ASK_GROUP"] = "Ask Your Group for %s"
@@ -1722,8 +1741,10 @@ L["BUFF_DUTY_OTHERS_ASK_NAMES"] = "%s are missing %s."
 L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "%d people are missing the %s buff."
 -- Your own chat, after the Whisper row: who was whispered, then the buff's link.
 L["BUFF_DUTY_OTHERS_SENT"] = "Whispered %s about %s."
--- The window's close button: the class name, the class name again for its checkbox, the When to Show
--- header, then the options command.
+--[[
+    The window's close button: the class name, the class name again for its
+    checkbox, the When to Show header, then the options command.
+]]
 L["BUFF_DUTY_CLOSED"] =
 	"Buff Duty is hidden until you log in again or reload. To bring it back now, Shift + Left-Click the mini-map button. To keep it off for the %s class, uncheck %s under %s in %s."
 
@@ -1733,6 +1754,13 @@ L["BUFF_KEY"] = "Buff Button"
 L["BUFF_KEY_WAITING"] = "Waiting on %s to get in range."
 L["BUFF_KEY_DONE"] = "Nothing left to buff."
 L["BUFF_KEY_OFF"] = "Buff Duty is off."
+--[[
+    The Buff Duty window's last line while the Buff Button has no key: the Buff
+    Button's name (BUFF_KEY), the root panel's Key Bindings header
+    (OPTIONS_KEY_BINDINGS_HEADER), then the options command.
+]]
+L["BUFF_DUTY_KEY_HINT"] =
+	"Did you know? Bind a key to the %s and each press casts the next buff here. Set it under %s in %s."
 
 --------------------------------------------------------------------------------
 -- Spellbook
@@ -2094,8 +2122,8 @@ L["TOOLTIP_MACRO_SLOTS"] =
 L["PAGE_MACRO_GENERAL"] = "General"
 L["PAGE_MACRO_CHARACTER"] = "Character"
 L["PAGE_NO_MATCHES_FOR"] = 'No spells match "%s".'
--- TRANSLATORS: %d is how many spells the category lists, %s its name ("Settings for All 6 Heals").
-L["PAGE_CATEGORY_SETTINGS"] = "Settings for All %d %s"
+-- TRANSLATORS: %d is how many spells the category lists, %s its name ("Options for All 6 Heals").
+L["PAGE_CATEGORY_SETTINGS"] = "Options for All %d %s"
 L["PAGE_CATEGORY_SETTINGS_DESCRIPTION"] =
 	"Turns an option on or off for every spell in this category at once. Spells not on your bars yet keep the setting for when you place them."
 -- after a category's count, where it carries on from the column before
