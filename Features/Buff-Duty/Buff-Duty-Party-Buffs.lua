@@ -142,7 +142,7 @@ end
 
 local function FillPanel(spec)
 	ReleasePanelParts()
-	local width, y = 0, 0
+	local y = 0
 
 	-- A line of text at the left padding; returns its width.
 	local function PutLeft(text, top)
@@ -160,7 +160,7 @@ local function FillPanel(spec)
 	end
 
 	-- The header: the buff's name in gold, then a blank line.
-	width = PutLeft(GetColor("TITLE") .. spec.spellName .. "|r", y)
+	local width = PutLeft(GetColor("TITLE") .. spec.spellName .. "|r", y)
 	y = y + LINE_HEIGHT * 2
 
 	-- Party by party: the header in gold, then each name in its class color, the buff's icon on the right.
@@ -190,12 +190,17 @@ local function FillPanel(spec)
 	]]
 	local function PutHint(keybind, action, ready)
 		local color = ready and GetColor("INFO") or GetColor("MUTED")
-		width = math.max(width, PutLeft(color .. keybind .. "|r", y) + COLUMN_GAP + PutRight(color .. action .. "|r", y))
+		width =
+			math.max(width, PutLeft(color .. keybind .. "|r", y) + COLUMN_GAP + PutRight(color .. action .. "|r", y))
 		y = y + LINE_HEIGHT
 	end
 	-- A blank line above the hints.
 	y = y + LINE_HEIGHT
-	PutHint(L["TOOLTIP_KEY_CLICK"], L["BUFF_DUTY_OTHERS_HINT_ASK"]:format(GroupChatName()), ns.CanAskForBuff("group", spec.key))
+	PutHint(
+		L["TOOLTIP_KEY_CLICK"],
+		L["BUFF_DUTY_OTHERS_HINT_ASK"]:format(GroupChatName()),
+		ns.CanAskForBuff("group", spec.key)
+	)
 	if spec.recipients[1] then
 		PutHint(L["TOOLTIP_KEY_RIGHT_CLICK"], L["BUFF_DUTY_OTHERS_HINT_WHISPER"], ns.CanAskForBuff("whisper", spec.key))
 	end
