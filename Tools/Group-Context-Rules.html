@@ -1,0 +1,338 @@
+<title>Group Context Rules</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@500;600&display=swap">
+<style>
+/* Layout: one reading column; the options mock and the try-it panel sit side by side on wide screens. */
+:root {
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --fg: #1c2230;
+  --muted: #5b6475;
+  --line: #dde1e8;
+  --accent: #8a6a12;
+  --accent-soft: #f4ecd4;
+  --panel: #14161c;
+  --panel-fg: #e6e2d6;
+  --panel-gold: #ffd100;
+  --panel-line: #2c3040;
+  --ok: #1f7a4a;
+  --ok-soft: #e1f2e8;
+  --no: #a23a2a;
+  --no-soft: #f7e4e0;
+  --warn: #8a5a00;
+  --warn-soft: #fbefd6;
+  --font-display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "IBM Plex Sans", -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12141a; --surface: #1a1d25; --fg: #e4e6ec; --muted: #9aa1b0; --line: #2b2f3b;
+    --accent: #e0b84a; --accent-soft: #2e2814;
+    --panel: #0b0c10; --panel-fg: #e6e2d6; --panel-gold: #ffd100; --panel-line: #262a36;
+    --ok: #5fcf8f; --ok-soft: #16301f; --no: #ef8a78; --no-soft: #3a1c17; --warn: #f0bf5a; --warn-soft: #332611;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12141a; --surface: #1a1d25; --fg: #e4e6ec; --muted: #9aa1b0; --line: #2b2f3b;
+  --accent: #e0b84a; --accent-soft: #2e2814;
+  --panel: #0b0c10; --panel-fg: #e6e2d6; --panel-gold: #ffd100; --panel-line: #262a36;
+  --ok: #5fcf8f; --ok-soft: #16301f; --no: #ef8a78; --no-soft: #3a1c17; --warn: #f0bf5a; --warn-soft: #332611;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font: 15px/1.6 var(--font-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 40px 64px;
+}
+main { max-width: 860px; margin: 0 auto; display: grid; gap: 44px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.2; }
+h1 { font-size: 2.1rem; font-weight: 600; }
+h2 { font-size: 1.35rem; font-weight: 600; }
+h3 { font-size: 1.02rem; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+code, .mono { font-family: var(--font-mono); font-size: 0.86em; }
+code { background: var(--accent-soft); padding: 1px 5px; border-radius: 4px; }
+section { display: grid; gap: 14px; min-width: 0; }
+.eyebrow { font: 500 0.72rem/1 var(--font-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+header { display: grid; gap: 12px; }
+.lede { color: var(--muted); font-size: 1.05rem; }
+
+.finding { border: 1px solid var(--line); border-left: 4px solid var(--warn); background: var(--surface); border-radius: 6px; padding: 18px 20px; display: grid; gap: 10px; }
+.finding .tag { font: 600 0.72rem/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--warn); }
+.finding pre { margin: 0; background: var(--warn-soft); padding: 10px 12px; border-radius: 4px; overflow-x: auto; font: 0.85rem/1.5 var(--font-mono); }
+
+/* Precedence ladder */
+.ladder { display: grid; gap: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--surface); }
+.rung { display: grid; grid-template-columns: 38px 150px 1fr; gap: 14px; align-items: center; padding: 14px 18px; border-top: 1px solid var(--line); }
+.rung:first-child { border-top: 0; }
+.rung .n { font: 600 1.1rem var(--font-display); color: var(--accent); }
+.rung .name { font: 600 1rem var(--font-display); }
+.rung .test { color: var(--muted); font-size: 0.92rem; min-width: 0; }
+.rung .test code { color: var(--fg); }
+@media (max-width: 560px) { .rung { grid-template-columns: 28px 1fr; } .rung .test { grid-column: 2; } }
+
+/* Rules list */
+ol.rules { margin: 0; padding: 0; list-style: none; counter-reset: r; display: grid; gap: 12px; }
+ol.rules li { counter-increment: r; display: grid; grid-template-columns: 44px 1fr; gap: 10px; }
+ol.rules li::before { content: "R" counter(r); font: 500 0.82rem/1.9 var(--font-mono); color: var(--accent); }
+ol.rules li > div { min-width: 0; }
+ol.rules b { font-weight: 600; }
+
+/* Tables */
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+th, td { text-align: left; padding: 9px 14px; border-top: 1px solid var(--line); vertical-align: top; }
+thead th { border-top: 0; font: 500 0.72rem/1.4 var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); background: var(--bg); }
+.chip { display: inline-block; font: 500 0.78rem/1 var(--font-mono); padding: 4px 8px; border-radius: 999px; white-space: nowrap; }
+.c-solo { background: #e3ebf8; color: #284a85; }
+.c-party { background: #e1f2e8; color: #1f6a43; }
+.c-raid { background: #efe3f6; color: #6a2f8a; }
+.c-bg { background: #f7e4e0; color: #9a3322; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .c-solo { background:#1c2a44; color:#9dbcf0 } :root:not([data-theme="light"]) .c-party { background:#16301f; color:#7fd7a3 } :root:not([data-theme="light"]) .c-raid { background:#2c1d38; color:#d3a6ef } :root:not([data-theme="light"]) .c-bg { background:#3a1c17; color:#f1998a } }
+:root[data-theme="dark"] .c-solo { background:#1c2a44; color:#9dbcf0 } :root[data-theme="dark"] .c-party { background:#16301f; color:#7fd7a3 } :root[data-theme="dark"] .c-raid { background:#2c1d38; color:#d3a6ef } :root[data-theme="dark"] .c-bg { background:#3a1c17; color:#f1998a }
+.changed { font: 500 0.72rem/1 var(--font-mono); color: var(--warn); margin-left: 6px; }
+
+/* Options mock + simulator */
+.pair { display: grid; grid-template-columns: 1.15fr 1fr; gap: 18px; align-items: start; }
+@media (max-width: 720px) { .pair { grid-template-columns: 1fr; } }
+.wow { background: var(--panel); color: var(--panel-fg); border: 1px solid var(--panel-line); border-radius: 6px; padding: 18px 20px; display: grid; gap: 12px; font-size: 0.92rem; min-width: 0; }
+.wow .hdr { color: var(--panel-gold); font: 600 0.95rem var(--font-body); display: flex; align-items: center; gap: 10px; }
+.wow .hdr::before, .wow .hdr::after { content: ""; flex: 1; height: 1px; background: var(--panel-line); }
+.wow .help { color: #a8a395; font-size: 0.85rem; }
+.wow .row { display: grid; grid-template-columns: 150px 1fr; gap: 10px; align-items: center; min-height: 30px; }
+.wow label.cb { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.wow input[type=checkbox] { accent-color: var(--panel-gold); width: 16px; height: 16px; margin: 0; }
+.wow select { background: #1f222c; color: var(--panel-fg); border: 1px solid #3a3f52; border-radius: 3px; padding: 4px 6px; font: inherit; font-size: 0.85rem; max-width: 100%; }
+.wow .na { color: #6f6b60; font-size: 0.82rem; font-style: italic; }
+.wow .none { color: #ff7a5c; font-size: 0.85rem; }
+@media (max-width: 420px) { .wow .row { grid-template-columns: 1fr; } }
+
+.sim { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 18px 20px; display: grid; gap: 12px; min-width: 0; }
+.sim label { font-size: 0.85rem; color: var(--muted); }
+.sim select { width: 100%; font: inherit; padding: 7px 8px; border: 1px solid var(--line); border-radius: 5px; background: var(--bg); color: var(--fg); }
+.verdict { border-radius: 6px; padding: 12px 14px; display: grid; gap: 4px; }
+.verdict.on { background: var(--ok-soft); color: var(--ok); }
+.verdict.off { background: var(--no-soft); color: var(--no); }
+.verdict strong { font: 600 1.05rem var(--font-display); }
+.verdict span { color: var(--fg); font-size: 0.88rem; }
+select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.code { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; overflow-x: auto; }
+.code pre { margin: 0; padding: 16px 18px; font: 0.84rem/1.55 var(--font-mono); }
+.code .cm { color: var(--muted); }
+
+.qs { display: grid; gap: 10px; }
+.q { border: 1px solid var(--line); background: var(--surface); border-radius: 6px; padding: 14px 16px; display: grid; gap: 6px; }
+.q .rec { font-size: 0.88rem; color: var(--muted); }
+.q .rec b { color: var(--accent); font-weight: 600; }
+</style>
+
+<main>
+  <header>
+    <div class="eyebrow">Good to Go · design rules · draft 1</div>
+    <h1>Group Context Rules</h1>
+    <p class="lede">One way to answer "where am I right now?" for every feature that turns on or off by group, so a battleground stops being a raid in disguise.</p>
+  </header>
+
+  <section>
+    <div class="eyebrow">Why this came up</div>
+    <h2>Buff Duty in battlegrounds</h2>
+    <div class="finding">
+      <div class="tag">Most likely cause · not yet confirmed in game</div>
+      <p>Your When to Show settings are not the problem. In a battleground the group is a raid, so Buff Duty reads your <b>Raid</b> row, which you have on Always. It never gets that far, though. Before it asks about Solo, Party or Raid, the refresh hides the window whenever the game makes buffs unreadable to add-ons (<code>ns.AreAurasSecret()</code>, <span class="mono">Buff-Duty.lua:118</span>). WoW Forever does that in PvP instances, so the window stays hidden whatever the settings say.</p>
+      <p>To confirm, stand in a battleground out of combat and run this. <b>true</b> means this is the cause.</p>
+      <pre>/run print(C_Secrets.ShouldAurasBeSecret())</pre>
+      <p>If it prints true, no settings change can bring the window back on Forever, because the add-on can't see who is missing what. Rule R12 below covers that case: the options should say so instead of leaving a ticked box that does nothing. Vanilla, TBC and Mists have no secret auras, so there Buff Duty works in battlegrounds today.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">The core idea</div>
+    <h2>Four contexts, checked top to bottom</h2>
+    <p>You are always in exactly one context. The first test that passes wins, so a 40-player battleground raid is a <b>Battleground</b>, never a Raid.</p>
+    <div class="ladder">
+      <div class="rung"><div class="n">1</div><div class="name"><span class="chip c-bg">Battleground</span></div><div class="test">Inside a battleground or an arena: <code>IsInInstance()</code> type is <code>"pvp"</code> or <code>"arena"</code>. This is the existing <code>ns.IsInPvPInstance()</code>.</div></div>
+      <div class="rung"><div class="n">2</div><div class="name"><span class="chip c-raid">Raid</span></div><div class="test">In a raid group: <code>IsInRaid()</code>. Home or instance group, LFR included.</div></div>
+      <div class="rung"><div class="n">3</div><div class="name"><span class="chip c-party">Party</span></div><div class="test">In a group that isn't a raid: <code>IsInGroup()</code>. Group finder dungeons included.</div></div>
+      <div class="rung"><div class="n">4</div><div class="name"><span class="chip c-solo">Solo</span></div><div class="test">Everything else. Not in any group.</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">The rules</div>
+    <h2>What every feature follows</h2>
+    <ol class="rules">
+      <li><div><b>One question, one answer.</b> Any feature that turns on or off by group asks which context you are in, and gets exactly one of Solo, Party, Raid or Battleground.</div></li>
+      <li><div><b>Precedence is fixed:</b> Battleground, then Raid, then Party, then Solo. Nothing overrides it per feature.</div></li>
+      <li><div><b>Battleground means a PvP instance.</b> Battlegrounds and arenas count. World PvP, being flagged, or queueing outside the instance does not; you are whatever your group makes you.</div></li>
+      <li><div><b>Four checkboxes, same order, same labels:</b> Solo · Party · Raid · Battleground. The header is <i>When to Show</i> for windows and <i>When to Use</i> for macros and automation. Each tooltip states the test from the ladder above in plain words.</div></li>
+      <li><div><b>A tick means "on here."</b> Ticked contexts are on, unticked are off. If nothing is ticked, the panel shows a red line saying the feature will never act.</div></li>
+      <li><div><b>Default is all four ticked.</b> A feature may start with fewer only for a stated reason, written in its defaults comment.</div></li>
+      <li><div><b>Extra filters narrow, never replace.</b> Where a feature needs more (Buff Duty's Anywhere / In Instance, consumables' level filter), it's a separate control beside or below the checkboxes. It can only switch a ticked context off. Battleground never gets an In Instance filter, since it always is one.</div></li>
+      <li><div><b>One helper owns the answer.</b> <code>ns.GetGroupContext()</code> returns the context, and <code>ns.IsGroupContextOn(settings)</code> reads the ticks. No feature calls <code>IsInRaid()</code> to decide its own visibility. Plumbing that only picks a chat channel or a unit prefix (<code>raid1</code> vs <code>party1</code>) is exempt.</div></li>
+      <li><div><b>Re-check on every change of place or group:</b> <code>GROUP_ROSTER_UPDATE</code>, <code>PLAYER_ENTERING_WORLD</code>, <code>ZONE_CHANGED_NEW_AREA</code>. The macro group signature includes the context, so entering a battleground rescans.</div></li>
+      <li><div><b>Settings share one shape:</b> <code>showIn = { solo, party, raid, battleground }</code>, booleans. Saved under each feature's own table, never shared between features.</div></li>
+      <li><div><b>Updating changes nobody's behaviour.</b> A new Battleground tick copies whatever the old setting did in a battleground, which was the Raid answer. See the migration table.</div></li>
+      <li><div><b>Never ignore a tick silently.</b> If a feature can't work in a context on some client (Buff Duty in a Forever battleground), that checkbox is greyed out with the reason in its tooltip. If the game blocks it mid-session, say so once in chat.</div></li>
+    </ol>
+  </section>
+
+  <section>
+    <div class="eyebrow">Draw before code</div>
+    <h2>How it looks in the options</h2>
+    <p>Buff Duty keeps its Anywhere / In Instance dropdown on the first three rows, because "only in dungeons" is a real ask. Battleground has none. Try a few situations on the right.</p>
+    <div class="pair">
+      <div class="wow" aria-label="Buff Duty options mockup">
+        <div class="hdr">When to Show</div>
+        <div class="help">Choose when the window can appear.</div>
+        <div class="row"><label class="cb"><input type="checkbox" id="cb-solo" checked> Solo</label><select id="w-solo" aria-label="Solo filter"><option value="any">Anywhere</option><option value="inst">In Instance</option></select></div>
+        <div class="row"><label class="cb"><input type="checkbox" id="cb-party" checked> Party</label><select id="w-party" aria-label="Party filter"><option value="any">Anywhere</option><option value="inst">In Instance</option></select></div>
+        <div class="row"><label class="cb"><input type="checkbox" id="cb-raid" checked> Raid</label><select id="w-raid" aria-label="Raid filter"><option value="any">Anywhere</option><option value="inst">In Instance</option></select></div>
+        <div class="row"><label class="cb"><input type="checkbox" id="cb-bg" checked> Battleground</label><span class="na">always an instance</span></div>
+        <div class="none" id="none-line" hidden>Nothing ticked: the window will never appear.</div>
+      </div>
+      <div class="sim">
+        <h3>Try a situation</h3>
+        <label for="scn">Where you are</label>
+        <select id="scn"></select>
+        <div class="verdict" id="verdict"><strong></strong><span></span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Edge cases</div>
+    <h2>Which context wins</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Situation</th><th>Context</th><th>Today</th></tr></thead>
+      <tbody>
+        <tr><td>Alone in the open world</td><td><span class="chip c-solo">Solo</span></td><td>Solo</td></tr>
+        <tr><td>Alone inside a dungeon</td><td><span class="chip c-solo">Solo</span></td><td>Solo</td></tr>
+        <tr><td>Party out questing</td><td><span class="chip c-party">Party</span></td><td>Party</td></tr>
+        <tr><td>Group finder dungeon</td><td><span class="chip c-party">Party</span></td><td>Party</td></tr>
+        <tr><td>Five people in a party inside a raid zone</td><td><span class="chip c-party">Party</span></td><td>Party</td></tr>
+        <tr><td>Raid group, even if only you are left in it</td><td><span class="chip c-raid">Raid</span></td><td>Raid</td></tr>
+        <tr><td>Battleground, any size</td><td><span class="chip c-bg">Battleground</span></td><td>Raid<span class="changed">changes</span></td></tr>
+        <tr><td>Arena</td><td><span class="chip c-bg">Battleground</span></td><td>Party<span class="changed">changes</span></td></tr>
+        <tr><td>Queued with friends, still outside the battleground</td><td><span class="chip c-party">Party</span></td><td>Party</td></tr>
+        <tr><td>Flagged for world PvP while in a party</td><td><span class="chip c-party">Party</span></td><td>Party</td></tr>
+        <tr><td>Match over, scoreboard up, still inside</td><td><span class="chip c-bg">Battleground</span></td><td>Raid<span class="changed">changes</span></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Where it applies</div>
+    <h2>Every setting this touches</h2>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Setting</th><th>Today</th><th>Under the rules</th></tr></thead>
+      <tbody>
+        <tr><td>Buff Duty · When to Show</td><td>Solo / In Party / In Raid toggles, each with Always / In Instance</td><td>Four checkboxes; dropdown kept on the first three, renamed Anywhere / In Instance</td></tr>
+        <tr><td>Consumables · Buff Food, Scroll Buffs, Pet Food Buffs, Conjured First</td><td>One dropdown: Always, Solo, Party or Raid, Raid, Leveling, Max Level</td><td>Four checkboxes, plus a level filter: Any Level / While Leveling / At Max Level</td></tr>
+        <tr><td>Buff Duty · Count as Tanks</td><td>Per class: Never / When Not in a Group / Always</td><td>Stays a dropdown (a row per class is too wide for four boxes). Label renamed <i>When Solo</i> and read through the helper</td></tr>
+        <tr><td>Ask Other Classes, Readiness Report, Rank Watch, Announcements</td><td>Hard-coded group checks</td><td>No new settings. Group checks that pick behaviour go through the helper; channel and unit-token plumbing stays as is</td></tr>
+        <tr><td>GogoLoot, Magic Eraser</td><td>No group settings</td><td>Nothing to change. The helper and these rules carry over the day one grows a group setting</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Migration</div>
+    <h2>Old settings to new ticks</h2>
+    <p>Each row keeps exactly what the old setting did, battlegrounds included. Today "Party or Raid" and "Raid" are both true inside a battleground, so they carry the Battleground tick.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Old value</th><th>Solo</th><th>Party</th><th>Raid</th><th>Battleground</th><th>Level filter</th></tr></thead>
+      <tbody>
+        <tr><td>Buff Duty, Raid on</td><td>(kept)</td><td>(kept)</td><td>✓</td><td>✓ copied from Raid</td><td>–</td></tr>
+        <tr><td>Buff Duty, Raid off</td><td>(kept)</td><td>(kept)</td><td>–</td><td>– copied from Raid</td><td>–</td></tr>
+        <tr><td>Always</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>Any Level</td></tr>
+        <tr><td>When Solo</td><td>✓</td><td>–</td><td>–</td><td>–</td><td>Any Level</td></tr>
+        <tr><td>When in a Party or Raid</td><td>–</td><td>✓</td><td>✓</td><td>✓</td><td>Any Level</td></tr>
+        <tr><td>When in a Raid</td><td>–</td><td>–</td><td>✓</td><td>✓</td><td>Any Level</td></tr>
+        <tr><td>While Leveling</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>While Leveling</td></tr>
+        <tr><td>At Max Level</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>At Max Level</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Code shape</div>
+    <h2>The one helper</h2>
+    <div class="code"><pre><span class="cm">-- Features/Utilities.lua  (rules R1 to R3, R8)</span>
+ns.GROUP_CONTEXTS = { "solo", "party", "raid", "battleground" }
+
+function ns.GetGroupContext()
+	if ns.IsInPvPInstance() then return "battleground" end
+	if IsInRaid() then return "raid" end
+	if IsInGroup() then return "party" end
+	return "solo"
+end
+
+<span class="cm">-- settings.showIn = { solo = true, party = true, raid = true, battleground = true }</span>
+function ns.IsGroupContextOn(showIn)
+	return showIn[ns.GetGroupContext()] ~= false
+end</pre></div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Your call</div>
+    <h2>Open questions</h2>
+    <div class="qs">
+      <div class="q"><h3>Do arenas count as Battleground?</h3><div class="rec"><b>Recommend yes.</b> Both are PvP instances where you buff before the gates open. The tooltip says "battlegrounds and arenas." The alternative is a fifth box, which is what the nut asks for next.</div></div>
+      <div class="q"><h3>Keep Anywhere / In Instance on Buff Duty?</h3><div class="rec"><b>Recommend keep it</b> on Solo, Party and Raid only. Dropping it loses "only in dungeons," and people who set it today would lose that on update.</div></div>
+      <div class="q"><h3>Move the consumable dropdowns to checkboxes?</h3><div class="rec"><b>Recommend yes</b>, with the level filter split out. Four rows of four boxes is more panel, but it's the same control everywhere, and group plus level can finally combine.</div></div>
+      <div class="q"><h3>Buff Duty's Battleground box on Forever</h3><div class="rec"><b>Recommend greying it out</b> once the <span class="mono">/run</span> check confirms secret auras, rather than trying to show a window that can't tell who needs buffs.</div></div>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  var scenarios = [
+    { id: "world", label: "Alone in the open world", ctx: "solo", inst: false },
+    { id: "soloDungeon", label: "Alone inside a dungeon", ctx: "solo", inst: true },
+    { id: "questing", label: "Party out questing", ctx: "party", inst: false },
+    { id: "dungeon", label: "Party in a dungeon", ctx: "party", inst: true },
+    { id: "raidWorld", label: "Raid group in the world", ctx: "raid", inst: false },
+    { id: "raid", label: "Raid group in a raid", ctx: "raid", inst: true },
+    { id: "bg", label: "Battleground (40-player raid)", ctx: "bg", inst: true },
+    { id: "arena", label: "Arena", ctx: "bg", inst: true },
+    { id: "queued", label: "Queued with friends, still outside", ctx: "party", inst: false }
+  ];
+  var names = { solo: "Solo", party: "Party", raid: "Raid", bg: "Battleground" };
+  var scn = document.getElementById("scn");
+  scenarios.forEach(function (s) {
+    var o = document.createElement("option");
+    o.value = s.id; o.textContent = s.label; scn.appendChild(o);
+  });
+  scn.value = "bg";
+  function render() {
+    var s = scenarios.filter(function (x) { return x.id === scn.value; })[0];
+    var ticked = document.getElementById("cb-" + s.ctx).checked;
+    var where = s.ctx === "bg" ? "any" : document.getElementById("w-" + s.ctx).value;
+    var on = ticked && (where === "any" || s.inst);
+    var reason;
+    if (!ticked) reason = names[s.ctx] + " is unticked.";
+    else if (!on) reason = names[s.ctx] + " is set to In Instance, and you're not in one.";
+    else reason = names[s.ctx] + " is ticked" + (where === "inst" ? " and you're in an instance." : ".");
+    var v = document.getElementById("verdict");
+    v.className = "verdict " + (on ? "on" : "off");
+    v.querySelector("strong").textContent = (on ? "Window shows" : "Window hidden") + " · context: " + names[s.ctx];
+    v.querySelector("span").textContent = reason;
+    var any = ["solo", "party", "raid", "bg"].some(function (k) { return document.getElementById("cb-" + k).checked; });
+    document.getElementById("none-line").hidden = any;
+    ["solo", "party", "raid"].forEach(function (k) {
+      document.getElementById("w-" + k).disabled = !document.getElementById("cb-" + k).checked;
+    });
+  }
+  document.querySelectorAll(".wow input, .wow select, #scn").forEach(function (el) {
+    el.addEventListener("change", render);
+  });
+  render();
+})();
+</script>

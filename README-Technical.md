@@ -551,7 +551,7 @@ The feature is "Restocker"; its window is the Restock List; its starter popup is
 #### The Window and Casting
 
 - Two frames: `anchor` on `UIParent`, owned by the Hide in Combat driver, and `content` inside it. Icons are pooled `SecureActionButtonTemplate` buttons.
-- The close button runs `ns.CloseBuffDuty` (off for this class only); the template's click would hide a protected parent. The title uses the Short Name (README-Notes).
+- The close button runs `ns.CloseBuffDuty`, which hides Buff Duty for the rest of the session through an unsaved flag in `ns.IsBuffDutyOnForClass`; the template's click would hide a protected parent. A login or reload, or anything that turns Buff Duty on (`ns.SetBuffDutyOn(true)`, so the mini-map button too, or ticking your own class), clears it. Only the Classes checkboxes save a class as off. The title uses the Short Name (README-Notes).
 - `ns.SetBuffButtonAttributes` writes every key, nil included, on every use, because buttons are pooled. Only `type1` is set, so right-click dismisses a favor instead of casting.
 - Spells cast by rank text, `Name(Rank N)` from `C_Spell.GetSpellSubtext`: on Classic Era a lower rank's ID casts nothing, and a bare group-buff name casts Rank 1. Resurrections and Create Soulstone cast by bare name, since each tier is its own spell. Weapon items use `item` + `target-slot`.
 - An outsider out of sight gets `/cleartarget` / `/targetexact NAME` / `/cast [help] Name(Rank N)`.
@@ -566,6 +566,7 @@ The feature is "Restocker"; its window is the Restock List; its starter popup is
 #### Who Gets What
 
 - `RoleOf` checks, in order: the Main Tank mark, the assigned role (tank only outside a raid), the player's own LFG roles, `tankWhen[class]`.
+- On Forever (Camelot) pets are never listed: `CanBuffPet` returns false, since pets take their owner's buffs there, and the Count as Tanks Pets row is hidden.
 - Pets take `ALL` buffs, plus `TANK` per `tankWhen.PET`, never `HEALER`. `manaOnly` is judged by the pet's power type. Charmed or phase-shifted pets are skipped, and so are pets out of sight (`UnitIsVisible`), ones `UnitCanAssist` refuses, ones whose identity is secret on Forever, and ones with any unreadable aura (`BuffDuty.AurasReadable`); only a readable "no" skips.
 - Pet holds (`Buff-Duty-Pets.lua`): a cast the window or key aimed at a pet that goes off (`ns.OnBuffCastSucceeded`) holds that buff for your cast's learned duration (`BuffDuty.MyDuration`, else `PET_HOLD_FALLBACK`) less the refresh time; a bad-target refusal (`PET_REFUSALS`) holds it while the pet stays around. `Has` agreeing clears a hold; `PruneAuraCache` drops holds on GUIDs no longer watched.
 - `ns.IsBuffInRange` tries spell range, then `UnitIsVisible`, then `UnitInRange`. An unknown or secret answer reads as in range.
@@ -659,6 +660,7 @@ The standalone Rank Sentinel add-on, brought home. It reports a spell cast at a 
 
 - **Settings keys** (`Macro-Options.lua`): the Rank 1 ID (`BaseSpellID`), `id#n` for a Duplicate, `id@rankID` for a rank copy, `consumable:<type>` for a Consumable Macros tile. A key survives rank-ups and locale changes.
 - An option is stored only where it differs from its kind default (`SetOption`). Choices of one are stored whole, and `kindDefaults` values are stored as true or false, never nil.
+- **Icons** (`ns.WowMacroIcon`): the question mark, so `#showtooltip` picks the spell's icon. A profession's macro is written with its tile's icon instead, because Forever resolves a profession's name to the wrong icon; the sync sets that icon on existing macros too and leaves every other macro's icon to the player.
 - **Names**: `ns.MACRO_NAME_PREFIX` plus the name trimmed to `ns.MACRO_NAME_MAX_LENGTH` by `ns.TrimMacroName`, which never splits a UTF-8 character. The suffixes come from the locale (`MACRO_NAME_FOCUS_SUFFIX`, `MACRO_NAME_RANK_SUFFIX`).
 - **Kinds**: `ns.MACRO_KINDS` / `ns.MacroKind` (`Macro-Kinds.lua`) decide the offered options (`OFFERED`) and defaults (`ns.DEFAULTABLE_OPTIONS`).
 - **Body order** (`Macro-Body.lua`):

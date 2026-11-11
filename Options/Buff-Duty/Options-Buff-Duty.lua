@@ -284,6 +284,10 @@ function ns.BuildBuffDutyOptions()
 			end,
 			set = function(_, value)
 				Settings().showClasses[class] = value
+				-- Ticking your own class brings back a window its close button hid this session.
+				if value and class == select(2, UnitClass("player")) then
+					ns.ShowBuffDutyAgain()
+				end
 				ns.RefreshBuffDuty()
 			end,
 		}

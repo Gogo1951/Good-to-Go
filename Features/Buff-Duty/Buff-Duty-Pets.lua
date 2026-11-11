@@ -113,8 +113,14 @@ end
 
     A phase-shifted imp drops off too: nothing can reach it until it phases
     back in.
+
+    On WoW Forever no pet is ever listed: a hunter's or warlock's pet takes its
+    owner's buffs, and can't be buffed on its own.
 ]]
 local function CanBuffPet(unit)
+	if ns.FLAVOR == "Camelot" then
+		return false
+	end
 	if not UnitExists(unit) or UnitIsPlayer(unit) or UnitIsDeadOrGhost(unit) then
 		return false
 	end
@@ -221,6 +227,35 @@ function BuffDuty.PetUnitOf(unit)
 end
 
 --[[
+    The missing-buff icons for a pet or an NPC, cast at `castUnit`: each buff
+    `wants(buff, unit)` offers it that it lacks and isn't held for.
+]]
+local function HeldIcons(unit, castUnit, name, wants)
+	local guid = UnitGUID(unit)
+	guid = ns.IsPlain(guid) and guid or nil
+	local icons = {}
+	for _, buff in ipairs(buffs) do
+		if buff.singleName and wants(buff, unit) then
+			local has, expires, duration = Has(buff, unit)
+			--[[
+			    Once Has agrees the unit has the buff, a hold on it has done its
+			    job: from here on Has alone decides. One that is only seen (it
+			    reads as weaker, or running low, right after your cast landed)
+			    keeps its hold until that runs out, so a version Has misjudges
+			    on a pet can't bring the row straight back.
+			]]
+			if has and guid and holds[guid] then
+				holds[guid][buff.key] = nil
+			end
+			if not has and not IsHeld(guid, buff.key) then
+				icons[#icons + 1] = BuffDuty.WithTimeLeft(SingleIcon(buff, unit, castUnit, name), expires, duration)
+			end
+		end
+	end
+	return icons
+end
+
+--[[
     A pet's row: its missing buffs, cast at `castUnit` (the pet's own token in
     the party list, "target" or "targetpet" in the Target list). Nil when it
     needs nothing. Under its owner it is indented and named alone; standing on
@@ -236,28 +271,8 @@ function BuffDuty.PetRow(unit, castUnit, ownerClass, ownerName)
 	if not BuffDuty.AurasReadable() then
 		return nil
 	end
-	local guid = UnitGUID(unit)
-	guid = ns.IsPlain(guid) and guid or nil
 	local name = GetUnitName(unit, false) or ""
-	local icons = {}
-	for _, buff in ipairs(buffs) do
-		if buff.singleName and PetWants(buff, unit) then
-			local has, expires, duration = Has(buff, unit)
-			--[[
-			    Once Has agrees the pet has the buff, a hold on it has done its
-			    job: from here on Has alone decides. One that is only seen (it
-			    reads as weaker, or running low, right after your cast landed)
-			    keeps its hold until that runs out, so a version Has misjudges
-			    on a pet can't bring the row straight back.
-			]]
-			if has and guid and holds[guid] then
-				holds[guid][buff.key] = nil
-			end
-			if not has and not IsHeld(guid, buff.key) then
-				icons[#icons + 1] = BuffDuty.WithTimeLeft(SingleIcon(buff, unit, castUnit, name), expires, duration)
-			end
-		end
-	end
+	local icons = HeldIcons(unit, castUnit, name, PetWants)
 	if #icons == 0 then
 		return nil
 	end
@@ -268,4 +283,71 @@ function BuffDuty.PetRow(unit, castUnit, ownerClass, ownerName)
 		}
 	end
 	return { label = PetLabel(unit, name, ownerClass), icons = icons, pet = true }
+end
+
+--------------------------------------------------------------------------------
+-- Friendly NPCs
+--------------------------------------------------------------------------------
+
+--[[
+    A friendly NPC you have targeted, one you could buff right now: not a
+    player or anyone's pet, alive, in sight, and one the game says you can
+    help. Quests ask for this (a priest's Power Word: Fortitude on a wounded
+    soldier), so a targeted NPC gets the Target list's row like a player does.
+    Here only a readable "yes" from UnitCanAssist lets it on, so no hostile
+    or neutral mob is ever offered a buff.
+]]
+function BuffDuty.CanBuffNPC(unit)
+	if not UnitExists(unit) or UnitIsPlayer(unit) or UnitPlayerControlled(unit) or UnitIsDeadOrGhost(unit) then
+		return false
+	end
+	if ns.IsUnitIdentitySecret(unit) then
+		return false
+	end
+	local visible = UnitIsVisible(unit)
+	if ns.IsPlain(visible) and not visible then
+		return false
+	end
+	local canAssist = UnitCanAssist("player", unit)
+	return ns.IsPlain(canAssist) and canAssist and true or false
+end
+
+--[[
+    An NPC takes every buff you have on, whoever it is set for: you target one
+    to buff it, usually for a quest, so a buff kept for Tanks shouldn't hide.
+    Mana-only buffs go by its power bar, and Blessing of Might skips an NPC
+    whose class is a caster's (NPCs have classes too).
+]]
+local function NPCWants(buff, unit)
+	if buff.noCasters then
+		local _, class = UnitClass(unit)
+		if ns.IsPlain(class) and class and Data.CASTER_CLASSES[class] then
+			return false
+		end
+	end
+	if buff.manaOnly then
+		local powerType = UnitPowerType(unit)
+		return ns.IsPlain(powerType) and powerType == Enum.PowerType.Mana
+	end
+	return true
+end
+
+--[[
+    A targeted NPC's row: its missing buffs, cast at `castUnit`. Nil when it
+    needs nothing. Casts on it are followed like a pet's (anything not a player
+    is, in Buff-Duty-Cast-Results.lua): one the game refuses outright holds
+    that buff for as long as the NPC is around, so a quest-giver who can't take
+    buffs doesn't keep offering them.
+]]
+function BuffDuty.NPCRow(unit, castUnit)
+	if not BuffDuty.CanBuffNPC(unit) then
+		return nil
+	end
+	BuffDuty.ReadAuras(unit)
+	local name = GetUnitName(unit, false) or ""
+	local icons = HeldIcons(unit, castUnit, name, NPCWants)
+	if #icons == 0 then
+		return nil
+	end
+	return { label = ns.GetColor("HELP") .. name .. "|r", icons = icons }
 end

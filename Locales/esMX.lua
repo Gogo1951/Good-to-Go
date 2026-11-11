@@ -1752,7 +1752,7 @@ L["BUFF_DUTY_OTHERS_SENT"] = "Se le susurró a %s sobre %s."
 -- The window's close button: the class name, the class name again for its checkbox, the When to Show
 -- header, then the options command.
 L["BUFF_DUTY_CLOSED"] =
-	"Turno de beneficios está desactivado para la clase %s. Para volver a activarlo, usa Mayús + Clic izquierdo en el botón del minimapa, o marca %s en %s, dentro de %s."
+	"Turno de beneficios está oculto hasta que vuelvas a conectarte o recargues. Para recuperarlo ahora, usa Mayús + Clic izquierdo en el botón del minimapa. Para dejarlo desactivado para la clase %s, desmarca %s en %s, dentro de %s."
 
 -- The Buff Button key: its name in the game's Key Bindings list and the root panel's Key Bindings section, then the notices a press shows.
 L["BUFF_KEY"] = "Botón de beneficio"

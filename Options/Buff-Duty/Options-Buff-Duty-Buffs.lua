@@ -97,7 +97,10 @@ function ns.BuildBuffDutyBuffsOptions()
 		TankRow(class, ns.ClassName(class), L["BUFF_DUTY_TANKS_CLASS_DESCRIPTION"], tankOrder)
 		tankOrder = tankOrder + 1
 	end
-	TankRow(Data.TANK_WHEN_PET, L["BUFF_DUTY_TANKS_PETS"], L["BUFF_DUTY_TANKS_PETS_DESCRIPTION"], tankOrder)
+	-- No pets on WoW Forever's list (they take their owner's buffs), so no Pets row either.
+	if ns.FLAVOR ~= "Camelot" then
+		TankRow(Data.TANK_WHEN_PET, L["BUFF_DUTY_TANKS_PETS"], L["BUFF_DUTY_TANKS_PETS_DESCRIPTION"], tankOrder)
+	end
 	options.args.spaceTanks3 = ns.OptionsSpacer(tankOrder + 1)
 
 	local audienceValues = {}

@@ -1729,7 +1729,7 @@ L["BUFF_DUTY_OTHERS_SENT"] = "已向 %s 发送%s的密语。"
 -- The window's close button: the class name, the class name again for its checkbox, the When to Show
 -- header, then the options command.
 L["BUFF_DUTY_CLOSED"] =
-	'已为%1$s职业关闭增益值班。要重新开启，请 Shift + 左键点击小地图按钮，或在 %4$s 的"%3$s"下勾选"%2$s"。'
+	'增益值班已隐藏，直到下次登录或重载界面。要立即恢复，请 Shift + 左键点击小地图按钮。要为%1$s职业保持关闭，请在 %4$s 的"%3$s"下取消勾选"%2$s"。'
 
 -- The Buff Button key: its name in the game's Key Bindings list and the root panel's Key Bindings section, then the notices a press shows.
 L["BUFF_KEY"] = "增益按钮"

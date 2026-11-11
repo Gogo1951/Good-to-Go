@@ -168,9 +168,21 @@ function ns.RefreshBuffDuty()
 end
 
 --[[
+    Whether the window's close button hid Buff Duty for the rest of this
+    session. Never saved: a login or reload brings the window back, and so does
+    turning Buff Duty on by any switch (the mini-map button, the feature switch,
+    or ticking your class).
+]]
+local hiddenThisSession = false
+
+function ns.ShowBuffDutyAgain()
+	hiddenThisSession = false
+end
+
+--[[
     Buff Duty's feature switch, the one setter both copies of its options
     toggle and the per-class calls below use: it redraws the window and
-    repaints every open panel.
+    repaints every open panel. Turning it on clears the close button's hide.
 ]]
 function ns.IsBuffDutyOn()
 	return ns.db.global.buffWindow.enabled and true or false
@@ -178,6 +190,9 @@ end
 
 function ns.SetBuffDutyOn(value)
 	ns.db.global.buffWindow.enabled = value
+	if value then
+		hiddenThisSession = false
+	end
 	ns.RefreshBuffDuty()
 	local registry = LibStub("AceConfigRegistry-3.0")
 	for _, name in pairs(ns.OPTIONS_REGISTRY) do
@@ -186,14 +201,15 @@ function ns.SetBuffDutyOn(value)
 end
 
 --[[
-    Buff Duty on the class you're playing: the feature switch on and your
-    class ticked under Classes. The close button and the mini-map button work
-    per class through these, so closing the window on a rogue leaves it up on
-    a druid. Turning it on ticks your class and flips the switch on with it.
+    Buff Duty on the class you're playing: the feature switch on, your class
+    ticked under Classes, and the window not closed this session. The mini-map
+    button works per class through these, so turning it off on a rogue leaves
+    it up on a druid. Turning it on ticks your class and flips the switch on
+    with it, which also undoes a close.
 ]]
 function ns.IsBuffDutyOnForClass()
 	local _, class = UnitClass("player")
-	return ns.IsBuffDutyOn() and ns.db.global.buffWindow.showClasses[class] ~= false
+	return not hiddenThisSession and ns.IsBuffDutyOn() and ns.db.global.buffWindow.showClasses[class] ~= false
 end
 
 function ns.SetBuffDutyForClass(on)
@@ -216,12 +232,14 @@ function ns.ApplyBuffDutyProfile()
 end
 
 --[[
-    The window's close button. Turns Buff Duty off for your class and says
-    how to turn it back on. In combat the window stays up until combat ends,
-    like any other change to it.
+    The window's close button. Hides Buff Duty until the next login or reload,
+    saving nothing, and says how to bring it back now or keep it off for your
+    class. In combat the window stays up until combat ends, like any other
+    change to it.
 ]]
 function ns.CloseBuffDuty()
-	ns.SetBuffDutyForClass(false)
+	hiddenThisSession = true
+	ns.RefreshBuffDuty()
 	local _, class = UnitClass("player")
 	ns:PrintMessage(
 		L["BUFF_DUTY_CLOSED"]:format(

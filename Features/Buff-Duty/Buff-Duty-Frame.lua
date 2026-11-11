@@ -27,8 +27,8 @@ local UpdateRange = ns.UpdateBuffDutyRange
     Two frames stack so combat visibility and our own never fight: the anchor
     belongs to a secure state driver (Hide in Combat), and the content inside it
     is shown and hidden by this file, out of combat only. The content carries a
-    title bar whose close button turns Buff Duty off for the class you're
-    playing (ns.CloseBuffDuty).
+    title bar whose close button hides Buff Duty until the next login or
+    reload, saving nothing (ns.CloseBuffDuty).
 ]]
 
 --------------------------------------------------------------------------------

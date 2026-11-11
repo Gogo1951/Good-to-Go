@@ -1780,7 +1780,7 @@ L["BUFF_DUTY_OTHERS_SENT"] = "%s에게 %s 관련 귓속말을 보냈습니다."
 -- The window's close button: the class name, the class name again for its checkbox, the When to Show
 -- header, then the options command.
 L["BUFF_DUTY_CLOSED"] =
-	"%1$s 직업의 버프 당번이 꺼졌습니다. 다시 켜려면 미니맵 버튼을 Shift + 좌클릭하거나, %4$s 설정의 %3$s에서 %2$s을(를) 체크하세요."
+	"버프 당번이 다음 접속이나 재시작 전까지 숨겨졌습니다. 지금 다시 보려면 미니맵 버튼을 Shift + 좌클릭하세요. %1$s 직업에서 계속 꺼 두려면 %4$s 설정의 %3$s에서 %2$s의 체크를 해제하세요."
 
 -- The Buff Button key: its name in the game's Key Bindings list and the root panel's Key Bindings section, then the notices a press shows.
 L["BUFF_KEY"] = "버프 버튼"

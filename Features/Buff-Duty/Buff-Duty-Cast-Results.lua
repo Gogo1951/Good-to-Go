@@ -57,9 +57,10 @@ function ns.NoteBuffCastAttempt(spec)
 	local guid = spec.favorGUID or (spec.unit and UnitGUID(spec.unit))
 	if ns.IsPlain(guid) and guid then
 		--[[
-		    A pet (anything not a player: a party pet's token, or a targeted
-		    one) has its cast followed through below, since its buffs reach
-		    the client less reliably than a player's.
+		    A pet (anything not a player: a party pet's token, a targeted
+		    one, or a targeted friendly NPC) has its cast followed through
+		    below, since its buffs reach the client less reliably than a
+		    player's, and a refusal holds that buff off it.
 		]]
 		local isPet = false
 		if spec.unit and not spec.isGroup and not spec.favorGUID then

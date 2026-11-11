@@ -1755,7 +1755,7 @@ L["BUFF_DUTY_OTHERS_SENT"] = "Sussurrado para %s sobre %s."
 -- The window's close button: the class name, the class name again for its checkbox, the When to Show
 -- header, then the options command.
 L["BUFF_DUTY_CLOSED"] =
-	"O Plantão de buffs está desativado para a classe %s. Para reativá-lo, use Shift + clique esquerdo no botão do minimapa, ou marque %s em %s, dentro de %s."
+	"O Plantão de buffs está oculto até você entrar de novo ou recarregar. Para trazê-lo de volta agora, use Shift + clique esquerdo no botão do minimapa. Para mantê-lo desativado para a classe %s, desmarque %s em %s, dentro de %s."
 
 -- The Buff Button key: its name in the game's Key Bindings list and the root panel's Key Bindings section, then the notices a press shows.
 L["BUFF_KEY"] = "Botão de buff"

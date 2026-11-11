@@ -60,6 +60,7 @@ end
 local EVENT_HANDLERS = {
 	ADDON_LOADED = "OnAddonLoaded",
 	SPELLS_CHANGED = "OnSpellsChanged",
+	SKILL_LINES_CHANGED = "OnSpellbookSkillLinesChanged",
 	PLAYER_EQUIPMENT_CHANGED = "OnPlayerEquipmentChanged",
 	SPELL_DATA_LOAD_RESULT = "OnSpellDataLoadResult",
 	ACTIONBAR_SLOT_CHANGED = "OnActionbarSlotChanged",

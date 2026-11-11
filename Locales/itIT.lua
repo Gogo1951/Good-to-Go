@@ -1757,7 +1757,7 @@ L["BUFF_DUTY_OTHERS_SENT"] = "Sussurrato a %s riguardo a %s."
 -- The window's close button: the class name, the class name again for its checkbox, the When to Show
 -- header, then the options command.
 L["BUFF_DUTY_CLOSED"] =
-	"Il turno dei potenziamenti è disattivato per la classe %s. Per riattivarlo, fai Maiusc + clic sinistro sul pulsante della minimappa, oppure spunta %s alla voce %s in %s."
+	"Il turno dei potenziamenti è nascosto fino al prossimo accesso o ricaricamento. Per riaverlo subito, fai Maiusc + clic sinistro sul pulsante della minimappa. Per tenerlo disattivato per la classe %s, togli la spunta da %s alla voce %s in %s."
 
 -- The Buff Button key: its name in the game's Key Bindings list and the root panel's Key Bindings section, then the notices a press shows.
 L["BUFF_KEY"] = "Pulsante potenziamento"

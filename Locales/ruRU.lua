@@ -1826,7 +1826,7 @@ L["BUFF_DUTY_OTHERS_SENT"] = "Шёпот отправлен игрокам %s: %
 -- The window's close button: the class name, the class name again for its checkbox, the When to Show
 -- header, then the options command.
 L["BUFF_DUTY_CLOSED"] =
-	'Дежурство по баффам выключено для класса %s. Чтобы включить его снова, нажмите Shift + ЛКМ по кнопке у миникарты или отметьте "%s" в разделе "%s" в настройках %s.'
+	'Дежурство по баффам скрыто до следующего входа в игру или перезагрузки интерфейса. Чтобы вернуть его сейчас, нажмите Shift + ЛКМ по кнопке у миникарты. Чтобы оставить его выключенным для класса %s, снимите отметку "%s" в разделе "%s" в настройках %s.'
 
 -- The Buff Button key: its name in the game's Key Bindings list and the root panel's Key Bindings section, then the notices a press shows.
 L["BUFF_KEY"] = "Кнопка баффов"

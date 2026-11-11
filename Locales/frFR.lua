@@ -1768,7 +1768,7 @@ L["BUFF_DUTY_OTHERS_SENT"] = "Chuchoté à %s au sujet de %s."
 -- The window's close button: the class name, the class name again for its checkbox, the When to Show
 -- header, then the options command.
 L["BUFF_DUTY_CLOSED"] =
-	"La corvée d'améliorations est désactivée pour la classe %s. Pour la réactiver, faites Maj + Clic gauche sur le bouton de la minicarte, ou cochez %s sous %s dans %s."
+	"La corvée d'améliorations est masquée jusqu'à votre prochaine connexion ou un rechargement. Pour la réafficher maintenant, faites Maj + Clic gauche sur le bouton de la minicarte. Pour la garder désactivée pour la classe %s, décochez %s sous %s dans %s."
 
 -- The Buff Button key: its name in the game's Key Bindings list and the root panel's Key Bindings section, then the notices a press shows.
 L["BUFF_KEY"] = "Bouton d'amélioration"

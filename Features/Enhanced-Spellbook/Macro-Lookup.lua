@@ -43,6 +43,18 @@ function ns.WowMacroName(macro)
 end
 
 --[[
+	The icon a page macro's WoW macro is written with. Most keep the question mark, so #showtooltip shows the
+	spell's own icon; a profession's takes the icon its tile shows (a specialization's, once folded in), since
+	the game resolves a profession's name to the wrong icon (a gem or an anvil, on Forever).
+]]
+function ns.WowMacroIcon(macro)
+	if macro.pageTag == "professions" and macro.icon and macro.icon ~= ns.QUESTION_MARK_ICON then
+		return macro.icon
+	end
+	return macro.macroIcon
+end
+
+--[[
 	MIGRATION (remove after 2026-11-23): the name the add-on gave a WoW macro before the prefix, when names ran
 	to the full 16 bytes: a spell macro's name cut to 16, a focus copy's or a Duplicate's cut to fit
 	its suffix in 16.
