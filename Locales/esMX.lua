@@ -1753,13 +1753,11 @@ L["BUFF_DUTY_TOOLTIP_USE"] = "Nadie en tu grupo tiene una piedra de alma. Usa un
 L["BUFF_DUTY_TOOLTIP_CREATE"] = "Nadie en tu grupo tiene una piedra de alma. Crea una."
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "Lo lanza sobre %s y su grupo."
 L["BUFF_DUTY_TOOLTIP_FAVOR"] = "Selecciona a %s como objetivo y lo lanza."
--- A Party Buffs icon's menu: a raid buff your group is missing, and its count.
-L["BUFF_DUTY_OTHERS_TOOLTIP_COUNT"] = "Falta o se acaba pronto: %d"
--- The menu's rows: the first asks the party or raid for the buff (its name), the second whispers the players who can cast it (their names).
-L["BUFF_DUTY_OTHERS_MENU_ASK_GROUP"] = "Pedir %s a tu grupo"
-L["BUFF_DUTY_OTHERS_MENU_WHISPER"] = "Susurrar a %s"
+-- A Party Buffs icon's tooltip, its click hints: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it.
+L["BUFF_DUTY_OTHERS_HINT_ASK"] = "Pedir beneficio en %s"
+L["BUFF_DUTY_OTHERS_HINT_WHISPER"] = "Susurrar a quien puede lanzarlo"
 --[[
-    The ask either row sends, signed off like every sent message ({star} ... // GtG), so it
+    The ask either click sends, signed off like every sent message ({star} ... // GtG), so it
     ends as a statement, not a question. Up to five missing players are named (ONE for one,
     NAMES for two to five, joined with LIST_PAIR_FORMAT or LIST_LAST_FORMAT), then the buff's link;
     past five, COUNT gives how many, then the link.
@@ -1767,8 +1765,6 @@ L["BUFF_DUTY_OTHERS_MENU_WHISPER"] = "Susurrar a %s"
 L["BUFF_DUTY_OTHERS_ASK_ONE"] = "A %s le falta %s."
 L["BUFF_DUTY_OTHERS_ASK_NAMES"] = "A %s les falta %s."
 L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "A %d personas les falta el beneficio %s."
--- Your own chat, after the Whisper row: who was whispered, then the buff's link.
-L["BUFF_DUTY_OTHERS_SENT"] = "Se le susurró a %s sobre %s."
 --[[
     The window's close button: the class name, the class name again for its
     checkbox, the When to Show header, then the options command.

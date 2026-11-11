@@ -7,252 +7,266 @@ local GetColor = ns.GetColor
 --[[
     Buff-Duty-Party-Buffs -- the Buff Duty window's Party-Buffs icons: a raid
     buff, any class's, numbered with how many in your group need it
-    (Buff-Duty-Other-Classes.lua counts). Hovering an icon opens its menu:
-    who needs the buff, then a row that asks the party or raid for it and,
-    when someone else can cast it, a row that whispers them. Clicking the
-    icon itself does nothing, so nothing is sent by accident.
-    Buff-Duty-Frame.lua places the icons on the Party-Buffs header.
+    (Buff-Duty-Other-Classes.lua counts). Clicking an icon asks the party or
+    raid for the buff; right-clicking whispers the players of that class who
+    can cast it, when anyone else can. Buff-Duty-Frame.lua places the icons on
+    the Party-Buffs header.
 
-    The roster is laid out like the window, two parties to a row, and
-    GameTooltip can't line up a second column (its right-hand text hugs the
-    right edge), so the icons share a small menu of their own, built from
-    pooled font strings in GameTooltip's fonts. It stays open while the
-    mouse is on the icon or the menu, closes a moment after it leaves both,
-    and closes on Escape.
+    The actions sit on the icon itself, not in a menu: a menu opened by
+    hovering closed before the mouse could reach it.
+
+    Hovering shows who needs the buff, party by party: each name on the left
+    and the buff's icon on the right, drawn the way the window draws its own --
+    grey and faded when they have none, or with a sliver of how much is left
+    when it's running low. The two clicks sit at the foot as hints. A cooldown
+    swipe can't sit in a GameTooltip line, so this is a small frame of its
+    own in GameTooltip's look; it takes no mouse, so it never gets in the way.
 ]]
 
 local ICON_SIZE = Data.BUFF_DUTY_ICON_SIZE
 local BACKDROP = Data.BUFF_DUTY_BACKDROP
-local MENU_NAME = "GoodToGoBuffDutyPartyMenu"
-local MENU_PADDING = 8
-local LINE_HEIGHT = 16
+local PADDING = 8
+local LINE_HEIGHT = 18
 local COLUMN_GAP = 16
-local DIVIDER_GAP = 4
-local CLOSE_DELAY = 0.2
+local SECTION_GAP = 6
+local FONT = "GameTooltipText"
 
-local menu
-local menuStrings, usedMenuStrings = {}, 0
--- The Party-Buffs icons: plain buttons, since a whisper isn't protected.
+-- The window's faded look (OUT_OF_RANGE_ALPHA in Buff-Duty-Icon-State.lua), for a buff nobody put on them.
+local MISSING_ALPHA = 0.35
+
+--[[
+    How often an open tooltip redraws, so a buff that runs out turns grey, a
+    hint greyed by its cooldown comes back, and a redraw of the window (new
+    count, icon gone) shows up while you hover. The sliver animates on its own.
+]]
+local REFRESH_INTERVAL = 0.5
+
+local panel, refreshTicker
+local panelStrings, usedStrings = {}, 0
+local panelIcons, usedIcons = {}, 0
+-- The Party-Buffs icons: plain buttons, since a chat line isn't protected.
 local otherIcons, usedOtherIcons = {}, 0
 
-local function AcquireMenuString(font)
-	usedMenuStrings = usedMenuStrings + 1
-	local text = menuStrings[usedMenuStrings]
+--------------------------------------------------------------------------------
+-- Panel
+--------------------------------------------------------------------------------
+
+local function CreatePanel()
+	panel = CreateFrame("Frame", nil, UIParent, "BackdropTemplate")
+	panel:SetFrameStrata("TOOLTIP")
+	panel:SetClampedToScreen(true)
+	panel:EnableMouse(false)
+	panel:SetBackdrop(BACKDROP)
+	panel:SetBackdropColor(0, 0, 0, Data.BUFF_DUTY_BACKDROP_ALPHA)
+	panel:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
+	panel:Hide()
+end
+
+local function AcquireString()
+	usedStrings = usedStrings + 1
+	local text = panelStrings[usedStrings]
 	if not text then
-		text = menu:CreateFontString(nil, "OVERLAY")
-		menuStrings[usedMenuStrings] = text
+		text = panel:CreateFontString(nil, "OVERLAY", FONT)
+		text:SetWordWrap(false)
+		panelStrings[usedStrings] = text
 	end
-	text:SetFontObject(font)
-	text:SetJustifyH("LEFT")
-	text:SetWidth(0)
-	text:SetWordWrap(false)
 	text:ClearAllPoints()
 	text:Show()
 	return text
 end
 
-function ns.HideBuffDutyRoster()
-	if menu then
-		menu:Hide()
+-- A row's buff icon, with the window's reversed, number-free sliver.
+local function AcquireIcon()
+	usedIcons = usedIcons + 1
+	local icon = panelIcons[usedIcons]
+	if not icon then
+		icon = CreateFrame("Frame", nil, panel)
+		icon:SetSize(ICON_SIZE, ICON_SIZE)
+		icon.texture = icon:CreateTexture(nil, "ARTWORK")
+		icon.texture:SetAllPoints()
+		icon.texture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+		icon.cooldown = CreateFrame("Cooldown", nil, icon, "CooldownFrameTemplate")
+		icon.cooldown:SetAllPoints()
+		icon.cooldown:SetReverse(true)
+		icon.cooldown:SetHideCountdownNumbers(true)
+		icon.cooldown.noCooldownCount = true
+		panelIcons[usedIcons] = icon
 	end
+	icon:ClearAllPoints()
+	icon:Show()
+	return icon
 end
 
--- Closes the menu once the mouse is on neither it nor the icon that opened it.
-local function CloseIfLeft()
-	if not menu or not menu:IsShown() then
-		return
+local function ReleasePanelParts()
+	for i = 1, usedStrings do
+		panelStrings[i]:Hide()
 	end
-	local owner = menu.owner
-	if menu:IsMouseOver() or (owner and owner:IsShown() and owner:IsMouseOver()) then
-		return
+	for i = 1, usedIcons do
+		panelIcons[i].cooldown:Clear()
+		panelIcons[i]:Hide()
 	end
-	menu:Hide()
+	usedStrings, usedIcons = 0, 0
 end
 
-local function ScheduleClose()
-	C_Timer.After(CLOSE_DELAY, CloseIfLeft)
-end
-
--- An action row: its label on the left, a highlight under the mouse, muted while it can't run.
-local function CreateRow()
-	local row = CreateFrame("Button", nil, menu)
-	row:SetHeight(LINE_HEIGHT)
-	row.label = row:CreateFontString(nil, "OVERLAY", "GameTooltipText")
-	row.label:SetPoint("LEFT", row, "LEFT", 0, 0)
-	row.label:SetJustifyH("LEFT")
-	row.label:SetWordWrap(false)
-	row:SetHighlightTexture("Interface/QuestFrame/UI-QuestTitleHighlight", "ADD")
-	row:SetScript("OnLeave", ScheduleClose)
-	row:SetScript("OnClick", function(self)
-		local spec = menu.spec
-		menu:Hide()
-		if spec then
-			self.action(spec)
-		end
-	end)
-	return row
-end
-
-local function CreateMenu()
-	menu = CreateFrame("Frame", MENU_NAME, UIParent, "BackdropTemplate")
-	menu:SetFrameStrata("TOOLTIP")
-	menu:SetClampedToScreen(true)
-	menu:EnableMouse(true)
-	menu:SetBackdrop(BACKDROP)
-	menu:SetBackdropColor(0, 0, 0, 0.9)
-	menu:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
-	menu:SetScript("OnLeave", ScheduleClose)
-	menu:Hide()
-	table.insert(UISpecialFrames, MENU_NAME)
-
-	menu.dividers = {}
-	for index = 1, 2 do
-		local divider = menu:CreateTexture(nil, "ARTWORK")
-		divider:SetHeight(1)
-		divider:SetColorTexture(0.4, 0.4, 0.4, 1)
-		menu.dividers[index] = divider
-	end
-
-	menu.askRow = CreateRow()
-	menu.askRow.action = ns.AskGroupForBuff
-	menu.whisperRow = CreateRow()
-	menu.whisperRow.action = ns.WhisperOtherClassBuff
-end
-
--- Lays a row's label out and greys it while the same ask is still cooling down.
-local function SetRow(row, text, ready, y)
-	row.label:SetText((ready and GetColor("TEXT") or GetColor("MUTED")) .. text .. "|r")
-	row:SetEnabled(ready)
-	row:ClearAllPoints()
-	row:SetPoint("TOPLEFT", menu, "TOPLEFT", MENU_PADDING, -(MENU_PADDING + y))
-	row:SetPoint("TOPRIGHT", menu, "TOPRIGHT", -MENU_PADDING, -(MENU_PADDING + y))
-	row:Show()
-	return row.label:GetStringWidth()
-end
-
-local function ShowMenu(owner, spec)
-	if not menu then
-		CreateMenu()
-	end
-	for i = 1, usedMenuStrings do
-		menuStrings[i]:Hide()
-	end
-	usedMenuStrings = 0
-	menu.owner, menu.spec = owner, spec
-
-	--[[
-	    How far down the lowest text reaches, so the padding under it matches
-	    the padding over the title. A line can stand taller than LINE_HEIGHT,
-	    and sizing by the line count alone let the last one sink into the
-	    bottom padding.
-	]]
-	local bottom = 0
-	local function Track(line, y)
-		bottom = math.max(bottom, y + line:GetStringHeight())
-	end
-
-	-- `x` and `y` measured in from the top-left padding; returns the text's width.
-	local function Put(text, font, x, y)
-		local line = AcquireMenuString(font)
-		line:SetText(text)
-		line:SetPoint("TOPLEFT", menu, "TOPLEFT", MENU_PADDING + x, -(MENU_PADDING + y))
-		Track(line, y)
-		return x + line:GetStringWidth()
-	end
-
-	local function PutDivider(divider, y)
-		divider:ClearAllPoints()
-		divider:SetPoint("TOPLEFT", menu, "TOPLEFT", MENU_PADDING, -(MENU_PADDING + y))
-		divider:SetPoint("TOPRIGHT", menu, "TOPRIGHT", -MENU_PADDING, -(MENU_PADDING + y))
-		return y + 1 + DIVIDER_GAP
-	end
-
-	-- The header: the buff's name in gold, the Short Name muted against the right edge.
-	local width = Put(GetColor("TITLE") .. spec.spellName .. "|r", "GameTooltipText", 0, 0)
-	local short = AcquireMenuString("GameTooltipText")
-	short:SetJustifyH("RIGHT")
-	short:SetText(GetColor("MUTED") .. L["ADDON_SHORT_NAME"] .. "|r")
-	short:SetPoint("TOPRIGHT", menu, "TOPRIGHT", -MENU_PADDING, -MENU_PADDING)
-	width = width + COLUMN_GAP + short:GetStringWidth()
-	local y = PutDivider(menu.dividers[1], LINE_HEIGHT + DIVIDER_GAP)
-
-	width = math.max(
-		width,
-		Put(GetColor("HELP") .. L["BUFF_DUTY_OTHERS_TOOLTIP_COUNT"]:format(spec.count) .. "|r", "GameTooltipText", 0, y)
-	)
-	y = y + LINE_HEIGHT
-
-	--[[
-	    Party by party, two to a row reading across like the window: the
-	    header in gold, then each name a space in, in its class color. Every
-	    row starts below the taller of its two, and the right-hand parties
-	    all start where the widest left-hand one ends.
-	]]
-	local function PutGroup(group, x, top)
-		local right = Put(GetColor("TITLE") .. group.label .. "|r", "GameTooltipText", x, top)
-		for index, name in ipairs(group.names) do
-			local color = ns.GetClassColor(group.classes[index]) or GetColor("TEXT")
-			right = math.max(right, Put(" " .. color .. name .. "|r", "GameTooltipText", x, top + index * LINE_HEIGHT))
-		end
-		return right
-	end
-	local groups, rowTops = spec.groups, {}
-	for index = 1, #groups, 2 do
-		y = y + DIVIDER_GAP
-		rowTops[index] = y
-		local lines = 1 + math.max(#groups[index].names, groups[index + 1] and #groups[index + 1].names or 0)
-		y = y + lines * LINE_HEIGHT
-	end
-	local leftWidth = 0
-	for index = 1, #groups, 2 do
-		leftWidth = math.max(leftWidth, PutGroup(groups[index], 0, rowTops[index]))
-	end
-	width = math.max(width, leftWidth)
-	for index = 2, #groups, 2 do
-		width = math.max(width, PutGroup(groups[index], leftWidth + COLUMN_GAP, rowTops[index - 1]))
-	end
-
-	--[[
-	    The actions. Your own class's buff, with nobody else of it in the
-	    group, has no one to whisper, so that row is left out.
-	]]
-	y = PutDivider(menu.dividers[2], y + DIVIDER_GAP)
-	width = math.max(
-		width,
-		SetRow(
-			menu.askRow,
-			L["BUFF_DUTY_OTHERS_MENU_ASK_GROUP"]:format(spec.spellName),
-			ns.CanAskForBuff("group", spec.key),
-			y
-		)
-	)
-	y = y + LINE_HEIGHT
-	if spec.recipientNames[1] then
-		width = math.max(
-			width,
-			SetRow(
-				menu.whisperRow,
-				L["BUFF_DUTY_OTHERS_MENU_WHISPER"]:format(table.concat(spec.recipientNames, L["LIST_SEPARATOR"])),
-				ns.CanAskForBuff("whisper", spec.key),
-				y
-			)
-		)
-		y = y + LINE_HEIGHT
+--[[
+    Grey and faded with no buff, or in color with the sliver of what's left.
+    A low buff that has since run out turns grey too.
+]]
+local function SetBuffIcon(icon, texture, expires, duration)
+	icon.texture:SetTexture(texture)
+	local now = GetTime()
+	if expires and expires > now and duration and duration > 0 then
+		icon.texture:SetDesaturated(false)
+		icon:SetAlpha(1)
+		icon.cooldown:SetCooldown(expires - duration, duration)
 	else
-		menu.whisperRow:Hide()
+		icon.texture:SetDesaturated(true)
+		icon:SetAlpha(MISSING_ALPHA)
+		icon.cooldown:Clear()
 	end
-	bottom = math.max(bottom, y)
-
-	menu:SetSize(math.ceil(width) + MENU_PADDING * 2, math.ceil(bottom) + MENU_PADDING * 2)
-	-- Where GameTooltip's ANCHOR_RIGHT would put it: up and to the right of the icon.
-	menu:ClearAllPoints()
-	menu:SetPoint("BOTTOMLEFT", owner, "TOPRIGHT")
-	menu:Show()
 end
+
+--[[
+    Where a click's ask goes, by name, for its hint: the group chat
+    ns:GetGroupChatChannel picks.
+]]
+local function GroupChatName()
+	local channel = ns:GetGroupChatChannel()
+	if channel == "RAID" then
+		return RAID
+	elseif channel == "INSTANCE_CHAT" then
+		return ns.IsInPvPInstance() and BATTLEGROUND or INSTANCE or GROUP
+	end
+	return PARTY
+end
+
+local function FillPanel(spec)
+	ReleasePanelParts()
+	local y = 0
+
+	-- A line of text at the left padding; returns its width.
+	local function PutLeft(text, top)
+		local line = AcquireString()
+		line:SetText(text)
+		line:SetPoint("TOPLEFT", panel, "TOPLEFT", PADDING, -(PADDING + top))
+		return line:GetStringWidth()
+	end
+	-- A line of text against the right padding; returns its width.
+	local function PutRight(text, top)
+		local line = AcquireString()
+		line:SetText(text)
+		line:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -PADDING, -(PADDING + top))
+		return line:GetStringWidth()
+	end
+
+	-- The header: the buff's name in gold, then a blank line.
+	local width = PutLeft(GetColor("TITLE") .. spec.spellName .. "|r", y)
+	y = y + LINE_HEIGHT * 2
+
+	-- Party by party: the header in gold, then each name in its class color, the buff's icon on the right.
+	local texture = C_Spell.GetSpellTexture(spec.spellId)
+	for index, group in ipairs(spec.groups) do
+		if index > 1 then
+			y = y + SECTION_GAP
+		end
+		width = math.max(width, PutLeft(GetColor("TITLE") .. group.label .. "|r", y))
+		y = y + LINE_HEIGHT
+		for row, name in ipairs(group.names) do
+			local color = ns.GetClassColor(group.classes[row]) or GetColor("TEXT")
+			local nameWidth = PutLeft(color .. name .. "|r", y)
+			local icon = AcquireIcon()
+			-- Centered on the text's line, which starts at its top.
+			icon:SetPoint("RIGHT", panel, "TOPRIGHT", -PADDING, -(PADDING + y + LINE_HEIGHT / 2 - 2))
+			SetBuffIcon(icon, texture, group.expires[row], group.durations[row])
+			width = math.max(width, nameWidth + COLUMN_GAP + ICON_SIZE)
+			y = y + LINE_HEIGHT
+		end
+	end
+
+	--[[
+	    The clicks, both sides in the interaction blue, muted while that ask
+	    is still cooling down. Your own class's buff, with nobody else of it
+	    in the group, has no one to whisper, so that hint is left out.
+	]]
+	local function PutHint(keybind, action, ready)
+		local color = ready and GetColor("INFO") or GetColor("MUTED")
+		width =
+			math.max(width, PutLeft(color .. keybind .. "|r", y) + COLUMN_GAP + PutRight(color .. action .. "|r", y))
+		y = y + LINE_HEIGHT
+	end
+	-- A blank line above the hints.
+	y = y + LINE_HEIGHT
+	PutHint(
+		L["TOOLTIP_KEY_CLICK"],
+		L["BUFF_DUTY_OTHERS_HINT_ASK"]:format(GroupChatName()),
+		ns.CanAskForBuff("group", spec.key)
+	)
+	if spec.recipients[1] then
+		PutHint(L["TOOLTIP_KEY_RIGHT_CLICK"], L["BUFF_DUTY_OTHERS_HINT_WHISPER"], ns.CanAskForBuff("whisper", spec.key))
+	end
+
+	panel:SetSize(math.ceil(width) + PADDING * 2, math.ceil(y) + PADDING * 2)
+end
+
+local function StopRefresh()
+	if refreshTicker then
+		refreshTicker:Cancel()
+		refreshTicker = nil
+	end
+end
+
+function ns.HideBuffDutyRoster()
+	StopRefresh()
+	if panel then
+		panel:Hide()
+		panel.owner = nil
+	end
+end
+
+-- Redraws the open panel from its icon's current spec, or closes it once the mouse has left or the icon is gone.
+local function RefreshPanel()
+	local owner = panel and panel.owner
+	if not owner or not panel:IsShown() or not owner:IsShown() or not owner.spec or not owner:IsMouseOver() then
+		ns.HideBuffDutyRoster()
+		return
+	end
+	FillPanel(owner.spec)
+end
+
+--------------------------------------------------------------------------------
+-- Icons
+--------------------------------------------------------------------------------
 
 local function OnOtherIconEnter(self)
-	if self.spec then
-		ShowMenu(self, self.spec)
+	if not self.spec then
+		return
+	end
+	if not panel then
+		CreatePanel()
+	end
+	StopRefresh()
+	panel.owner = self
+	FillPanel(self.spec)
+	-- Where GameTooltip's ANCHOR_RIGHT would put it: up and to the right of the icon.
+	panel:ClearAllPoints()
+	panel:SetPoint("BOTTOMLEFT", self, "TOPRIGHT")
+	panel:Show()
+	refreshTicker = C_Timer.NewTicker(REFRESH_INTERVAL, RefreshPanel)
+end
+
+-- Click asks the group; right-click whispers the class. Each waits out its own cooldown.
+local function OnOtherIconClick(self, mouseButton)
+	local spec = self.spec
+	if not spec then
+		return
+	end
+	if mouseButton == "RightButton" then
+		ns.WhisperOtherClassBuff(spec)
+	else
+		ns.AskGroupForBuff(spec)
+	end
+	if panel and panel.owner == self and panel:IsShown() then
+		FillPanel(spec)
 	end
 end
 
@@ -263,6 +277,7 @@ function ns.AcquireBuffDutyOtherIcon(parent)
 	if not button then
 		button = CreateFrame("Button", nil, parent)
 		button:SetSize(ICON_SIZE, ICON_SIZE)
+		button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 		button.icon = button:CreateTexture(nil, "ARTWORK")
 		button.icon:SetAllPoints()
 		button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
@@ -273,7 +288,8 @@ function ns.AcquireBuffDutyOtherIcon(parent)
 		button.count:SetTextColor(red.r, red.g, red.b)
 		button:SetHighlightTexture("Interface/Buttons/ButtonHilight-Square", "ADD")
 		button:SetScript("OnEnter", OnOtherIconEnter)
-		button:SetScript("OnLeave", ScheduleClose)
+		button:SetScript("OnLeave", ns.HideBuffDutyRoster)
+		button:SetScript("OnClick", OnOtherIconClick)
 		otherIcons[usedOtherIcons] = button
 	end
 	return button
