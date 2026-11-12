@@ -217,6 +217,7 @@ Features/Rank-Watch/Rank-Watch-Core.lua
 Features/Rank-Watch/Rank-Watch-Lookups.lua
 Features/Rank-Watch/Rank-Watch-Check.lua
 Features/Rank-Watch/Rank-Watch-Cluster.lua
+Features/Rank-Watch/Rank-Watch-Level-Up.lua
 Features/Rank-Watch/Rank-Watch-Detection-Combat-Log.lua
 
 # Buff Duty

@@ -1111,6 +1111,18 @@ L["RANK_WATCH_WHISPERER_SELF"] = "Вы."
 L["RANK_WATCH_WHISPERER_OTHER"] = "%s, поэтому вы видите только сообщение в чате."
 L["RANK_WATCH_WHISPERER_NONE"] = 'Никто: "Шептать участникам группы" выключено.'
 
+-- Ability Alerts While Leveling: the Rank Watch panel's section for the level-up prints (LEVEL_UP_SPELLS and the rest)
+L["RANK_WATCH_LEVEL_UP_HEADER"] = "Оповещения о способностях при повышении уровня"
+L["RANK_WATCH_LEVEL_UP_DESCRIPTION"] = "При повышении уровня в чате появляется список способностей, которые для вас есть у классового наставника, каждая со значком и ссылкой для наведения. У этого свой переключатель, независимо от того, включён ли Дозор рангов."
+L["RANK_WATCH_LEVEL_UP"] = "Сообщать о новых способностях при повышении уровня"
+L["RANK_WATCH_LEVEL_UP_TOGGLE_DESCRIPTION"] = "Перечисляет способности, которые открываются на только что полученном уровне."
+L["RANK_WATCH_LEVEL_UP_PAST"] = "Включать пропущенные способности"
+L["RANK_WATCH_LEVEL_UP_PAST_DESCRIPTION"] = "Добавляет строку со способностями прошлых уровней, которые вы ещё не изучили."
+L["RANK_WATCH_LEVEL_UP_PET"] = "Включать способности питомца"
+L["RANK_WATCH_LEVEL_UP_PET_DESCRIPTION"] = "Добавляет способности наставника питомцев для охотников или гримуары наставника демонов для чернокнижников, которые открываются на новом уровне."
+L["RANK_WATCH_LEVEL_UP_PET_PAST"] = "Включать пропущенные способности питомца"
+L["RANK_WATCH_LEVEL_UP_PET_PAST_DESCRIPTION"] = "Только для охотников: добавляет строку со способностями наставника питомцев прошлых уровней, которые вы ещё не изучили. Чернокнижники эту строку не получают: игра не сообщает, какие гримуары изучил демон, пока он не призван."
+
 -- Ignored Players, under Rank Watch.
 L["RANK_WATCH_IGNORED_HEADER"] = "Игнорируемые игроки"
 L["RANK_WATCH_IGNORED_DESCRIPTION"] =
@@ -2279,6 +2291,18 @@ L["WHATS_NEXT_ALL_SOURCES"] = "Все источники"
 L["WHATS_NEXT_ANY_LEVEL"] = "Любой уровень"
 -- TRANSLATORS: %s is a spell's rank or "Passive", after its name ("Rend (Rank 2)").
 L["WHATS_NEXT_SUBTEXT"] = "(%s)"
+
+-- TRANSLATORS: printed on a level-up; %s is the spells the character can learn now, joined with
+-- LEVEL_UP_SPELLS_PAIR_FORMAT or LEVEL_UP_SPELLS_LAST_FORMAT ("[Bash], [Moonfire] (Rank 3), & [Rejuvenation]").
+L["LEVEL_UP_SPELLS"] = "Теперь вы можете изучить: %s."
+-- printed under it: %s is the spells from earlier levels still not learned, joined the same way
+L["LEVEL_UP_SPELLS_NOT_LEARNED"] = "Не забудьте, вы также можете изучить: %s."
+-- the same two for a hunter's pet, and a warlock's grimoires (the first only)
+L["LEVEL_UP_PET_SPELLS"] = "Теперь ваш питомец может изучить: %s."
+L["LEVEL_UP_PET_SPELLS_NOT_LEARNED"] = "Не забудьте, ваш питомец также может изучить: %s."
+L["LEVEL_UP_DEMON_SPELLS"] = "Теперь ваши демоны могут изучить: %s."
+L["LEVEL_UP_SPELLS_PAIR_FORMAT"] = "%s и %s"
+L["LEVEL_UP_SPELLS_LAST_FORMAT"] = "%s и %s"
 
 -- What's Next? Tab: section headers, and the counts in the footer
 L["WHATS_NEXT_STATUS_AVAILABLE"] = "Доступно сейчас"

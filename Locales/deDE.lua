@@ -1082,6 +1082,18 @@ L["RANK_WATCH_WHISPERER_SELF"] = "Du selbst."
 L["RANK_WATCH_WHISPERER_OTHER"] = "%s, daher siehst du nur die Chatmeldung."
 L["RANK_WATCH_WHISPERER_NONE"] = 'Niemand: "Gruppenmitglieder anflüstern" ist aus.'
 
+-- Ability Alerts While Leveling: the Rank Watch panel's section for the level-up prints (LEVEL_UP_SPELLS and the rest)
+L["RANK_WATCH_LEVEL_UP_HEADER"] = "Fähigkeitshinweise beim Leveln"
+L["RANK_WATCH_LEVEL_UP_DESCRIPTION"] = "Wenn du eine Stufe aufsteigst, listet der Chat die Fähigkeiten auf, die dein Klassenlehrer für dich hat, jeweils mit Symbol und einem Link zum Überfahren. Das läuft über einen eigenen Schalter, egal ob Rangwache an ist oder nicht."
+L["RANK_WATCH_LEVEL_UP"] = "Neue Fähigkeiten beim Stufenaufstieg melden"
+L["RANK_WATCH_LEVEL_UP_TOGGLE_DESCRIPTION"] = "Listet die Fähigkeiten auf, die mit der gerade erreichten Stufe verfügbar werden."
+L["RANK_WATCH_LEVEL_UP_PAST"] = "Übersprungene Fähigkeiten einbeziehen"
+L["RANK_WATCH_LEVEL_UP_PAST_DESCRIPTION"] = "Fügt eine Zeile für Fähigkeiten früherer Stufen hinzu, die du noch nicht erlernt hast."
+L["RANK_WATCH_LEVEL_UP_PET"] = "Begleiterfähigkeiten einbeziehen"
+L["RANK_WATCH_LEVEL_UP_PET_DESCRIPTION"] = "Fügt die Fähigkeiten des Tierausbilders für Jäger oder die Grimoires des Dämonenausbilders für Hexenmeister hinzu, die mit deiner neuen Stufe verfügbar werden."
+L["RANK_WATCH_LEVEL_UP_PET_PAST"] = "Übersprungene Begleiterfähigkeiten einbeziehen"
+L["RANK_WATCH_LEVEL_UP_PET_PAST_DESCRIPTION"] = "Nur Jäger: Fügt eine Zeile für Fähigkeiten des Tierausbilders früherer Stufen hinzu, die du noch nicht erlernt hast. Hexenmeister erhalten diese Zeile nicht, da das Spiel nicht verrät, welche Grimoires ein Dämon gelernt hat, solange er nicht beschworen ist."
+
 -- Ignored Players, under Rank Watch.
 L["RANK_WATCH_IGNORED_HEADER"] = "Ignorierte Spieler"
 L["RANK_WATCH_IGNORED_DESCRIPTION"] = "Rangwache meldet diese Spieler nie."
@@ -2188,6 +2200,18 @@ L["WHATS_NEXT_ALL_SOURCES"] = "Alle Quellen"
 L["WHATS_NEXT_ANY_LEVEL"] = "Jede Stufe"
 -- TRANSLATORS: %s is a spell's rank or "Passive", after its name ("Rend (Rank 2)").
 L["WHATS_NEXT_SUBTEXT"] = "(%s)"
+
+-- TRANSLATORS: printed on a level-up; %s is the spells the character can learn now, joined with
+-- LEVEL_UP_SPELLS_PAIR_FORMAT or LEVEL_UP_SPELLS_LAST_FORMAT ("[Bash], [Moonfire] (Rank 3), & [Rejuvenation]").
+L["LEVEL_UP_SPELLS"] = "Du kannst jetzt %s erlernen."
+-- printed under it: %s is the spells from earlier levels still not learned, joined the same way
+L["LEVEL_UP_SPELLS_NOT_LEARNED"] = "Nicht vergessen: Du kannst auch %s erlernen."
+-- the same two for a hunter's pet, and a warlock's grimoires (the first only)
+L["LEVEL_UP_PET_SPELLS"] = "Dein Begleiter kann jetzt %s erlernen."
+L["LEVEL_UP_PET_SPELLS_NOT_LEARNED"] = "Nicht vergessen: Dein Begleiter kann auch %s erlernen."
+L["LEVEL_UP_DEMON_SPELLS"] = "Deine Dämonen können jetzt %s erlernen."
+L["LEVEL_UP_SPELLS_PAIR_FORMAT"] = "%s und %s"
+L["LEVEL_UP_SPELLS_LAST_FORMAT"] = "%s und %s"
 
 -- What's Next? Tab: section headers, and the counts in the footer
 L["WHATS_NEXT_STATUS_AVAILABLE"] = "Jetzt verfügbar"

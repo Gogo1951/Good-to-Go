@@ -59,8 +59,11 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 * **Catch Outdated Action Bars** // Find out when you or a group member casts a spell at a lower rank than you could, with a friendly whisper pointing them to the trainer.
 * **No False Alarms** // A buff the game lowers for a low-level player is never reported, and you pick which ranks are worth a mention.
 * **One Voice Per Group** // When several players run Rank Watch or RankSentinel, only one of them whispers.
+* **Ability Alerts While Leveling** // Each time you level, chat lists the new abilities your trainer has for you, plus any you skipped, with your pet's included.
 
 #### Example Messages
+
+> **Level Up, Self:** Good to Go // You can now learn [Corruption] (Rank 3), [Drain Mana], & [Drain Soul] (Rank 2).
 
 > **Low Rank Cast, Message To Portalrico:** FYI, no biggie, but you used [Fireball] (Rank 5). There's a newer rank at level 30. Update your action bars or visit your trainer and you'll be Good to Go // GtG
 

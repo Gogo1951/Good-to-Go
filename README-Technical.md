@@ -182,6 +182,7 @@ Good-to-Go/
 │   │   ├── Rank-Watch-Core.lua                     Event module, switch, standalone add-on handling, ignore command, reset listener
 │   │   ├── Rank-Watch-Detection-Combat-Log.lua     Vanilla and TBC TOCs: combat-log detection
 │   │   ├── Rank-Watch-Detection-Forever.lua        Camelot TOC: cast handshake, pet, auras, damage meter
+│   │   ├── Rank-Watch-Level-Up.lua                 Ability Alerts While Leveling: the trainer's spells printed on a ding
 │   │   └── Rank-Watch-Lookups.lua                  Ladders joined by ns.SPELL_GROUPS, tracked state, rank text
 │   ├── Readiness-Report/                           The private report printed on a ready check
 │   │   ├── Readiness-Report-Example.lua            The panel's sample lines
@@ -630,6 +631,7 @@ The feature is "Restocker"; its window is the Restock List; its starter popup is
 The standalone Rank Sentinel add-on, brought home. It reports a spell cast at a lower rank than the caster could have: a print for the player's own casts, and a whisper to, or a print about, a group member.
 
 - **Events.** Module `RankWatch`, with one handler per event via `ns.SetRankWatchHandler`. `ns.SyncRankWatchEvents` subscribes `EVENTS` plus `ns.RANK_WATCH_CHAT_EVENTS` while `ns.IsRankWatchActive()` (on, and the standalone add-on not loaded), then calls the loaded detection file's `ns.SyncRankWatchDetection` and `ns.SyncRankWatchCluster`.
+- **Ability Alerts While Leveling** (`Rank-Watch-Level-Up.lua`): module `LevelUpAlerts`, always subscribed to `PLAYER_LEVEL_UP` and gated by its own `rankWatch.levelUpAlerts` (with `levelUpAlertsPast`, `levelUpAlertsPet`, `levelUpAlertsPetPast`), not by Rank Watch's switch. Reads `ns.WhatsNextRows` and `ns.WhatsNextPetRows` with the event's level, so it needs neither Rank Watch nor the Enhanced Spellbook on. Lists trainer spells only: those whose level is the new one, then the earlier ones still `AVAILABLE`. Hunter pet lines start at level 10 and leave out taming abilities; warlocks get only the grimoires the level opened, since a used grimoire leaves no trace while the demon is away.
 - **Mists has no Rank Watch code.** Outside callers test that a function exists first: the panel registration (`ns.BuildRankWatchOptions`), the feature switch (`ns.SetRankWatchEnabled`), `/gtg ignore` (`ns.IgnoreRankWatchPlayer`), Diagnostics (`ns.RankWatchSettings`).
 - **Ladders** (`Rank-Watch-Lookups.lua`, `ns.BuildRankWatchLookups` at login): built from `ns.RANK_WATCH_ABILITIES` per class, minus ranks the client lacks, joined across one `ns.SPELL_GROUPS` group. `ns.RANK_WATCH_PET_ABILITIES` ladders are never joined, and their level is the pet's.
   - `ns.RankWatchReportableLookup` is the fast reject.

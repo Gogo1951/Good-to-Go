@@ -1059,6 +1059,18 @@ L["RANK_WATCH_WHISPERER_SELF"] = "You do."
 L["RANK_WATCH_WHISPERER_OTHER"] = "%s does, so you only see the print."
 L["RANK_WATCH_WHISPERER_NONE"] = "Nobody: Whisper Group Members is off."
 
+-- Ability Alerts While Leveling: the Rank Watch panel's section for the level-up prints (LEVEL_UP_SPELLS and the rest)
+L["RANK_WATCH_LEVEL_UP_HEADER"] = "Ability Alerts While Leveling"
+L["RANK_WATCH_LEVEL_UP_DESCRIPTION"] = "When you level, chat lists the abilities your class trainer has for you, each with its icon and a link you can hover. This runs on its own switch, whether Rank Watch is on or not."
+L["RANK_WATCH_LEVEL_UP"] = "Announce New Abilities When You Level"
+L["RANK_WATCH_LEVEL_UP_TOGGLE_DESCRIPTION"] = "Lists the abilities that open at the level you just reached."
+L["RANK_WATCH_LEVEL_UP_PAST"] = "Include Abilities You Skipped"
+L["RANK_WATCH_LEVEL_UP_PAST_DESCRIPTION"] = "Adds a line for abilities from earlier levels you haven't learned yet."
+L["RANK_WATCH_LEVEL_UP_PET"] = "Include Pet Abilities"
+L["RANK_WATCH_LEVEL_UP_PET_DESCRIPTION"] = "Adds the pet trainer's abilities for hunters, or the demon trainer's grimoires for warlocks, that open at your new level."
+L["RANK_WATCH_LEVEL_UP_PET_PAST"] = "Include Pet Abilities You Skipped"
+L["RANK_WATCH_LEVEL_UP_PET_PAST_DESCRIPTION"] = "Hunters only: adds a line for pet trainer abilities from earlier levels you haven't learned yet. Warlocks don't get this line, because the game doesn't say which grimoires a demon has learned while it's away."
+
 -- Ignored Players, under Rank Watch.
 L["RANK_WATCH_IGNORED_HEADER"] = "Ignored Players"
 L["RANK_WATCH_IGNORED_DESCRIPTION"] = "Rank Watch never reports these players."
@@ -2132,6 +2144,18 @@ L["WHATS_NEXT_ALL_SOURCES"] = "All Sources"
 L["WHATS_NEXT_ANY_LEVEL"] = "Any Level"
 -- TRANSLATORS: %s is a spell's rank or "Passive", after its name ("Rend (Rank 2)").
 L["WHATS_NEXT_SUBTEXT"] = "(%s)"
+
+-- TRANSLATORS: printed on a level-up; %s is the spells the character can learn now, joined with
+-- LEVEL_UP_SPELLS_PAIR_FORMAT or LEVEL_UP_SPELLS_LAST_FORMAT ("[Bash], [Moonfire] (Rank 3), & [Rejuvenation]").
+L["LEVEL_UP_SPELLS"] = "You can now learn %s."
+-- printed under it: %s is the spells from earlier levels still not learned, joined the same way
+L["LEVEL_UP_SPELLS_NOT_LEARNED"] = "Don't forget, you can also learn %s."
+-- the same two for a hunter's pet, and a warlock's grimoires (the first only)
+L["LEVEL_UP_PET_SPELLS"] = "Your pet can now learn %s."
+L["LEVEL_UP_PET_SPELLS_NOT_LEARNED"] = "Don't forget, your pet can also learn %s."
+L["LEVEL_UP_DEMON_SPELLS"] = "Your demons can now learn %s."
+L["LEVEL_UP_SPELLS_PAIR_FORMAT"] = "%s & %s"
+L["LEVEL_UP_SPELLS_LAST_FORMAT"] = "%s, & %s"
 
 -- What's Next? Tab: section headers, and the counts in the footer
 L["WHATS_NEXT_STATUS_AVAILABLE"] = "Available Now"

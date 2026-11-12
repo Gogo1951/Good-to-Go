@@ -1056,6 +1056,18 @@ L["RANK_WATCH_WHISPERER_SELF"] = "由你发送。"
 L["RANK_WATCH_WHISPERER_OTHER"] = "由 %s 发送，所以你只会看到聊天输出。"
 L["RANK_WATCH_WHISPERER_NONE"] = "无人：密语队伍成员已关闭。"
 
+-- Ability Alerts While Leveling: the Rank Watch panel's section for the level-up prints (LEVEL_UP_SPELLS and the rest)
+L["RANK_WATCH_LEVEL_UP_HEADER"] = "升级时的技能提醒"
+L["RANK_WATCH_LEVEL_UP_DESCRIPTION"] = "升级时，聊天框会列出职业训练师可以教你的技能，每个都带有图标和可悬停查看的链接。它有自己的开关，无论等级守望是否开启都会生效。"
+L["RANK_WATCH_LEVEL_UP"] = "升级时通告新技能"
+L["RANK_WATCH_LEVEL_UP_TOGGLE_DESCRIPTION"] = "列出刚达到的等级解锁的技能。"
+L["RANK_WATCH_LEVEL_UP_PAST"] = "包含跳过的技能"
+L["RANK_WATCH_LEVEL_UP_PAST_DESCRIPTION"] = "添加一行，列出之前等级中你还没有学习的技能。"
+L["RANK_WATCH_LEVEL_UP_PET"] = "包含宠物技能"
+L["RANK_WATCH_LEVEL_UP_PET_DESCRIPTION"] = "为猎人添加宠物训练师的技能，为术士添加恶魔训练师的魔典，均为新等级解锁的内容。"
+L["RANK_WATCH_LEVEL_UP_PET_PAST"] = "包含跳过的宠物技能"
+L["RANK_WATCH_LEVEL_UP_PET_PAST_DESCRIPTION"] = "仅限猎人：添加一行，列出之前等级中你还没有学习的宠物训练师技能。术士不会显示这一行，因为恶魔未被召唤时，游戏不会告诉你它学过哪些魔典。"
+
 -- Ignored Players, under Rank Watch.
 L["RANK_WATCH_IGNORED_HEADER"] = "已忽略的玩家"
 L["RANK_WATCH_IGNORED_DESCRIPTION"] = "等级守望永远不会报告这些玩家。"
@@ -2138,6 +2150,18 @@ L["WHATS_NEXT_ALL_SOURCES"] = "所有来源"
 L["WHATS_NEXT_ANY_LEVEL"] = "任意等级"
 -- TRANSLATORS: %s is a spell's rank or "Passive", after its name ("Rend (Rank 2)").
 L["WHATS_NEXT_SUBTEXT"] = "（%s）"
+
+-- TRANSLATORS: printed on a level-up; %s is the spells the character can learn now, joined with
+-- LEVEL_UP_SPELLS_PAIR_FORMAT or LEVEL_UP_SPELLS_LAST_FORMAT ("[Bash], [Moonfire] (Rank 3), & [Rejuvenation]").
+L["LEVEL_UP_SPELLS"] = "你现在可以学习%s。"
+-- printed under it: %s is the spells from earlier levels still not learned, joined the same way
+L["LEVEL_UP_SPELLS_NOT_LEARNED"] = "别忘了，你还可以学习%s。"
+-- the same two for a hunter's pet, and a warlock's grimoires (the first only)
+L["LEVEL_UP_PET_SPELLS"] = "你的宠物现在可以学习%s。"
+L["LEVEL_UP_PET_SPELLS_NOT_LEARNED"] = "别忘了，你的宠物还可以学习%s。"
+L["LEVEL_UP_DEMON_SPELLS"] = "你的恶魔现在可以学习%s。"
+L["LEVEL_UP_SPELLS_PAIR_FORMAT"] = "%s和%s"
+L["LEVEL_UP_SPELLS_LAST_FORMAT"] = "%s和%s"
 
 -- What's Next? Tab: section headers, and the counts in the footer
 L["WHATS_NEXT_STATUS_AVAILABLE"] = "现在可学"
