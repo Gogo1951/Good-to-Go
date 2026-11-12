@@ -629,6 +629,14 @@ AddDefaults("global", {
 		optOutOffered = {}, -- caster GUID -> true, sent the one-time opt-out number whisper
 		announced = {},
 		announcedVersion = "",
+		--[[
+		    Ability Alerts While Leveling (Features/Rank-Watch/Rank-Watch-Level-Up.lua): its own switch, not
+		    Rank Watch's, and on from the start, since it only ever talks to the player and only on a ding.
+		]]
+		levelUpAlerts = true, -- on a ding, print the trainer spells the new level opened
+		levelUpAlertsPast = true, -- and the ones from earlier levels not learned yet
+		levelUpAlertsPet = true, -- and a hunter's pet trainer ranks, or a warlock's grimoires, the level opened
+		levelUpAlertsPetPast = true, -- and a hunter's pet trainer ranks from earlier levels not learned yet
 		importedStandalone = false, -- MIGRATION (remove after 2026-12-08): the standalone add-on's settings were copied in
 	},
 })
