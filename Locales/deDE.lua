@@ -1084,15 +1084,20 @@ L["RANK_WATCH_WHISPERER_NONE"] = 'Niemand: "Gruppenmitglieder anflüstern" ist a
 
 -- Ability Alerts While Leveling: the Rank Watch panel's section for the level-up prints (LEVEL_UP_SPELLS and the rest)
 L["RANK_WATCH_LEVEL_UP_HEADER"] = "Fähigkeitshinweise beim Leveln"
-L["RANK_WATCH_LEVEL_UP_DESCRIPTION"] = "Wenn du eine Stufe aufsteigst, listet der Chat die Fähigkeiten auf, die dein Klassenlehrer für dich hat, jeweils mit Symbol und einem Link zum Überfahren. Das läuft über einen eigenen Schalter, egal ob Rangwache an ist oder nicht."
+L["RANK_WATCH_LEVEL_UP_DESCRIPTION"] =
+	"Wenn du eine Stufe aufsteigst, listet der Chat die Fähigkeiten auf, die dein Klassenlehrer für dich hat, jeweils mit Symbol und einem Link zum Überfahren. Das läuft über einen eigenen Schalter, egal ob Rangwache an ist oder nicht."
 L["RANK_WATCH_LEVEL_UP"] = "Neue Fähigkeiten beim Stufenaufstieg melden"
-L["RANK_WATCH_LEVEL_UP_TOGGLE_DESCRIPTION"] = "Listet die Fähigkeiten auf, die mit der gerade erreichten Stufe verfügbar werden."
+L["RANK_WATCH_LEVEL_UP_TOGGLE_DESCRIPTION"] =
+	"Listet die Fähigkeiten auf, die mit der gerade erreichten Stufe verfügbar werden."
 L["RANK_WATCH_LEVEL_UP_PAST"] = "Übersprungene Fähigkeiten einbeziehen"
-L["RANK_WATCH_LEVEL_UP_PAST_DESCRIPTION"] = "Fügt eine Zeile für Fähigkeiten früherer Stufen hinzu, die du noch nicht erlernt hast."
+L["RANK_WATCH_LEVEL_UP_PAST_DESCRIPTION"] =
+	"Fügt eine Zeile für Fähigkeiten früherer Stufen hinzu, die du noch nicht erlernt hast."
 L["RANK_WATCH_LEVEL_UP_PET"] = "Begleiterfähigkeiten einbeziehen"
-L["RANK_WATCH_LEVEL_UP_PET_DESCRIPTION"] = "Fügt die Fähigkeiten des Tierausbilders für Jäger oder die Grimoires des Dämonenausbilders für Hexenmeister hinzu, die mit deiner neuen Stufe verfügbar werden."
+L["RANK_WATCH_LEVEL_UP_PET_DESCRIPTION"] =
+	"Fügt die Fähigkeiten des Tierausbilders für Jäger oder die Grimoires des Dämonenausbilders für Hexenmeister hinzu, die mit deiner neuen Stufe verfügbar werden."
 L["RANK_WATCH_LEVEL_UP_PET_PAST"] = "Übersprungene Begleiterfähigkeiten einbeziehen"
-L["RANK_WATCH_LEVEL_UP_PET_PAST_DESCRIPTION"] = "Nur Jäger: Fügt eine Zeile für Fähigkeiten des Tierausbilders früherer Stufen hinzu, die du noch nicht erlernt hast. Hexenmeister erhalten diese Zeile nicht, da das Spiel nicht verrät, welche Grimoires ein Dämon gelernt hat, solange er nicht beschworen ist."
+L["RANK_WATCH_LEVEL_UP_PET_PAST_DESCRIPTION"] =
+	"Nur Jäger: Fügt eine Zeile für Fähigkeiten des Tierausbilders früherer Stufen hinzu, die du noch nicht erlernt hast. Hexenmeister erhalten diese Zeile nicht, da das Spiel nicht verrät, welche Grimoires ein Dämon gelernt hat, solange er nicht beschworen ist."
 
 -- Ignored Players, under Rank Watch.
 L["RANK_WATCH_IGNORED_HEADER"] = "Ignorierte Spieler"

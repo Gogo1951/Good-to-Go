@@ -1058,15 +1058,18 @@ L["RANK_WATCH_WHISPERER_NONE"] = "無人：密語隊伍成員已關閉。"
 
 -- Ability Alerts While Leveling: the Rank Watch panel's section for the level-up prints (LEVEL_UP_SPELLS and the rest)
 L["RANK_WATCH_LEVEL_UP_HEADER"] = "升級時的技能提醒"
-L["RANK_WATCH_LEVEL_UP_DESCRIPTION"] = "升級時，聊天框會列出職業訓練師可以教你的技能，每個都附有圖示和可懸停查看的連結。它有自己的開關，無論等級守望是否開啟都會生效。"
+L["RANK_WATCH_LEVEL_UP_DESCRIPTION"] =
+	"升級時，聊天框會列出職業訓練師可以教你的技能，每個都附有圖示和可懸停查看的連結。它有自己的開關，無論等級守望是否開啟都會生效。"
 L["RANK_WATCH_LEVEL_UP"] = "升級時通告新技能"
 L["RANK_WATCH_LEVEL_UP_TOGGLE_DESCRIPTION"] = "列出剛達到的等級解鎖的技能。"
 L["RANK_WATCH_LEVEL_UP_PAST"] = "包含跳過的技能"
 L["RANK_WATCH_LEVEL_UP_PAST_DESCRIPTION"] = "新增一行，列出之前等級中你還沒有學習的技能。"
 L["RANK_WATCH_LEVEL_UP_PET"] = "包含寵物技能"
-L["RANK_WATCH_LEVEL_UP_PET_DESCRIPTION"] = "為獵人新增寵物訓練師的技能，為術士新增惡魔訓練師的魔典，均為新等級解鎖的內容。"
+L["RANK_WATCH_LEVEL_UP_PET_DESCRIPTION"] =
+	"為獵人新增寵物訓練師的技能，為術士新增惡魔訓練師的魔典，均為新等級解鎖的內容。"
 L["RANK_WATCH_LEVEL_UP_PET_PAST"] = "包含跳過的寵物技能"
-L["RANK_WATCH_LEVEL_UP_PET_PAST_DESCRIPTION"] = "僅限獵人：新增一行，列出之前等級中你還沒有學習的寵物訓練師技能。術士不會顯示這一行，因為惡魔未被召喚時，遊戲不會告訴你它學過哪些魔典。"
+L["RANK_WATCH_LEVEL_UP_PET_PAST_DESCRIPTION"] =
+	"僅限獵人：新增一行，列出之前等級中你還沒有學習的寵物訓練師技能。術士不會顯示這一行，因為惡魔未被召喚時，遊戲不會告訴你它學過哪些魔典。"
 
 -- Ignored Players, under Rank Watch.
 L["RANK_WATCH_IGNORED_HEADER"] = "已忽略的玩家"

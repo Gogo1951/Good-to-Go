@@ -1087,15 +1087,20 @@ L["RANK_WATCH_WHISPERER_NONE"] = "없음: 그룹원에게 귓속말이 꺼져 �
 
 -- Ability Alerts While Leveling: the Rank Watch panel's section for the level-up prints (LEVEL_UP_SPELLS and the rest)
 L["RANK_WATCH_LEVEL_UP_HEADER"] = "레벨업 시 기술 알림"
-L["RANK_WATCH_LEVEL_UP_DESCRIPTION"] = "레벨이 오르면 직업 전문가에게서 배울 수 있는 기술을 아이콘과 마우스를 올려 볼 수 있는 링크와 함께 대화창에 표시합니다. 주문 레벨 감시가 켜져 있든 아니든 별도의 스위치로 작동합니다."
+L["RANK_WATCH_LEVEL_UP_DESCRIPTION"] =
+	"레벨이 오르면 직업 전문가에게서 배울 수 있는 기술을 아이콘과 마우스를 올려 볼 수 있는 링크와 함께 대화창에 표시합니다. 주문 레벨 감시가 켜져 있든 아니든 별도의 스위치로 작동합니다."
 L["RANK_WATCH_LEVEL_UP"] = "레벨업 시 새 기술 알림"
-L["RANK_WATCH_LEVEL_UP_TOGGLE_DESCRIPTION"] = "방금 도달한 레벨에서 새로 배울 수 있는 기술을 표시합니다."
+L["RANK_WATCH_LEVEL_UP_TOGGLE_DESCRIPTION"] =
+	"방금 도달한 레벨에서 새로 배울 수 있는 기술을 표시합니다."
 L["RANK_WATCH_LEVEL_UP_PAST"] = "건너뛴 기술 포함"
-L["RANK_WATCH_LEVEL_UP_PAST_DESCRIPTION"] = "이전 레벨에서 아직 배우지 않은 기술을 한 줄로 추가합니다."
+L["RANK_WATCH_LEVEL_UP_PAST_DESCRIPTION"] =
+	"이전 레벨에서 아직 배우지 않은 기술을 한 줄로 추가합니다."
 L["RANK_WATCH_LEVEL_UP_PET"] = "소환수 기술 포함"
-L["RANK_WATCH_LEVEL_UP_PET_DESCRIPTION"] = "새 레벨에서 배울 수 있는 사냥꾼의 야수 조련사 기술이나 흑마법사의 악마 훈련사 마법서를 추가합니다."
+L["RANK_WATCH_LEVEL_UP_PET_DESCRIPTION"] =
+	"새 레벨에서 배울 수 있는 사냥꾼의 야수 조련사 기술이나 흑마법사의 악마 훈련사 마법서를 추가합니다."
 L["RANK_WATCH_LEVEL_UP_PET_PAST"] = "건너뛴 소환수 기술 포함"
-L["RANK_WATCH_LEVEL_UP_PET_PAST_DESCRIPTION"] = "사냥꾼 전용: 이전 레벨에서 아직 배우지 않은 야수 조련사 기술을 한 줄로 추가합니다. 흑마법사는 이 줄이 표시되지 않습니다. 악마가 소환되어 있지 않으면 어떤 마법서를 배웠는지 게임이 알려주지 않기 때문입니다."
+L["RANK_WATCH_LEVEL_UP_PET_PAST_DESCRIPTION"] =
+	"사냥꾼 전용: 이전 레벨에서 아직 배우지 않은 야수 조련사 기술을 한 줄로 추가합니다. 흑마법사는 이 줄이 표시되지 않습니다. 악마가 소환되어 있지 않으면 어떤 마법서를 배웠는지 게임이 알려주지 않기 때문입니다."
 
 -- Ignored Players, under Rank Watch.
 L["RANK_WATCH_IGNORED_HEADER"] = "제외한 플레이어"

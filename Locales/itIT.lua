@@ -1079,15 +1079,19 @@ L["RANK_WATCH_WHISPERER_NONE"] = "Nessuno: Sussurra ai membri del gruppo è disa
 
 -- Ability Alerts While Leveling: the Rank Watch panel's section for the level-up prints (LEVEL_UP_SPELLS and the rest)
 L["RANK_WATCH_LEVEL_UP_HEADER"] = "Avvisi abilità durante il livellamento"
-L["RANK_WATCH_LEVEL_UP_DESCRIPTION"] = "Quando sali di livello, la chat elenca le abilità che il tuo istruttore di classe ha per te, ognuna con la sua icona e un collegamento da passare col mouse. Ha un interruttore tutto suo, che Controllo dei gradi sia attivo o no."
+L["RANK_WATCH_LEVEL_UP_DESCRIPTION"] =
+	"Quando sali di livello, la chat elenca le abilità che il tuo istruttore di classe ha per te, ognuna con la sua icona e un collegamento da passare col mouse. Ha un interruttore tutto suo, che Controllo dei gradi sia attivo o no."
 L["RANK_WATCH_LEVEL_UP"] = "Annuncia le nuove abilità quando sali di livello"
 L["RANK_WATCH_LEVEL_UP_TOGGLE_DESCRIPTION"] = "Elenca le abilità che si sbloccano al livello appena raggiunto."
 L["RANK_WATCH_LEVEL_UP_PAST"] = "Includi le abilità saltate"
-L["RANK_WATCH_LEVEL_UP_PAST_DESCRIPTION"] = "Aggiunge una riga per le abilità dei livelli precedenti che non hai ancora imparato."
+L["RANK_WATCH_LEVEL_UP_PAST_DESCRIPTION"] =
+	"Aggiunge una riga per le abilità dei livelli precedenti che non hai ancora imparato."
 L["RANK_WATCH_LEVEL_UP_PET"] = "Includi le abilità del famiglio"
-L["RANK_WATCH_LEVEL_UP_PET_DESCRIPTION"] = "Aggiunge le abilità dell'addestratore di famigli per i cacciatori, o i grimori dell'addestratore di demoni per gli stregoni, che si sbloccano al tuo nuovo livello."
+L["RANK_WATCH_LEVEL_UP_PET_DESCRIPTION"] =
+	"Aggiunge le abilità dell'addestratore di famigli per i cacciatori, o i grimori dell'addestratore di demoni per gli stregoni, che si sbloccano al tuo nuovo livello."
 L["RANK_WATCH_LEVEL_UP_PET_PAST"] = "Includi le abilità del famiglio saltate"
-L["RANK_WATCH_LEVEL_UP_PET_PAST_DESCRIPTION"] = "Solo cacciatori: aggiunge una riga per le abilità dell'addestratore di famigli dei livelli precedenti che non hai ancora imparato. Gli stregoni non ricevono questa riga, perché il gioco non indica quali grimori un demone ha imparato finché non è evocato."
+L["RANK_WATCH_LEVEL_UP_PET_PAST_DESCRIPTION"] =
+	"Solo cacciatori: aggiunge una riga per le abilità dell'addestratore di famigli dei livelli precedenti che non hai ancora imparato. Gli stregoni non ricevono questa riga, perché il gioco non indica quali grimori un demone ha imparato finché non è evocato."
 
 -- Ignored Players, under Rank Watch.
 L["RANK_WATCH_IGNORED_HEADER"] = "Giocatori ignorati"

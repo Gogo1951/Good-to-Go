@@ -1080,15 +1080,19 @@ L["RANK_WATCH_WHISPERER_NONE"] = "Ninguém: Sussurrar aos membros do grupo está
 
 -- Ability Alerts While Leveling: the Rank Watch panel's section for the level-up prints (LEVEL_UP_SPELLS and the rest)
 L["RANK_WATCH_LEVEL_UP_HEADER"] = "Alertas de habilidades ao subir de nível"
-L["RANK_WATCH_LEVEL_UP_DESCRIPTION"] = "Quando você sobe de nível, o chat lista as habilidades que seu instrutor de classe tem para você, cada uma com seu ícone e um link para passar o mouse. Isso tem um interruptor próprio, esteja Vigia de graus ligado ou não."
+L["RANK_WATCH_LEVEL_UP_DESCRIPTION"] =
+	"Quando você sobe de nível, o chat lista as habilidades que seu instrutor de classe tem para você, cada uma com seu ícone e um link para passar o mouse. Isso tem um interruptor próprio, esteja Vigia de graus ligado ou não."
 L["RANK_WATCH_LEVEL_UP"] = "Anunciar novas habilidades ao subir de nível"
 L["RANK_WATCH_LEVEL_UP_TOGGLE_DESCRIPTION"] = "Lista as habilidades liberadas no nível que você acabou de alcançar."
 L["RANK_WATCH_LEVEL_UP_PAST"] = "Incluir habilidades puladas"
-L["RANK_WATCH_LEVEL_UP_PAST_DESCRIPTION"] = "Adiciona uma linha com as habilidades de níveis anteriores que você ainda não aprendeu."
+L["RANK_WATCH_LEVEL_UP_PAST_DESCRIPTION"] =
+	"Adiciona uma linha com as habilidades de níveis anteriores que você ainda não aprendeu."
 L["RANK_WATCH_LEVEL_UP_PET"] = "Incluir habilidades do ajudante"
-L["RANK_WATCH_LEVEL_UP_PET_DESCRIPTION"] = "Adiciona as habilidades do instrutor de ajudantes para caçadores, ou os grimórios do instrutor de demônios para bruxos, liberadas no seu novo nível."
+L["RANK_WATCH_LEVEL_UP_PET_DESCRIPTION"] =
+	"Adiciona as habilidades do instrutor de ajudantes para caçadores, ou os grimórios do instrutor de demônios para bruxos, liberadas no seu novo nível."
 L["RANK_WATCH_LEVEL_UP_PET_PAST"] = "Incluir habilidades do ajudante puladas"
-L["RANK_WATCH_LEVEL_UP_PET_PAST_DESCRIPTION"] = "Só caçadores: adiciona uma linha com as habilidades do instrutor de ajudantes de níveis anteriores que você ainda não aprendeu. Bruxos não recebem esta linha, porque o jogo não informa quais grimórios um demônio aprendeu enquanto ele não está invocado."
+L["RANK_WATCH_LEVEL_UP_PET_PAST_DESCRIPTION"] =
+	"Só caçadores: adiciona uma linha com as habilidades do instrutor de ajudantes de níveis anteriores que você ainda não aprendeu. Bruxos não recebem esta linha, porque o jogo não informa quais grimórios um demônio aprendeu enquanto ele não está invocado."
 
 -- Ignored Players, under Rank Watch.
 L["RANK_WATCH_IGNORED_HEADER"] = "Jogadores ignorados"

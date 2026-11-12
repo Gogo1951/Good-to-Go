@@ -1071,15 +1071,20 @@ L["RANK_WATCH_WHISPERER_NONE"] = "Nadie: Susurrar a miembros del grupo está des
 
 -- Ability Alerts While Leveling: the Rank Watch panel's section for the level-up prints (LEVEL_UP_SPELLS and the rest)
 L["RANK_WATCH_LEVEL_UP_HEADER"] = "Avisos de habilidades al subir de nivel"
-L["RANK_WATCH_LEVEL_UP_DESCRIPTION"] = "Al subir de nivel, el chat muestra las habilidades que tu instructor de clase tiene para ti, cada una con su icono y un enlace que puedes señalar. Tiene su propio interruptor, esté activado o no Vigía de rangos."
+L["RANK_WATCH_LEVEL_UP_DESCRIPTION"] =
+	"Al subir de nivel, el chat muestra las habilidades que tu instructor de clase tiene para ti, cada una con su icono y un enlace que puedes señalar. Tiene su propio interruptor, esté activado o no Vigía de rangos."
 L["RANK_WATCH_LEVEL_UP"] = "Anunciar habilidades nuevas al subir de nivel"
-L["RANK_WATCH_LEVEL_UP_TOGGLE_DESCRIPTION"] = "Muestra las habilidades que se desbloquean en el nivel que acabas de alcanzar."
+L["RANK_WATCH_LEVEL_UP_TOGGLE_DESCRIPTION"] =
+	"Muestra las habilidades que se desbloquean en el nivel que acabas de alcanzar."
 L["RANK_WATCH_LEVEL_UP_PAST"] = "Incluir habilidades que te saltaste"
-L["RANK_WATCH_LEVEL_UP_PAST_DESCRIPTION"] = "Añade una línea con las habilidades de niveles anteriores que aún no has aprendido."
+L["RANK_WATCH_LEVEL_UP_PAST_DESCRIPTION"] =
+	"Añade una línea con las habilidades de niveles anteriores que aún no has aprendido."
 L["RANK_WATCH_LEVEL_UP_PET"] = "Incluir habilidades de mascota"
-L["RANK_WATCH_LEVEL_UP_PET_DESCRIPTION"] = "Añade las habilidades del instructor de mascotas para cazadores, o los grimorios del instructor de demonios para brujos, que se desbloquean en tu nuevo nivel."
+L["RANK_WATCH_LEVEL_UP_PET_DESCRIPTION"] =
+	"Añade las habilidades del instructor de mascotas para cazadores, o los grimorios del instructor de demonios para brujos, que se desbloquean en tu nuevo nivel."
 L["RANK_WATCH_LEVEL_UP_PET_PAST"] = "Incluir habilidades de mascota que te saltaste"
-L["RANK_WATCH_LEVEL_UP_PET_PAST_DESCRIPTION"] = "Solo cazadores: añade una línea con las habilidades del instructor de mascotas de niveles anteriores que aún no has aprendido. Los brujos no reciben esta línea, porque el juego no indica qué grimorios ha aprendido un demonio mientras no está invocado."
+L["RANK_WATCH_LEVEL_UP_PET_PAST_DESCRIPTION"] =
+	"Solo cazadores: añade una línea con las habilidades del instructor de mascotas de niveles anteriores que aún no has aprendido. Los brujos no reciben esta línea, porque el juego no indica qué grimorios ha aprendido un demonio mientras no está invocado."
 
 -- Ignored Players, under Rank Watch.
 L["RANK_WATCH_IGNORED_HEADER"] = "Jugadores ignorados"

@@ -1061,15 +1061,18 @@ L["RANK_WATCH_WHISPERER_NONE"] = "Nobody: Whisper Group Members is off."
 
 -- Ability Alerts While Leveling: the Rank Watch panel's section for the level-up prints (LEVEL_UP_SPELLS and the rest)
 L["RANK_WATCH_LEVEL_UP_HEADER"] = "Ability Alerts While Leveling"
-L["RANK_WATCH_LEVEL_UP_DESCRIPTION"] = "When you level, chat lists the abilities your class trainer has for you, each with its icon and a link you can hover. This runs on its own switch, whether Rank Watch is on or not."
+L["RANK_WATCH_LEVEL_UP_DESCRIPTION"] =
+	"When you level, chat lists the abilities your class trainer has for you, each with its icon and a link you can hover. This runs on its own switch, whether Rank Watch is on or not."
 L["RANK_WATCH_LEVEL_UP"] = "Announce New Abilities When You Level"
 L["RANK_WATCH_LEVEL_UP_TOGGLE_DESCRIPTION"] = "Lists the abilities that open at the level you just reached."
 L["RANK_WATCH_LEVEL_UP_PAST"] = "Include Abilities You Skipped"
 L["RANK_WATCH_LEVEL_UP_PAST_DESCRIPTION"] = "Adds a line for abilities from earlier levels you haven't learned yet."
 L["RANK_WATCH_LEVEL_UP_PET"] = "Include Pet Abilities"
-L["RANK_WATCH_LEVEL_UP_PET_DESCRIPTION"] = "Adds the pet trainer's abilities for hunters, or the demon trainer's grimoires for warlocks, that open at your new level."
+L["RANK_WATCH_LEVEL_UP_PET_DESCRIPTION"] =
+	"Adds the pet trainer's abilities for hunters, or the demon trainer's grimoires for warlocks, that open at your new level."
 L["RANK_WATCH_LEVEL_UP_PET_PAST"] = "Include Pet Abilities You Skipped"
-L["RANK_WATCH_LEVEL_UP_PET_PAST_DESCRIPTION"] = "Hunters only: adds a line for pet trainer abilities from earlier levels you haven't learned yet. Warlocks don't get this line, because the game doesn't say which grimoires a demon has learned while it's away."
+L["RANK_WATCH_LEVEL_UP_PET_PAST_DESCRIPTION"] =
+	"Hunters only: adds a line for pet trainer abilities from earlier levels you haven't learned yet. Warlocks don't get this line, because the game doesn't say which grimoires a demon has learned while it's away."
 
 -- Ignored Players, under Rank Watch.
 L["RANK_WATCH_IGNORED_HEADER"] = "Ignored Players"
