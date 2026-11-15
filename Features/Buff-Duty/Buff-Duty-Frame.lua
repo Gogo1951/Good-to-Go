@@ -3,10 +3,13 @@ local Data = ns.Data
 local L = ns.L
 
 local GetColor = ns.GetColor
-local AcquireOtherIcon = ns.AcquireBuffDutyOtherIcon
-local SetOtherIcon = ns.SetBuffDutyOtherIcon
 local UpdateCooldowns = ns.UpdateBuffDutyCooldowns
 local UpdateRange = ns.UpdateBuffDutyRange
+
+local Layout = ns.buffDutyLayout
+local Signature = Layout.Signature
+local GridSlots = Layout.GridSlots
+local PlaceLines = Layout.PlaceLines
 
 --[[
     The Buff Duty window's frames: draws the sections Features/Buff-Duty/Buff-Duty.lua builds
@@ -19,7 +22,9 @@ local UpdateRange = ns.UpdateBuffDutyRange
     cooldown swipes, plain children of the buttons, still change.
 
     The Party-Buffs icons and their hover menu are
-    Buff-Duty-Party-Buffs.lua; the icons' cooldown swipes and range fade are
+    Buff-Duty-Party-Buffs.lua; the list icons' pool and scripts are
+    Buff-Duty-Icons.lua; the signature, grid and line placing are
+    Buff-Duty-Layout.lua; the icons' cooldown swipes and range fade are
     Buff-Duty-Icon-State.lua; the icons' secure attributes are
     Buff-Duty-Button-Attributes.lua; the window's saved position is
     Buff-Duty-Position.lua.
@@ -42,14 +47,8 @@ local UpdateRange = ns.UpdateBuffDutyRange
     icons come and go.
 ]]
 local ICON_SIZE = Data.BUFF_DUTY_ICON_SIZE
-local ICON_GAP = 4
--- An icon plus the same 4-pixel gap between rows as between icons.
-local ROW_HEIGHT = ICON_SIZE + ICON_GAP
---[[
-    Extra room under each section (a party, Return the Favor, Target), so one
-    party's last member doesn't crowd the next party's header.
-]]
-local SECTION_GAP = 4
+local ICON_GAP = Layout.ICON_GAP
+local ROW_HEIGHT = Layout.ROW_HEIGHT
 --[[
     The name column fits the longest name on the list, between these bounds:
     never narrower than a short name needs to look tidy, and never so wide that a
@@ -62,8 +61,8 @@ local MAX_NAME_WIDTH = 256
     slightly longer name doesn't nudge the window wider.
 ]]
 local NAME_STEP = 16
--- Room between the end of the longest name and the first icon.
-local NAME_GAP = 8
+local NAME_GAP = Layout.NAME_GAP
+local MAIN_GRID = Layout.MAIN_GRID
 -- A member's role icon lines up with the header above it.
 local MEMBER_INDENT = 0
 --[[
@@ -97,16 +96,8 @@ local labels, usedLabels = {}, 0
 local pool = ns.buffDutyIconPool
 local icons = pool.buttons
 local lastSignature
-
---[[
-    What the window holds on to while it stays up for the same group, so it
-    keeps its width as buffs are cast: every grid's columns any icon has used
-    (a buff cast on everyone leaves its column empty rather than pulling the
-    icons left under the cursor), the widest name column, and the most
-    Party-Buffs icons. Let go when the window hides (everything's buffed), the
-    group's size changes, or a setting changes (ns.ApplyBuffDutySettings).
-]]
-local held = { columns = {}, nameWidth = 0, partyBuffs = 0 }
+-- What the window holds on to while it stays up for the same group (Buff-Duty-Layout.lua).
+local held = Layout.held
 
 local function ForgetHeldLayout()
 	held.columns, held.nameWidth, held.partyBuffs = {}, 0, 0
@@ -116,120 +107,8 @@ local function RosterKey()
 	return (IsInRaid() and "raid" or "party") .. GetNumGroupMembers()
 end
 
--- value rounded up to the next whole step
 local function SnapUp(value, step)
 	return math.ceil(value / step) * step
-end
-
---------------------------------------------------------------------------------
--- Icons
---------------------------------------------------------------------------------
-
-local function OnIconEnter(self)
-	local spec = self.spec
-	if not spec then
-		return
-	end
-	GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-	if spec.itemId then
-		GameTooltip:SetItemByID(spec.itemId)
-	else
-		GameTooltip:SetSpellByID(spec.spellId)
-	end
-	GameTooltip:AddLine(" ")
-	--[[
-	    Who the click lands on, not which click: every icon here casts on a
-	    click. A Self Buffs weapon or Soulstone icon brings its own line, already
-	    worded.
-	]]
-	local hint = spec.hint
-	if not hint then
-		local text = (spec.favorGUID and L["BUFF_DUTY_TOOLTIP_FAVOR"])
-			or (spec.isGroup and L["BUFF_DUTY_TOOLTIP_GROUP"])
-			or L["BUFF_DUTY_TOOLTIP_CAST"]
-		hint = text:format(spec.targetName)
-	end
-	GameTooltip:AddLine(GetColor("HELP") .. hint .. "|r", 1, 1, 1, true)
-	GameTooltip:Show()
-end
-
-local function OnIconLeave()
-	GameTooltip:Hide()
-end
-
---[[
-    PreClick, because the secure click fires the game's "replace your
-    enchant?" question before PostClick runs (Buff-Duty-Weapons.lua answers it).
-    Every cast is noted too, so a "more powerful spell" refusal can be pinned
-    on who it was aimed at (ns.NoteBuffCastAttempt).
-]]
-local function OnIconPreClick(self, button)
-	if button ~= "LeftButton" or not self.spec then
-		return
-	end
-	if self.spec.confirmReplace then
-		ns.ExpectReplaceEnchant()
-	end
-	ns.NoteBuffCastAttempt(self.spec)
-end
-
---[[
-    Right-click on a favor drops that stranger from the list. Buttons register
-    both up and down (below), so this answers the up half only.
-]]
-local function OnIconPostClick(self, button, down)
-	if button == "RightButton" and not down and self.spec and self.spec.favorGUID then
-		ns.DismissFavor(self.spec.favorGUID)
-	end
-end
-
-local function AcquireIcon()
-	pool.used = pool.used + 1
-	local button = icons[pool.used]
-	if not button then
-		button = CreateFrame("Button", nil, content, "SecureActionButtonTemplate")
-		button:SetSize(ICON_SIZE, ICON_SIZE)
-		--[[
-		    Both halves: the secure template acts on the one ActionButtonUseKeyDown
-		    names and ignores the other, so registering only "AnyUp" leaves the
-		    button dead for anyone casting on key down.
-		]]
-		button:RegisterForClicks("AnyUp", "AnyDown")
-		button.icon = button:CreateTexture(nil, "ARTWORK")
-		button.icon:SetAllPoints()
-		-- Trims the baked-in border every spell icon carries.
-		button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-		--[[
-		    The action bar's own swipe and countdown, so a buff still on cooldown
-		    reads exactly as it would on a bar (OmniCC and friends pick it up too).
-		    A plain child of the secure button, so it updates freely in combat.
-		]]
-		button.cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate")
-		button.cooldown:SetAllPoints()
-		button.cooldown:SetHideCountdownNumbers(false)
-		-- The template's numbers are sized for a 36-pixel bar button; ours is 16 (Data.BUFF_DUTY_ICON_SIZE).
-		if button.cooldown.SetCountdownFont then
-			button.cooldown:SetCountdownFont("GameFontHighlightSmallOutline")
-		end
-		button:SetHighlightTexture("Interface/Buttons/ButtonHilight-Square", "ADD")
-		button:SetScript("OnEnter", OnIconEnter)
-		button:SetScript("OnLeave", OnIconLeave)
-		button:SetScript("PreClick", OnIconPreClick)
-		button:SetScript("PostClick", OnIconPostClick)
-		icons[pool.used] = button
-	end
-	return button
-end
-
-local function SetIcon(button, spec)
-	button.spec = spec
-	if spec.itemId then
-		button.icon:SetTexture(C_Item.GetItemIconByID(spec.itemId))
-	else
-		button.icon:SetTexture(C_Spell.GetSpellTexture(spec.spellId))
-	end
-	ns.SetBuffButtonAttributes(button, spec)
-	button:Show()
 end
 
 --------------------------------------------------------------------------------
@@ -253,43 +132,6 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Everything a redraw would write, as one string, so an unchanged list (the
-    usual result of a raid's constant aura traffic) skips the redraw entirely.
-]]
-local function Signature(sections, otherBuffs)
-	local parts = {}
-	-- The names too: the hover list is read off the spec the last redraw set.
-	for _, spec in ipairs(otherBuffs) do
-		parts[#parts + 1] = "!" .. spec.key .. ":" .. table.concat(spec.recipients, ",")
-		for _, group in ipairs(spec.groups) do
-			parts[#parts + 1] = group.label .. ":" .. table.concat(group.names, ",")
-		end
-	end
-	local function AddIcons(list)
-		for _, spec in ipairs(list) do
-			parts[#parts + 1] = spec.column
-				.. ":"
-				.. (spec.castSpell or spec.spellName or spec.item or ("item:" .. tostring(spec.itemId)))
-				.. "@"
-				.. (spec.unit or "")
-				.. (spec.targetSlot or "")
-				.. (spec.macrotext or "")
-				.. "~"
-				.. (spec.buffExpires or "")
-		end
-	end
-	for _, section in ipairs(sections) do
-		parts[#parts + 1] = "#" .. (section.grid or "") .. section.label
-		AddIcons(section.icons)
-		for _, row in ipairs(section.rows) do
-			parts[#parts + 1] = (row.pet and ">>" or ">") .. (row.grid or "") .. row.label
-			AddIcons(row.icons)
-		end
-	end
-	return table.concat(parts, "|")
-end
-
---[[
     A width of 0 lets the text run unconstrained, so the measure is the whole
     name rather than whatever fit the last layout's column.
 ]]
@@ -298,110 +140,6 @@ local function MeasureLabel(text, indent)
 	label:SetWidth(0)
 	label:SetText(text)
 	return label, indent + label:GetStringWidth()
-end
-
---[[
-    `offsets` maps a buff's column to how far its icon sits from the grid's
-    first, in pixels. `x` is the left edge of the window column the row sits
-    in, `y` the row's middle.
-]]
-local function PlaceRow(line, x, y, nameWidth, offsets)
-	local label, indent = line.label, line.indent
-	label:ClearAllPoints()
-	label:SetPoint("LEFT", content, "TOPLEFT", x + indent, y)
-	label:SetWidth(nameWidth - indent)
-	label:Show()
-
-	local left = x + nameWidth + NAME_GAP
-	for _, spec in ipairs(line.specs) do
-		local button = AcquireIcon()
-		button:ClearAllPoints()
-		button:SetPoint("LEFT", content, "TOPLEFT", left + offsets[spec.column], y)
-		SetIcon(button, spec)
-	end
-	-- The Party-Buffs header's icons: plain buttons, side by side from the first icon column.
-	for index, spec in ipairs(line.partyBuffs or {}) do
-		local button = AcquireOtherIcon(content)
-		button:ClearAllPoints()
-		button:SetPoint("LEFT", content, "TOPLEFT", left + (index - 1) * (ICON_SIZE + ICON_GAP), y)
-		SetOtherIcon(button, spec)
-	end
-end
-
---[[
-    The icons sit in a grid: one column per buff, so a buff lines up down the
-    whole window and a party's group buff sits over the single one it
-    replaces. A member who doesn't need a buff leaves its cell empty. Only the
-    columns some icon uses are kept, in buff order, so a buff nobody needs
-    leaves no gap.
-
-    A section can name its own grid (Self Buffs does): its columns are other
-    buffs than the parties', so lining them up with the parties' would only
-    push them right. A row can name one too (each weapon hand does), so its
-    icons start at the left whatever the header's hold. Returns grid ->
-    (column -> pixels from the first icon), and grid -> the icons' whole
-    width. The party columns share one grid, so a buff sits at the same place
-    in each. The columns the window holds (held.columns) are kept too.
-]]
-local MAIN_GRID = "main"
-
-local function GridSlots(sections)
-	local used = held.columns
-	local function Mark(grid, list)
-		used[grid] = used[grid] or {}
-		for _, spec in ipairs(list) do
-			used[grid][spec.column] = true
-		end
-	end
-	for _, section in ipairs(sections) do
-		local grid = section.grid or MAIN_GRID
-		Mark(grid, section.icons)
-		for _, row in ipairs(section.rows) do
-			Mark(row.grid or grid, row.icons)
-		end
-	end
-
-	local offsetsByGrid, widths = {}, {}
-	for grid, columnSet in pairs(used) do
-		local columns = {}
-		for column in pairs(columnSet) do
-			columns[#columns + 1] = column
-		end
-		table.sort(columns)
-		local offsets, x = {}, 0
-		for slot, column in ipairs(columns) do
-			if slot > 1 then
-				x = x + ICON_SIZE + ICON_GAP
-			end
-			offsets[column] = x
-		end
-		offsetsByGrid[grid] = offsets
-		widths[grid] = #columns > 0 and x + ICON_SIZE or 0
-	end
-	return offsetsByGrid, widths
-end
-
---[[
-    Places a run of lines down from `y`, the first one's middle. Returns where
-    the next run's first middle goes, and the lowest edge this run drew.
-]]
-local function PlaceLines(lines, x, y, nameWidth, offsetsByGrid)
-	local bottom = y
-	for _, line in ipairs(lines) do
-		if line.spaceBefore then
-			y = y - ROW_HEIGHT
-		end
-		PlaceRow(line, x, y, nameWidth, offsetsByGrid[line.grid])
-		bottom = y - ICON_SIZE / 2
-		y = y - ROW_HEIGHT
-		if line.sectionEnd then
-			y = y - SECTION_GAP
-		end
-		if line.spaceAfter then
-			y = y - ROW_HEIGHT
-		end
-	end
-	return y, bottom
 end
 
 local function ReleaseAll()
@@ -425,7 +163,7 @@ end
 local PARTY_BUFFS_GRID = "partyBuffs"
 
 --[[
-    The window's last line while the Buff Button has no key: a blank row under
+    The window's last line while Cast Next Buff has no key: a blank row under
     everything else, then a tip pointing at the Key Bindings section. It wraps
     to the window's width rather than widening it, and goes away once a key is
     bound (UPDATE_BINDINGS asks for a redraw, Features/Key-Bindings.lua).
@@ -680,8 +418,11 @@ function ns.CreateBuffDutyFrame()
 	content:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
 	content:EnableMouse(true)
 	content:RegisterForDrag("LeftButton")
+	-- Set only while a drag really moves the window, so a drag of a locked one saves no position.
+	local moving = false
 	content:SetScript("OnDragStart", function()
 		if not ns.db.global.buffWindow.locked and not InCombatLockdown() then
+			moving = true
 			anchor:StartMoving()
 		end
 	end)
@@ -693,6 +434,10 @@ function ns.CreateBuffDutyFrame()
 	    waits for it to end before re-anchoring.
 	]]
 	content:SetScript("OnDragStop", function()
+		if not moving then
+			return
+		end
+		moving = false
 		anchor:StopMovingOrSizing()
 		ns.SaveBuffDutyPosition(anchor)
 		if InCombatLockdown() then
@@ -728,7 +473,7 @@ function ns.CreateBuffDutyFrame()
 	close:SetPoint("CENTER", content, "TOPRIGHT", -(PADDING + ICON_SIZE / 2), -(PADDING + TITLE_HEIGHT / 2))
 	close:SetScript("OnClick", ns.CloseBuffDuty)
 
-	-- The Buff Button tip under the list (KeyHintText); placed and shown by RenderBuffDuty.
+	-- The Cast Next Buff tip under the list (KeyHintText); placed and shown by RenderBuffDuty.
 	keyHint = content:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	keyHint:SetJustifyH("LEFT")
 	keyHint:SetJustifyV("TOP")

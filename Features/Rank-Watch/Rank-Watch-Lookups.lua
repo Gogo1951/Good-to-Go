@@ -13,7 +13,7 @@ local _, ns = ...
     Demon Skin once Demon Armor is learned is a low rank like any other. Where the data already lists a group as
     one ability (TBC's sheet joins several), there is nothing to join.
 
-    Each ladder is keyed by its first rank's spell ID, which the Tracked Abilities panel reads.
+    Each ladder is keyed by its first rank's spell ID, which the Reported Ranks panel reads.
 ]]
 local ladders = {} -- class token -> { ladder, ... }
 local petLadders = {} -- owner's class token -> { ladder, ... }, each with isPet
@@ -70,8 +70,8 @@ end
 --[[
     A rank this client has no such spell for is left off its ladder. WoW Forever gave some abilities new spell
     IDs (Curse of the Elements is 440892, not 1490), and the Classic IDs its table was built from don't exist
-    there: listed, they show as "Spell #1490" on the Tracked Abilities panel and can never be cast. A ladder
-    left with one rank stays: the Tracked Abilities panel lists every ability, and a single rank is never reported,
+    there: listed, they show as "Spell #1490" on the Reported Ranks panel and can never be cast. A ladder
+    left with one rank stays: the Reported Ranks panel lists every ability, and a single rank is never reported,
     having nothing above it.
 ]]
 local function OnClient(spellID)

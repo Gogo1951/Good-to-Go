@@ -22,13 +22,13 @@ local _, ns = ...
     nil, nil if nothing usable is found). Diagnostics reads the same pick.
 ]]
 function ns.FindBestScroll(scrollType, bagItemCounts)
-	if not ns.SCROLL_DATA[scrollType] then
+	local data = ns.SCROLL_DATA and ns.SCROLL_DATA[scrollType]
+	if not data or not bagItemCounts then
 		return nil, nil
 	end
 
 	local _, playerClass = UnitClass("player")
-	local items = ns.SCROLL_DATA[scrollType].items
-	for _, entry in ipairs(items) do
+	for _, entry in ipairs(data.items or {}) do
 		--[[
 		    The scroll override path never passes the scanner's ignore filter
 		    (it reads the raw bag counts), so it honors the Ignore List itself.
@@ -53,11 +53,12 @@ ns.scrollOverrideIDs = nil
     Returns an ordered list of scroll item IDs the player should use, or nil
     if none apply. Order follows ns.SCROLL_CHECK_ORDER, which is the order the
     scroll-only body fires them in. currentSnapshot is the player snapshot the
-    caller already took this pass, when it has one.
+    caller already took this pass, when it has one. No bag counts yet (a scan
+    before the bags load) means no override, never an error.
 ]]
 function ns.FindScrollOverrides(bagItemCounts, currentSnapshot)
 	local settings = ns.db and ns.db.profile
-	if not settings or not settings.useScrolls then
+	if not settings or not settings.useScrolls or not bagItemCounts then
 		return nil
 	end
 	if not ns.IsUseWhenActive(settings, "scrolls") then
@@ -79,7 +80,7 @@ function ns.FindScrollOverrides(bagItemCounts, currentSnapshot)
 	]]
 	currentSnapshot = currentSnapshot or ns.GetPlayerBuffSnapshot()
 
-	for _, scrollType in ipairs(ns.SCROLL_CHECK_ORDER) do
+	for _, scrollType in ipairs(ns.SCROLL_CHECK_ORDER or {}) do
 		if scrollTypes[scrollType] then
 			local scrollItemID, scrollAmount = ns.FindBestScroll(scrollType, bagItemCounts)
 			if scrollItemID and not ns.HasScrollBuff(scrollType, scrollAmount, currentSnapshot) then

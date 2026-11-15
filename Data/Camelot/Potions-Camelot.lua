@@ -50,7 +50,7 @@ ns.POTIONS = {
 How We Got the Data
 
 Last Validated
-	2026-11-11, WoW Forever 1.60.1.70888
+	2026-11-15, WoW Forever 1.60.1.70938
 
 Notes
 	- Every potion this client knows that restores health or mana instantly on the potion cooldown, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Health Potion and Mana Potion macros. Healing Amount and Mana Amount are each effect's low end; requiredAlchemy is the Alchemy rank the tooltip requires.
@@ -58,6 +58,7 @@ Notes
 	- Holy Spring Water (737) is left out on purpose, an oddball on the potion cooldown. Potions that do something else (rage, speed, protection, invisibility) are not in this table.
 	- Windstone's spell requires area 16593 (Zephras Isle), which UiMapAssignment maps to uiMap 2521; its text says it can't be used outside Skywall. Wildvine Potion's 0 to 1,500 health and mana is entered as 1 and 1, as in Vanilla and TBC, so it ranks below every other potion.
 	- Minor and Lesser Healing, Minor and Lesser Mana, and Greater Healing (287966-287969, 287977) are WoW Forever's level-1 copies of the originals, with the same use spells and the originals' values, which Validate Data confirmed on build 1.60.1.70450.
+	- Superior Healing Potion (288896) and Superior Mana Potion (288897) are WoW Forever level-1 copies like the ones above, but no spell on this client creates them and QuestieDB's Forever item base lists no drop, vendor or quest for them, so they are left out as likely unobtainable. (It lists none for the copies above either; those rows predate this test.)
 	- Season of Discovery items are left out even though this client knows many of their IDs (any ID of 200000 or more that the Classic Era tables also hold): they live only in Data/Discovery/. Where a table would otherwise pick one up, a deliberately-absent line in the table says so.
 
 SQL (CMaNGOS)
@@ -83,7 +84,13 @@ wago.tools
 	https://wago.tools/db2/ItemEffect?build=1.60.1.70862
 	https://wago.tools/db2/ItemXItemEffect?build=1.60.1.70862
 	https://wago.tools/db2/SpellEffect?build=1.60.1.70862
+	https://wago.tools/db2/ItemSparse?build=1.60.1.70938
+	https://wago.tools/db2/Item?build=1.60.1.70938
+	https://wago.tools/db2/ItemEffect?build=1.60.1.70938
+	https://wago.tools/db2/SpellEffect?build=1.60.1.70938
+	https://wago.tools/db2/ItemXItemEffect?build=1.60.1.70938
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Forever/foreverItemDB.lua
+	https://raw.githubusercontent.com/Questie/QuestieDB/master/src/corrections/Forever/generated/foreverBaseItem.lua
 ]]

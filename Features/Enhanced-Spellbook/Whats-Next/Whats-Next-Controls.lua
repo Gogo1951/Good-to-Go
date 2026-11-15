@@ -29,7 +29,7 @@ function ns.BuildWhatsNextControls(page, model, Layout, SourceLabel)
 	local options
 	if model.toggles then
 		-- the settings gear at the row's right end: which rows besides the ones to learn it lists
-		options = ns.CreateSpellbookGearButton(page, 22)
+		options = ns.CreateSpellbookGearButton(page, 16)
 		page.options = options
 		options:SetPoint("RIGHT", page, "TOPRIGHT", -10, rowY)
 		options:SetScript("OnEnter", function(self)
@@ -41,7 +41,8 @@ function ns.BuildWhatsNextControls(page, model, Layout, SourceLabel)
 			HideTooltip(self)
 			MenuUtil.CreateContextMenu(self, function(_, rootDescription)
 				rootDescription:CreateTitle(SETTINGS)
-				for _, toggle in ipairs(model.toggles) do
+				local toggles = type(model.toggles) == "function" and model.toggles() or model.toggles
+				for _, toggle in ipairs(toggles) do
 					local labelKey, descKey, getter, setter = unpack(toggle)
 					AddMenuTooltip(
 						rootDescription:CreateCheckbox(L[labelKey], getter, function()

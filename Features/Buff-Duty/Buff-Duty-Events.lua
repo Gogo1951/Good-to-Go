@@ -24,9 +24,9 @@ end)
 --[[
     On while Buff Duty is on for your class. UNIT_AURA is unfiltered, since the
     window reads the whole group; UNIT_SPELLCAST_SUCCEEDED, the player's only,
-    carries the Buff Key's casts and the resurrects; the combat log, never on Forever, says
-    when anyone's resurrect lands and which strangers buff you (Return the
-    Favor), which Forever reads off your own UNIT_AURA instead.
+    carries the Buff Key's casts and the resurrects. The combat log, which Forever's add-ons can't register,
+    says when anyone's resurrect lands and which strangers buff you (Return the Favor), which Forever reads off
+    your own UNIT_AURA instead; it is subscribed apart (SyncCombatLog), only while one of those two is in use.
 ]]
 local WINDOW_EVENTS = {
 	"GROUP_ROSTER_UPDATE",
@@ -42,10 +42,8 @@ local WINDOW_EVENTS = {
 	"UNIT_SPELLCAST_SUCCEEDED",
 }
 
--- Forever has no combat log, and registering COMBAT_LOG_EVENT_UNFILTERED there errors.
-if ns.FLAVOR ~= "Camelot" then
-	table.insert(WINDOW_EVENTS, "COMBAT_LOG_EVENT_UNFILTERED")
-end
+-- Forever has a combat log, but registering COMBAT_LOG_EVENT_UNFILTERED there raises ADDON_ACTION_FORBIDDEN.
+local READS_COMBAT_LOG = ns.FLAVOR ~= "Camelot"
 
 local EVENT_UNITS = {
 	UNIT_INVENTORY_CHANGED = { "player" },
@@ -95,6 +93,25 @@ end
     releases them while it doesn't. A closed window keeps them, so the Buff
     Key still reads fresh auras.
 ]]
+--[[
+    The combat log runs a line for every hit in a raid, so it is heard only while Buff Duty tracks your class
+    and either Return the Favor is on or you have a resurrection to hold back (BuffDuty.resurrection).
+    Re-checked whenever the window's events are, and when your spells change (a resurrection learned).
+]]
+local function SyncCombatLog(on)
+	if not READS_COMBAT_LOG then
+		return
+	end
+	local wanted = on and (ns.db.global.buffWindow.favorEnabled or ns.BuffDuty.resurrection ~= nil)
+	ns.SetModuleEvent(MODULE, "COMBAT_LOG_EVENT_UNFILTERED", wanted and true or false)
+end
+
+function ns.SyncBuffDutyCombatLog()
+	if ns.db and ns.db.global then
+		SyncCombatLog(ns.IsBuffDutyTrackingForClass())
+	end
+end
+
 function ns.UpdateBuffDutyEvents()
 	if not (ns.db and ns.db.global) then
 		return
@@ -103,6 +120,7 @@ function ns.UpdateBuffDutyEvents()
 	for _, event in ipairs(WINDOW_EVENTS) do
 		ns.SetModuleEvent(MODULE, event, on, unpack(EVENT_UNITS[event] or {}))
 	end
+	SyncCombatLog(on)
 	ns.SetBuffDutyWatching(on)
 end
 

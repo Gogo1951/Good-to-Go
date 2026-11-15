@@ -35,10 +35,11 @@ local pending = {} -- castGUID -> { target name, time }
 
 --[[
     UNIT_SPELLCAST_SENT names the recipient but gives neither unit nor GUID, so
-    the name is mapped back to a unit we hold, in the order people cast: at
-    the target, a mouseover or focus macro, then a group member.
+    the name is mapped back to a unit we hold, in the order people cast: the
+    player themself, at the target, a mouseover or focus macro, then a group
+    member.
 ]]
-local CAST_AT_UNITS = { "target", "mouseover", "focus" }
+local CAST_AT_UNITS = { "player", "target", "mouseover", "focus" }
 
 local function ResolveCastTargetUnit(name)
 	local short = Ambiguate(name, "short")
@@ -88,12 +89,12 @@ local function OnUnitSpellcastSent(unit, target, castGUID, spellID)
 end
 ns.SetRankWatchHandler("UNIT_SPELLCAST_SENT", OnUnitSpellcastSent)
 
+local CheckPetCast -- below, with the group-level helper it caps helpful casts by
+
 --[[
     No name, or the player's own, is a cast on themself; an enemy caps nothing; a friendly player caps the rank
     by their level; anyone the name can't be found for drops the cast.
 ]]
-local CheckPetCast -- below, with the group-level helper it caps helpful casts by
-
 local function OnUnitSpellcastSucceeded(unit, castGUID, spellID)
 	if unit == "pet" then
 		CheckPetCast(spellID)
@@ -108,7 +109,8 @@ local function OnUnitSpellcastSucceeded(unit, castGUID, spellID)
 		return
 	end
 	local recipientLevel
-	if cast.target and cast.target ~= "" and Ambiguate(cast.target, "short") ~= UnitName("player") then
+	local castAt = cast.target and cast.target ~= "" and Ambiguate(cast.target, "short")
+	if castAt and castAt ~= UnitName("player") and castAt ~= ns.GetPlayerFullName() then
 		local recipient = ResolveCastTargetUnit(cast.target)
 		if not recipient then
 			return
@@ -155,8 +157,12 @@ local function CheckAura(bearer, aura)
 	if not caster or caster == "target" or caster == "focus" or caster == "mouseover" then
 		return
 	end
+	local bearerGUID = UnitGUID(bearer)
+	if not ns.IsPlain(bearerGUID) then
+		return
+	end
 	local recipientLevel
-	if UnitGUID(bearer) ~= casterGUID then
+	if bearerGUID ~= casterGUID then
 		recipientLevel = ns.RankWatchUnitLevel(bearer)
 		if not recipientLevel then
 			return
@@ -318,6 +324,8 @@ local function PollMeter()
 		return
 	end
 	if not IsInGroup() then
+		-- Out of a group, the last group's totals mean nothing: the next group starts from a fresh baseline.
+		wipe(meterTotals)
 		needsBaseline = true
 		return
 	end

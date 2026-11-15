@@ -13,11 +13,11 @@ ns.EXPLOSIVES = {
 	[18641] = { 340, 460, 250, nil, 0, 500, 20, 0 }, -- Dense Dynamite
 	[6714] = { 51, 69, 0, nil, 10, 75, 20, 0 }, -- Ez-Thro Dynamite
 	[18588] = { 213, 287, 0, nil, 30, 200, 20, 0 }, -- Ez-Thro Dynamite II
-	[215168] = { 112, 188, 0 }, -- Ez-Thro Radiation Bomb
+	[215168] = { 112, 188, 0, nil, 40, 600, 10, 0 }, -- Ez-Thro Radiation Bomb
 	[10646] = { 450, 750, 205, nil, 0, 500, 10, 0 }, -- Goblin Sapper Charge
 	[4378] = { 128, 172, 125, nil, 0, 350, 20, 0 }, -- Heavy Dynamite
 	[10562] = { 255, 345, 235, nil, 0, 750, 10, 0 }, -- Hi-Explosive Bomb
-	[215127] = { 150, 250, 200 }, -- High-Yield Radiation Bomb
+	[215127] = { 150, 250, 200, nil, 35, 600, 10, 0 }, -- High-Yield Radiation Bomb
 	[4390] = { 132, 218, 175, nil, 0, 500, 10, 0 }, -- Iron Grenade
 	[4370] = { 43, 57, 105, nil, 0, 175, 10, 0 }, -- Large Copper Bomb
 	[10514] = { 149, 201, 205, nil, 0, 750, 10, 0 }, -- Mithril Frag Bomb
@@ -35,14 +35,14 @@ ns.EXPLOSIVES = {
 How We Got the Data
 
 Last Validated
-	2026-11-11, Season of Discovery 1.15.9.70576
+	2026-11-15, Season of Discovery 1.15.9.70576
 
 Notes
 	- Every Engineering explosive this client knows that deals damage, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Explosive macro. The family is the items sharing Coarse Dynamite's (4365) use category and its class and subclass (Trade Goods, Explosives).
 	- Min Damage and Max Damage are the use spell's damage range. Engineering Skill is the rank the tooltip requires (0 for none). Required Spell ID, where present, is the Goblin or Gnomish specialization the item needs; no row on this client carries one.
 	- Items that share the explosive cooldown but aren't crafted explosives are left out: the Portable Bronze Mortar (a reusable device), Goblin Fishing Pole, Flash Bundle, Explosive Rocket, Magic Candle, Brimstone, Fertile Bulb, M73 Frag Grenade, and the quest items (Crystal Charge, the Holy Waters).
-	- The Fumigator (233985) and Obsidian Bomb (233986) came from the Classic Era tables on wago.tools (build 1.15.9.70003), pending a Season of Discovery Validate Data run. The Fumigator also hurts its user and deals extra damage to Silithid in Silithus; neither requires Engineering.
-	- High-Yield Radiation Bomb (215127) and Ez-Thro Radiation Bomb (215168) are Season of Discovery's Gnomeregan bombs, made by the Engineering spells 435964 and 435966 from schematics a vendor sells (QuestieDB). Their damage, class, subclass and use category came from this client's tables on wago.tools (build 1.15.9.70576), pending a Season of Discovery Validate Data run. That build's ItemSparse has no row for either, so the Engineering rank is Wowhead's tooltip: 200 for High-Yield, none for Ez-Thro.
+	- The Fumigator (233985) and Obsidian Bomb (233986) came from the Classic Era tables on wago.tools (build 1.15.9.70003), and the Season of Discovery report confirms them. The Fumigator also hurts its user and deals extra damage to Silithid in Silithus; neither requires Engineering.
+	- High-Yield Radiation Bomb (215127) and Ez-Thro Radiation Bomb (215168) are Season of Discovery's Gnomeregan bombs, made by the Engineering spells 435964 and 435966 from schematics a vendor sells (QuestieDB). Their damage, class, subclass and use category came from this client's tables on wago.tools (build 1.15.9.70576), and the Season of Discovery Validate Data run confirms them: High-Yield requires level 35 and Engineering 200, Ez-Thro level 40 and no Engineering.
 	- Arcane Megabomb (233984) shares the family's use category, class and subclass, but its spell drains mana instead of dealing damage, so it is left out, as Arcane Bomb (16040) is.
 
 SQL (CMaNGOS)

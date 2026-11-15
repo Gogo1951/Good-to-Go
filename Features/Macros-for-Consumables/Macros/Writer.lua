@@ -12,7 +12,9 @@ local L = ns.L
     the General (account-wide) tab. Every character shares those macros,
     and each character's first update pass after login rewrites the
     shared bodies to its own best items, so the macros self-heal on every
-    character switch.
+    character switch. Feed Pet and Poisons are the exception: they are
+    rewritten only on a Hunter or Rogue, so other classes leave them as the
+    last such character wrote them.
 
     Do NOT pass a numeric 1 here to "mean" General — this client
     boolean-checks the argument (verified in-game: true lands in the

@@ -210,7 +210,7 @@ end
 
     The top list can be another character's. That is part of the ruling, and it
     is why the confirm names the list before the player agrees
-    (Restocker-Window-List-Bar.lua reads this too).
+    (Restocker-Window-List-Manage.lua reads this too).
 ]]
 function ns.GetRestockListAfterDelete(listName)
 	for _, name in ipairs(ns.GetRestockListNames()) do
@@ -288,7 +288,8 @@ end
 --[[
     The list New List or Copy just made, as { name, rows }: its name and a copy
     of its rows as made, so backing out of its rename can tell whether anything
-    was put on it since (ns.DiscardMadeRestockList). nil once that rename ends.
+    was put on it since (ns.DiscardMadeRestockList). Replaced by the next New
+    List or Copy, and cleared by a rename or a discard.
 ]]
 local madeList
 

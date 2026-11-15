@@ -13,11 +13,11 @@ local COMBAT, REPEAT, FIRST, ERRORS = ns.MENU_COMBAT, ns.MENU_REPEAT, ns.MENU_FI
 	Features/Enhanced-Spellbook/Menu-Utilities.lua.
 ]]
 
--- The category menu's reset, asked first; data is the reset itself, run on Yes.
+-- The category menu's reset, asked first; data is the reset itself, run on Reset.
 StaticPopupDialogs.GOODTOGO_RESET_CATEGORY = {
 	text = L["MENU_RESET_CATEGORY_CONFIRM"],
-	button1 = YES,
-	button2 = NO,
+	button1 = L["POPUP_RESET"],
+	button2 = CANCEL,
 	OnAccept = function(_, data)
 		data()
 	end,
@@ -205,7 +205,7 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 			end, L["MENU_HIGHEST_DESCRIPTION"])
 			local dynamic = offering(ns.OffersTargetRank)
 			if #dynamic > 0 then
-				radio(rankMenu, L["MENU_RANK_DYNAMIC"], dynamic, function(macro)
+				radio(rankMenu, L["MENU_DYNAMIC_RANK"], dynamic, function(macro)
 					return ns.AbilityRank(macro) == "targetRank"
 				end, function(macro)
 					ns.SetAbilityRank(macro, "targetRank")

@@ -32,6 +32,8 @@ local ResurrectionIcon = BuffDuty.ResurrectionIcon
 local PlayerLabel = BuffDuty.PlayerLabel
 local PetOwnerClass = BuffDuty.PetOwnerClass
 local PetRow = BuffDuty.PetRow
+-- a secret answer on WoW Forever counts as no, rather than erroring when tested
+local Yes = ns.IsPlainYes
 
 --------------------------------------------------------------------------------
 -- Outsiders
@@ -40,10 +42,10 @@ local PetRow = BuffDuty.PetRow
 -- A player outside your group that you could buff right now.
 local function IsOutsider(unit)
 	return CanBuff(unit)
-		and not UnitIsUnit(unit, "player")
-		and not UnitInParty(unit)
-		and not UnitInRaid(unit)
-		and UnitCanAssist("player", unit)
+		and not Yes(UnitIsUnit(unit, "player"))
+		and not Yes(UnitInParty(unit))
+		and not Yes(UnitInRaid(unit))
+		and Yes(UnitCanAssist("player", unit))
 end
 
 --[[
@@ -55,10 +57,10 @@ local function IsDeadOutsider(unit)
 	return UnitExists(unit)
 		and UnitIsPlayer(unit)
 		and UnitIsDeadOrGhost(unit)
-		and not UnitIsUnit(unit, "player")
-		and not UnitInParty(unit)
-		and not UnitInRaid(unit)
-		and UnitIsFriend("player", unit)
+		and not Yes(UnitIsUnit(unit, "player"))
+		and not Yes(UnitInParty(unit))
+		and not Yes(UnitInRaid(unit))
+		and Yes(UnitIsFriend("player", unit))
 end
 
 --[[
@@ -102,10 +104,10 @@ end
 local function IsOutsiderPet(unit)
 	return CanBuffPet(unit)
 		and UnitPlayerControlled(unit)
-		and not UnitIsUnit(unit, "pet")
-		and not UnitPlayerOrPetInParty(unit)
-		and not UnitPlayerOrPetInRaid(unit)
-		and UnitCanAssist("player", unit)
+		and not Yes(UnitIsUnit(unit, "pet"))
+		and not Yes(UnitPlayerOrPetInParty(unit))
+		and not Yes(UnitPlayerOrPetInRaid(unit))
+		and Yes(UnitCanAssist("player", unit))
 end
 
 --[[

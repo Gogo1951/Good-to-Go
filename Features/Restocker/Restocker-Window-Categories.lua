@@ -203,10 +203,10 @@ function ns.CreateRestockGroupPane(parent, listInset, topInset)
 
 	--[[
 	    Its own scroll frame, but a bare one driven by the wheel rather than
-	    UIPanelScrollFrameTemplate. That template's bar would take 22px off a
-	    132px pane, and it would take it permanently: the type list only overflows
-	    at the smallest window heights, so the bar would be reserving a fifth of
-	    the pane's width to be invisible almost all of the time.
+	    UIPanelScrollFrameTemplate. That template's bar would take its width off
+	    the narrow pane permanently, while the type list only overflows at the
+	    smallest window heights, so the bar would sit invisible almost all of the
+	    time.
 	]]
 	local scroll = CreateFrame("ScrollFrame", nil, pane)
 	scroll:SetAllPoints(pane)
@@ -283,7 +283,7 @@ function ns.UpdateRestockGroupPane(items, view)
 	end
 
 	Place(L["RESTOCKER_GROUP_ALL"], total, nil)
-	offset = offset + 6 -- a break under All, which is not one of the types
+	offset = offset + 8 -- a break under All, which is not one of the types
 
 	local selectedShown = (ns.restockSelectedGroup == nil)
 	for _, group in ipairs(groups) do

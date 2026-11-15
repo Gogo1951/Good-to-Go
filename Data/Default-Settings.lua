@@ -228,9 +228,10 @@ ns.DATABASE_DEFAULTS = {
 		    still shop from lists of their own, and switching one never moves
 		    the other.
 
-		    The two reminder modes differ on purpose: in town you are away from
-		    your bags and the detail is the whole point, while at a merchant or
-		    a bank you are already looking at the window that fixes it.
+		    All three reminders ship Simple, one line each: a reminder is a
+		    nudge. Verbose stays one dropdown away. restockLowThreshold is the
+		    share of a row's amount below which the reminders call it low
+		    (ns.RESTOCK_LOW_THRESHOLDS); rows at or above it are not mentioned.
 
 		    The Gold Reserve ships on at 1 gold, a floor low enough that nobody
 		    notices it until a merchant run would otherwise leave them broke. It
@@ -244,11 +245,12 @@ ns.DATABASE_DEFAULTS = {
 			framePosition = {},
 			restockReminderChat = true,
 			restockReminderSound = true,
-			restockReminderMode = "verbose",
+			restockReminderMode = "simple",
 			merchantReminder = true,
 			merchantReminderMode = "simple",
 			bankReminder = true,
 			bankReminderMode = "simple",
+			restockLowThreshold = 80,
 			autoOpenAtBank = false,
 			autoOpenAtMerchant = false,
 			goldReserve = true,
@@ -283,7 +285,7 @@ ns.DATABASE_DEFAULTS = {
 		ignoreList = {},
 		--[[
 		    Macro-name text on the default action bars. Off by default so the
-		    add-on hides the names Blizzard recently began showing again; the
+		    add-on hides the names Blizzard began showing again; the
 		    "Enable Macro Names on Buttons" toggle reads it directly, so checked
 		    means the names show (see Features/Macros-for-Consumables/Action-Button-Text.lua).
 		]]
@@ -594,7 +596,12 @@ AddDefaults("global", {
 		-- One of Data.BUFF_DUTY_FAVOR_CHOICES.
 		favorSeconds = 40,
 		targetEnabled = true,
-		-- The Party-Buffs raid buffs, and the asks its clicks send.
+		--[[
+			    The Party-Buffs raid buffs, and the asks its clicks send. The
+			    whispered ask's own text, askMessage, has no default here: unset,
+			    it goes out in the Send Messages In language's default
+			    (Data/Message-Languages.lua).
+			]]
 		askOtherClasses = true,
 		audience = {},
 	},
@@ -609,7 +616,7 @@ AddDefaults("global", {
     behavior preference, not a choice about one character, and the casts already reported are a fact about the
     other players, shared with every character who might group with them again. Off until the player turns it on.
 
-    untracked holds the player's own choices on the Tracked Abilities panel, by spell ID: true for a rank they
+    untracked holds the player's own choices on the Reported Ranks panel, by spell ID: true for a rank they
     unticked, false for one the data starts off (Rank 1 Scorch and the like) that they ticked. A rank they never
     touched follows the data, so a rank added later starts at its default with no seeding. announced keys a reported cast as
     "<caster GUID>-<caster level>-<spell ID>", the shape the standalone Rank Sentinel add-on records and sends
@@ -626,7 +633,11 @@ AddDefaults("global", {
 		untracked = {},
 		ignoredPlayers = {}, -- caster GUID -> name, never reported
 		ignoredClasses = {}, -- caster GUID -> class token, to draw the Ignored Players list in class colors
-		optOutOffered = {}, -- caster GUID -> true, sent the one-time opt-out number whisper
+		--[[
+		    The whispers' own text -- tipMessage, tipMessagePet, tipMessageDemon, optOutMessage and
+		    optOutDoneMessage -- has no default here: unset, each goes out in the Send Messages In language's
+		    default (Data/Message-Languages.lua).
+		]]
 		announced = {},
 		announcedVersion = "",
 		--[[
@@ -639,4 +650,18 @@ AddDefaults("global", {
 		levelUpAlertsPetPast = true, -- and a hunter's pet trainer ranks from earlier levels not learned yet
 		importedStandalone = false, -- MIGRATION (remove after 2026-12-08): the standalone add-on's settings were copied in
 	},
+})
+
+--------------------------------------------------------------------------------
+-- Message Language Defaults
+--------------------------------------------------------------------------------
+
+--[[
+    The language Buff Duty's and Rank Watch's whispers go out in, a locale code
+    from Data.MESSAGE_LANGUAGES. Account-wide, like the whisper settings of
+    both features, and one setting for both: the players you talk to read one
+    language, whichever feature is talking.
+]]
+AddDefaults("global", {
+	messageLanguage = ns.Data.DEFAULT_MESSAGE_LANGUAGE,
 })

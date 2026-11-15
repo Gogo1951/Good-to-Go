@@ -250,11 +250,11 @@ ns.RANK_WATCH_PET_ABILITIES = {
 How We Got the Data
 
 Last Validated
-	2026-11-11, WoW Forever 1.60.1.70888
+	2026-11-15, WoW Forever 1.60.1.70938
 
 Notes
 	- Built by Tools/Build-Rank-Watch-Pet-Abilities.py --wago from the client's own DB2 tables: every ranked spell on a pet skill line in SkillLineAbility (each beast family's "Pet - " line and Pet - Generic under HUNTER, the Imp, Felhunter, Voidwalker, Succubus, Infernal, Doomguard and Felguard lines under WARLOCK), its rank from Spell's subtext and its level from SpellLevels.
-	- WoW Forever's pets learn these as they level, with no Beast Training or grimoires; level is the pet's level, a demon's being its warlock's.
+	- level is the rank's SpellLevels level: the pet's level, a demon's being its warlock's. WoW Forever's pets don't rank up on their own as they level: with no Beast Training or grimoires, a hunter's pet has the ranks its hunter trainer teaches it and the ones it knew when tamed (Pet-Abilities-Camelot.lua).
 	- Passive abilities (the resistances, Great Stamina, Natural Armor), Beast Training's old pet talents, Devour Magic Effect, Lava Breath and abilities with one rank are left out. A rank this client lacks is dropped at login (Rank-Watch-Lookups.lua OnClient).
 
 SQL (CMaNGOS)

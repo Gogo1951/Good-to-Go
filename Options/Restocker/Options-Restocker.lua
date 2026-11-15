@@ -1,13 +1,13 @@
 local _, ns = ...
 local L = ns.L
+local Kit = ns.OptionsKit
 local GetColor = ns.GetColor
 
-local Header = ns.OptionsHeader
-local Desc = ns.OptionsDesc
-local Spacer = ns.OptionsSpacer
+local Header = Kit.Header
+local Desc = Kit.Desc
+local Spacer = Kit.Spacer
 
-local SubRow = ns.OptionsSubRow
-local SubLabel = ns.OptionsSubLabel
+local SubLabel = Kit.SubLabel
 
 --------------------------------------------------------------------------------
 -- Restocker Panel
@@ -24,15 +24,10 @@ local function GetRestockerSettings()
 	return ns.restockSettings
 end
 
--- The sound row only means anything while the in-town reminder itself is on.
+-- The mode and sound rows only mean anything while the in-town reminder itself is on.
 local function RemindHidden()
 	local settings = GetRestockerSettings()
 	return not (settings and settings.restockReminderChat)
-end
-
--- Repaint the panel so a toggle's dependent rows appear without a reopen.
-local function Refresh()
-	LibStub("AceConfigRegistry-3.0"):NotifyChange(ns.OPTIONS_REGISTRY.Restocker)
 end
 
 local function PlayAlert()
@@ -42,9 +37,9 @@ local function PlayAlert()
 end
 
 --[[
-    Each reminder is a toggle with the dropdown choosing how much it says on
-    the same line, sized like every other toggle-and-dropdown row (the Options
-    Layout Grid in Data/Data.lua) so the three rows end together.
+    The merchant and bank reminders are each a toggle with the dropdown
+    choosing how much it says on the same line, sized like every other
+    toggle-and-dropdown row (the kit's grid) so the two rows end together.
 ]]
 local function ReminderModes()
 	return {
@@ -55,7 +50,7 @@ end
 
 local REMINDER_MODE_ORDER = { ns.REMINDER_SIMPLE, ns.REMINDER_VERBOSE }
 
--- Hides a reminder's Example and the break above it while that reminder is off.
+-- Hides a reminder's Example while that reminder is off.
 local function ReminderOff(enabledKey)
 	return function()
 		local settings = GetRestockerSettings()
@@ -63,28 +58,33 @@ local function ReminderOff(enabledKey)
 	end
 end
 
--- The one short staple a reminder's Verbose Example lists.
-local SAMPLE_GROCERIES = { { itemID = ns.SAMPLE_RESTOCK_ITEM_ID, have = 5, wanted = 20 } }
+--[[
+    The staples a reminder's Example counts: one out, one low. 5 of 20 is low
+    at every threshold the dropdown offers, so the Example never goes quiet.
+]]
+local SAMPLE_OUT = { { itemID = ns.SAMPLE_RESTOCK_ITEM_ID, have = 0, wanted = 20 } }
+local SAMPLE_LOW = { { itemID = ns.SAMPLE_RESTOCK_ITEM_ID, have = 5, wanted = 20 } }
 
 --[[
     A reminder's Example, drawn through the same builder the reminder prints
     with, in the mode its dropdown has chosen: one line. Simple says only the
-    headline, so that is its Example. Verbose's Example shows the item line
-    under the headline, the part Verbose adds.
+    headline, so that is its Example. Verbose's Example shows the first item
+    line under the headline, the part Verbose adds.
 ]]
 local function ReminderExample(order, enabledKey, modeKey, headlineFunction)
-	return ns.OptionsExample(order, function()
+	return Kit.Example(order, ReminderOff(enabledKey), function()
 		local settings = GetRestockerSettings()
 		local mode = settings and settings[modeKey]
-		local lines = ns.BuildRestockShortfallLines(headlineFunction(), mode, SAMPLE_GROCERIES)
-		return lines[mode == ns.REMINDER_VERBOSE and 2 or 1]
-	end, ReminderOff(enabledKey))
+		local headline = headlineFunction(#SAMPLE_OUT, #SAMPLE_LOW)
+		local lines = ns.BuildRestockShortfallLines(headline, mode, SAMPLE_OUT, SAMPLE_LOW)
+		return ns.PrintedExampleLines(lines[mode == ns.REMINDER_VERBOSE and 2 or 1])
+	end)
 end
 
 -- The Gold Reserve's line, at the amount its dropdown has chosen, as an empty purse sees it.
 local function GoldReserveExampleLine()
 	local settings = GetRestockerSettings()
-	return ns.BuildOutOfGoldLine(settings or {}, 0)
+	return ns.PrintedExampleLines(ns.BuildOutOfGoldLine(settings or {}, 0))
 end
 
 local function GoldReserveOff()
@@ -92,12 +92,27 @@ local function GoldReserveOff()
 	return not (settings and settings.goldReserve)
 end
 
-local function TownHeadline()
-	return L["RESTOCKER_TOWN_REMINDER"]
+local function TownHeadline(outCount, lowCount)
+	return ns.RestockTownHeadline(outCount, lowCount)
 end
 
-local function ClosingHeadline()
-	return ns.RestockShortfallHeadline(1)
+local function ClosingHeadline(outCount, lowCount)
+	return ns.RestockClosingHeadline(outCount, lowCount)
+end
+
+-- The threshold row means nothing while every reminder is off.
+local function AllRemindersOff()
+	local settings = GetRestockerSettings()
+	return not (settings and (settings.restockReminderChat or settings.merchantReminder or settings.bankReminder))
+end
+
+-- The thresholds as percentages, the same in every locale.
+local function LowThresholds()
+	local values = {}
+	for _, percent in ipairs(ns.RESTOCK_LOW_THRESHOLDS) do
+		values[percent] = percent .. "%"
+	end
+	return values
 end
 
 -- The Gold Reserve amounts as the game writes money: the number and the gold coin.
@@ -137,6 +152,7 @@ end
 --[[
     The Simple/Verbose dropdown beside a reminder toggle. Hidden with the
     reminder off -- how loudly a silent reminder speaks is not a question.
+    A change redraws the reminder's Example.
 ]]
 local function ReminderModeSelect(settingKey, enabledKey, order, onSubRow)
 	local dropdown = {
@@ -160,6 +176,7 @@ local function ReminderModeSelect(settingKey, enabledKey, order, onSubRow)
 			if settings then
 				settings[settingKey] = value
 			end
+			ns.RefreshSettings()
 		end,
 	}
 	-- On a sub-row the row itself hides, so the dropdown carries no hidden of its own.
@@ -176,8 +193,9 @@ end
 
     The three reminders are peers under their header. The merchant and bank
     reminders are a toggle with the dropdown choosing how much it reports on
-    the same line; the in-town reminder, with a sound as well, puts both on
-    indented sub-rows under its toggle.
+    the same line; the in-town reminder, with a sound as well, puts its mode
+    on an indented sub-row under its toggle and its sound on a switch row of
+    its own.
 ]]
 function ns.BuildRestockerOptions()
 	local options = {
@@ -194,7 +212,7 @@ function ns.BuildRestockerOptions()
 				1
 			),
 			spaceEnabled = Spacer(1.1),
-			toggleRestockerEnabled = ns.OptionsFeatureSwitch("Restocker", 1.2),
+			toggleRestockerEnabled = Kit.FeatureSwitch("restockerEnabled", 1.2),
 
 			--[[
 			    The Gold Reserve: the floor the merchant restock never spends
@@ -212,7 +230,7 @@ function ns.BuildRestockerOptions()
 				"OPTIONS_RESTOCKER_GOLD_RESERVE_DESCRIPTION",
 				"goldReserve",
 				5,
-				Refresh
+				ns.RefreshSettings
 			),
 			amountGoldReserve = {
 				type = "select",
@@ -237,8 +255,7 @@ function ns.BuildRestockerOptions()
 					end
 				end,
 			},
-			spaceGoldExample = Spacer(6.4, GoldReserveOff),
-			exampleGoldReserve = ns.OptionsExample(6.5, GoldReserveExampleLine, GoldReserveOff),
+			exampleGoldReserve = Kit.Example(6.5, GoldReserveOff, GoldReserveExampleLine),
 
 			-- Reminders
 			spaceReminders0 = Spacer(7),
@@ -248,60 +265,76 @@ function ns.BuildRestockerOptions()
 			spaceReminders2 = Spacer(9.2),
 
 			--[[
+			    What counts as low, for all three reminders at once: one answer,
+			    so the three can never disagree about the same bags. Above the
+			    reminders it governs, and hidden with all three off.
+			]]
+			rowLowThreshold = Kit.LabelRow(9.3, AllRemindersOff, L["OPTIONS_RESTOCKER_LOW_THRESHOLD"], {
+				type = "select",
+				desc = L["OPTIONS_RESTOCKER_LOW_THRESHOLD_DESCRIPTION"],
+				values = LowThresholds,
+				sorting = ns.RESTOCK_LOW_THRESHOLDS,
+				get = function()
+					local settings = GetRestockerSettings()
+					return settings and settings.restockLowThreshold
+				end,
+				set = function(_, value)
+					local settings = GetRestockerSettings()
+					if settings then
+						settings.restockLowThreshold = value
+					end
+				end,
+			}),
+			spaceLowThreshold = Spacer(9.5, AllRemindersOff),
+
+			--[[
 			    In-Town Reminders. Both the chat line and the sound fire on the
 			    same signal -- the game's resting status, which turns on in inns
-			    and cities -- and only when the Restock List is actually short
-			    of something. All three reminders ship on; this one defaults to
-			    Verbose and the other two to Simple (Data/Default-Settings.lua).
+			    and cities -- and only when something on the Restock List is low
+			    or out (Low Means Under). All three reminders ship on, in Simple
+			    mode (Data/Default-Settings.lua).
 			]]
 			toggleRestockerRemind = ReminderToggle(
 				"OPTIONS_RESTOCKER_REMIND",
 				"OPTIONS_RESTOCKER_REMIND_DESCRIPTION",
 				"restockReminderChat",
 				10,
-				-- Reveal or hide its two sub-rows without a reopen.
-				Refresh,
+				-- Reveal or hide its mode and sound rows without a reopen.
+				ns.RefreshSettings,
 				"full"
 			),
-			-- Two settings of its own, so each takes an indented sub-row under the toggle rather than its line.
-			modeRestockerRemind = SubRow(11, RemindHidden, {
-				ns.OptionsRowLabel(
-					SubLabel(L["OPTIONS_RESTOCKER_REMIND_MODE_CAPTION"]),
-					0,
-					ns.OPTIONS_LABEL_WIDTH - ns.OPTIONS_SUB_INDENT_WIDTH - 0.05
-				),
-				ReminderModeSelect("restockReminderMode", "restockReminderChat", 0, true),
-			}),
+			-- Two settings of its own, so its mode takes an indented sub-row under the toggle rather than its line.
+			modeRestockerRemind = Kit.SubLabelRow(
+				11,
+				RemindHidden,
+				L["OPTIONS_RESTOCKER_REMIND_MODE_CAPTION"],
+				ReminderModeSelect("restockReminderMode", "restockReminderChat", nil, true)
+			),
 
 			--[[
-			    The speaker shares the sound's sub-row, so that toggle takes a
-			    plain unit width -- full-width would push the speaker onto a
-			    line of its own.
+			    The sound's switch, with its speaker past the row's end
+			    (Kit.ToggleRow, Kit.SoundPreview).
 
 			    Only the in-town reminder gets a sound: it arrives while you are
 			    running around, where a chat line is easy to miss. The merchant
 			    and bank reminders fire on a window you just closed, so you are
 			    already looking at the screen.
 			]]
-			soundRow = SubRow(12, RemindHidden, {
-				{
-					type = "toggle",
-					name = SubLabel(L["OPTIONS_RESTOCKER_REMIND_SOUND"]),
-					desc = L["OPTIONS_RESTOCKER_REMIND_SOUND_DESCRIPTION"],
-					get = function()
-						local settings = GetRestockerSettings()
-						return settings and settings.restockReminderSound
-					end,
-					set = function(_, value)
-						local settings = GetRestockerSettings()
-						if settings then
-							settings.restockReminderSound = value
-						end
-					end,
-				},
-				ns.DefineSoundPreview(PlayAlert, nil, nil, L["OPTIONS_RESTOCKER_SOUND_PREVIEW"]),
-			}),
-			exampleRestockerRemindSpace = Spacer(12.4, ReminderOff("restockReminderChat")),
+			soundRow = Kit.ToggleRow(12, {
+				type = "toggle",
+				name = SubLabel(L["OPTIONS_RESTOCKER_REMIND_SOUND"]),
+				desc = L["OPTIONS_RESTOCKER_REMIND_SOUND_DESCRIPTION"],
+				get = function()
+					local settings = GetRestockerSettings()
+					return settings and settings.restockReminderSound
+				end,
+				set = function(_, value)
+					local settings = GetRestockerSettings()
+					if settings then
+						settings.restockReminderSound = value
+					end
+				end,
+			}, { preview = Kit.SoundPreview(PlayAlert), hidden = RemindHidden }),
 			exampleRestockerRemind = ReminderExample(12.5, "restockReminderChat", "restockReminderMode", TownHeadline),
 
 			--[[
@@ -309,7 +342,7 @@ function ns.BuildRestockerOptions()
 			    of it -- each answers a different moment, and turning off the
 			    nudge you get walking into town should not silence the report
 			    you get walking away from a vendor. Both stay quiet unless
-			    something is actually short.
+			    something is low or out.
 			]]
 			spaceMerchant0 = Spacer(13),
 			toggleRestockerMerchantRemind = ReminderToggle(
@@ -317,10 +350,9 @@ function ns.BuildRestockerOptions()
 				"OPTIONS_RESTOCKER_MERCHANT_REMIND_DESCRIPTION",
 				"merchantReminder",
 				14,
-				Refresh
+				ns.RefreshSettings
 			),
 			modeRestockerMerchantRemind = ReminderModeSelect("merchantReminderMode", "merchantReminder", 15),
-			exampleRestockerMerchantRemindSpace = Spacer(15.4, ReminderOff("merchantReminder")),
 			exampleRestockerMerchantRemind = ReminderExample(
 				15.5,
 				"merchantReminder",
@@ -334,10 +366,9 @@ function ns.BuildRestockerOptions()
 				"OPTIONS_RESTOCKER_BANK_REMIND_DESCRIPTION",
 				"bankReminder",
 				17,
-				Refresh
+				ns.RefreshSettings
 			),
 			modeRestockerBankRemind = ReminderModeSelect("bankReminderMode", "bankReminder", 18),
-			exampleRestockerBankRemindSpace = Spacer(18.4, ReminderOff("bankReminder")),
 			exampleRestockerBankRemind = ReminderExample(18.5, "bankReminder", "bankReminderMode", ClosingHeadline),
 
 			-- Restocker Window

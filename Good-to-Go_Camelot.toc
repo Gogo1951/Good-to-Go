@@ -1,5 +1,5 @@
 ## Title: Good to Go
-## Notes: Auto-updating macros for your best food, water, potions, and healthstones, a Restock List that auto-buys and banks reagents and ammo, click-to-cast missing buffs, and mouseover macros for every spell.
+## Notes: Auto-updating macros for your best food, water, potions, and healthstones, a Restock List that auto-buys and banks reagents and ammo, click-to-cast missing buffs, low spell rank alerts, and mouseover macros for every spell.
 ## Author: Gogo1951
 
 ## IconTexture: Interface/AddOns/Good-to-Go/Includes/Images/Good-to-Go.tga
@@ -56,6 +56,7 @@ Locales/zhTW.lua
 # Data
 Data/Flavor.lua
 Data/Data.lua
+Data/Message-Languages.lua
 Data/Camelot/Scrolls-Camelot.lua
 Data/Camelot/Bandages-Camelot.lua
 Data/Camelot/Food-and-Water-Camelot.lua
@@ -88,9 +89,16 @@ Data/Default-Settings.lua
 
 # Good to Go
 Features/Core.lua
+Features/Replaced-Addons.lua
+# MIGRATION (remove after 2026-12-08)
+Features/Legacy-Migration.lua
 Features/Utilities.lua
+Features/Menu-Kit.lua
+Features/Minimap-Menu.lua
 # MIGRATION (remove after 2026-12-11)
 Features/Group-Context-Migration.lua
+# MIGRATION (remove after 2026-12-13)
+Features/Restock-Reminders-Migration.lua
 Features/Announcements.lua
 Features/Key-Bindings.lua
 Features/Item-Info.lua
@@ -167,16 +175,21 @@ Features/Restocker/Restocker-Window-Reputation.lua
 Features/Restocker/Restocker-Window-Columns.lua
 Features/Restocker/Restocker-Window-Column-Header.lua
 Features/Restocker/Restocker-Window-Filter.lua
+Features/Restocker/Restocker-Window-Cells.lua
 Features/Restocker/Restocker-Window-Rows.lua
 Features/Restocker/Restocker-Window-Menus.lua
 Features/Restocker/Restocker-Window-Render.lua
 Features/Restocker/Restocker-Window-Categories.lua
 Features/Restocker/Restocker-Window-List-Bar.lua
+Features/Restocker/Restocker-Window-List-Manage.lua
 Features/Restocker/Restocker-Window-Bag-Menu.lua
 Features/Restocker/Restocker-Window-Footer.lua
+Features/Restocker/Restocker-Starter-Categories.lua
 Features/Restocker/Restocker-Starter-List.lua
+Features/Restocker/Restocker-Starter-Sections.lua
 Features/Restocker/Restocker-Starter-Window.lua
 Features/Restocker/Restocker-Reminders.lua
+Features/Restocker/Restocker-Town-Reminder.lua
 Features/Restocker/Restocker-Events.lua
 Features/Restocker/Restocker-Slash-Command.lua
 
@@ -196,6 +209,8 @@ Features/Rank-Watch/Rank-Watch-Detection-Forever.lua
 Features/Buff-Duty/Buff-Duty-Events.lua
 Features/Buff-Duty/Buff-Duty-Icon-State.lua
 Features/Buff-Duty/Buff-Duty-Party-Buffs.lua
+Features/Buff-Duty/Buff-Duty-Icons.lua
+Features/Buff-Duty/Buff-Duty-Layout.lua
 Features/Buff-Duty/Buff-Duty-Frame.lua
 Features/Buff-Duty/Buff-Duty-Button-Attributes.lua
 Features/Buff-Duty/Buff-Duty-Position.lua
@@ -206,6 +221,7 @@ Features/Buff-Duty/Buff-Duty-Auras.lua
 Features/Buff-Duty/Buff-Duty-Units.lua
 Features/Buff-Duty/Buff-Duty-Resurrections.lua
 Features/Buff-Duty/Buff-Duty-Pets.lua
+Features/Buff-Duty/Buff-Duty-NPCs.lua
 Features/Buff-Duty/Buff-Duty-Weapons.lua
 Features/Buff-Duty/Buff-Duty-Self.lua
 Features/Buff-Duty/Buff-Duty-Favors.lua
@@ -213,6 +229,7 @@ Features/Buff-Duty/Buff-Duty-Outsiders.lua
 Features/Buff-Duty/Buff-Duty-Other-Classes.lua
 Features/Buff-Duty/Buff-Duty-Groups.lua
 Features/Buff-Duty/Buff-Duty.lua
+Features/Buff-Duty/Buff-Duty-Switches.lua
 Features/Buff-Duty/Buff-Duty-Cast-Results.lua
 Features/Buff-Duty/Buff-Duty-Key-Picker.lua
 Features/Buff-Duty/Buff-Duty-Keys.lua
@@ -222,12 +239,15 @@ Features/Enhanced-Spellbook/Spellbook-Core.lua
 Features/Enhanced-Spellbook/Spellbook-Utilities.lua
 Features/Enhanced-Spellbook/Class-Spells.lua
 Features/Enhanced-Spellbook/Macro-Kinds.lua
+Features/Enhanced-Spellbook/Macro-Settings.lua
 Features/Enhanced-Spellbook/Macro-Options.lua
+Features/Enhanced-Spellbook/Macro-Rank-Option.lua
 Features/Enhanced-Spellbook/Page-Settings.lua
 Features/Enhanced-Spellbook/Grouped-Spells.lua
 Features/Enhanced-Spellbook/Page-Categories.lua
 Features/Enhanced-Spellbook/Target-Priority.lua
 Features/Enhanced-Spellbook/Macro-Builder/Conditionals.lua
+Features/Enhanced-Spellbook/Macro-Builder/Slot-Spells.lua
 Features/Enhanced-Spellbook/Macro-Builder/Cast-Sequence.lua
 Features/Enhanced-Spellbook/Macro-Copies.lua
 Features/Enhanced-Spellbook/Macro-Body.lua
@@ -269,6 +289,7 @@ Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Models.lua
 Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Layout.lua
 Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Controls.lua
 Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Page.lua
+Features/Enhanced-Spellbook/Spell-Rank-Lines.lua
 Features/Enhanced-Spellbook/Spell-Ranks-Tooltip.lua
 Features/Enhanced-Spellbook/Spellbook-Window.lua
 Features/Enhanced-Spellbook/Macro-Builder/Panel-Widgets.lua
@@ -282,6 +303,7 @@ Features/Enhanced-Spellbook/Spellbook-Host-Modern.lua
 Features/Enhanced-Spellbook/Key-Bindings.lua
 
 # Mini-map Button
+Features/Macros-for-Consumables/Macro-Notes.lua
 Features/Minimap-Button.lua
 
 # Diagnostics
@@ -304,10 +326,11 @@ Diagnostics/Message-Length-Rank-Watch.lua
 Diagnostics/Report-Runner.lua
 
 # Options
+Options/Options-Kit.lua
 Options/Options-Utilities.lua
 Options/Options-Widgets.lua
+Options/Options-Message-Composer.lua
 Options/Options-Feature-Switches.lua
-Options/Options-Item-Lists.lua
 Options/Options-General.lua
 Options/Macros-for-Consumables/Options-Macros.lua
 Options/Macros-for-Consumables/Options-Class-Race.lua

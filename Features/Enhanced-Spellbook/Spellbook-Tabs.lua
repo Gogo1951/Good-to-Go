@@ -157,18 +157,24 @@ function SpellbookTabs:Layout(reuse)
 		return
 	end
 	local width, height, gap = TAB_WIDTH * scale, TAB_HEIGHT * scale, GAP * scale
-	local obstacles = reuse and self.obstacles or CollectObstacles(width, height)
+	local fresh = not (reuse and self.obstacles)
+	local obstacles = fresh and CollectObstacles(width, height) or self.obstacles
 	self.obstacles = obstacles
 
-	-- other add-ons' launchers sit where these tabs go, down the window's right edge
-	local blizzard = BlizzardFrames()
-	for _, rect in ipairs(obstacles) do
-		local byEdge = rect.left > windowRight - width / 2
-			and rect.left < windowRight + width
-			and rect.top < windowTop + height
-			and rect.bottom > windowBottom
-		if byEdge and not blizzard[rect.frame] then
-			self:HookLauncher(rect.frame)
+	--[[
+		other add-ons' launchers sit where these tabs go, down the window's right edge; a reused look has the same
+		obstacles, already hooked, so only a full look walks Blizzard's frames and hooks again
+	]]
+	if fresh then
+		local blizzard = BlizzardFrames()
+		for _, rect in ipairs(obstacles) do
+			local byEdge = rect.left > windowRight - width / 2
+				and rect.left < windowRight + width
+				and rect.top < windowTop + height
+				and rect.bottom > windowBottom
+			if byEdge and not blizzard[rect.frame] then
+				self:HookLauncher(rect.frame)
+			end
 		end
 	end
 	-- the first tab lines up with the top of the native skill line tabs, the way the Classic book's side tabs start

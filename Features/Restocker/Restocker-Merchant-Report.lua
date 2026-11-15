@@ -100,10 +100,9 @@ local function ReportRun(run)
 	end
 
 	--[[
-	    Report what happened, and nothing more. Anything this vendor did not stock
-	    is still outstanding, but the mini-map's Restocker Report already says so --
-	    the chat line covers the event, the tooltip covers the outstanding state,
-	    and neither repeats the other.
+	    Report this run, and nothing more. What is still outstanding is the
+	    closing reminder's job (ns.RemindRestockShortfallAfterVisit) and the
+	    mini-map's Restocker Report's, so the summary never repeats them.
 
 	    Filled and partly filled are counted apart and printed apart, so a mixed run
 	    needs no combined string and a clean one never mentions partials. Both are

@@ -23,7 +23,7 @@ local RANK_WATCH = Data.RANK_WATCH
         reported. Detection passes the recipient's level only when it knows the cast landed on another friendly
         player, and drops the cast outright when it can't tell how low that player is.
 
-    Once per caster and ladder a session, and once per caster, level and spell for good (settings.announced,
+    Once per caster and ladder a session, and once per caster, level and spell until the next version (settings.announced,
     shared through NOTIFY with every Rank Watch and Rank Sentinel in the group).
 ]]
 
@@ -31,11 +31,20 @@ local session = {
 	firstLevel = {}, -- caster GUID -> level first seen at this session
 	notified = {}, -- "<caster GUID>:<ladder ID>" -> true
 	queue = {}, -- whispers held for combat, death or a busy target
+	reminders = {}, -- caster GUID -> reminders whispered to them
+	offered = {}, -- caster GUID -> true, sent the opt-out offer
 }
 
 function ns.ResetRankWatchSession()
 	wipe(session.firstLevel)
 	wipe(session.notified)
+	wipe(session.queue)
+	wipe(session.reminders)
+	wipe(session.offered)
+end
+
+-- Drops the whispers held back, so none goes out after Rank Watch is switched off and on again.
+function ns.ClearRankWatchQueue()
 	wipe(session.queue)
 end
 
@@ -43,11 +52,13 @@ end
 -- Messages
 --------------------------------------------------------------------------------
 
--- "[Arcane Intellect] (Rank 3)", or the name alone where the client can't build a link.
-local function RankLink(row, withLink)
+-- "[Arcane Intellect] (Rank 3)", or the name alone where the client can't build a link or `withLink` is false.
+function ns.RankWatchSpellText(row, withLink)
 	local name = withLink and ns.GetSpellLink(row.id) or C_Spell.GetSpellName(row.id) or tostring(row.id)
 	return L["RANK_WATCH_SPELL_RANK"]:format(name, ns.RankWatchRankText(row))
 end
+
+local RankLink = ns.RankWatchSpellText
 
 --[[
     A pet as its owner's messages name it: { name, isDemon }. A hunter pet by its own name ("your pet Fluffy"),
@@ -70,24 +81,26 @@ local function MessageKey(key, pet)
 	return pet and (key .. (pet.isDemon and "_DEMON" or "_PET")) or key
 end
 
+-- The tip's form for a cast: nil for the caster's own, "pet" or "demon" for a pet's (ns:BuildRankWatchTipWhisper).
+function ns.RankWatchTipForm(pet)
+	return pet and (pet.isDemon and "demon" or "pet") or nil
+end
+
 --[[
-    The whisper, led by the marker, never over the chat ceiling: the cast linked, then its name alone. It is
-    never cut, since a cut could break a link. A pet's whisper names the pet first.
+    The whisper for a cast, in the player's own words for its form (or the chosen language's default), led by
+    the marker and never over the chat ceiling: ns:BuildRankWatchTipWhisper links the cast, then names it alone,
+    then falls back to the default text. Nil when the player emptied the form's text.
 ]]
 function ns.BuildRankWatchWhisper(castRow, betterRow, pet)
-	local key = MessageKey("RANK_WATCH_MESSAGE_WHISPER", pet)
-	local message
-	for _, withLink in ipairs({ true, false }) do
-		if pet then
-			message = ns:BuildWhisperMessage(key, pet.name, RankLink(castRow, withLink), betterRow.level)
-		else
-			message = ns:BuildWhisperMessage(key, RankLink(castRow, withLink), betterRow.level)
-		end
-		if #message <= ns.CHAT_MESSAGE_MAX_LENGTH then
-			return message
-		end
-	end
-	return message
+	local form = ns.RankWatchTipForm(pet)
+	return ns:BuildRankWatchTipWhisper(
+		form,
+		ns.GetMessageText(ns.RankWatchTipField(form)),
+		RankLink(castRow, true),
+		RankLink(castRow, false),
+		betterRow.level,
+		pet and pet.name
+	)
 end
 
 function ns.BuildRankWatchSelfLine(castRow, betterRow, pet)
@@ -121,8 +134,10 @@ end
     add-on's did; a whisper mid-pull is noise the reader can't act on. They go out through the add-on's shared
     whisper queue, a beat apart from every other whisper, so a burst never trips the server's chat squelch.
     A whisper also waits for the client's text for the rank it names (ns.RankWatchHasRankText), and is built
-    only then: the data's number can disagree with the reader's spellbook. After RANK_TEXT_TRIES tries a
-    second apart it is dropped rather than sent with that number.
+    only then: the data's number can disagree with the reader's spellbook. After RANK_TEXT_TRIES seconds of
+    waiting it is dropped rather than sent with that number. Every held whisper is checked again when it would
+    go: one for a player since ignored, or held while Whisper went off or another copy took the lead, is
+    dropped.
 ]]
 local RANK_TEXT_RETRY = 1
 local RANK_TEXT_TRIES = 10
@@ -130,54 +145,41 @@ local RANK_TEXT_TRIES = 10
 local retryArmed = false
 
 --[[
-    The first whisper a player ever gets from this account is followed by a second one with their opt-out number:
-    say it and they go on Ignored Players. Once per player for good (settings.optOutOffered), so nobody is told
-    twice.
+    A player's second reminder in a session comes with the opt-out offer, as a whisper of its own right after it:
+    whisper "Opt Out" back and they go on Ignored Players. Never with the first, so a player told once isn't asked
+    to do anything about it, and once a session per player (session.offered).
 
-    The number is made from the player's name alone (ns.RankWatchOptOutCode), so every copy of Good to Go
-    works out the same one: a player told it by one person can say it to anyone else running Rank Watch. It
-    counts from that player only, in a whisper or any chat this client hears, at any time.
+    Only a whisper of those words alone counts, in any case and with spaces around them trimmed, and only from
+    someone in your group now: the reminders only ever go to group members, so a stranger in Trade or General has
+    nothing to opt out of. The reply confirms it, so they know it took.
 ]]
-local codes = {} -- short name -> its opt-out number, as a string
+local OPT_OUT_WORDS = "opt out"
 
--- A player's four-digit opt-out number, 1000 to 9999, from their name without its realm.
-function ns.RankWatchOptOutCode(name)
-	local short = Ambiguate(name, "short")
-	local code = codes[short]
-	if not code then
-		local hash = 5381
-		for index = 1, #short do
-			hash = (hash * 33 + short:byte(index)) % 2147483647
-		end
-		code = tostring(1000 + hash % 9000)
-		codes[short] = code
-	end
-	return code
+-- The opt-out offer in the player's own words; nil when they emptied it.
+function ns.BuildRankWatchOptOutWhisper()
+	return ns:BuildOptOutOfferWhisper(ns.GetMessageText("rankWatchOptOut"))
 end
 
-function ns.BuildRankWatchOptOutWhisper(name)
-	return ns:BuildWhisperMessage("RANK_WATCH_MESSAGE_OPT_OUT", ns.RankWatchOptOutCode(name))
-end
-
-local function OfferOptOut(guid, target)
-	local offered = ns.RankWatchSettings().optOutOffered
-	if offered[guid] then
+-- Counts a reminder sent, and follows a player's second this session with the offer. An emptied offer sends nothing.
+local function AfterReminder(guid, target)
+	local count = (session.reminders[guid] or 0) + 1
+	session.reminders[guid] = count
+	if count < 2 or session.offered[guid] then
 		return
 	end
-	offered[guid] = true
-	ns:QueueAutomatedWhisper(target, ns.BuildRankWatchOptOutWhisper(target))
+	local message = ns.BuildRankWatchOptOutWhisper()
+	if message then
+		session.offered[guid] = true
+		ns:QueueAutomatedWhisper(target, message)
+	end
 end
 
---[[
-    Whether a line says the number as a word of its own: "4821", "4821!", "ok 4821", never "48210" or "4821g".
-    Links and color codes are dropped first, so a spell or item ID inside one never counts.
-]]
-local function SaysCode(text, code)
-	local plain = text:gsub("|H.-|h(.-)|h", "%1"):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
-	return plain:find("%f[%w]" .. code .. "%f[%W]") ~= nil
+-- Whether a whisper is the words alone: "Opt Out", "opt out", " OPT OUT ", never "opt out please".
+local function SaysOptOut(text)
+	return text:match("^%s*(.-)%s*$"):lower() == OPT_OUT_WORDS
 end
 
-local function OnChatMessage(isWhisper, text, sender, ...)
+local function OnChatMsgWhisper(text, sender, ...)
 	local guid = select(10, ...)
 	if not ns.IsPlain(text) or not ns.IsPlain(sender) or not ns.IsPlain(guid) then
 		return
@@ -186,10 +188,12 @@ local function OnChatMessage(isWhisper, text, sender, ...)
 		return
 	end
 	local settings = ns.RankWatchSettings()
-	if settings.ignoredPlayers[guid] or not ns.IsPlayerGUID(guid) or not text:find("%d%d%d%d") then
+	if settings.ignoredPlayers[guid] or not ns.IsPlayerGUID(guid) or not SaysOptOut(text) then
 		return
 	end
-	if not SaysCode(text, ns.RankWatchOptOutCode(sender)) then
+	-- In your group now: a party or raid unit, not someone you only have targeted, focused or under the mouse.
+	local unit = ns.GetUnitByGUID(guid)
+	if not unit or not (unit:find("^party") or unit:find("^raid")) then
 		return
 	end
 	local name = Ambiguate(sender, "none")
@@ -197,20 +201,11 @@ local function OnChatMessage(isWhisper, text, sender, ...)
 	class = ns.IsPlain(class) and class or nil
 	settings.ignoredPlayers[guid] = name
 	settings.ignoredClasses[guid] = class
-	-- Only a whisper is answered: said in group chat, every Rank Watch in the group would answer at once.
-	if isWhisper then
-		ns:Announce("WHISPER", sender, "RANK_WATCH_MESSAGE_OPT_OUT_DONE")
-	end
+	ns:QueueAutomatedWhisper(sender, ns:BuildOptOutDoneWhisper(ns.GetMessageText("rankWatchOptOutDone")))
 	ns:PrintMessage(L["RANK_WATCH_OPT_OUT_ADDED"]:format(ns.ClassColoredName(name, class)))
 	LibStub("AceConfigRegistry-3.0"):NotifyChange(ns.OPTIONS_REGISTRY.RankWatchIgnored)
 end
-
-for _, event in ipairs(ns.RANK_WATCH_CHAT_EVENTS) do
-	local isWhisper = event == "CHAT_MSG_WHISPER"
-	ns.SetRankWatchHandler(event, function(...)
-		OnChatMessage(isWhisper, ...)
-	end)
-end
+ns.SetRankWatchHandler("CHAT_MSG_WHISPER", OnChatMsgWhisper)
 
 local function ArmRetry(seconds)
 	if retryArmed then
@@ -231,21 +226,27 @@ function ns.ProcessRankWatchQueue()
 		return
 	end
 	local held, retry = {}, nil
+	local settings = ns.RankWatchSettings()
+	local whispering = ns.RankWatchWhisperer() == "self"
 	for _, whisper in ipairs(session.queue) do
-		local unit = ns.GetUnitByGUID(whisper.guid)
-		if unit and UnitAffectingCombat(unit) then
-			held[#held + 1] = whisper
-			retry = retry or RANK_WATCH.TARGET_BUSY_RETRY
-		elseif not ns.RankWatchHasRankText(whisper.castRow) then
-			whisper.tries = whisper.tries + 1
-			if whisper.tries < RANK_TEXT_TRIES then
+		if whispering and not settings.ignoredPlayers[whisper.guid] then
+			local unit = ns.GetUnitByGUID(whisper.guid)
+			if unit and UnitAffectingCombat(unit) then
 				held[#held + 1] = whisper
-				retry = RANK_TEXT_RETRY
+				retry = retry or RANK_WATCH.TARGET_BUSY_RETRY
+			elseif not ns.RankWatchHasRankText(whisper.castRow) then
+				if GetTime() - whisper.firstTry < RANK_TEXT_TRIES * RANK_TEXT_RETRY then
+					held[#held + 1] = whisper
+					retry = RANK_TEXT_RETRY
+				end
+			else
+				local message = ns.BuildRankWatchWhisper(whisper.castRow, whisper.betterRow, whisper.pet)
+				-- An emptied tip sends nothing, and so counts toward no opt-out offer either.
+				if message then
+					ns:QueueAutomatedWhisper(whisper.target, message)
+					AfterReminder(whisper.guid, whisper.target)
+				end
 			end
-		else
-			local message = ns.BuildRankWatchWhisper(whisper.castRow, whisper.betterRow, whisper.pet)
-			ns:QueueAutomatedWhisper(whisper.target, message)
-			OfferOptOut(whisper.guid, whisper.target)
 		end
 	end
 	session.queue = held
@@ -256,7 +257,7 @@ end
 
 local function QueueWhisper(guid, target, castRow, betterRow, pet)
 	session.queue[#session.queue + 1] =
-		{ guid = guid, target = target, castRow = castRow, betterRow = betterRow, pet = pet, tries = 0 }
+		{ guid = guid, target = target, castRow = castRow, betterRow = betterRow, pet = pet, firstTry = GetTime() }
 	ns.ProcessRankWatchQueue()
 end
 

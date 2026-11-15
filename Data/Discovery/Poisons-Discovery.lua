@@ -51,14 +51,14 @@ ns.POISON_DATA = {
 How We Got the Data
 
 Last Validated
-	2026-11-11, Season of Discovery 1.15.9.70576
+	2026-11-15, Season of Discovery 1.15.9.70576
 
 Notes
 	- ns.POISON_DATA holds every rogue poison the Poisons macro can apply, read by Features/Macros-for-Consumables/Macros/Tools-Rogues.lua: Required Level is the level the tooltip requires, and Poison Group is ns.POISON_GROUPS' numbering (Data/Data.lua), which carries no game IDs and so lives there.
 	- ns.POISON_GROUP_BASE_ITEMS names the base (rank 1) item of each group. A group's display name is that item's name from C_Item.GetItemInfo, so the client's own localization does the work, with the options panels' loading text standing in until the item is cached (ns.GetPoisonGroupName).
 	- Anesthetic Poison is a TBC poison, so this client has no group 1.
 	- Instant Toxin (5654) is a Classic Era item the Classic Era report confirms, copied in.
-	- Season of Discovery's own poisons are groups 7 to 10 (Sebacious, Numbing, Atrophic, Occult), which only this folder fills; Occult has two ranks (I at 54, II at 60). Their rows came from the Classic Era tables on wago.tools (build 1.15.9.70003, ItemSparse and the Poisons skill line), pending a Season of Discovery Validate Data run. Whether a rogue must have the matching rune engraved to apply them is unchecked in game.
+	- Season of Discovery's own poisons are groups 7 to 10 (Sebacious, Numbing, Atrophic, Occult), which only this folder fills; Occult has two ranks (I at 54, II at 60). Their rows came from the Classic Era tables on wago.tools (build 1.15.9.70003, ItemSparse and the Poisons skill line), and the Season of Discovery report confirms them and their required levels. Whether a rogue must have the matching rune engraved to apply them is unchecked in game.
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query

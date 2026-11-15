@@ -14,11 +14,12 @@ local L = ns.L
     buffed raid shows no window at all.
 
     The other Buff Duty files share state through ns.BuffDuty; this file owns
-    the refresh, the When to Show check and setup.
+    the refresh, the When to Show check and setup. The feature and per-class
+    switches and the close button's hide are Buff-Duty-Switches.lua.
 
-    Nothing is read in combat: the window's buttons are secure and can't be
-    redrawn there anyway (see the frame file), so a change mid-fight waits for
-    PLAYER_REGEN_ENABLED.
+    The list isn't rebuilt in combat: the window's buttons are secure and can't
+    be redrawn there anyway (see the frame file), so a change mid-fight waits
+    for PLAYER_REGEN_ENABLED. Range and cooldown reads still run.
 ]]
 
 local BuffDuty = ns.BuffDuty
@@ -133,11 +134,14 @@ local function Refresh()
 	    The error still reaches the error handler (BugSack and the like).
 	]]
 	local sections, otherBuffs
+	-- One read of the roster serves every section (BuffDuty.HoldGroupMembers).
+	BuffDuty.HoldGroupMembers(true)
 	local built = xpcall(function()
 		sections = BuffDuty.BuildSections()
 		-- The raid buffs the group is missing ride along as Party-Buffs (Buff-Duty-Other-Classes.lua).
 		otherBuffs = BuffDuty.BuildOtherClassBuffs()
 	end, geterrorhandler())
+	BuffDuty.HoldGroupMembers(false)
 	-- Either one keeps the window up: Party-Buffs alone still shows it.
 	if not built or (#sections == 0 and #otherBuffs == 0) then
 		ns.HideBuffDuty()
@@ -181,66 +185,6 @@ function ns.RefreshBuffDuty()
 end
 
 --[[
-    Whether the window's close button hid Buff Duty for the rest of this
-    session. Never saved: a login or reload brings the window back, and so does
-    turning Buff Duty on by any switch (the mini-map button, the feature switch,
-    or ticking your class).
-]]
-local hiddenThisSession = false
-
-function ns.ShowBuffDutyAgain()
-	hiddenThisSession = false
-end
-
---[[
-    Buff Duty's feature switch, the one setter both copies of its options
-    toggle and the per-class calls below use: it redraws the window and
-    repaints every open panel. Turning it on clears the close button's hide.
-]]
-function ns.IsBuffDutyOn()
-	return ns.db.global.buffWindow.enabled and true or false
-end
-
-function ns.SetBuffDutyOn(value)
-	ns.db.global.buffWindow.enabled = value
-	if value then
-		hiddenThisSession = false
-	end
-	ns.RefreshBuffDuty()
-	local registry = LibStub("AceConfigRegistry-3.0")
-	for _, name in pairs(ns.OPTIONS_REGISTRY) do
-		registry:NotifyChange(name)
-	end
-end
-
---[[
-    Whether Buff Duty keeps its data up for the class you're playing: the
-    feature switch on and your class ticked under Classes. The window's
-    events, its backstop and the Buff Key follow this, so the key still casts
-    from fresh auras after the close button hides the window.
-]]
-function ns.IsBuffDutyTrackingForClass()
-	local _, class = UnitClass("player")
-	return ns.IsBuffDutyOn() and ns.db.global.buffWindow.showClasses[class] ~= false
-end
-
---[[
-    Buff Duty's window on the class you're playing: tracking, and the window
-    not closed this session. The mini-map button works per class through
-    these, so turning it off on a rogue leaves it up on a druid. Turning it on
-    ticks your class and flips the switch on with it, which also undoes a close.
-]]
-function ns.IsBuffDutyOnForClass()
-	return not hiddenThisSession and ns.IsBuffDutyTrackingForClass()
-end
-
-function ns.SetBuffDutyForClass(on)
-	local _, class = UnitClass("player")
-	ns.db.global.buffWindow.showClasses[class] = on
-	ns.SetBuffDutyOn(on or ns.IsBuffDutyOn())
-end
-
---[[
     Buff Duty's settings are account-wide, so a profile switch, copy or reset
     leaves them as they were; Features/Core.lua calls this anyway so a Reset
     never leaves the window reading a stale table.
@@ -251,26 +195,6 @@ function ns.ApplyBuffDutyProfile()
 	end
 	ns.PopulateBuffDutyAudience()
 	ns.RefreshBuffDuty()
-end
-
---[[
-    The window's close button. Hides Buff Duty until the next login or reload,
-    saving nothing, and says how to bring it back now or keep it off for your
-    class. In combat the window stays up until combat ends, like any other
-    change to it.
-]]
-function ns.CloseBuffDuty()
-	hiddenThisSession = true
-	ns.RefreshBuffDuty()
-	local _, class = UnitClass("player")
-	ns:PrintMessage(
-		L["BUFF_DUTY_CLOSED"]:format(
-			ns.ClassName(class),
-			ns.ClassName(class),
-			L["BUFF_DUTY_WHEN_HEADER"],
-			ns.GetColor("INFO") .. L["OPTIONS_COMMAND"] .. "|r"
-		)
-	)
 end
 
 -- A change that can move who a unit token names, or what the window offers.
@@ -290,23 +214,20 @@ end
     Nothing is queued while Buff Duty is off for your class or in combat:
     turning it on and PLAYER_REGEN_ENABLED each request a fresh read.
 ]]
+local WATCHED_UNITS = { player = true, target = true, targetpet = true, pet = true }
+for i = 1, 4 do
+	WATCHED_UNITS["party" .. i], WATCHED_UNITS["partypet" .. i] = true, true
+end
+for i = 1, 40 do -- a raid's most members
+	WATCHED_UNITS["raid" .. i], WATCHED_UNITS["raidpet" .. i] = true, true
+end
+
 function ns.OnBuffDutyUnitAura(unit)
 	if not BuffDuty.isSetUp or inCombat or not ns.IsPlain(unit) or not unit then
 		return
 	end
-	-- The unit first: nameplates make most of these, and the string tests are cheaper than the class check.
-	if
-		not (
-			unit == "player"
-			or unit == "target"
-			or unit == "targetpet"
-			or unit == "pet"
-			or unit:find("^party%d")
-			or unit:find("^raid%d")
-			or unit:find("^partypet%d")
-			or unit:find("^raidpet%d")
-		)
-	then
+	-- The unit first: nameplates make most of these, and one lookup is cheaper than the class check.
+	if not WATCHED_UNITS[unit] then
 		return
 	end
 	if ns.IsBuffDutyTrackingForClass() and (HasAnythingToOffer() or WatchesPartyBuffs()) then
@@ -382,6 +303,8 @@ local function OnSpellsChanged()
 	if BuffDuty.isSetUp then
 		BuffDuty.ForgetMyStrengths()
 		BuffDuty.BuildBuffs()
+		-- a resurrection learned or lost turns the combat log on or off with it
+		ns.SyncBuffDutyCombatLog()
 		RequestFullRefresh()
 	end
 end

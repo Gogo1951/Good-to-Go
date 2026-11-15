@@ -36,7 +36,7 @@ ns.BANDAGES = {
 How We Got the Data
 
 Last Validated
-	2026-11-11, TBC Anniversary 2.5.6.70577
+	2026-11-15, TBC Anniversary 2.5.6.70577
 
 Notes
 	- Every First Aid bandage on this client, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) to rank the Bandage macro's picks.
@@ -100,6 +100,10 @@ wago.tools
 	https://wago.tools/db2/SpellCastingRequirements?build=2.5.6.70006
 	https://wago.tools/db2/AreaGroupMember?build=2.5.6.70006
 	https://wago.tools/db2/UiMapAssignment?build=2.5.6.70006
+	https://wago.tools/db2/ItemSparse?build=2.5.6.70577
+	https://wago.tools/db2/Item?build=2.5.6.70577
+	https://wago.tools/db2/ItemEffect?build=2.5.6.70577
+	https://wago.tools/db2/SpellEffect?build=2.5.6.70577
 
 QuestieDB
 	None.

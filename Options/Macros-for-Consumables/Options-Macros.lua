@@ -1,11 +1,11 @@
 local _, ns = ...
 local L = ns.L
+local Kit = ns.OptionsKit
 local GetColor = ns.GetColor
 
-local Header = ns.OptionsHeader
-local Desc = ns.OptionsDesc
-local Spacer = ns.OptionsSpacer
-local RowLabel = ns.OptionsRowLabel
+local Header = Kit.Header
+local Desc = Kit.Desc
+local Spacer = Kit.Spacer
 
 --------------------------------------------------------------------------------
 -- Active-State Predicates
@@ -13,10 +13,10 @@ local RowLabel = ns.OptionsRowLabel
 
 --[[
     Every sub-option hides until its toggle is on. A toggle's one dropdown
-    then appears on its toggle's line (see the Options Layout Grid in
-    Data/Data.lua). Scroll Buffs and Pet Food Buffs, which also carry a block
-    of type checkboxes, put their dropdown on a captioned sub-option row under
-    the toggle (ModeSubRow), with the checkboxes beneath it. Every When to Use
+    then appears on its toggle's line (Kit.ToggleRow). Scroll Buffs and Pet
+    Food Buffs, which also carry a block of type checkboxes, put their
+    dropdown on a captioned sub-option row under the toggle (ModeSubRow), with
+    the checkboxes beneath it. Every When to Use
     dropdown has the group context checkboxes on a row under it
     (UseWhenGroups). These read the profile's settings
     table that InitializeDatabase in Features/Core.lua guarantees.
@@ -80,17 +80,11 @@ local function UseWhenChanged()
 	ns.RequestUpdate()
 end
 
-local function FeatureModeSelect(prefix, description, isActive, order)
+local function FeatureModeSelect(prefix, description)
 	local settingKey = prefix .. "Level"
 	return {
 		type = "select",
-		name = "",
 		desc = description,
-		order = order,
-		width = ns.OPTIONS_CONTROL_WIDTH,
-		hidden = function()
-			return not isActive()
-		end,
 		values = ns.LEVEL_FILTER_VALUES,
 		sorting = ns.LEVEL_FILTER_ORDER,
 		get = function()
@@ -117,23 +111,13 @@ end
 
 --[[
     The same dropdown for a toggle with more than one setting: on a sub-option
-    row of its own, under a silver caption, since it no longer shares the
-    toggle's line. The caption and the dropdown together end where every other
-    row ends.
+    row of its own, under a silver caption (Kit.SubLabelRow), since it no
+    longer shares the toggle's line. The dropdown keeps the control column.
 ]]
 local function ModeSubRow(prefix, description, isActive, order)
-	local dropdown = FeatureModeSelect(prefix, description, isActive, 0)
-	dropdown.hidden = nil
-	return ns.OptionsSubRow(order, function()
+	return Kit.SubLabelRow(order, function()
 		return not isActive()
-	end, {
-		ns.OptionsRowLabel(
-			ns.OptionsSubLabel(L["OPTIONS_MODE_CAPTION"]),
-			0,
-			ns.OPTIONS_LABEL_WIDTH - ns.OPTIONS_SUB_INDENT_WIDTH - 0.05
-		),
-		dropdown,
-	})
+	end, L["OPTIONS_MODE_CAPTION"], FeatureModeSelect(prefix, description))
 end
 
 -- Hover text for a level filter dropdown choosing when the Food macro offers a feature.
@@ -155,8 +139,8 @@ local function ManaRuneText(formatKey)
 				coldItemIDs[#coldItemIDs + 1] = itemID
 			end
 		end
-		ns.WarmItemCache(coldItemIDs, ns.OPTIONS_REGISTRY.Macros)
-		return string.format(L[formatKey], ns.GetItemDisplayName(runeIDs[1]), ns.GetItemDisplayName(runeIDs[2]))
+		Kit.WarmItems(coldItemIDs, ns.OPTIONS_REGISTRY.Macros)
+		return string.format(L[formatKey], Kit.ItemName(runeIDs[1]), Kit.ItemName(runeIDs[2]))
 	end
 end
 
@@ -205,7 +189,7 @@ local function PetBuffTypeToggles()
 			label = ns.GetItemLabel(food.itemID)
 		else
 			coldItemIDs[#coldItemIDs + 1] = food.itemID
-			label = ns.GetItemDisplayName(food.itemID)
+			label = Kit.ItemName(food.itemID)
 		end
 		local toggle = SubsetToggle("petBuffTypes", food.settingKey, label, order)
 		toggle.image = C_Item.GetItemIconByID(food.itemID)
@@ -213,7 +197,7 @@ local function PetBuffTypeToggles()
 		toggle.dialogControl = ns.ICON_CHECKBOX_WIDGET_TYPE
 		toggles["pet" .. food.settingKey] = toggle
 	end
-	ns.WarmItemCache(coldItemIDs, ns.OPTIONS_REGISTRY.Macros)
+	Kit.WarmItems(coldItemIDs, ns.OPTIONS_REGISTRY.Macros)
 	return toggles
 end
 
@@ -307,7 +291,7 @@ function ns.BuildMacrosOptions()
 	local args = {
 		descIntro = Desc(L["OPTIONS_MACROS_DESCRIPTION"], 1),
 		spaceIntro = Spacer(2),
-		toggleMacrosEnabled = ns.OptionsFeatureSwitch("Macros", 2.5),
+		toggleMacrosEnabled = Kit.FeatureSwitch("macrosEnabled", 2.5),
 
 		-- Macro Names on Buttons
 		toggleMacroNames = {
@@ -359,9 +343,8 @@ function ns.BuildMacrosOptions()
 			func = OpenMacroWindow,
 		},
 		-- What a macro prints when your bags hold nothing it can use, as the Food macro prints it.
-		spaceExample = Spacer(18),
-		exampleNoItem = ns.OptionsExample(19, function()
-			return ns.BuildNoItemLine("Food")
+		exampleNoItem = Kit.Example(19, nil, function()
+			return ns.PrintedExampleLines(ns.BuildNoItemLine("Food"))
 		end),
 
 		--[[
@@ -381,20 +364,17 @@ function ns.BuildMacrosOptions()
 		spaceFoodWater1 = Spacer(22),
 		descFoodWater = Desc(GetColor("BODY") .. L["OPTIONS_FOOD_WATER_DESCRIPTION"] .. "|r", 23),
 		spaceFoodWater2 = Spacer(24),
-		toggleBuffFood = {
+		toggleBuffFood = Kit.ToggleRow(25, {
 			type = "toggle",
 			name = L["OPTIONS_BUFF_FOOD"],
 			desc = SpellDescription("OPTIONS_BUFF_FOOD_DESCRIPTION_FORMAT", ns.WELL_FED_SPELL_ID),
-			order = 25,
-			width = ns.OPTIONS_LABEL_WIDTH,
 			get = function()
 				return BuffFoodActive()
 			end,
 			set = function(_, value)
 				ns.ToggleMacroSetting("useBuffFood", value)
 			end,
-		},
-		buffFoodLevel = FeatureModeSelect("buffFood", ModeDescription(L["FEATURE_BUFF_FOOD"]), BuffFoodActive, 26),
+		}, { control = FeatureModeSelect("buffFood", ModeDescription(L["FEATURE_BUFF_FOOD"])) }),
 		spaceBuffFood = Spacer(27),
 		toggleScrolls = {
 			type = "toggle",
@@ -431,25 +411,17 @@ function ns.BuildMacrosOptions()
 		spaceScrollTypes = Spacer(32, function()
 			return not ScrollsActive()
 		end),
-		toggleConjuredFirst = {
+		toggleConjuredFirst = Kit.ToggleRow(33, {
 			type = "toggle",
 			name = L["OPTIONS_CONJURED_FIRST"],
 			desc = L["OPTIONS_CONJURED_FIRST_DESCRIPTION"],
-			order = 33,
-			width = ns.OPTIONS_LABEL_WIDTH,
 			get = function()
 				return ConjuredFirstActive()
 			end,
 			set = function(_, value)
 				ns.ToggleMacroSetting("useConjuredFirst", value)
 			end,
-		},
-		conjuredFirstLevel = FeatureModeSelect(
-			"conjuredFirst",
-			L["OPTIONS_CONJURED_FIRST_MODE_DESCRIPTION"],
-			ConjuredFirstActive,
-			34
-		),
+		}, { control = FeatureModeSelect("conjuredFirst", L["OPTIONS_CONJURED_FIRST_MODE_DESCRIPTION"]) }),
 		spaceConjuredFirst = Spacer(35),
 		toggleRestockLast = {
 			type = "toggle",
@@ -638,7 +610,7 @@ function ns.BuildMacrosOptions()
 		spaceExplosives1 = Spacer(352),
 		descExplosives = Desc(GetColor("BODY") .. L["OPTIONS_EXPLOSIVES_DESCRIPTION"] .. "|r", 353),
 		spaceExplosives2 = Spacer(354),
-		labelExplosivesClickMode = RowLabel(GetColor("BODY") .. L["OPTIONS_EXPLOSIVES_CLICK_LAYOUT"] .. "|r", 355),
+		labelExplosivesClickMode = Kit.Label(GetColor("BODY") .. L["OPTIONS_EXPLOSIVES_CLICK_LAYOUT"] .. "|r", 355),
 		explosivesClickMode = {
 			type = "select",
 			name = "",

@@ -1,14 +1,83 @@
 local _, ns = ...
 local Data = ns.Data
 local L = ns.L
+local Kit = ns.OptionsKit
 
 local GetSpellTexture = C_Spell.GetSpellTexture
 
 --[[
     The builders only the Buff Duty panels (Options/Buff-Duty/) use: the
-    classes this client has, the refresh choices' labels, and a spell's
-    caption-and-dropdown row.
+    classes this client has, the refresh choices' labels, a spell's
+    caption-and-dropdown row, and the ability labels, tooltip links and sorted
+    entries those rows are built from.
 ]]
+
+--------------------------------------------------------------------------------
+-- Ability Rows
+--------------------------------------------------------------------------------
+
+--[[
+    A row label naming an ability, which shows the game's own tooltip for it
+    on hover, the same one an action bar shows. `hyperlink` returns
+    "spell:<id>" or "item:<id>". A plain Label takes no mouse, so this one is
+    an InteractiveLabel, which AceConfigDialog gives the same hover handler as
+    any control, and that handler shows `tooltipHyperlink` when there is one.
+]]
+function ns.OptionsAbilityLabel(text, order, width, hyperlink)
+	local label = Kit.Label(text, order, width)
+	label.dialogControl = "InteractiveLabel"
+	label.tooltipHyperlink = hyperlink
+	return label
+end
+
+--[[
+    The spell an ability's tooltip quotes: the HIGHEST id in its rank group
+    that the client describes, so it reads the rank you actually cast, not rank
+    1. Ids are sorted rather than trusted in data order -- rows are not
+    reliably rank-ordered (Combustion is { 29977, 11129 }, Vanish
+    { 1856, 1857, 27617, 26889, 44290 }). Classic holds tooltip data only for
+    spells the character has known, and these panels list every class, so each
+    id is requested once here and the pick is made again at every hover, when
+    the text has had time to land.
+]]
+function ns.SpellTooltipLink(ids)
+	local ranked = {}
+	for i = 1, #ids do
+		ranked[i] = ids[i]
+		C_Spell.RequestLoadSpellData(ids[i])
+	end
+	table.sort(ranked)
+	return function()
+		for i = #ranked, 1, -1 do
+			local text = C_Spell.GetSpellDescription(ranked[i])
+			if text and text ~= "" then
+				return "spell:" .. ranked[i]
+			end
+		end
+		return "spell:" .. ranked[#ranked]
+	end
+end
+
+-- The lowercased spell name an entry sorts by.
+local function EntrySortKey(entry)
+	return (entry.spellName or ""):lower()
+end
+
+-- A copy of `entries` ordered alphabetically by spell name, with the watched id breaking ties for a stable result.
+function ns.SortedEntries(entries)
+	local sorted = {}
+	for i = 1, #entries do
+		sorted[i] = entries[i]
+	end
+	table.sort(sorted, function(a, b)
+		local keyA, keyB = EntrySortKey(a), EntrySortKey(b)
+		if keyA == keyB then
+			return (a.ids[1] or 0) < (b.ids[1] or 0)
+		end
+		return keyA < keyB
+	end)
+	return sorted
+end
 
 --------------------------------------------------------------------------------
 -- Classes

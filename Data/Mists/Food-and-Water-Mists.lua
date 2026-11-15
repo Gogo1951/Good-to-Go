@@ -198,7 +198,7 @@ ns.FOOD_AND_WATER = {
 	[4604] = { 0, 0, 90, 0, 0, nil, nil, 1, 1, 20, 0 }, -- Forest Mushroom Cap
 	[33254] = { 0, 0, 7500, 0, 0, nil, nil, 65, 400, 20, 0 }, -- Forest Strider Drumstick
 	[75034] = { 0, 2, 0, 0, 0, nil, nil, 0, 0, 20, 1 }, -- Forsaken Foie Gras
-	[62649] = { 1, 0, 96000, 0, 0, nil, nil, 80, 100, 20, 0 }, -- Fortune Cookie
+	[62649] = { 1, 0, 96000, 0, 96000, nil, nil, 80, 100, 20, 0 }, -- Fortune Cookie
 	[43086] = { 0, 0, 0, 0, 12840, nil, nil, 70, 425, 20, 0 }, -- Fresh Apple Juice
 	[44609] = { 0, 0, 18480, 0, 0, nil, nil, 65, 425, 20, 0 }, -- Fresh Dalaran Bread Slice
 	[40359] = { 0, 0, 18480, 0, 0, nil, nil, 65, 425, 20, 0 }, -- Fresh Eagle Meat
@@ -666,7 +666,7 @@ ns.FOOD_AND_WATER = {
 How We Got the Data
 
 Last Validated
-	2026-11-11, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-15, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- Every food and drink this client knows that restores health or mana while seated, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Food and Water macros and the buff-food choices. The family is the items whose use spell is on the food (11) or drink (59) cooldown category, plus the few on no category whose spell says "Must remain seated".

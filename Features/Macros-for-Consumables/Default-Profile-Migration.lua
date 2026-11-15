@@ -72,32 +72,19 @@ local _, ns = ...
 
 local DEFAULT_PROFILE = "Default"
 
--- Derived data rather than a choice: everything else a profile holds, the player set.
-local DERIVED_KEYS = {
-	itemCache = true,
-	itemCacheFolder = true,
-	itemCacheVersion = true,
-}
-
+--[[
+    Whether a profile holds anything the player set. ns.RetireSavedItemCache (Item-Cache.lua) clears the derived
+    item cache from every profile before this migration runs, so whatever is left is theirs.
+]]
 local function HoldsSettings(profile)
-	if type(profile) ~= "table" then
-		return false
-	end
-	for key in pairs(profile) do
-		if not DERIVED_KEYS[key] then
-			return true
-		end
-	end
-	return false
+	return type(profile) == "table" and next(profile) ~= nil
 end
 
 -- Everything the player set, the profile's Ignore List included.
 local function CopySettings(profile)
 	local copy = {}
 	for key, value in pairs(profile or {}) do
-		if not DERIVED_KEYS[key] then
-			copy[key] = type(value) == "table" and CopyTable(value) or value
-		end
+		copy[key] = type(value) == "table" and CopyTable(value) or value
 	end
 	return copy
 end
@@ -265,9 +252,8 @@ end
     The character playing is read through ns.db.profile, because in a session
     where AceDB could not name it, its own name reaches profileKeys only at
     logout (Features/Core.lua). Keys that name no character -- the client's
-    placeholder, or an older Forever first name -- are passed over. The
-    profiles keep their restockList: the older Forever name's profile still
-    hands its copy, choice included, to a namesake not yet logged in.
+    placeholder, or an older Forever first name -- are passed over; the
+    profiles' own restockList goes afterwards (RetireProfileRestockLists).
 ]]
 local function CarryListChoices(profiles, profileKeys, ownProfileKey)
 	local restocker = ns.db.global.restocker
@@ -315,6 +301,41 @@ local function CarryListChoices(profiles, profileKeys, ownProfileKey)
 	restocker.listsByCharacter = nil
 end
 
+--[[
+    A profile's restockList, once carried, is a retired key, and Profiles → Copy From would copy it on for good,
+    so it goes once every character on the profile holds its list choice. It stays where a key that names no
+    character still points (an older Forever first name, which hands its copy, choice included, to a namesake
+    not yet logged in), and where it's the profile's only key, which would otherwise read as holding no settings
+    and take the older Forever profile's copy again at the next login.
+]]
+local function RetireProfileRestockLists(profiles, profileKeys, ownProfileKey)
+	local listChoices = ns.db.global.restocker.listChoices or {}
+	local keep, retire = {}, {}
+	-- the character playing may reach profileKeys only at logout (see CarryListChoices)
+	local current = ns.db:GetCurrentProfile()
+	if listChoices[ownProfileKey] ~= nil then
+		retire[current] = true
+	else
+		keep[current] = true
+	end
+	for profileKey, profileName in pairs(profileKeys) do
+		if ns.SplitCharacterProfileName(profileKey) and listChoices[profileKey] ~= nil then
+			retire[profileName] = true
+		else
+			keep[profileName] = true
+		end
+	end
+	for profileName in pairs(retire) do
+		local profile = profiles[profileName]
+		if not keep[profileName] and type(profile) == "table" and profile.restockList ~= nil then
+			local onlyKey = next(profile) == "restockList" and next(profile, "restockList") == nil
+			if not onlyKey then
+				profile.restockList = nil
+			end
+		end
+	end
+end
+
 --------------------------------------------------------------------------------
 -- Migration
 --------------------------------------------------------------------------------
@@ -331,4 +352,5 @@ function ns.MoveCharactersOntoOwnProfiles()
 	DropUnnamedCharacters(profileKeys, ownProfileKey)
 	MoveCharactersOffDefault(profiles, profileKeys, ownProfileKey)
 	CarryListChoices(profiles, profileKeys, ownProfileKey)
+	RetireProfileRestockLists(profiles, profileKeys, ownProfileKey)
 end

@@ -70,8 +70,8 @@
 - **Instead:** `/gtg ignore Name` adds a player to Rank Watch's Ignored Players, and `/gtg` with anything else still opens the Options Interface.
 - **Why:** Ignoring a player is reached from the add-on's one command rather than a second literal.
 
-### Title Case keeps verb particles capitalized
+### Title Case capitalizes "on", "off" and "yet" outside prepositions
 
 - **Departs from:** TONE AND COPY → English, Title Case's lowercase word list.
-- **Instead:** Titles capitalize "on", "off" and "yet" where the word belongs to a verb rather than acting as a preposition or conjunction.
+- **Instead:** Titles capitalize "on", "off" and "yet" wherever the word is not acting as a preposition or conjunction, as in "Turn On", "Options On" and "Not Yet Available".
 - **Why:** Lowercased, a word that belongs to the verb reads as a typo in game.

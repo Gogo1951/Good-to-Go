@@ -18,7 +18,7 @@ local lastAttempt -- { guid, unit, key, at }: the last buff cast the window or k
 local bounceErrorType
 
 --[[
-    Forever has no combat log, so its SPELL_RESURRECT never arrives to keep a
+    Registering the combat log is forbidden on Forever, so SPELL_RESURRECT never arrives to keep a
     resurrected player's icon away while they decide to accept
     (BuffDuty.NoteResurrect). There, a resurrection the window or key cast is
     noted from the player's own cast going off instead.

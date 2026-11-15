@@ -93,7 +93,7 @@ local MODULE = "KeyBindings"
 	UPDATE_BINDINGS. The root panel's Key Bindings rows show each binding's key or Not Bound, and the player
 	changes it in the game's own Key Bindings list, so repaint the panel when they come back from it. Heard
 	whatever features are on, since the rows show every binding. The Buff Duty window redraws too, since it
-	shows a Buff Button tip only while that key is unbound (Buff-Duty-Frame.lua).
+	shows a Cast Next Buff tip only while that key is unbound (Buff-Duty-Frame.lua).
 ]]
 local function OnUpdateBindings()
 	AceConfigRegistry:NotifyChange(ns.OPTIONS_REGISTRY.General)

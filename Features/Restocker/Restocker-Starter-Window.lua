@@ -1,6 +1,9 @@
 local _, ns = ...
 local L = ns.L
 local GetColor = ns.GetColor
+local StackChoices = ns.StarterStackChoices
+local StackLabel = ns.StarterStackLabel
+local OfferedSections = ns.StarterOfferedSections
 
 --------------------------------------------------------------------------------
 -- Staples Window
@@ -11,9 +14,10 @@ local GetColor = ns.GetColor
     their Restock List, and from the Restock List's Pick Staples button,
     offering the staples -- foods, water, class reagents, ammo -- as one-tick
     suggestions, a few of them pre-ticked for the class. The categories are
-    rows in Data/Data.lua (ns.STARTER_LIST_CATEGORIES); the trigger, the
+    rows in Restocker-Starter-Categories.lua (ns.STARTER_LIST_CATEGORIES); the trigger, the
     defaults and what every tick does live in Restocker-Starter-List.lua. This
     file draws them, and clears the Restock List's New flags when it closes.
+    Which sections and stack counts it offers is Restocker-Starter-Sections.lua.
 
     It wears the Restock List's frame (Restocker-Window-Frame.lua): the bag
     portrait and the title, the header band left clear (the title bar's X
@@ -62,149 +66,32 @@ local WARM_KEY = "StaplesWindow"
 local window
 local openedFromLogin = false
 
---------------------------------------------------------------------------------
--- Choices
---------------------------------------------------------------------------------
-
---[[
-    The counts a staple's dropdown offers, in offered order: every number up to
-    its cap, or the category's own choices where it lists them (Soul Shards
-    step in fours). A stack is whatever its item stacks to, so the label says
-    stacks and the tooltip says how many; a category that counts items
-    instead (countsItems) shows a bare number, since "1 Stack" of a thing that
-    cannot stack reads as a bug.
-]]
-local function StackChoices(category)
-	local offered = category.choices
-	if not offered then
-		offered = {}
-		for stacks = 1, category.maxStacks do
-			offered[stacks] = stacks
-		end
-	end
-	return offered
-end
-
-local function StackLabel(category, stacks)
-	if category.countsItems then
-		return tostring(stacks)
-	end
-	if stacks == 1 then
-		return L["STARTER_POPUP_STACK_ONE"]
-	end
-	return string.format(L["STARTER_POPUP_STACK_MANY"], stacks)
-end
-
 -- Stands in for text built from an item the client has not resolved yet, until the window repaints.
 local function LoadingText(itemID)
 	return GetColor("MUTED") .. string.format(L["LOADING_ITEM"], itemID) .. "|r"
 end
 
 --[[
-    One section's categories in display order, holding only the ones this
-    class is offered right now -- Restocker-Starter-List.lua's class and
-    availability rules keep another class's reagents, a not-yet-trained
-    spell's reagent, and items this client's folder does not carry out.
-
-    Display order is computed, never authored: the staples with a stacks
-    dropdown lead, the fixed-amount singles follow, and each run sorts
-    alphabetically by the name it shows, so every locale reads A to Z. A row
-    whose name is still loading sorts after the named ones, by item ID, and
-    takes its place when the window repaints with the name.
-]]
-local function SectionCategories(section)
-	local categories = {}
-	for _, category in ipairs(ns.GetStarterCategories()) do
-		if
-			category.section == section
-			and ns.IsStarterCategoryForClass(category)
-			and ns.IsStarterCategoryAvailable(category)
-		then
-			categories[#categories + 1] = category
-		end
-	end
-
-	local names = {}
-	for _, category in ipairs(categories) do
-		names[category] = ns.GetStarterCategoryName(category) or false
-	end
-	table.sort(categories, function(a, b)
-		local aFixed = a.fixedAmount ~= nil
-		local bFixed = b.fixedAmount ~= nil
-		if aFixed ~= bFixed then
-			return bFixed
-		end
-		local aName, bName = names[a], names[b]
-		if aName and bName then
-			return aName < bName
-		end
-		if aName or bName then
-			return aName ~= false
-		end
-		return ns.GetStarterCategoryNameItemID(a) < ns.GetStarterCategoryNameItemID(b)
-	end)
-	return categories
-end
-
---[[
-    The sections this character is offered, top to bottom from what everyone
-    stocks to what one class does: food and water (water as the block's last
-    cell, under a heading naming both), the rogue's poisons with their note,
-    ammo, then the class reagents and tools, where the Hearthstone closes the
-    window as the one row that is nobody's consumable. A section with nothing
-    to offer is left out rather than drawn empty.
-]]
-local function OfferedSections()
-	local sections = {}
-
-	local provisions = SectionCategories("food")
-	local waterCategories = SectionCategories("water")
-	for _, category in ipairs(waterCategories) do
-		provisions[#provisions + 1] = category
-	end
-	if #provisions > 0 then
-		sections[#sections + 1] = {
-			title = (#waterCategories > 0) and L["STARTER_POPUP_FOOD_AND_WATER_HEADER"]
-				or L["STARTER_POPUP_FOOD_HEADER"],
-			categories = provisions,
-		}
-	end
-
-	local poisons = SectionCategories("poisons")
-	if #poisons > 0 then
-		sections[#sections + 1] = {
-			title = L["STARTER_POPUP_POISONS_HEADER"],
-			--[[
-			    The crafting-reagent half of the Restocker already shops for a
-			    listed poison's makings, and a fresh rogue has no way to know
-			    that, so the section says so, opening with the class-colored
-			    class name the mini-map tooltip's notes open with.
-			]]
-			note = string.format(
-				L["STARTER_POPUP_POISONS_NOTE"],
-				ns.GetClassColor("ROGUE") .. UnitClass("player") .. "|r" .. GetColor("BODY")
-			),
-			categories = poisons,
-		}
-	end
-
-	local ammo = SectionCategories("ammo")
-	if #ammo > 0 then
-		sections[#sections + 1] = { title = L["STARTER_POPUP_AMMO_HEADER"], categories = ammo }
-	end
-
-	local reagents = SectionCategories("reagents")
-	if #reagents > 0 then
-		sections[#sections + 1] = { title = L["STARTER_POPUP_REAGENTS_HEADER"], categories = reagents }
-	end
-	return sections
-end
-
---[[
     Every item an offered staple needs that the client has not resolved yet --
     the one a tick adds, for its stack size, and the one the row is named for
-    -- handed to ns.WarmItemCache so the window repaints as the answers land.
+    -- handed to ns.WarmItemCache once as the window opens. It repaints as the
+    answers land, once a frame however many land in it, rather than once per item.
 ]]
+local layoutPending = false
+
+local function LayoutNextFrame()
+	if layoutPending then
+		return
+	end
+	layoutPending = true
+	C_Timer.After(0, function()
+		layoutPending = false
+		if window and window:IsShown() then
+			window:Layout()
+		end
+	end)
+end
+
 local function WarmOfferedItems()
 	local coldItemIDs, seen = {}, {}
 	local function Cold(itemID)
@@ -223,11 +110,7 @@ local function WarmOfferedItems()
 			end
 		end
 	end
-	ns.WarmItemCache(coldItemIDs, WARM_KEY, function()
-		if window and window:IsShown() then
-			window:Layout()
-		end
-	end)
+	ns.WarmItemCache(coldItemIDs, WARM_KEY, LayoutNextFrame)
 end
 
 --------------------------------------------------------------------------------
@@ -261,9 +144,9 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The game's own dropdown, as the Spell Book's sort and filter dropdowns are;
-    every client ships WowStyle1DropdownTemplate with Blizzard_Menu. Live either
-    way round: picked first, it decides what a later tick adds; changed after,
+    The game's own dropdown where the client has WowStyle1DropdownTemplate, as
+    the Spell Book's sort and filter dropdowns are, else a plain button that
+    opens the same menu and names the current choice. Live either way round: picked first, it decides what a later tick adds; changed after,
     it rewrites the listed entry's amount on the spot.
 ]]
 local function SetupStacksMenu(dropdown)
@@ -287,10 +170,20 @@ local function SetupStacksMenu(dropdown)
 end
 
 local function CreateStacksDropdown(parent)
-	local dropdown = CreateFrame("DropdownButton", nil, parent, "WowStyle1DropdownTemplate")
-	dropdown:SetWidth(DROPDOWN_WIDTH)
-	dropdown:SetupMenu(SetupStacksMenu(dropdown))
-	dropdown:SetScript("OnEnter", function(self)
+	local dropdown
+	if ns.HasTemplate("WowStyle1DropdownTemplate") then
+		dropdown = CreateFrame("DropdownButton", nil, parent, "WowStyle1DropdownTemplate")
+		dropdown:SetWidth(DROPDOWN_WIDTH)
+		dropdown:SetupMenu(SetupStacksMenu(dropdown))
+	else
+		dropdown = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
+		dropdown:SetSize(DROPDOWN_WIDTH, 22)
+		dropdown:SetScript("OnClick", function(self)
+			MenuUtil.CreateContextMenu(self, SetupStacksMenu(self))
+		end)
+	end
+	-- hooked, so the template's own hover highlight survives
+	dropdown:HookScript("OnEnter", function(self)
 		local category = self.category
 		local text
 		if category.countsItems then
@@ -302,7 +195,7 @@ local function CreateStacksDropdown(parent)
 		end
 		ns.ShowRestockerTooltip(self, text)
 	end)
-	dropdown:SetScript("OnLeave", function()
+	dropdown:HookScript("OnLeave", function()
 		GameTooltip:Hide()
 	end)
 	return dropdown
@@ -310,7 +203,11 @@ end
 
 local function RefreshStacksDropdown(dropdown, category)
 	dropdown.category = category
-	dropdown:GenerateMenu()
+	if dropdown.GenerateMenu then
+		dropdown:GenerateMenu()
+	else
+		dropdown:SetText(StackLabel(category, ns.GetStarterCategoryStacks(category)))
+	end
 end
 
 --------------------------------------------------------------------------------
@@ -511,7 +408,6 @@ local function Layout(frame)
 
 	local chrome = BANDS.TITLE_HEIGHT + BANDS.CONTROLS_HEIGHT + BANDS.FOOTER_HEIGHT + BANDS.FRAME_BORDER + 8
 	frame:SetHeight(math.max(WINDOW_MIN_HEIGHT, math.min(WINDOW_MAX_HEIGHT, y + chrome)))
-	WarmOfferedItems()
 end
 
 --------------------------------------------------------------------------------
@@ -589,7 +485,8 @@ local function CreateWindow()
 	    items just added here, and once the window is gone the note is stale --
 	    the same rule as the Restock List's own OnHide, and as true with that
 	    window still open behind this one, where the repaint below files the new
-	    rows under their own types. It also hands Escape back to the list, a
+	    rows under their own types; that repaint also clears the Restock List's
+	    Undo offer, by design. It also hands Escape back to the list, a
 	    frame later: Escape hides this window from inside CloseSpecialWindows,
 	    which is still walking UISpecialFrames and would close the list too.
 	]]
@@ -625,6 +522,7 @@ function ns.ShowStarterListPopup(fromLogin)
 	ns.SetRestockWindowClosesOnEscape(false)
 	window:Show()
 	window:Raise()
+	WarmOfferedItems()
 	window:Layout()
 	window.scrollFrame:SetVerticalScroll(0)
 end

@@ -80,6 +80,9 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 	Global("GetSpellBookItemTexture"),
 	Global("IsPassiveSpell"),
 	Global("BOOKTYPE_SPELL"),
+	-- The Retail engine's Professions line (Class-Spells.lua), left off the page where either is missing.
+	Global("GetProfessions"),
+	Global("GetProfessionInfo"),
 	-- MoP Classic's Call Pet flyout, which the Classic-engine read lists as one macro.
 	Global("GetFlyoutInfo"),
 	Global("GetFlyoutSlotInfo"),
@@ -193,6 +196,8 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 	Template("SearchBoxTemplate"),
 	Template("InputBoxTemplate"),
 	Global("PixelUtil"),
+	-- The parchment's aged edges (Spellbook-Page-Parchment.lua), drawn plain without it.
+	Global("CreateColor"),
 	Global("StaticPopup_Show"),
 	-- The macro list's item macros (Consumable-Macros.lua) and What's Next?'s grimoire names.
 	Global("GetMacroIndexByName"),
@@ -805,9 +810,13 @@ local function GroupVersionLines(lines)
 end
 
 local function SpellbookLines(lines)
-	local total, byLine, order = 0, {}, {}
-	local ok, problem = pcall(ns.ForEachClassSpell, function(_, _, _, lineName, line)
+	local total, unnamed, byLine, order = 0, 0, {}, {}
+	local ok, problem = pcall(ns.ForEachClassSpell, function(name, _, _, lineName, line)
 		total = total + 1
+		-- the page skips a spell the client gives no name yet
+		if not name then
+			unnamed = unnamed + 1
+		end
 		local key = string.format("%s %s", tostring(line), tostring(lineName))
 		if not byLine[key] then
 			byLine[key] = 0
@@ -820,9 +829,10 @@ local function SpellbookLines(lines)
 		return
 	end
 	lines[#lines + 1] = string.format(
-		"Spellbook spells (castable, every rank): %d, read through %s",
+		"Spellbook spells (castable, every rank): %d, read through %s; %d with no name yet, left off the page",
 		total,
-		C_SpellBook.GetNumSpellBookSkillLines and "C_SpellBook's skill lines" or "the spell tab globals"
+		C_SpellBook.GetNumSpellBookSkillLines and "C_SpellBook's skill lines" or "the spell tab globals",
+		unnamed
 	)
 	for _, key in ipairs(order) do
 		lines[#lines + 1] = string.format("  skill line %s: %d", key, byLine[key])
@@ -1087,6 +1097,117 @@ local function WhatsNextSourceIds()
 end
 
 --[[
+	The pet's spells that sit among this class's own rows, where What's Next? and Ability Alerts While Leveling
+	would list them as the player's and never see them as learned (the player's spellbook doesn't hold them).
+	A spell counts as the pet's when the pet data has it (PET_ABILITIES' id, Rank Watch's pet ladders) or the
+	pet out has a spell of its name. Read from the bundled trainer rows and the raw recorded table, so the probe
+	writes nothing. Empty when there are none. Without a pet out, only the pet data marks a spell; a pet out also
+	catches the ones the data misses.
+]]
+local PET_SPELL_EXAMPLES = 8
+
+local function PetSpellsInClassRows()
+	local class = PlayerClass()
+	local petIds, petNames = {}, {}
+	local function mark(id, signal)
+		if id then
+			petIds[id] = petIds[id] or {}
+			petIds[id][signal] = true
+		end
+	end
+	for _, row in ipairs(ns.PET_ABILITIES or {}) do
+		mark(row.id, "PET_ABILITIES")
+	end
+	for _, ladder in ipairs((ns.RANK_WATCH_PET_ABILITIES or {})[class] or {}) do
+		for _, rank in ipairs(ladder) do
+			mark(rank.id, "RANK_WATCH_PET_ABILITIES")
+		end
+	end
+	local bookOk, bookRows = pcall(ns.PetSpellbookRows or function()
+		return {}
+	end)
+	for _, row in ipairs(bookOk and bookRows or {}) do
+		if row.name then
+			petNames[row.name] = true
+		end
+	end
+
+	local found, seen = {}, {}
+	local function check(id, where)
+		if seen[id] then
+			return
+		end
+		seen[id] = true
+		local signals = {}
+		for signal in pairs(petIds[id] or {}) do
+			signals[#signals + 1] = signal
+		end
+		local name = C_Spell.GetSpellName(id)
+		if name and petNames[name] then
+			signals[#signals + 1] = "pet's spellbook"
+		end
+		if #signals > 0 then
+			table.sort(signals)
+			found[#found + 1] = { id = id, name = name, where = where, signals = signals }
+		end
+	end
+	for _, row in ipairs(ns.ClassTrainerRows and ns.ClassTrainerRows() or {}) do
+		check(row.id, "data")
+	end
+	local recorded = ns.db and ns.db.profile.trainerSpells and ns.db.profile.trainerSpells[class] or {}
+	-- the recorded ones Features/Enhanced-Spellbook/Trainer-Recording.lua drops on its first read don't count
+	for id in pairs(recorded) do
+		if not (ns.IsPetAbilitySpell and ns.IsPetAbilitySpell(id)) then
+			check(id, "recorded")
+		end
+	end
+	table.sort(found, function(a, b)
+		return a.id < b.id
+	end)
+	return found, bookOk and #bookRows or 0
+end
+
+--[[
+	One line for the pet's spells among the class rows: "none", or how many from the bundled data and the
+	recorded trainer spells, with the first few named and what marked each as the pet's.
+]]
+function ns.PetSpellsInClassRowsLine()
+	local ok, found, bookCount = pcall(PetSpellsInClassRows)
+	if not ok then
+		return "  pet spells among your class rows: (read failed: " .. Shown(found) .. ")"
+	end
+	local suffix = string.format(" (pet spellbook spells read: %d)", bookCount)
+	if #found == 0 then
+		return "  pet spells among your class rows: none" .. suffix
+	end
+	local data, recorded, examples = 0, 0, {}
+	for index, entry in ipairs(found) do
+		if entry.where == "data" then
+			data = data + 1
+		else
+			recorded = recorded + 1
+		end
+		if index <= PET_SPELL_EXAMPLES then
+			examples[#examples + 1] = string.format(
+				"%s %d (%s; %s)",
+				PlainText(entry.name),
+				entry.id,
+				entry.where,
+				table.concat(entry.signals, ", ")
+			)
+		end
+	end
+	return string.format(
+		"  PROBLEM: pet spells among your class rows, listed as yours and never seen as learned: %d from the data, %d recorded%s; %s%s",
+		data,
+		recorded,
+		suffix,
+		table.concat(examples, "; "),
+		#found > PET_SPELL_EXAMPLES and string.format("; and %d more", #found - PET_SPELL_EXAMPLES) or ""
+	)
+end
+
+--[[
 	What's Next? (Features/Enhanced-Spellbook/Whats-Next/Whats-Next.lua): its settings, the talent tree its talent
 	levels come from (none on the Retail engine), and the rows it builds now by status and source. A spell
 	whose name isn't loaded yet is skipped until it arrives, and counted here; Known and talent rows show only
@@ -1118,6 +1239,32 @@ local function WhatsNextLines(lines, profile)
 		UnnamedCount(WhatsNextSourceIds()),
 		CountBy(rows, "status", ns.WHATS_NEXT_STATUSES),
 		CountBy(rows, "source", ns.WHATS_NEXT_SOURCES)
+	)
+	lines[#lines + 1] = ns.PetSpellsInClassRowsLine()
+	--[[
+		The rank lines under the game's own spell tooltips (Spell-Ranks-Tooltip.lua), skipped in combat, while a
+		page's own tooltip holds the flag that says it adds its ranks itself, and for a spell with fewer than two
+		rows of its name.
+	]]
+	local hook = (TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum.TooltipDataType)
+			and "TooltipDataProcessor post-call"
+		or (GameTooltip:HasScript("OnTooltipSetSpell") and "OnTooltipSetSpell")
+		or "none, so no ranks show"
+	local rankCounts, ranked = {}, 0
+	for _, row in ipairs(rows) do
+		local key = (row.extra and "extra:" or "rank:") .. tostring(row.name)
+		rankCounts[key] = (rankCounts[key] or 0) + 1
+		if rankCounts[key] == 2 then
+			ranked = ranked + 1
+		end
+	end
+	lines[#lines + 1] = string.format(
+		"  Ranks under spell tooltips: %s; hooked through %s; in combat now %s; own-ranks flag held %s; spells with two or more ranks in the rows %d",
+		OnOff(ns.db.global.abilityTooltipRanks),
+		hook,
+		YesNo(InCombatLockdown()),
+		YesNo(ns.spellTooltipHasOwnRanks),
+		ranked
 	)
 end
 
@@ -1161,9 +1308,10 @@ local function PetLines(lines, profile)
 	end
 	local ok, rows = pcall(ns.WhatsNextPetRows)
 	lines[#lines + 1] = string.format(
-		"  Pet What's Next?: show known %s, show other families %s; %s; %d of %d abilities with no spell data yet",
+		"  Pet What's Next?: show known %s, show other families %s; Beast Training read with no pet out %s; %s; %d of %d abilities with no spell data yet",
 		OnOff(profile.whatsNextPetShowKnown),
 		OnOff(profile.whatsNextPetShowOtherFamilies),
+		YesNo(ns.WhatsNextPetUsesBeastTraining and ns.WhatsNextPetUsesBeastTraining()),
 		ok and string.format("rows %d, by status %s", #rows, CountBy(rows, "status", ns.WHATS_NEXT_PET_STATUSES))
 			or ("rows: (read failed: " .. Shown(rows) .. ")"),
 		UnnamedCount(abilityIds),
@@ -1292,13 +1440,10 @@ function ns:BuildPageContextReport()
 	else
 		lines[#lines + 1] = "Profile: (database not loaded)"
 	end
-	local settingsRoute = type(Settings) == "table"
-		and Settings.OpenToCategory
-		and ns.optionsFrames
-		and ns.optionsFrames.categoryID
+	-- The Options-Kit keeps each panel's category ID and opens it by that ID wherever the client has the route.
+	local settingsRoute = type(Settings) == "table" and Settings.OpenToCategory
 	lines[#lines + 1] = string.format(
-		"Options panel: category id %s, /gtg opens it through %s",
-		tostring(ns.optionsFrames and ns.optionsFrames.categoryID),
+		"Options panel: /gtg opens it through %s",
 		settingsRoute and "Settings.OpenToCategory" or "AceConfigDialog:Open"
 	)
 	local keys = { GetBindingKey("GOODTOGO_TOGGLE_SPELLBOOK") }
@@ -1308,7 +1453,7 @@ function ns:BuildPageContextReport()
 		keys[1] and table.concat(keys, ", ") or "not bound",
 		oldKeys[1] and table.concat(oldKeys, ", ") or "not bound",
 		YesNo(type(GoodToGo_ToggleSpellbook) == "function"),
-		not ns.ToggleSpellbookPage and "nothing, no spellbook host loaded" or "the page's window"
+		not ns.ToggleSpellbookPage and "nothing, Spellbook-Window.lua not loaded" or "the page's window"
 	)
 	DockedPanelLine(lines)
 
@@ -1363,32 +1508,65 @@ local DYNAMIC_RANK_MACROS_SHOWN = 12
 
 --[[
 	Dynamic Rank (Features/Enhanced-Spellbook/Dynamic-Rank.lua): a macro counts as placed when its WoW macro exists and a
-	bar holds it by name or by the tag its body carries, as the rewrite reads it; with none placed a new target
-	rewrites nothing, and with none placed that tries the mouseover a new mouseover rewrites nothing either.
-	A macro names a lower rank only for a unit that is there, can be helped and shows its level, and only when
-	it casts its own spell (not a grouped one), not at the cursor and with no fixed rank set. The text it would
-	write for the units now, against its WoW macro's, says whether a rewrite is still due.
+	bar holds it by the tag its body carries (or by name when the bar's macro has none), as the rewrite reads it; with none placed a new target
+	rewrites nothing, and a new mouseover, focus, pet or target's target rewrites only when a placed macro tries
+	that unit. A focus copy tries its focus, then the target, but no focus change rewrites it. A macro names a
+	lower rank only for a unit that is there, can be helped and shows its level, and that WoW Forever doesn't
+	keep secret in combat, and only when it casts its own spell (not a grouped one), not at the cursor and with
+	no fixed rank set. The text it would write for the units now, against its WoW macro's, says whether a
+	rewrite is still due.
 ]]
+local DYNAMIC_RANK_UNITS = { "target", "mouseover", "focus", "pet", "targettarget" }
+
+-- The units a macro's rank follows, in the order it tries them.
+local function RankUnits(macro)
+	if macro.focus then
+		return { "focus", "target" }
+	end
+	return ns.TargetPriority(macro)
+end
+
+-- One unit as RankFor (Features/Enhanced-Spellbook/Macro-Body.lua) reads it.
+local function RankUnitText(unit)
+	if unit == "focus" and ns.FLAVOR == "Vanilla" then
+		return "focus none on this flavor"
+	end
+	if ns.IsUnitIdentitySecret(unit) then
+		return unit .. " secret in combat"
+	end
+	return string.format(
+		"%s there %s, can be helped %s, level %s",
+		unit,
+		PlainYesNo(UnitExists(unit)),
+		PlainYesNo(UnitCanAssist("player", unit)),
+		PlainText(UnitLevel(unit))
+	)
+end
+
 local function DynamicRankLines(lines, indexes, barNames)
 	local onBars, tagsOnBars = {}, {}
-	for _, name in pairs(barNames) do
-		onBars[name] = true
-		local tag = ns.MacroNameTag(name)
+	for slot, name in pairs(barNames) do
+		local tag = ns.ActionMacroTag(slot)
 		if tag then
 			tagsOnBars[tag] = true
+		else
+			onBars[name] = true
 		end
 	end
-	local total, placed, placedMouseover, detail = 0, 0, 0, {}
+	local total, placed, placedTrying, detail = 0, 0, {}, {}
 	for _, macro in ipairs(ns.macros or {}) do
 		if ns.IsOptionOn(macro, "targetRank") then
 			total = total + 1
 			local tag = ns.MacroTag(macro)
 			local index = indexes.tags[tag]
 			local onBar = index ~= nil and (onBars[ns.WowMacroName(macro)] or tagsOnBars[tag]) == true
-			local mouseover = ns.TriesUnit(macro, "mouseover")
 			if onBar then
 				placed = placed + 1
-				placedMouseover = placedMouseover + (mouseover and 1 or 0)
+				for _, unit in ipairs(DYNAMIC_RANK_UNITS) do
+					if ns.TriesUnit(macro, unit) then
+						placedTrying[unit] = (placedTrying[unit] or 0) + 1
+					end
+				end
 			end
 			if #detail < DYNAMIC_RANK_MACROS_SHOWN then
 				local bodyOk, body = pcall(ns.MacroBody, macro)
@@ -1396,10 +1574,10 @@ local function DynamicRankLines(lines, indexes, barNames)
 					or not bodyOk and ("(read failed: " .. Shown(body) .. ")")
 					or YesNo(select(3, GetMacroInfo(index)) == body)
 				detail[#detail + 1] = string.format(
-					"  %s: on a bar %s, tries the mouseover %s, ranks known %d (right-click spell's %d), casts its own spell %s, fixed rank %s, at the cursor %s; WoW macro holds the text for the units now %s",
+					"  %s: on a bar %s, tries %s, ranks known %d (right-click spell's %d), casts its own spell %s, fixed rank %s, at the cursor %s; WoW macro holds the text for the units now %s",
 					Shown(macro.label or macro.name),
 					YesNo(onBar),
-					YesNo(mouseover),
+					table.concat(RankUnits(macro), ">"),
 					#(macro.ranks or {}),
 					#(macro.rightClickRanks or {}),
 					YesNo(ns.CastSpellName(macro) == macro.name),
@@ -1410,18 +1588,21 @@ local function DynamicRankLines(lines, indexes, barNames)
 			end
 		end
 	end
+	local trying = {}
+	for _, unit in ipairs(DYNAMIC_RANK_UNITS) do
+		trying[#trying + 1] = unit .. " " .. (placedTrying[unit] or 0)
+	end
 	lines[#lines + 1] = string.format(
-		"Dynamic Rank: %d macros, %d on the action bars, %d of those try the mouseover; target there %s, can be helped %s, level %s; mouseover there %s, can be helped %s, level %s",
+		"Dynamic Rank: %d macros, %d on the action bars; of those, trying %s",
 		total,
 		placed,
-		placedMouseover,
-		PlainYesNo(UnitExists("target")),
-		PlainYesNo(UnitCanAssist("player", "target")),
-		PlainText(UnitLevel("target")),
-		PlainYesNo(UnitExists("mouseover")),
-		PlainYesNo(UnitCanAssist("player", "mouseover")),
-		PlainText(UnitLevel("mouseover"))
+		table.concat(trying, ", ")
 	)
+	local units = {}
+	for _, unit in ipairs(DYNAMIC_RANK_UNITS) do
+		units[#units + 1] = RankUnitText(unit)
+	end
+	lines[#lines + 1] = "  units now: " .. table.concat(units, "; ")
 	for _, line in ipairs(detail) do
 		lines[#lines + 1] = line
 	end
@@ -1457,7 +1638,8 @@ end
 --[[
 	The state behind "clicking a macro does nothing", "my own macro was left alone" or "the macro didn't
 	update": the Spellbook's switch and combat, free macro slots (character macros spill into general ones once
-	full) and whether a new one can be created, which macros the add-on recorded as its own and for whom, each
+	full) and whether a new one can be created, the game's macro window, which holds every write back while it
+	is open, which macros the add-on recorded as its own and for whom, each
 	page macro as ns.FindMacroIndex finds it (by its tag line, or by name for a macro from before the tags,
 	which the next sync tags), page macros too long to write or out of step with their WoW macro, tags two WoW
 	macros share, untagged macros sharing a page macro's name that the page leaves alone, a replaced spell's
@@ -1494,6 +1676,13 @@ function ns:BuildMacroContextReport()
 		YesNo(generalFull),
 		YesNo(not (characterFull and generalFull))
 	)
+	-- read off the frame, not ns.IsMacroUIOpen, which hooks the frame the first time it finds it
+	local macroFrame = _G.MacroFrame
+	lines[#lines + 1] = string.format(
+		"Game's macro window: loaded %s, open %s (while open, no page macro is created or rewritten)",
+		YesNo(macroFrame ~= nil),
+		YesNo(macroFrame and macroFrame:IsShown())
+	)
 	if not ns.db then
 		lines[#lines + 1] = "(database not loaded)"
 		return table.concat(lines, "\n")
@@ -1518,7 +1707,7 @@ function ns:BuildMacroContextReport()
 		CountKeys(ns.db.global.macroTags)
 	)
 
-	local counts = { tag = 0, owned = 0, claim = 0, adopt = 0, missing = 0, tooLong = 0, outOfStep = 0 }
+	local counts = { tag = 0, owned = 0, claim = 0, missing = 0, tooLong = 0, outOfStep = 0 }
 	local leftAlone, tooLong = {}, {}
 	local indexes = ns.ReadMacroIndexes()
 	for _, macro in ipairs(ns.macros or {}) do
@@ -1536,17 +1725,16 @@ function ns:BuildMacroContextReport()
 			end
 		end
 		local wowName = ns.WowMacroName(macro)
-		if found ~= "owned" and found ~= "claim" and found ~= "adopt" and indexes.names[wowName] then
+		if found ~= "owned" and found ~= "claim" and indexes.names[wowName] then
 			leftAlone[#leftAlone + 1] = wowName
 		end
 	end
 	lines[#lines + 1] = string.format(
-		"Page macros (as of the page's last redraw, %d in the list): %d found by tag; by name, from before the tags, %d this character's, %d to claim, %d to adopt; %d not created yet; %d of those found out of step with the page; %d over %d bytes, never written%s",
+		"Page macros (as of the page's last redraw, %d in the list): %d found by tag; by name, from before the tags, %d this character's, %d to claim; %d not created yet; %d of those found out of step with the page; %d over %d bytes, never written%s",
 		#(ns.macros or {}),
 		counts.tag,
 		counts.owned,
 		counts.claim,
-		counts.adopt,
 		counts.missing,
 		counts.outOfStep,
 		counts.tooLong,

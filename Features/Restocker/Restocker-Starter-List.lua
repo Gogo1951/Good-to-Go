@@ -46,7 +46,7 @@ for _, chain in ipairs(ns.CONSUMABLE_UPGRADE_CHAINS) do
 end
 
 --[[
-    Resolve every data row (ns.STARTER_LIST_CATEGORIES, in Data/Data.lua) to the ladder its
+    Resolve every data row (ns.STARTER_LIST_CATEGORIES, in Restocker-Starter-Categories.lua) to the ladder its
     chainKey names. A row whose ladder this client's folder does not carry is dropped here
     rather than crashing the popup open.
 ]]

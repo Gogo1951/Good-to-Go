@@ -1,10 +1,11 @@
 local _, ns = ...
 local L = ns.L
 local GetColor = ns.GetColor
+local Kit = ns.OptionsKit
 
-local Header = ns.OptionsHeader
-local Desc = ns.OptionsDesc
-local Spacer = ns.OptionsSpacer
+local Header = Kit.Header
+local Desc = Kit.Desc
+local Spacer = Kit.Spacer
 
 --------------------------------------------------------------------------------
 -- Key Bindings
@@ -19,7 +20,7 @@ local Spacer = ns.OptionsSpacer
     repaints this panel
     when the player changes a key.
 
-    The descKey line says what the key does. The Buff Button's names the macro
+    The descKey line says what the key does. Cast Next Buff's names the macro
     that presses the same key, passed in as its %s.
 ]]
 local function KeyBindings()
@@ -32,11 +33,10 @@ end
 
 --[[
     The caption takes the grid's label width, so the key lines up with every
-    other row's control, and the key and Set Key share the control width, less a
-    little slack that keeps the unnamed group's row off the wrap boundary.
+    other row's control, and the key and Set Key share the control column.
 ]]
+local KEY_STATUS_WIDTH = 0.75
 local KEY_BUTTON_WIDTH = 0.55
-local KEY_STATUS_WIDTH = ns.OPTIONS_CONTROL_WIDTH - KEY_BUTTON_WIDTH - 0.1
 
 local function GetBindingStatus(bindingName)
 	local key = GetBindingKey(bindingName)
@@ -67,34 +67,26 @@ local function AddKeyBindingRows(args, startOrder)
 			order = order + 0.01
 		end
 
-		args["rowKeyBinding" .. index] = {
-			type = "group",
-			name = "",
-			inline = true,
-			order = order,
-			args = {
-				caption = ns.OptionsRowLabel(GetColor("INFO") .. L[captionKey] .. "|r", 1),
-				status = {
-					type = "description",
-					name = function()
-						return GetBindingStatus(bindingName)
-					end,
-					fontSize = "medium",
-					width = KEY_STATUS_WIDTH,
-					order = 2,
-				},
-				setKey = {
-					type = "execute",
-					name = L["OPTIONS_KEY_SET"],
-					desc = L["OPTIONS_KEY_SET_DESCRIPTION"],
-					width = KEY_BUTTON_WIDTH,
-					order = 3,
-					func = function()
-						ns:OpenKeyBindings()
-					end,
-				},
+		args["rowKeyBinding" .. index] = Kit.Row(order, nil, {
+			Kit.Label(GetColor("INFO") .. L[captionKey] .. "|r", nil, Kit.LABEL_WIDTH),
+			{
+				type = "description",
+				name = function()
+					return GetBindingStatus(bindingName)
+				end,
+				fontSize = "medium",
+				width = KEY_STATUS_WIDTH,
 			},
-		}
+			{
+				type = "execute",
+				name = L["OPTIONS_KEY_SET"],
+				desc = L["OPTIONS_KEY_SET_DESCRIPTION"],
+				width = KEY_BUTTON_WIDTH,
+				func = function()
+					ns:OpenKeyBindings()
+				end,
+			},
+		})
 		order = order + 0.01
 
 		args["descKeyBinding" .. index] = Desc(KeyBindingDescription(descKey, descArgument), order)
@@ -111,7 +103,7 @@ end
     Message, Mini-map Button, Features (every feature's on/off switch, two to a
     line), Key Bindings and /Commands. Every toggle on this page is account-wide
     (ns.db.global). Each Features switch is the same toggle that heads its
-    feature's own panel (ns.OptionsFeatureSwitch).
+    feature's own panel (Kit.FeatureSwitch, from ns.FEATURES).
 
     Order values are grouped in spaced blocks so sections can be reordered or
     extended without renumbering their neighbors.
@@ -135,6 +127,7 @@ function ns.BuildGeneralOptions()
 				if ns.db then
 					ns.db.global.showWelcome = value
 				end
+				ns.RefreshSettings()
 			end,
 		},
 
@@ -149,14 +142,19 @@ function ns.BuildGeneralOptions()
 				return not (ns.db and ns.db.global.minimap and ns.db.global.minimap.hide)
 			end,
 			set = function(_, value)
-				ns.ToggleMinimapButton(value)
+				if ns.db then
+					ns.db.global.minimap.hide = not value
+					ns:ApplyMinimapButton()
+				end
+				ns.RefreshSettings()
 			end,
 		},
 
-		-- Features: two groups of pairs fill 23 through 50.
+		-- Features
 		spaceFeatures0 = Spacer(20),
 		headerFeatures = Header(L["OPTIONS_FEATURES_HEADER"], 21),
 		spaceFeatures1 = Spacer(22),
+		switchesFeatures = Kit.FeatureSwitches(23),
 
 		-- Key Bindings: the rows fill 63 onward.
 		spaceKeyBindings0 = Spacer(60),
@@ -191,7 +189,6 @@ function ns.BuildGeneralOptions()
 		)
 	end
 
-	ns.OptionsFeatureSwitchRows(args, "rowFeatures", 23)
 	AddKeyBindingRows(args, 63)
 
 	return {

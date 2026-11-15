@@ -100,8 +100,8 @@ end
 	A spell macro's page category (a ns.PAGE_CATEGORIES key), or nil for a macro with no kind, which goes
 	under its own section after the categories. A resurrection is
 	one whatever it's tagged; then the spell's page tag decides (Polymorph is crowd control, Barkskin a
-	defensive cooldown, Inner Fire a buff, Fishing a profession). Untagged, a ground or self spell is an attack
-	when it hurts (Blizzard, Arcane Explosion). A utility-tagged spell, or a ground or self spell that doesn't
+	defensive cooldown, Inner Fire a buff, Fishing a profession). Otherwise a ground or self spell is an attack
+	when it hurts (Blizzard, Arcane Explosion), even utility-tagged. A utility-tagged spell, or a ground or self spell that doesn't
 	hurt, is an offensive cooldown when its base cooldown is a minute or longer (Arcane Power),
 	else Utility (Cure Poison, Conjure Water). The rest follow their kind.
 ]]

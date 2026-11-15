@@ -44,7 +44,9 @@ end
 
 --[[
     Branded sent messages -- Rank Watch's whispers and Buff Duty's buff asks:
-    {rt1} Message // GtG. The body carries a spell link, and MarkerPrefix adds
+    {rt1} Message // GtG. The editable whispers (Editable Whispers, below) are
+    signed off here too, so the marker and the name are never part of the
+    player's saved text. The body carries a spell link, and MarkerPrefix adds
     the leading raid-target marker; the chat system renders both on send (the
     marker becomes the Star icon), so the pipes and braces pass through unchanged. WoW Forever blocks
     raid-marker tokens in group and channel chat but allows them in whispers, so
@@ -95,7 +97,7 @@ end
 -- L[formatKey] formatted and signed off, or nil for a key with no text. Bodies carry links, so pipes stay.
 local function BuildSent(isWhisper, formatKey, ...)
 	local template = L[formatKey]
-	if not template then
+	if not template or template == "" then
 		return nil
 	end
 	return SignOff(string.format(template, ...), isWhisper)
@@ -107,11 +109,6 @@ end
 ]]
 function ns:BuildAnnounceMessage(formatKey, ...)
 	return BuildSent(false, formatKey, ...)
-end
-
--- An automated whisper: led by the marker on every flavor, WoW Forever included.
-function ns:BuildWhisperMessage(formatKey, ...)
-	return BuildSent(true, formatKey, ...)
 end
 
 -- Every chat line the add-on sends goes through here, which sends nothing without a channel and a message.
@@ -162,74 +159,6 @@ local function Deliver(channel, target, message)
 	end
 end
 
---[[
-    Resolve the client's plural escape to plain text.
-
-    Trap: WoW's own duration strings (D_MINUTES == "%d |4minute:minutes;") carry
-    a |4 escape that the UI expands only at render time. It looks right in a
-    print, but SendChatMessage rejects any message still holding one -- "Invalid
-    escape code in chat message" -- and silently drops the whole line. Resolving
-    it here is what lets the units come from the client's own localization in
-    every language it ships, instead of the add-on carrying its own copies.
-
-    Slavic locales list a third form (one/few/many) and get their rule; two-form
-    languages take a simple count check; languages that don't inflect (zhCN,
-    koKR) carry no escape at all, so the gsub finds nothing to do.
-]]
-local function ResolvePlurals(text)
-	return (
-		text:gsub("(%d+)(%s*)|4([^;]*);", function(count, gap, body)
-			local forms = {}
-			for form in body:gmatch("[^:]+") do
-				forms[#forms + 1] = form
-			end
-			if #forms == 0 then
-				return count .. gap
-			end
-
-			local number = tonumber(count) or 0
-			local pick
-			if #forms >= 3 then
-				local mod10, mod100 = number % 10, number % 100
-				if mod10 == 1 and mod100 ~= 11 then
-					pick = forms[1] -- 1, 21, 31...
-				elseif mod10 >= 2 and mod10 <= 4 and (mod100 < 12 or mod100 > 14) then
-					pick = forms[2] -- 2-4, 22-24...
-				else
-					pick = forms[3]
-				end
-			else
-				pick = (number == 1) and forms[1] or (forms[2] or forms[1])
-			end
-			return count .. gap .. pick
-		end)
-	)
-end
-
---[[
-    Durations run to round numbers, so the largest whole unit states one exactly.
-    `forceSeconds` keeps the seconds wording whatever the size: the rounding is
-    right for a duration read as a length ("1 Minute" for 89s) but wrong for a
-    fixed menu choice, where 89 would print as "1 Minute" directly beneath "55
-    Seconds". Return the Favor's 60-second choice reads as a minute. The hour
-    rung stays because this formats whatever duration it is handed, and a later
-    caller re-deriving the ladder would walk back into the plural-escape trap
-    that ResolvePlurals exists to solve.
-]]
-local function FormatDuration(seconds, forceSeconds)
-	seconds = math.floor((seconds or 0) + 0.5)
-	local template, count
-	if not forceSeconds and seconds >= 3600 then
-		template, count = D_HOURS, math.floor(seconds / 3600 + 0.5)
-	elseif not forceSeconds and seconds >= 60 then
-		template, count = D_MINUTES, math.floor(seconds / 60 + 0.5)
-	else
-		template, count = D_SECONDS, seconds
-	end
-	return ResolvePlurals(template:format(count))
-end
-ns.FormatDuration = FormatDuration
-
 --------------------------------------------------------------------------------
 -- Buff Requests
 --------------------------------------------------------------------------------
@@ -239,7 +168,7 @@ local ASK_MAX_NAMES = 5
 
 --[[
     Names joined the way a sentence lists them: "Katz", "Katz and Aero",
-    "Katz, Aero, and Spek".
+    "Katz, Aero, and Spek". Exposed for the Party Buffs menu's whisper row.
 ]]
 local function JoinNames(names)
 	if #names == 1 then
@@ -250,29 +179,162 @@ local function JoinNames(names)
 	local head = table.concat(names, L["LIST_SEPARATOR"], 1, #names - 1)
 	return L["LIST_LAST_FORMAT"]:format(head, names[#names])
 end
+ns.JoinNames = JoinNames
+
+-- Whether an ask counts its players rather than naming them: past ASK_MAX_NAMES, or without a name for each.
+local function AsksByCount(names, count)
+	return count > ASK_MAX_NAMES or #names ~= count or count == 0
+end
 
 --[[
-    Buff Duty's ask for a raid buff (an icon under the window's Party-Buffs),
-    signed off like every sent message: "Katz and Aero are missing [Arcane
-    Intellect] // GtG" while ASK_MAX_NAMES or fewer are missing it, and "7
-    people are missing the [Arcane Intellect] buff // GtG" past that. `names`
-    are the missing players' names without their realms, `count` how many.
-    A statement, not a question, so the sign-off reads cleanly after it.
-    `isWhisper` builds the whispered ask, which leads with the marker on
-    WoW Forever too; the group's follows the group-chat rule (MarkerPrefix).
+    Buff Duty's ask for a raid buff said to the group (a click on an icon
+    under the window's Party-Buffs), signed off like every sent message:
+    "Katz and Aero are missing [Arcane Intellect] // GtG" while ASK_MAX_NAMES
+    or fewer are missing it, and "7 people are missing the [Arcane Intellect]
+    buff // GtG" past that. `names` are the missing players' names without
+    their realms, `count` how many. A statement, not a question, so the
+    sign-off reads cleanly after it. It follows the group-chat rule
+    (MarkerPrefix); the whispered ask is the player's own text
+    (ns:BuildBuffAskWhisper, below).
 ]]
-function ns:BuildBuffRequestMessage(names, count, link, isWhisper)
+function ns:BuildBuffRequestMessage(names, count, link)
 	names = names or {}
-	local build = isWhisper and ns.BuildWhisperMessage or ns.BuildAnnounceMessage
-	if count > ASK_MAX_NAMES or #names ~= count or count == 0 then
-		return build(ns, "BUFF_DUTY_OTHERS_ASK_COUNT", count, link)
+	if AsksByCount(names, count) then
+		return ns:BuildAnnounceMessage("BUFF_DUTY_OTHERS_ASK_COUNT", count, link)
 	elseif count == 1 then
-		return build(ns, "BUFF_DUTY_OTHERS_ASK_ONE", names[1], link)
+		return ns:BuildAnnounceMessage("BUFF_DUTY_OTHERS_ASK_ONE", names[1], link)
 	end
-	return build(ns, "BUFF_DUTY_OTHERS_ASK_NAMES", JoinNames(names), link)
+	return ns:BuildAnnounceMessage("BUFF_DUTY_OTHERS_ASK_NAMES", JoinNames(names), link)
 end
 
 ns.BUFF_ASK_MAX_NAMES = ASK_MAX_NAMES
+
+--------------------------------------------------------------------------------
+-- Editable Whispers
+--------------------------------------------------------------------------------
+
+--[[
+    The whispers a player words themselves on the options panels: Buff Duty's
+    whispered ask, and Rank Watch's tip, opt-out offer and opt-out reply. The
+    saved text holds {word} tokens, swapped with gsub and never format codes,
+    so a stray % can't break the send; each value goes in through a function,
+    which gsub takes literally, % included. A token the whisper doesn't list
+    stays as typed.
+
+    Each whisper has two builders. Its fill function builds the message as
+    typed, however long, so the panel can tell when it runs past the chat
+    ceiling. Its build function is what sends: nil for empty text, which sends
+    no whisper, and the default text of the language whispers go out in
+    (ns.GetDefaultMessage) when the player's own runs past the ceiling, or nil
+    again when even the default does, since the game rejects the line. The
+    Example lines, the Too Long lines, Send Test to Me and the real sends all
+    go through them.
+]]
+local function FillTokens(template, values)
+	return (
+		template:gsub("{(%a+)}", function(token)
+			local value = values[token]
+			if value ~= nil then
+				return tostring(value)
+			end
+		end)
+	)
+end
+
+-- The default text when `template` is too long to send, else nil for empty text, else the message as filled; nil when even the default is too long.
+local function BuildEditable(template, fill, field)
+	if not template or template == "" then
+		return nil
+	end
+	local message = fill(template)
+	if #message > ns.CHAT_MESSAGE_MAX_LENGTH then
+		message = fill(ns.GetDefaultMessage(field))
+		if #message > ns.CHAT_MESSAGE_MAX_LENGTH then
+			return nil
+		end
+	end
+	return message
+end
+
+--[[
+    Buff Duty's whispered ask (a right-click on an icon under the window's
+    Party-Buffs). {names} is the missing players' names joined as a sentence
+    lists them, or "7 people" past ASK_MAX_NAMES, and {spell} the buff's link.
+
+    While the text is the chosen language's default, one missing player and a
+    count each take their own default form (buffAskOne, buffAskCount), so the
+    grammar matches the ask said to the group: "Katz is missing", "7 people
+    are missing the ... buff".
+]]
+function ns.FillBuffAskWhisper(template, names, count, link)
+	names = names or {}
+	local values = { spell = link or "" }
+	if template == ns.GetDefaultMessage("buffAsk") and (count == 1 or AsksByCount(names, count)) then
+		template = ns.GetDefaultMessage(count == 1 and #names == 1 and "buffAskOne" or "buffAskCount")
+		values.count = count
+	end
+	if AsksByCount(names, count) then
+		values.names = L["BUFF_DUTY_OTHERS_ASK_PEOPLE"]:format(count)
+	else
+		values.names = JoinNames(names)
+	end
+	return SignOff(FillTokens(template, values), true)
+end
+
+function ns:BuildBuffAskWhisper(template, names, count, link)
+	return BuildEditable(template, function(text)
+		return ns.FillBuffAskWhisper(text, names, count, link)
+	end, "buffAsk")
+end
+
+--[[
+    Rank Watch's tip to a player who cast a low rank: {spell} is the cast and
+    its rank, {level} the level a newer rank comes at, and {pet} the pet (its
+    name) or demon (its kind) in those two forms. `form` is nil, "pet" or
+    "demon". `linkedSpell` is the cast linked and `namedSpell` its name alone:
+    the fill takes the link, then the name when the link won't fit the chat
+    ceiling, and never cuts the message, since a cut could break a link.
+]]
+local TIP_FIELDS = { pet = "rankWatchTipPet", demon = "rankWatchTipDemon" }
+
+function ns.RankWatchTipField(form)
+	return TIP_FIELDS[form] or "rankWatchTip"
+end
+
+function ns.FillRankWatchTipWhisper(template, linkedSpell, namedSpell, level, petName)
+	local message
+	for _, spell in ipairs({ linkedSpell or "", namedSpell or "" }) do
+		message = SignOff(FillTokens(template, { spell = spell, level = level, pet = petName }), true)
+		if #message <= ns.CHAT_MESSAGE_MAX_LENGTH then
+			return message
+		end
+	end
+	return message
+end
+
+function ns:BuildRankWatchTipWhisper(form, template, linkedSpell, namedSpell, level, petName)
+	return BuildEditable(template, function(text)
+		return ns.FillRankWatchTipWhisper(text, linkedSpell, namedSpell, level, petName)
+	end, ns.RankWatchTipField(form))
+end
+
+-- Rank Watch's opt-out offer, with a player's second tip in a session. It has no tokens.
+function ns.FillOptOutOfferWhisper(template)
+	return SignOff(template, true)
+end
+
+function ns:BuildOptOutOfferWhisper(template)
+	return BuildEditable(template, ns.FillOptOutOfferWhisper, "rankWatchOptOut")
+end
+
+-- Rank Watch's reply to a group member who whispered "Opt Out". It has no tokens.
+function ns.FillOptOutDoneWhisper(template)
+	return SignOff(template, true)
+end
+
+function ns:BuildOptOutDoneWhisper(template)
+	return BuildEditable(template, ns.FillOptOutDoneWhisper, "rankWatchOptOutDone")
+end
 
 --[[
     The chat the whole group reads: an instance group's own (a battleground's,
@@ -290,16 +352,7 @@ function ns:GetGroupChatChannel()
 	return nil
 end
 
---[[
-    The one entry point for a sent line built from a locale key: formatted,
-    signed off (a whisper by the whisper rule, MarkerPrefix) and delivered. A
-    nil channel, or a key with no text, sends nothing.
-]]
-function ns:Announce(channel, target, formatKey, ...)
-	Deliver(channel, target, BuildSent(channel == "WHISPER", formatKey, ...))
-end
-
--- A Party-Buffs icon's click, to the whole group: a line already built, so its length was measured.
+-- A Party-Buffs icon's click, to the whole group: a line already built.
 function ns:SayBuffRequest(message)
 	Deliver(ns:GetGroupChatChannel(), nil, message)
 end
@@ -310,4 +363,16 @@ end
 ]]
 function ns:QueueAutomatedWhisper(target, message)
 	Deliver("WHISPER", target, message)
+end
+
+--[[
+    The options panels' Send Test to Me: an editable whisper exactly as another
+    player gets it, sent to the player's own character, so they see the marker
+    and the links drawn by real chat rather than by the panel.
+]]
+function ns:WhisperTestToSelf(message)
+	local me = GetUnitName("player", true)
+	if message and me then
+		Send(message, "WHISPER", me)
+	end
 end

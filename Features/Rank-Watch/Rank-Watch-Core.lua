@@ -19,11 +19,13 @@ local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
       Rank-Watch-Lookups.lua     ns.RANK_WATCH_ABILITIES as ladders, joined by ns.SPELL_GROUPS
       Rank-Watch-Check.lua       Whether a cast was low, and the whisper or print that says so
       Rank-Watch-Cluster.lua     The RANKSENTINEL add-on messages that pick one whisperer per group
+      Rank-Watch-Level-Up.lua    Ability Alerts While Leveling: on a ding, the trainer spells it opened
       Rank-Watch-Detection-Combat-Log.lua   Casts from the combat log, in every TOC but WoW Forever's
       Rank-Watch-Detection-Forever.lua      Casts on WoW Forever: the player's own, auras and the damage meter
 
     Each file hands its event handlers to this one through ns.SetRankWatchHandler, the pattern Buff Duty uses,
-    so one module subscribes everything and one switch releases it.
+    so one module subscribes everything and one switch releases it. Rank-Watch-Level-Up.lua is the exception:
+    it runs its own module and its own switch.
 ]]
 
 local MODULE = "RankWatch"
@@ -61,8 +63,8 @@ end
 --[[
     Two copies watching one group would report every low rank twice, so while the standalone Rank Sentinel runs,
     Good to Go's stays quiet, and says so once a session when the player has it turned on. Good to Go replaces it,
-    so Features/Core.lua turns it off at login (ns.LEGACY_ADDONS) and offers a reload; it runs on until then, and
-    Rank Watch is switched on to take over after it (TakeOverFromStandalone).
+    so Features/Replaced-Addons.lua turns it off at login (ns.REPLACED_ADDONS) and offers a reload; it runs on until
+    then, and Rank Watch is switched on to take over after it (TakeOverFromStandalone).
 ]]
 local standaloneTitle
 
@@ -127,7 +129,7 @@ end
 
 --[[
     Rank Watch takes over the watching: in every session where the standalone add-on runs, which is a session
-    where Features/Core.lua turns it off, Rank Watch is switched on, so a player who ran it isn't left with
+    where Features/Replaced-Addons.lua turns it off (ns.REPLACED_ADDONS), Rank Watch is switched on, so a player who ran it isn't left with
     nothing watching after the reload. A player who had switched Rank Sentinel off keeps Rank Watch as it was.
     This runs every such login, not once, so a player who turns Rank Sentinel back on is moved over again.
 ]]
@@ -159,22 +161,7 @@ local EVENTS = {
 	"PLAYER_REGEN_ENABLED",
 	"PLAYER_ALIVE",
 	"PLAYER_UNGHOST",
-}
-
--- Every chat a player can say their opt-out number in (Rank-Watch-Check.lua listens to them all).
-ns.RANK_WATCH_CHAT_EVENTS = {
-	"CHAT_MSG_CHANNEL",
-	"CHAT_MSG_GUILD",
-	"CHAT_MSG_INSTANCE_CHAT",
-	"CHAT_MSG_INSTANCE_CHAT_LEADER",
-	"CHAT_MSG_OFFICER",
-	"CHAT_MSG_PARTY",
-	"CHAT_MSG_PARTY_LEADER",
-	"CHAT_MSG_RAID",
-	"CHAT_MSG_RAID_LEADER",
-	"CHAT_MSG_SAY",
-	"CHAT_MSG_WHISPER",
-	"CHAT_MSG_YELL",
+	"CHAT_MSG_WHISPER", -- a group member's "Opt Out" (Rank-Watch-Check.lua)
 }
 
 function ns.SyncRankWatchEvents()
@@ -182,11 +169,11 @@ function ns.SyncRankWatchEvents()
 	for _, event in ipairs(EVENTS) do
 		ns.SetModuleEvent(MODULE, event, active)
 	end
-	for _, event in ipairs(ns.RANK_WATCH_CHAT_EVENTS) do
-		ns.SetModuleEvent(MODULE, event, active)
-	end
 	ns.SyncRankWatchDetection(active)
 	ns.SyncRankWatchCluster(active)
+	if not active then
+		ns.ClearRankWatchQueue()
+	end
 end
 
 function ns.SetRankWatchEnabled(value)
@@ -296,12 +283,23 @@ end
 
 --[[
     Reset Profile on the Profiles panel puts Rank Watch back to its defaults too: switched off, both messages on,
-    the default grace periods, and every rank on Tracked Abilities following the data again. Rank Watch's settings
+    the default grace periods, every rank on Reported Ranks following the data again, and every Ability Alerts
+    While Leveling choice back on. Rank Watch's settings
     are account-wide, so AceDB's reset, which clears the profile alone, never reaches them by itself. Kept: the
-    Ignored Players list (a list the player built, one name at a time), the casts already reported, the
-    players already offered the opt-out, and the migration's own bookkeeping.
+    Ignored Players list (a list the player built, one name at a time), the casts already reported, and the
+    migration's own bookkeeping.
 ]]
-local RESET_KEYS = { "enabled", "whisper", "print", "graceMaxLevel", "graceLeveling" }
+local RESET_KEYS = {
+	"enabled",
+	"whisper",
+	"print",
+	"graceMaxLevel",
+	"graceLeveling",
+	"levelUpAlerts",
+	"levelUpAlertsPast",
+	"levelUpAlertsPet",
+	"levelUpAlertsPetPast",
+}
 local resetListener = {}
 
 function resetListener.OnProfileReset()
@@ -321,6 +319,15 @@ local function OnPlayerLogin()
 	local settings = ns.RankWatchSettings()
 	standaloneTitle = FindStandalone()
 	ImportStandaloneSettings(settings) -- MIGRATION (remove after 2026-12-08)
+	--[[
+	    MIGRATION (remove after 2026-12-15): the opt-out number gave way to a whispered "Opt Out", offered once a
+	    session. The saved list of players offered the number goes, and an offer the player wrote around {code}
+	    goes back to the default, since it would tell people to send a number that no longer works.
+	]]
+	settings.optOutOffered = nil
+	if type(settings.optOutMessage) == "string" and settings.optOutMessage:find("{code}", 1, true) then
+		settings.optOutMessage = nil
+	end
 	TakeOverFromStandalone(settings)
 	ForgetOnNewVersion(settings)
 	ns.BuildRankWatchLookups()

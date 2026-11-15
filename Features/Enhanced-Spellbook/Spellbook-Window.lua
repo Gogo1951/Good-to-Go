@@ -32,8 +32,8 @@ local TAB_PADDING, TAB_MIN_WIDTH, TAB_MAX_TEXT_WIDTH = 20, 60, 220
 --[[
 	The window's tabs, in order, each { title key, builder, refresh as it shows, shown }: the Spell Book page,
 	the What's Next? page where its file loaded (Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Page.lua), which refreshes
-	itself, then for a class with a pet the Pet Spell Book page, and for a hunter or warlock on a client whose
-	pets are trained (Beast Training, grimoires) the Pet What's Next? page. shown, where given, says whether this character gets the tab at all.
+	itself, then for a class with a pet the Pet Spell Book page, and the Pet What's Next? page where the client's
+	data lists the pet's abilities (ns.HasWhatsNextPet). shown, where given, says whether this character gets the tab at all.
 ]]
 local TABS = {
 	{ "TAB_ENHANCED_SPELLBOOK", ns.BuildSpellbookPage, ns.RefreshSpellbookPage },

@@ -162,7 +162,7 @@ end
     your group or not. BuffDuty.ResurrectionIcon says who can take one.
 ]]
 local function ResurrectionSpec()
-	if not UnitExists("target") or not UnitIsFriend("player", "target") then
+	if not UnitExists("target") or not ns.IsPlainYes(UnitIsFriend("player", "target")) then
 		return nil
 	end
 	return BuffDuty.ResurrectionIcon("target", "target", GetUnitName("target", false) or "")
@@ -174,7 +174,7 @@ local function TargetSubgroup()
 		return nil
 	end
 	for _, member in ipairs(BuffDuty.GroupMembers()) do
-		if UnitIsUnit(member.unit, "target") then
+		if ns.IsPlainYes(UnitIsUnit(member.unit, "target")) then
 			return member.subgroup
 		end
 	end

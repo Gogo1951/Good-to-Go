@@ -6,7 +6,7 @@ local SettingsKey = ns.SettingsKey
 --[[
 	A page macro's Conditionals: rows checked top to bottom, each one or two conditions and the spell the macro
 	casts in its place when they all match, ahead of everything the macro casts on its own. They are one of the
-	per-spell settings (Features/Enhanced-Spellbook/Macro-Options.lua), "conditionals", so a Duplicate copy keeps its own
+	per-spell settings (Features/Enhanced-Spellbook/Macro-Settings.lua), "conditionals", so a Duplicate copy keeps its own
 	and the menu's Delete and the middle-click reset drop them with the rest. Features/Enhanced-Spellbook/Macro-Body.lua
 	writes them into the /cast line, and Features/Enhanced-Spellbook/Macro-Builder/Conditionals-Panel.lua is the panel docked beside the
 	Spell Book that sets them.

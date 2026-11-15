@@ -1,5 +1,6 @@
 local _, ns = ...
 local L = ns.L
+local Kit = ns.OptionsKit
 
 --------------------------------------------------------------------------------
 -- Ignore List Panel
@@ -18,11 +19,11 @@ local L = ns.L
     AceConfig re-invokes this on every open and every NotifyChange and the panel
     is always current.
 
-    The rows come from ns.BuildItemListOptions, the shared builder every
-    player-managed item list renders through, so a list adds and removes the
-    same way here as in any other panel. A pane spends
-    ns.OPTIONS_TREE_ROW_WIDTH rather than the full row width, because the tree
-    sidebar takes its share of the panel first.
+    The rows come from Kit.ItemList, the shared builder every player-managed
+    item list renders through, so a list adds and removes the same way here as
+    in any other panel. A pane spends ns.OPTIONS_TREE_ROW_WIDTH rather than the
+    full row width, because the tree sidebar takes its share of the panel
+    first.
 
     There is no drop target. The game closes the bags and the bank when the
     options interface opens, so there is no way to have an item on the cursor
@@ -40,6 +41,7 @@ local L = ns.L
 ]]
 local function PromoteColumn()
 	return {
+		type = "execute",
 		name = L["OPTIONS_IGNORE_GLOBAL"],
 		desc = L["OPTIONS_IGNORE_PROMOTE_DESCRIPTION"],
 		width = ns.OPTIONS_PROMOTE_WIDTH,
@@ -52,10 +54,10 @@ end
 local function BuildScopeArgs(scopeKey)
 	local isGlobalScope = scopeKey == ns.IGNORE_SCOPE_GLOBAL
 
-	local args = ns.BuildItemListOptions({
+	local args = Kit.ItemList({
 		rowWidth = ns.OPTIONS_TREE_ROW_WIDTH,
 		startOrder = 3,
-		notifyKey = ns.OPTIONS_REGISTRY.IgnoreList,
+		registryName = ns.OPTIONS_REGISTRY.IgnoreList,
 		getSourceTable = function()
 			return ns.GetIgnoreListForScope(scopeKey)
 		end,
@@ -99,7 +101,7 @@ local function BuildScopeArgs(scopeKey)
 		actionColumn = (not isGlobalScope) and PromoteColumn() or nil,
 	})
 
-	args.spacerTop = ns.OptionsSpacer(2)
+	args.spacerTop = Kit.Spacer(2)
 
 	return args
 end
@@ -121,9 +123,10 @@ function ns.BuildIgnoreListOptions()
 	    repeating in every pane.
 	]]
 	local args = {
-		descIntro = ns.OptionsDesc(L["OPTIONS_IGNORE_LIST_DESCRIPTION"], 1),
-		spacerIntro = ns.OptionsSpacer(2),
+		descIntro = Kit.Desc(L["OPTIONS_IGNORE_LIST_DESCRIPTION"], 1),
+		spacerIntro = Kit.Spacer(2),
 	}
+	ns.AddFeatureOffLine(args, "macrosEnabled")
 
 	--[[
 	    Keyed by scope, not by position: the tree remembers the selected node by
@@ -178,7 +181,7 @@ function ns.BuildIgnoreListOptions()
 
 	return {
 		type = "group",
-		name = L["TAB_IGNORE_LIST"],
+		name = Kit.SubPanelTitle(L["TAB_CONSUMABLE_MACROS"], L["TAB_IGNORE_LIST"]),
 		childGroups = "tree",
 		args = args,
 	}

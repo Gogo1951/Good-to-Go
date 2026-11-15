@@ -154,6 +154,7 @@ function ns.UpdateMacros(forced)
 			ns.ScanPetFood()
 		end
 		ns.UpdateMinimapIcon()
+		ns.RefreshMenu()
 		return
 	end
 
@@ -369,7 +370,9 @@ function ns.UpdateMacros(forced)
 		definition.customUpdate(forced)
 	end
 
+	-- The button shows the food just picked, and an open mini-map menu redraws with the new items.
 	ns.UpdateMinimapIcon()
+	ns.RefreshMenu()
 end
 
 function ns.ResetMacroState()

@@ -13,6 +13,7 @@ function ns.CloseRestockMenus()
 	ns.CloseReputationMenu()
 	ns.CloseRestockColumnMenu()
 	ns.CloseRestockListMenus()
+	ns.CloseRestockManageMenu()
 	ns.CloseRestockBagMenu()
 end
 

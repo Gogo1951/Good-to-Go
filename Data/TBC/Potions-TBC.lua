@@ -69,7 +69,7 @@ ns.POTIONS = {
 How We Got the Data
 
 Last Validated
-	2026-11-11, TBC Anniversary 2.5.6.70577
+	2026-11-15, TBC Anniversary 2.5.6.70577
 
 Notes
 	- Every potion this client knows that restores health or mana instantly on the potion cooldown, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Health Potion and Mana Potion macros. Healing Amount and Mana Amount are each effect's low end; requiredAlchemy is the Alchemy rank the tooltip requires.
@@ -95,6 +95,10 @@ wago.tools
 	https://wago.tools/db2/SpellCastingRequirements?build=2.5.6.70006
 	https://wago.tools/db2/AreaGroupMember?build=2.5.6.70006
 	https://wago.tools/db2/UiMapAssignment?build=2.5.6.70006
+	https://wago.tools/db2/ItemSparse?build=2.5.6.70577
+	https://wago.tools/db2/Item?build=2.5.6.70577
+	https://wago.tools/db2/ItemEffect?build=2.5.6.70577
+	https://wago.tools/db2/SpellEffect?build=2.5.6.70577
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/TBC/tbcItemDB.lua

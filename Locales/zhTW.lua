@@ -51,9 +51,9 @@ L["MACRO_WATER"] = "- 水"
 
 -- Joins the items of any list the add-on shows, such as a Readiness Report clause or the characters on a Restock List.
 L["LIST_SEPARATOR"] = "、"
--- Joins two names in a sentence ("Katz and Aero").
+-- Joins two names or spells in a sentence, such as a buff ask or a level-up line ("Katz and Aero").
 L["LIST_PAIR_FORMAT"] = "%s和%s"
--- Joins the last name to the ones before it, already joined with LIST_SEPARATOR ("Katz, Aero, and Spek").
+-- Joins the last one to the ones before it, already joined with LIST_SEPARATOR ("Katz, Aero, and Spek").
 L["LIST_LAST_FORMAT"] = "%s和%s"
 -- A name with a detail after it: a Spellbook note and its settings ("Target (Mouseover, Self)"), or a pet and its owner.
 L["NAME_WITH_DETAIL_FORMAT"] = "%s（%s）"
@@ -203,7 +203,7 @@ L["TIP_EMPTY_CONJURE"] = "你的背包裡沒有%s了。右鍵點擊 %s 製造更
 L["TIP_EMPTY_CREATE"] = "你的背包裡沒有%s了。右鍵點擊 %s 製造一顆。"
 
 --------------------------------------------------------------------------------
--- Minimap Tooltip
+-- Mini-map Menu
 --------------------------------------------------------------------------------
 
 --[[
@@ -215,9 +215,9 @@ L["FEATURE_BUFF_FOOD"] = "增益食物"
 L["FEATURE_SCROLL_BUFFS"] = "卷軸增益"
 
 --[[
-    The mini-map tooltip's two switches, each a block with a description line.
-    Buff Food and Scroll Buffs share one block and one click, which turns both
-    on or off together. Buff Duty's block takes its title and description
+    The mini-map menu's Buff Food & Scrolls block: its title and description
+    line. Buff Food and Scroll Buffs share one block and one click, which turns
+    both on or off together. Buff Duty's block takes its title and description
     from TAB_BUFF_DUTY and BUFF_DUTY_DESCRIPTION.
 ]]
 L["MINIMAP_BUFF_FOOD_SCROLLS"] = "增益食物與卷軸"
@@ -225,82 +225,69 @@ L["MINIMAP_BUFF_FOOD_SCROLLS_DESCRIPTION_FORMAT"] =
 	'使用提供"%s"的食物，並在進食前補上缺少的卷軸增益。'
 
 --[[
-    Item titles in the mini-map tooltip. A title sits alone on its row and its
-    item is right-aligned on the row beneath, so neither has to stay short;
-    with nothing to show, MESSAGE_NO_ITEM takes the item's row. Current Pet
-    Food opens the Hunter's class block, and the two poison titles open the
-    Rogue's.
+    The heading over the food the Food macro eats, at the top of the mini-map
+    menu, with the item on the row beneath; with nothing to show,
+    MESSAGE_NO_ITEM takes the item's row.
 ]]
 L["MINIMAP_BEST_FOOD"] = "當前食物"
-L["MINIMAP_BEST_PET_FOOD"] = "當前寵物食物"
-L["MINIMAP_MAIN_HAND_POISON"] = "主手毒藥"
-L["MINIMAP_OFF_HAND_POISON"] = "副手毒藥"
 
--- The Ignore List block. The count stands in for a list too long to show, so it is never one and needs no singular.
+-- The Ignore List block: its heading, the row that ignores the current food, and the row that clears the list.
 L["MINIMAP_IGNORE_LIST"] = "忽略列表"
-L["MINIMAP_IGNORE_COUNT"] = "%d 件物品"
 L["MENU_IGNORE"] = "忽略"
 L["MENU_CLEAR_IGNORE"] = "清除忽略列表"
 
 --[[
-    Restocker Report block in the mini-map tooltip. While the outstanding
-    restocking orders are few enough to fit, it lists them under the header,
-    one item per row; past that it shows only how many there are, beside the
-    header. An order is one Restock List row with Buy switched on that is still
-    short in your bags, so the count is of rows and not of missing units -- nine
-    outstanding orders can be nine single juices or nine full stacks. The header
-    beside it supplies the "restocking", so the count only needs the noun.
-
-    The count only ever stands in for a list too long to show, so it is never
-    one and needs no singular.
-
-    The count sits in the tooltip's right column, beside the header, so it has
-    to stay short enough to read as a value rather than a sentence. The
-    all-stocked case has no header and no count: STOCKED replaces the whole
-    row, on a wrapping line of its own, so it can be a full sentence. EMPTY is
-    the line under the header when the list holds nothing at all, which is not
-    the same as being stocked.
+    The orders inside the mini-map menu's Restocker block, while it's on: one
+    item per row, up to eight, then MENU_MORE. An order is one Restock List row
+    with Buy switched on that is still short in your bags.
 
     ITEM_COUNT is the right-hand value of a listed row: { have, wanted }, the
     ratio RESTOCKER_REMINDER_ITEM prints. Wordless, so there is nothing to
     translate, but a key anyway for the same reason that one is.
+
+    STOCKED takes the place of the rows, in green, when nothing at all is
+    short, on a wrapping line of its own, so it can be a full sentence. EMPTY
+    is the line when the list holds nothing at all, which is not the same as
+    being stocked, and NOTHING_LOW the line when rows are short but none is
+    under the Low Means Under threshold.
 ]]
-L["MINIMAP_RESTOCKER_REPORT"] = "Restocker 報告"
-L["MINIMAP_RESTOCKER_NEEDED"] = "%d 項未完成訂單"
 L["MINIMAP_RESTOCKER_ITEM_COUNT"] = "%d/%d"
 L["MINIMAP_RESTOCKER_STOCKED"] = "恭喜，你的補給已全部備齊！"
 L["MINIMAP_RESTOCKER_EMPTY"] = "你的清單是空的。"
+L["MINIMAP_RESTOCKER_NOTHING_LOW"] = "沒有快用完或已用完的物品。"
 
 --[[
-    The Restock List block, above the class notes: its title, a line saying
-    what the list is for, and its click, which sits beside MINIMAP_OPEN. "Your
-    list" in the description and in MINIMAP_RESTOCKER_EMPTY is this list. The
-    Options entry is always the tooltip's last block and has no action label.
+    The Restock List window's name, and the mini-map menu's Restocker block:
+    a line saying what the list is for, and the click its Open row names.
+    "Your list" in the description and in MINIMAP_RESTOCKER_EMPTY is this
+    list. The Options row is always the menu's last, its click on its right.
 ]]
 L["MENU_RESTOCKER"] = "補貨清單"
 L["MENU_RESTOCKER_DESCRIPTION"] = "購買你清單上的物品，並在銀行存取。"
-L["MENU_RESTOCKER_KEYBIND"] = "Shift + 右鍵點擊"
+L["MENU_CLICK_SHIFT_RIGHT"] = "Shift + 右鍵點擊"
 L["MENU_OPTIONS"] = "GtG 選項"
-L["MENU_OPTIONS_KEYBIND"] = "Shift + 中鍵點擊"
+L["MENU_CLICK_SHIFT_MIDDLE"] = "Shift + 中鍵點擊"
 
 --------------------------------------------------------------------------------
 -- Class Notes
 --------------------------------------------------------------------------------
 
 --[[
-    The class block of the mini-map tooltip: a class-colored header, which is
-    the client's name for the player's class and has no key here, the items
-    the class's own macro will use (a Hunter's pet food, a Rogue's two poisons,
-    titled in the Minimap Tooltip section above), then one group per macro.
+    The mini-map menu's [Class] Macros flyout, and one macro's worth under a
+    consumable macro's tooltip on the Spellbook page. MENU_CLASS_MACROS, with
+    the UI Labels, titles the flyout with the client's name for the player's
+    class. The items the class's own macros will use (a Hunter's pet food, a
+    Rogue's two poisons) list under that title in the menu, each beside the
+    client's slot name or LABEL_PET_FOOD.
 ]]
 
 --[[
-    A group is the macro's name, then one row per click: the click on the left
-    and what it does on the right. The right-hand column never wraps, so each
-    result stays a few words. A spell the row casts is named by the client
-    (Mend Pet, Ritual of Refreshment, Ritual of Souls) and has no key here, and
-    a plain click reuses MINIMAP_LEFT_CLICK, MINIMAP_RIGHT_CLICK or
-    MINIMAP_MIDDLE_CLICK.
+    A group is the macro's name, then one row per click: in the menu's flyout,
+    what it does on the left and the click on the right; under a Spellbook
+    tooltip, the other way round. Neither side wraps, so each stays a few
+    words. A spell the row casts is named by the client (Mend Pet, Ritual of
+    Refreshment, Ritual of Souls) and has no key here, and a plain click
+    reuses MENU_CLICK_LEFT, MENU_CLICK_RIGHT or MENU_CLICK_MIDDLE.
 ]]
 L["NOTE_MACRO_FEED_PET"] = "餵養寵物巨集"
 L["NOTE_MACRO_FOOD_WATER"] = "食物與水巨集"
@@ -320,7 +307,8 @@ L["NOTE_PET_DISMISS"] = "解散"
 --[[
     Mage and Warlock. The verb tracks the real spell names, which differ by
     class: mages Conjure, warlocks Create. A second Right-Click makes the next
-    rank down, since the bags hold one of each rank.
+    rank down (NOTE_CONJURE_LOWER_RANK, NOTE_CREATE_LOWER_RANK), since the bags
+    hold one of each rank.
 
     Target downranking is per-macro, not block-wide: it applies only to the
     mage's Food and Water and the warlock's Healthstone, so each line closes
@@ -329,7 +317,8 @@ L["NOTE_PET_DISMISS"] = "解散"
 L["NOTE_CONJURE"] = "製造"
 L["NOTE_CREATE"] = "製造"
 L["NOTE_RIGHT_CLICK_AGAIN"] = "再次右鍵點擊"
-L["NOTE_LOWER_RANK_BACKUP"] = "低等級備用"
+L["NOTE_CONJURE_LOWER_RANK"] = "製造低等級"
+L["NOTE_CREATE_LOWER_RANK"] = "製造低等級"
 L["NOTE_MAGE_TARGET_LEVEL"] = "以等級較低的玩家為目標，即可依其等級製造。"
 L["NOTE_WARLOCK_TARGET_LEVEL"] = "以等級較低的玩家為目標，即可依其等級製造一顆治療石。"
 
@@ -343,7 +332,7 @@ L["NOTE_POISONS_REPLACED"] = "自動替換舊毒藥。"
 
 --[[
     One label per macro type, dropped as-is into MESSAGE_NO_ITEM ("No suitable
-    %s found...") from GtGNoItem and the mini-map tooltip. LABEL_WATER
+    %s found...") from GtGNoItem and the mini-map menu. LABEL_WATER
     is also the staples pop-up's Water checkbox.
 ]]
 
@@ -363,16 +352,40 @@ L["LABEL_WATER"] = "水"
 -- UI Labels
 --------------------------------------------------------------------------------
 
--- Generic labels used in the mini-map tooltip.
+-- Generic labels used in the mini-map menu: the Toggle and Open rows, and the button clicks rows name on their right.
 
-L["MINIMAP_ENABLED"] = "已啟用"
-L["MINIMAP_DISABLED"] = "已停用"
-L["MINIMAP_TOGGLE"] = "切換"
-L["MINIMAP_OPEN"] = "開啟"
-L["MINIMAP_LEFT_CLICK"] = "左鍵點擊"
-L["MINIMAP_RIGHT_CLICK"] = "右鍵點擊"
-L["MINIMAP_MIDDLE_CLICK"] = "中鍵點擊"
-L["MINIMAP_SHIFT_LEFT"] = "Shift + 左鍵點擊"
+L["MENU_TOGGLE"] = "切換"
+L["MENU_OPEN"] = "開啟"
+L["MENU_CLICK_LEFT"] = "左鍵點擊"
+L["MENU_CLICK_RIGHT"] = "右鍵點擊"
+L["MENU_CLICK_MIDDLE"] = "中鍵點擊"
+L["MENU_CLICK_SHIFT_LEFT"] = "Shift + 左鍵點擊"
+
+--[[
+    The words on the right of a block's title: On, Off, or Paused for Buff
+    Food & Scrolls while it waits on its When to Use, and WAITING_FOR, the
+    note under it saying what it waits for (a level label, or the ticked
+    group contexts joined with LIST_SEPARATOR).
+]]
+L["MENU_ON"] = "開啟"
+L["MENU_OFF"] = "關閉"
+L["MENU_PAUSED"] = "已暫停"
+L["MENU_WAITING_FOR"] = "等待：%s"
+
+-- The note after a list cut short at eight rows: %d is how many more there are, so it is never one.
+L["MENU_MORE"] = "還有 %d 項"
+
+--[[
+    More Features, the row that opens the flyout of every feature without a
+    block of its own, and its right side: how many of those are on and off,
+    side by side ("4 On, 3 Off"), so the On count can take its own color.
+]]
+L["MENU_MORE_FEATURES"] = "更多功能"
+L["MENU_FEATURE_COUNT_ON"] = "%d 項開啟"
+L["MENU_FEATURE_COUNT_OFF"] = "%d 項關閉"
+
+-- The row opening the class's macro notes, in the class color. %s is the client's name for the player's class.
+L["MENU_CLASS_MACROS"] = "%s巨集"
 
 --------------------------------------------------------------------------------
 -- Group Contexts
@@ -383,7 +396,7 @@ L["MINIMAP_SHIFT_LEFT"] = "Shift + 左鍵點擊"
     them, always in this order. Each description is the checkbox's hover text,
     saying when that context holds: a battleground or arena is always
     Battleground, even though its group is a raid. GROUP_CONTEXT_NEVER is the
-    mini-map tooltip's label for a feature on with none of them ticked.
+    mini-map menu's label for a feature on with none of them ticked.
 ]]
 L["GROUP_CONTEXT_SOLO"] = "單人"
 L["GROUP_CONTEXT_SOLO_DESCRIPTION"] = "不在隊伍或團隊中時。"
@@ -410,11 +423,11 @@ L["GROUP_CONTEXT_NEVER"] = "從不"
     Leveling means below the client's max level. OPTIONS_GROUPS_NONE shows in
     red under the checkboxes while none is ticked.
 
-    In the mini-map tooltip, the Buff Food & Scrolls block, while a switch is
-    on but its When to Use doesn't hold, shows the level label holding it back
-    in place of MINIMAP_ENABLED, so every level label has to read as a state
-    too. When the checkboxes hold it back, it lists the ticked contexts'
-    labels instead, or GROUP_CONTEXT_NEVER with none.
+    In the mini-map menu, the Buff Food & Scrolls block, while a switch is on
+    but its When to Use doesn't hold, reads Paused with a note naming the level
+    label holding it back (MENU_WAITING_FOR), so every level label has to read
+    after "Waiting for:" too. When the checkboxes hold it back, the note lists
+    the ticked contexts' labels instead, or GROUP_CONTEXT_NEVER with none.
 ]]
 L["OPTIONS_MODE_DESCRIPTION"] =
 	"選擇你的食物巨集在哪些等級提供%s：任何等級、僅練等時或僅滿等時。下方的核取方塊選擇在哪些隊伍中。"
@@ -453,7 +466,7 @@ L["INVENTORY_REPORT_TOTAL"] = "總計 %s"
 --------------------------------------------------------------------------------
 
 L["OPTIONS_DESCRIPTION"] =
-	"自動更新的巨集，總是使用你最好的食物、水、藥水和治療石；自動購買材料與彈藥並存入銀行的補貨清單；一鍵施放缺少的增益；以及為每個法術產生的滑鼠指向巨集。"
+	"自動更新的巨集，總是使用你最好的食物、水、藥水和治療石；自動購買材料與彈藥並存入銀行的補貨清單；一鍵施放缺少的增益；低等級法術提醒；以及為每個法術產生的滑鼠指向巨集。"
 
 -- Enhanced Spellbook: its tree label, its panel's description, and the print when it's off.
 L["TAB_ENHANCED_SPELLBOOK"] = "強化法術書"
@@ -509,6 +522,28 @@ L["OPTIONS_RESTOCKER_ENABLE"] = "啟用 Restocker"
 
 -- The label before a panel's Example line, which shows a chat print as it will arrive.
 L["SAMPLE_EXAMPLE"] = "範例：%s"
+
+-- A Reset row's button, which puts the settings it sits under back to their defaults.
+L["OPTIONS_RESET"] = "重設"
+L["OPTIONS_FEATURE_OFF_STATUS"] = "%s已關閉，因此這些設定不會生效。它的開關在%s頁面上。"
+
+--[[
+    The whisper composer around every whisper a player words themselves, on the Buff Duty and Rank Watch
+    panels: the language they go out in, the caption and Reset button beside each box, the tooltip on the
+    marker and the "// GtG" either side of it, the line shown when a whisper is too long, and the test button.
+    The whispers' default text lives in Data/Message-Languages.lua, not here.
+]]
+L["SEND_MESSAGES_IN"] = "訊息傳送語言"
+L["SEND_MESSAGES_IN_DESCRIPTION"] =
+	"設定 Good to Go 密語其他玩家時使用的語言。選擇其他語言會換成該語言的預設文字，除非你寫了自己的文字。"
+L["WHISPER_TEXT"] = "密語內容"
+L["WHISPER_TEXT_RESET"] = "重設"
+L["WHISPER_TEXT_RESET_DESCRIPTION"] = "將此密語恢復為傳送語言的預設文字。"
+L["WHISPER_SIGN_OFF_DESCRIPTION"] =
+	"附加在 Good to Go 傳送的每則密語後，讓其他玩家知道這是插件傳出的。"
+L["WHISPER_TOO_LONG"] = "內容過長，將改為傳送預設文字。"
+L["WHISPER_TEST"] = "傳送測試給自己"
+L["WHISPER_TEST_DESCRIPTION"] = "將範例密語給你，讓你看到與其他玩家完全相同的樣子。"
 
 --[[
     /Commands. Both halves of each line are locale keys: the literal, which
@@ -589,7 +624,7 @@ L["OPTIONS_FOOD_WATER_DESCRIPTION"] =
 
 --[[
     Buff Food, the first option under Food & Water. Its hover text carries the
-    arena exception, which the mini-map tooltip's shared Buff Food & Scrolls
+    arena exception, which the mini-map menu's shared Buff Food & Scrolls
     line has no room for.
 ]]
 L["OPTIONS_BUFF_FOOD"] = "優先增益食物"
@@ -754,8 +789,8 @@ L["OPTIONS_RAPID_REGENERATION_EATING_DESCRIPTION"] =
     translated and has no key here. The rows are items, so the copy here is
     the panel description, the scope and promote labels, the add box, Remove,
     the empty-list line, and LOADING_ITEM, the placeholder shown while the
-    client is still resolving an item's name (the mini-map tooltip, the Macros
-    panel, and the staples pop-up use it too). The mini-map tooltip's section
+    client is still resolving an item's name (the mini-map menu, the Macros
+    panel, and the staples pop-up use it too). The mini-map menu's section
     keeps its own MINIMAP_IGNORE_LIST and MENU_CLEAR_IGNORE keys.
 ]]
 L["TAB_IGNORE_LIST"] = "忽略列表"
@@ -793,13 +828,18 @@ L["OPTIONS_RESTOCKER_OPEN_MERCHANT_DESCRIPTION"] = "造訪商人時開啟你的�
 -- The header over the three reminder rows below, which follow the Gold Reserve section on the page, and its description.
 L["OPTIONS_RESTOCKER_REMINDERS_HEADER"] = "提醒"
 L["OPTIONS_RESTOCKER_REMINDERS_DESCRIPTION"] = "選擇何時提醒你補貨清單存量不足。"
+-- Low Means Under, the dropdown above the three reminders: the share of a row's amount below which they call it low. Its values are percentages, written the same in every locale.
+L["OPTIONS_RESTOCKER_LOW_THRESHOLD"] = "低於多少算快用完"
+L["OPTIONS_RESTOCKER_LOW_THRESHOLD_DESCRIPTION"] =
+	"物品數量低於補貨清單要求的這一比例時算快用完，一個都沒有時算已用完。高於此比例的物品不會提及。"
 L["OPTIONS_RESTOCKER_REMIND"] = "啟用城鎮補貨提醒"
 L["OPTIONS_RESTOCKER_REMIND_DESCRIPTION"] =
-	"當補貨清單尚有缺口，且你抵達旅店或城市，或登入時已身處其中，在聊天中輸出提醒。"
+	"當補貨清單中有物品快用完或已用完，且你抵達旅店或城市，或登入時已身處其中，在聊天中輸出提醒。"
 L["OPTIONS_RESTOCKER_MERCHANT_REMIND"] = "啟用商人補貨提醒"
-L["OPTIONS_RESTOCKER_MERCHANT_REMIND_DESCRIPTION"] = "關閉商人視窗時，回報所有未完成的補貨訂單。"
+L["OPTIONS_RESTOCKER_MERCHANT_REMIND_DESCRIPTION"] =
+	"關閉商人視窗時，回報仍快用完或已用完的物品。"
 L["OPTIONS_RESTOCKER_BANK_REMIND"] = "啟用銀行補貨提醒"
-L["OPTIONS_RESTOCKER_BANK_REMIND_DESCRIPTION"] = "關閉銀行時，回報所有未完成的補貨訂單。"
+L["OPTIONS_RESTOCKER_BANK_REMIND_DESCRIPTION"] = "關閉銀行時，回報仍快用完或已用完的物品。"
 
 --[[
     The Gold Reserve: the floor the merchant restock never spends below. The
@@ -815,20 +855,20 @@ L["OPTIONS_RESTOCKER_GOLD_RESERVE_AMOUNT_DESCRIPTION"] = "設定補貨始終為�
 
 --[[
     How much each reminder says. Simple is the headline alone; Verbose adds a
-    line per item, showing how many you have against how many you want.
+    line per item it counted (out, then low), showing how many you have against how many you want.
 
     One word each, deliberately: they sit in the dropdown beside each reminder,
     which has no caption, and read there as how much it says.
 ]]
 L["OPTIONS_RESTOCKER_REMIND_MODE_DESCRIPTION"] =
-	"選擇提醒只有一行，還是為你缺少的每件物品各加一行。"
+	"選擇提醒只有一行，還是為每件快用完或已用完的物品各加一行。"
 L["OPTIONS_RESTOCKER_REMIND_MODE_CAPTION"] = "提醒詳細程度"
 L["OPTIONS_RESTOCKER_MODE_SIMPLE"] = "簡潔"
 L["OPTIONS_RESTOCKER_MODE_VERBOSE"] = "詳細"
 
 L["OPTIONS_RESTOCKER_REMIND_SOUND"] = "播放音效"
 L["OPTIONS_RESTOCKER_REMIND_SOUND_DESCRIPTION"] = "在提醒的同時播放提示音，適合聊天繁忙的時候。"
-L["OPTIONS_RESTOCKER_SOUND_PREVIEW"] = "點擊試聽提示音。"
+L["OPTIONS_SOUND_PREVIEW_DESCRIPTION"] = "點擊試聽提示音。"
 
 L["OPTIONS_RESTOCKER_WINDOW_HEADER"] = "補貨清單視窗"
 L["OPTIONS_RESTOCKER_WINDOW_DESCRIPTION"] = "選擇你的補貨清單何時自動開啟。"
@@ -958,9 +998,10 @@ L["OPTIONS_READINESS_NONCOMBAT_GEAR_DESCRIPTION"] =
 --------------------------------------------------------------------------------
 
 --[[
-    Rank Watch tells a group member who cast a spell at a lower rank than they could have. Its messages are
-    fixed, one whisper and one print, with nothing for the player to edit. Rank Sentinel is the standalone
-    add-on Rank Watch replaces; its name stays as written in every locale.
+    Rank Watch tells a group member who cast a spell at a lower rank than they could have. Its whispers are the
+    player's to word on the Rank Watch panel, with their default text in Data/Message-Languages.lua; its prints
+    are fixed. Rank Sentinel is the standalone add-on Rank Watch replaces; its name stays as written in every
+    locale.
 ]]
 L["TAB_RANK_WATCH"] = "等級守望"
 L["OPTIONS_RANK_WATCH_DESCRIPTION"] =
@@ -977,34 +1018,9 @@ L["RANK_WATCH_SPELL_RANK"] = "%s（%s）"
 -- A rank's number, where the client hasn't loaded the spell's own rank text yet.
 L["RANK_WATCH_RANK"] = "等級 %d"
 
---[[
-    The whisper to the caster. { the spell and rank they cast, the level a higher rank is learned at } Sent
-    after the marker and before " // GtG", so "Good to Go" runs straight into the sign-off: "...and you'll be
-    Good to Go // GtG". Casual on purpose; a stranger's whisper should read as a tip, not a correction.
-]]
-L["RANK_WATCH_MESSAGE_WHISPER"] =
-	"小提醒，沒什麼大不了的：你剛剛用的是%s，%d級就有更新的等級了。更新一下快捷列或去找訓練師，馬上就 Good to Go。"
---[[
-    The whisper to a pet's owner, the same shape with the pet first. { the pet, the spell and rank it cast, the
-    level a higher rank comes at } A hunter pet is named ("your pet Fluffy") and its level is its own; a demon is
-    named by its kind ("your Imp"), and its level is the warlock's, which a grimoire asks for.
-]]
-L["RANK_WATCH_MESSAGE_WHISPER_PET"] =
-	"小提醒，沒什麼大不了的：你的寵物%s剛剛用的是%s，寵物%d級就有更新的等級了。用訓練野獸教牠，馬上就 Good to Go。"
-L["RANK_WATCH_MESSAGE_WHISPER_DEMON"] =
-	"小提醒，沒什麼大不了的：你的%s剛剛用的是%s，%d級就有更新的等級了。去惡魔訓練師那裡買本魔典，馬上就 Good to Go。"
---[[
-    Sent once per player, right after the first whisper they ever get from you, so a stranger's tip comes with a
-    way to make it stop. Signed off like the whisper above it. %s is their opt-out number, made from their name,
-    so it is the same from everyone running Good to Go.
-]]
-L["RANK_WATCH_MESSAGE_OPT_OUT"] =
-	"不想再收到這類提示？回覆 %s，我就不會再因為法術等級密語你了。這個號碼對所有使用 Good to Go 的人都有效。"
--- Sent back once to a player who whispered their opt-out number.
-L["RANK_WATCH_MESSAGE_OPT_OUT_DONE"] = "了解，我不會再傳等級提示給你了。"
--- Printed when a player says their opt-out number. %s is their name.
+-- Printed when a group member whispers "Opt Out". %s is their name.
 L["RANK_WATCH_OPT_OUT_ADDED"] =
-	'%s 傳送了免打擾號碼，等級守望現在會忽略此玩家。可在等級守望的"已忽略的玩家"中復原。'
+	'%s 密語了"Opt Out"，等級守望現在會忽略此玩家。可在等級守望的"已忽略的玩家"中復原。'
 -- Printed when you cast a low rank yourself. { the spell and rank, the higher spell and rank, its level }
 L["RANK_WATCH_PRINT_SELF"] =
 	"你施放了%s，而%s從%d級起即可取得。去找訓練師或更新你的快捷列吧。"
@@ -1029,6 +1045,25 @@ L["RANK_WATCH_MESSAGES_DESCRIPTION"] = "等級守望如何告知玩家他們施�
 L["RANK_WATCH_WHISPER"] = "密語隊伍成員"
 L["RANK_WATCH_WHISPER_DESCRIPTION"] =
 	"密語施放了低等級法術的隊伍成員。當你的隊伍中有多名玩家使用等級守望或 Rank Sentinel 時，只有其中一人會傳送密語。"
+--[[
+    The tip's whisper composer, under the whisper toggle: one box for the caster's own low rank, one for a
+    hunter's pet, one for a warlock's demon.
+    TRANSLATORS: keep {spell}, {level} and {pet} exactly as written; they are the tokens players type into the
+    whisper. In the TOKENS lines each %s is a token, in the order shown, drawn in blue.
+]]
+L["RANK_WATCH_TIP_MESSAGE_DESCRIPTION"] =
+	"設定 Good to Go 密語給施放了低等級法術的隊伍成員的內容。{spell} 會替換為對方施放的法術和等級，{level} 替換為可學更新等級的等級。留空則不傳送密語。"
+L["RANK_WATCH_TIP_TOKENS"] = "佔位符：%s 對方施放的法術和等級，%s 更新等級的所需等級"
+L["RANK_WATCH_TIP_PET_MESSAGE"] = "寵物密語"
+L["RANK_WATCH_TIP_PET_MESSAGE_DESCRIPTION"] =
+	"設定 Good to Go 密語給寵物施放了低等級法術的獵人的內容。{pet} 會替換為寵物的名字，{spell} 替換為牠施放的法術和等級，{level} 替換為可學更新等級的寵物等級。留空則不傳送密語。"
+L["RANK_WATCH_TIP_PET_TOKENS"] =
+	"佔位符：%s 寵物的名字，%s 法術和等級，%s 更新等級所需的寵物等級"
+L["RANK_WATCH_TIP_DEMON_MESSAGE"] = "惡魔密語"
+L["RANK_WATCH_TIP_DEMON_MESSAGE_DESCRIPTION"] =
+	"設定 Good to Go 密語給惡魔施放了低等級法術的術士的內容。{pet} 會替換為惡魔的種類，例如小鬼，{spell} 替換為牠施放的法術和等級，{level} 替換為可學更新等級的等級。留空則不傳送密語。"
+L["RANK_WATCH_TIP_DEMON_TOKENS"] =
+	"佔位符：%s 惡魔的種類，%s 法術和等級，%s 更新等級的所需等級"
 L["RANK_WATCH_PRINT"] = "輸出隊伍成員的低等級法術"
 L["RANK_WATCH_PRINT_DESCRIPTION"] =
 	"在你的聊天視窗中輸出隊伍成員施放的低等級法術。你自己的低等級法術一律會輸出。"
@@ -1046,8 +1081,20 @@ L["RANK_WATCH_GRACE_LEVEL"] = "1 級"
 L["RANK_WATCH_GRACE_LEVELS"] = "%d 級"
 
 L["RANK_WATCH_OPT_OUT_HEADER"] = "免打擾"
+--[[
+    The opt-out whispers' composer, in the Opt Out section: the offer sent with a player's second tip in a
+    session, and the reply to a group member who whispers "Opt Out" back.
+    TRANSLATORS: keep "Opt Out" in English; it is the words a player whispers back, and Good to Go listens for
+    exactly those.
+]]
+L["RANK_WATCH_OPT_OUT_MESSAGE"] = "免打擾提示"
+L["RANK_WATCH_OPT_OUT_MESSAGE_DESCRIPTION"] =
+	'設定 Good to Go 在一次登入期間向某玩家傳送第二則等級提示後緊接著密語的內容。請告訴對方回覆"Opt Out"。留空則不傳送。'
+L["RANK_WATCH_OPT_OUT_DONE_MESSAGE"] = "免打擾回覆"
+L["RANK_WATCH_OPT_OUT_DONE_MESSAGE_DESCRIPTION"] =
+	'設定 Good to Go 回覆密語"Opt Out"的隊伍成員的內容。留空則不傳送回覆。'
 L["RANK_WATCH_OPT_OUT_DESCRIPTION"] =
-	'等級守望第一次密語某人時，會接著傳送對方的免打擾號碼。這個號碼由對方的名字產生，因此所有使用 Good to Go 的人傳出的號碼都相同。如果對方在密語或任何你看得到的聊天頻道中說出這個號碼，就會被加入"已忽略的玩家"，之後再也不會收到你發出的等級提醒。若要自行忽略某人，請選取對方並輸入 /gtg ignore。'
+	'等級守望在一次登入期間第二次密語某人時，會接著告訴對方如何退訂。如果對方在你的隊伍中時向你密語"Opt Out"，就會被加入"已忽略的玩家"，你會回覆確認，之後對方再也不會收到你發出的等級提醒。若要自行忽略某人，請選取對方並輸入 /gtg ignore。'
 L["RANK_WATCH_WHISPERER_HEADER"] = "由誰為隊伍回報"
 L["RANK_WATCH_WHISPERER_DESCRIPTION"] =
 	"當你的隊伍中有多人使用等級守望或 Rank Sentinel 時，只有其中一人會傳送密語，這樣施放了低等級法術的玩家只會收到一次提醒，而不是每個人都提醒一遍。其他人只會在自己的聊天視窗中輸出。以下是目前負責傳送密語的人。"
@@ -1085,7 +1132,7 @@ L["RANK_WATCH_IGNORE_COMMAND"] = "/gtg ignore 名字"
 L["RANK_WATCH_IGNORE_COMMAND_DESCRIPTION"] =
 	"等級守望將不再回報該玩家。不加名字時，會忽略你的目標。"
 
--- Tracked Abilities, under Rank Watch.
+-- Reported Ranks, under Rank Watch.
 L["RANK_WATCH_TRACKED_DESCRIPTION"] =
 	"等級守望會回報的法術等級，依職業列出。取消勾選你刻意降級使用的等級，等級守望就不會理會它。所有技能都會列出。等級守望預設不監看的技能，例如治療法術、天賦以及等級 1 的灼燒，一開始為未勾選。技能的最高等級會顯示為灰色，因為沒有比它更高的等級。"
 -- A rank's checkbox. %s is the rank ("Rank 3"), %d the level it is learned at.
@@ -1095,7 +1142,9 @@ L["RANK_WATCH_TOP_RANK_DESCRIPTION"] = "最高等級。沒有比它更高的等�
 -- The tree entry after Hunter and Warlock listing their pets' and demons' abilities. %s is the class name.
 L["RANK_WATCH_PETS"] = "%s寵物"
 L["RANK_WATCH_TRACK_ALL"] = "全部勾選"
+L["RANK_WATCH_TRACK_ALL_DESCRIPTION"] = "回報本頁上所有低於最高等級的等級。"
 L["RANK_WATCH_TRACK_NONE"] = "全部取消勾選"
+L["RANK_WATCH_TRACK_NONE_DESCRIPTION"] = "停止回報本頁上的所有等級。"
 
 --------------------------------------------------------------------------------
 -- Restocker Window & Chat
@@ -1137,13 +1186,14 @@ L["RESTOCKER_STOPPED_ERROR"] = "補貨因錯誤而停止：%s"
 ]]
 L["RESTOCKER_REAGENTS_SKIPPED"] =
 	"這個商人沒有販售你的毒藥所需的全部材料。跳過購買這些材料。"
--- Printed on reaching an inn or a city while the Restock List is short of something.
-L["RESTOCKER_TOWN_REMINDER"] = "在城裡的時候別忘了補貨！"
+-- Printed on reaching an inn or a city while something on the Restock List is low or out. %s is the counts sentence (RESTOCKER_LOW_ONE and the rest, below).
+L["RESTOCKER_TOWN_REMINDER"] = "在城裡的時候記得補貨！%s"
 
 --[[
-    Headline for the merchant and bank reminders, which report on the way out
-    rather than nudging on arrival, so the count is the message. The in-town
-    reminder keeps its own line above.
+    The Restock window's status line (Restocker-Window-Footer.lua): every row
+    still short, whatever the reminders' Low Means Under threshold. The window
+    is the full picture; the reminders say only what is low or out, in the
+    counts sentence below.
 
     The count is of restocking orders -- Restock List rows with Buy switched on
     that are still short in your bags -- so it never says "items", and never
@@ -1162,6 +1212,32 @@ L["RESTOCKER_STILL_SHORT_ONE"] = "還有 1 項補貨訂單未完成。"
 L["RESTOCKER_STILL_SHORT_MANY"] = "還有 %d 項補貨訂單未完成。"
 
 --[[
+    The counts sentence every reminder's headline is built on
+    (ns.RestockReminderCounts). OUT counts rows the bags hold none of; LOW
+    counts rows they hold some of but less than the Low Means Under share of
+    (restockLowThreshold). Rows at or above that line are never mentioned.
+    Out leads, so an empty slot is the first thing read.
+
+    The plain forms follow RESTOCKER_TOWN_REMINDER on arriving in town; the
+    STILL forms stand alone after closing a merchant or the bank, since you
+    have just shopped. When both counts are present only the out count takes
+    a noun, so OUT_AND_LOW_ONE is "out of 1 item" and the low %d needs none;
+    a locale whose grammar wants a noun on both can add one in its own words.
+]]
+L["RESTOCKER_LOW_ONE"] = "有 1 種物品快用完了。"
+L["RESTOCKER_LOW_MANY"] = "有 %d 種物品快用完了。"
+L["RESTOCKER_OUT_ONE"] = "有 1 種物品已經用完了。"
+L["RESTOCKER_OUT_MANY"] = "有 %d 種物品已經用完了。"
+L["RESTOCKER_OUT_AND_LOW_ONE"] = "有 1 種物品已經用完，%d 種快用完了。"
+L["RESTOCKER_OUT_AND_LOW_MANY"] = "有 %d 種物品已經用完，%d 種快用完了。"
+L["RESTOCKER_STILL_LOW_ONE"] = "仍有 1 種物品快用完了。"
+L["RESTOCKER_STILL_LOW_MANY"] = "仍有 %d 種物品快用完了。"
+L["RESTOCKER_STILL_OUT_ONE"] = "仍有 1 種物品已經用完。"
+L["RESTOCKER_STILL_OUT_MANY"] = "仍有 %d 種物品已經用完。"
+L["RESTOCKER_STILL_OUT_AND_LOW_ONE"] = "仍有 1 種物品已經用完，%d 種快用完了。"
+L["RESTOCKER_STILL_OUT_AND_LOW_MANY"] = "仍有 %d 種物品已經用完，%d 種快用完了。"
+
+--[[
     Level-up upgrades. The headline makes the Restock List the subject, so
     there is no item count to agree with and one string covers any number of
     swaps; the line under it is { old link, old amount, new link, new amount },
@@ -1175,7 +1251,8 @@ L["RESTOCKER_UPGRADED"] = "你的補貨清單已升級。"
 L["RESTOCKER_UPGRADED_ITEM"] = "%sx%d 升級為 %sx%d。"
 
 --[[
-    Verbose follow-up line, one per short item: { have, wanted, item link }.
+    Verbose follow-up line, one per item the headline counted, out first and
+    then low: { have, wanted, item link }.
     Shared by all three reminders. Wordless on purpose -- the headline above it
     supplies the context, so there is nothing here to translate. It stays a
     locale key anyway so a locale that needs a different order can reorder it
@@ -1193,7 +1270,7 @@ L["RESTOCKER_REMINDER_ITEM"] = "%d/%d %s"
     The claim has to be earned: PurchaseMerchantItem returns nothing, and the
     caller decides filled or partly filled once per order, after the last slot,
     from the units that order bought. What the vendor did not stock is
-    deliberately not mentioned here: the mini-map's Restocker Report owns the
+    deliberately not mentioned here: the mini-map menu's Restocker block owns the
     outstanding state, this line owns the event, and neither repeats the other.
 ]]
 L["RESTOCKER_RESTOCKED_ONE"] = "已完成 1 項補貨訂單。"
@@ -1259,7 +1336,8 @@ L["RESTOCKER_HELP_PROFILE_USE"] = "將此角色切換到該名稱的清單。"
 L["STARTER_POPUP_TITLE"] = "基礎物資"
 -- The button at the Staples window's footer end that closes it once you've picked.
 L["STARTER_POPUP_DONE"] = "完成"
-L["STARTER_POPUP_INTRO_LOGIN"] = "我們已為你的職業勾選了一些基礎物資，幫你快速上手。"
+L["STARTER_POPUP_INTRO_LOGIN"] =
+	"我們已將一些適合你職業的基礎物資加入補貨清單。不需要的請取消勾選。"
 L["STARTER_POPUP_INTRO_EMPTY"] = "你的補貨清單是空的，我們來新增一些物品好讓你上手。"
 -- Shown instead when the window is opened over a list that already has items on it.
 L["STARTER_POPUP_INTRO_STOCKED"] = "挑選你想保持備足的基礎物資。"
@@ -1497,8 +1575,8 @@ L["RESTOCKER_NO_MATCH_GROUP"] = "此分類中已沒有物品。"
 --[[
     The status line under the list. The orders count itself is
     RESTOCKER_STILL_SHORT_ONE / _MANY above, and the all-stocked line is
-    MINIMAP_RESTOCKER_STOCKED, so the window, the reminders and the mini-map
-    tooltip say the same thing in the same words.
+    MINIMAP_RESTOCKER_STOCKED, so the window and the mini-map menu say the
+    same thing in the same words.
 
     NO_ORDERS is the in-between: nothing for a merchant to fill, but a row with
     Buy off is still short in the bags (its Keep number is yellow), so the
@@ -1590,6 +1668,9 @@ L["POPUP_REPLACED_RELOAD"] =
 	"Good to Go 已停用被它取代的 %s。要立即重新載入，讓舊插件停止運作嗎？"
 L["POPUP_REPLACED_RELOAD_ACCEPT"] = "立即重新載入"
 L["POPUP_REPLACED_LATER"] = "稍後"
+-- The Spellbook's confirm buttons, each naming what it does; the other button is the client's Cancel.
+L["POPUP_DELETE"] = "刪除"
+L["POPUP_RESET"] = "重設"
 
 -- MIGRATION (remove after 2026-12-08): the import from the add-ons this one replaces.
 L["CHAT_LEGACY_IMPORTED"] = "已複製你的 %s 設定。"
@@ -1604,20 +1685,14 @@ L["POPUP_LEGACY_IMPORT_ACCEPT"] = "移轉過來"
 L["POPUP_LEGACY_IMPORT_DECLINE"] = "不用了，謝謝"
 
 --------------------------------------------------------------------------------
--- Options: Tracked Abilities
+-- Options: Group Buffs and Reported Ranks
 --------------------------------------------------------------------------------
 
--- The two Tracked Abilities panels' titles, Buff Duty's then Rank Watch's, and the stand-in for an item or spell whose name the client hasn't loaded yet.
+-- The Group Buffs and Reported Ranks panels' titles, and the stand-in for an item or spell whose name the client hasn't loaded yet.
 L["BUFF_DUTY_TRACKED_HEADER"] = "隊伍增益"
 L["RANK_WATCH_TRACKED_HEADER"] = "回報的法術等級"
 L["TRACKED_ITEM_PENDING"] = "物品 #%d"
 L["TRACKED_SPELL_PENDING"] = "法術 #%d"
-
---------------------------------------------------------------------------------
--- Shared: Sound Preview
---------------------------------------------------------------------------------
-
-L["NOTIFICATIONS_SOUND_PREVIEW_DESCRIPTION"] = "播放該音效，讓你在開啟前先試聽。"
 
 --------------------------------------------------------------------------------
 -- Options: Buff Duty
@@ -1660,6 +1735,14 @@ L["BUFF_DUTY_TARGET_ENABLE_DESCRIPTION"] =
 L["BUFF_DUTY_ASK_OTHERS"] = "請其他職業提供增益"
 L["BUFF_DUTY_ASK_OTHERS_DESCRIPTION"] =
 	'在"缺少的隊伍增益"下顯示你的隊伍缺少的團隊增益，以及各有多少人需要。左鍵點擊可向隊伍請求該增益，右鍵點擊則密語能施放它的玩家。'
+--[[
+    The whispered ask's composer, under Ask Other Classes for Buffs.
+    TRANSLATORS: keep {names} and {spell} exactly as written; they are the tokens players type into the whisper.
+    In the TOKENS line each %s is a token, {names} then {spell}, drawn in blue.
+]]
+L["BUFF_DUTY_ASK_MESSAGE_DESCRIPTION"] =
+	'設定你在"缺少的隊伍增益"下右鍵點擊某個增益時，Good to Go 密語給能施放該增益的玩家的內容。{names} 會替換為缺少該增益的玩家或人數，{spell} 替換為該增益。留空則不傳送密語。'
+L["BUFF_DUTY_ASK_TOKENS"] = "佔位符：%s 缺少增益的玩家或人數，%s 增益"
 L["BUFF_DUTY_REFRESH"] = "剩餘低於此值時補充"
 L["BUFF_DUTY_REFRESH_DESCRIPTION"] =
 	"設定增益剩餘時間低於多少時視為缺失，方便你在增益消失前及時補上。持續時間不超過此值的增益，只有在消失後才會視為缺失。"
@@ -1744,9 +1827,12 @@ L["BUFF_DUTY_TOOLTIP_USE"] = "你的隊伍中沒有人有靈魂石。對 %s 使�
 L["BUFF_DUTY_TOOLTIP_CREATE"] = "你的隊伍中沒有人有靈魂石。製造一顆。"
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "對 %s 及其隊伍施放。"
 L["BUFF_DUTY_TOOLTIP_FAVOR"] = "選取 %s 為目標並施放。"
--- A Party Buffs icon's tooltip, its click hints: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it.
+-- A Party Buffs icon's menu, its ask rows: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it: %s is one or two names (LIST_PAIR_FORMAT), or BUFF_DUTY_OTHERS_ASK_PEOPLE past two.
 L["BUFF_DUTY_OTHERS_HINT_ASK"] = "在%s中請求增益"
-L["BUFF_DUTY_OTHERS_HINT_WHISPER"] = "密語可施放者"
+L["BUFF_DUTY_OTHERS_HINT_WHISPER"] = "密語%s"
+-- A Party Buffs menu's name row, on the right: the whole minutes left on that player's buff, or Missing once there is none.
+L["BUFF_DUTY_OTHERS_MINUTES"] = "%d 分鐘"
+L["BUFF_DUTY_OTHERS_MISSING"] = "缺少"
 --[[
     The ask either click sends, signed off like every sent message ({star} ... // GtG), so it
     ends as a statement, not a question. Up to five missing players are named (ONE for one,
@@ -1756,6 +1842,8 @@ L["BUFF_DUTY_OTHERS_HINT_WHISPER"] = "密語可施放者"
 L["BUFF_DUTY_OTHERS_ASK_ONE"] = "%s缺少%s。"
 L["BUFF_DUTY_OTHERS_ASK_NAMES"] = "%s缺少%s。"
 L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "%d名玩家缺少%s增益。"
+-- The whispered ask's {names} past five missing players, when the player has written their own whisper, and the Party Buffs menu's whisper row past two players. %d is how many.
+L["BUFF_DUTY_OTHERS_ASK_PEOPLE"] = "%d 名玩家"
 --[[
     The window's close button: the class name, the class name again for its
     checkbox, the When to Show header, then the options command.
@@ -1763,15 +1851,15 @@ L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "%d名玩家缺少%s增益。"
 L["BUFF_DUTY_CLOSED"] =
 	'增益值班已隱藏，直到下次登入或重新載入介面。要立即恢復，請 Shift + 左鍵點擊小地圖按鈕。要為%1$s職業保持關閉，請在 %4$s 的"%3$s"下取消勾選"%2$s"。'
 
--- The Buff Button key: its name in the game's Key Bindings list and the root panel's Key Bindings section, then the notices a press shows.
-L["BUFF_KEY"] = "增益按鈕"
+-- The Cast Next Buff key: its name in the game's Key Bindings list and the root panel's Key Bindings section, then the notices a press shows.
+L["BUFF_KEY"] = "施放下一個增益"
 -- %s is a player's name.
 L["BUFF_KEY_WAITING"] = "正在等待 %s 進入範圍。"
 L["BUFF_KEY_DONE"] = "沒有需要施放的增益了。"
 L["BUFF_KEY_OFF"] = "增益值班已關閉。"
 --[[
-    The Buff Duty window's last line while the Buff Button has no key: the Buff
-    Button's name (BUFF_KEY), the root panel's Key Bindings header
+    The Buff Duty window's last line while the Cast Next Buff key has none: its
+    name (BUFF_KEY), the root panel's Key Bindings header
     (OPTIONS_KEY_BINDINGS_HEADER), then the options command.
 ]]
 L["BUFF_DUTY_KEY_HINT"] =
@@ -1828,10 +1916,12 @@ L["MENU_DELETE"] = "刪除"
 L["MENU_DELETE_USED_ONE"] = "刪除（用於 1 個快捷列）"
 L["MENU_DELETE_USED"] = "刪除（用於 %d 個快捷列）"
 L["MENU_DELETE_DESCRIPTION"] =
-	"從你的巨集中刪除此巨集，這也會將它從快捷列上移除，並重設它的所有選項。在頁面上點擊或拖曳它即可重新建立。"
+	"刪除此巨集，這也會將它從快捷列上移除，並重設它的所有選項。在頁面上點擊或拖曳它即可重新建立。"
 L["MENU_DELETE_COPY_DESCRIPTION"] =
 	"將此副本從頁面移除，並從你的巨集中刪除，這也會將它從快捷列上移除。"
 L["MENU_DELETE_CONFIRM"] = "要刪除 %s 嗎？它會從你的快捷列上移除，且選項會被重設。"
+-- The same ask for a macro on none of your bars.
+L["MENU_DELETE_CONFIRM_UNUSED"] = "要刪除 %s 嗎？它的選項會被重設。"
 L["MENU_GROUP_RANK"] = "等級"
 L["MENU_GROUP_WHEN"] = "時機"
 L["MENU_GROUP_FIRST"] = "先執行"
@@ -1863,9 +1953,8 @@ L["MENU_UNIT_MOUSEOVER_DESCRIPTION"] =
 	"對游標下的對象施放，無論是在遊戲世界中還是在頭像框架上，只要對方能接受該法術。"
 L["MENU_OPTIONS_COUNT"] = "%d 個選項"
 L["MENU_ENABLED"] = "已啟用"
-L["MENU_HIGHEST"] = "最高"
+L["MENU_HIGHEST"] = "最高等級"
 L["MENU_HIGHEST_DESCRIPTION"] = "施放你已學會的最高等級。"
-L["MENU_RANK_DYNAMIC"] = "動態等級"
 L["MENU_FIXED_RANK_DESCRIPTION"] = "無論角色等級為何，總是施放%s。"
 L["MENU_ANY_TIME"] = "任何時候"
 L["MENU_ANY_TIME_DESCRIPTION"] = "戰鬥中或非戰鬥時都會施放。"
@@ -2025,10 +2114,10 @@ L["SETTINGS_SHOW_GROUPED_SPELLS"] = "顯示同組法術"
 L["SETTINGS_SHOW_UNLEARNED"] = "顯示未學會的法術"
 L["SETTINGS_MARK_ALL_PLACED"] = "將所有法術標記為已放置"
 L["SETTINGS_MARK_ALL_PLACED_DESCRIPTION"] =
-	"本頁的所有巨集不再發光，無論是否在你的快捷列上。之後學會的法術在放置前仍會發光。"
-L["SETTINGS_HIGHLIGHT_UNPLACED"] = "醒目顯示未放置的法術"
-L["SETTINGS_HIGHLIGHT_UNPLACED_DESCRIPTION"] =
-	'讓所有不在快捷列上的巨集發光。關閉此項會將它們全部標記為已放置，效果與"將所有法術標記為已放置"按鈕相同。'
+	'本頁的所有巨集不再發光，無論是否在你的快捷列上。之後學會的法術在放置前仍會發光。齒輪選單中的"重新醒目提示未放置的法術"可以復原此操作。'
+L["SETTINGS_HIGHLIGHT_AGAIN"] = "重新醒目提示未放置的法術"
+L["SETTINGS_HIGHLIGHT_AGAIN_DESCRIPTION"] =
+	'復原"將所有法術標記為已放置"，讓所有不在快捷列上的法術重新發光。'
 L["SORT_BY_CATEGORY"] = "依類別排序"
 L["SORT_BY_SCHOOL"] = "依系別排序"
 L["SORT_DESCRIPTION"] =
@@ -2119,6 +2208,8 @@ L["MENU_RESET_CATEGORY_DESCRIPTION"] =
 	"清除你在此處每個法術上設定的選項，讓每個法術重新遵循預設值。專注目標副本和複製出的巨集會保留。"
 L["MENU_RESET_CATEGORY_CONFIRM"] =
 	"要重設你在%s中每個法術上設定的選項嗎？每個法術都會重新遵循預設值。"
+-- A middle-click on a macro, asked first. %s is the macro.
+L["MENU_RESET_MACRO_CONFIRM"] = "要重設 %s 的選項嗎？它會重新遵循預設值。"
 
 -- TRANSLATORS: %s is a spell's name, heading its macro's part of a tile's tooltip after "GtG //" ("Immolate Macro").
 L["TOOLTIP_MACRO_HEADING"] = "%s巨集"
@@ -2150,13 +2241,16 @@ L["PAGE_CONTINUED"] = "（續）"
 -- What's Next? Tab: the window's second tab and its title before "// Good to Go"
 L["WHATS_NEXT_TITLE"] = "接下來學什麼？"
 L["WHATS_NEXT_EMPTY"] = "沒有可列出的法術。"
+-- The same page while Show Known Spells is off: %s is that toggle's name (WHATS_NEXT_SHOW_KNOWN).
+L["WHATS_NEXT_EMPTY_KNOWN_HIDDEN"] =
+	'目前沒有新的可學內容。在齒輪選單中勾選"%s"即可查看已學會的法術。'
 L["WHATS_NEXT_ALL_SOURCES"] = "所有來源"
 L["WHATS_NEXT_ANY_LEVEL"] = "任何等級"
 -- TRANSLATORS: %s is a spell's rank or "Passive", after its name ("Rend (Rank 2)").
 L["WHATS_NEXT_SUBTEXT"] = "（%s）"
 
 -- TRANSLATORS: printed on a level-up; %s is the spells the character can learn now, joined with
--- LEVEL_UP_SPELLS_PAIR_FORMAT or LEVEL_UP_SPELLS_LAST_FORMAT ("[Bash], [Moonfire] (Rank 3), & [Rejuvenation]").
+-- LIST_PAIR_FORMAT or LIST_LAST_FORMAT ("[Bash], [Moonfire] (Rank 3), and [Rejuvenation]").
 L["LEVEL_UP_SPELLS"] = "你現在可以學習%s。"
 -- printed under it: %s is the spells from earlier levels still not learned, joined the same way
 L["LEVEL_UP_SPELLS_NOT_LEARNED"] = "別忘了，你還可以學習%s。"
@@ -2164,8 +2258,6 @@ L["LEVEL_UP_SPELLS_NOT_LEARNED"] = "別忘了，你還可以學習%s。"
 L["LEVEL_UP_PET_SPELLS"] = "你的寵物現在可以學習%s。"
 L["LEVEL_UP_PET_SPELLS_NOT_LEARNED"] = "別忘了，你的寵物還可以學習%s。"
 L["LEVEL_UP_DEMON_SPELLS"] = "你的惡魔現在可以學習%s。"
-L["LEVEL_UP_SPELLS_PAIR_FORMAT"] = "%s和%s"
-L["LEVEL_UP_SPELLS_LAST_FORMAT"] = "%s和%s"
 
 -- What's Next? Tab: section headers, and the counts in the footer
 L["WHATS_NEXT_STATUS_AVAILABLE"] = "現在可學"
@@ -2240,6 +2332,7 @@ L["WHATS_NEXT_PET_FOOTER"] = "%s，%d級%s"
 -- TRANSLATORS: the first %d is the training points the pet has left, the second its total.
 L["WHATS_NEXT_PET_FOOTER_TRAINING_POINTS"] = "訓練點數：剩餘 %d / 共 %d"
 L["WHATS_NEXT_PET_NO_PET"] = "寵物未召喚：顯示你透過訓練野獸學會的技能。"
+L["WHATS_NEXT_PET_NO_PET_SUMMON"] = "寵物未召喚：召喚你的寵物以查看牠已經會的技能。"
 L["WHATS_NEXT_PET_NO_DEMON"] = "惡魔未召喚：召喚一隻以查看牠已經會的技能。"
 
 -- Pet What's Next? Tab: the pet's own section headers (the rest are the What's Next? tab's)
@@ -2250,6 +2343,7 @@ L["WHATS_NEXT_PET_SHORT_OTHER"] = "其他家族"
 
 -- Pet What's Next? Tab: where the hunter learns an ability
 L["WHATS_NEXT_PET_SOURCE_TRAINER"] = "寵物訓練師"
+L["WHATS_NEXT_PET_SOURCE_HUNTER_TRAINER"] = "獵人訓練師"
 L["WHATS_NEXT_PET_SOURCE_TAMING"] = "馴服"
 L["WHATS_NEXT_PET_SOURCE_DEMON_TRAINER"] = "惡魔訓練師"
 
@@ -2258,11 +2352,15 @@ L["WHATS_NEXT_PET_TOOLTIP_LEVEL"] = "需要寵物等級"
 L["WHATS_NEXT_PET_TOOLTIP_TRAINING_POINTS"] = "訓練點數"
 L["WHATS_NEXT_PET_TOOLTIP_HOW_TRAINER"] =
 	"由寵物訓練師傳授給你。之後再用訓練野獸傳授給你的寵物。"
+L["WHATS_NEXT_PET_TOOLTIP_HOW_HUNTER_TRAINER"] = "由獵人訓練師直接傳授給你召喚出的寵物。"
 L["WHATS_NEXT_PET_TOOLTIP_HOW_TAMING"] =
 	"馴服一隻會此技能的野獸，並與牠並肩作戰直到你學會。之後再用訓練野獸傳授給任何能學會它的寵物。"
+L["WHATS_NEXT_PET_TOOLTIP_HOW_TAMING_NEW_PET"] =
+	"馴服一隻會此技能的野獸，新寵物就會自帶它。已有的寵物無法再學會它。"
 L["WHATS_NEXT_PET_TOOLTIP_HUNTER_KNOWS"] = "你已學會。用訓練野獸將它傳授給你的寵物。"
 L["WHATS_NEXT_PET_TOOLTIP_HOW_DEMON_TRAINER"] =
 	"向惡魔訓練師購買它的魔典，然後在會學習它的惡魔被召喚時使用。"
+L["WHATS_NEXT_PET_TOOLTIP_HOW_DEMON_TRAINER_TEACHES"] = "由惡魔訓練師傳授。"
 L["WHATS_NEXT_PET_TOOLTIP_GRIMOIRE"] = "魔典"
 L["WHATS_NEXT_PET_TOOLTIP_GRIMOIRE_IN_BAGS"] = "它的魔典在你的背包中。在召喚此惡魔時使用。"
 L["WHATS_NEXT_PET_TOOLTIP_OTHER"] = "你的寵物無法學會它。"
@@ -2362,7 +2460,7 @@ L["BINDING_TOGGLE_PAGE"] = "開啟/關閉強化法術書"
 
 L["CHAT_KEY_BINDINGS_IN_COMBAT"] = "基於安全考量，戰鬥中無法開啟按鍵設定清單。"
 L["KEY_BINDINGS_LOCATION"] = "開啟遊戲選單，依序進入 %s 和 %s，找到 Good to Go 分類。"
-L["ERROR_MACRO_SLOTS_FULL"] = "沒有空的巨集欄位。請在 /macro 中刪除一個巨集來騰出位置。"
+L["ERROR_MACRO_SLOTS_FULL"] = "沒有空的巨集欄位。請在 /m 中刪除幾個巨集來騰出位置。"
 L["ERROR_MACRO_WINDOW_OPEN"] = "請先關閉巨集視窗。"
 L["CHAT_MACROS_DELETED"] = "已刪除巨集：%d"
 L["CHAT_MACRO_TOO_LONG"] =

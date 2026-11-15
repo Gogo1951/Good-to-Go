@@ -23,8 +23,8 @@ local MACRO_CONFIG = ns.MACRO_CONFIG
     UIErrorsFrame:Clear() swallows the noise from clicking with no off-hand
     weapon equipped or a poison already pending.
 
-    The player picks a poison GROUP per hand (Options → Poisons, Rogues
-    only); the scan resolves each group to the best rank the rogue can use
+    The player picks a poison GROUP per hand (the Class & Race panel →
+    Rogues); the scan resolves each group to the best rank the rogue can use
     and actually has in bags. Poisons aren't soulbound, so a twink can carry
     ranks above their level — the required-level column in ns.POISON_DATA
     gates those out.
@@ -82,7 +82,7 @@ end
     Localized group name for the Options dropdowns: the base (rank 1) item's
     client-localized name. Nil while C_Item.GetItemInfo is still cold -- the
     call itself starts the async load -- and the dropdown shows the panels'
-    loading text until ns.WarmItemCache repaints it.
+    loading text until Kit.WarmItems repaints it.
 ]]
 function ns.GetPoisonGroupName(groupID)
 	local baseItem = ns.POISON_GROUP_BASE_ITEMS[groupID]

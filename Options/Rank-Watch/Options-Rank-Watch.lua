@@ -1,11 +1,12 @@
 local _, ns = ...
 local L = ns.L
+local Kit = ns.OptionsKit
 
-local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
+local GetColor = ns.GetColor
 
-local Header = ns.OptionsHeader
-local Desc = ns.OptionsDesc
-local Spacer = ns.OptionsSpacer
+local Header = Kit.Header
+local Desc = Kit.Desc
+local Spacer = Kit.Spacer
 
 --------------------------------------------------------------------------------
 -- Rank Watch Panel
@@ -14,18 +15,16 @@ local Spacer = ns.OptionsSpacer
 --[[
     The switch and the two grace periods, how Rank Watch speaks up, how a player opts out, and who reports for
     the group; then Ability Alerts While Leveling, which shares the panel but not the switch. Which ranks
-    it watches and the players it leaves alone are the Tracked Abilities and Ignored Players panels under this
+    it watches and the players it leaves alone are the Reported Ranks and Ignored Players panels under this
     one. Every setting is
-    account-wide (ns.db.global.rankWatch; Data/Default-Settings.lua says why). The messages are fixed: one
-    whisper and one print, with no flavors to pick and no template to edit.
+    account-wide (ns.db.global.rankWatch; Data/Default-Settings.lua says why). The whispers are the player's to
+    word: the tip, in its own form for a hunter's pet and a warlock's demon, under the whisper toggle, and the
+    opt-out offer and reply under Opt Out, each in a whisper composer (Options/Options-Message-Composer.lua)
+    that shows only while the whisper toggle is on. The print is fixed.
 ]]
 
 local function Settings()
 	return ns.RankWatchSettings()
-end
-
-local function Refresh()
-	AceConfigRegistry:NotifyChange(ns.OPTIONS_REGISTRY.RankWatch)
 end
 
 local function Toggle(key, name, desc, order)
@@ -43,7 +42,7 @@ local function Toggle(key, name, desc, order)
 			if key == "whisper" then
 				ns.SyncRankWatchEvents()
 			end
-			Refresh()
+			ns.RefreshSettings()
 		end,
 	}
 end
@@ -67,24 +66,109 @@ local function SampleRows()
 	return nil
 end
 
-local function WhisperExample()
-	local castRow, betterRow = SampleRows()
-	return castRow and ns.BuildRankWatchWhisper(castRow, betterRow) or ""
+--[[
+    A pet's sample cast: the lowest and highest ranks of one of its owner's pet abilities, or the player's own
+    sample where this client's pets have none with two ranks.
+]]
+local function SamplePetRows(owner)
+	for _, ladder in ipairs(ns.RankWatchPetLadders()[owner] or {}) do
+		if #ladder.rows > 1 then
+			return ladder.rows[1], ladder.rows[#ladder.rows]
+		end
+	end
+	return SampleRows()
+end
+
+-- The demon a warlock's sample names: its kind, as the client names the creature family.
+local function SampleDemonName()
+	local info = C_CreatureInfo
+		and C_CreatureInfo.GetCreatureFamilyInfo
+		and C_CreatureInfo.GetCreatureFamilyInfo(ns.SAMPLE_DEMON_FAMILY_ID)
+	return info and info.name or ns.SAMPLE_PET_NAME
+end
+
+--[[
+    Each form of the tip with its sample parts: the cast linked and named, the newer rank's level and, for a
+    pet's form, the pet. fill and build are the composer's, through the same builders the real whisper uses.
+]]
+local TIP_SAMPLES = {
+	{
+		rows = SampleRows,
+	},
+	{
+		form = "pet",
+		rows = function()
+			return SamplePetRows("HUNTER")
+		end,
+		petName = function()
+			return ns.SAMPLE_PET_NAME
+		end,
+	},
+	{
+		form = "demon",
+		rows = function()
+			return SamplePetRows("WARLOCK")
+		end,
+		petName = SampleDemonName,
+	},
+}
+
+local function TipParts(sample)
+	local castRow, betterRow = sample.rows()
+	if not castRow then
+		return nil
+	end
+	return ns.RankWatchSpellText(castRow, true),
+		ns.RankWatchSpellText(castRow, false),
+		betterRow.level,
+		sample.petName and sample.petName()
+end
+
+local function TipFill(sample)
+	return function(text)
+		local linked, named, level, petName = TipParts(sample)
+		if not linked then
+			return ""
+		end
+		return ns.FillRankWatchTipWhisper(text, linked, named, level, petName)
+	end
+end
+
+local function TipBuild(sample)
+	return function(text)
+		local linked, named, level, petName = TipParts(sample)
+		if not linked then
+			return nil
+		end
+		return ns:BuildRankWatchTipWhisper(sample.form, text, linked, named, level, petName)
+	end
+end
+
+-- The tokens line: each %s a token, drawn in blue.
+local function Tokens(key, ...)
+	local tokens = { ... }
+	return function()
+		local info, help = GetColor("INFO"), GetColor("HELP")
+		local drawn = {}
+		for index, token in ipairs(tokens) do
+			drawn[index] = info .. token .. help
+		end
+		return L[key]:format(unpack(drawn))
+	end
 end
 
 -- The caster is the house roster's name for the sample spell's class, borrowing a name for a class with none.
 local function PrintExample()
 	local castRow, betterRow, class = SampleRows()
 	if not castRow then
-		return nil
+		return ns.PrintedExampleLines(nil)
 	end
 	local name = ns.ClassColoredName(ns.SAMPLE_NAMES[class] or ns.SAMPLE_NAMES.WARRIOR, class)
-	return ns.BuildRankWatchOtherLine(name, castRow, betterRow)
+	return ns.PrintedExampleLines(ns.BuildRankWatchOtherLine(name, castRow, betterRow))
 end
 
--- The opt-out whisper as it would go to the player themself, with their own number.
-local function OptOutExample()
-	return ns.BuildRankWatchOptOutWhisper(UnitName("player"))
+local function LevelUpExample()
+	return ns.PrintedExampleLines(ns.LevelUpAlertExample())
 end
 
 -- An Example shows only while its message is on, so it never shows a message the player hasn't chosen.
@@ -123,7 +207,7 @@ end
 
 local function GraceRow(args, key, name, desc, order)
 	local values, sorting = GraceValues()
-	args[key .. "Label"] = ns.OptionsRowLabel(L[name], order)
+	args[key .. "Label"] = Kit.Label(L[name], order)
 	args[key] = {
 		type = "select",
 		name = "",
@@ -137,7 +221,7 @@ local function GraceRow(args, key, name, desc, order)
 		end,
 		set = function(_, value)
 			Settings()[key] = value
-			Refresh()
+			ns.RefreshSettings()
 		end,
 	}
 end
@@ -155,10 +239,10 @@ local function LevelUpPetOff()
 end
 
 local function LevelUpSubRow(key, name, desc, order, hidden)
-	return ns.OptionsSubRow(order, hidden, {
+	return Kit.SubRow(order, hidden, {
 		{
 			type = "toggle",
-			name = ns.OptionsSubLabel(L[name]),
+			name = Kit.SubLabel(L[name]),
 			desc = L[desc],
 			width = 3,
 			get = function()
@@ -166,7 +250,7 @@ local function LevelUpSubRow(key, name, desc, order, hidden)
 			end,
 			set = function(_, value)
 				Settings()[key] = value
-				Refresh()
+				ns.RefreshSettings()
 			end,
 		},
 	})
@@ -184,7 +268,7 @@ function ns.BuildRankWatchOptions()
 		args = {
 			description = Desc(L["OPTIONS_RANK_WATCH_DESCRIPTION"], 1),
 			space0 = Spacer(2),
-			switch = ns.OptionsFeatureSwitch("RankWatch", 3),
+			switch = Kit.FeatureSwitch("rankWatch.enabled", 3),
 			standaloneSpace = Spacer(3.1, StandaloneHidden),
 			standalone = Desc(function()
 				return L["RANK_WATCH_STANDALONE"]:format(ns.RankWatchStandaloneTitle() or "")
@@ -204,17 +288,18 @@ function ns.BuildRankWatchOptions()
 			messagesDescription = Desc(L["RANK_WATCH_MESSAGES_DESCRIPTION"], 10.2),
 			messagesSpace2 = Spacer(10.3),
 			whisper = Toggle("whisper", "RANK_WATCH_WHISPER", "RANK_WATCH_WHISPER_DESCRIPTION", 11),
-			whisperExample = ns.OptionsWhisperExample(12, WhisperExample, WhisperOff),
+			-- 11.1 through 11.49 belong to the tip's whisper composer, added below.
+			tipComposerSpace = Spacer(11.05, WhisperOff),
 			whisperSpace = Spacer(13, WhisperOff),
 			print = Toggle("print", "RANK_WATCH_PRINT", "RANK_WATCH_PRINT_DESCRIPTION", 14),
-			printExample = ns.OptionsExample(15, PrintExample, PrintOff),
+			printExample = Kit.Example(15, PrintOff, PrintExample),
 
 			optOutSpace0 = Spacer(16),
 			optOutHeader = Header(L["RANK_WATCH_OPT_OUT_HEADER"], 17),
 			optOutSpace1 = Spacer(17.1),
 			optOutDescription = Desc(L["RANK_WATCH_OPT_OUT_DESCRIPTION"], 17.2),
 			optOutSpace2 = Spacer(17.3, WhisperOff),
-			optOutExample = ns.OptionsWhisperExample(18, OptOutExample, WhisperOff),
+			-- 17.4 through 17.69 belong to the opt-out whispers' composer, added below.
 
 			whispererSpace0 = Spacer(19),
 			whispererHeader = Header(L["RANK_WATCH_WHISPERER_HEADER"], 20),
@@ -250,10 +335,65 @@ function ns.BuildRankWatchOptions()
 				27,
 				LevelUpPetOff
 			),
-			levelUpExampleSpace = Spacer(28, LevelUpOff),
-			levelUpExample = ns.OptionsExample(29, ns.LevelUpAlertExample, LevelUpOff),
+			levelUpExample = Kit.Example(29, LevelUpOff, LevelUpExample),
 		},
 	}
+	ns.DefineWhisperComposer(options.args, {
+		prefix = "tipWhisper",
+		hidden = WhisperOff,
+		messages = {
+			{
+				field = "rankWatchTip",
+				label = L["WHISPER_TEXT"],
+				description = L["RANK_WATCH_TIP_MESSAGE_DESCRIPTION"],
+				tokens = Tokens("RANK_WATCH_TIP_TOKENS", "{spell}", "{level}"),
+				fill = TipFill(TIP_SAMPLES[1]),
+				build = TipBuild(TIP_SAMPLES[1]),
+			},
+			{
+				field = "rankWatchTipPet",
+				label = L["RANK_WATCH_TIP_PET_MESSAGE"],
+				description = L["RANK_WATCH_TIP_PET_MESSAGE_DESCRIPTION"],
+				tokens = Tokens("RANK_WATCH_TIP_PET_TOKENS", "{pet}", "{spell}", "{level}"),
+				fill = TipFill(TIP_SAMPLES[2]),
+				build = TipBuild(TIP_SAMPLES[2]),
+			},
+			{
+				field = "rankWatchTipDemon",
+				label = L["RANK_WATCH_TIP_DEMON_MESSAGE"],
+				description = L["RANK_WATCH_TIP_DEMON_MESSAGE_DESCRIPTION"],
+				tokens = Tokens("RANK_WATCH_TIP_DEMON_TOKENS", "{pet}", "{spell}", "{level}"),
+				fill = TipFill(TIP_SAMPLES[3]),
+				build = TipBuild(TIP_SAMPLES[3]),
+			},
+		},
+	}, 11.1)
+	-- Send Messages In is already above, with the tip.
+	ns.DefineWhisperComposer(options.args, {
+		prefix = "optOutWhisper",
+		hidden = WhisperOff,
+		language = false,
+		messages = {
+			{
+				field = "rankWatchOptOut",
+				label = L["RANK_WATCH_OPT_OUT_MESSAGE"],
+				description = L["RANK_WATCH_OPT_OUT_MESSAGE_DESCRIPTION"],
+				fill = ns.FillOptOutOfferWhisper,
+				build = function(text)
+					return ns:BuildOptOutOfferWhisper(text)
+				end,
+			},
+			{
+				field = "rankWatchOptOutDone",
+				label = L["RANK_WATCH_OPT_OUT_DONE_MESSAGE"],
+				description = L["RANK_WATCH_OPT_OUT_DONE_MESSAGE_DESCRIPTION"],
+				fill = ns.FillOptOutDoneWhisper,
+				build = function(text)
+					return ns:BuildOptOutDoneWhisper(text)
+				end,
+			},
+		},
+	}, 17.4)
 	GraceRow(options.args, "graceMaxLevel", "RANK_WATCH_GRACE_MAX_LEVEL", "RANK_WATCH_GRACE_MAX_LEVEL_DESCRIPTION", 6)
 	GraceRow(options.args, "graceLeveling", "RANK_WATCH_GRACE_LEVELING", "RANK_WATCH_GRACE_LEVELING_DESCRIPTION", 7)
 	return options

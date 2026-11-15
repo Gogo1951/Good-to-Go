@@ -4,8 +4,8 @@ local StoreSetting = ns.StoreMacroSetting
 local NO_SLOTS = ns.NO_SLOTS
 
 --[[
-	A macro's target priority, one of its options. The rest of them, and the per-spell settings this reads and
-	writes, are Features/Enhanced-Spellbook/Macro-Options.lua, which loads first.
+	A macro's target priority, one of its options. The rest of them are Features/Enhanced-Spellbook/Macro-Options.lua,
+	and the per-spell settings this reads and writes Features/Enhanced-Spellbook/Macro-Settings.lua; both load first.
 ]]
 
 --------------------------------------------------------------------------------

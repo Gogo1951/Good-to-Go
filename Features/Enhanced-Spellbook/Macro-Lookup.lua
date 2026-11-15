@@ -103,15 +103,13 @@ local function OwnerRecord(index)
 end
 
 --[[
-	How a page macro stands to the untagged WoW macro of its name at index: "owned" (recorded as the add-on's,
+	How the untagged WoW macro at index stands to the add-on: "owned" (recorded as the add-on's,
 	for this character), "claim" (MIGRATION (remove after 2026-11-23): a general macro recorded true
-	before owners were, which the first character to find it claims),
-	"adopt" (MIGRATION (remove after 2026-11-23): unrecorded, from before ownership tracking, but its text
-	is the page's own), or nil (the player's own, or another character's). Reads only; ns.SyncMacro records a
-	claim or adoption.
+	before owners were, which the first character to find it claims), or nil (unrecorded: the player's own,
+	whatever its text, or another character's). Reads only; ns.SyncMacro records a claim.
 ]]
-function ns.LegacyOwnership(macro, index)
-	local name, _, body = GetMacroInfo(index)
+function ns.LegacyOwnership(index)
+	local name = GetMacroInfo(index)
 	local record = OwnedList(index)[name]
 	-- MIGRATION (remove after 2026-11-23)
 	if record == true and IsGeneral(index) then
@@ -120,19 +118,16 @@ function ns.LegacyOwnership(macro, index)
 	if record ~= nil then
 		return record == OwnerRecord(index) and "owned" or nil
 	end
-	-- MIGRATION (remove after 2026-11-23)
-	if body and (ns.TaggedBody(macro, body) == macro.body or body == ns.BareBody(macro.name)) then
-		return "adopt"
-	end
 	return nil
 end
 
 local NO_INDEXES = {}
 
 --[[
-	Where the WoW macros are, read in one pass over them: tags maps each tag to the first macro carrying it,
-	and names each name to the untagged macros of that name, character ones first, as the page's lookups by
-	name have always preferred them.
+	Where the WoW macros are, read in one pass over them: tags maps each tag to every macro carrying it (more
+	than one when the player pasted an add-on macro's text into a macro of their own), and names each name to
+	the untagged macros of that name; both list character macros first, as the page's lookups have always
+	preferred them.
 ]]
 local function ReadMacroIndexes()
 	local indexes = { tags = {}, names = {} }
@@ -141,7 +136,8 @@ local function ReadMacroIndexes()
 		local name, _, body = GetMacroInfo(index)
 		local tag = ns.BodyTag(body)
 		if tag then
-			indexes.tags[tag] = indexes.tags[tag] or index
+			indexes.tags[tag] = indexes.tags[tag] or {}
+			table.insert(indexes.tags[tag], index)
 		elseif name then
 			indexes.names[name] = indexes.names[name] or {}
 			table.insert(indexes.names[name], index)
@@ -159,10 +155,10 @@ end
 
 ns.ReadMacroIndexes = ReadMacroIndexes
 
--- The first untagged WoW macro called name that ns.LegacyOwnership says is the page macro's, and how.
-local function FindByName(macro, indexes, name)
+-- The first untagged WoW macro called name that ns.LegacyOwnership says is the add-on's, and how.
+local function FindByName(indexes, name)
 	for _, named in ipairs(name and indexes.names[name] or NO_INDEXES) do
-		local ownership = ns.LegacyOwnership(macro, named)
+		local ownership = ns.LegacyOwnership(named)
 		if ownership then
 			return named, ownership
 		end
@@ -171,26 +167,45 @@ local function FindByName(macro, indexes, name)
 end
 
 --[[
-	The WoW macro that is a page macro's: the one carrying its tag, else an untagged one of its name the
-	add-on created (see ns.LegacyOwnership), under its name or, from before the prefix, its old one. Returns
-	the index, 0 for none, and how it was found: "tag", or the ownership answer. Reads only. indexes is a
-	ReadMacroIndexes result, read here when nil.
+	Of several WoW macros carrying one tag, the page macro's: the one under its name, else the one recorded as
+	this character's, else the first. The others are copies the player pasted, and stay theirs.
+]]
+local function PickTagged(macro, tagged)
+	local wowName = ns.WowMacroName(macro)
+	for _, index in ipairs(tagged) do
+		if GetMacroInfo(index) == wowName then
+			return index
+		end
+	end
+	for _, index in ipairs(tagged) do
+		if ns.LegacyOwnership(index) == "owned" then
+			return index
+		end
+	end
+	return tagged[1]
+end
+
+--[[
+	The WoW macro that is a page macro's: the one carrying its tag (see PickTagged when several do), else an
+	untagged one of its name the add-on created (see ns.LegacyOwnership), under its name or, from before the
+	prefix, its old one. Returns the index, 0 for none, how it was found ("tag", or the ownership answer), and
+	for "tag" whether other macros carry the same tag. Reads only. indexes is a ReadMacroIndexes result, read
+	here when nil.
 ]]
 function ns.FindMacroIndex(macro, indexes)
 	indexes = indexes or ReadMacroIndexes()
-	local index = indexes.tags[ns.MacroTag(macro)]
-	if index then
-		return index, "tag"
+	local tagged = indexes.tags[ns.MacroTag(macro)]
+	if tagged then
+		return PickTagged(macro, tagged), "tag", #tagged > 1
 	end
-	local ownership
-	index, ownership = FindByName(macro, indexes, ns.WowMacroName(macro))
+	local index, ownership = FindByName(indexes, ns.WowMacroName(macro))
 	if not index then
 		-- MIGRATION (remove after 2026-11-26)
-		index, ownership = FindByName(macro, indexes, OldPrefixName(macro))
+		index, ownership = FindByName(indexes, OldPrefixName(macro))
 	end
 	if not index then
 		-- MIGRATION (remove after 2026-11-23)
-		index, ownership = FindByName(macro, indexes, LegacyMacroName(macro))
+		index, ownership = FindByName(indexes, LegacyMacroName(macro))
 	end
 	return index or 0, ownership
 end

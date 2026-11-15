@@ -38,6 +38,11 @@ local function InitializeConsumableMacros()
 		if ns.isMage or ns.isWarlock or ns.isForsaken or (ns.isTroll and ns.rapidRegenerationSpellName) then
 			ns.SetEventRegistered("UNIT_SPELLCAST_SUCCEEDED", true, "player")
 		end
+		-- A hunter's Call Pet and Revive Pet tell a dead pet from a dead target (Tools-Hunters.lua).
+		if ns.isHunter then
+			ns.SetEventRegistered("UNIT_SPELLCAST_SENT", true, "player")
+			ns.SetEventRegistered("UNIT_SPELLCAST_SUCCEEDED", true, "player")
+		end
 	end
 end
 
@@ -73,8 +78,7 @@ local function RefreshArrivalState()
 	    QUEST_LOG_UPDATE fires very frequently, and the only consumer of quest
 	    data is Hunter pet-food quest-objective skipping (ScanPetFood via
 	    BuildActiveQuestSet). Register it only for hunters so everyone else
-	    doesn't pay for a full bag rescan + macro rebuild on every quest-log
-	    churn. Idempotent, so registration follows ns.isHunter on every arrival.
+	    doesn't pay for a quest-log walk on every firing. Idempotent, so registration follows ns.isHunter on every arrival.
 	]]
 	ns.SetEventRegistered("QUEST_LOG_UPDATE", ns.isHunter)
 end
@@ -255,8 +259,17 @@ local function OnEvent(event, ...)
 	    casts ns.SpellCastChangesMacros names change what the macros hold, and
 	    ns.RequestUpdate leaves that rebuild pending until combat drops.
 	]]
+	if event == "UNIT_SPELLCAST_SENT" then
+		local _, _, _, spellID = ...
+		ns.OnHunterSpellcastSent(spellID)
+		return
+	end
+
 	if event == "UNIT_SPELLCAST_SUCCEEDED" then
 		local _, _, spellID = ...
+		if ns.isHunter then
+			ns.OnHunterSpellcastSucceeded(spellID)
+		end
 		--[[
 		    A secret spellID (Forever, while casts are restricted) errors as a
 		    table key, so it can't be told apart; the macros rebuild once combat
@@ -344,6 +357,7 @@ local function OnEvent(event, ...)
 		RefreshArrivalState()
 		ns.UpdateAuraTracking()
 		ns.RequestUpdate()
+		-- again shortly after: catches item info and auras that arrive late after a loading screen
 		C_Timer.After(3, function()
 			ns.RequestUpdate()
 		end)
@@ -375,8 +389,9 @@ end
 --[[
     Every event the consumable macros handle. The plain ones subscribe at
     load; UNIT_PET for the player alone; UNIT_SPELLCAST_SUCCEEDED for the
-    player alone, and only for mages, warlocks, Forsaken and Trolls with Rapid
-    Regeneration (at login); the
+    player alone, and only for mages, warlocks, Forsaken, Trolls with Rapid
+    Regeneration and hunters (at login), and UNIT_SPELLCAST_SENT for hunters
+    alone; the
     on-demand ones only while needed (UNIT_AURA via ns.UpdateAuraTracking,
     QUEST_LOG_UPDATE for hunters in RefreshArrivalState), each through
     ns.SetEventRegistered. Item info arrives through Features/Item-Info.lua.
@@ -398,6 +413,7 @@ local EVENTS = {
 	"SPELLS_CHANGED",
 	"GROUP_ROSTER_UPDATE",
 	"UNIT_PET",
+	"UNIT_SPELLCAST_SENT",
 	"UNIT_SPELLCAST_SUCCEEDED",
 	"UNIT_AURA",
 	"QUEST_LOG_UPDATE",
@@ -405,6 +421,7 @@ local EVENTS = {
 
 local DEFERRED_EVENTS = {
 	UNIT_PET = true,
+	UNIT_SPELLCAST_SENT = true,
 	UNIT_SPELLCAST_SUCCEEDED = true,
 	UNIT_AURA = true,
 	QUEST_LOG_UPDATE = true,

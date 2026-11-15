@@ -83,6 +83,12 @@ function ns.ScanBags()
 	    this refreshes on every arena entry and exit.
 	]]
 	local inArena = select(2, IsInInstance()) == "arena"
+	--[[
+	    On Forever auras can be secret even out of combat (a battleground, for one), so the buffs a scroll,
+	    pet buff food or buff food choice reads can't be seen: the macros keep their plain eat/drink bodies
+	    rather than acting on the last buffs they saw.
+	]]
+	local aurasHidden = ns.AreAurasSecret()
 	local firstAidSkill = ns.currentFirstAidSkill or 0
 	local alchemySkill = ns.currentAlchemySkill or 0
 	local engineeringSkill = ns.currentEngineeringSkill or 0
@@ -112,6 +118,7 @@ function ns.ScanBags()
 		and not ns.wellFedState
 		and not targetingSelf
 		and not inArena
+		and not aurasHidden
 
 	--[[
 	    Use Conjured Food & Water First: the setting and its When to Use, the
@@ -174,11 +181,12 @@ function ns.ScanBags()
 
 	--[[
 	    Overrides check happens before standard consumable scan. Skipped
-	    entirely in a PvP Arena (see the arena rule above): scroll mode and pet
-	    buff food can't be used there, so both stay nil and the Food macro keeps
-	    its plain food/conjure form.
+	    entirely in a PvP Arena (see the arena rule above), where scroll mode and
+	    pet buff food can't be used, and while auras are hidden (aurasHidden
+	    above), where the buffs they key on can't be read: both stay nil and the
+	    Food macro keeps its plain food/conjure form.
 	]]
-	if inArena then
+	if inArena or aurasHidden then
 		ns.scrollOverrideIDs = nil
 		ns.petBuffOverrideID = nil
 	else

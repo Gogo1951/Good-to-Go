@@ -1,9 +1,11 @@
 local _, ns = ...
+local L = ns.L
 
 --[[
     Utilities -- stateless, cross-cutting helpers used by multiple files: the
     color accessor, cross-client API shims, the secret-value checks, and the
-    spell link, GUID, unit and buff-duration helpers several features share. No
+    spell link, GUID, unit and buff-duration helpers several features share,
+    the duration wording, and the level filter's labels. No
     module state beyond the hidden tooltip Era and TBC read tooltip text
     through; the one saved-data read is ns.GetClassesByProfileName's, of
     ns.db.global.inventory. A feature's own helpers live in its folder, in
@@ -525,6 +527,11 @@ function ns.IsPlainTrue(value)
 	return ns.IsPlain(value) and value == true
 end
 
+-- True for any readable truthy answer, for the unit questions that answer with a number (UnitInRaid's raid index).
+function ns.IsPlainYes(value)
+	return ns.IsPlain(value) and value and true or false
+end
+
 --[[
     On WoW Forever, unit identity, aura data and cooldowns go secret in
     combat. Ask these before reading any of them; each is always false on the
@@ -928,3 +935,90 @@ function ns.GetUnitByGUID(guid)
 	end
 	return nil
 end
+
+--------------------------------------------------------------------------------
+-- Durations
+--------------------------------------------------------------------------------
+
+--[[
+    Resolve the client's plural escape to plain text.
+
+    Trap: WoW's own duration strings (D_MINUTES == "%d |4minute:minutes;") carry
+    a |4 escape that the UI expands only at render time. It looks right in a
+    print, but SendChatMessage rejects any message still holding one -- "Invalid
+    escape code in chat message" -- and silently drops the whole line, so
+    resolve before anything goes to SendChatMessage. Resolving it here is what
+    lets the units come from the client's own localization in
+    every language it ships, instead of the add-on carrying its own copies.
+
+    Slavic locales list a third form (one/few/many) and get their rule; two-form
+    languages take a simple count check; languages that don't inflect (zhCN,
+    koKR) carry no escape at all, so the gsub finds nothing to do.
+]]
+local function ResolvePlurals(text)
+	return (
+		text:gsub("(%d+)(%s*)|4([^;]*);", function(count, gap, body)
+			local forms = {}
+			for form in body:gmatch("[^:]+") do
+				forms[#forms + 1] = form
+			end
+			if #forms == 0 then
+				return count .. gap
+			end
+
+			local number = tonumber(count) or 0
+			local pick
+			if #forms >= 3 then
+				local mod10, mod100 = number % 10, number % 100
+				if mod10 == 1 and mod100 ~= 11 then
+					pick = forms[1] -- 1, 21, 31...
+				elseif mod10 >= 2 and mod10 <= 4 and (mod100 < 12 or mod100 > 14) then
+					pick = forms[2] -- 2-4, 22-24...
+				else
+					pick = forms[3]
+				end
+			else
+				pick = (number == 1) and forms[1] or (forms[2] or forms[1])
+			end
+			return count .. gap .. pick
+		end)
+	)
+end
+
+--[[
+    Durations run to round numbers, so the largest whole unit states one exactly.
+    Return the Favor's 60-second choice reads as a minute. The hour
+    rung stays because this formats whatever duration it is handed, and a later
+    caller re-deriving the ladder would walk back into the plural-escape trap
+    that ResolvePlurals exists to solve.
+]]
+local function FormatDuration(seconds)
+	seconds = math.floor((seconds or 0) + 0.5)
+	local template, count
+	if seconds >= 3600 then
+		template, count = D_HOURS, math.floor(seconds / 3600 + 0.5)
+	elseif seconds >= 60 then
+		template, count = D_MINUTES, math.floor(seconds / 60 + 0.5)
+	else
+		template, count = D_SECONDS, seconds
+	end
+	return ResolvePlurals(template:format(count))
+end
+ns.FormatDuration = FormatDuration
+
+--------------------------------------------------------------------------------
+-- Level Filter
+--------------------------------------------------------------------------------
+
+--[[
+    The level filter's labels, shared by every consumable's When to Use
+    (Buff Food, Scroll Buffs, Pet Food Buffs, and Use Conjured Food & Water
+    First), offered in ns.LEVEL_FILTER_ORDER. Each reads as a state on its own,
+    since the mini-map menu's Waiting For note shows one while it is what holds
+    a switch back.
+]]
+ns.LEVEL_FILTER_VALUES = {
+	any = L["LEVEL_FILTER_ANY"],
+	leveling = L["LEVEL_FILTER_LEVELING"],
+	maxlevel = L["LEVEL_FILTER_MAX_LEVEL"],
+}

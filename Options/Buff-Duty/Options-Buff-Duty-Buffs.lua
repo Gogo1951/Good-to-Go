@@ -1,15 +1,16 @@
 local _, ns = ...
 local Data = ns.Data
 local L = ns.L
+local Kit = ns.OptionsKit
 
 local GetColor = ns.GetColor
 
 --[[
-    "Tracked Abilities" panel, under Buff Duty: who each buff you can give to others is
+    "Group Buffs" panel, under Buff Duty: who each buff you can give to others is
     offered to, and when a buff counts as missing. Lists every class, because
-    these settings are account-wide. Not hidden
-    behind the Buff Duty switch: these are choices worth making before
-    turning the window on, and the parent panel says whether it is.
+    these settings are account-wide. Not hidden behind the Buff Duty switch:
+    these are choices worth making before turning the window on, and the
+    page opens with a line saying so while it's off (ns.AddFeatureOffLine).
 ]]
 function ns.BuildBuffDutyBuffsOptions()
 	local function Settings()
@@ -17,7 +18,7 @@ function ns.BuildBuffDutyBuffsOptions()
 	end
 
 	local options = {
-		name = ns.SubPanelTitle(L["TAB_BUFF_DUTY"], L["BUFF_DUTY_TRACKED_HEADER"]),
+		name = Kit.SubPanelTitle(L["TAB_BUFF_DUTY"], L["BUFF_DUTY_TRACKED_HEADER"]),
 		type = "group",
 		args = {
 			--[[
@@ -25,10 +26,11 @@ function ns.BuildBuffDutyBuffsOptions()
 			    rather than in each one's tooltip. The raid's Main Tank mark is
 			    named in the client's own words.
 			]]
-			descBuffs = ns.OptionsDesc(L["BUFF_DUTY_BUFFS_DESCRIPTION"]:format(MAINTANK), 1),
-			space0 = ns.OptionsSpacer(2),
+			descBuffs = Kit.Desc(L["BUFF_DUTY_BUFFS_DESCRIPTION"]:format(MAINTANK), 1),
+			space0 = Kit.Spacer(2),
 		},
 	}
+	ns.AddFeatureOffLine(options.args, "buffWindow.enabled")
 	--[[
 	    Labeled with the client's own duration string, so "5 Minutes" reads right
 	    in every locale without a string of ours.
@@ -38,7 +40,7 @@ function ns.BuildBuffDutyBuffsOptions()
 		refreshValues[minutes] = D_MINUTES:format(minutes)
 	end
 	options.args.refreshLabel =
-		ns.OptionsRowLabel(GetColor("TITLE") .. L["BUFF_DUTY_REFRESH"] .. "|r", 26, ns.OPTIONS_ALIGNED_LABEL_WIDTH)
+		Kit.Label(GetColor("TITLE") .. L["BUFF_DUTY_REFRESH"] .. "|r", 26, ns.OPTIONS_ALIGNED_LABEL_WIDTH)
 	options.args.refreshMinutes = {
 		type = "select",
 		name = "",
@@ -62,18 +64,18 @@ function ns.BuildBuffDutyBuffsOptions()
 	    sits apart from the role note above rather than inside it. Captions take
 	    the aligned width so the dropdowns line up with the boxed ones below.
 	]]
-	options.args.spaceTanks0 = ns.OptionsSpacer(28)
-	options.args.headerTanks = ns.OptionsHeader(L["BUFF_DUTY_TANKS_HEADER"], 29)
-	options.args.spaceTanks1 = ns.OptionsSpacer(30)
-	options.args.descTanks = ns.OptionsDesc(L["BUFF_DUTY_TANKS_DESCRIPTION"], 30.3)
-	options.args.spaceTanks2 = ns.OptionsSpacer(30.6)
+	options.args.spaceTanks0 = Kit.Spacer(28)
+	options.args.headerTanks = Kit.Header(L["BUFF_DUTY_TANKS_HEADER"], 29)
+	options.args.spaceTanks1 = Kit.Spacer(30)
+	options.args.descTanks = Kit.Desc(L["BUFF_DUTY_TANKS_DESCRIPTION"], 30.3)
+	options.args.spaceTanks2 = Kit.Spacer(30.6)
 
 	local tankValues = {}
 	for _, value in ipairs(Data.TANK_WHEN_ORDER) do
 		tankValues[value] = L["BUFF_DUTY_TANKS_" .. value]
 	end
 	local function TankRow(key, caption, desc, order)
-		options.args["tankLabel_" .. key] = ns.OptionsRowLabel(caption, order, ns.OPTIONS_ALIGNED_LABEL_WIDTH)
+		options.args["tankLabel_" .. key] = Kit.Label(caption, order, ns.OPTIONS_ALIGNED_LABEL_WIDTH)
 		options.args["tankWhen_" .. key] = {
 			type = "select",
 			name = "",
@@ -101,7 +103,7 @@ function ns.BuildBuffDutyBuffsOptions()
 	if ns.FLAVOR ~= "Camelot" then
 		TankRow(Data.TANK_WHEN_PET, L["BUFF_DUTY_TANKS_PETS"], L["BUFF_DUTY_TANKS_PETS_DESCRIPTION"], tankOrder)
 	end
-	options.args.spaceTanks3 = ns.OptionsSpacer(tankOrder + 1)
+	options.args.spaceTanks3 = Kit.Spacer(tankOrder + 1)
 
 	local audienceValues = {}
 	for _, value in ipairs(Data.BUFF_AUDIENCE_ORDER) do

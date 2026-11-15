@@ -83,7 +83,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(GetMerchantItemMaxStack) == "function"
 		end,
 	},
-	-- The Delete List confirm (Restocker-Window-List-Bar.lua).
+	-- The Delete List confirm (Restocker-Window-List-Manage.lua).
 	{
 		"StaticPopup_Show",
 		function()
@@ -330,10 +330,11 @@ function ns:BuildRestockerContextReport()
 	]]
 	if ns.merchantIsOpen then
 		local reaction = UnitReaction("npc", "player") or UnitReaction("target", "player") or 0
+		local plainReaction = ns.IsPlain(reaction)
 		lines[#lines + 1] = string.format(
-			"Vendor standing: %d (%s) // items it lists: %d",
-			reaction,
-			tostring(ns.GetStandingLabel(reaction)),
+			"Vendor standing: %s (%s) // items it lists: %d",
+			plainReaction and tostring(reaction) or "(secret)",
+			plainReaction and tostring(ns.GetStandingLabel(reaction)) or "(secret)",
 			GetMerchantNumItems() or 0
 		)
 	end
@@ -454,7 +455,20 @@ function ns:BuildRestockerContextReport()
 		YesNo(IsResting()),
 		YesNo(UnitOnTaxi("player"))
 	)
-	-- The reminder sound plays on the Master channel (Restocker-Reminders.lua).
+	--[[
+	    Restocker-Town-Reminder.lua is new this release, so after a /reload
+	    from an update it and its handlers are absent until a restart, and no
+	    arrival reminds (Restocker-Events.lua).
+	]]
+	local handlers = ns.restockerEventHandlers or {}
+	lines[#lines + 1] = string.format(
+		"Town reminder file loaded: %s // handlers for walking in: %s, landing: %s, loading screens: %s",
+		YesNo(ns.OnRestockerArrival),
+		YesNo(handlers.PLAYER_UPDATE_RESTING),
+		YesNo(handlers.PLAYER_CONTROL_GAINED),
+		YesNo(handlers.PLAYER_ENTERING_WORLD)
+	)
+	-- The reminder sound plays on the Master channel (Restocker-Town-Reminder.lua).
 	lines[#lines + 1] = string.format(
 		"Sound CVars: Sound_EnableAllSound %s, Sound_MasterVolume %s, Sound_EnableSoundWhenGameIsInBG %s // alert sound file set: %s",
 		tostring(GetCVar("Sound_EnableAllSound")),
@@ -473,6 +487,19 @@ function ns:BuildRestockerContextReport()
 		OnOff(settings.bankReminder),
 		tostring(settings.bankReminderMode),
 		OnOff(settings.autoOpenAtBank)
+	)
+	lines[#lines + 1] = string.format(
+		"Reminders call a row low under: %s%% // moved onto Simple: %s",
+		tostring(settings.restockLowThreshold),
+		YesNo(settings.remindersMovedOntoSimple)
+	)
+	-- What a reminder would report now (ns.BuildRestockReminderLists); with both counts 0 none prints.
+	local out, low = ns.BuildRestockReminderLists()
+	lines[#lines + 1] = string.format(
+		"A reminder now would name: %d out, %d low // short but at or above the low line, never named: %d",
+		#out,
+		#low,
+		#ns.BuildRestockShortfallList() - #out - #low
 	)
 	lines[#lines + 1] = string.format(
 		"Window open: %s // opened by a visit: %s // level: %d",

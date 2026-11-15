@@ -155,8 +155,8 @@ end
 
 StaticPopupDialogs.GOODTOGO_DELETE_MACRO = {
 	text = L["MENU_DELETE_CONFIRM"],
-	button1 = YES,
-	button2 = NO,
+	button1 = L["POPUP_DELETE"],
+	button2 = CANCEL,
 	OnAccept = function(_, data)
 		data()
 	end,
@@ -166,7 +166,11 @@ StaticPopupDialogs.GOODTOGO_DELETE_MACRO = {
 	preferredIndex = 3,
 }
 
--- Asks before deleting a macro that is on the bars, by name; delete runs on Yes.
-function ns.ConfirmDelete(name, delete)
+--[[
+	Asks before deleting a macro, by name; delete runs on Delete. unused words the ask for a macro on none of
+	the bars, which has nothing to take off them.
+]]
+function ns.ConfirmDelete(name, delete, unused)
+	StaticPopupDialogs.GOODTOGO_DELETE_MACRO.text = L[unused and "MENU_DELETE_CONFIRM_UNUSED" or "MENU_DELETE_CONFIRM"]
 	StaticPopup_Show("GOODTOGO_DELETE_MACRO", name, nil, delete)
 end

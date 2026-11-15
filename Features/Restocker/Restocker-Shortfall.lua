@@ -2,8 +2,9 @@ local _, ns = ...
 
 --[[
     How short the bags are of the Restock List, with no merchant involved: the
-    grocery list the reminders, the mini-map tooltip and the window's footer
-    read, and the one-row test behind the Keep box's mark. The merchant restock
+    shortfall list the reminders and the mini-map tooltip read (every short
+    row), the grocery list the window's footer reads (the short rows with Buy
+    on), and the one-row test behind the Keep box's mark. The merchant restock
     itself is Restocker-Merchant.lua.
 ]]
 
@@ -12,22 +13,13 @@ local _, ns = ...
 --------------------------------------------------------------------------------
 
 --[[
-    What the current list is short of right now: the same shortfall
-    BuildPurchaseOrder computes, minus the vendor. Used by the mini-map tooltip,
-    the entering-town reminder and the reminders after a merchant or bank window
-    closes, none of which reads a vendor's stock.
-
-    Two differences from a real purchase order, both because there is no vendor:
-    the required-reputation gate is skipped (it depends on which vendor you walk
-    up to), and crafting reagents are left out (ns.BuildCraftingPurchaseOrder
-    resolves those against the merchant's stock). So this answers "what am I low on", which is
-    what a shopping list is, rather than "what will this vendor sell me".
-
-    Counts are bags only -- C_Item.GetItemCount(id, false, false) -- matching what the
-    merchant restock compares against, so the list agrees with what would
-    actually be bought.
+    The rows of the current list the bags are short of right now, sorted by
+    name: every one ns.IsRestockItemShort calls short, or with buyOnly only
+    those with Buy on. Each is {itemID, itemName, have, wanted, needed}; have
+    and wanted ride along for the reminders, whose low/out split reads the
+    ratio (ns.SplitRestockShortfall) and whose Verbose mode prints it.
 ]]
-function ns.BuildGroceryList()
+local function BuildShortRows(buyOnly)
 	local settings = ns.restockSettings
 	local restockList = settings and settings.lists and settings.lists[settings.currentList]
 	local list = {}
@@ -36,27 +28,19 @@ function ns.BuildGroceryList()
 	end
 
 	for _, record in pairs(restockList) do
-		local wanted = record.amount or 0
-		local itemID = record.itemID
 		-- nil buyFromMerchant defaults to true, the same rule ns.RestockFromMerchant uses
-		if itemID and wanted > 0 and (record.buyFromMerchant == nil or record.buyFromMerchant) then
-			local have = C_Item.GetItemCount(itemID, false, false) or 0
-			local short = wanted - have
-			if short > 0 then
-				-- sorted by the client's name, not a saved one gone stale (Restocker-Saved-Format.lua)
-				ns.RefreshRestockItemName(record)
-				--[[
-				    have/wanted ride along for the verbose town reminder, which reports
-				    the ratio rather than the shortfall.
-				]]
-				list[#list + 1] = {
-					itemID = itemID,
-					itemName = record.itemName,
-					have = have,
-					wanted = wanted,
-					needed = short,
-				}
-			end
+		local buys = record.buyFromMerchant == nil or record.buyFromMerchant
+		if ns.IsRestockItemShort(record) and (buys or not buyOnly) then
+			local have = C_Item.GetItemCount(record.itemID, false, false) or 0
+			-- sorted by the client's name, not a saved one gone stale (Restocker-Saved-Format.lua)
+			ns.RefreshRestockItemName(record)
+			list[#list + 1] = {
+				itemID = record.itemID,
+				itemName = record.itemName,
+				have = have,
+				wanted = record.amount,
+				needed = record.amount - have,
+			}
 		end
 	end
 
@@ -71,10 +55,40 @@ function ns.BuildGroceryList()
 end
 
 --[[
-    Do the bags hold fewer of this row's item than its Keep amount? The grocery
-    list's own shortfall, asked of one row and without its Buy gate: the Restock
-    window marks every short row, not only the ones a merchant would be asked
-    for, so a row the bank is meant to fill is marked too.
+    Every row the current list is short of right now, Buy on or off, as the
+    Restock window marks them: a row the bank is meant to fill still counts
+    when the bank had none. Used by the entering-town reminder, the reminders
+    after a merchant or bank window closes, and the mini-map tooltip, so all of
+    them agree with the window.
+]]
+function ns.BuildRestockShortfallList()
+	return BuildShortRows(false)
+end
+
+--[[
+    What a merchant would be asked for right now: the short rows with Buy on,
+    the same shortfall BuildPurchaseOrder computes, minus the vendor. Used by
+    the window's footer count and its tooltip, which name orders.
+
+    Two differences from a real purchase order, both because there is no vendor:
+    the required-reputation gate is skipped (it depends on which vendor you walk
+    up to), and crafting reagents are left out (ns.BuildCraftingPurchaseOrder
+    resolves those against the merchant's stock). So this answers "what am I low on", which is
+    what a shopping list is, rather than "what will this vendor sell me".
+
+    Counts are bags only -- C_Item.GetItemCount(id, false, false) -- matching what the
+    merchant restock compares against, so the list agrees with what would
+    actually be bought.
+]]
+function ns.BuildGroceryList()
+	return BuildShortRows(true)
+end
+
+--[[
+    Do the bags hold fewer of this row's item than its Keep amount? The test
+    behind both lists above, asked of one row: the Restock window marks every
+    short row, not only the ones a merchant would be asked for, so a row the
+    bank is meant to fill is marked too.
 
     Bags only and counted by itemID like the list above, so a row this calls
     short with Buy on is always an order there. A row with no itemID is never
@@ -92,6 +106,7 @@ end
     in one pass and without building the list: the window's status line asks on
     every redraw and every bag change while it is open. Counts by the same rules
     as ns.BuildGroceryList and ns.IsRestockItemShort, so the three always agree.
+    anyShort is true exactly when ns.BuildRestockShortfallList has a row.
 ]]
 function ns.CountRestockOrders(restockList)
 	local orders, anyShort = 0, false
@@ -114,7 +129,7 @@ end
     Leaving a merchant or a bank is the last moment you can still do something
     about a short list, so both close handlers (Restocker-Merchant.lua and
     Restocker-Bank-State.lua) report what is left on the way out. Silent when nothing
-    is short -- a report with nothing in it is just noise.
+    is low or out -- a report with nothing in it is just noise.
 
     The short delay is for bag counts. Bank moves settle on BAG_UPDATE, which can
     land after the window closes; reading the shortfall on the same frame would
@@ -129,10 +144,10 @@ function ns.RemindRestockShortfallAfterVisit(enabled, mode)
 		return
 	end
 	C_Timer.After(SETTLE_DELAY, function()
-		local groceries = ns.BuildGroceryList()
-		if #groceries == 0 then
+		local out, low = ns.BuildRestockReminderLists()
+		if #out == 0 and #low == 0 then
 			return
 		end
-		ns.PrintRestockShortfall(ns.RestockShortfallHeadline(#groceries), mode, groceries)
+		ns.PrintRestockShortfall(ns.RestockClosingHeadline(#out, #low), mode, out, low)
 	end)
 end

@@ -1,11 +1,10 @@
 local _, ns = ...
 local L = ns.L
+local Kit = ns.OptionsKit
 
-local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
-
-local Header = ns.OptionsHeader
-local Desc = ns.OptionsDesc
-local Spacer = ns.OptionsSpacer
+local Header = Kit.Header
+local Desc = Kit.Desc
+local Spacer = Kit.Spacer
 
 --------------------------------------------------------------------------------
 -- Readiness Report Panel
@@ -65,11 +64,6 @@ local function SpecHidden()
 	return ReportsHidden() or not ns.CanReportSpecialization()
 end
 
--- Repaint the page so a reset shows in the controls without a reopen.
-local function Refresh()
-	AceConfigRegistry:NotifyChange(ns.OPTIONS_REGISTRY.ReadinessReport)
-end
-
 --------------------------------------------------------------------------------
 -- Reset
 --------------------------------------------------------------------------------
@@ -78,7 +72,8 @@ end
     Every Readiness Report category back to what a fresh install ships with.
     The report's own on/off switch (readinessReportEnabled) is left as it is.
 
-    A control of its own, because these settings are account-wide, and nothing
+    A Reset row of its own (Kit.ResetRow, which repaints every panel after),
+    because these settings are account-wide, and nothing
     else reaches that scope -- ns.db:ResetProfile() clears the active profile
     and the profile alone -- so without this button the page has no path back
     to its defaults at all.
@@ -109,8 +104,6 @@ local function ResetReadinessSettings()
 			ns.db.global[key] = value
 		end
 	end
-
-	Refresh()
 end
 
 --------------------------------------------------------------------------------
@@ -342,7 +335,7 @@ end
 --[[
     One category row: the switch, its threshold dropdown on the same line where
     it has one, and the break under it. What the row reports is the switch's
-    hover text.
+    hover text. A change redraws the Example.
 
     Every part carries the row's own `hidden`, so a row that is not offered
     (Flask on Era) takes its break with it rather than leaving a gap where
@@ -366,6 +359,7 @@ local function AddReportRow(args, row, order)
 		end,
 		set = function(_, value)
 			ns.db.global[key] = value
+			ns.RefreshSettings()
 		end,
 	}
 	order = order + 1
@@ -387,6 +381,7 @@ local function AddReportRow(args, row, order)
 			end,
 			set = function(_, value)
 				ns.db.global[threshold.key] = value
+				ns.RefreshSettings()
 			end,
 		}
 		order = order + 1
@@ -413,7 +408,7 @@ function ns.BuildReadinessReportOptions()
 	order = order + 1
 	args.spaceIntro = Spacer(order)
 	order = order + 1
-	args.toggleReadiness = ns.OptionsFeatureSwitch("ReadinessReport", order)
+	args.toggleReadiness = Kit.FeatureSwitch("readinessReportEnabled", order)
 	order = order + 1
 
 	--[[
@@ -424,22 +419,21 @@ function ns.BuildReadinessReportOptions()
 	]]
 	args.spaceReset = Spacer(order)
 	order = order + 1
-	args.resetReadiness = {
-		type = "execute",
-		name = L["OPTIONS_READINESS_RESET"],
-		desc = L["OPTIONS_READINESS_RESET_DESCRIPTION"],
-		order = order,
-		width = "double",
-		confirm = true,
-		confirmText = L["OPTIONS_READINESS_RESET_CONFIRM"],
-		func = ResetReadinessSettings,
-	}
+	args.resetReadiness = Kit.ResetRow(
+		order,
+		nil,
+		L["OPTIONS_READINESS_RESET"],
+		L["OPTIONS_READINESS_RESET_DESCRIPTION"],
+		nil,
+		ResetReadinessSettings,
+		L["OPTIONS_READINESS_RESET_CONFIRM"]
+	)
 	order = order + 1
 
 	-- The report as it prints, following the switches below.
-	args.spaceExample = Spacer(order, ReportsHidden)
-	order = order + 1
-	args.exampleReadiness = ns.OptionsExample(order, ns.BuildReadinessSampleLines, ReportsHidden)
+	args.exampleReadiness = Kit.Example(order, ReportsHidden, function()
+		return ns.PrintedExampleLines(ns.BuildReadinessSampleLines())
+	end)
 	order = order + 1
 
 	for index, section in ipairs(SECTIONS) do

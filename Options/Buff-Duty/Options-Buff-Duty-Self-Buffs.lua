@@ -1,18 +1,19 @@
 local _, ns = ...
 local Data = ns.Data
 local L = ns.L
+local Kit = ns.OptionsKit
 
 local GetColor = ns.GetColor
 
 --[[
     "Self-Buffs" panel, under Buff Duty: one dropdown per self buff by class
     picking when it shows -- Off, When Missing, or a few minutes before it runs
-    out. Its own time rather than the Tracked Abilities panel's one "Refresh Under", since a
+    out. Its own time rather than the Group Buffs panel's one "Refresh Under", since a
     30-minute armor and a 10-minute shield want different warnings. Every class
     is listed, because these settings are account-wide.
 
     The switch for the window's Self-Buffs row lives on the Buff Duty panel with
-    the window's other rows. Like the Tracked Abilities panel, nothing here hides behind it:
+    the window's other rows. Like the Group Buffs panel, nothing here hides behind it:
     these are choices worth making before turning the row on. Weapons have a
     panel of their own (Options-Buff-Duty-Weapon-Buffs.lua).
 ]]
@@ -51,13 +52,14 @@ function ns.BuildBuffDutySelfBuffsOptions()
 	end
 
 	local options = {
-		name = ns.SubPanelTitle(L["TAB_BUFF_DUTY"], L["BUFF_DUTY_SELF_HEADER"]),
+		name = Kit.SubPanelTitle(L["TAB_BUFF_DUTY"], L["BUFF_DUTY_SELF_HEADER"]),
 		type = "group",
 		args = {
-			descIntro = ns.OptionsDesc(L["BUFF_DUTY_SELF_DESCRIPTION"], 1),
-			spaceIntro = ns.OptionsSpacer(2),
+			descIntro = Kit.Desc(L["BUFF_DUTY_SELF_DESCRIPTION"], 1),
+			spaceIntro = Kit.Spacer(2),
 		},
 	}
+	ns.AddFeatureOffLine(options.args, "buffWindow.enabled")
 
 	local refreshValues = ns.BuffDutyRefreshValues(Data.SELF_REFRESH_CHOICES)
 	local selfOrder = 10

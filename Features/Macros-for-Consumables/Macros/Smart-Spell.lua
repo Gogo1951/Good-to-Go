@@ -85,7 +85,7 @@ function ns.GetSmartSpell(spellList, ignoreTarget, checkUnique)
 
 	--[[
 	    Fallback when no rank matched the level cap (targeting a low-level
-	    friend): walk the list bottom-up and use the lowest rank the player
+	    friend), or checkUnique skipped every known rank: walk the list bottom-up and use the lowest rank the player
 	    actually KNOWS. Players can skip training low ranks, so the list's
 	    last entry may be untrained — and /cast of an untrained spell is a
 	    silent no-op that would make the conjure click look broken. Knows

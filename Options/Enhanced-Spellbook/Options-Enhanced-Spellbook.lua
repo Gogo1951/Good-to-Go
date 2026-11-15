@@ -1,72 +1,77 @@
 local _, ns = ...
 local L = ns.L
+local Kit = ns.OptionsKit
 
-local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
-
-local Header = ns.OptionsHeader
-local Desc = ns.OptionsDesc
-local Spacer = ns.OptionsSpacer
+local Header = Kit.Header
+local Desc = Kit.Desc
+local Spacer = Kit.Spacer
 
 --------------------------------------------------------------------------------
 -- Delete Macros
 --------------------------------------------------------------------------------
 
-local DELETE_BUTTON_WIDTH = 1.5
-
 --[[
 	A button deleting the Spellbook's macros from one list (ns.DeleteAddonMacros), behind a confirm, and
-	grayed out while the list holds none. The panel repaints after, so the button grays out at once.
+	grayed out while the list holds none, on a row of its own in the control column. Every panel repaints
+	after, so the button grays out at once.
 ]]
 local function DeleteMacrosButton(general, nameKey, descKey, confirmKey, order)
-	return {
-		type = "execute",
-		name = L[nameKey],
-		desc = L[descKey],
-		width = DELETE_BUTTON_WIDTH,
-		order = order,
-		confirm = true,
-		confirmText = L[confirmKey],
-		disabled = function()
-			return ns.CountAddonMacros(general) == 0
-		end,
-		func = function()
-			ns.DeleteAddonMacros(general)
-			AceConfigRegistry:NotifyChange(ns.OPTIONS_REGISTRY.Spellbook)
-		end,
-	}
+	return Kit.Row(order, nil, {
+		Kit.Label(" ", nil, Kit.LABEL_WIDTH),
+		{
+			type = "execute",
+			name = L[nameKey],
+			desc = L[descKey],
+			width = Kit.CONTROL_WIDTH,
+			confirm = true,
+			confirmText = L[confirmKey],
+			disabled = function()
+				return ns.CountAddonMacros(general) == 0
+			end,
+			func = function()
+				ns.DeleteAddonMacros(general)
+				ns.RefreshSettings()
+			end,
+		},
+	})
 end
 
 --------------------------------------------------------------------------------
 -- Enhanced Spellbook Panel
 --------------------------------------------------------------------------------
 
+local function SpellbookOff()
+	return not ns.IsSpellbookEnabled()
+end
+
 --[[
 	The Spellbook's page in the settings tree. Its settings live on the Spellbook itself, so this holds only
-	what can't: the on/off switch, what the ability tooltips' ranks are for and their own switch, and the buttons that delete the
+	what can't: the on/off switch, what the ability tooltips' ranks are for and their own switch (shown only while it's on), and the buttons that delete the
 	macros it made. The key that opens it is on the root panel, with every other key binding.
 ]]
 function ns.BuildSpellbookOptions()
 	local args = {
 		descIntro = Desc(L["OPTIONS_SPELLBOOK_DESCRIPTION"], 1),
 		spaceEnable = Spacer(2),
-		toggleSpellbookEnabled = ns.OptionsFeatureSwitch("Spellbook", 3),
+		toggleSpellbookEnabled = Kit.FeatureSwitch("spellbookEnabled", 3),
 
-		-- What's Next ability tooltips: the ranks under every spell's tooltip (Features/Enhanced-Spellbook/Spell-Ranks-Tooltip.lua)
-		spacerAbilityTooltips0 = Spacer(50),
-		headerAbilityTooltips = Header(L["OPTIONS_ABILITY_TOOLTIPS_HEADER"], 51),
-		spacerAbilityTooltips1 = Spacer(52),
-		descAbilityTooltips = Desc(L["OPTIONS_ABILITY_TOOLTIPS_DESCRIPTION"], 53),
-		spacerAbilityTooltips2 = Spacer(54),
-		-- Grayed out while the Spellbook is off, since no tooltip gets ranks then.
+		--[[
+		    What's Next ability tooltips: the ranks under every spell's tooltip
+		    (Features/Enhanced-Spellbook/Spell-Ranks-Tooltip.lua). The whole section is hidden while the
+		    Spellbook is off, since no tooltip gets ranks then.
+		]]
+		spacerAbilityTooltips0 = Spacer(50, SpellbookOff),
+		headerAbilityTooltips = Header(L["OPTIONS_ABILITY_TOOLTIPS_HEADER"], 51, SpellbookOff),
+		spacerAbilityTooltips1 = Spacer(52, SpellbookOff),
+		descAbilityTooltips = Desc(L["OPTIONS_ABILITY_TOOLTIPS_DESCRIPTION"], 53, SpellbookOff),
+		spacerAbilityTooltips2 = Spacer(54, SpellbookOff),
 		toggleAbilityTooltips = {
 			type = "toggle",
 			name = L["OPTIONS_ABILITY_TOOLTIPS_ENABLE"],
 			desc = L["OPTIONS_ABILITY_TOOLTIPS_ENABLE_DESCRIPTION"],
 			order = 55,
 			width = "full",
-			disabled = function()
-				return not ns.IsSpellbookEnabled()
-			end,
+			hidden = SpellbookOff,
 			get = function()
 				return ns.db and ns.db.global.abilityTooltipRanks
 			end,

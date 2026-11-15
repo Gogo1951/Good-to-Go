@@ -100,6 +100,11 @@ local function ItemGroupOf(item)
 	return GROUP_OTHER
 end
 
+-- Characters, not bytes: a Cyrillic or accented letter takes two bytes. Counts every byte that doesn't continue one.
+local function CharacterCount(text)
+	return select(2, text:gsub("[^\128-\191]", ""))
+end
+
 --[[
     One pass over the list, resolving per item what both walks below would
     otherwise resolve repeatedly. Rebuilt on every redraw rather than cached
@@ -110,7 +115,7 @@ function ns.BuildRestockView(items)
 	local filter = ns.restockListFilter
 	local view = {
 		groups = {},
-		filter = (filter and #filter >= 2) and Fold(filter) or nil,
+		filter = (filter and CharacterCount(filter) >= 2) and Fold(filter) or nil,
 	}
 	for _, item in ipairs(items) do
 		view.groups[item] = ItemGroupOf(item)
