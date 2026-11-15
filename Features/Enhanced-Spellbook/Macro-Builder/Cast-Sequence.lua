@@ -10,7 +10,7 @@ local SettingsKey = ns.SettingsKey
 	combat ending, Shift, Ctrl or Alt held on a press, or some seconds without a press. A step that fails (out
 	of range, on cooldown) doesn't move the sequence on, so the next press tries it again.
 
-	Three per-spell settings (Features/Enhanced-Spellbook/Macro-Options.lua) hold it, each flat so a Duplicate copy
+	Three per-spell settings (Features/Enhanced-Spellbook/Macro-Settings.lua) hold it, each flat so a Duplicate copy
 	gets its own (Features/Enhanced-Spellbook/Macro-Copies.lua): "castSequence" the added steps, "castSequenceEnd"
 	"stop" or nil for starting over, and "castSequenceReset" the resets, keys and a number of seconds.
 	Features/Enhanced-Spellbook/Macro-Body.lua writes them into the cast line, and

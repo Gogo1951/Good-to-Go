@@ -1,6 +1,7 @@
 local _, ns = ...
 local Data = ns.Data
 local L = ns.L
+local Kit = ns.OptionsKit
 
 --[[
     "Weapon Buffs" panel, under Buff Duty after Self-Buffs: one Reapply
@@ -31,7 +32,7 @@ local function WeaponChoiceName(entry)
 		if name then
 			return name
 		end
-		ns.WarmItemCache({ id }, ns.OPTIONS_REGISTRY.BuffDutyWeaponBuffs)
+		Kit.WarmItems({ id }, ns.OPTIONS_REGISTRY.BuffDutyWeaponBuffs)
 		return L["TRACKED_ITEM_PENDING"]:format(id)
 	end
 	return C_Spell.GetSpellName(id) or L["TRACKED_SPELL_PENDING"]:format(id)
@@ -56,10 +57,10 @@ local function DefineGrid(args, choices, hands, list, handKey)
 		has[hand] = true
 	end
 
-	args.columnsSpace = ns.OptionsRowLabel("", 1, ns.OPTIONS_INLINE_LABEL_WIDTH)
+	args.columnsSpace = Kit.Label("", 1, ns.OPTIONS_INLINE_LABEL_WIDTH)
 	for index, hand in ipairs(Data.WEAPON_HAND_ORDER) do
 		if has[hand] then
-			args["column_" .. hand] = ns.OptionsRowLabel(ns.WEAPON_HAND_LABELS[hand], 1 + index / 10, COLUMN_WIDTH)
+			args["column_" .. hand] = Kit.Label(ns.WEAPON_HAND_LABELS[hand], 1 + index / 10, COLUMN_WIDTH)
 		end
 	end
 
@@ -109,13 +110,13 @@ function ns.BuildBuffDutyWeaponBuffsOptions()
 	end
 
 	local options = {
-		name = ns.SubPanelTitle(L["TAB_BUFF_DUTY"], L["BUFF_DUTY_WEAPON_PANEL_HEADER"]),
+		name = Kit.SubPanelTitle(L["TAB_BUFF_DUTY"], L["BUFF_DUTY_WEAPON_PANEL_HEADER"]),
 		type = "group",
 		args = {
-			descIntro = ns.OptionsDesc(L["BUFF_DUTY_WEAPON_DESCRIPTION"], 1),
-			spaceIntro = ns.OptionsSpacer(2),
+			descIntro = Kit.Desc(L["BUFF_DUTY_WEAPON_DESCRIPTION"], 1),
+			spaceIntro = Kit.Spacer(2),
 			-- One timing for every choice below, lined up with the boxes' columns.
-			refreshLabel = ns.OptionsRowLabel(
+			refreshLabel = Kit.Label(
 				ns.GetColor("TITLE") .. L["BUFF_DUTY_WEAPON_REFRESH"] .. "|r",
 				3,
 				ns.OPTIONS_ALIGNED_LABEL_WIDTH
@@ -136,7 +137,7 @@ function ns.BuildBuffDutyWeaponBuffsOptions()
 					ns.RefreshBuffDuty()
 				end,
 			},
-			spaceRefresh = ns.OptionsSpacer(4),
+			spaceRefresh = Kit.Spacer(4),
 		},
 	}
 
@@ -200,5 +201,6 @@ function ns.BuildBuffDutyWeaponBuffsOptions()
 		end
 	end
 
+	ns.AddFeatureOffLine(options.args, "buffWindow.enabled")
 	return options
 end

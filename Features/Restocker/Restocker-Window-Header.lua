@@ -65,9 +65,9 @@ local ADD_BOX_WIDTH = 160
 --[[
     Between the bag menu and the add box. An InputBoxTemplate field draws its
     border some 4px left of its own edge, which eats into the gap, so it is
-    wider than the 20 it draws as (measured in the Forever client).
+    wider than the 12 it draws as (measured in the Forever client).
 ]]
-local CONTROL_ITEM_GAP = 24
+local CONTROL_ITEM_GAP = 16
 local ADD_BUTTON_WIDTH = 64
 local STAPLES_GAP = 8 -- between the header's buttons, and between the add box and Add
 
@@ -82,7 +82,7 @@ local STAPLES_GAP = 8 -- between the header's buttons, and between the add box a
 local ROW_ICON_SIZE = 16
 local ROW_ICON_GAP = 8
 local FILTER_ICON = "Interface\\Common\\UI-Searchbox-Icon"
-local CLEAR_BUTTON_SIZE = 14
+local CLEAR_BUTTON_SIZE = 16
 local CLEAR_BUTTON_INSET = 4
 local CLEAR_ICON = "Interface\\Buttons\\UI-GroupLoot-Pass-Up"
 local CLEAR_ICON_DOWN = "Interface\\Buttons\\UI-GroupLoot-Pass-Down"

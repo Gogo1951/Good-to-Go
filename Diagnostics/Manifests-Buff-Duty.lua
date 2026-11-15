@@ -117,8 +117,25 @@ end
     sight unless AFK), whether a dead one gets a resurrection icon (none while
     one is already being cast on them), and their pet, with what keeps one
     off the list: dead, phase-shifted, or a borrowed mob (charmed, or neither
-    a known demon nor a Focus beast and with no pet family).
+    a known demon nor a Focus beast and with no pet family). A buffable pet
+    also names the buffs held off it: one cast that went off, trusted until
+    it would need a refresh, or one the game refused, held while it stays.
 ]]
+-- The buffs Buff Duty holds off a pet or NPC (BuffDuty.IsHeld), by name.
+local function HeldBuffs(BW, unit)
+	local guid = UnitGUID(unit)
+	if not (ns.IsPlain(guid) and guid) then
+		return "none"
+	end
+	local held = {}
+	for _, buff in ipairs(BW.buffs) do
+		if BW.IsHeld(guid, buff.key) then
+			held[#held + 1] = buff.singleName or buff.groupName or "?"
+		end
+	end
+	return #held > 0 and table.concat(held, ",") or "none"
+end
+
 local function PetState(BW, pet)
 	if not (pet and UnitExists(pet)) then
 		return "none"
@@ -129,7 +146,7 @@ local function PetState(BW, pet)
 	end
 	if BW.CanBuffPet(pet) then
 		BW.ReadAuras(pet)
-		return "buffable aurasReadable=" .. tostring(BW.AurasReadable())
+		return string.format("buffable aurasReadable=%s held=%s", tostring(BW.AurasReadable()), HeldBuffs(BW, pet))
 	end
 	return string.format(
 		"not buffable (identitySecret=%s visible=%s canAssist=%s dead=%s phaseShifted=%s charmed=%s ownerClass=%s family=%s)",
@@ -199,11 +216,14 @@ end
     the longest-lasting version and its time left (yours or someone else's), or
     missing with the rank the window would cast at the unit's level, TOO LOW
     when none of yours fits. `class` nil skips the audience check (self buffs).
-    The window's own read adds Refresh Under and the blessing families on top
-    of this. A plain read of the unit's auras: the window's cache is untouched.
+    Where the window's own verdict (BuffDuty.Has, after it reads the unit into
+    its aura cache) differs, it is said: one on but offered (running under
+    Refresh Under, or a weaker rank than yours), or one missing but skipped
+    (another of your blessings is on them).
 ]]
 local function BuffStates(BW, unit, class, list)
 	local left, mine = ReadUnitBuffs(unit)
+	BW.ReadAuras(unit)
 	local role = class and BW.RoleOf(unit, class)
 	local parts = {}
 	for _, buff in ipairs(list) do
@@ -218,13 +238,15 @@ local function BuffStates(BW, unit, class, list)
 					best = id
 				end
 			end
+			local windowHas = BW.Has(buff, unit)
 			if best then
 				local seconds = left[best]
 				parts[#parts + 1] = string.format(
-					"%s=on %s%s",
+					"%s=on %s%s%s",
 					name,
 					seconds == 0 and "(no timer)" or (math.floor(seconds / 60) .. "m" .. (seconds % 60) .. "s"),
-					mine[best] and " yours" or ""
+					mine[best] and " yours" or "",
+					windowHas and "" or " (window offers it)"
 				)
 			else
 				local cast = "group version only"
@@ -232,7 +254,8 @@ local function BuffStates(BW, unit, class, list)
 					local rank = BW.RankFor(buff, UnitLevel(unit))
 					cast = rank and rank.castText or "TOO LOW"
 				end
-				parts[#parts + 1] = string.format("%s=missing cast=%s", name, cast)
+				parts[#parts + 1] =
+					string.format("%s=missing cast=%s%s", name, cast, windowHas and " (window skips it)" or "")
 			end
 		end
 	end
@@ -253,7 +276,9 @@ end
     Soulstone and who already carries one, and the Buff Key's binding and any
     override taking its key; then every group member and your target as the
     window reads them, each with which of your buffs they have on or are
-    missing (a friendly NPC target too), and what feeds Return the Favor.
+    missing and where the window's own verdict differs, what a pet or a
+    friendly NPC target is held off or takes, the other classes' buffs
+    Party-Buffs counts, and what feeds Return the Favor.
     The group read is skipped in combat, as the window skips it.
     Existence/value reads only: nothing is cast, targeted or redrawn.
 ]]
@@ -296,6 +321,11 @@ function ns:BuildBuffDutyContextReport()
 		tostring(db.favorEnabled),
 		tostring(db.targetEnabled),
 		tostring(db.askOtherClasses)
+	)
+	lines[#lines + 1] = string.format(
+		"Whispered ask: %s // Send Messages In: %s",
+		db.askMessage == nil and "default" or (db.askMessage == "" and "emptied (sends nothing)" or "edited"),
+		ns.GetMessageLanguage()
 	)
 	local hiddenClasses = {}
 	for classToken, shown in pairs(db.showClasses or {}) do
@@ -743,6 +773,35 @@ function ns:BuildBuffDutyContextReport()
 		end
 	end
 
+	--[[
+	    Party-Buffs: every class's raid-wide buff (blessings aside) with its
+	    Who Gets It, less your own castable ones (yours), counted in a group
+	    with Ask Other Classes on, once its class is up and online in the
+	    group, and a talent buff once anyone carries it; then how many icons
+	    it would draw now. It alone keeps the window up for a class with
+	    nothing to offer.
+	]]
+	local partyBuffRows = {}
+	for _, entry in ipairs(BW.entries) do
+		local row = entry.row
+		if row.group and not row.exclusive then
+			partyBuffRows[#partyBuffRows + 1] = string.format(
+				"%s (%s)=%s%s",
+				C_Spell.GetSpellName(entry.key) or "?",
+				tostring(row.class),
+				castable[entry.key] and "yours" or tostring(db.audience[entry.key]),
+				row.talent and " talent" or ""
+			)
+		end
+	end
+	local watchesPartyBuffs = (IsInGroup() and db.askOtherClasses) and true or false
+	lines[#lines + 1] = string.format(
+		"Party-Buffs: watching=%s iconsNow=%s rows=%s",
+		tostring(watchesPartyBuffs),
+		(watchesPartyBuffs and not aurasSecret) and tostring(#BW.BuildOtherClassBuffs()) or "n/a",
+		#partyBuffRows > 0 and table.concat(partyBuffRows, " | ") or "none on this client"
+	)
+
 	if not UnitExists("target") then
 		lines[#lines + 1] = "Target: none"
 	elseif ns.IsUnitIdentitySecret("target") then
@@ -778,19 +837,41 @@ function ns:BuildBuffDutyContextReport()
 		--[[
 		    A friendly NPC (a quest's wounded soldier) gets the Target list's
 		    row: not a player or anyone's pet, alive, in sight, and one you can
-		    help. It is offered every buff you have on, so its states skip the
-		    audience check; a Mana-only buff still wants a mana bar, and a buff
-		    the game refused on it stays held off while it's around.
+		    help. It is offered every single-target buff you have on, whatever
+		    it wears and whoever the buff is set for, one after another in a
+		    cycle (which buff the cycle has reached isn't readable here); a
+		    Mana-only buff still wants a mana bar, Blessing of Might skips a
+		    caster's class, and a buff the game refused on it stays held off
+		    while it's around.
 		]]
 		local canBuffNPC = BW.CanBuffNPC and BW.CanBuffNPC("target") or false
+		local npcClass = select(2, UnitClass("target"))
+		local npcPower = UnitPowerType("target")
 		lines[#lines + 1] = string.format(
 			"  npc: canBuffNPC=%s powerType=%s class=%s",
 			tostring(canBuffNPC),
-			PlainText(UnitPowerType("target")),
-			PlainText((select(2, UnitClass("target"))))
+			PlainText(npcPower),
+			PlainText(npcClass)
 		)
 		if canBuffNPC then
-			lines[#lines + 1] = aurasSecret and "    buffs: (auras secret)" or BuffStates(BW, "target", nil, BW.buffs)
+			local npcGUID = UnitGUID("target")
+			npcGUID = ns.IsPlain(npcGUID) and npcGUID or nil
+			local casters = ns.Data.CASTER_CLASSES or {}
+			local takes = {}
+			for _, buff in ipairs(BW.buffs) do
+				local state = "takes"
+				if not buff.singleName then
+					state = "group version only"
+				elseif buff.noCasters and ns.IsPlain(npcClass) and npcClass and casters[npcClass] then
+					state = "caster class"
+				elseif buff.manaOnly and not (ns.IsPlain(npcPower) and npcPower == Enum.PowerType.Mana) then
+					state = "no mana"
+				elseif npcGUID and BW.IsHeld(npcGUID, buff.key) then
+					state = "held (refused)"
+				end
+				takes[#takes + 1] = (buff.singleName or buff.groupName or "?") .. "=" .. state
+			end
+			lines[#lines + 1] = "    takes: " .. (#takes > 0 and table.concat(takes, " | ") or "(none castable)")
 		end
 	end
 	lines[#lines + 1] = string.format(
@@ -798,11 +879,23 @@ function ns:BuildBuffDutyContextReport()
 		db.favorSeconds,
 		ns.Data.BUFF_DUTY_FAVOR_MAX
 	)
-	-- Strangers' buffs are heard after the pause that follows login and every loading screen.
+	--[[
+	    Strangers' buffs are heard after the pause that follows login and every
+	    loading screen, and then how many strangers are kept inside that time.
+	]]
+	local favorsKept, now = 0, GetTime()
+	if BW.EachFavor then
+		for _, favor in BW.EachFavor() do
+			if now - favor.at <= db.favorSeconds then
+				favorsKept = favorsKept + 1
+			end
+		end
+	end
 	lines[#lines + 1] = string.format(
-		"  heard from %s: ready=%s",
+		"  heard from %s: ready=%s strangersKept=%d",
 		ns.FLAVOR == "Camelot" and "your own auras" or "the combat log",
-		tostring(ns.IsBuffDutyReady and ns.IsBuffDutyReady())
+		tostring(ns.IsBuffDutyReady and ns.IsBuffDutyReady()),
+		favorsKept
 	)
 
 	return table.concat(lines, "\n")
@@ -1205,9 +1298,10 @@ local CHARACTER_NAME_MAX_LETTERS = 12
     locale, usually ruRU.
 
     Buff Duty's ask for another class's buff is built for every raid-wide
-    buff the window counts, and the longest is kept. It is built whispered:
-    the whisper leads with the marker on every flavor, so it is never shorter
-    than the line said to the group.
+    buff the window counts, and the longest is kept: once as said to the
+    group, and once whispered, in the player's saved text (or the Send
+    Messages In language's default), through ns:BuildBuffAskWhisper. A
+    whisper the player emptied sends nothing, and the notes say so.
 
     Buff Duty's Return the Favor buttons cast through a macro naming the
     stranger, one per buff you can give right now, built by ns.BuffDuty's
@@ -1218,7 +1312,8 @@ ns.DIAGNOSTIC_MESSAGES = function()
 	local rows, notes = {}, {}
 	local BW = ns.BuffDuty
 	if BW and BW.entries then
-		local longestAsk
+		local longestAsk, longestWhisper
+		local template = ns.GetMessageText("buffAsk")
 		-- the longest names list an ask can carry: as many as it names, each at the game's 12-letter limit
 		local longestNames = {}
 		for i = 1, ns.BUFF_ASK_MAX_NAMES do
@@ -1229,18 +1324,31 @@ ns.DIAGNOSTIC_MESSAGES = function()
 			if row.group and not row.exclusive then
 				local linkId = entry.ids[#entry.ids]
 				local link = ns.GetSpellLink(linkId) or C_Spell.GetSpellName(linkId) or ""
-				local ask = ns:BuildBuffRequestMessage(longestNames, #longestNames, link, true)
+				local ask = ns:BuildBuffRequestMessage(longestNames, #longestNames, link)
 				if not longestAsk or #ask > #longestAsk then
 					longestAsk = ask
+				end
+				local whisper = ns:BuildBuffAskWhisper(template, longestNames, #longestNames, link)
+				if whisper and (not longestWhisper or #whisper > #longestWhisper) then
+					longestWhisper = whisper
 				end
 			end
 		end
 		if longestAsk then
 			rows[#rows + 1] = {
-				label = "Buff Duty ask for a buff",
+				label = "Buff Duty ask for a buff, said to the group",
 				ceiling = ns.CHAT_MESSAGE_MAX_LENGTH,
 				text = longestAsk,
 			}
+		end
+		if longestWhisper then
+			rows[#rows + 1] = {
+				label = "Buff Duty ask for a buff, whispered (" .. ns.GetMessageLanguage() .. ")",
+				ceiling = ns.CHAT_MESSAGE_MAX_LENGTH,
+				text = longestWhisper,
+			}
+		elseif longestAsk then
+			notes[#notes + 1] = "The whispered ask is emptied on the Buff Duty panel, so nothing is whispered."
 		end
 	end
 	if BW and BW.SingleIcon then

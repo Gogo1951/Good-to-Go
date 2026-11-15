@@ -33,6 +33,15 @@ local function EventsNote(text)
 	return string.format(D.EVENTS_SOME_FAIL, failures)
 end
 
+-- The Options Tables report's status note: how many panels failed AceConfig's validation.
+local function OptionsNote(text)
+	local _, failures = string.gsub(text, "%[FAIL%]", "")
+	if failures == 0 then
+		return D.OPTIONS_TABLES_ALL_PASS
+	end
+	return string.format(D.OPTIONS_TABLES_SOME_FAIL, failures)
+end
+
 -- A Message Length report's status note: how many lines came out over their ceiling.
 local function MessagesNote(text)
 	local _, over = string.gsub(text, "%[OVER%]", "")
@@ -154,6 +163,14 @@ ns.DIAGNOSTIC_REPORTS = {
 			return ns:RunApiChecks()
 		end,
 	},
+	optionsTables = {
+		title = D.OPTIONS_TABLES_TITLE,
+		description = D.OPTIONS_TABLES_DESCRIPTION,
+		build = function()
+			return ns:RunOptionsValidation()
+		end,
+		note = OptionsNote,
+	},
 	libs = {
 		title = D.LIBS_TITLE,
 		description = D.LIBS_DESCRIPTION,
@@ -230,7 +247,7 @@ ns.DIAGNOSTIC_SECTIONS = {
 			"addons",
 		},
 	},
-	{ key = "code", label = D.SECTION_CODE, reports = { "events", "api", "libs" } },
+	{ key = "code", label = D.SECTION_CODE, reports = { "events", "api", "optionsTables", "libs" } },
 	{ key = "data", label = D.SECTION_DATA, reports = {} },
 	{
 		key = "localization",

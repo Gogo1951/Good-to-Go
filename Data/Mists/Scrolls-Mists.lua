@@ -214,7 +214,7 @@ ns.SCROLL_DATA = {
 How We Got the Data
 
 Last Validated
-	2026-11-11, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-15, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- The stat scrolls, read by Features/Macros-for-Consumables/Scanner/Scanner-Auras.lua and Scanner-Scrolls.lua (FindBestScroll) to pick a scroll whose buff the player lacks. Each type lists its scrolls as { itemID, buffID, requiredLevel, amount }: the buff is the aura the scroll leaves, requiredLevel the level the item requires, amount the stat it grants. This client keeps the scrolls through rank IX (Inscription).

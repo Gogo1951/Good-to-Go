@@ -16,8 +16,10 @@ local AceGUI = LibStub("AceGUI-3.0")
                                     Pick Staples (the bag menu itself is
                                     Restocker-Window-Bag-Menu.lua's)
       this file                     the footer's list controls: the label, the
-                                    selector, Manage Lists, "Used by", and the
-                                    rename field with its two buttons
+                                    selector and "Used by"
+      Restocker-Window-List-Manage.lua
+                                    Manage Lists, its menu and Delete confirm,
+                                    and the rename field with its two buttons
       Restocker-Window-Footer.lua   the orders at the footer's right, and the
                                     undo offer
 
@@ -51,11 +53,12 @@ local BAR_HEIGHT = ns.RESTOCK_BAR_HEIGHT -- the header's, so the two bars match 
 local BAR_INSET_RIGHT = ns.RESTOCK_BAR_INSET_RIGHT
 local FOOTER_X = ns.RESTOCK_FOOTER_X
 local LIST_SELECTOR_WIDTH = 192 -- holds a full Name-Realm, which an old list can be named
-local SELECTOR_ARROW_SIZE = 18
+local SELECTOR_ARROW_SIZE = 16
 local BAR_ITEM_GAP = 16
-local BUTTON_GAP = 4
+-- Shared with the Manage Lists button and the rename field (Restocker-Window-List-Manage.lua).
+ns.RESTOCK_LIST_SELECTOR_WIDTH = LIST_SELECTOR_WIDTH
+ns.RESTOCK_LIST_BAR_ITEM_GAP = BAR_ITEM_GAP
 local LIST_MENU_WIDTH = 304 -- a list's name with its characters beside it
-local MANAGE_MENU_WIDTH = 288 -- holds "Copy This List into a New One" whole
 
 --------------------------------------------------------------------------------
 -- Used By
@@ -82,6 +85,9 @@ local function JoinUsers(users, plain)
 	return table.concat(names, plain .. L["LIST_SEPARATOR"] .. "|r")
 end
 
+-- Also names the other characters in the Delete confirm (Restocker-Window-List-Manage.lua).
+ns.JoinRestockListUsers = JoinUsers
+
 --[[
     The bar's "Used by" line for the list in use. Normally this character is among
     them, since the window shows the list it is on; a character whose key changed
@@ -99,7 +105,8 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Two pullouts, each built on first use and reused, which is how AceGUI's own
+    Two pullouts, the list menu's here and Manage Lists' in
+    Restocker-Window-List-Manage.lua, each built on first use and reused, which is how AceGUI's own
     Dropdown treats its pullout. Creating and releasing one per open would leak
     here: an Execute item closes its own pullout from inside its OnClick, so a
     release driven off OnClose would free the very item whose handler is still
@@ -111,17 +118,11 @@ end
 ]]
 local listPullout
 local listPulloutOpen = false
-local managePullout
-local managePulloutOpen = false
 
 local function CloseListMenus()
 	if listPullout and listPulloutOpen then
 		listPulloutOpen = false
 		listPullout:Close()
-	end
-	if managePullout and managePulloutOpen then
-		managePulloutOpen = false
-		managePullout:Close()
 	end
 end
 
@@ -207,223 +208,6 @@ local function ToggleListPullout(anchor)
 end
 
 --------------------------------------------------------------------------------
--- Delete
---------------------------------------------------------------------------------
-
---[[
-    Confirmation for the Manage Lists menu's Delete. The whole message is composed at show
-    time and handed in as text_arg1, because how much it has to say depends on
-    the list: who else is on it, and the list this character lands on
-    afterward. StaticPopup_Show's fourth argument carries the list's name
-    through as the dialog's data, and OnAccept deletes THAT name rather than
-    re-reading currentList.
-
-    Load-bearing: the dialog does not lock the window behind it, so a list
-    switched in the selector while the confirm is open would otherwise redirect
-    the delete onto a list the player was never asked about -- and a Restock
-    List has no undo. ns.DeleteRestockList ignores a nil or already-deleted
-    name, and moves the character only when the list deleted is the one in use.
-]]
-StaticPopupDialogs["GOODTOGO_RESTOCKER_DELETE_LIST"] = {
-	text = "%s",
-	button1 = YES,
-	button2 = NO,
-	OnAccept = function(_self, data)
-		ns.DeleteRestockList(data)
-	end,
-	timeout = 0,
-	whileDead = true,
-	hideOnEscape = true,
-	preferredIndex = 3,
-}
-
---[[
-    What the confirm says, a paragraph to a fact: the question, the list's name
-    in gold, what happens next, and that it is final.
-
-    "What happens next" must be said before the player agrees. Every other
-    character pointed at the list starts its next login on an empty list of the
-    same name (ns.InitializeCharacterRestockList recreates a missing one), so they are
-    named here while the player can still say no. This character's own landing
-    place is named with them: the top list, which may be one another character
-    uses and so is worth seeing before agreeing, or -- when this is the last
-    list -- a new, empty one.
-]]
-local function DeleteConfirmText(listName)
-	local consequences = {}
-	local others = ns.GetRestockListUsers(listName, true)
-	if #others > 0 then
-		local key = (#others == 1) and "RESTOCKER_DELETE_LIST_SHARED_ONE" or "RESTOCKER_DELETE_LIST_SHARED_MANY"
-		consequences[#consequences + 1] = string.format(L[key], JoinUsers(others, GetColor("TEXT")))
-	end
-	local landing = ns.GetRestockListAfterDelete(listName)
-	if landing then
-		consequences[#consequences + 1] =
-			string.format(L["RESTOCKER_DELETE_LIST_SWITCH"], GetColor("TITLE") .. landing .. "|r")
-	else
-		consequences[#consequences + 1] = L["RESTOCKER_DELETE_LIST_LAST"]
-	end
-
-	return table.concat({
-		L["RESTOCKER_DELETE_LIST_QUESTION"],
-		GetColor("TITLE") .. listName .. "|r",
-		table.concat(consequences, " "),
-		L["RESTOCKER_DELETE_LIST_FINAL"],
-	}, "|n|n")
-end
-
-local function ConfirmDeleteCurrentList()
-	local listName = ns.restockSettings.currentList
-	if not listName then
-		return
-	end
-	StaticPopup_Show("GOODTOGO_RESTOCKER_DELETE_LIST", DeleteConfirmText(listName), nil, listName)
-end
-
---------------------------------------------------------------------------------
--- Manage Lists Menu
---------------------------------------------------------------------------------
-
---[[
-    Every entry is an Execute: each performs an action and closes the menu.
-    Delete sits under a rule of its own, the way a destructive entry does in
-    the game's own menus.
-]]
-local MANAGE_ENTRIES = {
-	{
-		label = "RESTOCKER_NEW_PROFILE",
-		run = function()
-			ns.CreateRestockList()
-		end,
-	},
-	{
-		label = "RESTOCKER_MANAGE_COPY",
-		run = function()
-			ns.CloneCurrentRestockList()
-		end,
-	},
-	{
-		label = "RESTOCKER_RENAME_PROFILE",
-		run = function()
-			ns.BeginRestockListRename()
-		end,
-	},
-	{ isRule = true },
-	{ label = "RESTOCKER_MANAGE_DELETE", run = ConfirmDeleteCurrentList },
-}
-
-local function OpenManagePullout(anchor)
-	if not managePullout then
-		managePullout = AceGUI:Create("Dropdown-Pullout")
-		managePullout:SetCallback("OnClose", function()
-			managePulloutOpen = false
-		end)
-	end
-	managePullout:Clear()
-
-	for _, entry in ipairs(MANAGE_ENTRIES) do
-		if entry.isRule then
-			managePullout:AddItem(AceGUI:Create("Dropdown-Item-Separator"))
-		else
-			local item = AceGUI:Create("Dropdown-Item-Execute")
-			item:SetText(L[entry.label])
-			item:SetCallback("OnClick", entry.run)
-			managePullout:AddItem(item)
-		end
-	end
-
-	managePulloutOpen = true
-	managePullout:SetWidth(MANAGE_MENU_WIDTH)
-	-- The control's own tooltip would sit over the menu it opened.
-	GameTooltip:Hide()
-	-- Opening upward, as the list menu does from the footer.
-	managePullout:Open("BOTTOMLEFT", anchor, "TOPLEFT", 0, 0)
-end
-
-local function ToggleManagePullout(anchor)
-	if managePulloutOpen then
-		CloseListMenus()
-		return
-	end
-	ns.CloseRestockMenus()
-	OpenManagePullout(anchor)
-end
-
---------------------------------------------------------------------------------
--- Rename
---------------------------------------------------------------------------------
-
---[[
-    Renaming swaps the selector for a field holding the list's name, selected
-    and ready to type over, with Rename and Cancel beside it. The field exists
-    only while a rename is under way, so text sitting in it can never be
-    mistaken for the name the list actually has.
-
-    Enter and the Rename button commit. Escape, Cancel and clicking away
-    discard, and so does any list event, since ns.RefreshRestockListBar ends
-    the rename before it repaints. A Button click does not pull keyboard focus
-    off an EditBox, so pressing Rename does not trip the discard -- its OnClick
-    reads what was typed.
-
-    New List and Copy both land here: each makes a list under a generated name
-    and opens the rename over it, so the real name is one line of typing away.
-    They pass the list the character was on, and Escape or Cancel then takes
-    the made list back off and returns there, so backing out of a new list
-    leaves nothing behind -- unless something was put on it meanwhile, which
-    keeps it (ns.DiscardMadeRestockList). Clicking away only ends the rename and keeps the
-    list under its generated name, the way it keeps a plain rename's old name.
-]]
-local isRenaming = false
-local madeFromList
-
--- The rename field and its buttons take the selector's place and Manage Lists' room; "Used by" steps aside too.
-local function SetRenameShown(bar, shown)
-	bar.selector:SetShown(not shown)
-	bar.manageButton:SetShown(not shown)
-	bar.users:SetShown(not shown)
-	bar.renameBox:SetShown(shown)
-	bar.renameButton:SetShown(shown)
-	bar.cancelButton:SetShown(shown)
-end
-
-local function EndRename()
-	if not isRenaming then
-		return
-	end
-	isRenaming = false
-	madeFromList = nil
-	SetRenameShown(ns.restockWindow.listBar, false)
-end
-
-ns.EndRestockListRename = EndRename
-
--- Escape and Cancel: a list New List or Copy just made, still as made, goes again, and the character returns to its list.
-local function CancelRename()
-	local previousList = madeFromList
-	EndRename()
-	if previousList then
-		ns.DiscardMadeRestockList(previousList)
-	end
-end
-
--- previousList is the list the character was on when New List or Copy made the current one; nil for a plain rename.
-function ns.BeginRestockListRename(previousList)
-	local bar = ns.restockWindow.listBar
-	ns.CloseRestockMenus()
-	isRenaming = true
-	madeFromList = previousList
-	SetRenameShown(bar, true)
-	bar.renameBox:SetText(ns.restockSettings.currentList or "")
-	bar.renameBox:SetFocus()
-	bar.renameBox:HighlightText()
-end
-
--- Every path through ns.RenameCurrentRestockList repaints the bar, which ends the rename.
-local function CommitRename()
-	ns.RenameCurrentRestockList(ns.restockWindow.listBar.renameBox:GetText())
-end
-
---------------------------------------------------------------------------------
 -- Widgets
 --------------------------------------------------------------------------------
 
@@ -445,17 +229,6 @@ local function CreateListSelector(bar)
 
 	ns.SetupRestockerTooltip(selector, L["RESTOCKER_PROFILE_LABEL"], L["RESTOCKER_PROFILE_TOOLTIP"])
 	bar.selector = selector
-end
-
--- Beside the selector, the list it acts on.
-local function CreateManageButton(bar)
-	local button = ns.CreateRestockerHeaderButton(bar, L["RESTOCKER_MANAGE"])
-	button:SetPoint("LEFT", bar.selector, "RIGHT", BAR_ITEM_GAP, 0)
-	ns.SetRestockControlClick(button, function(self)
-		ToggleManagePullout(self)
-	end)
-	ns.SetupRestockerTooltip(button, L["RESTOCKER_MANAGE"], L["RESTOCKER_MANAGE_TOOLTIP"])
-	bar.manageButton = button
 end
 
 --[[
@@ -489,31 +262,6 @@ function ns.SetRestockUsersLineEnd(edge)
 	end
 end
 
--- The rename field and its two buttons, in the selector's place; hidden until a rename begins.
-local function CreateRenameControls(bar)
-	local box = CreateFrame("EditBox", nil, bar, "InputBoxTemplate")
-	box:SetPoint("LEFT", bar.label, "RIGHT", BAR_ITEM_GAP, 0)
-	box:SetWidth(LIST_SELECTOR_WIDTH)
-	box:SetHeight(20)
-	box:SetAutoFocus(false)
-	box:SetScript("OnEnterPressed", CommitRename)
-	box:SetScript("OnEscapePressed", CancelRename)
-	box:SetScript("OnEditFocusLost", EndRename)
-
-	local renameButton = ns.CreateRestockerHeaderButton(bar, L["RESTOCKER_RENAME_LABEL"])
-	renameButton:SetPoint("LEFT", box, "RIGHT", BUTTON_GAP + 4, 0)
-	ns.SetRestockControlClick(renameButton, CommitRename)
-	ns.SetupRestockerTooltip(renameButton, L["RESTOCKER_RENAME_LABEL"], L["RESTOCKER_RENAME_TOOLTIP"])
-
-	local cancelButton = ns.CreateRestockerHeaderButton(bar, CANCEL)
-	cancelButton:SetPoint("LEFT", renameButton, "RIGHT", BUTTON_GAP, 0)
-	ns.SetRestockControlClick(cancelButton, CancelRename)
-
-	bar.renameBox = box
-	bar.renameButton = renameButton
-	bar.cancelButton = cancelButton
-end
-
 --[[
     Show the active list and its characters, ending any rename in progress.
     Called whenever a list is added, renamed, copied, deleted or switched
@@ -522,7 +270,7 @@ end
 function ns.RefreshRestockListBar()
 	local bar = ns.restockWindow.listBar
 	local listName = ns.restockSettings.currentList or ""
-	EndRename()
+	ns.EndRestockListRename()
 	bar.selector:SetText(listName)
 	bar.selector:SetCursorPosition(0)
 	bar.users:SetText(UsedByText(listName))
@@ -551,10 +299,9 @@ function ns.CreateRestockListBar(addonFrame)
 	bar:SetPoint("BOTTOMRIGHT", addonFrame, "BOTTOMRIGHT", -BAR_INSET_RIGHT, bottom)
 	bar:SetHeight(BAR_HEIGHT)
 	CreateListSelector(bar)
-	CreateManageButton(bar)
+	ns.CreateRestockManageControls(bar)
 	CreateUsersLine(bar)
-	CreateRenameControls(bar)
-	SetRenameShown(bar, false)
+	ns.SetRestockRenameShown(bar, false)
 
 	--[[
 	    Painted by hand this once: ns.RefreshRestockListBar reads the bar back off

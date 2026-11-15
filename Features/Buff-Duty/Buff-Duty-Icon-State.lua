@@ -11,9 +11,9 @@ local OUT_OF_RANGE_ALPHA = 0.35
 local RANGE_INTERVAL = 0.5
 
 --[[
-    The list's icon pool, filled by Buff-Duty-Frame.lua: `buttons` holds every
+    The list's icon pool, filled by Buff-Duty-Icons.lua: `buttons` holds every
     icon made, the first `used` of them in use, and `content` is the frame they
-    sit in, set once the window is built.
+    sit in, set once the window is built (Buff-Duty-Frame.lua).
 ]]
 local pool = { buttons = {}, used = 0 }
 ns.buffDutyIconPool = pool

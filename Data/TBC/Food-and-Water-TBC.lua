@@ -387,7 +387,7 @@ ns.FOOD_AND_WATER = {
 How We Got the Data
 
 Last Validated
-	2026-11-11, TBC Anniversary 2.5.6.70577
+	2026-11-15, TBC Anniversary 2.5.6.70577
 
 Notes
 	- Every food and drink this client knows that restores health or mana while seated, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Food and Water macros and the buff-food choices.
@@ -417,6 +417,10 @@ wago.tools
 	https://wago.tools/db2/SpellCastingRequirements?build=2.5.6.70006
 	https://wago.tools/db2/AreaGroupMember?build=2.5.6.70006
 	https://wago.tools/db2/UiMapAssignment?build=2.5.6.70006
+	https://wago.tools/db2/ItemSparse?build=2.5.6.70577
+	https://wago.tools/db2/Item?build=2.5.6.70577
+	https://wago.tools/db2/ItemEffect?build=2.5.6.70577
+	https://wago.tools/db2/SpellEffect?build=2.5.6.70577
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/TBC/tbcItemDB.lua

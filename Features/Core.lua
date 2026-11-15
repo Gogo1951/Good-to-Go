@@ -1,8 +1,6 @@
 local ADDON_NAME, ns = ...
 local L = ns.L
 
-local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
-
 --------------------------------------------------------------------------------
 -- Version
 --------------------------------------------------------------------------------
@@ -25,7 +23,8 @@ ns.Version = GetVersion()
     Every event the add-on uses, in one list. The dispatcher below registers
     from it, and Diagnostics' Event Registration check reads the same list, so
     the two can never drift. Each feature subscribes to the events it handles
-    with ns.SetModuleEvent; a name missing here stops the load.
+    with ns.SetModuleEvent; a name missing here stops the load, and fails
+    Tests/Run.lua in CI first.
 ]]
 ns.EVENT_NAMES = {
 	"ACTIONBAR_SLOT_CHANGED",
@@ -34,18 +33,7 @@ ns.EVENT_NAMES = {
 	"BANKFRAME_CLOSED",
 	"BANKFRAME_OPENED",
 	"CHAT_MSG_ADDON",
-	"CHAT_MSG_CHANNEL",
-	"CHAT_MSG_GUILD",
-	"CHAT_MSG_INSTANCE_CHAT",
-	"CHAT_MSG_INSTANCE_CHAT_LEADER",
-	"CHAT_MSG_OFFICER",
-	"CHAT_MSG_PARTY",
-	"CHAT_MSG_PARTY_LEADER",
-	"CHAT_MSG_RAID",
-	"CHAT_MSG_RAID_LEADER",
-	"CHAT_MSG_SAY",
 	"CHAT_MSG_WHISPER",
-	"CHAT_MSG_YELL",
 	"GET_ITEM_INFO_RECEIVED",
 	"GROUP_ROSTER_UPDATE",
 	"ITEM_PUSH",
@@ -80,15 +68,21 @@ ns.EVENT_NAMES = {
 	"UNIT_PET",
 	"UNIT_SPELLCAST_SENT",
 	"UNIT_SPELLCAST_SUCCEEDED",
+	"UNIT_TARGET",
 	"UPDATE_BINDINGS",
 	"UPDATE_MACROS",
 	"UPDATE_MOUSEOVER_UNIT",
 	"ZONE_CHANGED_NEW_AREA",
 }
 
--- Forever has no combat log, and registering COMBAT_LOG_EVENT_UNFILTERED there errors.
+-- Forever has a combat log, but registering COMBAT_LOG_EVENT_UNFILTERED there raises ADDON_ACTION_FORBIDDEN.
 if ns.FLAVOR ~= "Camelot" then
 	table.insert(ns.EVENT_NAMES, "COMBAT_LOG_EVENT_UNFILTERED")
+end
+
+-- Classic Era has no focus, and registering an event its client lacks throws.
+if ns.FLAVOR ~= "Vanilla" then
+	table.insert(ns.EVENT_NAMES, "PLAYER_FOCUS_CHANGED")
 end
 
 local KNOWN_EVENTS = {}
@@ -171,261 +165,6 @@ function ns.SetModuleEvent(name, event, enabled, ...)
 end
 
 --------------------------------------------------------------------------------
--- Replaced Add-ons
---------------------------------------------------------------------------------
-
---[[
-    An add-on Good to Go replaces (ns.REPLACED_ADDONS) that runs alongside it
-    rewrites the same macros, each undoing the other. So whenever one is
-    running at login, it is turned off for every character and the player is
-    offered a reload, since the old copy runs on until then. This outlives the
-    settings import below: a player can install Good to Go, or turn the old
-    add-on back on, long after the import is gone.
-]]
--- Titles of the old add-ons turned off this session.
-local turnedOff = {}
-
-local function AddOnTitle(folder)
-	return C_AddOns.GetAddOnMetadata(folder, "Title") or folder
-end
-
-local function JoinTitles(titles)
-	return table.concat(titles, L["LIST_SEPARATOR"])
-end
-
-local function TurnOffReplacedAddons()
-	for _, folder in ipairs(ns.REPLACED_ADDONS) do
-		if C_AddOns.IsAddOnLoaded(folder) then
-			C_AddOns.DisableAddOn(folder)
-			turnedOff[#turnedOff + 1] = AddOnTitle(folder)
-		end
-	end
-end
-
-StaticPopupDialogs.GOODTOGO_REPLACED_RELOAD = {
-	text = L["POPUP_REPLACED_RELOAD"],
-	button1 = L["POPUP_REPLACED_RELOAD_ACCEPT"],
-	button2 = L["POPUP_REPLACED_LATER"],
-	OnAccept = function()
-		ReloadUI()
-	end,
-	timeout = 0,
-	whileDead = true,
-	hideOnEscape = true,
-	preferredIndex = 3,
-}
-
--- Asked once the player is in the world, after the welcome line.
-local function OfferReplacedReload()
-	if #turnedOff > 0 then
-		StaticPopup_Show("GOODTOGO_REPLACED_RELOAD", JoinTitles(turnedOff))
-	end
-end
-
---------------------------------------------------------------------------------
--- Legacy Settings
---------------------------------------------------------------------------------
-
---[[
-    MIGRATION (remove after 2026-12-08)
-    Bringing players over from the add-ons this one replaces (ns.LEGACY_ADDONS).
-    The client loads an add-on's saved variables only while that add-on is
-    turned on, so the import can read them only in a session where it runs:
-
-      turned on   Its settings are copied in at login, before AceDB opens the
-                  table, once per add-on. They win key by key over what is
-                  here, and keys only this add-on has (the Spellbook's, say)
-                  are kept, since the copy can land on a profile that has been
-                  played. Restock Lists merge by name. Then every old add-on
-                  still running is turned off for all characters, and the
-                  player is offered a reload so the old copy stops rewriting
-                  the same macros. Those in ns.REPLACED_ADDONS are turned off
-                  by TurnOffReplacedAddons above, which stays when this goes;
-                  the rest are turned off here.
-      turned off  The player is asked whether to bring its settings over.
-                  Yes turns it on for this character and reloads, which lands
-                  in the case above; No is remembered and never asked again;
-                  Escape puts the question off to the next login.
-                  While the question is open, the Staples window stays shut
-                  (ns.IsLegacyImportPending): an import may be about to fill
-                  the Restock List.
-
-    Connoisseur & Restocker's table has this one's shape, profile for profile.
-    Macro Spellbook's settings are not brought over; it is only turned off.
-    Rank Sentinel is only turned off here too: Rank Watch copies its settings
-    itself at login (Features/Rank-Watch/Rank-Watch-Core.lua), in the same
-    session, since turning it off takes hold only after a reload.
-    Thanks for the Buff is not on the list: it is its own add-on, so it is
-    never imported or turned off.
-]]
-local legacyNotices = {}
-local legacyToTurnOn = {}
--- Titles of the old add-ons whose settings were copied in this session.
-local legacyCopied = {}
-
---[[
-    What an add-on's entry in ns.db.global.legacyImported holds once its
-    settings are in: this number, or "declined" for a player who said no. An
-    entry from an earlier import rule (true, from the first version, which
-    copied only what was missing and so left a fresh install's starter list in
-    place of the player's own) runs the import again under this one.
-]]
-local LEGACY_IMPORT_VERSION = 2
-
-local function IsSettled(entry)
-	return entry == LEGACY_IMPORT_VERSION or entry == "declined"
-end
-
-local function CopyTable(source)
-	if type(source) ~= "table" then
-		return source
-	end
-	local copy = {}
-	for key, value in pairs(source) do
-		copy[key] = CopyTable(value)
-	end
-	return copy
-end
-
--- Every key of source onto target, the source winning; except is a set of keys to leave alone.
-local function CopyOver(target, source, except)
-	for key, value in pairs(source or {}) do
-		if not (except and except[key]) then
-			target[key] = CopyTable(value)
-		end
-	end
-end
-
-local LEGACY_IMPORTERS = {
-	ConnoisseurDB = function(saved, legacy)
-		saved.profiles = saved.profiles or {}
-		saved.profileKeys = saved.profileKeys or {}
-		saved.global = saved.global or {}
-		for name, legacyProfile in pairs(legacy.profiles or {}) do
-			if type(legacyProfile) == "table" then
-				saved.profiles[name] = saved.profiles[name] or {}
-				CopyOver(saved.profiles[name], legacyProfile)
-			end
-		end
-		CopyOver(saved.profileKeys, legacy.profileKeys)
-		CopyOver(saved.global, legacy.global, { restocker = true, legacyImported = true })
-		local restocker = legacy.global and legacy.global.restocker
-		if type(restocker) == "table" then
-			saved.global.restocker = saved.global.restocker or {}
-			CopyOver(saved.global.restocker, restocker, { lists = true })
-			saved.global.restocker.lists = saved.global.restocker.lists or {}
-			CopyOver(saved.global.restocker.lists, restocker.lists)
-		end
-	end,
-}
-
-local function LegacyTitle(legacy)
-	return AddOnTitle(legacy.folder)
-end
-
-local function IsReplacedAddon(folder)
-	for _, replaced in ipairs(ns.REPLACED_ADDONS) do
-		if replaced == folder then
-			return true
-		end
-	end
-	return false
-end
-
--- Whether the player switched the old add-on off, so turning it back on lets this session read its settings.
-local function IsInstalledButOff(legacy)
-	if C_AddOns.IsAddOnLoaded(legacy.folder) then
-		return false
-	end
-	local _, _, _, _, reason = C_AddOns.GetAddOnInfo(legacy.folder)
-	return reason == "DISABLED"
-end
-
-local function ImportLegacySettings()
-	_G[ns.SAVED_VARIABLES_NAME] = _G[ns.SAVED_VARIABLES_NAME] or {}
-	local saved = _G[ns.SAVED_VARIABLES_NAME]
-	saved.global = saved.global or {}
-	saved.global.legacyImported = saved.global.legacyImported or {}
-	local imported = saved.global.legacyImported
-
-	for _, legacy in ipairs(ns.LEGACY_ADDONS) do
-		local key = legacy.savedVariables
-		if C_AddOns.IsAddOnLoaded(legacy.folder) then
-			local legacyTable = key and _G[key]
-			if key and not IsSettled(imported[key]) then
-				if type(legacyTable) == "table" then
-					LEGACY_IMPORTERS[key](saved, legacyTable)
-					legacyNotices[#legacyNotices + 1] = L["CHAT_LEGACY_IMPORTED"]:format(LegacyTitle(legacy))
-					legacyCopied[#legacyCopied + 1] = LegacyTitle(legacy)
-				end
-				imported[key] = LEGACY_IMPORT_VERSION
-			end
-			-- TurnOffReplacedAddons has already turned off and listed the ones in ns.REPLACED_ADDONS.
-			if not IsReplacedAddon(legacy.folder) then
-				C_AddOns.DisableAddOn(legacy.folder)
-				turnedOff[#turnedOff + 1] = LegacyTitle(legacy)
-			end
-		elseif key and not IsSettled(imported[key]) and IsInstalledButOff(legacy) then
-			legacyToTurnOn[#legacyToTurnOn + 1] = legacy
-		end
-	end
-end
-
-function ns.IsLegacyImportPending()
-	return #legacyToTurnOn > 0
-end
-
-StaticPopupDialogs.GOODTOGO_LEGACY_IMPORT = {
-	text = L["POPUP_LEGACY_IMPORT_SETTINGS"],
-	button1 = L["POPUP_LEGACY_IMPORT_ACCEPT"],
-	button2 = L["POPUP_LEGACY_IMPORT_DECLINE"],
-	OnAccept = function()
-		local character = UnitName("player")
-		for _, legacy in ipairs(legacyToTurnOn) do
-			C_AddOns.EnableAddOn(legacy.folder, character)
-		end
-		ReloadUI()
-	end,
-	OnCancel = function()
-		for _, legacy in ipairs(legacyToTurnOn) do
-			ns.db.global.legacyImported[legacy.savedVariables] = "declined"
-		end
-		wipe(legacyToTurnOn)
-	end,
-	timeout = 0,
-	whileDead = true,
-	hideOnEscape = true,
-	noCancelOnEscape = true,
-	preferredIndex = 3,
-}
-
---[[
-    Asked once the player is in the world, after the welcome line, in place of
-    OfferReplacedReload. Returns whether it asked anything: when it didn't,
-    OfferReplacedReload offers the plain reload. A reload for an add-on just
-    turned off comes before the import question, which waits for the next login.
-]]
-local function OfferLegacySteps()
-	if #legacyCopied > 0 then
-		StaticPopupDialogs.GOODTOGO_REPLACED_RELOAD.text = L["POPUP_LEGACY_RELOAD_COPIED"]
-		StaticPopup_Show("GOODTOGO_REPLACED_RELOAD", JoinTitles(legacyCopied), JoinTitles(turnedOff))
-		return true
-	elseif #turnedOff == 0 and #legacyToTurnOn > 0 then
-		local titles = {}
-		local bringsLists = false
-		for index, legacy in ipairs(legacyToTurnOn) do
-			titles[index] = LegacyTitle(legacy)
-			bringsLists = bringsLists or legacy.savedVariables == "ConnoisseurDB"
-		end
-		StaticPopupDialogs.GOODTOGO_LEGACY_IMPORT.text = bringsLists and L["POPUP_LEGACY_IMPORT_LISTS"]
-			or L["POPUP_LEGACY_IMPORT_SETTINGS"]
-		StaticPopup_Show("GOODTOGO_LEGACY_IMPORT", JoinTitles(titles))
-		return true
-	end
-	return false
-end
-
---------------------------------------------------------------------------------
 -- Saved Variables
 --------------------------------------------------------------------------------
 
@@ -482,78 +221,6 @@ local function MoveRenamedSettings()
 	end
 	_G[ns.SAVED_VARIABLES_NAME] = old
 	_G[ns.OLD_SAVED_VARIABLES_NAME] = nil
-end
-
---[[
-    MIGRATION (remove after 2026-12-08)
-    Automated Appreciation (Stranger Buffs, Sharing Good News, Combat Buffs,
-    Group Service Alerts and the Thank You buttons) is gone: thanking is
-    Thanks for the Buff's job, which is its own add-on again. Its settings go,
-    and so does the record of an import from it that no longer happens.
-
-    The Thank You macros this add-on made go too, since their commands no
-    longer answer: only one whose body is still exactly its button's command,
-    and only while no other add-on has taken that command, so a macro the
-    player rewrote, or one Thanks for the Buff still answers, stays. Macros
-    can't be deleted in combat; a login mid-fight leaves them for the next.
-]]
-local RETIRED_SETTINGS = {
-	"strangers",
-	"teammates",
-	"services",
-	"goodNews",
-	"watchedBuffs",
-	"slash",
-	"slash2",
-	"slash3",
-	"slash4",
-	"slash5",
-}
-
-local RETIRED_MACROS = {
-	["- Thank"] = "/thankyou",
-	["- GtG 2"] = "/thankyou2",
-	["- GtG 3"] = "/thankyou3",
-	["- GtG 4"] = "/thankyou4",
-	["- GtG 5"] = "/thankyou5",
-}
-
-local function IsSlashCommandTaken(command)
-	for key in pairs(SlashCmdList) do
-		local index = 1
-		local alias = _G["SLASH_" .. key .. index]
-		while alias do
-			if type(alias) == "string" and alias:lower() == command then
-				return true
-			end
-			index = index + 1
-			alias = _G["SLASH_" .. key .. index]
-		end
-	end
-	return false
-end
-
-local function RetireAutomatedAppreciation()
-	for _, key in ipairs(RETIRED_SETTINGS) do
-		ns.db.global[key] = nil
-	end
-	local imported = ns.db.global.legacyImported
-	if type(imported) == "table" then
-		imported.TFTBDB = nil
-	end
-
-	if InCombatLockdown() then
-		return
-	end
-	for name, command in pairs(RETIRED_MACROS) do
-		local index = GetMacroIndexByName(name)
-		if index > 0 then
-			local body = select(3, GetMacroInfo(index))
-			if body and strtrim(body) == command and not IsSlashCommandTaken(command) then
-				DeleteMacro(index)
-			end
-		end
-	end
 end
 
 --[[
@@ -688,6 +355,45 @@ local function PruneOtherClientCharacters()
 end
 
 --[[
+    MIGRATION (remove after 2026-12-13)
+    Before Send Messages In, Buff Duty's whispered ask and Rank Watch's
+    whispers always went out in the client's language. An account that had
+    either turned on -- Buff Duty on with Ask Other Classes for Buffs, or Rank
+    Watch on with Whisper Group Members -- keeps whispering in that language:
+    it gets the client's locale as its message language, when Good to Go
+    lists it. A whisper with no saved text follows that language's default,
+    so nothing else moves. Read from the raw saved table before AceDB fills
+    in defaults, since a value left at its default is simply absent there.
+    Runs once per account, stamped (messageLanguageMigrated, right after
+    AceDB opens) so a player who later picks English is never switched back.
+]]
+local function MigrateMessageLanguage()
+	local sv = _G[ns.SAVED_VARIABLES_NAME]
+	if type(sv) ~= "table" or next(sv) == nil then
+		return
+	end
+	if sv.global ~= nil and type(sv.global) ~= "table" then
+		return
+	end
+	local global = sv.global or {}
+	if global.messageLanguageMigrated or global.messageLanguage ~= nil then
+		return
+	end
+	local locale = GetLocale()
+	if locale == ns.Data.DEFAULT_MESSAGE_LANGUAGE or not ns.GetMessageLanguageInfo(locale) then
+		return
+	end
+	local buffWindow = type(global.buffWindow) == "table" and global.buffWindow or {}
+	local rankWatch = type(global.rankWatch) == "table" and global.rankWatch or {}
+	local asking = buffWindow.enabled ~= false and buffWindow.askOtherClasses ~= false
+	local tipping = rankWatch.enabled == true and rankWatch.whisper ~= false
+	if asking or tipping then
+		global.messageLanguage = locale
+		sv.global = global
+	end
+end
+
+--[[
     One account-wide SavedVariable managed by AceDB-3.0, Per-Character: every
     character lands on a profile of its own, named as AceDB names the
     character (its first name and surname on WoW Forever, "Name - Realm" on
@@ -700,18 +406,36 @@ local function InitializeDatabase()
 	-- MIGRATION (remove after 2026-12-03)
 	MoveRenamedSettings()
 
+	--[[
+	    MIGRATION (remove after 2026-12-13): Send Messages In keeps a whispering account's client language. Before
+	    the legacy import, so only what Good to Go itself saved counts.
+	]]
+	MigrateMessageLanguage()
+
 	-- MIGRATION (remove after 2026-12-08)
-	ImportLegacySettings()
+	ns.ImportLegacySettings()
 
 	ns.db = LibStub("AceDB-3.0"):New(ns.SAVED_VARIABLES_NAME, ns.DATABASE_DEFAULTS)
 	PruneOtherClientCharacters()
 	UseOwnProfileWhenUnnamed()
 
+	-- MIGRATION (remove after 2026-12-13): stamps the account so MigrateMessageLanguage runs once, fresh installs included.
+	ns.db.global.messageLanguageMigrated = true
+
 	-- MIGRATION (remove after 2026-12-11): group settings onto the Solo / Party / Raid / Battleground checkboxes.
 	ns.MoveGroupSettingsOntoCheckboxes()
 
+	--[[
+	    MIGRATION (remove after 2026-12-13): every restock reminder back onto Simple, once. Tested for: a /reload
+	    doesn't load files added to the TOC since the game started, so after an update with the game running this
+	    file's absent until a restart, and the move waits for it.
+	]]
+	if ns.MoveRestockRemindersOntoSimple then
+		ns.MoveRestockRemindersOntoSimple()
+	end
+
 	-- MIGRATION (remove after 2026-12-08)
-	RetireAutomatedAppreciation()
+	ns.RetireAutomatedAppreciation()
 
 	-- MIGRATION (remove after 2026-12-08)
 	ns.RetireSavedItemCache()
@@ -738,9 +462,11 @@ end
 --[[
     A profile switch, copy or reset swaps every per-character setting at once.
     Settings read live from the database update themselves; each feature
-    re-applies what it applied imperatively (macro bodies, aura tracking), and
-    every open options panel redraws. The Restock List in use is the
-    character's own choice, not the profile's, so a switch leaves it alone.
+    re-applies what it applied imperatively (macro bodies, aura tracking), the
+    mini-map button re-reads its saved table, and every open options panel,
+    the menu and the button's icon redraw through ns.RefreshSettings. The
+    Restock List in use is the character's own choice, not the profile's, so
+    a switch leaves it alone.
 ]]
 function ns:ApplyProfile()
 	if ns.ApplyConsumableMacrosProfile then
@@ -752,9 +478,8 @@ function ns:ApplyProfile()
 	if ns.ApplySpellbookProfile then
 		ns.ApplySpellbookProfile()
 	end
-	for _, registryName in pairs(ns.OPTIONS_REGISTRY) do
-		AceConfigRegistry:NotifyChange(registryName)
-	end
+	ns:ApplyMinimapButton()
+	ns.RefreshSettings()
 end
 
 --------------------------------------------------------------------------------
@@ -773,12 +498,10 @@ function ns:PrintWelcome()
 		ns:PrintMessage(L["CHAT_LOADED"]:format(ns.Version))
 	end
 	-- MIGRATION (remove after 2026-12-08)
-	for _, notice in ipairs(legacyNotices) do
-		ns:PrintMessage(notice)
-	end
+	ns.PrintLegacyNotices()
 	-- MIGRATION (remove after 2026-12-08): the OfferLegacySteps test, leaving the OfferReplacedReload call.
-	if not OfferLegacySteps() then
-		OfferReplacedReload()
+	if not ns.OfferLegacySteps() then
+		ns.OfferReplacedReload()
 	end
 end
 
@@ -801,7 +524,7 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
 	end
 
 	if event == "PLAYER_LOGIN" then
-		TurnOffReplacedAddons()
+		ns.TurnOffReplacedAddons()
 		InitializeDatabase()
 		ns.RegisterOptionsPanels()
 		-- The one mini-map button every feature shares; LibDBIcon reads its saved position from ns.db.

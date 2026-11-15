@@ -14,8 +14,9 @@ Left out:
 DEMON_ABILITIES lists grimoires, so it lacks the rank a demon knows when first summoned (Firebolt Rank 1);
 DEMON_STARTING_RANKS adds those, since an imp still casting Firebolt Rank 1 is the case most worth reporting.
 
-WoW Forever (Camelot) has no Pet-Abilities table: its pets learn as they level, with no Beast Training or
-grimoires, but still by rank. Its ladders come from the client's own DB2 tables on wago.tools instead, every
+WoW Forever (Camelot) has no Beast Training or grimoires: its Pet-Abilities table has the hunter trainer's
+ranks, the taming ranks and the demon trainer's ranks, but leaves out the rank 1s a pet or demon comes with.
+Its ladders come from the client's own DB2 tables on wago.tools instead, every
 ranked spell on a pet skill line (SkillLineAbility), its rank from Spell's subtext and its level from
 SpellLevels. Download these as CSV for WAGO_BUILD into one folder and pass it with --wago:
 

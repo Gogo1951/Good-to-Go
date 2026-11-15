@@ -156,8 +156,8 @@ end
 --[[
     Called from Buff-Duty-Events.lua's UNIT_SPELLCAST_SUCCEEDED handler. The
     cast is matched by spell ID against every rank the press could go off as:
-    a group buff's castIds list every group rank, and a resurrection is cast
-    by its bare name and resolves to whichever rank you know.
+    a group buff's castIds list every group rank, and a resurrection's list
+    every rank of it, whichever one its rank text casts.
 ]]
 function ns.OnBuffKeyCastSucceeded(unit, spellID)
 	if not pending or not ns.IsPlain(unit) or unit ~= "player" or not ns.IsPlain(spellID) then

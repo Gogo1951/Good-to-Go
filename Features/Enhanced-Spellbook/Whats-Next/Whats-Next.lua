@@ -124,7 +124,7 @@ local function CollectRows(talentLevels)
 			id = id,
 			name = name,
 			icon = C_Spell.GetSpellTexture(id),
-			subtext = C_Spell.GetSpellSubtext(id),
+			subtext = ns.SpellSubtext(id),
 			level = level,
 			source = source,
 			requires = requires or NO_IDS,

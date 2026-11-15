@@ -26,6 +26,23 @@ function ns.MacroNameTag(name)
 	return ns.BodyTag(GetMacroBody(name))
 end
 
+--[[
+	The tag the macro in an action slot carries, or nil. Read by the macro's index where the slot gives one:
+	names are cut to 16 bytes, so two macros can share one ("-Greater Blessin"), and a lookup by name finds
+	only the first.
+]]
+function ns.ActionMacroTag(slot)
+	local actionType, id, subType = GetActionInfo(slot)
+	if actionType ~= "macro" then
+		return nil
+	end
+	if subType ~= "spell" and id then
+		return ns.BodyTag(GetMacroBody(id))
+	end
+	local name = ns.ActionMacroName(slot)
+	return name and ns.MacroNameTag(name)
+end
+
 -- The macro names on the action bars, by slot; a slot holding no macro has none.
 function ns.BarMacroNames()
 	local names = {}
@@ -37,19 +54,22 @@ end
 
 --[[
 	What is on the action bars: {macros = {[macro name] = true}, spells = {[spell name] = true},
-	tags = {[tag] = true}}, macros matched by name (see ns.ActionMacroName) and by the tag their body carries.
+	tags = {[tag] = true}}: a tagged macro by its tag only (see ns.ActionMacroTag), an untagged one by its name
+	(see ns.ActionMacroName).
 ]]
 function ns.ScanActionBars()
 	local bars = { macros = {}, spells = {}, tags = {} }
 	for slot = 1, MAX_ACTION_SLOTS do
 		local actionType, id = GetActionInfo(slot)
 		if actionType == "macro" then
-			local name = ns.ActionMacroName(slot)
-			if name then
-				bars.macros[name] = true
-				local tag = ns.MacroNameTag(name)
-				if tag then
-					bars.tags[tag] = true
+			-- a tagged macro counts only by its tag: its name may be shared by another cut to the same 16 bytes
+			local tag = ns.ActionMacroTag(slot)
+			if tag then
+				bars.tags[tag] = true
+			else
+				local name = ns.ActionMacroName(slot)
+				if name then
+					bars.macros[name] = true
 				end
 			end
 		elseif actionType == "spell" and id then
@@ -64,15 +84,25 @@ function ns.ScanActionBars()
 end
 
 --[[
-	How many action slots hold the WoW macro at index: matched by the name GetActionText gives, as
-	ns.ScanActionBars matches, or by the index where the slot gives one rather than the spell's.
+	How many action slots hold the WoW macro at index. A tagged macro is matched by its tag, as
+	ns.ScanActionBars matches; an untagged one by the name GetActionText gives, or by the index where the slot
+	gives one rather than the spell's.
 ]]
 function ns.MacroBarCount(index)
-	local name, count = GetMacroInfo(index), 0
+	local name, _, body = GetMacroInfo(index)
+	local tag, count = ns.BodyTag(body), 0
 	for slot = 1, MAX_ACTION_SLOTS do
 		local actionType, id, subType = GetActionInfo(slot)
-		if actionType == "macro" and (GetActionText(slot) == name or (subType ~= "spell" and id == index)) then
-			count = count + 1
+		if actionType == "macro" then
+			local matches
+			if tag then
+				matches = ns.ActionMacroTag(slot) == tag
+			else
+				matches = GetActionText(slot) == name or (subType ~= "spell" and id == index)
+			end
+			if matches then
+				count = count + 1
+			end
 		end
 	end
 	return count

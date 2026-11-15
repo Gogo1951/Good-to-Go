@@ -217,14 +217,19 @@ function ns.AskGroupForBuff(spec)
 end
 
 --[[
-    A Party-Buffs icon's right-click: the same ask whispered to every other
-    player of the class. Nothing is printed: the whispers show in your own chat.
+    A Party-Buffs icon's right-click: the ask whispered to every other player
+    of the class, in the player's own words (the Buff Duty panel's whisper
+    composer) or the chosen language's default. An emptied whisper sends
+    nothing. Nothing is printed: the whispers show in your own chat.
 ]]
 function ns.WhisperOtherClassBuff(spec)
 	if not spec.recipients[1] or not ReadyToAsk("whisper", spec.key) then
 		return
 	end
-	local message = ns:BuildBuffRequestMessage(spec.missing, spec.count, spec.link, true)
+	local message = ns:BuildBuffAskWhisper(ns.GetMessageText("buffAsk"), spec.missing, spec.count, spec.link)
+	if not message then
+		return
+	end
 	for _, target in ipairs(spec.recipients) do
 		ns:QueueAutomatedWhisper(target, message)
 	end

@@ -87,19 +87,6 @@ BuffDuty.isSetUp = false
 --------------------------------------------------------------------------------
 
 --[[
-    Any known rank of a resurrection will do: its key casts by name, which
-    resolves to the highest rank you know.
-]]
-local function FirstKnown(ids)
-	for _, id in ipairs(ids) do
-		if ns.IsPlayerSpell(id) then
-			return id
-		end
-	end
-	return nil
-end
-
---[[
     The highest group version you know. The data lists them lowest first, so
     the last known one; the tooltip shows it and the button casts it by rank.
 ]]
@@ -112,7 +99,6 @@ local function HighestKnown(ids)
 	return nil
 end
 
--- The client's spell subtext ("Rank 3").
 local GetSpellSubtext = C_Spell.GetSpellSubtext
 
 --[[
@@ -123,6 +109,7 @@ local function CastText(id, name)
 	local subtext = GetSpellSubtext(id)
 	return (subtext and subtext ~= "") and (name .. "(" .. subtext .. ")") or name
 end
+BuffDuty.CastText = CastText
 
 --[[
     The single-target ranks you know, highest first, each with what a macro
@@ -146,6 +133,7 @@ local function KnownRanks(entry)
 	end)
 	return known
 end
+BuffDuty.KnownRanks = KnownRanks
 
 --[[
     Rebuilt at setup, on SPELLS_CHANGED (a new rank, or the group version at its
@@ -213,65 +201,8 @@ function BuffDuty.BuildBuffs()
 		end
 	end
 
-	--[[
-	    One per hand with anything ticked, each its own row under Self Buffs:
-	    the picks, all on the one Reapply timing -- your class's poisons or
-	    imbues (classPick), and the oils, stones and lures any class can use.
-	    The row orders its icons as it draws them, by the item or rank each
-	    one uses (Buff-Duty-Weapons.lua). An imbue needs a known rank; an item
-	    is looked for in your bags at each refresh, since that changes without
-	    SPELLS_CHANGED. Nothing while Weapon Buffs is off.
-	]]
-	wipe(weaponBuffs)
-	local settings = ns.db.global.buffWindow
-	local classHands = {}
-	for _, hand in ipairs(ns.BUFF_DUTY_WEAPON_HANDS[playerClass] or {}) do
-		classHands[hand] = true
-	end
-	for _, hand in ipairs(settings.weaponEnabled and Data.WEAPON_HAND_ORDER or {}) do
-		local chosen = {}
-		local when = settings.weaponRefresh
-		local function Choose(entry, ranks, classPick)
-			chosen[#chosen + 1] = {
-				key = entry.key,
-				ranks = ranks,
-				items = entry.items,
-				enchants = entry.enchants,
-				types = entry.types,
-				zones = entry.zones,
-				layer = entry.layer,
-				refreshSeconds = when * 60,
-				durationSeconds = entry.row.duration and entry.row.duration * 60,
-				classPick = classPick,
-			}
-		end
-		for _, entry in ipairs(classHands[hand] and weaponEntries or {}) do
-			local ranks = entry.ranks and KnownRanks(entry)
-			if
-				entry.row.class == playerClass
-				and BuffDuty.WeaponChoiceOn(settings.weaponPicks, playerClass .. "_" .. hand, entry.key)
-				and (entry.items or ranks[1])
-			then
-				Choose(entry, ranks, true)
-			end
-		end
-		for _, entry in ipairs(weaponItemEntries) do
-			local kindHands = Data.WEAPON_ITEM_KIND_HANDS[entry.kind]
-			if
-				(not kindHands or tContains(kindHands, hand))
-				and BuffDuty.WeaponChoiceOn(settings.weaponItems, hand, entry.key)
-			then
-				Choose(entry)
-			end
-		end
-		if chosen[1] then
-			weaponBuffs[#weaponBuffs + 1] = {
-				hand = hand,
-				slot = Data.WEAPON_HAND_SLOTS[hand],
-				picks = chosen,
-			}
-		end
-	end
+	-- One per hand with anything ticked (Buff-Duty-Weapons.lua).
+	BuffDuty.BuildWeaponBuffs(playerClass)
 
 	--[[
 	    Shaped like a self buff so Has can read it on anyone in the group: no
@@ -299,20 +230,8 @@ function BuffDuty.BuildBuffs()
 		end
 	end
 
-	--[[
-	    The Buff Key's resurrection (ns.BUFF_DUTY_RESURRECTIONS): any rank
-	    you know, cast by its bare name, which resolves to your highest.
-	]]
-	BuffDuty.resurrection = nil
-	for _, row in ipairs(ns.BUFF_DUTY_RESURRECTIONS) do
-		if row.class == playerClass then
-			local id = FirstKnown(row.ranks)
-			local name = id and C_Spell.GetSpellName(id)
-			if name then
-				BuffDuty.resurrection = { id = id, name = name, ids = row.ranks }
-			end
-		end
-	end
+	-- The Buff Key's resurrection (Buff-Duty-Resurrections.lua).
+	BuffDuty.PickResurrection(playerClass)
 end
 
 -- Whether this character has anything at all the window could offer.

@@ -2,11 +2,14 @@ local _, ns = ...
 local Data = ns.Data
 local L = ns.L
 
--- Your weapons' row in the Buff Duty window's Self section: the poisons, imbues, oils and stones to put on each hand.
+-- Your weapons' row in the Buff Duty window's Self section: the poisons, imbues, oils and stones to put on each hand, and which picks each hand is offered.
 
 local BuffDuty = ns.BuffDuty
 local weaponBuffs = BuffDuty.weaponBuffs
 local weaponByEnchant = BuffDuty.weaponByEnchant
+local weaponEntries = BuffDuty.weaponEntries
+local weaponItemEntries = BuffDuty.weaponItemEntries
+local KnownRanks = BuffDuty.KnownRanks
 
 local IMBUE, TEMPORARY = Data.WEAPON_LAYERS.IMBUE, Data.WEAPON_LAYERS.TEMPORARY
 local MAIN_SLOT, OFF_SLOT = Data.WEAPON_HAND_SLOTS.MAIN, Data.WEAPON_HAND_SLOTS.OFF
@@ -192,7 +195,6 @@ local function PicksToOffer(hand, worn)
 	return offer
 end
 
--- Whether a hand carries any enchant in a layer.
 local function Carries(worn, slot, layer)
 	for _, enchant in ipairs(worn[slot]) do
 		if enchant.layer == layer then
@@ -382,6 +384,72 @@ function BuffDuty.AddWeaponRows(rows)
 				rows[#rows + 1] =
 					{ label = WeaponRowLabel(hand), icons = specs, grid = "weapon" .. hand.hand, indent = 0 }
 			end
+		end
+	end
+end
+
+--------------------------------------------------------------------------------
+-- Castable
+--------------------------------------------------------------------------------
+
+--[[
+    One per hand with anything ticked, each its own row under Self Buffs:
+    the picks, all on the one Reapply timing -- your class's poisons or
+    imbues (classPick), and the oils, stones and lures any class can use.
+    The row orders its icons as it draws them, by the item or rank each
+    one uses (SortWeaponIcons). An imbue needs a known rank; an item
+    is looked for in your bags at each refresh, since that changes without
+    SPELLS_CHANGED. Nothing while Weapon Buffs is off.
+]]
+function BuffDuty.BuildWeaponBuffs(playerClass)
+	wipe(weaponBuffs)
+	local settings = ns.db.global.buffWindow
+	local classHands = {}
+	for _, hand in ipairs(ns.BUFF_DUTY_WEAPON_HANDS[playerClass] or {}) do
+		classHands[hand] = true
+	end
+	for _, hand in ipairs(settings.weaponEnabled and Data.WEAPON_HAND_ORDER or {}) do
+		local chosen = {}
+		local when = settings.weaponRefresh
+		local function Choose(entry, ranks, classPick)
+			chosen[#chosen + 1] = {
+				key = entry.key,
+				ranks = ranks,
+				items = entry.items,
+				enchants = entry.enchants,
+				types = entry.types,
+				zones = entry.zones,
+				layer = entry.layer,
+				refreshSeconds = when * 60,
+				durationSeconds = entry.row.duration and entry.row.duration * 60,
+				classPick = classPick,
+			}
+		end
+		for _, entry in ipairs(classHands[hand] and weaponEntries or {}) do
+			local ranks = entry.ranks and KnownRanks(entry)
+			if
+				entry.row.class == playerClass
+				and BuffDuty.WeaponChoiceOn(settings.weaponPicks, playerClass .. "_" .. hand, entry.key)
+				and (entry.items or ranks[1])
+			then
+				Choose(entry, ranks, true)
+			end
+		end
+		for _, entry in ipairs(weaponItemEntries) do
+			local kindHands = Data.WEAPON_ITEM_KIND_HANDS[entry.kind]
+			if
+				(not kindHands or tContains(kindHands, hand))
+				and BuffDuty.WeaponChoiceOn(settings.weaponItems, hand, entry.key)
+			then
+				Choose(entry)
+			end
+		end
+		if chosen[1] then
+			weaponBuffs[#weaponBuffs + 1] = {
+				hand = hand,
+				slot = Data.WEAPON_HAND_SLOTS[hand],
+				picks = chosen,
+			}
 		end
 	end
 end

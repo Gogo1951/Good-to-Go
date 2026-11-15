@@ -110,7 +110,10 @@ function ns.SetRestockerEnabled(value)
 	ns.SyncRestockerEvents()
 	if value then
 		-- What a loading screen would have done while the switched-off handlers slept.
-		ns.ArmRestockerReminders()
+		-- MIGRATION (remove after 2026-12-13): absent after a /reload until a restart (Restocker-Town-Reminder.lua is new).
+		if ns.ArmRestockerReminders then
+			ns.ArmRestockerReminders()
+		end
 		ns.UpgradeRestockList()
 		return
 	end

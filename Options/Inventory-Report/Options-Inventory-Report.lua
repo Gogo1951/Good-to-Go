@@ -1,10 +1,11 @@
 local _, ns = ...
 local L = ns.L
+local Kit = ns.OptionsKit
 local GetColor = ns.GetColor
 
-local Header = ns.OptionsHeader
-local Desc = ns.OptionsDesc
-local Spacer = ns.OptionsSpacer
+local Header = Kit.Header
+local Desc = Kit.Desc
+local Spacer = Kit.Spacer
 
 --------------------------------------------------------------------------------
 -- Inventory Report Panel
@@ -20,11 +21,6 @@ local Spacer = ns.OptionsSpacer
     next one without a reload. Not a Restocker settings key: it sits on
     ns.db.global itself (Data/Default-Settings.lua).
 ]]
-
--- Repaint the panel so a forgotten character's row goes without a reopen.
-local function Refresh()
-	LibStub("AceConfigRegistry-3.0"):NotifyChange(ns.OPTIONS_REGISTRY.InventoryReport)
-end
 
 --[[
     Recorded Characters: one row per other character on this realm the
@@ -66,25 +62,30 @@ local function AddRecordedCharacters(args, order)
 	for index, key in ipairs(keys) do
 		local record = inventory[key]
 		local color = ns.GetClassColor(record.class) or GetColor("TEXT")
-		args["recorded_" .. index] = {
-			type = "group",
-			name = "",
-			inline = true,
-			order = order + 0.3 + index / 1000,
-			args = {
-				name = {
-					type = "description",
-					name = color .. record.name .. "|r",
-					fontSize = "medium",
-					width = ns.OPTIONS_ROW_WIDTH - ns.OPTIONS_REMOVE_ICON_WIDTH,
-					order = 1,
-				},
-				forget = ns.OptionsRemoveIcon(L["INVENTORY_REPORT_FORGET_CHARACTER"], 2, function()
-					ns.ForgetRecordedCharacter(key)
-					Refresh()
-				end, L["INVENTORY_REPORT_FORGET_CHARACTER_CONFIRM"]:format(color .. record.name .. "|r")),
+		-- The remove icon is the item lists' own; every panel repaints after, so the row goes without a reopen.
+		args["recorded_" .. index] = Kit.Row(order + 0.3 + index / 1000, nil, {
+			{
+				type = "description",
+				name = color .. record.name .. "|r",
+				fontSize = "medium",
+				width = ns.OPTIONS_ROW_WIDTH - ns.OPTIONS_REMOVE_ICON_WIDTH,
 			},
-		}
+			{
+				type = "execute",
+				name = "",
+				desc = L["INVENTORY_REPORT_FORGET_CHARACTER"],
+				image = "Interface/Buttons/UI-GroupLoot-Pass-Up",
+				imageWidth = 16,
+				imageHeight = 16,
+				width = ns.OPTIONS_REMOVE_ICON_WIDTH,
+				confirm = true,
+				confirmText = L["INVENTORY_REPORT_FORGET_CHARACTER_CONFIRM"]:format(color .. record.name .. "|r"),
+				func = function()
+					ns.ForgetRecordedCharacter(key)
+					ns.RefreshSettings()
+				end,
+			},
+		})
 	end
 end
 
@@ -96,7 +97,7 @@ function ns.BuildInventoryReportOptions()
 		args = {
 			descInventory = Desc(GetColor("BODY") .. L["OPTIONS_INVENTORY_REPORT_SECTION_DESCRIPTION"] .. "|r", 1),
 			spaceInventory = Spacer(2),
-			toggleInventoryReport = ns.OptionsFeatureSwitch("InventoryReport", 3),
+			toggleInventoryReport = Kit.FeatureSwitch("inventoryReport", 3),
 		},
 	}
 	AddRecordedCharacters(options.args, 10)

@@ -38,6 +38,23 @@ function ns.SpellName(id)
 	return name
 end
 
+--[[
+	A spell's subtext ("Rank 3"), or nil or "" while its data isn't loaded (it is then requested, once). The name
+	is in the client's own tables from the start, but the subtext comes with the spell's data, so a row can have
+	its name and still wait on its rank.
+]]
+function ns.SpellSubtext(id)
+	local subtext = C_Spell.GetSpellSubtext(id)
+	if (subtext == nil or subtext == "") and not requested[id] then
+		local cached = C_Spell.IsSpellDataCached
+		if not (cached and cached(id)) then
+			requested[id] = true
+			C_Spell.RequestLoadSpellData(id)
+		end
+	end
+	return subtext
+end
+
 -- Whether id is a spell ns.SpellName asked the client for and is still waiting on; marks it answered.
 function ns.TakeRequestedSpell(id)
 	if requested[id] == true then

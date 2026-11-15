@@ -3,7 +3,8 @@ local Data = ns.Data
 
 --[[
     Return the Favor's memory: the strangers outside your group who just buffed
-    you, heard from the combat log or, on WoW Forever, from your own UNIT_AURA.
+    you, heard from the combat log or, on WoW Forever, where registering it is
+    forbidden, from your own UNIT_AURA.
     Each is kept for favorSeconds from their latest buff, up to
     Data.BUFF_DUTY_FAVOR_MAX of them. Buff-Duty-Outsiders.lua draws the list.
 ]]
@@ -89,9 +90,11 @@ end
     its flags claim.
 ]]
 local band = bit.band
+local playerGUID -- read on the first line, since a character's GUID never changes in a session
 
 function ns.NoteFavorFromCombatLog(sourceGUID, sourceName, sourceFlags, destGUID, auraType)
-	if auraType ~= "BUFF" or not sourceGUID or destGUID ~= UnitGUID("player") or sourceGUID == destGUID then
+	playerGUID = playerGUID or UnitGUID("player")
+	if auraType ~= "BUFF" or not sourceGUID or destGUID ~= playerGUID or sourceGUID == destGUID then
 		return
 	end
 	local flags = sourceFlags or 0
@@ -165,7 +168,7 @@ local function FavorCaster(aura)
 end
 
 --[[
-    WoW Forever has no combat log, so the auras just added to you are read
+    Registering the combat log is forbidden on WoW Forever, so the auras just added to you are read
     off UNIT_AURA instead. Nothing is read in combat or while auras are
     secret, and a recast of a buff you already have adds nothing to see.
 ]]

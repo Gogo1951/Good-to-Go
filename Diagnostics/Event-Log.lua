@@ -91,7 +91,7 @@ local function DecodeCombatLog()
 	local _, subevent, _, sourceGUID, sourceName, sourceFlags, _, destGUID, destName, _, _, spellID, spellName, _, auraType =
 		CombatLogGetCurrentEventInfo()
 	local flags = sourceFlags or 0
-	if ns.db ~= nil and ns.IsBuffDutyOnForClass() and ns.IsBuffDutyReady() then
+	if ns.db ~= nil and ns.IsBuffDutyTrackingForClass() and ns.IsBuffDutyReady() then
 		if subevent == "SPELL_RESURRECT" then
 			return { n = 5, "Buff Duty", subevent, sourceName, destName, spellName }
 		end
@@ -169,7 +169,8 @@ end
       file, so a firing it would still turn away logs in full rather than
       being lost.
     - COMBAT_LOG_EVENT_UNFILTERED, registered on every flavor but Forever while
-      Buff Duty or Rank Watch is on, carries its payload in
+      Rank Watch is on, or Buff Duty is with Return the Favor on or a
+      resurrection known, carries its payload in
       CombatLogGetCurrentEventInfo: Buff Duty acts on a resurrect and on a
       stranger's buff landing on you (Buff-Duty-Events.lua,
       ns.NoteFavorFromCombatLog), Rank Watch on a group member's cast of a

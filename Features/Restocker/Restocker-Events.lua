@@ -52,7 +52,10 @@ end
 
 -- The one PLAYER_ENTERING_WORLD handler: the arrival check, the Starter List pop-up and the upgrade catch-up.
 function ns.OnRestockerEnteringWorld(isInitialLogin, isReloadingUi)
-	ns.OnRestockerArrival(isInitialLogin, isReloadingUi)
+	-- MIGRATION (remove after 2026-12-13): Restocker-Town-Reminder.lua is new, so absent after a /reload until a restart.
+	if ns.OnRestockerArrival then
+		ns.OnRestockerArrival(isInitialLogin, isReloadingUi)
+	end
 	ns.OnStarterListEnteringWorld(isInitialLogin, isReloadingUi)
 
 	--[[
@@ -94,6 +97,11 @@ end
     Every handler but one stops while the Restocker is off: the logout handler
     still packs the lists for the saved-variables file. Item answers reach the
     Restocker through Features/Item-Info.lua, not this table.
+
+    MIGRATION (remove after 2026-12-13): the in-town handlers are
+    Restocker-Town-Reminder.lua's, new this release, so a /reload after an
+    update with the game running has none of them until a restart, and their
+    events go unhandled until then.
 ]]
 function ns.InitializeRestockerEvents()
 	ns.restockerEventHandlers = {
@@ -103,8 +111,8 @@ function ns.InitializeRestockerEvents()
 		BANKFRAME_CLOSED = WhileEnabled(ns.OnRestockerBankFrameClosed),
 		BAG_UPDATE_DELAYED = WhileEnabled(ns.OnRestockerBagUpdateDelayed),
 		PLAYER_LOGOUT = ns.OnRestockerLogout,
-		PLAYER_UPDATE_RESTING = WhileEnabled(ns.OnRestockerUpdateResting),
-		PLAYER_CONTROL_GAINED = WhileEnabled(ns.OnRestockerControlGained),
+		PLAYER_UPDATE_RESTING = ns.OnRestockerUpdateResting and WhileEnabled(ns.OnRestockerUpdateResting),
+		PLAYER_CONTROL_GAINED = ns.OnRestockerControlGained and WhileEnabled(ns.OnRestockerControlGained),
 		PLAYER_LEVEL_UP = WhileEnabled(ns.OnRestockerLevelUp),
 		PLAYER_ENTERING_WORLD = WhileEnabled(ns.OnRestockerEnteringWorld),
 	}

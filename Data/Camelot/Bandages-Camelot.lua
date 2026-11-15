@@ -37,7 +37,7 @@ ns.BANDAGES = {
 How We Got the Data
 
 Last Validated
-	2026-11-11, WoW Forever 1.60.1.70888
+	2026-11-15, WoW Forever 1.60.1.70938
 
 Notes
 	- Every First Aid bandage on this client, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) to rank the Bandage macro's picks.
@@ -109,6 +109,11 @@ wago.tools
 	https://wago.tools/db2/SpellEffect?build=1.60.1.70862
 	https://wago.tools/db2/SpellMisc?build=1.60.1.70862
 	https://wago.tools/db2/SpellDuration?build=1.60.1.70862
+	https://wago.tools/db2/ItemSparse?build=1.60.1.70938
+	https://wago.tools/db2/Item?build=1.60.1.70938
+	https://wago.tools/db2/ItemEffect?build=1.60.1.70938
+	https://wago.tools/db2/SpellEffect?build=1.60.1.70938
+	https://wago.tools/db2/ItemXItemEffect?build=1.60.1.70938
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Forever/foreverItemDB.lua

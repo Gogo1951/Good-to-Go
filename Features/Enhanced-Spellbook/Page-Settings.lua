@@ -45,8 +45,8 @@ function ns.CountsSpellsOnBars()
 end
 
 --[[
-	How the page groups its macros: "category", under each kind of macro (ns.MACRO_KINDS), or "school", under
-	each spellbook tab, as the book lists them.
+	How the page groups its macros: "category", under each page category (ns.PAGE_CATEGORIES), or "school",
+	under each spellbook tab, as the book lists them.
 ]]
 function ns.PageSort()
 	return ns.db.profile.pageSort

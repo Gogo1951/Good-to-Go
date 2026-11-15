@@ -23,7 +23,7 @@ end
 -- Rank Watch Context
 --------------------------------------------------------------------------------
 
--- A rank as the Tracked Abilities panel shows it: the client's name and rank text, and its learn level.
+-- A rank as the Reported Ranks panel shows it: the client's name and rank text, and its learn level.
 local function RankText(row)
 	local name = C_Spell.GetSpellName(row.id) or ("spell #" .. row.id)
 	return string.format("%s (%s, %s, level %s)", name, ns.RankWatchRankText(row), row.id, tostring(row.level))
@@ -108,6 +108,45 @@ local function LadderLine(ladder, ceiling)
 	)
 end
 
+-- A hunter tames its first pet at 10, so no pet line prints before then (Rank-Watch-Level-Up.lua's HUNTER_PET_LEVEL).
+local HUNTER_PET_LEVEL = 10
+
+-- What the next ding's pet lines would name, read as LevelUpLines reads ns.WhatsNextPetRows.
+local function NextPetLine(warlock, nextLevel)
+	if not warlock and nextLevel < HUNTER_PET_LEVEL then
+		return string.format("Next level's pet lines: none before level %d", HUNTER_PET_LEVEL)
+	end
+	if not ns.WhatsNextPetRows then
+		return "Next level's pet lines: the Spellbook's What's Next? pet rows aren't loaded"
+	end
+	local ok, rows, pet = pcall(ns.WhatsNextPetRows, nextLevel)
+	if not ok then
+		return "Next level's pet lines: (read failed: " .. PlainText(rows) .. ")"
+	end
+	local opened, waiting = 0, 0
+	for _, row in ipairs(rows) do
+		local fromTrainer, ready = warlock, true
+		if row.source == "TRAINER" then
+			fromTrainer = not row.ready
+		elseif row.source == "HUNTER_TRAINER" then
+			fromTrainer = row.status ~= "KNOWN" and row.status ~= "OTHER"
+			ready = pet ~= nil and row.status == "AVAILABLE"
+		end
+		if fromTrainer and row.level == nextLevel then
+			opened = opened + 1
+		elseif fromTrainer and ready and not warlock and row.level and row.level < nextLevel then
+			waiting = waiting + 1
+		end
+	end
+	return string.format(
+		"Next level's pet lines (%d): %d new, %d earlier ones not yet learned%s (a line prints only when its count is above 0)",
+		nextLevel,
+		opened,
+		waiting,
+		warlock and " (never printed for a warlock)" or ""
+	)
+end
+
 --[[
     Answers "Rank Watch never says anything": every switch and gate that keeps it quiet (Rank-Watch-Core.lua,
     Rank-Watch-Check.lua), who whispers for the group (Rank-Watch-Cluster.lua), how this flavor sees casts
@@ -143,12 +182,30 @@ function ns:BuildRankWatchContextReport()
 		tostring(settings.graceLeveling)
 	)
 	lines[#lines + 1] = string.format("Rank Sentinel's settings brought over: %s", YesNo(settings.importedStandalone))
+	-- Each whisper's own text: unset follows the Send Messages In language's default, empty sends nothing.
+	local function TextState(key)
+		local saved = settings[key]
+		return saved == nil and "default" or (saved == "" and "emptied" or "edited")
+	end
+	lines[#lines + 1] = string.format(
+		"Send Messages In: %s // tip: %s // pet tip: %s // demon tip: %s // opt-out offer: %s // opt-out reply: %s",
+		ns.GetMessageLanguage(),
+		TextState("tipMessage"),
+		TextState("tipMessagePet"),
+		TextState("tipMessageDemon"),
+		TextState("optOutMessage"),
+		TextState("optOutDoneMessage")
+	)
 
 	lines[#lines + 1] = ""
 	lines[#lines + 1] = "-- Gates --"
 	local _, class = UnitClass("player")
 	local level, maxLevel = UnitLevel("player"), ns.GetMaxPlayerLevel()
 	lines[#lines + 1] = string.format("You: %s, level %s of %s", tostring(class), tostring(level), tostring(maxLevel))
+	lines[#lines + 1] = string.format(
+		"A cast on another player is judged against their level + %d at most (the game lowers a rank for a low-level target), and dropped when their level can't be read",
+		RANK_WATCH.TARGET_LEVEL_RANGE
+	)
 	local _, instanceType = IsInInstance()
 	lines[#lines + 1] = string.format(
 		"In a group: %s (%s, %d members) // in a battleground or arena (nothing is reported or sent there): %s (%s)",
@@ -182,10 +239,23 @@ function ns:BuildRankWatchContextReport()
 		lines[#lines + 1] =
 			"WoW Forever: your own and your pet's casts, group members' buffs, and their damage and healing from the damage meter."
 		lines[#lines + 1] = string.format(
-			"Auras secret now (group members' buffs go unread): %s // damage meter present: %s (read every %d seconds, never in combat)",
+			"Auras secret now (group members' buffs go unread): %s // damage meter present: %s (read every %d seconds in a group, never in combat; the first read after joining or turning on only takes the totals)",
 			YesNo(ns.AreAurasSecret()),
 			YesNo(C_DamageMeter and Enum.DamageMeterSessionType and Enum.DamageMeterType),
 			RANK_WATCH.METER_POLL
+		)
+		-- The cap Rank-Watch-Detection-Forever.lua's LowestGroupLevel puts on meter heals and your pet's helpful casts.
+		local lowest
+		for _, unit in ipairs(IsInGroup() and GroupUnits() or {}) do
+			local unitLevel = ns.RankWatchUnitLevel(unit)
+			if unitLevel and (not lowest or unitLevel < lowest) then
+				lowest = unitLevel
+			end
+		end
+		lines[#lines + 1] = string.format(
+			"Lowest readable level in your group (group members' heals and your pet's helpful casts are judged against it + %d): %s",
+			RANK_WATCH.TARGET_LEVEL_RANGE,
+			IsInGroup() and tostring(lowest or "none readable, heals dropped") or "not in a group"
 		)
 	else
 		lines[#lines + 1] = "Combat log: every group member's casts, their pets' included."
@@ -214,9 +284,31 @@ function ns:BuildRankWatchContextReport()
 		end
 	end
 	lines[#lines + 1] = string.format(
-		"Tracked Abilities choices: ranks unticked %d // ranks ticked that the data leaves off %d",
+		"Reported Ranks choices: ranks unticked %d // ranks ticked that the data leaves off %d",
 		unticked,
 		ticked
+	)
+	-- A whisper waits for the client's rank text of the rank it names, then is dropped (ns.ProcessRankWatchQueue).
+	local reportable, noText = 0, 0
+	for _, byClass in ipairs({ ns.RankWatchLadders(), ns.RankWatchPetLadders() }) do
+		for _, list in pairs(byClass) do
+			for _, ladder in ipairs(list) do
+				for index = 1, #ladder.rows - 1 do
+					local row = ladder.rows[index]
+					if ns.IsRankWatchRankTracked(row) then
+						reportable = reportable + 1
+						if not ns.RankWatchHasRankText(row) then
+							noText = noText + 1
+						end
+					end
+				end
+			end
+		end
+	end
+	lines[#lines + 1] = string.format(
+		"Reportable ranks with no rank text from the client yet (a whisper naming one waits, then is dropped): %d of %d (asked for now; run again to see what loaded)",
+		noText,
+		reportable
 	)
 	lines[#lines + 1] = string.format(
 		"Casts already reported (never reported again): %d // forgotten on a new version: kept for %s, running %s",
@@ -265,6 +357,56 @@ function ns:BuildRankWatchContextReport()
 	for _, ladder in ipairs(mine) do
 		lines[#lines + 1] = LadderLine(ladder, ceiling)
 	end
+
+	--[[
+	    Ability Alerts While Leveling (Features/Rank-Watch/Rank-Watch-Level-Up.lua): its switches, and the pet's
+	    spells among the class rows it reads, which its "you can also learn" line would name as the player's.
+	]]
+	lines[#lines + 1] = ""
+	lines[#lines + 1] = "-- Ability Alerts While Leveling --"
+	lines[#lines + 1] = string.format(
+		"Alerts: %s // skipped spells: %s // pet: %s // pet's skipped spells: %s // Pet What's Next? data for this class: %s",
+		OnOff(settings.levelUpAlerts),
+		OnOff(settings.levelUpAlertsPast),
+		OnOff(settings.levelUpAlertsPet),
+		OnOff(settings.levelUpAlertsPetPast),
+		YesNo(ns.HasWhatsNextPet and ns.HasWhatsNextPet())
+	)
+	if ns.PetSpellsInClassRowsLine then
+		lines[#lines + 1] = ns.PetSpellsInClassRowsLine()
+	end
+	-- What the next ding's first two lines would name, read as LevelUpLines reads them: class trainer spells ready to learn.
+	if level >= maxLevel then
+		lines[#lines + 1] = "Next level: none, you are at the level cap, so no alert prints"
+	elseif ns.WhatsNextRows then
+		local nextLevel = level + 1
+		local ok, rows = pcall(ns.WhatsNextRows, nextLevel)
+		if ok then
+			local opened, waiting = 0, 0
+			for _, row in ipairs(rows) do
+				if row.source == "TRAINER" and row.status == "AVAILABLE" then
+					if row.level == nextLevel then
+						opened = opened + 1
+					else
+						waiting = waiting + 1
+					end
+				end
+			end
+			lines[#lines + 1] = string.format(
+				"Next level (%d): %d new trainer spells, %d earlier ones not yet learned (a line prints only when its count is above 0)",
+				nextLevel,
+				opened,
+				waiting
+			)
+		else
+			lines[#lines + 1] = "Next level: (read failed: " .. PlainText(rows) .. ")"
+		end
+	else
+		lines[#lines + 1] = "Next level: the Spellbook's What's Next? rows aren't loaded, so no alert can print"
+	end
+	if level < maxLevel and settings.levelUpAlertsPet and ns.HasWhatsNextPet and ns.HasWhatsNextPet() then
+		lines[#lines + 1] = NextPetLine(class == "WARLOCK", level + 1)
+	end
 	return table.concat(lines, "\n")
 end
 
@@ -312,6 +454,58 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, not ns.RankWatchSettings and {
 	},
 	{ "C_Spell.IsSpellHelpful (guarded)", HasFunction("C_Spell", "IsSpellHelpful") },
 })
+
+--------------------------------------------------------------------------------
+-- Game Names
+--------------------------------------------------------------------------------
+
+--[[
+    Every rank Rank Watch can name for your class and its pets: the spell's name and the client's rank text,
+    each through the call the whispers and the Reported Ranks panel make (ns.RankWatchSpellText,
+    ClientRankText in Rank-Watch-Lookups.lua). Scoped to your class as the Spellbook's rows are; a non-English
+    tester on each class covers the rest. Then the demon kind the warlock's Example names.
+]]
+local function RankWatchNameRows()
+	local rows, seen = {}, { spell = {}, spellRank = {} }
+	local _, class = UnitClass("player")
+	local function Add(constant, kind, id, read)
+		if seen[kind][id] then
+			return
+		end
+		seen[kind][id] = true
+		rows[#rows + 1] = {
+			constant = constant,
+			kind = kind,
+			id = id,
+			lookup = function()
+				return read(id)
+			end,
+			request = function()
+				C_Spell.RequestLoadSpellData(id)
+			end,
+		}
+	end
+	for _, constant in ipairs({ "RANK_WATCH_ABILITIES", "RANK_WATCH_PET_ABILITIES" }) do
+		for _, ranks in ipairs((ns[constant] or {})[class] or {}) do
+			for _, rank in ipairs(ranks) do
+				Add(constant, "spell", rank.id, C_Spell.GetSpellName)
+				Add(constant, "spellRank", rank.id, C_Spell.GetSpellSubtext)
+			end
+		end
+	end
+	rows[#rows + 1] = {
+		constant = "SAMPLE_DEMON_FAMILY_ID",
+		kind = "creatureFamily",
+		id = ns.SAMPLE_DEMON_FAMILY_ID,
+		lookup = function()
+			local info = C_CreatureInfo.GetCreatureFamilyInfo(ns.SAMPLE_DEMON_FAMILY_ID)
+			return info and info.name
+		end,
+	}
+	return rows
+end
+
+ns.AppendDiagnosticRows(ns.DIAGNOSTIC_NAME_LOOKUPS, not ns.RankWatchSettings and {} or RankWatchNameRows())
 
 --------------------------------------------------------------------------------
 -- Validate Data Sources

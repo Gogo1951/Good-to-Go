@@ -15,7 +15,7 @@ local AceGUI = LibStub("AceGUI-3.0")
     without dragging it out of a bag or looking up its item ID.
 
     A pick lands like any other add (ns.AddRestockItem in Restocker-List.lua):
-    one stack to keep, every switch on, first in the New group. The menu closes
+    one stack to keep, every switch on except Extra, first in the New group. The menu closes
     on the pick, as a menu does, and the item is not in it the next time.
 
     Built on every open rather than kept, from the bags as they are then and

@@ -82,6 +82,7 @@ read_globals = {
 	"GetBuildInfo",
 	"GetCurrentBindingSet",
 	"GetCursorInfo",
+	"GetCursorPosition",
 	"GetCVar",
 	"GetFlyoutInfo",
 	"GetFlyoutSlotInfo",
@@ -318,7 +319,9 @@ globals = {
 	StaticPopupDialogs = {
 		fields = {
 			"GOODTOGO_DELETE_MACRO",
+			"GOODTOGO_MENU_FEATURE_OFF",
 			"GOODTOGO_RESET_CATEGORY",
+			"GOODTOGO_RESET_MACRO",
 			"GOODTOGO_RESTOCKER_DELETE_LIST",
 			"GOODTOGO_REPLACED_RELOAD",
 			"GOODTOGO_LEGACY_IMPORT", -- MIGRATION (remove after 2026-12-08)

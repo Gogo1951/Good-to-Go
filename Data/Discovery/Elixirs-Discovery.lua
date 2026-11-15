@@ -30,7 +30,7 @@ ns.ELIXIR_BUFF_IDS = {
 	[10692] = true, -- Cerebral Cortex Compound
 	[15231] = true, -- Crystal Force
 	[15233] = true, -- Crystal Ward
-	[11328] = true, -- Deprecated Alchemy Elixir Template
+	[11328] = true, -- Elixir of Agility
 	[17537] = true, -- Elixir of Brute Force
 	[3220] = true, -- Elixir of Defense
 	[11406] = true, -- Elixir of Demonslaying
@@ -92,7 +92,7 @@ ns.ELIXIR_BUFF_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-11-11, Season of Discovery 1.15.9.70576
+	2026-11-15, Season of Discovery 1.15.9.70576
 
 Notes
 	- What counts as being flasked, for the Readiness Report's Flask or 2x Elixirs check (Features/Readiness-Report/Readiness-Report-Probes.lua): a flask, OR two different elixirs. Two different elixirs is the whole test, and it is enough because the client enforces the rest: from TBC on, a character may carry one battle and one guardian elixir at a time, so any two elixir auras up together are already one of each. Nothing here needs to know which kind an elixir is, which is why neither table carries that column; it can't be read off an aura at runtime.
@@ -122,6 +122,10 @@ wago.tools
 	https://wago.tools/db2/SpellMisc?build=1.15.9.70003
 	https://wago.tools/db2/SpellDuration?build=1.15.9.70003
 	https://wago.tools/db2/SpellCategories?build=1.15.9.70003
+	https://wago.tools/db2/ItemSparse?build=1.15.9.70576
+	https://wago.tools/db2/Item?build=1.15.9.70576
+	https://wago.tools/db2/ItemEffect?build=1.15.9.70576
+	https://wago.tools/db2/SpellEffect?build=1.15.9.70576
 
 QuestieDB
 	None.

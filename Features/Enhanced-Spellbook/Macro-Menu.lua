@@ -111,8 +111,9 @@ function ns.ShowMacroMenu(button)
 		end
 
 		--[[
-			Delete, with how many action bar slots hold the macro; one in use asks first. It deletes the WoW
-			macro and resets every option, so the macro starts over (a Duplicate copy leaves the page).
+			Delete, with how many action bar slots hold the macro, always asked first, the ask saying whether
+			it comes off the bars. It deletes the WoW macro and resets every option, so the macro starts over
+			(a Duplicate copy leaves the page).
 		]]
 		local function addDelete()
 			local index = ns.FindMacroIndex(macro)
@@ -121,15 +122,10 @@ function ns.ShowMacroMenu(button)
 				or used == 1 and L["MENU_DELETE_USED_ONE"]
 				or L["MENU_DELETE_USED"]:format(used)
 			local element = root:CreateButton(label, function()
-				local function delete()
+				ns.ConfirmDelete(macro.label or macro.name, function()
 					ns.DeletePageMacro(macro)
 					ns.RefreshSpellbookPage(page)
-				end
-				if used > 0 then
-					ns.ConfirmDelete(macro.label or macro.name, delete)
-				else
-					delete()
-				end
+				end, used == 0)
 			end)
 			SetTip(
 				element,

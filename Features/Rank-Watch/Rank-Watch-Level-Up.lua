@@ -27,15 +27,15 @@ end
 -- Lines
 --------------------------------------------------------------------------------
 
--- "A", "A & B", "A, B, & C".
+-- "A", "A and B", "A, B, and C".
 local function JoinSpells(parts)
 	if #parts == 1 then
 		return parts[1]
 	elseif #parts == 2 then
-		return L["LEVEL_UP_SPELLS_PAIR_FORMAT"]:format(parts[1], parts[2])
+		return L["LIST_PAIR_FORMAT"]:format(parts[1], parts[2])
 	end
 	local head = table.concat(parts, L["LIST_SEPARATOR"], 1, #parts - 1)
-	return L["LEVEL_UP_SPELLS_LAST_FORMAT"]:format(head, parts[#parts])
+	return L["LIST_LAST_FORMAT"]:format(head, parts[#parts])
 end
 
 -- The rank in a row's subtext ("Rank 3"), or nil for a spell without ranks.
@@ -84,9 +84,12 @@ end
 	The lines for a ding to level, as the settings ask. The class trainer's spells: the ones this level opened,
 	then the earlier ones still not learned. A hunter's pet: the pet trainer's Beast Training ranks the same
 	two ways, read against the hunter's level, since it's the hunter who buys them, and leaving out the
-	abilities learned by taming a beast, which no trainer teaches. A warlock's demons: only the grimoires this
-	level opened, since a grimoire used on a demon leaves no trace while the demon is away, so there's no
-	telling which ones were skipped.
+	abilities learned by taming a beast, which no trainer teaches. On WoW Forever the hunter's own trainer
+	teaches the pet out (HUNTER_TRAINER), with no Beast Training to say what was bought, so only the pet out
+	knows: those ranks name the ones it doesn't know, and the earlier ones only with a pet out that's ready for
+	them. A warlock's demons: only the grimoires (on WoW Forever, the demon trainer's ranks) this level opened,
+	since what a demon learned leaves no trace while the demon is away, so there's no telling which ones were
+	skipped.
 ]]
 local function LevelUpLines(level)
 	local settings, lines = Settings(), {}
@@ -114,11 +117,22 @@ local function LevelUpLines(level)
 		return lines
 	end
 	local petOpened, petWaiting = {}, {}
-	for _, row in ipairs((ns.WhatsNextPetRows(level))) do
-		local fromTrainer = warlock or (row.source == "TRAINER" and not row.ready)
+	local petRows, pet = ns.WhatsNextPetRows(level)
+	for _, row in ipairs(petRows) do
+		local fromTrainer, ready = warlock, true
+		if row.source == "TRAINER" then
+			fromTrainer = not row.ready
+		elseif row.source == "HUNTER_TRAINER" then
+			--[[
+				read against the hunter's level, which the trainer sells by; only the pet out says what it knows, so
+				with none out nothing reads as known and nothing earlier is listed as waiting
+			]]
+			fromTrainer = row.status ~= "KNOWN" and row.status ~= "OTHER"
+			ready = pet ~= nil and row.status == "AVAILABLE"
+		end
 		if fromTrainer and row.level == level then
 			petOpened[#petOpened + 1] = row
-		elseif fromTrainer and not warlock and row.level < level then
+		elseif fromTrainer and ready and not warlock and row.level < level then
 			petWaiting[#petWaiting + 1] = row
 		end
 	end
@@ -186,7 +200,7 @@ function ns.LevelUpAlertExample()
 		local warlock = IsWarlock() and ns.DEMON_ABILITIES ~= nil
 		local list = warlock and ns.DEMON_ABILITIES or ns.PET_ABILITIES
 		local petOpened, petWaiting = SampleSets(list, function(row)
-			return warlock or row.source == "TRAINER"
+			return warlock or row.source == "TRAINER" or row.source == "HUNTER_TRAINER"
 		end)
 		Add(lines, SpellsLine(warlock and "LEVEL_UP_DEMON_SPELLS" or "LEVEL_UP_PET_SPELLS", petOpened))
 		if settings.levelUpAlertsPetPast and not warlock then

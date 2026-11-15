@@ -57,7 +57,7 @@ local CreateFilterBox = ns.CreateSpellbookFilterBox
 local function BuildLegend(page)
 	local glow = CreateFrame("Frame", nil, page)
 	glow:SetSize(11, 11)
-	glow:SetPoint("LEFT", page, "BOTTOMLEFT", 12, FRAME_BORDER + FOOTER_HEIGHT / 2)
+	glow:SetPoint("LEFT", page, "BOTTOMLEFT", 16, FRAME_BORDER + FOOTER_HEIGHT / 2)
 	local ring = glow:CreateTexture(nil, "BACKGROUND")
 	ring:SetAllPoints()
 	ring:SetColorTexture(unpack(GLOW_SWATCH))
@@ -66,7 +66,7 @@ local function BuildLegend(page)
 	PixelInset(fill, glow, 2)
 	local label = page:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
 	label:SetTextColor(unpack(LEGEND_COLOR))
-	label:SetPoint("LEFT", glow, "RIGHT", 5, 0)
+	label:SetPoint("LEFT", glow, "RIGHT", 4, 0)
 	label:SetText(L["TOOLTIP_NOT_ON_BARS"])
 	page.legendLabel = label
 end
@@ -113,25 +113,20 @@ function ns.BuildSpellbookControls(page)
 			)
 		end
 		--[[
-			Highlight Unplaced Spells: on while no macro is marked placed, so every one not on the bars glows.
-			Turning it off marks them all placed, as the Mark All Spells As Placed button does; turning it on
-			clears the marks
+			Highlight Unplaced Spells Again: undoes Mark All Spells as Placed, so every spell not on the bars
+			glows again. Listed only while something is marked, since there's nothing to undo otherwise.
 		]]
-		rootDescription:CreateDivider()
-		AddMenuTooltip(
-			rootDescription:CreateCheckbox(L["SETTINGS_HIGHLIGHT_UNPLACED"], function()
-				return not ns.HasPlacedMarks()
-			end, function()
-				if ns.HasPlacedMarks() then
+		if ns.HasPlacedMarks() then
+			rootDescription:CreateDivider()
+			AddMenuTooltip(
+				rootDescription:CreateButton(L["SETTINGS_HIGHLIGHT_AGAIN"], function()
 					ns.ClearPlacedMarks()
-				else
-					ns.MarkAllPlaced()
-				end
-				ns:OnActionbarSlotChanged() -- redraws the glows
-			end),
-			"SETTINGS_HIGHLIGHT_UNPLACED",
-			"SETTINGS_HIGHLIGHT_UNPLACED_DESCRIPTION"
-		)
+					ns:OnActionbarSlotChanged() -- redraws the glows, and brings Mark All Spells as Placed back
+				end),
+				"SETTINGS_HIGHLIGHT_AGAIN",
+				"SETTINGS_HIGHLIGHT_AGAIN_DESCRIPTION"
+			)
+		end
 	end
 
 	-- the controls row: on the dark frame under the title, from clear of the portrait to the frame's right
@@ -285,15 +280,16 @@ function ns.BuildSpellbookControls(page)
 	--[[
 		Stops every macro glowing, whether or not it's on the bars, at once and without asking: the settings
 		menu undoes it. A spell learned later still glows until it is placed. It sits in the footer beside the
-		legend for the glow it clears.
+		legend for the glow it clears, shown only while some macro glows (ns.UpdateMarkPlacedButton).
 	]]
 	local markPlaced = CreateFrame("Button", nil, page, "UIPanelButtonTemplate")
 	page.markPlaced = markPlaced
 	markPlaced:SetText(L["SETTINGS_MARK_ALL_PLACED"])
 	markPlaced:SetSize(markPlaced:GetFontString():GetStringWidth() + 32, 22)
-	markPlaced:SetPoint("LEFT", page.legendLabel, "RIGHT", 12, 0)
+	markPlaced:SetPoint("LEFT", page.legendLabel, "RIGHT", 16, 0)
 	markPlaced:SetScript("OnClick", function()
 		ns.MarkAllPlaced()
+		markPlaced:Hide() -- nothing glows now
 		ns:OnActionbarSlotChanged() -- redraws the glows
 	end)
 	markPlaced:SetScript("OnEnter", function(self)
@@ -306,7 +302,7 @@ function ns.BuildSpellbookControls(page)
 	ApplyElvUISkin(page)
 
 	page.macroCount = page:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-	page.macroCount:SetPoint("RIGHT", page, "BOTTOMRIGHT", -12, FRAME_BORDER + FOOTER_HEIGHT / 2)
+	page.macroCount:SetPoint("RIGHT", page, "BOTTOMRIGHT", -16, FRAME_BORDER + FOOTER_HEIGHT / 2)
 	-- a font string takes no hover, so a frame over the counts carries its tooltip
 	local slotsHover = CreateFrame("Frame", nil, page)
 	slotsHover:SetAllPoints(page.macroCount)
@@ -319,4 +315,12 @@ function ns.BuildSpellbookControls(page)
 	end)
 	slotsHover:SetScript("OnLeave", HideTooltip)
 	slotsHover:SetScript("OnHide", HideTooltip)
+end
+
+--[[
+	Shows Mark All Spells as Placed only while some macro glows; bars is ns.ScanActionBars's result when the
+	caller has it. Run on every layout and every glow redraw.
+]]
+function ns.UpdateMarkPlacedButton(page, bars)
+	page.markPlaced:SetShown(ns.AnyMacroGlows(bars or ns.ScanActionBars()))
 end

@@ -85,7 +85,7 @@ local function CreateAddonFrame()
 		settings.framePosition.point or "RIGHT",
 		UIParent,
 		settings.framePosition.relativePoint or "RIGHT",
-		settings.framePosition.xOffset or -5,
+		settings.framePosition.xOffset or -4,
 		settings.framePosition.yOffset or 0
 	)
 	addonFrame:SetFrameStrata("HIGH")
@@ -281,11 +281,11 @@ end
     It takes no mouse, so an item dropped on it falls through to the window's
     own drop handler like a drop on any other bare part of the window.
 ]]
-local EMPTY_BODY_WIDTH = 440
-local EMPTY_TITLE_OFFSET = 48 -- the title's foot above the area's center, which centers the stack
+local EMPTY_BODY_WIDTH = 448
+local EMPTY_TITLE_OFFSET = 64 -- the title's foot above the area's center, which centers the stack
 local EMPTY_GAP = 8
-local EMPTY_BUTTON_WIDTH = 140
-local EMPTY_BUTTON_HEIGHT = 28
+local EMPTY_BUTTON_WIDTH = 144
+local EMPTY_BUTTON_HEIGHT = 32
 
 local function CreateEmptyState(addonFrame, listInset)
 	local panel = CreateFrame("Frame", nil, addonFrame)

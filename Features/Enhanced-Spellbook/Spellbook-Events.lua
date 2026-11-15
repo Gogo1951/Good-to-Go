@@ -193,11 +193,13 @@ end
 	(PET_BAR_UPDATE) or a grimoire bought or used (BAG_UPDATE_DELAYED) change the pet tabs; redraw the open tab
 	once per burst, since PET_BAR_UPDATE fires several times in a row. Only the player's and the pet's own
 	events count. One handler per event, each named for the Spellbook (ns.OnUnitPet is the Feed Pet macro's).
+	A new pet or pet level also rewrites the Dynamic Rank macros that try the pet.
 ]]
 local petPending = false
 
 local function PetChanged()
 	ns.InvalidateSpellRankRows(true)
+	ns.QueueRankRewriteFor("pet")
 	if petPending then
 		return
 	end
@@ -247,6 +249,7 @@ local function RedrawGlows()
 			for i = 1, page.buttons.used do
 				ns.UpdateMacroGlow(page.buttons[i], bars)
 			end
+			ns.UpdateMarkPlacedButton(page, bars)
 		end
 	end
 end
@@ -285,6 +288,7 @@ local function RedrawButtons()
 				ns.SetMacroButton(page.buttons[i], page.buttons[i].macro, bars)
 			end
 			UpdateMacroCount(page)
+			ns.UpdateMarkPlacedButton(page, bars)
 		end
 	end
 end

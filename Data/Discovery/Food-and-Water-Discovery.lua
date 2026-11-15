@@ -274,7 +274,7 @@ ns.FOOD_AND_WATER = {
 How We Got the Data
 
 Last Validated
-	2026-11-11, Season of Discovery 1.15.9.70576
+	2026-11-15, Season of Discovery 1.15.9.70576
 
 Notes
 	- Every food and drink this client knows that restores health or mana while seated, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Food and Water macros and the buff-food choices.
@@ -282,7 +282,7 @@ Notes
 	- Allowed Zones are uiMapIDs: 1460 Warsong Gulch and 1461 Arathi Basin. Each zone-locked ration's text says where it works.
 	- Arena (column 7) is a fixed per-item property: 1 = offered only inside a PvP Arena. 2 = a conjured item, so it also works inside an arena. Harvest Bread and Winter Veil Loaf say Conjured Item but carry no arena value, as on TBC, whose client doesn't flag them usable in arenas. Whether an item is actually offered is gated live on IsInInstance() at scan time (ns.CacheItemData and ns.ScanBags); no arena zone IDs are kept.
 	- Left out on purpose: Scorpid Surprise (5473) and Green Tea Leaf (1401), oddballs that share the food cooldown, and items that share it but restore nothing (alcohol, Deviate fish, holiday novelties, feasts that place a table).
-	- Green Garden Tea (17405) and Lapidis Tankard of Tidesippe (4696) are Classic Era foods the Classic Era report confirms, copied in. Season of Discovery's own foods (Pine Nut Butter, Jungle Durian, Drinkable Stratholme Holy Water, Darkclaw Bisque, Smoked Redgill, Prowler Steak, Filet o' Flank, Sunrise Omelette, Slice of Carrie's Apple Pie) came from the Classic Era tables on wago.tools (build 1.15.9.70003: the regen value times the duration over 5, rounded down), pending a Season of Discovery Validate Data run.
+	- Green Garden Tea (17405) and Lapidis Tankard of Tidesippe (4696) are Classic Era foods the Classic Era report confirms, copied in. Season of Discovery's own foods (Pine Nut Butter, Jungle Durian, Drinkable Stratholme Holy Water, Darkclaw Bisque, Smoked Redgill, Prowler Steak, Filet o' Flank, Sunrise Omelette, Slice of Carrie's Apple Pie) came from the Classic Era tables on wago.tools (build 1.15.9.70003: the regen value times the duration over 5, rounded down), and the Season of Discovery report's tooltips confirm their amounts.
 	- Blessed Sunfruit Juice (13813) and Bottled Alterac Spring Water (19318) are left out; their Well Fed buffs are still recognized through ns.WELL_FED_BUFF_IDS.
 
 SQL (CMaNGOS)
@@ -302,6 +302,10 @@ wago.tools
 	https://wago.tools/db2/SpellCastingRequirements?build=1.15.9.70003
 	https://wago.tools/db2/AreaGroupMember?build=1.15.9.70003
 	https://wago.tools/db2/UiMapAssignment?build=1.15.9.70003
+	https://wago.tools/db2/ItemSparse?build=1.15.9.70576
+	https://wago.tools/db2/Item?build=1.15.9.70576
+	https://wago.tools/db2/ItemEffect?build=1.15.9.70576
+	https://wago.tools/db2/SpellEffect?build=1.15.9.70576
 
 QuestieDB
 	None.

@@ -39,10 +39,12 @@ local function LongestCast(byClass, owner)
 end
 
 --[[
-    Every whisper Rank Watch sends, built through its own ns.BuildRankWatchWhisper with the rank whose name runs
-    longest in this locale and a 12-letter pet name, each with its byte length against the chat limit, OVER past
-    it. The builder links the spell, and names it unlinked when the link won't fit; the line says which it took.
-    Then the opt-out offer and its answer. It builds strings only: nothing is sent.
+    Every whisper Rank Watch sends, built through its own ns.BuildRankWatchWhisper with the player's saved text
+    (or the Send Messages In language's default), the rank whose name runs longest in this locale and a 12-letter
+    pet name, each with its byte length against the chat limit, OVER past it. The builder links the spell, names
+    it unlinked when the link won't fit, and sends the default text when neither does; the line says which spell
+    form it took. Then the opt-out offer and its answer. A whisper the player emptied sends nothing, and says so.
+    It builds strings only: nothing is sent.
 ]]
 function ns:BuildRankWatchMessageLengthReport()
 	local lines = { GetClientHeader(), "" }
@@ -68,8 +70,10 @@ function ns:BuildRankWatchMessageLengthReport()
 	}
 	for _, whisper in ipairs(whispers) do
 		local castRow, betterRow = LongestCast(whisper.ladders, whisper.owner)
-		if castRow then
-			local text = ns.BuildRankWatchWhisper(castRow, betterRow, whisper.pet)
+		local text = castRow and ns.BuildRankWatchWhisper(castRow, betterRow, whisper.pet)
+		if castRow and not text then
+			lines[#lines + 1] = string.format("%s: emptied on the Rank Watch panel, so nothing is sent.", whisper.label)
+		elseif castRow then
 			lines[#lines + 1] = string.format(
 				"[%s] %s: %d / %d bytes, %s",
 				#text > ns.CHAT_MESSAGE_MAX_LENGTH and "OVER" or "OK",
@@ -84,26 +88,31 @@ function ns:BuildRankWatchMessageLengthReport()
 		end
 	end
 	--[[
-	    The opt-out offer and its answer, each built as Rank-Watch-Check.lua sends it: the offer with the
-	    four-digit code your own name gets, the answer through the whisper rule ns:Announce takes.
+	    The opt-out offer and its answer, each built as Rank-Watch-Check.lua sends it, in the player's saved
+	    text or the language's default.
 	]]
 	for _, whisper in ipairs({
-		{ label = "Rank Watch opt-out offer", text = ns.BuildRankWatchOptOutWhisper(UnitName("player")) },
+		{ label = "Rank Watch opt-out offer", text = ns.BuildRankWatchOptOutWhisper() },
 		{
 			label = "Rank Watch opt-out answer",
-			text = ns:BuildWhisperMessage("RANK_WATCH_MESSAGE_OPT_OUT_DONE"),
+			text = ns:BuildOptOutDoneWhisper(ns.GetMessageText("rankWatchOptOutDone")),
 		},
 	}) do
-		local text = whisper.text or ""
-		lines[#lines + 1] = string.format(
-			"[%s] %s: %d / %d bytes",
-			#text > ns.CHAT_MESSAGE_MAX_LENGTH and "OVER" or "OK",
-			whisper.label,
-			#text,
-			ns.CHAT_MESSAGE_MAX_LENGTH
-		)
-		lines[#lines + 1] = "    " .. ShownText(text)
+		local text = whisper.text
+		if not text then
+			lines[#lines + 1] = string.format("%s: emptied on the Rank Watch panel, so nothing is sent.", whisper.label)
+		else
+			lines[#lines + 1] = string.format(
+				"[%s] %s: %d / %d bytes",
+				#text > ns.CHAT_MESSAGE_MAX_LENGTH and "OVER" or "OK",
+				whisper.label,
+				#text,
+				ns.CHAT_MESSAGE_MAX_LENGTH
+			)
+			lines[#lines + 1] = "    " .. ShownText(text)
+		end
 	end
+	lines[#lines + 1] = string.format("Send Messages In: %s", ns.GetMessageLanguage())
 	lines[#lines + 1] = ""
 	lines[#lines + 1] =
 		"A demon is named by its kind and a hunter's pet by its own name; either in a non-Latin script takes 2 or 3 bytes a letter, so a pet's whisper can run longer than shown."

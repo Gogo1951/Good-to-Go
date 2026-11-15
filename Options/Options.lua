@@ -1,14 +1,12 @@
 local _, ns = ...
 local L = ns.L
 
-local AceConfig = LibStub("AceConfig-3.0")
 local AceConfigDialog = LibStub("AceConfigDialog-3.0")
+local Kit = ns.OptionsKit
 
 --------------------------------------------------------------------------------
 -- Registration
 --------------------------------------------------------------------------------
-
-local REGISTRY = ns.OPTIONS_REGISTRY
 
 --[[
     Registration is deferred to ns.RegisterOptionsPanels, called once from
@@ -16,8 +14,7 @@ local REGISTRY = ns.OPTIONS_REGISTRY
     is read from the stock AceDBOptions-3.0 table, which needs the database.
 
     One panel per feature directly under the root, in the root panel's Features
-    order (ns.FEATURE_GROUPS, left to right then down), each followed by its
-    sub-panels:
+    order (ns.FEATURES), each followed by its sub-panels:
 
       Good to Go    (welcome, mini-map, Features, Key Bindings, /Commands)
         Buff Duty               Group Buffs, Self-Buffs, Weapon Buffs
@@ -29,97 +26,69 @@ local REGISTRY = ns.OPTIONS_REGISTRY
         Readiness Report
         Profiles, Feedback & Support, Diagnostic Tools
 
-    Child-panel order is the order of the AddToBlizOptions calls. The third
-    argument is the parent: the root's display name by default, or a child's
-    category ID to nest a panel a level deeper. AceConfigDialog maps only root
-    names to IDs, so a nested panel passes the ID its parent's registration
-    returned; the Settings panel finds a category at any depth by ID and
-    indents each level.
-
-    Every category ID is kept by registry key, so ns:OpenOptionsPanel can open
-    any panel directly; a title lookup fails wherever the ID is a number.
-]]
-local function RegisterChild(registryKey, builder, displayName, parentID)
-	AceConfig:RegisterOptionsTable(REGISTRY[registryKey], builder)
-	local _, categoryID =
-		AceConfigDialog:AddToBlizOptions(REGISTRY[registryKey], displayName, parentID or L["ADDON_TITLE"])
-	ns.optionsFrames.categories[registryKey] = categoryID
-	return categoryID
-end
-
---[[
-    Each panel with a tracked list gets it as a sub-panel: Group Buffs under
-    Buff Duty, Reported Ranks under Rank Watch.
-    Sub-panels and panels whose lists exist only after login register their
-    builder function, not a built table, so each is rebuilt on open.
+    Child-panel order is the order of the Kit.RegisterPanel calls, which keeps
+    every panel's category ID by registry key, so ns:OpenOptionsPanel (the
+    kit's) opens any panel directly. A sub-panel names its parent's key. Each
+    panel registers its builder function, not a built table, so it is rebuilt
+    on every repaint.
 ]]
 local function RegisterBuffDutyPanels()
-	local buffDutyID = RegisterChild("BuffDuty", ns.BuildBuffDutyOptions, L["TAB_BUFF_DUTY"])
-	RegisterChild("BuffDutyBuffs", ns.BuildBuffDutyBuffsOptions, L["BUFF_DUTY_TRACKED_HEADER"], buffDutyID)
-	RegisterChild("BuffDutySelfBuffs", ns.BuildBuffDutySelfBuffsOptions, L["BUFF_DUTY_SELF_HEADER"], buffDutyID)
-	RegisterChild(
+	Kit.RegisterPanel("BuffDuty", ns.BuildBuffDutyOptions, L["TAB_BUFF_DUTY"])
+	Kit.RegisterPanel("BuffDutyBuffs", ns.BuildBuffDutyBuffsOptions, L["BUFF_DUTY_TRACKED_HEADER"], "BuffDuty")
+	Kit.RegisterPanel("BuffDutySelfBuffs", ns.BuildBuffDutySelfBuffsOptions, L["BUFF_DUTY_SELF_HEADER"], "BuffDuty")
+	Kit.RegisterPanel(
 		"BuffDutyWeaponBuffs",
 		ns.BuildBuffDutyWeaponBuffsOptions,
 		L["BUFF_DUTY_WEAPON_PANEL_HEADER"],
-		buffDutyID
+		"BuffDuty"
 	)
 end
 
 --[[
     Consumable Macros -- every macro setting, led by its on/off switch, with
     Class & Race and the Ignore List nested under it: the list only says what
-    the macros may offer. The Ignore List registers its builder function, not
-    a built table, so it never renders a stale list.
+    the macros may offer. The Ignore List's tree takes the kit's 176-point
+    sidebar (Kit.PrepareTree) and reopens on the character being played.
 ]]
 local function RegisterMacrosPanels()
-	local macrosID = RegisterChild("Macros", ns.BuildMacrosOptions, L["TAB_CONSUMABLE_MACROS"])
-	RegisterChild("ClassRace", ns.BuildClassRaceOptions, L["TAB_CLASS_RACE"], macrosID)
-	RegisterChild("IgnoreList", ns.BuildIgnoreListOptions, L["TAB_IGNORE_LIST"], macrosID)
-
-	--[[
-	    Seed the Ignore List tree's width (ns.OPTIONS_TREE_WIDTH). AceGUI's
-	    SetStatusTable fills treewidth in only when the key is absent -- so
-	    seeding it here wins, while a player dragging the splitter still
-	    overwrites it from then on.
-	]]
-	local ignoreStatus = AceConfigDialog:GetStatusTable(REGISTRY.IgnoreList)
-	ignoreStatus.groups = ignoreStatus.groups or {}
-	ignoreStatus.groups.treewidth = ns.OPTIONS_TREE_WIDTH
+	Kit.RegisterPanel("Macros", ns.BuildMacrosOptions, L["TAB_CONSUMABLE_MACROS"])
+	Kit.RegisterPanel("ClassRace", ns.BuildClassRaceOptions, L["TAB_CLASS_RACE"], "Macros")
+	Kit.RegisterPanel("IgnoreList", ns.BuildIgnoreListOptions, L["TAB_IGNORE_LIST"], "Macros")
+	Kit.PrepareTree("IgnoreList", function()
+		return ns.db:GetCurrentProfile()
+	end)
 end
 
 --[[
     Rank Watch, where its TOC loads it (every flavor with ranks to compare), with its Reported Ranks and
     Ignored Players under it. Reported Ranks is a tree of classes, opened on the player's own and seeded with
-    the shared tree width, the way the Ignore List seeds its own; a player dragging the splitter or picking a
-    class overwrites either from then on.
+    the shared tree width; a player dragging the splitter or picking a class overwrites either from then on.
 ]]
 local function RegisterRankWatchPanels()
 	if not ns.BuildRankWatchOptions then
 		return
 	end
-	local rankWatchID = RegisterChild("RankWatch", ns.BuildRankWatchOptions, L["TAB_RANK_WATCH"])
-	RegisterChild("RankWatchTracked", ns.BuildRankWatchTrackedOptions, L["RANK_WATCH_TRACKED_HEADER"], rankWatchID)
-	RegisterChild("RankWatchIgnored", ns.BuildRankWatchIgnoredOptions, L["RANK_WATCH_IGNORED_HEADER"], rankWatchID)
+	Kit.RegisterPanel("RankWatch", ns.BuildRankWatchOptions, L["TAB_RANK_WATCH"])
+	Kit.RegisterPanel("RankWatchTracked", ns.BuildRankWatchTrackedOptions, L["RANK_WATCH_TRACKED_HEADER"], "RankWatch")
+	Kit.RegisterPanel("RankWatchIgnored", ns.BuildRankWatchIgnoredOptions, L["RANK_WATCH_IGNORED_HEADER"], "RankWatch")
 
-	local trackedStatus = AceConfigDialog:GetStatusTable(REGISTRY.RankWatchTracked)
+	local trackedStatus = AceConfigDialog:GetStatusTable(ns.OPTIONS_REGISTRY.RankWatchTracked)
 	trackedStatus.groups = trackedStatus.groups or {}
 	trackedStatus.groups.treewidth = trackedStatus.groups.treewidth or ns.OPTIONS_TREE_WIDTH
 	trackedStatus.groups.selected = trackedStatus.groups.selected or select(2, UnitClass("player"))
 end
 
 function ns.RegisterOptionsPanels()
-	AceConfig:RegisterOptionsTable(REGISTRY.General, ns.BuildGeneralOptions)
-	local mainPanel, mainCategoryID = AceConfigDialog:AddToBlizOptions(REGISTRY.General, L["ADDON_TITLE"])
-	ns.optionsFrames = { main = mainPanel, categoryID = mainCategoryID, categories = {} }
+	Kit.RegisterPanel("General", ns.BuildGeneralOptions, L["ADDON_TITLE"])
 
 	RegisterBuffDutyPanels()
-	RegisterChild("Restocker", ns.BuildRestockerOptions, L["TAB_RESTOCKER"])
-	RegisterChild("Spellbook", ns.BuildSpellbookOptions, L["TAB_ENHANCED_SPELLBOOK"])
+	Kit.RegisterPanel("Restocker", ns.BuildRestockerOptions, L["TAB_RESTOCKER"])
+	Kit.RegisterPanel("Spellbook", ns.BuildSpellbookOptions, L["TAB_ENHANCED_SPELLBOOK"])
 	RegisterMacrosPanels()
 	RegisterRankWatchPanels()
 	-- Named by the tooltip block's own title, so the panel and the tooltip cannot name it two ways.
-	RegisterChild("InventoryReport", ns.BuildInventoryReportOptions, L["INVENTORY_REPORT_TITLE"])
-	RegisterChild("ReadinessReport", ns.BuildReadinessReportOptions, L["TAB_READINESS_REPORT"])
+	Kit.RegisterPanel("InventoryReport", ns.BuildInventoryReportOptions, L["INVENTORY_REPORT_TITLE"])
+	Kit.RegisterPanel("ReadinessReport", ns.BuildReadinessReportOptions, L["TAB_READINESS_REPORT"])
 
 	--[[
 	    Profiles panel: the stock AceDBOptions-3.0 table, unmodified. Its display
@@ -127,45 +96,16 @@ function ns.RegisterOptionsPanels()
 	    so we neither hardcode it nor add a locale key for a stock widget.
 	]]
 	local profilesOptions = ns.BuildProfilesOptions()
-	RegisterChild("Profiles", profilesOptions, profilesOptions.name)
+	Kit.RegisterPanel("Profiles", profilesOptions, profilesOptions.name)
 
-	RegisterChild("FeedbackSupport", ns.BuildFeedbackSupportOptions, L["OPTIONS_FEEDBACK"])
+	Kit.RegisterPanel("FeedbackSupport", ns.BuildFeedbackSupportOptions, L["OPTIONS_FEEDBACK"])
 
 	--[[
 	    Diagnostic Tools last so it sits at the bottom of the tree. Registered as
 	    the builder, so the tabs come and go with the enable toggle; its display
 	    name is a plain English string, never a locale key.
 	]]
-	RegisterChild("Diagnostics", ns.BuildDiagnosticsOptions, ns.DiagnosticsStrings.TAB)
-end
-
---------------------------------------------------------------------------------
--- Panel Navigation
---------------------------------------------------------------------------------
-
---[[
-    Opens the root panel, or the panel named by an ns.OPTIONS_REGISTRY key.
-    Combat first: Blizzard's Settings panel is protected in combat, so every
-    route below is blocked and the player would get an ADDON_ACTION_BLOCKED
-    error naming the add-on instead of an answer. The gate sits at this single
-    entry point, so the slash command and the mini-map button's Shift +
-    Middle-Click answer identically. It returns -- never queues the open for
-    when combat ends.
-]]
-function ns:OpenOptionsPanel(panel)
-	if InCombatLockdown() then
-		ns:PrintMessage(L["CHAT_OPTIONS_IN_COMBAT"])
-		return
-	end
-	if not ns.optionsFrames then
-		return
-	end
-	local categoryID = ns.optionsFrames.categories[panel] or ns.optionsFrames.categoryID
-	if Settings and Settings.OpenToCategory and categoryID then
-		Settings.OpenToCategory(categoryID)
-		return
-	end
-	AceConfigDialog:Open(REGISTRY[panel] or REGISTRY.General)
+	Kit.RegisterPanel("Diagnostics", ns.BuildDiagnosticsOptions, ns.DiagnosticsStrings.TAB)
 end
 
 --------------------------------------------------------------------------------

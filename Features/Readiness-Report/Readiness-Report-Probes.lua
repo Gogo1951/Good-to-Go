@@ -116,7 +116,7 @@ end
     can go up however many the Warlock carries: after a stoned player rose, for
     the rest of the half hour since the stone was used. The stones share the
     one cooldown, so any of them on it answers. A cooldown the client keeps
-    secret (Forever) counts as over, and the entry reports as it always has.
+    secret (Forever) counts as over, and the entry reports normally.
 ]]
 function ns.SoulstonesOnCooldown()
 	if ns.AreCooldownsSecret() then

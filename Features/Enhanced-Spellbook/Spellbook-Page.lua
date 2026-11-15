@@ -177,7 +177,9 @@ local function Layout(page)
 	page.subheaders:ReleaseAll()
 	page.buttons:ReleaseAll()
 	local controls = page.pagingControls
-	page.markPlaced:SetShown(#ns.macros > 0)
+	-- one read of the action bars serves the Mark Placed button and every tile's glow
+	local bars = ns.ScanActionBars()
+	ns.UpdateMarkPlacedButton(page, bars)
 	local categories = SpellbookPageCategories(page)
 	if #categories == 0 then
 		local text = page.filterText or ""
@@ -203,7 +205,6 @@ local function Layout(page)
 	controls:Show()
 
 	local current = math.min(controls:GetCurrentPage(), maxPages)
-	local bars = ns.ScanActionBars()
 	local half = paper:GetWidth() / 2
 	local shift = page.parchment.spineShift -- toward the spine: right on the left page, left on the right
 	for side = 1, 2 do
@@ -290,8 +291,8 @@ local function BuildPage(page)
 	-- the page strip along the parchment's bottom; the wheel turns the page anywhere on the parchment
 	local controls = ns.CreatePagingControls(page, parchment.paper)
 	page.pagingControls = controls
-	controls:SetPoint("BOTTOMLEFT", parchment.paper, "BOTTOMLEFT", 14, 0)
-	controls:SetPoint("BOTTOMRIGHT", parchment.paper, "BOTTOMRIGHT", -14, 0)
+	controls:SetPoint("BOTTOMLEFT", parchment.paper, "BOTTOMLEFT", 16, 0)
+	controls:SetPoint("BOTTOMRIGHT", parchment.paper, "BOTTOMRIGHT", -16, 0)
 	function page:OnPageChanged()
 		Layout(self)
 	end

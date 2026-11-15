@@ -1,10 +1,9 @@
 local _, ns = ...
 local L = ns.L
+local Kit = ns.OptionsKit
 
-local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
-
-local Desc = ns.OptionsDesc
-local Spacer = ns.OptionsSpacer
+local Desc = Kit.Desc
+local Spacer = Kit.Spacer
 
 --------------------------------------------------------------------------------
 -- Rank Watch Ignored Players Panel
@@ -13,7 +12,8 @@ local Spacer = ns.OptionsSpacer
 --[[
     "Ignored Players", under Rank Watch: the players it never reports, added from the current target and removed
     one by one. Account-wide, like every Rank Watch setting, and keyed by GUID so a renamed player stays ignored.
-    Not hidden behind the Rank Watch switch: a choice worth making before turning it on. Registered as a
+    Not hidden behind the Rank Watch switch: a choice worth making before turning it on, and the page opens
+    with a line saying so while it's off (ns.AddFeatureOffLine). Registered as a
     function, so the list and the Ignore Target button follow the target on every redraw.
 ]]
 
@@ -43,10 +43,6 @@ local function ClassOf(guid)
 	return nil
 end
 
-local function Refresh()
-	AceConfigRegistry:NotifyChange(ns.OPTIONS_REGISTRY.RankWatchIgnored)
-end
-
 -- The target, when it is another player who can be ignored.
 local function IgnorableTarget()
 	return ns.RankWatchIgnorableUnit("target")
@@ -62,25 +58,41 @@ local function AddIgnoredRows(args, startOrder)
 		return a.name < b.name
 	end)
 	if #sorted == 0 then
-		args.ignoredNone = Desc(ns.OptionsSubLabel(L["RANK_WATCH_IGNORED_NONE"]), startOrder)
+		args.ignoredNone = Desc(Kit.SubLabel(L["RANK_WATCH_IGNORED_NONE"]), startOrder)
 		return
 	end
 	for index, entry in ipairs(sorted) do
 		local order = startOrder + index * 0.01
 		local color = ns.GetClassColor(ClassOf(entry.guid)) or ns.GetColor("TEXT")
-		args["ignored" .. index] = ns.OptionsRowLabel(color .. entry.name .. "|r", order)
-		args["ignoredRemove" .. index] = ns.OptionsRemoveIcon(L["RANK_WATCH_IGNORED_REMOVE"], order + 0.001, function()
-			ignored[entry.guid] = nil
-			IgnoredClasses()[entry.guid] = nil
-			Refresh()
-		end)
-		args["ignoredBreak" .. index] = { type = "description", name = "", width = "full", order = order + 0.002 }
+		-- one row each, so the remove icon (the item lists' own) sits at the row's end, as on the Inventory Report
+		args["ignored" .. index] = Kit.Row(order, nil, {
+			{
+				type = "description",
+				name = color .. entry.name .. "|r",
+				fontSize = "medium",
+				width = ns.OPTIONS_ROW_WIDTH - ns.OPTIONS_REMOVE_ICON_WIDTH,
+			},
+			{
+				type = "execute",
+				name = "",
+				desc = L["RANK_WATCH_IGNORED_REMOVE"],
+				image = "Interface/Buttons/UI-GroupLoot-Pass-Up",
+				imageWidth = 16,
+				imageHeight = 16,
+				width = ns.OPTIONS_REMOVE_ICON_WIDTH,
+				func = function()
+					ignored[entry.guid] = nil
+					IgnoredClasses()[entry.guid] = nil
+					ns.RefreshSettings()
+				end,
+			},
+		})
 	end
 end
 
 function ns.BuildRankWatchIgnoredOptions()
 	local options = {
-		name = ns.SubPanelTitle(L["TAB_RANK_WATCH"], L["RANK_WATCH_IGNORED_HEADER"]),
+		name = Kit.SubPanelTitle(L["TAB_RANK_WATCH"], L["RANK_WATCH_IGNORED_HEADER"]),
 		type = "group",
 		args = {
 			description = Desc(L["RANK_WATCH_IGNORED_DESCRIPTION"], 1),
@@ -98,7 +110,7 @@ function ns.BuildRankWatchIgnoredOptions()
 					if guid then
 						Ignored()[guid] = name
 						IgnoredClasses()[guid] = class
-						Refresh()
+						ns.RefreshSettings()
 					end
 				end,
 			},
@@ -106,5 +118,6 @@ function ns.BuildRankWatchIgnoredOptions()
 		},
 	}
 	AddIgnoredRows(options.args, 10)
+	ns.AddFeatureOffLine(options.args, "rankWatch.enabled")
 	return options
 end

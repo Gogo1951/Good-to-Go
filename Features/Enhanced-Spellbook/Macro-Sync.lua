@@ -68,9 +68,10 @@ end
 	over ("-Bear Form", now Dire Bear Form's), is renamed, its ownership record moving with it; a name the
 	player gave it is kept, and recorded as the add-on's while the body carries this macro's tag, so Delete
 	Macros still finds it. A new name sorts the macro elsewhere in its list, so this returns the index it
-	ends up at.
+	ends up at. shared says other macros carry the same tag: the player pasted the text, so the tag alone no
+	longer says this one is the add-on's, and no record is written for a name the player gave.
 ]]
-local function SyncAt(macro, index)
+local function SyncAt(macro, index, shared)
 	if index == 0 then
 		return 0
 	end
@@ -86,7 +87,7 @@ local function SyncAt(macro, index)
 	renamed = renamed or name == OldPrefixName(macro)
 	if not renamed then
 		local owned = OwnedList(index)
-		if owned[name] == nil and ns.BodyTag(body) == ns.MacroTag(macro) then
+		if owned[name] == nil and not shared and ns.BodyTag(body) == ns.MacroTag(macro) then
 			owned[name] = OwnerRecord(index)
 		end
 		if newBody or newIcon then
@@ -132,7 +133,7 @@ ns.IsMacroUIOpen = IsMacroUIOpen
 	moves macros about, so indexes is then read again.
 ]]
 function ns.SyncMacro(macro, indexes)
-	local index, found = ns.FindMacroIndex(macro, indexes)
+	local index, found, shared = ns.FindMacroIndex(macro, indexes)
 	if IsMacroUIOpen() then
 		return index
 	end
@@ -141,7 +142,7 @@ function ns.SyncMacro(macro, indexes)
 		OwnedList(index)[name] = OwnerRecord(index)
 		ns.AssignMacroTag(macro)
 		if indexes then
-			indexes.tags[ns.MacroTag(macro)] = index
+			indexes.tags[ns.MacroTag(macro)] = { index }
 			local named = indexes.names[name]
 			for i = #named, 1, -1 do
 				if named[i] == index then
@@ -150,7 +151,7 @@ function ns.SyncMacro(macro, indexes)
 			end
 		end
 	end
-	local moved = SyncAt(macro, index)
+	local moved = SyncAt(macro, index, shared)
 	if moved ~= index and indexes then
 		local fresh = ReadMacroIndexes()
 		indexes.tags, indexes.names = fresh.tags, fresh.names

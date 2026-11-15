@@ -14,14 +14,15 @@ local GetColor = ns.GetColor
     too, though it sits above the list (Undo Offer, below).
 
     At the right end is the answer the list exists to give: how many restocking orders
-    are outstanding, in the words the merchant and bank reminders print
-    (ns.RestockShortfallHeadline). Hovering it lists the orders the way the
+    are outstanding (ns.RestockShortfallHeadline). Hovering it lists the orders the way the
     mini-map's Restocker Report does -- icon, name, have/wanted -- capped, so a
     long list cannot run the tooltip off the screen.
 
     The count comes from ns.CountRestockOrders and the tooltip from
-    ns.BuildGroceryList, which count by the same rules as the mini-map tooltip
-    and every reminder, so none of them can disagree about what is outstanding. An
+    ns.BuildGroceryList, which count by the same rules as the mini-map tooltip,
+    so neither can disagree about what is outstanding. The chat reminders start
+    from the same list but name only what is low or out (ns.SplitRestockShortfall),
+    so a row nearly topped off counts here and stays out of chat. An
     order is a row with Buy on that the bags are short of, and the count is
     drawn in the yellow of the Keep marks it counts (KEEP_SHORT in
     Data/Data.lua): the line is where a player learns what a yellow Keep
@@ -74,9 +75,9 @@ local function ItemWithIcon(itemID)
 end
 
 --[[
-    The orders themselves, in the mini-map Restocker Report's own form and under
-    its own title: the item, then have/wanted, the ratio the verbose reminder
-    prints.
+    The orders themselves, in the mini-map Restocker Report's row form under the
+    Restock List's title (L["MENU_RESTOCKER"]): the item, then have/wanted, the
+    ratio the verbose reminder prints.
 
     Built on hover rather than kept, so it is as current as the bags are.
     Nothing to list draws no tooltip: the line above has already said so.
@@ -149,7 +150,7 @@ function ns.UpdateRestockStatus()
 	window.undo:SetShown(removed ~= nil)
 	if removed then
 		window.removedText:SetText(string.format(L["RESTOCKER_REMOVED_ITEM"], ItemWithIcon(removed.item.itemID)))
-		-- Sized here rather than when built: a font not yet resolved at login measures as nothing.
+		-- Sized again here: a font not yet resolved at login measures as nothing when built.
 		ns.FitRestockButton(window.undo)
 		FitUndoOffer(window)
 	end

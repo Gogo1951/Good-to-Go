@@ -5,9 +5,9 @@ local Data = ns.Data
     Buff Duty's unit reads: whether a unit can take a buff, the role and
     class it is buffed as, how far away it is, a player's row label, and the
     icons that cast at it. What it has on is Buff-Duty-Auras.lua's; a dead
-    player's resurrection is Buff-Duty-Resurrections.lua's and a pet's row
-    Buff-Duty-Pets.lua's. Shared with the other Buff Duty files through
-    ns.BuffDuty.
+    player's resurrection is Buff-Duty-Resurrections.lua's, a pet's row
+    Buff-Duty-Pets.lua's and a friendly NPC's Buff-Duty-NPCs.lua's. Shared
+    with the other Buff Duty files through ns.BuffDuty.
 ]]
 
 local BuffDuty = ns.BuffDuty
@@ -21,8 +21,13 @@ function BuffDuty.CanBuff(unit)
 	return UnitExists(unit) and UnitIsPlayer(unit) and UnitIsConnected(unit) and not UnitIsDeadOrGhost(unit)
 end
 
--- Your group as { unit, subgroup }: the raid by roster order, or you and your party.
+local heldMembers
+
+-- Your group as { unit, subgroup }: the raid by roster order, or you and your party. Read only; see HoldGroupMembers.
 function BuffDuty.GroupMembers()
+	if heldMembers then
+		return heldMembers
+	end
 	local members = {}
 	if IsInRaid() then
 		for i = 1, GetNumGroupMembers() do
@@ -40,6 +45,18 @@ function BuffDuty.GroupMembers()
 		end
 	end
 	return members
+end
+
+--[[
+    While held, BuffDuty.GroupMembers hands every caller one reading of the roster, so a redraw, whose sections
+    each walk the group, reads it once. Held only around one redraw, inside a single frame, where the roster
+    can't change.
+]]
+function BuffDuty.HoldGroupMembers(hold)
+	heldMembers = nil
+	if hold then
+		heldMembers = BuffDuty.GroupMembers()
+	end
 end
 
 -- Whether a Count as Tanks entry (a class token, or Data.TANK_WHEN_PET) applies right now; SOLO is the Solo group context.
@@ -157,10 +174,12 @@ BuffDuty.IsPhaseShifted = IsPhaseShifted
 
 --[[
     Is `unit` close enough to take `spellName`? A phase-shifted pet never is.
-    Otherwise the spell's own range check first; when it has no answer,
-    UnitInRange's group-wide ~40 yards, which only knows about group members. A unit we can't ask about reads as in range, and so does any
-    secret answer (WoW Forever's for a stranger): the fade is a hint, and a
-    wrong "out of range" would hide a buff the player could have cast.
+    Otherwise the spell's own range check first; when it has no answer, a unit
+    out of sight (UnitIsVisible) reads as out of range, and one in sight takes
+    UnitInRange's group-wide ~40 yards, which only knows about group members.
+    A unit we can't ask about reads as in range, and so does any secret answer
+    (WoW Forever's for a stranger): the fade is a hint, and a wrong "out of
+    range" would hide a buff the player could have cast.
 ]]
 function ns.IsBuffInRange(unit, spellName)
 	if not unit or not ns.CanCompareUnitTokens(unit, "player") then

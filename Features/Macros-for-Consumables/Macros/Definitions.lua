@@ -123,10 +123,11 @@ local customDefinitions = {}
 ns.REGISTERED_MACRO_DEFINITIONS = macroDefinitions
 
 --[[
-    The custom definitions, exposed on the same terms for diagnostics only.
-    They own their whole update and never reach the scanner's ranking ladder,
-    so the Selection Report names them as resolved elsewhere rather than
-    leaving the reader to wonder why Feed Pet and Poisons are missing from it.
+    The custom definitions, exposed on the same terms. Engine.lua runs each
+    one's customUpdate after the standard loop; they own their whole update and
+    never reach the scanner's ranking ladder, so the Selection Report names
+    them as resolved elsewhere rather than leaving the reader to wonder why
+    Feed Pet and Poisons are missing from it.
 ]]
 ns.REGISTERED_CUSTOM_MACRO_DEFINITIONS = customDefinitions
 

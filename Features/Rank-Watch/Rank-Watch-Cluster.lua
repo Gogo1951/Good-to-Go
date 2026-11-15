@@ -120,7 +120,17 @@ local function OnChatMsgAddon(prefix, text, _, sender)
 	elseif command == "LEAD" then
 		local name = strsplit(",", data)
 		if name and name ~= "" and IsInMyGroup(name) then
-			lead = name
+			--[[
+			    Two copies that each took the lead (joining at once, or both claiming after the leader left) would
+			    otherwise each adopt the other and nobody would whisper. The lower name keeps it and says so again;
+			    the other adopts it, as a standalone Rank Sentinel adopts any LEAD.
+			]]
+			local me = MyName()
+			if lead == me and settings.whisper and me < name then
+				Broadcast("LEAD", Release(me))
+			else
+				lead = name
+			end
 		end
 	elseif command == "JOIN" then
 		-- A leader with whispers off stays silent, so a joiner who whispers keeps the lead it gave itself.
@@ -134,7 +144,8 @@ ns.SetRankWatchHandler("CHAT_MSG_ADDON", OnChatMsgAddon)
 
 --[[
     Joining a group asks who leads; a leader who leaves hands the lead back to every copy left, each of which
-    takes it until the next LEAD arrives, as the standalone add-on does.
+    takes it until the next LEAD arrives, as the standalone add-on does. When two copies both hold it, the lower
+    name keeps it (the LEAD branch above).
 ]]
 local function OnGroupRosterUpdate()
 	local inGroup = IsInGroup()

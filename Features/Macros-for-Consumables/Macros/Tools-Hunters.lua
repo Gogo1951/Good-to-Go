@@ -59,11 +59,34 @@ end
     Detect a dead-but-dismissed pet. When Call Pet fails because the pet is
     dead, the client shows the SPELL_FAILED_TARGETS_DEAD text; we match that
     text and flip the flag so the macro rebuilds with Revive Pet on the next
-    cycle. A spell aimed at a dead target shows the same text, so the error is
-    ignored while the target is dead. The module's dispatcher
-    (Macros-for-Consumables-Core.lua) routes UI_ERROR_MESSAGE here ahead of its
-    combat-lockdown guard, so this still fires mid-fight.
+    cycle. Any spell aimed at a dead unit shows the same text, so the error
+    counts only within CALL_PET_ERROR_WINDOW seconds of sending Call Pet
+    (ns.OnHunterSpellcastSent), whatever is targeted or under the cursor. The
+    module's dispatcher (Macros-for-Consumables-Core.lua) routes
+    UI_ERROR_MESSAGE here ahead of its combat-lockdown guard, so this still
+    fires mid-fight.
 ]]
+local CALL_PET_ERROR_WINDOW = 1
+local callPetSentAt
+
+-- UNIT_SPELLCAST_SENT, the player's own; a secret spell ID (Forever, while casts are restricted) is never Call Pet.
+function ns.OnHunterSpellcastSent(spellID)
+	if not ns.IsSecretValue(spellID) and spellID == ns.CALL_PET_SPELL_ID then
+		callPetSentAt = GetTime()
+	end
+end
+
+-- UNIT_SPELLCAST_SUCCEEDED, the player's own: a pet called or revived is no longer dead.
+function ns.OnHunterSpellcastSucceeded(spellID)
+	if ns.IsSecretValue(spellID) or not ns.petDeadDismissed then
+		return
+	end
+	if spellID == ns.CALL_PET_SPELL_ID or spellID == ns.REVIVE_PET_SPELL_ID then
+		ns.petDeadDismissed = false
+		ns.RequestUpdate()
+	end
+end
+
 function ns.OnHunterUiErrorMessage(message)
 	if not ns.isHunter then
 		return
@@ -71,15 +94,12 @@ function ns.OnHunterUiErrorMessage(message)
 	if UnitExists("pet") or not message then
 		return
 	end
-	-- Whether the target is dead can't be read while its identity is secret, so the error can't be told apart.
-	if ns.IsUnitIdentitySecret("target") then
-		return
-	end
-	if UnitExists("target") and UnitIsDead("target") then
+	if not callPetSentAt or GetTime() - callPetSentAt > CALL_PET_ERROR_WINDOW then
 		return
 	end
 	local deadMessage = SPELL_FAILED_TARGETS_DEAD
 	if deadMessage and message == deadMessage then
+		callPetSentAt = nil
 		ns.petDeadDismissed = true
 		ns.RequestUpdate()
 	end

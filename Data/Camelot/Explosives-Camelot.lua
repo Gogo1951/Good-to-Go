@@ -39,13 +39,14 @@ ns.EXPLOSIVES = {
 How We Got the Data
 
 Last Validated
-	2026-11-11, WoW Forever 1.60.1.70888
+	2026-11-15, WoW Forever 1.60.1.70938
 
 Notes
 	- Every Engineering explosive this client knows that deals damage, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Explosive macro. The family is the items sharing Coarse Dynamite's (4365) use category, which on this client is class 0, subclass 0.
 	- Min Damage and Max Damage are the use spell's damage range. Engineering Skill is the rank the tooltip requires (0 for none). Required Spell ID, where present, is the Goblin or Gnomish specialization the item needs; no row on this client carries one.
 	- Items that share the explosive cooldown but aren't crafted explosives are left out: the Portable Bronze Mortar (a reusable device), Goblin Fishing Pole, Flash Bundle, Explosive Rocket, Magic Candle, Brimstone, Fertile Bulb, M73 Frag Grenade, and the quest items (Crystal Charge, the Holy Waters).
 	- Damage on this client is the base points times one plus or minus half the variance, rounded (Rough Dynamite's 25.9999996 is 26). The Scrolls of Cryoblast and Greater Cryoblast (217495, 277499) are left out: they are scrolls, not explosives.
+	- Explosive Runeshard (276145) shares the family's use category and deals damage, but no spell on this client creates it and QuestieDB's Forever item base lists no drop, vendor or quest for it, so it is left out as likely unobtainable.
 	- Season of Discovery items are left out even though this client knows many of their IDs (any ID of 200000 or more that the Classic Era tables also hold): they live only in Data/Discovery/. Where a table would otherwise pick one up, a deliberately-absent line in the table says so.
 
 SQL (CMaNGOS)
@@ -100,7 +101,13 @@ wago.tools
 	https://wago.tools/db2/ItemEffect?build=1.60.1.70862
 	https://wago.tools/db2/ItemXItemEffect?build=1.60.1.70862
 	https://wago.tools/db2/SpellEffect?build=1.60.1.70862
+	https://wago.tools/db2/ItemSparse?build=1.60.1.70938
+	https://wago.tools/db2/Item?build=1.60.1.70938
+	https://wago.tools/db2/ItemEffect?build=1.60.1.70938
+	https://wago.tools/db2/SpellEffect?build=1.60.1.70938
+	https://wago.tools/db2/ItemXItemEffect?build=1.60.1.70938
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Forever/foreverItemDB.lua
+	https://raw.githubusercontent.com/Questie/QuestieDB/master/src/corrections/Forever/generated/foreverBaseItem.lua
 ]]

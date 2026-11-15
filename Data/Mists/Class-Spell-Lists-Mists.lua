@@ -1077,12 +1077,12 @@ ns.CLASS_SPELL_LISTS = {
 How We Got the Data
 
 Last Validated
-	2026-11-11, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-15, Mists of Pandaria Classic 5.5.4.70631
 
 Notes
 	- Each class's lists for the spellbook page: the spells whose macros get the mouseover, cursor and channeled options, stealth, the aspects that offer "!Name" casting, the ability each demon summon's macro can cast. Features/Enhanced-Spellbook/Macro-Builder/Macro-Builder.lua reads them.
 	- One ID per spell: this client has no spell ranks, and spells are matched by the name this client gives them.
-	- Built from this client's game tables after its Validate Data report, which found every table here empty, so the next Validate Data run is the first to check these rows.
+	- Built from this client's game tables after a Validate Data report that found every table here empty; the next report confirmed every row on this client.
 	- The class's spells are the ones on its class skill line, its specializations or its talents (SkillLineAbility, SpecializationSpells, Talent), leaving out passive and hidden spells and the effects other spells fire.
 	- mouseoverEnemy: spells cast on an enemy unit (SpellEffect target) from range, plus the melee-range interrupts, crowd control and taunts. Melee strikes are left out; any harmful spell with a range gets the mouseover option anyway (TargetsEnemy in Features/Enhanced-Spellbook/Macro-Builder/Macro-Builder.lua).
 	- mouseoverFriend: spells cast on a friendly unit, resurrections, and the raid buffs cast on a target. A spell that heals a friend or hurts an enemy (Holy Shock, Penance, Chi Wave, Cascade, Holy Prism, Execution Sentence, Mind Sear, Gorefiend's Grasp, Shadowstep) is on both lists, so its macro casts on any unit.

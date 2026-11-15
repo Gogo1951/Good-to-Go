@@ -2,9 +2,9 @@ local _, ns = ...
 local L = ns.L
 
 --[[
-    The controls that fill the Restock List grid: the Keep box, the toggle cells,
-    the reputation cell, the remove button and its undo, and the pooled rows
-    holding them.
+    The controls that fill the Restock List grid: the Keep box, the remove
+    button and its undo, and the pooled rows holding them. The toggle cells
+    and the reputation cell are Restocker-Window-Cells.lua, which loads first.
 
     The grid itself -- column definitions, widths and shared colors -- is
     Restocker-Window-Columns.lua, which loads first, and its header
@@ -13,26 +13,21 @@ local L = ns.L
     out is Restocker-Window-Render.lua.
 ]]
 local COLUMNS = ns.RESTOCK_COLUMNS
-local BUTTON_FONT = ns.RESTOCK_BUTTON_FONT
 local REMOVE_ICON_SIZE = ns.RESTOCK_REMOVE_ICON_SIZE
-local COLUMN_MIN_WIDTH = ns.RESTOCK_COLUMN_MIN_WIDTH
 local ROW_INSET = ns.RESTOCK_ROW_INSET
 local ICON_SIZE = ns.RESTOCK_ICON_SIZE
 local ICON_TEXT_GAP = ns.RESTOCK_ICON_TEXT_GAP
 local NAME_COLUMN_GAP = ns.RESTOCK_NAME_COLUMN_GAP
 local KEEP_GAP = ns.RESTOCK_KEEP_GAP
-local GOLD = ns.RESTOCK_CELL_GOLD
 local WHITE = ns.RESTOCK_CELL_WHITE
-local DASH_OFF = ns.RESTOCK_CELL_DASH_OFF
-local DASH_NOT_APPLICABLE = ns.RESTOCK_CELL_DASH_NOT_APPLICABLE
-local REPUTATION_SET = ns.RESTOCK_CELL_REPUTATION_SET
 local KEEP_SHORT = ns.RESTOCK_CELL_KEEP_SHORT
-local CELL_HIGHLIGHT = ns.RESTOCK_CELL_HIGHLIGHT
-local CELL_HIGHLIGHT_ALPHA = ns.RESTOCK_CELL_HIGHLIGHT_ALPHA
 local LayoutColumns = ns.LayoutRestockColumns
 local ApplyColumnWidths = ns.ApplyRestockColumnWidths
-local TooltipBody = ns.RestockColumnTooltipBody
-local ReputationStandingByValue = ns.RestockReputationStandingByValue
+local COLUMN_STATE = ns.RESTOCK_COLUMN_STATE
+local SetCell = ns.SetRestockCell
+local SetReputationCell = ns.SetRestockReputationCell
+local CreateGlyphCell = ns.CreateRestockGlyphCell
+local CreateReputationCell = ns.CreateRestockReputationCell
 
 --[[
     Zebra stripe alpha. Deliberately faint: the row already carries quality-colored
@@ -52,6 +47,9 @@ local ROW_STRIPE_ALPHA = 0.045
 local function TakeCursorItem()
 	ns.AddRestockItemFromCursor()
 end
+
+-- The cells' drop handler too (Restocker-Window-Cells.lua).
+ns.TakeRestockCursorItem = TakeCursorItem
 
 --[[
     A Keep amount is yellow while the bags hold fewer: the grocery list's line
@@ -90,7 +88,29 @@ local function CreateAmountEditBox(frame)
 	    other row control -- never GetParent().item, which can point at another
 	    item once the row is reused, and removal then fails silently.
 	]]
+	--[[
+	    An emptied box is a slip, not a 0: leaving it (Enter, a click away,
+	    Escape) puts back the amount it held when it took focus, saved and
+	    painted as usual. Typing 0 still means store all of it at the bank.
+	    Hooked, not set, so the template's own focus handling still runs.
+	]]
+	editBox:HookScript("OnEditFocusGained", function(self)
+		self.amountBefore = self.item and self.item.amount
+	end)
+	editBox:HookScript("OnEditFocusLost", function(self)
+		if self:GetText() ~= "" or not self.item then
+			return
+		end
+		self.item.amount = self.amountBefore or self.item.amount or 0
+		self:SetText(tostring(self.item.amount))
+		PaintKeep(self, self.item)
+		ns.UpdateRestockList()
+	end)
 	editBox:SetScript("OnEnterPressed", function(self)
+		if self:GetText() == "" then
+			self:ClearFocus() -- OnEditFocusLost puts the old amount back
+			return
+		end
 		local amount = tonumber(self:GetText()) or 0
 
 		if self.item then
@@ -105,13 +125,17 @@ local function CreateAmountEditBox(frame)
 	end)
 	editBox:SetScript("OnKeyUp", function(self)
 		if self.item then
-			self.item.amount = tonumber(self:GetText()) or 0
 			--[[
 			    Saved as the player types, so closing the window without
-			    pressing Enter keeps what the box holds, and an emptied box
-			    saves 0 (store all of it at the bank). The amount is live from
-			    here, so its mark and the count under the list follow it.
+			    pressing Enter keeps what the box holds. An empty box saves
+			    nothing: leaving it puts the old amount back (above). The
+			    amount is live from here, so its mark and the count under the
+			    list follow it.
 			]]
+			if self:GetText() == "" then
+				return
+			end
+			self.item.amount = tonumber(self:GetText()) or 0
 			PaintKeep(self, self.item)
 			ns.UpdateRestockStatus()
 		end
@@ -163,7 +187,7 @@ end
 
 --[[
     The group-loot pass mark is the game's own "get rid of this" icon, and the
-    same texture the options panels' item lists (Options/Options-Item-Lists.lua)
+    same texture the options panels' item lists (Kit.ItemList, Options/Options-Kit.lua)
     use for their remove column -- so removal looks the same everywhere. Never a
     UIPanelCloseButton: its red X reads as "close the window" on a row, and its
     30px frame is mostly transparent padding.
@@ -186,248 +210,6 @@ local function CreateDeleteButton(frame)
 	button:SetScript("OnReceiveDrag", TakeCursorItem)
 	ns.SetupRestockerTooltip(button, L["RESTOCKER_REMOVE_TOOLTIP"], L["RESTOCKER_REMOVE_TOOLTIP_UNDO"])
 	return button
-end
-
---------------------------------------------------------------------------------
--- Cell States
---------------------------------------------------------------------------------
-
-local CELL_ON, CELL_OFF, CELL_NOT_APPLICABLE = "on", "off", "na"
-
-local CHECK_TEXTURE = "Interface\\Buttons\\UI-CheckBox-Check"
-local CHECK_SIZE = 16
-local DASH_WIDTH = 7
-local DASH_HEIGHT = 2
-
---[[
-    Reading and writing one item flag per column, so a cell needs no knowledge of
-    which one it is beyond its key.
-
-    The nil defaults are load-bearing and differ per flag: buyFromMerchant and
-    upgrade default ON when unset, buyExtra defaults OFF. A plain `not` on the
-    first two would read nil as false and switch them on, which is backward.
-]]
-local COLUMN_STATE = {
-	withdraw = function(item)
-		return item.restockFromBank and CELL_ON or CELL_OFF
-	end,
-	deposit = function(item)
-		return item.stashToBank and CELL_ON or CELL_OFF
-	end,
-	buy = function(item)
-		return (item.buyFromMerchant == nil or item.buyFromMerchant) and CELL_ON or CELL_OFF
-	end,
-	extra = function(item)
-		--[[
-		    Extra rides on top of Buy: ns.RestockFromMerchant never reaches an item
-		    with Buy off, so the cell says "not applicable" rather than "off".
-		]]
-		if not (item.buyFromMerchant == nil or item.buyFromMerchant) then
-			return CELL_NOT_APPLICABLE
-		end
-		return item.buyExtra and CELL_ON or CELL_OFF
-	end,
-	upgrade = function(item)
-		--[[
-		    Only vendor-sold staples sit on a ladder; most of a real list cannot
-		    upgrade at all, which is not the same as choosing not to.
-		]]
-		if not ns.CanUpgradeRestockItem(item.itemID) then
-			return CELL_NOT_APPLICABLE
-		end
-		return (item.upgrade ~= false) and CELL_ON or CELL_OFF
-	end,
-}
-
--- Read by the column menus (Restocker-Window-Menus.lua), which set a column only where it applies.
-ns.RESTOCK_COLUMN_STATE = COLUMN_STATE
-ns.RESTOCK_CELL_NOT_APPLICABLE = CELL_NOT_APPLICABLE
-
-local COLUMN_TOGGLE = {
-	withdraw = function(item)
-		item.restockFromBank = not item.restockFromBank
-	end,
-	deposit = function(item)
-		item.stashToBank = not item.stashToBank
-	end,
-	buy = function(item)
-		if item.buyFromMerchant == nil then
-			item.buyFromMerchant = false -- nil defaults to true, so toggle to false
-		else
-			item.buyFromMerchant = not item.buyFromMerchant
-		end
-	end,
-	extra = function(item)
-		item.buyExtra = not item.buyExtra -- nil defaults to false
-	end,
-	upgrade = function(item)
-		if item.upgrade == nil then
-			item.upgrade = false -- nil defaults to true, so toggle to false
-		else
-			item.upgrade = not item.upgrade
-		end
-	end,
-}
-
--- Attach the shared hover highlight used by every clickable cell.
-local function AddCellHighlight(cell)
-	cell:SetHighlightTexture(CELL_HIGHLIGHT, "ADD")
-	local highlight = cell:GetHighlightTexture()
-	if highlight then
-		highlight:SetVertexColor(GOLD.r, GOLD.g, GOLD.b, CELL_HIGHLIGHT_ALPHA)
-	end
-end
-
---[[
-    Why a cell cannot be set on its row, by column. A dead cell's tooltip says
-    this in place of the column's general explanation, which would describe a
-    switch the row does not have.
-]]
-local NOT_APPLICABLE_REASON = {
-	extra = "RESTOCKER_EXTRA_NOT_APPLICABLE",
-	reputation = "RESTOCKER_REPUTATION_NOT_APPLICABLE",
-	upgrade = "RESTOCKER_UPGRADE_NOT_APPLICABLE",
-}
-
---[[
-    The part of a cell's state every column shares: whether it takes clicks, and
-    the dash's tone. The cell's tooltip reads the same flag, to give the reason
-    above in place of the column's explanation (SetupCellTooltip).
-
-    Alpha rather than Disable() on the highlight: a dead cell still has to answer
-    "why can this not be set?", and Disable() would take the tooltip away with the
-    clicks.
-]]
-local function SetCellActive(cell, isActive)
-	cell.isActive = isActive
-	local tone = isActive and DASH_OFF or DASH_NOT_APPLICABLE
-	cell.dash:SetColorTexture(tone.r, tone.g, tone.b, 1)
-	local highlight = cell:GetHighlightTexture()
-	if highlight then
-		highlight:SetAlpha(isActive and 1 or 0)
-	end
-end
-
--- Paint a glyph cell for one of the three states.
-local function SetCell(cell, state)
-	cell.check:SetShown(state == CELL_ON)
-	cell.dash:SetShown(state ~= CELL_ON)
-	SetCellActive(cell, state ~= CELL_NOT_APPLICABLE)
-end
-
---[[
-    Paint the reputation cell. It names its standing only when one is set, in
-    amber so a gated row stands out. With none it draws the dash every other
-    column draws for off, rather than a word: "Any" is the absence of a
-    requirement, and a column of thirty identical words buries the one row that
-    sets one.
-
-    It rides on Buy the way Extra does -- a standing only gates buying -- so with
-    Buy off it is not applicable: the dimmer dash, and no menu. The standing
-    itself stays on the row, and shows again when Buy comes back on.
-]]
-local function SetReputationCell(cell, item)
-	local buys = item.buyFromMerchant == nil or item.buyFromMerchant
-	local isSet = buys and (item.reaction or 0) > 0
-	cell.text:SetShown(isSet)
-	cell.dash:SetShown(not isSet)
-	if isSet then
-		cell.text:SetText(ns.GetStandingLabel(ReputationStandingByValue(item.reaction).value))
-		cell.text:SetTextColor(REPUTATION_SET.r, REPUTATION_SET.g, REPUTATION_SET.b)
-	end
-	SetCellActive(cell, buys)
-end
-
---[[
-    A cell's tooltip: its column's title and explanation, or -- on a row where the
-    cell cannot be set -- the title and the reason why not.
-]]
-local function SetupCellTooltip(cell, column)
-	local reason = NOT_APPLICABLE_REASON[column.key]
-	cell:SetScript("OnEnter", function(self)
-		if reason and not self.isActive then
-			ns.ShowRestockerTooltip(self, L[column.title], L[reason])
-		else
-			ns.ShowRestockerTooltip(self, L[column.title], unpack(TooltipBody(column)))
-		end
-	end)
-	cell:SetScript("OnLeave", function()
-		GameTooltip:Hide()
-	end)
-end
-
-local function CreateGlyphCell(row, column)
-	local cell = CreateFrame("Button", nil, row)
-	cell:SetSize(ns.restockColumnWidths[column.key] or COLUMN_MIN_WIDTH, ns.restockButtonHeight)
-
-	local check = cell:CreateTexture(nil, "ARTWORK")
-	check:SetTexture(CHECK_TEXTURE)
-	check:SetSize(CHECK_SIZE, CHECK_SIZE)
-	check:SetPoint("CENTER")
-	check:SetVertexColor(GOLD.r, GOLD.g, GOLD.b)
-	cell.check = check
-
-	local dash = cell:CreateTexture(nil, "ARTWORK")
-	dash:SetSize(DASH_WIDTH, DASH_HEIGHT)
-	dash:SetPoint("CENTER")
-	cell.dash = dash
-
-	AddCellHighlight(cell)
-
-	local toggle = COLUMN_TOGGLE[column.key]
-	cell:SetScript("OnClick", function(self)
-		if ns.AddRestockItemFromCursor() then
-			return
-		end
-		-- Reads self.item, rebound by UpdateRestockListRow like every other control
-		if not (self.isActive and self.item) then
-			return
-		end
-		toggle(self.item)
-		ns.UpdateRestockListRow(row, self.item)
-		-- Buy decides whether a short row is an order, so the count under the list can move.
-		ns.UpdateRestockStatus()
-	end)
-	cell:SetScript("OnReceiveDrag", TakeCursorItem)
-
-	SetupCellTooltip(cell, column)
-	return cell
-end
-
---[[
-    The reputation cell. A menu, not a toggle, so it names the standing it
-    requires and opens the standings list on click. SetReputationCell above
-    paints it.
-]]
-local function CreateReputationCell(row, column)
-	local cell = CreateFrame("Button", nil, row)
-	cell:SetSize(ns.restockColumnWidths[column.key] or COLUMN_MIN_WIDTH, ns.restockButtonHeight)
-	cell.isActive = true
-
-	local fontString = cell:CreateFontString(nil, "ARTWORK", BUTTON_FONT)
-	fontString:SetPoint("CENTER")
-	cell.text = fontString
-
-	local dash = cell:CreateTexture(nil, "ARTWORK")
-	dash:SetSize(DASH_WIDTH, DASH_HEIGHT)
-	dash:SetPoint("CENTER")
-	cell.dash = dash
-
-	AddCellHighlight(cell)
-
-	cell:SetScript("OnClick", function(self)
-		if ns.AddRestockItemFromCursor() then
-			return
-		end
-		if not (self.isActive and self.item) then
-			return
-		end
-		ns.OpenRestockReputationMenu(self, row)
-	end)
-	cell:SetScript("OnReceiveDrag", TakeCursorItem)
-
-	SetupCellTooltip(cell, column)
-	return cell
 end
 
 function ns.CreateRestockListRow(item)

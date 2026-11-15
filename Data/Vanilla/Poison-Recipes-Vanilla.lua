@@ -42,14 +42,14 @@ ns.POISON_RECIPES = {
 How We Got the Data
 
 Last Validated
-	2026-11-11, Classic Era 1.15.9.70576
+	2026-11-15, Classic Era 1.15.9.70576
 
 Notes
 	- What a rogue poison costs to craft, read by Features/Restocker/Restocker-Crafting-Reagents.lua: when the Restock List is short of a poison, the shortfall becomes an order for these reagents, and the vendor has to stock every one of them before any is bought.
 	- Blizzard rebalanced most of these counts in TBC, so each folder carries its own client's counts: the Classic Era folders the original ones, TBC and later the rebalanced ones. Every recipe matches its crafting spell's reagents in this client's tables.
 	- Vials are listed like any other reagent rather than special-cased: a recipe needs one, the vendor has to sell it, and the all-or-nothing gate treats it as it treats the rest.
 	- Reagents by ID: 2928 Dust of Decay, 8924 Dust of Deterioration, 2930 Essence of Pain, 8923 Essence of Agony, 2931 Maiden's Anguish, 5173 Deathweed, 1288 Large Venom Sac, 3371 Empty Vial, 3372 Leaded Vial, 8925 Crystal Vial.
-	- Instant Toxin (5654) is made from a Large Venom Sac, which no vendor sells, so the Restocker never buys its reagents. Its recipe comes from this client's tables (spell 6651), for the next Validate Data run to confirm.
+	- Instant Toxin (5654) is made from a Large Venom Sac, which no vendor sells, so the Restocker never buys its reagents. Its recipe comes from this client's tables (spell 6651); the Classic Era report confirms the toxin and the sac are on this client, though no report states reagent counts.
 	- Season of Discovery items are left out even though this client knows their IDs: they live only in Data/Discovery/. Where a table would otherwise pick one up, a deliberately-absent line in the table says so.
 
 SQL (CMaNGOS)

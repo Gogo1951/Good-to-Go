@@ -1,14 +1,13 @@
 local _, ns = ...
 local L = ns.L
-
-local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
+local Kit = ns.OptionsKit
 
 --------------------------------------------------------------------------------
--- Rank Watch Tracked Abilities Panel
+-- Rank Watch Reported Ranks Panel
 --------------------------------------------------------------------------------
 
 --[[
-    "Tracked Abilities", under Rank Watch: every ability it watches, class by class down the tree on the left
+    "Reported Ranks", under Rank Watch: every ability it watches, class by class down the tree on the left
     (alphabetical), and under each ability a checkbox for each of its ranks. Unticking a rank
     means a cast of that rank is never reported, so a player who lowers a spell on purpose can say so. The ranks
     the data marks off (Rank 1 Scorch and the like) start unticked; see ns.IsRankWatchRankTracked.
@@ -18,13 +17,9 @@ local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
     higher, so it is never reported, but it shows how many ranks the ability has. Spells joined by ns.SPELL_GROUPS
     share one box, the Enhanced Spellbook's own groups, and their ranks carry the spell's name too.
 
-    Not hidden behind the Rank Watch switch, like the other Tracked Abilities panels: these are choices worth
-    making before turning it on. Registered as a function, so names the client loads later fill in on reopen.
+    Not hidden behind the Rank Watch switch, like the Group Buffs panel under Buff Duty: these are choices worth
+    making before turning it on, and the page opens with a line saying so while it's off (ns.AddFeatureOffLine). Registered as a function, so names the client loads later fill in on reopen.
 ]]
-
-local function Refresh()
-	AceConfigRegistry:NotifyChange(ns.OPTIONS_REGISTRY.RankWatchTracked)
-end
 
 local function SpellName(spellID)
 	local name = C_Spell.GetSpellName(spellID)
@@ -140,23 +135,25 @@ local function AbilityPage(name, list, order)
 		all = {
 			type = "execute",
 			name = L["RANK_WATCH_TRACK_ALL"],
+			desc = L["RANK_WATCH_TRACK_ALL_DESCRIPTION"],
 			order = 1,
 			func = function()
 				for _, entry in ipairs(sorted) do
 					SetLadder(entry.ladder, true)
 				end
-				Refresh()
+				ns.RefreshSettings()
 			end,
 		},
 		none = {
 			type = "execute",
 			name = L["RANK_WATCH_TRACK_NONE"],
+			desc = L["RANK_WATCH_TRACK_NONE_DESCRIPTION"],
 			order = 2,
 			func = function()
 				for _, entry in ipairs(sorted) do
 					SetLadder(entry.ladder, false)
 				end
-				Refresh()
+				ns.RefreshSettings()
 			end,
 		},
 	}
@@ -174,13 +171,14 @@ end
 
 function ns.BuildRankWatchTrackedOptions()
 	local options = {
-		name = ns.SubPanelTitle(L["TAB_RANK_WATCH"], L["RANK_WATCH_TRACKED_HEADER"]),
+		name = Kit.SubPanelTitle(L["TAB_RANK_WATCH"], L["RANK_WATCH_TRACKED_HEADER"]),
 		type = "group",
 		childGroups = "tree",
 		args = {
-			description = ns.OptionsDesc(L["RANK_WATCH_TRACKED_DESCRIPTION"], 0),
+			description = Kit.Desc(L["RANK_WATCH_TRACKED_DESCRIPTION"], 1),
 		},
 	}
+	ns.AddFeatureOffLine(options.args, "rankWatch.enabled")
 	local classes, seen = {}, {}
 	for _, byClass in ipairs({ ns.RankWatchLadders(), ns.RankWatchPetLadders() }) do
 		for class in pairs(byClass) do

@@ -82,3 +82,49 @@ function ns.KnowsAny(spellList)
 	end
 	return false
 end
+
+-- The racial cooldown Cannibalize (Tools-Forsaken.lua) and Rapid Regeneration (Tools-Troll.lua) share.
+
+-- When each spell's pending rebuild timer fires, so a second read of the same cooldown never stacks another.
+local rebuildAt = {}
+
+local function RebuildWhenReady(spellID, readyAt)
+	if rebuildAt[spellID] == readyAt then
+		return
+	end
+	rebuildAt[spellID] = readyAt
+	C_Timer.After(math.max(readyAt - GetTime(), 0) + 0.1, function()
+		if rebuildAt[spellID] == readyAt then
+			rebuildAt[spellID] = nil
+			ns.RequestUpdate()
+		end
+	end)
+end
+
+--[[
+    True when a racial a macro casts in place of eating or drinking
+    (Cannibalize, Rapid Regeneration) is off cooldown. While it is on one, a
+    rebuild is timed for the moment it comes off, which is when the body
+    should gain the cast again. A hidden reading, asked of C_Secrets before
+    the read, counts as on cooldown: the usual body is always safe.
+]]
+function ns.RacialSpellReady(spellID)
+	if ns.IsSpellCooldownSecret(spellID) then
+		return false
+	end
+	local cooldown = C_Spell.GetSpellCooldown(spellID)
+	if not cooldown then
+		return true
+	end
+	local startTime, duration = cooldown.startTime, cooldown.duration
+	-- A global-cooldown reading counts as on cooldown, which only times the line for when the GCD ends: ready within one GCD is close enough.
+	if not duration or duration <= 0 then
+		return true
+	end
+	local readyAt = startTime + duration
+	if readyAt <= GetTime() then
+		return true
+	end
+	RebuildWhenReady(spellID, readyAt)
+	return false
+end

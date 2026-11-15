@@ -337,7 +337,7 @@ local REMOVE_ICON_SIZE = 16
 local ROW_INSET = 8
 
 local ICON_SIZE = 16
-local ICON_TEXT_GAP = 4
+local ICON_TEXT_GAP = 8
 local NAME_INSET = ROW_INSET + ICON_SIZE + ICON_TEXT_GAP
 local NAME_COLUMN_GAP = 8 -- name to the Keep box
 

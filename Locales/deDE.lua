@@ -51,9 +51,9 @@ L["MACRO_WATER"] = "- Wasser"
 
 -- Joins the items of any list the add-on shows, such as a Readiness Report clause or the characters on a Restock List.
 L["LIST_SEPARATOR"] = ", "
--- Joins two names in a sentence ("Katz and Aero").
+-- Joins two names or spells in a sentence, such as a buff ask or a level-up line ("Katz and Aero").
 L["LIST_PAIR_FORMAT"] = "%s und %s"
--- Joins the last name to the ones before it, already joined with LIST_SEPARATOR ("Katz, Aero, and Spek").
+-- Joins the last one to the ones before it, already joined with LIST_SEPARATOR ("Katz, Aero, and Spek").
 L["LIST_LAST_FORMAT"] = "%s und %s"
 -- A name with a detail after it: a Spellbook note and its settings ("Target (Mouseover, Self)"), or a pet and its owner.
 L["NAME_WITH_DETAIL_FORMAT"] = "%s (%s)"
@@ -203,7 +203,7 @@ L["TIP_EMPTY_CONJURE"] = "Kein %s in deinen Taschen. Rechtsklicke auf %s, um meh
 L["TIP_EMPTY_CREATE"] = "Kein %s in deinen Taschen. Rechtsklicke auf %s, um einen herzustellen."
 
 --------------------------------------------------------------------------------
--- Minimap Tooltip
+-- Mini-map Menu
 --------------------------------------------------------------------------------
 
 --[[
@@ -215,9 +215,9 @@ L["FEATURE_BUFF_FOOD"] = "Buff-Essen"
 L["FEATURE_SCROLL_BUFFS"] = "Schriftrollen-Buffs"
 
 --[[
-    The mini-map tooltip's two switches, each a block with a description line.
-    Buff Food and Scroll Buffs share one block and one click, which turns both
-    on or off together. Buff Duty's block takes its title and description
+    The mini-map menu's Buff Food & Scrolls block: its title and description
+    line. Buff Food and Scroll Buffs share one block and one click, which turns
+    both on or off together. Buff Duty's block takes its title and description
     from TAB_BUFF_DUTY and BUFF_DUTY_DESCRIPTION.
 ]]
 L["MINIMAP_BUFF_FOOD_SCROLLS"] = "Buff-Essen und Schriftrollen"
@@ -225,82 +225,69 @@ L["MINIMAP_BUFF_FOOD_SCROLLS_DESCRIPTION_FORMAT"] =
 	'Verwendet Essen mit "%s" und wendet fehlende Schriftrollen-Buffs an, bevor du isst.'
 
 --[[
-    Item titles in the mini-map tooltip. A title sits alone on its row and its
-    item is right-aligned on the row beneath, so neither has to stay short;
-    with nothing to show, MESSAGE_NO_ITEM takes the item's row. Current Pet
-    Food opens the Hunter's class block, and the two poison titles open the
-    Rogue's.
+    The heading over the food the Food macro eats, at the top of the mini-map
+    menu, with the item on the row beneath; with nothing to show,
+    MESSAGE_NO_ITEM takes the item's row.
 ]]
 L["MINIMAP_BEST_FOOD"] = "Aktuelles Essen"
-L["MINIMAP_BEST_PET_FOOD"] = "Aktuelles Tierfutter"
-L["MINIMAP_MAIN_HAND_POISON"] = "Waffenhand-Gift"
-L["MINIMAP_OFF_HAND_POISON"] = "Schildhand-Gift"
 
--- The Ignore List block. The count stands in for a list too long to show, so it is never one and needs no singular.
+-- The Ignore List block: its heading, the row that ignores the current food, and the row that clears the list.
 L["MINIMAP_IGNORE_LIST"] = "Ignorierliste"
-L["MINIMAP_IGNORE_COUNT"] = "%d Gegenstände"
 L["MENU_IGNORE"] = "Ignorieren"
 L["MENU_CLEAR_IGNORE"] = "Ignorierliste leeren"
 
 --[[
-    Restocker Report block in the mini-map tooltip. While the outstanding
-    restocking orders are few enough to fit, it lists them under the header,
-    one item per row; past that it shows only how many there are, beside the
-    header. An order is one Restock List row with Buy switched on that is still
-    short in your bags, so the count is of rows and not of missing units -- nine
-    outstanding orders can be nine single juices or nine full stacks. The header
-    beside it supplies the "restocking", so the count only needs the noun.
-
-    The count only ever stands in for a list too long to show, so it is never
-    one and needs no singular.
-
-    The count sits in the tooltip's right column, beside the header, so it has
-    to stay short enough to read as a value rather than a sentence. The
-    all-stocked case has no header and no count: STOCKED replaces the whole
-    row, on a wrapping line of its own, so it can be a full sentence. EMPTY is
-    the line under the header when the list holds nothing at all, which is not
-    the same as being stocked.
+    The orders inside the mini-map menu's Restocker block, while it's on: one
+    item per row, up to eight, then MENU_MORE. An order is one Restock List row
+    with Buy switched on that is still short in your bags.
 
     ITEM_COUNT is the right-hand value of a listed row: { have, wanted }, the
     ratio RESTOCKER_REMINDER_ITEM prints. Wordless, so there is nothing to
     translate, but a key anyway for the same reason that one is.
+
+    STOCKED takes the place of the rows, in green, when nothing at all is
+    short, on a wrapping line of its own, so it can be a full sentence. EMPTY
+    is the line when the list holds nothing at all, which is not the same as
+    being stocked, and NOTHING_LOW the line when rows are short but none is
+    under the Low Means Under threshold.
 ]]
-L["MINIMAP_RESTOCKER_REPORT"] = "Restocker-Bericht"
-L["MINIMAP_RESTOCKER_NEEDED"] = "%d offene Posten"
 L["MINIMAP_RESTOCKER_ITEM_COUNT"] = "%d/%d"
 L["MINIMAP_RESTOCKER_STOCKED"] = "Glückwunsch, deine Vorräte sind vollständig aufgefüllt!"
 L["MINIMAP_RESTOCKER_EMPTY"] = "Deine Liste ist leer."
+L["MINIMAP_RESTOCKER_NOTHING_LOW"] = "Nichts ist knapp oder aufgebraucht."
 
 --[[
-    The Restock List block, above the class notes: its title, a line saying
-    what the list is for, and its click, which sits beside MINIMAP_OPEN. "Your
-    list" in the description and in MINIMAP_RESTOCKER_EMPTY is this list. The
-    Options entry is always the tooltip's last block and has no action label.
+    The Restock List window's name, and the mini-map menu's Restocker block:
+    a line saying what the list is for, and the click its Open row names.
+    "Your list" in the description and in MINIMAP_RESTOCKER_EMPTY is this
+    list. The Options row is always the menu's last, its click on its right.
 ]]
 L["MENU_RESTOCKER"] = "Nachschubliste"
 L["MENU_RESTOCKER_DESCRIPTION"] = "Kauft die Gegenstände auf deiner Liste und lagert sie in der Bank."
-L["MENU_RESTOCKER_KEYBIND"] = "Shift + Rechtsklick"
+L["MENU_CLICK_SHIFT_RIGHT"] = "Shift + Rechtsklick"
 L["MENU_OPTIONS"] = "GtG-Optionen"
-L["MENU_OPTIONS_KEYBIND"] = "Shift + Mittelklick"
+L["MENU_CLICK_SHIFT_MIDDLE"] = "Shift + Mittelklick"
 
 --------------------------------------------------------------------------------
 -- Class Notes
 --------------------------------------------------------------------------------
 
 --[[
-    The class block of the mini-map tooltip: a class-colored header, which is
-    the client's name for the player's class and has no key here, the items
-    the class's own macro will use (a Hunter's pet food, a Rogue's two poisons,
-    titled in the Minimap Tooltip section above), then one group per macro.
+    The mini-map menu's [Class] Macros flyout, and one macro's worth under a
+    consumable macro's tooltip on the Spellbook page. MENU_CLASS_MACROS, with
+    the UI Labels, titles the flyout with the client's name for the player's
+    class. The items the class's own macros will use (a Hunter's pet food, a
+    Rogue's two poisons) list under that title in the menu, each beside the
+    client's slot name or LABEL_PET_FOOD.
 ]]
 
 --[[
-    A group is the macro's name, then one row per click: the click on the left
-    and what it does on the right. The right-hand column never wraps, so each
-    result stays a few words. A spell the row casts is named by the client
-    (Mend Pet, Ritual of Refreshment, Ritual of Souls) and has no key here, and
-    a plain click reuses MINIMAP_LEFT_CLICK, MINIMAP_RIGHT_CLICK or
-    MINIMAP_MIDDLE_CLICK.
+    A group is the macro's name, then one row per click: in the menu's flyout,
+    what it does on the left and the click on the right; under a Spellbook
+    tooltip, the other way round. Neither side wraps, so each stays a few
+    words. A spell the row casts is named by the client (Mend Pet, Ritual of
+    Refreshment, Ritual of Souls) and has no key here, and a plain click
+    reuses MENU_CLICK_LEFT, MENU_CLICK_RIGHT or MENU_CLICK_MIDDLE.
 ]]
 L["NOTE_MACRO_FEED_PET"] = "Tier-füttern-Makro"
 L["NOTE_MACRO_FOOD_WATER"] = "Essen- und Wasser-Makros"
@@ -320,7 +307,8 @@ L["NOTE_PET_DISMISS"] = "Freigeben"
 --[[
     Mage and Warlock. The verb tracks the real spell names, which differ by
     class: mages Conjure, warlocks Create. A second Right-Click makes the next
-    rank down, since the bags hold one of each rank.
+    rank down (NOTE_CONJURE_LOWER_RANK, NOTE_CREATE_LOWER_RANK), since the bags
+    hold one of each rank.
 
     Target downranking is per-macro, not block-wide: it applies only to the
     mage's Food and Water and the warlock's Healthstone, so each line closes
@@ -329,7 +317,8 @@ L["NOTE_PET_DISMISS"] = "Freigeben"
 L["NOTE_CONJURE"] = "Herbeizaubern"
 L["NOTE_CREATE"] = "Herstellen"
 L["NOTE_RIGHT_CLICK_AGAIN"] = "Erneuter Rechtsklick"
-L["NOTE_LOWER_RANK_BACKUP"] = "Ersatz niedrigeren Ranges"
+L["NOTE_CONJURE_LOWER_RANK"] = "Niedrigeren Rang herbeizaubern"
+L["NOTE_CREATE_LOWER_RANK"] = "Niedrigeren Rang herstellen"
 L["NOTE_MAGE_TARGET_LEVEL"] =
 	"Visiere einen Spieler niedrigerer Stufe an, um Essen oder Wasser für dessen Stufe herbeizuzaubern."
 L["NOTE_WARLOCK_TARGET_LEVEL"] =
@@ -345,7 +334,7 @@ L["NOTE_POISONS_REPLACED"] = "Ersetzt alte Gifte automatisch."
 
 --[[
     One label per macro type, dropped as-is into MESSAGE_NO_ITEM ("No suitable
-    %s found...") from GtGNoItem and the mini-map tooltip. LABEL_WATER
+    %s found...") from GtGNoItem and the mini-map menu. LABEL_WATER
     is also the staples pop-up's Water checkbox.
 ]]
 
@@ -365,16 +354,40 @@ L["LABEL_WATER"] = "Wasser"
 -- UI Labels
 --------------------------------------------------------------------------------
 
--- Generic labels used in the mini-map tooltip.
+-- Generic labels used in the mini-map menu: the Toggle and Open rows, and the button clicks rows name on their right.
 
-L["MINIMAP_ENABLED"] = "Aktiviert"
-L["MINIMAP_DISABLED"] = "Deaktiviert"
-L["MINIMAP_TOGGLE"] = "Umschalten"
-L["MINIMAP_OPEN"] = "Öffnen"
-L["MINIMAP_LEFT_CLICK"] = "Linksklick"
-L["MINIMAP_RIGHT_CLICK"] = "Rechtsklick"
-L["MINIMAP_MIDDLE_CLICK"] = "Mittelklick"
-L["MINIMAP_SHIFT_LEFT"] = "Shift + Linksklick"
+L["MENU_TOGGLE"] = "Umschalten"
+L["MENU_OPEN"] = "Öffnen"
+L["MENU_CLICK_LEFT"] = "Linksklick"
+L["MENU_CLICK_RIGHT"] = "Rechtsklick"
+L["MENU_CLICK_MIDDLE"] = "Mittelklick"
+L["MENU_CLICK_SHIFT_LEFT"] = "Shift + Linksklick"
+
+--[[
+    The words on the right of a block's title: On, Off, or Paused for Buff
+    Food & Scrolls while it waits on its When to Use, and WAITING_FOR, the
+    note under it saying what it waits for (a level label, or the ticked
+    group contexts joined with LIST_SEPARATOR).
+]]
+L["MENU_ON"] = "An"
+L["MENU_OFF"] = "Aus"
+L["MENU_PAUSED"] = "Pausiert"
+L["MENU_WAITING_FOR"] = "Wartet auf: %s"
+
+-- The note after a list cut short at eight rows: %d is how many more there are, so it is never one.
+L["MENU_MORE"] = "%d weitere"
+
+--[[
+    More Features, the row that opens the flyout of every feature without a
+    block of its own, and its right side: how many of those are on and off,
+    side by side ("4 On, 3 Off"), so the On count can take its own color.
+]]
+L["MENU_MORE_FEATURES"] = "Weitere Funktionen"
+L["MENU_FEATURE_COUNT_ON"] = "%d an"
+L["MENU_FEATURE_COUNT_OFF"] = "%d aus"
+
+-- The row opening the class's macro notes, in the class color. %s is the client's name for the player's class.
+L["MENU_CLASS_MACROS"] = "%s-Makros"
 
 --------------------------------------------------------------------------------
 -- Group Contexts
@@ -385,7 +398,7 @@ L["MINIMAP_SHIFT_LEFT"] = "Shift + Linksklick"
     them, always in this order. Each description is the checkbox's hover text,
     saying when that context holds: a battleground or arena is always
     Battleground, even though its group is a raid. GROUP_CONTEXT_NEVER is the
-    mini-map tooltip's label for a feature on with none of them ticked.
+    mini-map menu's label for a feature on with none of them ticked.
 ]]
 L["GROUP_CONTEXT_SOLO"] = "Solo"
 L["GROUP_CONTEXT_SOLO_DESCRIPTION"] = "Während du in keiner Gruppe und keinem Schlachtzug bist."
@@ -414,11 +427,11 @@ L["GROUP_CONTEXT_NEVER"] = "Nie"
     Leveling means below the client's max level. OPTIONS_GROUPS_NONE shows in
     red under the checkboxes while none is ticked.
 
-    In the mini-map tooltip, the Buff Food & Scrolls block, while a switch is
-    on but its When to Use doesn't hold, shows the level label holding it back
-    in place of MINIMAP_ENABLED, so every level label has to read as a state
-    too. When the checkboxes hold it back, it lists the ticked contexts'
-    labels instead, or GROUP_CONTEXT_NEVER with none.
+    In the mini-map menu, the Buff Food & Scrolls block, while a switch is on
+    but its When to Use doesn't hold, reads Paused with a note naming the level
+    label holding it back (MENU_WAITING_FOR), so every level label has to read
+    after "Waiting for:" too. When the checkboxes hold it back, the note lists
+    the ticked contexts' labels instead, or GROUP_CONTEXT_NEVER with none.
 ]]
 L["OPTIONS_MODE_DESCRIPTION"] =
 	'Legt fest, auf welchen Stufen dein Essen-Makro "%s" anbietet: auf jeder Stufe, nur beim Leveln oder nur auf Höchststufe. Die Kästchen darunter legen fest, in welchen Gruppen.'
@@ -457,14 +470,14 @@ L["INVENTORY_REPORT_TOTAL"] = "Gesamt %s"
 --------------------------------------------------------------------------------
 
 L["OPTIONS_DESCRIPTION"] =
-	"Sich selbst aktualisierende Makros für dein bestes Essen, Wasser, Tränke und Gesundheitssteine, eine Nachschubliste, die Reagenzien und Munition automatisch kauft und einlagert, fehlende Buffs per Klick und Mouseover-Makros für jeden Zauber."
+	"Sich selbst aktualisierende Makros für dein bestes Essen, Wasser, Tränke und Gesundheitssteine, eine Nachschubliste, die Reagenzien und Munition automatisch kauft und einlagert, fehlende Buffs per Klick, Hinweise auf niedrige Zauberränge und Mouseover-Makros für jeden Zauber."
 
 -- Enhanced Spellbook: its tree label, its panel's description, and the print when it's off.
 L["TAB_ENHANCED_SPELLBOOK"] = "Erweitertes Zauberbuch"
 L["OPTIONS_SPELLBOOK_DESCRIPTION"] =
 	"Mouseover-, Cursor- und Selbstzauber-Makros für jeden Klassenzauber, mit einem Klick in einem neuen Zauberbuch-Reiter erstellt, ganz ohne Makrosyntax. Sie bleiben aktuell, wenn du aufsteigst, trainierst oder die Skillung wechselst. Per Rechtsklick kommen Fokus, Zaubern abbrechen, automatischer Angriff, Begleiterangriff oder Schmuckstücke dazu."
 L["SPELLBOOK_IS_OFF"] =
-	"Das Erweiterte Zauberbuch ist aus. Schalte es unter Optionen > AddOns > Good to Go > Erweitertes Zauberbuch ein."
+	"Erweitertes Zauberbuch ist aus. Schalte es unter Optionen > AddOns > Good to Go > Erweitertes Zauberbuch ein."
 
 -- Welcome Message
 L["OPTIONS_WELCOME_MESSAGE"] = "Willkommensnachricht aktivieren"
@@ -514,6 +527,30 @@ L["OPTIONS_RESTOCKER_ENABLE"] = "Restocker aktivieren"
 
 -- The label before a panel's Example line, which shows a chat print as it will arrive.
 L["SAMPLE_EXAMPLE"] = "Beispiel: %s"
+
+-- A Reset row's button, which puts the settings it sits under back to their defaults.
+L["OPTIONS_RESET"] = "Zurücksetzen"
+L["OPTIONS_FEATURE_OFF_STATUS"] =
+	"Die Funktion %s ist aus, daher werden diese Einstellungen nicht verwendet. Ihr Schalter ist auf der Seite %s."
+
+--[[
+    The whisper composer around every whisper a player words themselves, on the Buff Duty and Rank Watch
+    panels: the language they go out in, the caption and Reset button beside each box, the tooltip on the
+    marker and the "// GtG" either side of it, the line shown when a whisper is too long, and the test button.
+    The whispers' default text lives in Data/Message-Languages.lua, not here.
+]]
+L["SEND_MESSAGES_IN"] = "Nachrichten senden auf"
+L["SEND_MESSAGES_IN_DESCRIPTION"] =
+	"Legt fest, in welcher Sprache Good to Go anderen Spielern flüstert. Wählst du eine andere Sprache, wird deren Standardtext eingesetzt, außer du hast einen eigenen geschrieben."
+L["WHISPER_TEXT"] = "Flüsternachricht"
+L["WHISPER_TEXT_RESET"] = "Zurücksetzen"
+L["WHISPER_TEXT_RESET_DESCRIPTION"] =
+	"Setzt diese Flüsternachricht auf den Standardtext in deiner Sendesprache zurück."
+L["WHISPER_SIGN_OFF_DESCRIPTION"] =
+	"Wird an jede Flüsternachricht von Good to Go angehängt, damit andere Spieler erkennen, dass sie von einem Add-on kommt."
+L["WHISPER_TOO_LONG"] = "Zu lang, daher wird stattdessen der Standardtext gesendet."
+L["WHISPER_TEST"] = "Test an mich senden"
+L["WHISPER_TEST_DESCRIPTION"] = "Flüstert dir das Beispiel, damit du es genau so siehst wie andere Spieler."
 
 --[[
     /Commands. Both halves of each line are locale keys: the literal, which
@@ -595,7 +632,7 @@ L["OPTIONS_FOOD_WATER_DESCRIPTION"] =
 
 --[[
     Buff Food, the first option under Food & Water. Its hover text carries the
-    arena exception, which the mini-map tooltip's shared Buff Food & Scrolls
+    arena exception, which the mini-map menu's shared Buff Food & Scrolls
     line has no room for.
 ]]
 L["OPTIONS_BUFF_FOOD"] = "Buff-Essen bevorzugen"
@@ -765,8 +802,8 @@ L["OPTIONS_RAPID_REGENERATION_EATING_DESCRIPTION"] =
     translated and has no key here. The rows are items, so the copy here is
     the panel description, the scope and promote labels, the add box, Remove,
     the empty-list line, and LOADING_ITEM, the placeholder shown while the
-    client is still resolving an item's name (the mini-map tooltip, the Macros
-    panel, and the staples pop-up use it too). The mini-map tooltip's section
+    client is still resolving an item's name (the mini-map menu, the Macros
+    panel, and the staples pop-up use it too). The mini-map menu's section
     keeps its own MINIMAP_IGNORE_LIST and MENU_CLEAR_IGNORE keys.
 ]]
 L["TAB_IGNORE_LIST"] = "Ignorierliste"
@@ -808,14 +845,19 @@ L["OPTIONS_RESTOCKER_OPEN_MERCHANT_DESCRIPTION"] = "Öffnet deine Nachschubliste
 L["OPTIONS_RESTOCKER_REMINDERS_HEADER"] = "Erinnerungen"
 L["OPTIONS_RESTOCKER_REMINDERS_DESCRIPTION"] =
 	"Wähle, wann du einen Hinweis bekommst, dass auf deiner Nachschubliste etwas knapp wird."
+-- Low Means Under, the dropdown above the three reminders: the share of a row's amount below which they call it low. Its values are percentages, written the same in every locale.
+L["OPTIONS_RESTOCKER_LOW_THRESHOLD"] = "Knapp heißt unter"
+L["OPTIONS_RESTOCKER_LOW_THRESHOLD_DESCRIPTION"] =
+	"Ein Gegenstand gilt als knapp, wenn du weniger als diesen Anteil der Menge auf deiner Nachschubliste hast, und als aufgebraucht, wenn du keinen mehr hast. Darüber wird er nicht erwähnt."
 L["OPTIONS_RESTOCKER_REMIND"] = "Nachschub-Erinnerungen in der Stadt aktivieren"
 L["OPTIONS_RESTOCKER_REMIND_DESCRIPTION"] =
-	"Gibt eine Chat-Erinnerung aus, wenn deiner Nachschubliste etwas fehlt und du ein Gasthaus oder eine Stadt erreichst oder dich beim Anmelden bereits dort befindest."
+	"Gibt eine Chat-Erinnerung aus, wenn etwas auf deiner Nachschubliste knapp oder aufgebraucht ist und du ein Gasthaus oder eine Stadt erreichst oder dich beim Anmelden bereits dort befindest."
 L["OPTIONS_RESTOCKER_MERCHANT_REMIND"] = "Nachschub-Erinnerungen beim Händler aktivieren"
 L["OPTIONS_RESTOCKER_MERCHANT_REMIND_DESCRIPTION"] =
-	"Meldet alle offenen Nachschubposten, wenn du ein Händlerfenster schließt."
+	"Meldet, was noch knapp oder aufgebraucht ist, wenn du ein Händlerfenster schließt."
 L["OPTIONS_RESTOCKER_BANK_REMIND"] = "Nachschub-Erinnerungen bei der Bank aktivieren"
-L["OPTIONS_RESTOCKER_BANK_REMIND_DESCRIPTION"] = "Meldet alle offenen Nachschubposten, wenn du die Bank schließt."
+L["OPTIONS_RESTOCKER_BANK_REMIND_DESCRIPTION"] =
+	"Meldet, was noch knapp oder aufgebraucht ist, wenn du die Bank schließt."
 
 --[[
     The Gold Reserve: the floor the merchant restock never spends below. The
@@ -833,13 +875,13 @@ L["OPTIONS_RESTOCKER_GOLD_RESERVE_AMOUNT_DESCRIPTION"] = "Legt fest, wie viel Go
 
 --[[
     How much each reminder says. Simple is the headline alone; Verbose adds a
-    line per item, showing how many you have against how many you want.
+    line per item it counted (out, then low), showing how many you have against how many you want.
 
     One word each, deliberately: they sit in the dropdown beside each reminder,
     which has no caption, and read there as how much it says.
 ]]
 L["OPTIONS_RESTOCKER_REMIND_MODE_DESCRIPTION"] =
-	"Legt fest, ob die Erinnerung nur eine Zeile umfasst oder für jeden fehlenden Gegenstand eine Zeile hinzufügt."
+	"Legt fest, ob die Erinnerung nur eine Zeile umfasst oder für jeden knappen oder aufgebrauchten Gegenstand eine Zeile hinzufügt."
 L["OPTIONS_RESTOCKER_REMIND_MODE_CAPTION"] = "Wie ausführlich"
 L["OPTIONS_RESTOCKER_MODE_SIMPLE"] = "Einfach"
 L["OPTIONS_RESTOCKER_MODE_VERBOSE"] = "Ausführlich"
@@ -847,7 +889,7 @@ L["OPTIONS_RESTOCKER_MODE_VERBOSE"] = "Ausführlich"
 L["OPTIONS_RESTOCKER_REMIND_SOUND"] = "Ton abspielen"
 L["OPTIONS_RESTOCKER_REMIND_SOUND_DESCRIPTION"] =
 	"Spielt zusätzlich zur Erinnerung einen Hinweiston ab, falls im Chat gerade viel los ist."
-L["OPTIONS_RESTOCKER_SOUND_PREVIEW"] = "Klicke, um den Hinweiston zu hören."
+L["OPTIONS_SOUND_PREVIEW_DESCRIPTION"] = "Klicke, um den Hinweiston zu hören."
 
 L["OPTIONS_RESTOCKER_WINDOW_HEADER"] = "Fenster der Nachschubliste"
 L["OPTIONS_RESTOCKER_WINDOW_DESCRIPTION"] = "Wähle, wann sich deine Nachschubliste von selbst öffnet."
@@ -981,9 +1023,10 @@ L["OPTIONS_READINESS_NONCOMBAT_GEAR_DESCRIPTION"] =
 --------------------------------------------------------------------------------
 
 --[[
-    Rank Watch tells a group member who cast a spell at a lower rank than they could have. Its messages are
-    fixed, one whisper and one print, with nothing for the player to edit. Rank Sentinel is the standalone
-    add-on Rank Watch replaces; its name stays as written in every locale.
+    Rank Watch tells a group member who cast a spell at a lower rank than they could have. Its whispers are the
+    player's to word on the Rank Watch panel, with their default text in Data/Message-Languages.lua; its prints
+    are fixed. Rank Sentinel is the standalone add-on Rank Watch replaces; its name stays as written in every
+    locale.
 ]]
 L["TAB_RANK_WATCH"] = "Rangwache"
 L["OPTIONS_RANK_WATCH_DESCRIPTION"] =
@@ -1000,34 +1043,9 @@ L["RANK_WATCH_SPELL_RANK"] = "%s (%s)"
 -- A rank's number, where the client hasn't loaded the spell's own rank text yet.
 L["RANK_WATCH_RANK"] = "Rang %d"
 
---[[
-    The whisper to the caster. { the spell and rank they cast, the level a higher rank is learned at } Sent
-    after the marker and before " // GtG", so "Good to Go" runs straight into the sign-off: "...and you'll be
-    Good to Go // GtG". Casual on purpose; a stranger's whisper should read as a tip, not a correction.
-]]
-L["RANK_WATCH_MESSAGE_WHISPER"] =
-	"Nur als Info, nichts Wildes, aber du hast %s benutzt. Ab Stufe %d gibt es einen neueren Rang. Aktualisiere deine Aktionsleisten oder besuch deinen Lehrer, und du bist Good to Go."
---[[
-    The whisper to a pet's owner, the same shape with the pet first. { the pet, the spell and rank it cast, the
-    level a higher rank comes at } A hunter pet is named ("your pet Fluffy") and its level is its own; a demon is
-    named by its kind ("your Imp"), and its level is the warlock's, which a grimoire asks for.
-]]
-L["RANK_WATCH_MESSAGE_WHISPER_PET"] =
-	"Nur als Info, nichts Wildes, aber dein Begleiter %s hat %s benutzt. Ab Begleiterstufe %d gibt es einen neueren Rang. Bring ihm den neuen Rang mit Wildtierausbildung bei, und du bist Good to Go."
-L["RANK_WATCH_MESSAGE_WHISPER_DEMON"] =
-	"Nur als Info, nichts Wildes, aber dein Dämon %s hat %s benutzt. Ab Stufe %d gibt es einen neueren Rang. Hol dir das passende Grimoire bei einem Dämonenausbilder, und du bist Good to Go."
---[[
-    Sent once per player, right after the first whisper they ever get from you, so a stranger's tip comes with a
-    way to make it stop. Signed off like the whisper above it. %s is their opt-out number, made from their name,
-    so it is the same from everyone running Good to Go.
-]]
-L["RANK_WATCH_MESSAGE_OPT_OUT"] =
-	"Lieber keine solchen Tipps? Antworte mit %s, dann flüstere ich dich nicht mehr wegen Zauberrängen an. Deine Nummer gilt bei jedem mit Good to Go."
--- Sent back once to a player who whispered their opt-out number.
-L["RANK_WATCH_MESSAGE_OPT_OUT_DONE"] = "Alles klar, von mir kommen keine Rang-Tipps mehr."
--- Printed when a player says their opt-out number. %s is their name.
+-- Printed when a group member whispers "Opt Out". %s is their name.
 L["RANK_WATCH_OPT_OUT_ADDED"] =
-	"%s hat die eigene Abmeldenummer geschickt, daher ignoriert Rangwache diesen Spieler jetzt. Unter Rangwache > Ignorierte Spieler lässt sich das rückgängig machen."
+	'%s hat dir "Opt Out" geflüstert, daher ignoriert Rangwache diesen Spieler jetzt. Unter Rangwache > Ignorierte Spieler lässt sich das rückgängig machen.'
 -- Printed when you cast a low rank yourself. { the spell and rank, the higher spell and rank, its level }
 L["RANK_WATCH_PRINT_SELF"] =
 	"Du hast %s gewirkt, und %s ist ab Stufe %d verfügbar. Besuche deinen Lehrer oder aktualisiere deine Aktionsleisten."
@@ -1055,6 +1073,25 @@ L["RANK_WATCH_MESSAGES_DESCRIPTION"] =
 L["RANK_WATCH_WHISPER"] = "Gruppenmitglieder anflüstern"
 L["RANK_WATCH_WHISPER_DESCRIPTION"] =
 	"Flüstert ein Gruppenmitglied an, das einen niedrigen Rang gewirkt hat. Nutzen mehrere Spieler in deiner Gruppe Rangwache oder Rank Sentinel, flüstert nur einer von ihnen."
+--[[
+    The tip's whisper composer, under the whisper toggle: one box for the caster's own low rank, one for a
+    hunter's pet, one for a warlock's demon.
+    TRANSLATORS: keep {spell}, {level} and {pet} exactly as written; they are the tokens players type into the
+    whisper. In the TOKENS lines each %s is a token, in the order shown, drawn in blue.
+]]
+L["RANK_WATCH_TIP_MESSAGE_DESCRIPTION"] =
+	"Legt fest, was Good to Go einem Gruppenmitglied flüstert, das einen niedrigen Rang gewirkt hat. {spell} wird zum gewirkten Zauber samt Rang, {level} zur Stufe, ab der es einen neueren Rang gibt. Leer lassen, um nichts zu flüstern."
+L["RANK_WATCH_TIP_TOKENS"] = "Platzhalter: %s der gewirkte Zauber samt Rang, %s die Stufe des neueren Rangs"
+L["RANK_WATCH_TIP_PET_MESSAGE"] = "Begleiter-Flüstern"
+L["RANK_WATCH_TIP_PET_MESSAGE_DESCRIPTION"] =
+	"Legt fest, was Good to Go einem Jäger flüstert, dessen Begleiter einen niedrigen Rang gewirkt hat. {pet} wird zum Namen des Begleiters, {spell} zum gewirkten Zauber samt Rang und {level} zur Begleiterstufe, ab der es einen neueren Rang gibt. Leer lassen, um nichts zu flüstern."
+L["RANK_WATCH_TIP_PET_TOKENS"] =
+	"Platzhalter: %s der Name des Begleiters, %s der Zauber samt Rang, %s die Begleiterstufe des neueren Rangs"
+L["RANK_WATCH_TIP_DEMON_MESSAGE"] = "Dämonen-Flüstern"
+L["RANK_WATCH_TIP_DEMON_MESSAGE_DESCRIPTION"] =
+	"Legt fest, was Good to Go einem Hexenmeister flüstert, dessen Dämon einen niedrigen Rang gewirkt hat. {pet} wird zur Dämonenart, etwa Wichtel, {spell} zum gewirkten Zauber samt Rang und {level} zur Stufe, ab der es einen neueren Rang gibt. Leer lassen, um nichts zu flüstern."
+L["RANK_WATCH_TIP_DEMON_TOKENS"] =
+	"Platzhalter: %s die Dämonenart, %s der Zauber samt Rang, %s die Stufe des neueren Rangs"
 L["RANK_WATCH_PRINT"] = "Niedrige Ränge der Gruppe ausgeben"
 L["RANK_WATCH_PRINT_DESCRIPTION"] =
 	"Gibt den niedrigen Rang eines Gruppenmitglieds in deinem Chat aus. Deine eigenen niedrigen Ränge werden immer ausgegeben."
@@ -1072,8 +1109,20 @@ L["RANK_WATCH_GRACE_LEVEL"] = "1 Stufe"
 L["RANK_WATCH_GRACE_LEVELS"] = "%d Stufen"
 
 L["RANK_WATCH_OPT_OUT_HEADER"] = "Abmeldung"
+--[[
+    The opt-out whispers' composer, in the Opt Out section: the offer sent with a player's second tip in a
+    session, and the reply to a group member who whispers "Opt Out" back.
+    TRANSLATORS: keep "Opt Out" in English; it is the words a player whispers back, and Good to Go listens for
+    exactly those.
+]]
+L["RANK_WATCH_OPT_OUT_MESSAGE"] = "Abmeldeangebot"
+L["RANK_WATCH_OPT_OUT_MESSAGE_DESCRIPTION"] =
+	'Legt fest, was Good to Go einem Spieler direkt nach seinem zweiten Rang-Tipp in einer Sitzung flüstert. Sag ihm, er soll mit "Opt Out" antworten. Leer lassen, um kein Angebot zu senden.'
+L["RANK_WATCH_OPT_OUT_DONE_MESSAGE"] = "Abmeldeantwort"
+L["RANK_WATCH_OPT_OUT_DONE_MESSAGE_DESCRIPTION"] =
+	'Legt fest, was Good to Go einem Gruppenmitglied zurückflüstert, das "Opt Out" flüstert. Leer lassen, um keine Antwort zu senden.'
 L["RANK_WATCH_OPT_OUT_DESCRIPTION"] =
-	"Wenn Rangwache jemanden zum ersten Mal anflüstert, schickt sie danach seine Abmeldenummer. Die Nummer ergibt sich aus seinem Namen und ist daher bei allen mit Good to Go dieselbe. Sagt er sie in einem Flüstern oder in einem Chat, den du sehen kannst, landet er unter Ignorierte Spieler und hört von dir nie wieder etwas über Ränge. Um selbst jemanden in Ruhe zu lassen, nimm ihn ins Ziel und gib /gtg ignore ein."
+	'Wenn Rangwache jemanden in einer Sitzung zum zweiten Mal anflüstert, erklärt sie danach, wie man sich abmeldet. Flüstert er dir "Opt Out", während er in deiner Gruppe ist, landet er unter Ignorierte Spieler, du antwortest mit einer Bestätigung, und er hört von dir nie wieder etwas über Ränge. Um selbst jemanden in Ruhe zu lassen, nimm ihn ins Ziel und gib /gtg ignore ein.'
 L["RANK_WATCH_WHISPERER_HEADER"] = "Wer für deine Gruppe meldet"
 L["RANK_WATCH_WHISPERER_DESCRIPTION"] =
 	"Nutzen mehrere Leute in deiner Gruppe Rangwache oder Rank Sentinel, schickt nur einer von ihnen die Flüsternachrichten, sodass ein Spieler, der einen niedrigen Rang wirkt, nur einmal davon hört statt von allen. Die anderen geben es nur in ihrem eigenen Chat aus. Hier siehst du, wer sie gerade schickt."
@@ -1114,7 +1163,7 @@ L["RANK_WATCH_IGNORE_COMMAND"] = "/gtg ignore Name"
 L["RANK_WATCH_IGNORE_COMMAND_DESCRIPTION"] =
 	"Rangwache meldet diesen Spieler nicht mehr. Ohne Namen wird dein Ziel ignoriert."
 
--- Tracked Abilities, under Rank Watch.
+-- Reported Ranks, under Rank Watch.
 L["RANK_WATCH_TRACKED_DESCRIPTION"] =
 	"Die Ränge, die Rangwache meldet, nach Klasse sortiert. Wähle einen niedrigen Rang ab, den du absichtlich nutzt, und Rangwache lässt ihn in Ruhe. Jede Fähigkeit ist aufgeführt. Die, die Rangwache standardmäßig nicht überwacht, etwa Heilungen, Talente und Versengen Rang 1, sind anfangs abgewählt. Der höchste Rang einer Fähigkeit ist ausgegraut, da nichts darüber liegt."
 -- A rank's checkbox. %s is the rank ("Rank 3"), %d the level it is learned at.
@@ -1124,7 +1173,9 @@ L["RANK_WATCH_TOP_RANK_DESCRIPTION"] = "Der höchste Rang. Darüber gibt es nich
 -- The tree entry after Hunter and Warlock listing their pets' and demons' abilities. %s is the class name.
 L["RANK_WATCH_PETS"] = "%s-Begleiter"
 L["RANK_WATCH_TRACK_ALL"] = "Alle anhaken"
+L["RANK_WATCH_TRACK_ALL_DESCRIPTION"] = "Meldet jeden Rang unterhalb des höchsten auf dieser Seite."
 L["RANK_WATCH_TRACK_NONE"] = "Alle abwählen"
+L["RANK_WATCH_TRACK_NONE_DESCRIPTION"] = "Meldet keinen Rang auf dieser Seite mehr."
 
 --------------------------------------------------------------------------------
 -- Restocker Window & Chat
@@ -1168,13 +1219,14 @@ L["RESTOCKER_STOPPED_ERROR"] = "Auffüllen wegen eines Fehlers gestoppt: %s"
 ]]
 L["RESTOCKER_REAGENTS_SKIPPED"] =
 	"Dieser Händler führt nicht alle Zutaten, die deine Gifte benötigen. Es wird keine davon gekauft."
--- Printed on reaching an inn or a city while the Restock List is short of something.
-L["RESTOCKER_TOWN_REMINDER"] = "Vergiss nicht, deine Vorräte aufzufüllen, solange du in der Stadt bist!"
+-- Printed on reaching an inn or a city while something on the Restock List is low or out. %s is the counts sentence (RESTOCKER_LOW_ONE and the rest, below).
+L["RESTOCKER_TOWN_REMINDER"] = "Denk daran, deine Vorräte aufzufüllen, solange du in der Stadt bist! %s"
 
 --[[
-    Headline for the merchant and bank reminders, which report on the way out
-    rather than nudging on arrival, so the count is the message. The in-town
-    reminder keeps its own line above.
+    The Restock window's status line (Restocker-Window-Footer.lua): every row
+    still short, whatever the reminders' Low Means Under threshold. The window
+    is the full picture; the reminders say only what is low or out, in the
+    counts sentence below.
 
     The count is of restocking orders -- Restock List rows with Buy switched on
     that are still short in your bags -- so it never says "items", and never
@@ -1193,6 +1245,32 @@ L["RESTOCKER_STILL_SHORT_ONE"] = "1 Nachschubposten offen."
 L["RESTOCKER_STILL_SHORT_MANY"] = "%d Nachschubposten offen."
 
 --[[
+    The counts sentence every reminder's headline is built on
+    (ns.RestockReminderCounts). OUT counts rows the bags hold none of; LOW
+    counts rows they hold some of but less than the Low Means Under share of
+    (restockLowThreshold). Rows at or above that line are never mentioned.
+    Out leads, so an empty slot is the first thing read.
+
+    The plain forms follow RESTOCKER_TOWN_REMINDER on arriving in town; the
+    STILL forms stand alone after closing a merchant or the bank, since you
+    have just shopped. When both counts are present only the out count takes
+    a noun, so OUT_AND_LOW_ONE is "out of 1 item" and the low %d needs none;
+    a locale whose grammar wants a noun on both can add one in its own words.
+]]
+L["RESTOCKER_LOW_ONE"] = "Bei 1 Gegenstand wird es knapp."
+L["RESTOCKER_LOW_MANY"] = "Bei %d Gegenständen wird es knapp."
+L["RESTOCKER_OUT_ONE"] = "1 Gegenstand ist aufgebraucht."
+L["RESTOCKER_OUT_MANY"] = "%d Gegenstände sind aufgebraucht."
+L["RESTOCKER_OUT_AND_LOW_ONE"] = "1 Gegenstand ist aufgebraucht, und bei %d wird es knapp."
+L["RESTOCKER_OUT_AND_LOW_MANY"] = "%d Gegenstände sind aufgebraucht, und bei %d wird es knapp."
+L["RESTOCKER_STILL_LOW_ONE"] = "Bei 1 Gegenstand ist es noch knapp."
+L["RESTOCKER_STILL_LOW_MANY"] = "Bei %d Gegenständen ist es noch knapp."
+L["RESTOCKER_STILL_OUT_ONE"] = "1 Gegenstand ist noch immer aufgebraucht."
+L["RESTOCKER_STILL_OUT_MANY"] = "%d Gegenstände sind noch immer aufgebraucht."
+L["RESTOCKER_STILL_OUT_AND_LOW_ONE"] = "1 Gegenstand ist noch immer aufgebraucht, und bei %d ist es knapp."
+L["RESTOCKER_STILL_OUT_AND_LOW_MANY"] = "%d Gegenstände sind noch immer aufgebraucht, und bei %d ist es knapp."
+
+--[[
     Level-up upgrades. The headline makes the Restock List the subject, so
     there is no item count to agree with and one string covers any number of
     swaps; the line under it is { old link, old amount, new link, new amount },
@@ -1206,7 +1284,8 @@ L["RESTOCKER_UPGRADED"] = "Deine Nachschubliste wurde aufgewertet."
 L["RESTOCKER_UPGRADED_ITEM"] = "%sx%d wird zu %sx%d."
 
 --[[
-    Verbose follow-up line, one per short item: { have, wanted, item link }.
+    Verbose follow-up line, one per item the headline counted, out first and
+    then low: { have, wanted, item link }.
     Shared by all three reminders. Wordless on purpose -- the headline above it
     supplies the context, so there is nothing here to translate. It stays a
     locale key anyway so a locale that needs a different order can reorder it
@@ -1224,7 +1303,7 @@ L["RESTOCKER_REMINDER_ITEM"] = "%d/%d %s"
     The claim has to be earned: PurchaseMerchantItem returns nothing, and the
     caller decides filled or partly filled once per order, after the last slot,
     from the units that order bought. What the vendor did not stock is
-    deliberately not mentioned here: the mini-map's Restocker Report owns the
+    deliberately not mentioned here: the mini-map menu's Restocker block owns the
     outstanding state, this line owns the event, and neither repeats the other.
 ]]
 L["RESTOCKER_RESTOCKED_ONE"] = "1 Nachschubposten erfüllt."
@@ -1291,7 +1370,7 @@ L["STARTER_POPUP_TITLE"] = "Grundvorräte"
 -- The button at the Staples window's footer end that closes it once you've picked.
 L["STARTER_POPUP_DONE"] = "Fertig"
 L["STARTER_POPUP_INTRO_LOGIN"] =
-	"Wir haben schon ein paar Grundvorräte für deine Klasse angehakt, damit du loslegen kannst."
+	"Wir haben ein paar Grundvorräte für deine Klasse auf deine Nachschubliste gesetzt. Entferne den Haken bei allem, was du nicht willst."
 L["STARTER_POPUP_INTRO_EMPTY"] =
 	"Deine Nachschubliste ist leer, also lass uns ein paar Gegenstände hinzufügen, damit du loslegen kannst."
 -- Shown instead when the window is opened over a list that already has items on it.
@@ -1534,8 +1613,8 @@ L["RESTOCKER_NO_MATCH_GROUP"] = "In dieser Kategorie ist nichts mehr übrig."
 --[[
     The status line under the list. The orders count itself is
     RESTOCKER_STILL_SHORT_ONE / _MANY above, and the all-stocked line is
-    MINIMAP_RESTOCKER_STOCKED, so the window, the reminders and the mini-map
-    tooltip say the same thing in the same words.
+    MINIMAP_RESTOCKER_STOCKED, so the window and the mini-map menu say the
+    same thing in the same words.
 
     NO_ORDERS is the in-between: nothing for a merchant to fill, but a row with
     Buy off is still short in the bags (its Keep number is yellow), so the
@@ -1629,6 +1708,9 @@ L["POPUP_REPLACED_RELOAD"] =
 	"Good to Go hat %s abgeschaltet, das es ersetzt. Jetzt neu laden, damit die alte Version nicht mehr läuft?"
 L["POPUP_REPLACED_RELOAD_ACCEPT"] = "Jetzt neu laden"
 L["POPUP_REPLACED_LATER"] = "Später"
+-- The Spellbook's confirm buttons, each naming what it does; the other button is the client's Cancel.
+L["POPUP_DELETE"] = "Löschen"
+L["POPUP_RESET"] = "Zurücksetzen"
 
 -- MIGRATION (remove after 2026-12-08): the import from the add-ons this one replaces.
 L["CHAT_LEGACY_IMPORTED"] = "Deine Einstellungen aus %s wurden kopiert."
@@ -1643,20 +1725,14 @@ L["POPUP_LEGACY_IMPORT_ACCEPT"] = "Übernehmen"
 L["POPUP_LEGACY_IMPORT_DECLINE"] = "Nein, danke"
 
 --------------------------------------------------------------------------------
--- Options: Tracked Abilities
+-- Options: Group Buffs and Reported Ranks
 --------------------------------------------------------------------------------
 
--- The two Tracked Abilities panels' titles, Buff Duty's then Rank Watch's, and the stand-in for an item or spell whose name the client hasn't loaded yet.
+-- The Group Buffs and Reported Ranks panels' titles, and the stand-in for an item or spell whose name the client hasn't loaded yet.
 L["BUFF_DUTY_TRACKED_HEADER"] = "Gruppenbuffs"
 L["RANK_WATCH_TRACKED_HEADER"] = "Gemeldete Ränge"
 L["TRACKED_ITEM_PENDING"] = "Gegenstand #%d"
 L["TRACKED_SPELL_PENDING"] = "Zauber #%d"
-
---------------------------------------------------------------------------------
--- Shared: Sound Preview
---------------------------------------------------------------------------------
-
-L["NOTIFICATIONS_SOUND_PREVIEW_DESCRIPTION"] = "Spielt den Ton ab, damit du ihn hören kannst, bevor du ihn aktivierst."
 
 --------------------------------------------------------------------------------
 -- Options: Buff Duty
@@ -1701,6 +1777,14 @@ L["BUFF_DUTY_TARGET_ENABLE_DESCRIPTION"] =
 L["BUFF_DUTY_ASK_OTHERS"] = "Andere Klassen um Buffs bitten"
 L["BUFF_DUTY_ASK_OTHERS_DESCRIPTION"] =
 	'Zeigt unter "Fehlende Gruppenbuffs" die Schlachtzugsbuffs, die deiner Gruppe fehlen, und wie viele jeweils einen brauchen. Linksklicke auf einen, um deine Gruppe darum zu bitten, oder rechtsklicke, um die Spieler anzuflüstern, die ihn wirken können.'
+--[[
+    The whispered ask's composer, under Ask Other Classes for Buffs.
+    TRANSLATORS: keep {names} and {spell} exactly as written; they are the tokens players type into the whisper.
+    In the TOKENS line each %s is a token, {names} then {spell}, drawn in blue.
+]]
+L["BUFF_DUTY_ASK_MESSAGE_DESCRIPTION"] =
+	"Legt fest, was Good to Go den Spielern flüstert, die einen fehlenden Buff wirken können, wenn du ihn unter Fehlende Gruppenbuffs rechtsklickst. {names} wird zu den Spielern, denen er fehlt, oder zu ihrer Anzahl, und {spell} zum Buff. Leer lassen, um nichts zu flüstern."
+L["BUFF_DUTY_ASK_TOKENS"] = "Platzhalter: %s die Spieler, denen er fehlt, oder ihre Anzahl, %s der Buff"
 L["BUFF_DUTY_REFRESH"] = "Auffrischen unter"
 L["BUFF_DUTY_REFRESH_DESCRIPTION"] =
 	"Legt fest, wie wenig Restzeit ein Buff haben darf, bevor er als fehlend gilt, damit du ihn auffrischen kannst, bevor er ausläuft. Ein Buff, der nicht länger als diese Zeit hält, zählt erst, wenn er abgelaufen ist."
@@ -1785,9 +1869,12 @@ L["BUFF_DUTY_TOOLTIP_USE"] = "Niemand in deiner Gruppe hat einen Seelenstein. We
 L["BUFF_DUTY_TOOLTIP_CREATE"] = "Niemand in deiner Gruppe hat einen Seelenstein. Stellt einen her."
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "Wirkt auf %s samt Gruppe."
 L["BUFF_DUTY_TOOLTIP_FAVOR"] = "Nimmt %s ins Ziel und wirkt."
--- A Party Buffs icon's tooltip, its click hints: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it.
+-- A Party Buffs icon's menu, its ask rows: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it: %s is one or two names (LIST_PAIR_FORMAT), or BUFF_DUTY_OTHERS_ASK_PEOPLE past two.
 L["BUFF_DUTY_OTHERS_HINT_ASK"] = "Buff anfragen (%s)"
-L["BUFF_DUTY_OTHERS_HINT_WHISPER"] = "Buffer direkt anflüstern"
+L["BUFF_DUTY_OTHERS_HINT_WHISPER"] = "%s anflüstern"
+-- A Party Buffs menu's name row, on the right: the whole minutes left on that player's buff, or Missing once there is none.
+L["BUFF_DUTY_OTHERS_MINUTES"] = "%d Min."
+L["BUFF_DUTY_OTHERS_MISSING"] = "Fehlt"
 --[[
     The ask either click sends, signed off like every sent message ({star} ... // GtG), so it
     ends as a statement, not a question. Up to five missing players are named (ONE for one,
@@ -1797,6 +1884,8 @@ L["BUFF_DUTY_OTHERS_HINT_WHISPER"] = "Buffer direkt anflüstern"
 L["BUFF_DUTY_OTHERS_ASK_ONE"] = "%s fehlt %s."
 L["BUFF_DUTY_OTHERS_ASK_NAMES"] = "%s fehlt %s."
 L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "%d Spielern fehlt der Buff %s."
+-- The whispered ask's {names} past five missing players, when the player has written their own whisper, and the Party Buffs menu's whisper row past two players. %d is how many.
+L["BUFF_DUTY_OTHERS_ASK_PEOPLE"] = "%d Spieler"
 --[[
     The window's close button: the class name, the class name again for its
     checkbox, the When to Show header, then the options command.
@@ -1804,19 +1893,19 @@ L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "%d Spielern fehlt der Buff %s."
 L["BUFF_DUTY_CLOSED"] =
 	"Buff-Dienst ist bis zum nächsten Einloggen oder Neuladen ausgeblendet. Um ihn sofort zurückzuholen, mache Shift + Linksklick auf den Minikarten-Button. Um ihn für die Klasse %s ausgeschaltet zu lassen, entferne den Haken bei %s unter %s in %s."
 
--- The Buff Button key: its name in the game's Key Bindings list and the root panel's Key Bindings section, then the notices a press shows.
-L["BUFF_KEY"] = "Buff-Knopf"
+-- The Cast Next Buff key: its name in the game's Key Bindings list and the root panel's Key Bindings section, then the notices a press shows.
+L["BUFF_KEY"] = "Nächsten Buff wirken"
 -- %s is a player's name.
 L["BUFF_KEY_WAITING"] = "Warte darauf, dass %s in Reichweite kommt."
 L["BUFF_KEY_DONE"] = "Nichts mehr zu buffen."
 L["BUFF_KEY_OFF"] = "Buff-Dienst ist aus."
 --[[
-    The Buff Duty window's last line while the Buff Button has no key: the Buff
-    Button's name (BUFF_KEY), the root panel's Key Bindings header
+    The Buff Duty window's last line while the Cast Next Buff key has none: its
+    name (BUFF_KEY), the root panel's Key Bindings header
     (OPTIONS_KEY_BINDINGS_HEADER), then the options command.
 ]]
 L["BUFF_DUTY_KEY_HINT"] =
-	"Schon gewusst? Belege den %s mit einer Taste, und jeder Druck wirkt den nächsten Buff hier. Einstellen kannst du das unter %s in %s."
+	"Schon gewusst? Belege %s mit einer Taste, und jeder Druck wirkt den nächsten Buff hier. Einstellen kannst du das unter %s in %s."
 
 --------------------------------------------------------------------------------
 -- Spellbook
@@ -1871,11 +1960,13 @@ L["MENU_DELETE"] = "Löschen"
 L["MENU_DELETE_USED_ONE"] = "Löschen (auf 1 Leiste)"
 L["MENU_DELETE_USED"] = "Löschen (auf %d Leisten)"
 L["MENU_DELETE_DESCRIPTION"] =
-	"Löscht dieses Makro aus deinen Makros, wodurch es von deinen Aktionsleisten verschwindet, und setzt alle seine Optionen zurück. Klicke oder ziehe es auf der Seite, um es neu zu erstellen."
+	"Löscht dieses Makro, wodurch es von deinen Aktionsleisten verschwindet, und setzt alle seine Optionen zurück. Klicke oder ziehe es auf der Seite, um es neu zu erstellen."
 L["MENU_DELETE_COPY_DESCRIPTION"] =
 	"Nimmt diese Kopie von der Seite und löscht sie aus deinen Makros, wodurch sie von deinen Aktionsleisten verschwindet."
 L["MENU_DELETE_CONFIRM"] =
 	"%s löschen? Es verschwindet von deinen Aktionsleisten, und seine Optionen werden zurückgesetzt."
+-- The same ask for a macro on none of your bars.
+L["MENU_DELETE_CONFIRM_UNUSED"] = "%s löschen? Seine Optionen werden zurückgesetzt."
 L["MENU_GROUP_RANK"] = "Rang"
 L["MENU_GROUP_WHEN"] = "Wann"
 L["MENU_GROUP_FIRST"] = "Zuerst"
@@ -1907,9 +1998,8 @@ L["MENU_UNIT_MOUSEOVER_DESCRIPTION"] =
 	"Wirkt auf den, der unter deinem Mauszeiger ist, in der Welt oder auf einem Einheitenfenster, wenn er den Zauber erhalten kann."
 L["MENU_OPTIONS_COUNT"] = "%d Optionen"
 L["MENU_ENABLED"] = "Aktiviert"
-L["MENU_HIGHEST"] = "Höchster"
+L["MENU_HIGHEST"] = "Höchster Rang"
 L["MENU_HIGHEST_DESCRIPTION"] = "Wirkt den höchsten Rang, den du kennst."
-L["MENU_RANK_DYNAMIC"] = "Dynamischer Rang"
 L["MENU_FIXED_RANK_DESCRIPTION"] = "Wirkt immer %s, auf jeder Stufe."
 L["MENU_ANY_TIME"] = "Jederzeit"
 L["MENU_ANY_TIME_DESCRIPTION"] = "Wirkt im Kampf und außerhalb des Kampfes."
@@ -2076,10 +2166,10 @@ L["SETTINGS_SHOW_GROUPED_SPELLS"] = "Gruppierte Zauber anzeigen"
 L["SETTINGS_SHOW_UNLEARNED"] = "Nicht erlernte Zauber anzeigen"
 L["SETTINGS_MARK_ALL_PLACED"] = "Alle Zauber als platziert markieren"
 L["SETTINGS_MARK_ALL_PLACED_DESCRIPTION"] =
-	"Kein Makro auf dieser Seite leuchtet mehr, ob es auf deinen Leisten liegt oder nicht. Ein Zauber, den du später erlernst, leuchtet weiter, bis du ihn platzierst."
-L["SETTINGS_HIGHLIGHT_UNPLACED"] = "Nicht platzierte Zauber hervorheben"
-L["SETTINGS_HIGHLIGHT_UNPLACED_DESCRIPTION"] =
-	"Lässt jedes Makro leuchten, das nicht auf deinen Leisten liegt. Schalte es ab, um alle als platziert zu markieren, wie mit der Schaltfläche Alle Zauber als platziert markieren."
+	'Kein Makro auf dieser Seite leuchtet mehr, ob es auf deinen Leisten liegt oder nicht. Ein Zauber, den du später erlernst, leuchtet weiter, bis du ihn platzierst. "Nicht platzierte Zauber wieder hervorheben" im Zahnradmenü macht das rückgängig.'
+L["SETTINGS_HIGHLIGHT_AGAIN"] = "Nicht platzierte Zauber wieder hervorheben"
+L["SETTINGS_HIGHLIGHT_AGAIN_DESCRIPTION"] =
+	'Macht "Alle Zauber als platziert markieren" rückgängig, sodass jeder Zauber, der nicht auf deinen Leisten liegt, wieder leuchtet.'
 L["SORT_BY_CATEGORY"] = "Nach Kategorie sortieren"
 L["SORT_BY_SCHOOL"] = "Nach Schule sortieren"
 L["SORT_DESCRIPTION"] =
@@ -2170,6 +2260,8 @@ L["MENU_RESET_CATEGORY_DESCRIPTION"] =
 	"Verwirft die Optionen, die du bei jedem Zauber hier eingestellt hast, sodass alle wieder ihren Standards folgen. Fokus-Kopien und Duplikate bleiben erhalten."
 L["MENU_RESET_CATEGORY_CONFIRM"] =
 	"Die Optionen zurücksetzen, die du bei jedem Zauber in %s eingestellt hast? Alle folgen dann wieder ihren Standards."
+-- A middle-click on a macro, asked first. %s is the macro.
+L["MENU_RESET_MACRO_CONFIRM"] = "Die Optionen von %s zurücksetzen? Es folgt dann wieder seinen Standards."
 
 -- TRANSLATORS: %s is a spell's name, heading its macro's part of a tile's tooltip after "GtG //" ("Immolate Macro").
 L["TOOLTIP_MACRO_HEADING"] = "%s-Makro"
@@ -2201,13 +2293,16 @@ L["PAGE_CONTINUED"] = "(Fortsetzung)"
 -- What's Next? Tab: the window's second tab and its title before "// Good to Go"
 L["WHATS_NEXT_TITLE"] = "Was kommt als Nächstes?"
 L["WHATS_NEXT_EMPTY"] = "Keine Zauber aufzulisten."
+-- The same page while Show Known Spells is off: %s is that toggle's name (WHATS_NEXT_SHOW_KNOWN).
+L["WHATS_NEXT_EMPTY_KNOWN_HIDDEN"] =
+	"Gerade gibt es nichts Neues zu lernen. Hake %s im Zahnradmenü an, um zu sehen, was du schon gelernt hast."
 L["WHATS_NEXT_ALL_SOURCES"] = "Alle Quellen"
 L["WHATS_NEXT_ANY_LEVEL"] = "Jede Stufe"
 -- TRANSLATORS: %s is a spell's rank or "Passive", after its name ("Rend (Rank 2)").
 L["WHATS_NEXT_SUBTEXT"] = "(%s)"
 
 -- TRANSLATORS: printed on a level-up; %s is the spells the character can learn now, joined with
--- LEVEL_UP_SPELLS_PAIR_FORMAT or LEVEL_UP_SPELLS_LAST_FORMAT ("[Bash], [Moonfire] (Rank 3), & [Rejuvenation]").
+-- LIST_PAIR_FORMAT or LIST_LAST_FORMAT ("[Bash], [Moonfire] (Rank 3), and [Rejuvenation]").
 L["LEVEL_UP_SPELLS"] = "Du kannst jetzt %s erlernen."
 -- printed under it: %s is the spells from earlier levels still not learned, joined the same way
 L["LEVEL_UP_SPELLS_NOT_LEARNED"] = "Nicht vergessen: Du kannst auch %s erlernen."
@@ -2215,8 +2310,6 @@ L["LEVEL_UP_SPELLS_NOT_LEARNED"] = "Nicht vergessen: Du kannst auch %s erlernen.
 L["LEVEL_UP_PET_SPELLS"] = "Dein Begleiter kann jetzt %s erlernen."
 L["LEVEL_UP_PET_SPELLS_NOT_LEARNED"] = "Nicht vergessen: Dein Begleiter kann auch %s erlernen."
 L["LEVEL_UP_DEMON_SPELLS"] = "Deine Dämonen können jetzt %s erlernen."
-L["LEVEL_UP_SPELLS_PAIR_FORMAT"] = "%s und %s"
-L["LEVEL_UP_SPELLS_LAST_FORMAT"] = "%s und %s"
 
 -- What's Next? Tab: section headers, and the counts in the footer
 L["WHATS_NEXT_STATUS_AVAILABLE"] = "Jetzt verfügbar"
@@ -2291,6 +2384,7 @@ L["WHATS_NEXT_PET_FOOTER"] = "%1$s, %3$s der Stufe %2$d"
 -- TRANSLATORS: the first %d is the training points the pet has left, the second its total.
 L["WHATS_NEXT_PET_FOOTER_TRAINING_POINTS"] = "Trainingspunkte: %d von %d"
 L["WHATS_NEXT_PET_NO_PET"] = "Kein Begleiter draußen: Angezeigt wird, was du mit Wildtierausbildung gelernt hast."
+L["WHATS_NEXT_PET_NO_PET_SUMMON"] = "Kein Begleiter draußen: Rufe deinen Begleiter, um zu sehen, was er bereits kann."
 L["WHATS_NEXT_PET_NO_DEMON"] = "Kein Dämon draußen: Beschwöre einen, um zu sehen, was er bereits kann."
 
 -- Pet What's Next? Tab: the pet's own section headers (the rest are the What's Next? tab's)
@@ -2301,6 +2395,7 @@ L["WHATS_NEXT_PET_SHORT_OTHER"] = "Andere Familie"
 
 -- Pet What's Next? Tab: where the hunter learns an ability
 L["WHATS_NEXT_PET_SOURCE_TRAINER"] = "Tierausbilder"
+L["WHATS_NEXT_PET_SOURCE_HUNTER_TRAINER"] = "Jägerlehrer"
 L["WHATS_NEXT_PET_SOURCE_TAMING"] = "Zähmen"
 L["WHATS_NEXT_PET_SOURCE_DEMON_TRAINER"] = "Dämonenausbilder"
 
@@ -2309,11 +2404,15 @@ L["WHATS_NEXT_PET_TOOLTIP_LEVEL"] = "Benötigte Begleiterstufe"
 L["WHATS_NEXT_PET_TOOLTIP_TRAINING_POINTS"] = "Trainingspunkte"
 L["WHATS_NEXT_PET_TOOLTIP_HOW_TRAINER"] =
 	"Ein Tierausbilder bringt sie dir bei. Lehre sie dann deinem Begleiter mit Wildtierausbildung."
+L["WHATS_NEXT_PET_TOOLTIP_HOW_HUNTER_TRAINER"] = "Dein Jägerlehrer bringt sie dem Begleiter bei, den du draußen hast."
 L["WHATS_NEXT_PET_TOOLTIP_HOW_TAMING"] =
 	"Zähme ein Wildtier, das sie kennt, und kämpfe an seiner Seite, bis du sie erlernst. Lehre sie dann mit Wildtierausbildung jedem Begleiter, der sie lernen kann."
+L["WHATS_NEXT_PET_TOOLTIP_HOW_TAMING_NEW_PET"] =
+	"Zähme ein Wildtier, das sie kennt, dann bringt dein neuer Begleiter sie mit. Einem Begleiter, den du schon hast, bringt sie nichts mehr bei."
 L["WHATS_NEXT_PET_TOOLTIP_HUNTER_KNOWS"] = "Du kennst sie. Lehre sie deinem Begleiter mit Wildtierausbildung."
 L["WHATS_NEXT_PET_TOOLTIP_HOW_DEMON_TRAINER"] =
 	"Kauf ihr Grimoire bei einem Dämonenausbilder und benutze es, während der Dämon beschworen ist, der sie lernt."
+L["WHATS_NEXT_PET_TOOLTIP_HOW_DEMON_TRAINER_TEACHES"] = "Dein Dämonenausbilder bringt sie bei."
 L["WHATS_NEXT_PET_TOOLTIP_GRIMOIRE"] = "Grimoire"
 L["WHATS_NEXT_PET_TOOLTIP_GRIMOIRE_IN_BAGS"] =
 	"Ihr Grimoire ist in deinen Taschen. Benutze es, während dieser Dämon beschworen ist."
@@ -2421,7 +2520,7 @@ L["BINDING_TOGGLE_PAGE"] = "Erweitertes Zauberbuch ein-/ausblenden"
 
 L["CHAT_KEY_BINDINGS_IN_COMBAT"] = "Aus Sicherheitsgründen kann die Tastenbelegung im Kampf nicht geöffnet werden."
 L["KEY_BINDINGS_LOCATION"] = "Öffne das Spielmenü, dann %s, dann %s, und suche den Abschnitt Good to Go."
-L["ERROR_MACRO_SLOTS_FULL"] = "Keine freien Makroplätze. Lösche ein Makro in /macro, um Platz zu schaffen."
+L["ERROR_MACRO_SLOTS_FULL"] = "Keine freien Makroplätze. Lösche ein paar deiner Makros in /m, um Platz zu schaffen."
 L["ERROR_MACRO_WINDOW_OPEN"] = "Schließe zuerst das Makrofenster."
 L["CHAT_MACROS_DELETED"] = "Gelöschte Makros: %d"
 L["CHAT_MACRO_TOO_LONG"] =

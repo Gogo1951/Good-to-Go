@@ -1,5 +1,6 @@
 local _, ns = ...
 local L = ns.L
+local Kit = ns.OptionsKit
 local GetColor = ns.GetColor
 
 --------------------------------------------------------------------------------
@@ -34,24 +35,23 @@ function ns.BuildFeedbackSupportOptions()
 	for index, key in ipairs(PARAGRAPHS) do
 		if index > 1 then
 			order = order + 1
-			args["spaceParagraph" .. index] = ns.OptionsSpacer(order)
+			args["spaceParagraph" .. index] = Kit.Spacer(order)
 		end
 		order = order + 1
-		args["descParagraph" .. index] = ns.OptionsDesc(L[key], order)
+		args["descParagraph" .. index] = Kit.Desc(L[key], order)
 	end
 
 	order = order + 1
-	args.spaceLinks0 = ns.OptionsSpacer(order)
+	args.spaceLinks0 = Kit.Spacer(order)
 	order = order + 1
-	args.headerLinks = ns.OptionsHeader(L["OPTIONS_FEEDBACK_LINKS_HEADER"], order)
+	args.headerLinks = Kit.Header(L["OPTIONS_FEEDBACK_LINKS_HEADER"], order)
 
 	for index, link in ipairs(LINKS) do
 		local captionKey, linkKey = link[1], link[2]
 		order = order + 1
-		args["spaceLink" .. index] = ns.OptionsSpacer(order)
+		args["spaceLink" .. index] = Kit.Spacer(order)
 		order = order + 1
-		args["labelLink" .. index] =
-			ns.OptionsRowLabel(GetColor("TITLE") .. L[captionKey] .. "|r", order, LINK_LABEL_WIDTH)
+		args["labelLink" .. index] = Kit.Label(GetColor("TITLE") .. L[captionKey] .. "|r", order, LINK_LABEL_WIDTH)
 		order = order + 1
 		args["urlLink" .. index] = {
 			type = "input",
@@ -66,9 +66,9 @@ function ns.BuildFeedbackSupportOptions()
 	end
 
 	order = order + 1
-	args.spaceCopyLink = ns.OptionsSpacer(order)
+	args.spaceCopyLink = Kit.Spacer(order)
 	order = order + 1
-	args.descCopyLink = ns.OptionsDesc(GetColor("HELP") .. L["OPTIONS_COPY_LINK"] .. "|r", order)
+	args.descCopyLink = Kit.Desc(GetColor("HELP") .. L["OPTIONS_COPY_LINK"] .. "|r", order)
 
 	args.spaceVersion = {
 		type = "description",

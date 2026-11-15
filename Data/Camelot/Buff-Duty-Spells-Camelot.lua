@@ -135,12 +135,6 @@ ns.BUFF_DUTY_PET_ICONS = {
 
 -- { class, ranks = { { spell id, level learned } }, auras, exclusive, needsPet, default (minutes left, MISSING or OFF) }, -- Name
 ns.BUFF_DUTY_SELF_SPELLS = {
-	-- Druid ---------------------------------------------------------------------
-	{
-		class = "DRUID",
-		ranks = { { 16864, 20 } },
-		default = 3,
-	}, -- Omen of Clarity
 	-- Hunter --------------------------------------------------------------------
 	{
 		class = "HUNTER",
@@ -488,14 +482,14 @@ ns.BUFF_DUTY_RESURRECTIONS = {
 How We Got the Data
 
 Last Validated
-	2026-11-11, WoW Forever 1.60.1.70888
+	2026-11-15, WoW Forever 1.60.1.70938
 
 Notes
 	- Every buff one player can put on another that lasts more than two minutes: the ones worth keeping up on a group, and the ones a player may want to hand out on request. Only the rows for the player's own class are read, and only the ranks the player knows are cast.
 	- Paladin blessings share exclusive = BLESSING: a target holds one blessing from each paladin, and a second replaces the first. So once one of yours is on a player, the window stops offering your others to them, and only offers that one again when it runs low. With none of yours on them, every blessing you turned on is offered and you pick.
 	- greater lists every rank of a blessing's Greater version. It only counts toward "already has it" -- a Greater Blessing covers a class across the raid, not a party, so it is never offered as a party's group icon.
 	- noCasters drops the buff for the classes in Data.CASTER_CLASSES, who get nothing from melee attack power (Blessing of Might).
-	- Left out for lasting two minutes or less: Power Infusion, Innervate, Levitate, Slow Fall, Battle Shout (a warrior keeps Battle Shout up as a self buff instead, below). Left out for being item uses rather than spells: the stat scrolls. The Soulstone has a table of its own, below.
+	- Left out for lasting two minutes or less: Power Infusion, Innervate, Levitate, Slow Fall. Battle Shout lasts three minutes on this client, but it's shouted for the whole party rather than cast on one target, so a warrior keeps it up as a self buff instead, below. Left out for being item uses rather than spells: the stat scrolls. The Soulstone has a table of its own, below.
 	- single is every rank of the single-target buff, and group every rank of its party-wide version. A player counts as buffed by any rank of either, because each rank's aura carries its own ID.
 	- Each single-target rank carries the level it is learned at, because Classic doesn't pick a rank for the target: casting a rank on a player more than 10 levels below its learn level fails with "Target is too low level". The button casts the highest known rank the target can take, by its rank text ("Name(Rank 2)"), and offers nothing when even rank 1 is too high. Group versions always cast their highest rank, by name.
 	- The learn levels are the client's own, checked against the SPELL_LEVEL_LEARNED column of a Validate Data run from this client.
@@ -505,16 +499,16 @@ Notes
 	- Amplify and Dampen Magic replace each other on the target, so turning both on offers each to everyone carrying the other.
 	- The setting is keyed by the first single-target ID, the lowest rank.
 	- BUFF_WINDOW_PET_ICONS picks the icon in front of a pet's name: a warlock demon wears its own summoning spell's icon, found by the creature ID inside the pet's GUID, and any other pet wears Call Pet's. Only the spell IDs are stored; the icons come from the client.
-	- BUFF_WINDOW_SELF_SPELLS are the long buffs a player can only put on themselves, behind the window's Self Buffs row: armors, shields, Inner Fire, Omen of Clarity, Trueshot Aura, Shadowform, Demonic Sacrifice, Soul Link, the paladin auras and hunter aspects, which have no timer and only need to be up, and Battle Shout, which a warrior shouts for the group but is listed here to keep up on themselves; a rogue's poisons are weapon enchants, below.
-	- Talent buffs (Omen of Clarity, Trueshot Aura, Shadowform, Demonic Sacrifice, Soul Link) carry the level their talent tier opens at, and a row only shows for a player who took the talent.
+	- BUFF_WINDOW_SELF_SPELLS are the long buffs a player can only put on themselves, behind the window's Self Buffs row: armors, shields, Inner Fire, Trueshot Aura, Shadowform, Demonic Sacrifice, Soul Link, the paladin auras and hunter aspects, which have no timer and only need to be up, and Battle Shout, which a warrior shouts for the group but is listed here to keep up on themselves; a rogue's poisons are weapon enchants, below.
+	- Talent buffs (Trueshot Aura, Shadowform, Demonic Sacrifice, Soul Link) carry the level their talent tier opens at, and a row only shows for a player who took the talent.
 	- auras names the buffs a cast leaves when they aren't the cast's own ID: Demonic Sacrifice leaves one of four, by the demon sacrificed (Burning Wish, Fel Stamina, Touch of Shadow, Fel Energy), and Soul Link's cast is a dummy that puts up 25228.
 	- Demonic Sacrifice and Soul Link share exclusive = WARLOCK_DEMON: a Soul Link warlock keeps a demon out, so with Soul Link up the sacrifice stops asking, and the other way round. Soul Link starts OFF, and needsPet keeps it from asking while there is no demon to link to.
 	- ranks is every rank, with the level it is learned at; the row casts the highest one known. Where ranks change name (Frost Armor into Ice Armor, Demon Skin into Demon Armor) they share a row, since they are one line of the same buff.
 	- exclusive groups the self buffs only one of which can be up at a time (an armor, a paladin aura, an aspect, a shaman shield): with any one of yours up, the rest of its family stop asking. Turn on every one you might use, and the window offers them all only when none is up.
-	- default is when the self buff shows until the player picks: minutes left (3) to recast before it drops, MISSING for one with no timer (an aura or aspect is either up or not), or OFF. Battle Shout starts on MISSING too: it lasts two minutes, so any minutes-left choice would only ask once it's gone anyway. Every aspect but Hawk starts off: Cheetah and the rest are swapped in for a moment, and Hawk is the one to come back to. A player's own choice is never overwritten.
+	- default is when the self buff shows until the player picks: minutes left (3) to recast before it drops, MISSING for one with no timer (an aura or aspect is either up or not), or OFF. Battle Shout starts on MISSING too: it lasts three minutes on this client (Wowhead's WoW Forever page, spell 25289), so a three-minute or longer choice would ask the moment it's shouted. Every aspect but Hawk starts off: Cheetah and the rest are swapped in for a moment, and Hawk is the one to come back to. A player's own choice is never overwritten.
 	- The self-buff learn levels are checked the same way.
 	- Shadowguard (Troll) and Touch of Weakness (Undead) are priest racial self buffs. Only a priest of that race knows them, and a row offers only the ranks the player knows. Their learn levels come from SpellLevels.
-	- Left out of the self buffs: tracking, stealth, mounts, pet spells, Feign Death, totems, and cooldowns spent on the next action (Presence of Mind, Nature's Swiftness, Inner Focus, Cold Blood, Divine Favor, Elemental Mastery, Combustion). Moonkin Aura is left out because Moonkin Form puts it up, not a cast.
+	- Left out of the self buffs: tracking, stealth, mounts, pet spells, Feign Death, totems, and cooldowns spent on the next action (Presence of Mind, Nature's Swiftness, Inner Focus, Cold Blood, Divine Favor, Elemental Mastery, Combustion). Moonkin Aura is left out because Moonkin Form puts it up, not a cast. Omen of Clarity is left out because it's passive on this client: a trained spell with no duration or cost, flagged Passive on Wowhead's WoW Forever page (spell 16864), where Classic Era's is a 10-minute buff. So druids have nothing to keep up.
 	- BUFF_WINDOW_WEAPON_ENCHANTS are the rogue poisons and shaman imbues. Each hand has its own timing per row on the Self-Buffs panel, and every row starts on for every hand: the window only offers an imbue you know or a poison in your bags, so a row you can't use yet stays out of the way.
 	- A poison row is every item of its line with the level it requires, from Consumable Connoisseur's Poisons-Camelot.lua (validated 2026-10-16 on this client); Instant Toxin is a lower Instant Poison and shares its row. The button uses the best one in the rogue's bags they can use, on that hand's slot. The setting is keyed by the first item ID.
 	- An imbue row is every rank, as a self buff's, and its duration: 60 minutes on this client, as each rank's tooltip states. A row's duration only matters once it's no longer than a Reapply choice, when the imbue is offered only once it's gone (a poison lasts longer than any, so carries none).

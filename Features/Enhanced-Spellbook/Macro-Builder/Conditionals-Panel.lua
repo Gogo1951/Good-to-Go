@@ -46,9 +46,8 @@ local TEXTURE_ARROW = "Interface\\ChatFrame\\ChatFrameExpandArrow"
 local panel
 
 --[[
-	What the panel shares with its rows (Conditionals-Rows.lua) and pick mode (Spell-Pick.lua), which
-	load after this file and read it as they load; this file reaches the rows and pick mode only once the
-	panel is built.
+	What the panel shares with its rows (Conditionals-Rows.lua), which load after this file and read it as
+	they load; this file reaches the rows and pick mode only once the panel is built.
 ]]
 local UI = {}
 ns.ConditionalsUI = UI
@@ -171,7 +170,7 @@ local function CreatePanel(page)
 	end
 	panel.otherwise = CreateOtherwise(panel)
 	panel.add = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-	panel.add:SetSize(150, 22)
+	panel.add:SetSize(160, 22)
 	panel.add:SetText(L["CONDITIONALS_ADD"])
 	panel.add:SetMotionScriptsWhileDisabled(true)
 	-- the new row has no spell yet, so pick mode starts for it at once

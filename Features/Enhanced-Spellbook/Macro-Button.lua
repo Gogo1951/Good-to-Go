@@ -87,8 +87,6 @@ local function TooltipSpellID(macro)
 	local name = macro.name
 	if macro.rangedAttacks then
 		name = ns.CastSpellName(macro) -- the Shoot macro shows the attack for the weapon equipped
-	elseif macro.rank then
-		name = name .. "(" .. macro.rank .. ")" -- a rank's macro shows that rank's tooltip
 	end
 	local info = name and C_Spell.GetSpellInfo(name)
 	return info and info.spellID or macro.spellID
@@ -104,11 +102,27 @@ local function AddHint(keybind, action)
 	GameTooltip:AddDoubleLine(GetColor("INFO") .. keybind .. "|r", GetColor("INFO") .. action .. "|r")
 end
 
--- Middle-click: the macro's own options dropped, the page redrawn and its WoW macro rewritten to match.
+--[[
+	Middle-click, asked first: the macro's own options dropped, the page redrawn and its WoW macro rewritten
+	to match. data is the macro.
+]]
+StaticPopupDialogs.GOODTOGO_RESET_MACRO = {
+	text = L["MENU_RESET_MACRO_CONFIRM"],
+	button1 = L["POPUP_RESET"],
+	button2 = CANCEL,
+	OnAccept = function(_, macro)
+		ns.ResetMacroSettings(macro)
+		ns:RefreshMacros()
+		ns:PrintMessage(L["CHAT_MACRO_OPTIONS_RESET"]:format(macro.label or macro.name))
+	end,
+	timeout = 0,
+	whileDead = true,
+	hideOnEscape = true,
+	preferredIndex = 3,
+}
+
 local function ResetOptions(macro)
-	ns.ResetMacroSettings(macro)
-	ns:RefreshMacros()
-	ns:PrintMessage(L["CHAT_MACRO_OPTIONS_RESET"]:format(macro.label or macro.name))
+	StaticPopup_Show("GOODTOGO_RESET_MACRO", macro.label or macro.name, nil, macro)
 end
 
 -- Tiles are reused across refreshes; SetMacro points one at a macro.
@@ -327,15 +341,33 @@ local function CreateMacroButton(parent)
 end
 
 --[[
-	Shows the glow when the button's macro is learned but not on the bars (from ns.ScanActionBars).
-	The stance bar's forms (noGlow) and macros marked placed never glow.
+	Whether a macro glows: learned but not on the bars (from ns.ScanActionBars). The stance bar's forms
+	(noGlow) and macros marked placed never glow.
 ]]
-local function UpdateGlow(button, bars)
-	local macro = button.macro
-	local shown = not macro.noGlow
+function ns.MacroGlows(macro, bars)
+	return not macro.noGlow
 		and not macro.unlearned
 		and not ns.IsMarkedPlaced(macro)
 		and not ns.IsOnActionBars(macro, bars)
+end
+
+-- Whether any macro the page can list glows, on any page, which is when Mark All Spells as Placed has work to do.
+function ns.AnyMacroGlows(bars)
+	for _, macro in ipairs(ns.macros) do
+		if ns.MacroGlows(macro, bars) then
+			return true
+		end
+	end
+	for _, macro in ipairs(ns.ConsumablePageMacros()) do
+		if ns.MacroGlows(macro, bars) then
+			return true
+		end
+	end
+	return false
+end
+
+local function UpdateGlow(button, bars)
+	local shown = ns.MacroGlows(button.macro, bars)
 	button.glow:SetShown(shown)
 	if not shown then
 		button.pulse:Stop()

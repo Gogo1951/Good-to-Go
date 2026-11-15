@@ -37,7 +37,7 @@ local _, ns = ...
     What keeps the body current: the cast itself rebuilds through
     UNIT_SPELLCAST_SUCCEEDED (Macros-for-Consumables-Core.lua), and the end of
     the cooldown rebuilds through ns.RacialSpellReady's timer
-    (Tools-Forsaken.lua).
+    (Macros-for-Consumables-Utilities.lua).
 ]]
 
 --[[

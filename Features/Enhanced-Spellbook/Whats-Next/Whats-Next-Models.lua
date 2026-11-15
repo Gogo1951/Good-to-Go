@@ -2,7 +2,7 @@ local _, ns = ...
 local TITLE, BODY = ns.COLORS_RGB.TITLE, ns.COLORS_RGB.BODY
 local L = ns.L
 local GetColor = ns.GetColor
-local FADED_INK = ns.FADED_INK_COLOR
+local MUTED = ns.COLORS_RGB.MUTED
 local BRIGHT = ns.WHATS_NEXT_BRIGHT
 
 --[[
@@ -37,13 +37,13 @@ end
 	  rows(level)         the rows and a context the footer reads; level as ns.RefreshWhatsNext takes it
 	  statuses, sources   in the order Sort By Availability and the source filter list them; no sources, no
 	                      source filter
-	  counts              the statuses the footer counts
+	  counts              the statuses the footer counts, or a function giving them
 	  statusLabel(status) a status's name, for its heading, the tooltip and the footer
 	  shortLabel(status)  a status's short name, at a row's right
 	  sourceLabel(source) a source's name, for the source filter and the tooltip
 	  shows(row)          whether the settings let a row show
-	  toggles             the settings gear's checkboxes, each { label key, description key, getter, setter };
-	                      none, no gear
+	  toggles             the settings gear's checkboxes, each { label key, description key, getter, setter },
+	                      or a function giving them when the gear opens; none, no gear
 	  sortDescription     the sort dropdown's tooltip; none, no sort, the rows only under their statuses
 	  empty               the empty note's key, or a function of the context giving its text
 	  addTooltip(row, model) the tooltip's lines after the status
@@ -94,7 +94,13 @@ local CLASS_MODEL = {
 		},
 	},
 	sortDescription = "WHATS_NEXT_SORT_DESCRIPTION",
-	empty = "WHATS_NEXT_EMPTY",
+	-- With known spells hidden, an empty page points at the toggle that lists them.
+	empty = function()
+		if ns.WhatsNextShowsKnown() then
+			return L["WHATS_NEXT_EMPTY"]
+		end
+		return L["WHATS_NEXT_EMPTY_KNOWN_HIDDEN"]:format(L["WHATS_NEXT_SHOW_KNOWN"])
+	end,
 	addTooltip = function(row, model)
 		if row.source then
 			AddPair(L["WHATS_NEXT_TOOLTIP_SOURCE"], model.sourceLabel(row.source))
@@ -156,8 +162,9 @@ local function AddBeasts(beasts)
 		local beast = list[i]
 		local levels = beast[2] == beast[3] and tostring(beast[2]) or (beast[2] .. "-" .. beast[3])
 		local zone = C_Map.GetAreaInfo(beast[4]) or ""
-		local ink = beast[2] <= level and BODY or FADED_INK
-		local r, g, b = ink.r or ink[1], ink.g or ink[2], ink.b or ink[3]
+		-- a beast still above your level in the palette's gray, so it reads as not yet
+		local ink = beast[2] <= level and BODY or MUTED
+		local r, g, b = ink.r, ink.g, ink.b
 		GameTooltip:AddDoubleLine(L["WHATS_NEXT_PET_TOOLTIP_BEAST"]:format(beast[1], levels), zone, r, g, b, r, g, b)
 	end
 	if #list > MAX_BEASTS then
@@ -165,10 +172,14 @@ local function AddBeasts(beasts)
 	end
 end
 
--- The footer of both pet tabs: the pet out, its level and family, and its training points left; or that there's none out.
+--[[
+	The footer of both pet tabs: the pet out, its level and family, and its training points left; or that there's
+	none out, and what the statuses read instead: the hunter's Beast Training, or nothing where there's none
+	(WoW Forever).
+]]
 local function PetFooter(pet)
 	if not pet then
-		return L["WHATS_NEXT_PET_NO_PET"]
+		return L[ns.WhatsNextPetUsesBeastTraining() and "WHATS_NEXT_PET_NO_PET" or "WHATS_NEXT_PET_NO_PET_SUMMON"]
 	end
 	local text = L["WHATS_NEXT_PET_FOOTER"]:format(pet.name or "", pet.level or 0, pet.family or "")
 	local left, total = ns.WhatsNextPetTrainingPoints()
@@ -180,13 +191,71 @@ end
 
 local PET_STATUSES = { TEACH = true, OTHER = true }
 
+--[[
+	A grimoire whose name hasn't loaded reads as loading, and the item is asked for; when it arrives, the row
+	tooltip still showing it is drawn again. The shared GET_ITEM_INFO_RECEIVED subscription (Features/Item-Info.lua)
+	is held only while a grimoire is waited on.
+]]
+local GRIMOIRE_WAITER = "WhatsNextGrimoire"
+local waitingGrimoires = {}
+
+local function GrimoireName(itemID)
+	local name = C_Item.GetItemNameByID(itemID)
+	if name then
+		return name
+	end
+	waitingGrimoires[itemID] = true
+	ns.RequestItemInfoEvents(GRIMOIRE_WAITER)
+	C_Item.RequestLoadItemDataByID(itemID)
+	return GetColor("MUTED") .. L["LOADING_ITEM"]:format(itemID) .. "|r"
+end
+
+function ns.OnWhatsNextItemInfoReceived(itemID)
+	if not waitingGrimoires[itemID] then
+		return
+	end
+	waitingGrimoires[itemID] = nil
+	if next(waitingGrimoires) == nil then
+		ns.ReleaseItemInfoEvents(GRIMOIRE_WAITER)
+	end
+	local owner = GameTooltip:IsShown() and GameTooltip:GetOwner()
+	if owner and owner.row and owner.row.item == itemID and owner:IsMouseOver() then
+		owner:GetScript("OnEnter")(owner)
+	end
+end
+
+--[[
+	A rank is ready to teach only through a warlock's grimoire or a hunter's Beast Training; WoW Forever's hunter
+	trainer teaches the pet out directly, so there the footer has no Ready to Teach count.
+]]
+local PET_COUNTS = { "TEACH", "AVAILABLE", "SOON", "LATER" }
+local PET_COUNTS_NO_TEACH = { "AVAILABLE", "SOON", "LATER" }
+
+local SHOW_KNOWN_TOGGLE = {
+	"WHATS_NEXT_PET_SHOW_KNOWN",
+	"WHATS_NEXT_PET_SHOW_KNOWN_DESCRIPTION",
+	ns.WhatsNextPetShowsKnown,
+	ns.SetWhatsNextPetShowKnown,
+}
+local SHOW_OTHER_TOGGLE = {
+	"WHATS_NEXT_PET_SHOW_OTHER",
+	"WHATS_NEXT_PET_SHOW_OTHER_DESCRIPTION",
+	ns.WhatsNextPetShowsOtherFamilies,
+	ns.SetWhatsNextPetShowOtherFamilies,
+}
+
 local PET_MODEL = {
 	rows = function(level)
 		return ns.WhatsNextPetRows(level)
 	end,
 	statuses = ns.WHATS_NEXT_PET_STATUSES,
 	sources = ns.WHATS_NEXT_PET_SOURCES,
-	counts = { "TEACH", "AVAILABLE", "SOON", "LATER" },
+	counts = function()
+		if ns.IsWhatsNextPetWarlock() or ns.WhatsNextPetUsesBeastTraining() then
+			return PET_COUNTS
+		end
+		return PET_COUNTS_NO_TEACH
+	end,
 	-- the pet's own statuses have their own labels; the rest read as the class tab's
 	statusLabel = function(status)
 		return L[(PET_STATUSES[status] and "WHATS_NEXT_PET_STATUS_" or "WHATS_NEXT_STATUS_") .. status]
@@ -203,29 +272,22 @@ local PET_MODEL = {
 		end
 		return row.status ~= "OTHER" or ns.WhatsNextPetShowsOtherFamilies()
 	end,
-	toggles = {
-		{
-			"WHATS_NEXT_PET_SHOW_KNOWN",
-			"WHATS_NEXT_PET_SHOW_KNOWN_DESCRIPTION",
-			ns.WhatsNextPetShowsKnown,
-			ns.SetWhatsNextPetShowKnown,
-		},
-		{
-			"WHATS_NEXT_PET_SHOW_OTHER",
-			"WHATS_NEXT_PET_SHOW_OTHER_DESCRIPTION",
-			ns.WhatsNextPetShowsOtherFamilies,
-			ns.SetWhatsNextPetShowOtherFamilies,
-		},
-	},
+	-- Show Other Families' Abilities only where some rank is limited to some families
+	toggles = function()
+		if ns.WhatsNextPetHasFamilies() then
+			return { SHOW_KNOWN_TOGGLE, SHOW_OTHER_TOGGLE }
+		end
+		return { SHOW_KNOWN_TOGGLE }
+	end,
 	sortDescription = "WHATS_NEXT_PET_SORT_DESCRIPTION",
 	empty = "WHATS_NEXT_PET_EMPTY",
 	addTooltip = function(row, model)
 		AddPair(L["WHATS_NEXT_TOOLTIP_SOURCE"], model.sourceLabel(row.source))
-		-- a grimoire asks for the warlock's level, Beast Training for the pet's
-		AddPair(L[row.item and "WHATS_NEXT_TOOLTIP_LEVEL" or "WHATS_NEXT_PET_TOOLTIP_LEVEL"], tostring(row.level))
-		local grimoire = row.item and C_Item.GetItemNameByID(row.item)
-		if grimoire then
-			AddPair(L["WHATS_NEXT_PET_TOOLTIP_GRIMOIRE"], grimoire)
+		-- a demon's rank and WoW Forever's hunter ranks ask for the player's level, Beast Training for the pet's
+		local playerLevel = row.item or row.source == "DEMON_TRAINER" or ns.WhatsNextPetReadsHunterLevel(row)
+		AddPair(L[playerLevel and "WHATS_NEXT_TOOLTIP_LEVEL" or "WHATS_NEXT_PET_TOOLTIP_LEVEL"], tostring(row.level))
+		if row.item then
+			AddPair(L["WHATS_NEXT_PET_TOOLTIP_GRIMOIRE"], GrimoireName(row.item))
 		end
 		if row.tp then
 			AddPair(L["WHATS_NEXT_PET_TOOLTIP_TRAINING_POINTS"], tostring(row.tp))
@@ -240,7 +302,17 @@ local PET_MODEL = {
 		if row.ready then
 			AddBody(L[row.item and "WHATS_NEXT_PET_TOOLTIP_GRIMOIRE_IN_BAGS" or "WHATS_NEXT_PET_TOOLTIP_HUNTER_KNOWS"])
 		else
-			AddBody(L["WHATS_NEXT_PET_TOOLTIP_HOW_" .. row.source])
+			--[[
+				WoW Forever has no Beast Training, so a taming rank comes only with the beast tamed, and no grimoires,
+				so the demon trainer teaches a demon's rank itself
+			]]
+			local how = "WHATS_NEXT_PET_TOOLTIP_HOW_" .. row.source
+			if row.source == "TAMING" and not ns.WhatsNextPetUsesBeastTraining() then
+				how = "WHATS_NEXT_PET_TOOLTIP_HOW_TAMING_NEW_PET"
+			elseif row.source == "DEMON_TRAINER" and not row.item then
+				how = "WHATS_NEXT_PET_TOOLTIP_HOW_DEMON_TRAINER_TEACHES"
+			end
+			AddBody(L[how])
 			if row.beasts then
 				AddBeasts(row.beasts)
 			end

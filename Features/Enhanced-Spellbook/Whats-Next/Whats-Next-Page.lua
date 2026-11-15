@@ -204,7 +204,8 @@ local function BuildPage(frame, model)
 			counts[row.status] = (counts[row.status] or 0) + 1
 		end
 		local parts = {}
-		for _, status in ipairs(model.counts) do
+		local counted = type(model.counts) == "function" and model.counts() or model.counts
+		for _, status in ipairs(counted) do
 			parts[#parts + 1] = Bright(status, model.statusLabel(status))
 				.. " "
 				.. GetColor("TEXT")
@@ -318,8 +319,8 @@ local function BuildPage(frame, model)
 	-- the page strip along the parchment's bottom; the wheel turns the page anywhere on the parchment
 	local controls = ns.CreatePagingControls(page, parchment.paper)
 	page.pagingControls = controls
-	controls:SetPoint("BOTTOMLEFT", parchment.paper, "BOTTOMLEFT", 14, 0)
-	controls:SetPoint("BOTTOMRIGHT", parchment.paper, "BOTTOMRIGHT", -14, 0)
+	controls:SetPoint("BOTTOMLEFT", parchment.paper, "BOTTOMLEFT", 16, 0)
+	controls:SetPoint("BOTTOMRIGHT", parchment.paper, "BOTTOMRIGHT", -16, 0)
 	function page:OnPageChanged()
 		Layout()
 	end

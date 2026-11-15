@@ -181,7 +181,7 @@ function ns.MacroMenuGroupedSpells(menuState)
 end
 
 --[[
-	Rank: Highest, naming the rank it casts now, Dynamic (a friendly spell's Dynamic Rank), or a known rank; the
+	Rank: Max Rank, naming the rank it casts now, Dynamic (a friendly spell's Dynamic Rank), or a known rank; the
 	rest unclickable, each in its rank color with its note (MenuRank): red with where to learn it for one the
 	character could have now, gray with its level for one still to come
 ]]
@@ -191,7 +191,7 @@ function ns.MacroMenuRank(menuState)
 		section()
 		local rankMenu = group("MENU_GROUP_RANK", function()
 			local rank = ns.AbilityRank(menuState.macro)
-			return { rank == "targetRank" and L["MENU_RANK_DYNAMIC"] or rank or L["MENU_HIGHEST"] }
+			return { rank == "targetRank" and L["MENU_DYNAMIC_RANK"] or rank or L["MENU_HIGHEST"] }
 		end)
 		local function isRank(choice)
 			return function()
@@ -204,7 +204,7 @@ function ns.MacroMenuRank(menuState)
 			end
 		end
 		local highest = radio(rankMenu, L["MENU_HIGHEST"], isRank(nil), setRank(nil), L["MENU_HIGHEST_DESCRIPTION"])
-		-- the rank Highest casts today, so a rank still to learn reads as not in use yet (ranks lists highest first)
+		-- the rank Max Rank casts today, so a rank still to learn reads as not in use yet (ranks lists highest first)
 		local casts = menuState.macro.ranks and menuState.macro.ranks[1]
 		if casts then
 			highest:AddInitializer(function(frame)
@@ -214,7 +214,7 @@ function ns.MacroMenuRank(menuState)
 		if ns.OffersTargetRank(menuState.macro) then
 			radio(
 				rankMenu,
-				L["MENU_RANK_DYNAMIC"],
+				L["MENU_DYNAMIC_RANK"],
 				isRank("targetRank"),
 				setRank("targetRank"),
 				L[DESCRIPTIONS.targetRank],
@@ -230,8 +230,15 @@ function ns.MacroMenuRank(menuState)
 				all[#all + 1] = rank
 			end
 		end
-		table.sort(all, function(a, b) -- up from Rank 1
-			return a.level < b.level
+		--[[
+			highest on top, down to Rank 1 at the bottom, known and unlearned ranks interleaved by level; two
+			ranks taught at the same level keep the newer (higher spell ID) above
+		]]
+		table.sort(all, function(a, b)
+			if a.level ~= b.level then
+				return a.level > b.level
+			end
+			return (a.id or 0) > (b.id or 0)
 		end)
 		for _, rank in ipairs(all) do
 			if rank.unknown then
@@ -287,7 +294,8 @@ function ns.MacroMenuCastSequence(menuState)
 			-- the spell then NULL alone reads "Rend, Stop" rather than a count of one
 			local text = count
 				and (
-					count > 1 and L["MENU_CAST_SEQUENCE_STEPS"]:format(count) or ns.CastSequenceSummary(menuState.macro)
+					count > 1 and L["MENU_CAST_SEQUENCE_STEPS"]:format(count)
+					or ns.CastSequenceSummary(menuState.macro)
 				)
 			local value = text and GetColor("INFO") .. text .. "|r"
 			return LabelAndValue(frame, L["MENU_GROUP_CAST_SEQUENCE"], value)

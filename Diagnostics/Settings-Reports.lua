@@ -9,12 +9,23 @@ local CountKeys = ns.CountDiagnosticKeys
 
 --[[
     Answers "it's gone / off-screen" reports for everything the add-on draws:
-    screen size and UI scale, then the mini-map button's saved placement, the
+    screen size and UI scale, then the mini-map button's saved placement and menu, the
     Buff Duty window's, the Restock List window's and the Staples window's,
     and where the spellbook, the Spellbook's tab and its page sit. Read-only.
 ]]
 
--- The main mini-map button, and where a dragged position lives, link by link.
+-- True when Escape's list of frames to close holds the menu (Features/Minimap-Menu.lua).
+local function MenuClosesOnEscape()
+	local menuName = ADDON_NAME .. "Menu"
+	for _, name in ipairs(type(UISpecialFrames) == "table" and UISpecialFrames or {}) do
+		if name == menuName then
+			return true
+		end
+	end
+	return false
+end
+
+-- The main mini-map button, its menu, and where a dragged position lives, link by link.
 local function AppendMinimapLines(lines)
 	lines[#lines + 1] = ""
 	local LibDBIcon = LibStub("LibDBIcon-1.0")
@@ -22,6 +33,13 @@ local function AppendMinimapLines(lines)
 	-- Without the data object, login never registers a button and every repaint returns early.
 	lines[#lines + 1] = string.format("Data broker object: %s", ns.dataBrokerObject and "present" or "MISSING")
 	lines[#lines + 1] = string.format("Minimap button created: %s", button and "yes" or "no")
+	if button then
+		lines[#lines + 1] = string.format(
+			"Minimap button shown: %s, visible: %s",
+			tostring(button:IsShown() and true or false),
+			tostring(button:IsVisible() and true or false)
+		)
+	end
 
 	local minimap = ns.db and ns.db.global.minimap
 	if type(minimap) == "table" then
@@ -30,6 +48,32 @@ local function AppendMinimapLines(lines)
 	else
 		lines[#lines + 1] = "Minimap saved position: (none yet)"
 	end
+
+	--[[
+	    The menu opens from the data object's OnEnter through ns.ShowMenu, which
+	    returns early until the database is open; a TOC missing the menu's files
+	    leaves ns.ShowMenu nil and the hover does nothing.
+	]]
+	local broker = ns.dataBrokerObject
+	lines[#lines + 1] = ""
+	lines[#lines + 1] = string.format(
+		"Menu loaded: %s, database open: %s",
+		type(ns.ShowMenu) == "function" and "yes" or "MISSING",
+		ns.db and "yes" or "no"
+	)
+	lines[#lines + 1] = string.format(
+		"Button hover opens menu: %s, click runs menu clicks: %s",
+		tostring(type(broker) == "table" and type(broker.OnEnter) == "function"),
+		tostring(
+			type(broker) == "table" and type(broker.OnClick) == "function" and type(ns.RunButtonClick) == "function"
+		)
+	)
+	lines[#lines + 1] = string.format(
+		"Menu open now: %s, closes on Escape: %s",
+		tostring(type(ns.IsMenuShown) == "function" and ns.IsMenuShown() or false),
+		tostring(MenuClosesOnEscape())
+	)
+	lines[#lines + 1] = string.format("More Features rows: %d", #(ns.FEATURES or {}))
 
 	--[[
 	    Where a dragged position lives, link by link: LibDBIcon's drag handler

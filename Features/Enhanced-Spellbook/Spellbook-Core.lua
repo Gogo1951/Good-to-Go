@@ -66,6 +66,7 @@ local EVENT_HANDLERS = {
 	ACTIONBAR_SLOT_CHANGED = "OnActionbarSlotChanged",
 	UPDATE_MACROS = "OnUpdateMacros",
 	PLAYER_TARGET_CHANGED = "OnPlayerTargetChanged",
+	UNIT_TARGET = "OnSpellbookUnitTarget",
 	UPDATE_MOUSEOVER_UNIT = "OnUpdateMouseoverUnit",
 	PLAYER_REGEN_ENABLED = "OnPlayerRegenEnabled",
 	PLAYER_REGEN_DISABLED = "OnPlayerRegenDisabled",
@@ -77,6 +78,10 @@ local EVENT_HANDLERS = {
 	PET_BAR_UPDATE = "OnSpellbookPetBarUpdate",
 	BAG_UPDATE_DELAYED = "OnSpellbookBagUpdateDelayed",
 }
+-- Only where ns.EVENT_NAMES lists it (Features/Core.lua): Classic Era has no focus.
+if ns.FLAVOR ~= "Vanilla" then
+	EVENT_HANDLERS.PLAYER_FOCUS_CHANGED = "OnPlayerFocusChanged"
+end
 
 local LOGIN_REGISTERED_EVENTS = { TRAINER_SHOW = true, TRAINER_UPDATE = true }
 local OWNER_REGISTERED_EVENTS = { ADDON_LOADED = true }
@@ -84,10 +89,14 @@ local OWNER_REGISTERED_EVENTS = { ADDON_LOADED = true }
 -- Heard with the Spellbook off: the spellbook tab attaches whenever the game's book loads, so switching on later finds it there.
 local WHILE_OFF_EVENTS = { ADDON_LOADED = true }
 
--- Unit events the page only ever needs for these units: the player's pet, and the player's or the pet's level.
+--[[
+	Unit events the page only ever needs for these units: the player's pet, the player's or the pet's level, and
+	whom the target targets (for Dynamic Rank's target-of-target).
+]]
 local EVENT_UNITS = {
 	UNIT_PET = { "player" },
 	UNIT_LEVEL = { "player", "pet" },
+	UNIT_TARGET = { "target" },
 }
 
 local MODULE = "Spellbook"
@@ -133,6 +142,22 @@ local function OnPlayerLogin()
 			if class then
 				trainerSpells[class] = trainerSpells[class] or {}
 				trainerSpells[class][id] = trainerSpells[class][id] or level
+			end
+		end
+	end
+	--[[
+		MIGRATION (remove after 2026-12-13): pet abilities a WoW Forever hunter trainer listed, recorded as the
+		hunter's own trainer spells before RecordServices (Features/Enhanced-Spellbook/Trainer-Recording.lua) skipped
+		them, leave every profile's records.
+	]]
+	for _, profile in pairs(ns.db.sv.profiles or {}) do
+		for _, spells in pairs(type(profile.trainerSpells) == "table" and profile.trainerSpells or {}) do
+			if type(spells) == "table" then
+				for id in pairs(spells) do
+					if ns.IsPetAbilitySpell(id) then
+						spells[id] = nil
+					end
+				end
 			end
 		end
 	end
@@ -184,8 +209,3 @@ end)
 
 -- The rest wait for login, when the saved switch is known.
 ns.SetModuleEvent(MODULE, "PLAYER_LOGIN", true)
-for event in pairs(WHILE_OFF_EVENTS) do
-	if not OWNER_REGISTERED_EVENTS[event] then
-		ns.SetModuleEvent(MODULE, event, true)
-	end
-end

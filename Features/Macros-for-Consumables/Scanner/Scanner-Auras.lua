@@ -22,6 +22,28 @@ local _, ns = ...
 ]]
 ns.SCROLL_ITEM_LOOKUP = {}
 
+--[[
+    A flavor with no scroll file, or a type missing either list, reads as no
+    scrolls rather than erroring: every walk below and in Scanner-Scrolls.lua
+    runs ipairs/pairs on these lists. ns.SCROLL_DATA_GAPS records what was
+    filled in, and Diagnostics' context report prints it.
+]]
+ns.SCROLL_DATA_GAPS = {}
+if type(ns.SCROLL_DATA) ~= "table" then
+	ns.SCROLL_DATA = {}
+	ns.SCROLL_DATA_GAPS[#ns.SCROLL_DATA_GAPS + 1] = "no SCROLL_DATA table"
+end
+for scrollType, data in pairs(ns.SCROLL_DATA) do
+	if type(data.items) ~= "table" then
+		data.items = {}
+		ns.SCROLL_DATA_GAPS[#ns.SCROLL_DATA_GAPS + 1] = tostring(scrollType) .. " has no items"
+	end
+	if type(data.conflictSpells) ~= "table" then
+		data.conflictSpells = {}
+		ns.SCROLL_DATA_GAPS[#ns.SCROLL_DATA_GAPS + 1] = tostring(scrollType) .. " has no conflictSpells"
+	end
+end
+
 local function ByRequiredLevelDescending(a, b)
 	if a[3] ~= b[3] then
 		return a[3] > b[3]
@@ -32,9 +54,9 @@ end
 --[[
     Reverse maps from a spell ID back to the scroll type(s) it covers, so the
     aura walk below resolves each aura in one lookup instead of testing every
-    type. Both hold lists: no spell covers two stats in the current data, but a
-    group buff that did (a Gift of the Wild style spell) has to register
-    against every type it covers rather than silently claiming one.
+    type. Both hold lists: several conflict buffs (Elixir of the Sages) cover
+    two stats, and each registers against every type it covers rather than
+    silently claiming one.
 ]]
 local scrollBuffOwners = {}
 local scrollConflictOwners = {}

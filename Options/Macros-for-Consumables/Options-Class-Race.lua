@@ -1,10 +1,11 @@
 local _, ns = ...
 local L = ns.L
+local Kit = ns.OptionsKit
 local GetColor = ns.GetColor
 
-local Header = ns.OptionsHeader
-local Desc = ns.OptionsDesc
-local Spacer = ns.OptionsSpacer
+local Header = Kit.Header
+local Desc = Kit.Desc
+local Spacer = Kit.Spacer
 
 --------------------------------------------------------------------------------
 -- Active-State Predicates
@@ -69,7 +70,7 @@ end
 -- No Poisons skill on this flavor (Mists), so no Poisons macro for these rows to set up.
 local NO_POISONS = ns.POISONS_SPELL_ID == nil
 
-local function PoisonHandDropdown(description, settingKey, order)
+local function PoisonHandDropdown(description, settingKey)
 	local sorting = {}
 	for groupID in pairs(ns.POISON_GROUP_BASE_ITEMS) do
 		sorting[#sorting + 1] = groupID
@@ -78,21 +79,17 @@ local function PoisonHandDropdown(description, settingKey, order)
 
 	return {
 		type = "select",
-		name = "",
 		desc = description,
-		order = order,
-		width = ns.OPTIONS_CONTROL_WIDTH,
-		hidden = NO_POISONS,
 		values = function()
 			local values = {}
 			local coldItemIDs = {}
 			for groupID, baseItem in pairs(ns.POISON_GROUP_BASE_ITEMS) do
-				values[groupID] = ns.GetPoisonGroupName(groupID) or ns.GetItemDisplayName(baseItem)
+				values[groupID] = ns.GetPoisonGroupName(groupID) or Kit.ItemName(baseItem)
 				if not C_Item.GetItemInfo(baseItem) then
 					coldItemIDs[#coldItemIDs + 1] = baseItem
 				end
 			end
-			ns.WarmItemCache(coldItemIDs, ns.OPTIONS_REGISTRY.ClassRace)
+			Kit.WarmItems(coldItemIDs, ns.OPTIONS_REGISTRY.ClassRace)
 			return values
 		end,
 		sorting = sorting,
@@ -136,42 +133,35 @@ function ns.BuildClassRaceOptions()
 		spaceDruid1 = Spacer(11),
 		descDruid = Desc(GetColor("BODY") .. L["OPTIONS_DRUID_DESCRIPTION"] .. "|r", 12),
 		spaceDruid2 = Spacer(13),
-		toggleDruidMacroHelper = {
+		toggleDruidMacroHelper = Kit.ToggleRow(14, {
 			type = "toggle",
 			name = L["OPTIONS_DRUID_MACRO_HELPER"],
 			desc = L["OPTIONS_DRUID_MACRO_HELPER_DESCRIPTION"],
-			order = 14,
-			width = ns.OPTIONS_LABEL_WIDTH,
 			get = function()
 				return DruidMacroHelperActive()
 			end,
 			set = function(_, value)
 				ns.ToggleMacroSetting("enableDruidMacroHelper", value)
 			end,
-		},
-		druidReturnForm = {
-			type = "select",
-			name = "",
-			desc = L["OPTIONS_DRUID_RETURN_FORM_DESCRIPTION"],
-			order = 15,
-			width = ns.OPTIONS_CONTROL_WIDTH,
-			hidden = function()
-				return not DruidMacroHelperActive()
-			end,
-			values = {
-				bear = L["DRUID_FORM_BEAR"],
-				cat = L["DRUID_FORM_CAT"],
+		}, {
+			control = {
+				type = "select",
+				desc = L["OPTIONS_DRUID_RETURN_FORM_DESCRIPTION"],
+				values = {
+					bear = L["DRUID_FORM_BEAR"],
+					cat = L["DRUID_FORM_CAT"],
+				},
+				sorting = { "bear", "cat" },
+				get = function()
+					return ns.db.profile.druidReturnForm
+				end,
+				set = function(_, value)
+					ns.db.profile.druidReturnForm = value
+					ns.ResetMacroState()
+					ns.RequestUpdate()
+				end,
 			},
-			sorting = { "bear", "cat" },
-			get = function()
-				return ns.db.profile.druidReturnForm
-			end,
-			set = function(_, value)
-				ns.db.profile.druidReturnForm = value
-				ns.ResetMacroState()
-				ns.RequestUpdate()
-			end,
-		},
+		}),
 
 		--[[
 		    Rogues -- poison group per weapon slot plus Stealth Eating.
@@ -187,22 +177,20 @@ function ns.BuildClassRaceOptions()
 		spaceRogue1 = Spacer(22),
 		descPoisons = Desc(GetColor("BODY") .. L["OPTIONS_POISONS_DESCRIPTION"] .. "|r", 23, NO_POISONS),
 		spaceRogue2 = Spacer(24, NO_POISONS),
-		-- Label-beside-control rows: the label cell, then the unlabeled dropdown, one row wide together.
-		labelMainHandPoison = ns.OptionsRowLabel(
-			GetColor("BODY") .. L["OPTIONS_POISON_MAIN_HAND"] .. "|r",
+		-- Label-beside-control rows: the caption, then the unlabeled dropdown, one row wide together.
+		mainHandPoison = Kit.LabelRow(
 			25,
-			nil,
-			NO_POISONS
+			NO_POISONS,
+			GetColor("BODY") .. L["OPTIONS_POISON_MAIN_HAND"] .. "|r",
+			PoisonHandDropdown(L["OPTIONS_POISON_MAIN_HAND_DESCRIPTION"], "mainHandPoisonGroup")
 		),
-		mainHandPoison = PoisonHandDropdown(L["OPTIONS_POISON_MAIN_HAND_DESCRIPTION"], "mainHandPoisonGroup", 26),
 		spaceRogue3 = Spacer(27, NO_POISONS),
-		labelOffHandPoison = ns.OptionsRowLabel(
-			GetColor("BODY") .. L["OPTIONS_POISON_OFF_HAND"] .. "|r",
+		offHandPoison = Kit.LabelRow(
 			28,
-			nil,
-			NO_POISONS
+			NO_POISONS,
+			GetColor("BODY") .. L["OPTIONS_POISON_OFF_HAND"] .. "|r",
+			PoisonHandDropdown(L["OPTIONS_POISON_OFF_HAND_DESCRIPTION"], "offHandPoisonGroup")
 		),
-		offHandPoison = PoisonHandDropdown(L["OPTIONS_POISON_OFF_HAND_DESCRIPTION"], "offHandPoisonGroup", 29),
 		spaceRogue4 = Spacer(30, NO_POISONS),
 		toggleStealthEatingRogue = MacroSettingToggle(
 			"enableStealthEating",
@@ -286,10 +274,11 @@ function ns.BuildClassRaceOptions()
 			NoRapidRegeneration
 		),
 	}
+	ns.AddFeatureOffLine(args, "macrosEnabled")
 
 	return {
 		type = "group",
-		name = L["TAB_CLASS_RACE"],
+		name = Kit.SubPanelTitle(L["TAB_CONSUMABLE_MACROS"], L["TAB_CLASS_RACE"]),
 		args = args,
 	}
 end

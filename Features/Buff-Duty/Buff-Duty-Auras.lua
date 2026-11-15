@@ -101,20 +101,12 @@ local function AuraStrength(points)
 end
 
 --[[
-    Every record goes stale, and one not read since the last call is dropped, so
-    the cache holds only players the window still looks at.
+    Every record goes stale, to be read again on its next use; nothing is dropped,
+    so the bounces a stronger buff caused are still known after a loading screen
+    or a spell change. BuffDuty.PruneAuraCache keeps both tables to the players
+    the window still looks at.
 ]]
 function BuffDuty.MarkAllAurasDirty()
-	for guid, record in pairs(auraCache) do
-		if record.generation ~= generation then
-			auraCache[guid] = nil
-		end
-	end
-	for guid in pairs(bounced) do
-		if not auraCache[guid] then
-			bounced[guid] = nil
-		end
-	end
 	wipe(dirtyGUIDs)
 	generation = generation + 1
 end
@@ -151,6 +143,7 @@ function BuffDuty.PruneAuraCache()
 		end
 	end
 	BuffDuty.PrunePetHolds(keep)
+	BuffDuty.PruneNPCCycles(keep)
 end
 
 function BuffDuty.MarkAurasDirty(unit)

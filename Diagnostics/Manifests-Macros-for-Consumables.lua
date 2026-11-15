@@ -36,7 +36,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(C_AddOns) == "table" and type(C_AddOns.GetNumAddOns) == "function"
 		end,
 	},
-	-- The legacy import (Features/Core.lua) turns the add-ons this one replaces off, or on for one character to read them.
+	-- The legacy import (Features/Legacy-Migration.lua) turns the add-ons this one replaces off, or on for one character to read them.
 	{
 		"C_AddOns.DisableAddOn",
 		function()
@@ -49,7 +49,14 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(C_AddOns) == "table" and type(C_AddOns.EnableAddOn) == "function"
 		end,
 	},
-	-- The options' item lists ask whether a row's item is cached before naming it (Options/Options-Item-Lists.lua).
+	-- The mini-map menu closes once the cursor leaves it, read this way so a controller's virtual cursor counts (Features/Menu-Kit.lua).
+	{
+		"GetCursorPosition",
+		function()
+			return type(GetCursorPosition) == "function"
+		end,
+	},
+	-- The options' item lists and the Staples window ask whether an item is cached before naming it (Options/Options-Kit.lua, Features/Item-Info.lua).
 	{
 		"C_Item.IsItemDataCachedByID",
 		function()
@@ -106,7 +113,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 	},
 	--[[
 	    The route ns.OpenOptionsPanel docks the panel with
-	    (Options/Options.lua). A client that does not provide it falls through
+	    (Options/Options-Kit.lua). A client that does not provide it falls through
 	    to AceConfigDialog, which opens a standalone floating window instead of
 	    docking -- so a report where this row FAILs is the one that explains a
 	    panel the player says opened in the wrong place.
@@ -190,8 +197,9 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 		end,
 	},
 	--[[
-	    Called by ns.WarmItemCache (Options/Options-Item-Lists.lua): without it an
-	    options item list can only show ids the client already cached, so the
+	    Called by Kit.WarmItems (Options/Options-Kit.lua) and ns.WarmItemCache
+	    (Features/Item-Info.lua): without it an options item list or the
+	    Staples window can only show ids the client already cached, so the
 	    rows sit on their loading text until something else pulls the data.
 	]]
 	{
@@ -844,8 +852,9 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_SPELLS, {
     window holding writes back, a full macro book, a body at the length cap, a
     class, race, level, group or target gate, a scroll buff already covered, a
     spell not known, a pet diet the add-on can't read, an item not loaded --
-    then what the last scan picked and the spells the add-on gates on. Restocker Context covers the Restocker and the Inventory Report,
-    Readiness Report the ready check, and Display Context the mini-map button.
+    then what the last scan picked, what the mini-map button's icon, rows and
+    clicks would show and do, and the spells the add-on gates on. Restocker Context covers the Restocker and the Inventory Report,
+    Readiness Report the ready check, and Display Context where the mini-map button sits.
 ]]
 
 local function OnOff(value)
@@ -887,6 +896,14 @@ local function ExpirationText(expiration)
 	return string.format("on, %.0f s left", expiration - GetTime())
 end
 
+-- Forever hides the target's identity mid-fight, and testing it then errors (ns.IsUnitIdentitySecret).
+local function FriendlyTargetText()
+	if ns.IsUnitIdentitySecret("target") then
+		return "restricted right now"
+	end
+	return YesNo(ns.HasFriendlyPlayerTarget())
+end
+
 local function AppendCharacter(lines)
 	local _, classToken = UnitClass("player")
 	local _, raceToken = UnitRace("player")
@@ -915,14 +932,15 @@ local function AppendCharacter(lines)
 
 	-- The flags every class and race gate reads, set once at login (Scanner-Character.lua).
 	lines[#lines + 1] = string.format(
-		"Read as: Hunter %s, Druid %s, Mage %s, Warlock %s, Rogue %s, Night Elf %s, Forsaken %s",
+		"Read as: Hunter %s, Druid %s, Mage %s, Warlock %s, Rogue %s, Night Elf %s, Forsaken %s, Troll %s",
 		YesNo(ns.isHunter),
 		YesNo(ns.isDruid),
 		YesNo(ns.isMage),
 		YesNo(ns.isWarlock),
 		YesNo(ns.isRogue),
 		YesNo(ns.isNightElf),
-		YesNo(ns.isForsaken)
+		YesNo(ns.isForsaken),
+		YesNo(ns.isTroll)
 	)
 	-- Until the login setup runs, every flag above reads "no" and no macro knows its spells.
 	lines[#lines + 1] = string.format("Character setup run: %s", YesNo(ns.spellCache ~= nil))
@@ -950,13 +968,14 @@ local function AppendCharacter(lines)
 		YesNo(UnitIsDead("player")),
 		YesNo(UnitIsGhost("player")),
 		YesNo(UnitExists("target")),
-		YesNo(ns.HasFriendlyPlayerTarget())
+		FriendlyTargetText()
 	)
 
 	--[[
 	    The profession ranks the scanner's usability gates read (0 = unlearned).
 	    Where they are read from the skill list by name, the read opens a
-	    collapsed header and closes it again, unless the client can't.
+	    collapsed header and closes it again, unless the client can't, and
+	    puts that off while the Skills tab is open.
 	]]
 	local byID = C_SkillInfo and C_SkillInfo.GetSkillLineInfoByID
 	local readBy = "by ID"
@@ -970,9 +989,10 @@ local function AppendCharacter(lines)
 			end
 		end
 		readBy = string.format(
-			"from the skill list by name, a header collapsed: %s, headers can open: %s",
+			"from the skill list by name, a header collapsed: %s, headers can open: %s, Skills tab open: %s",
 			YesNo(collapsed),
-			YesNo(ns.ExpandSkillHeader and ns.CollapseSkillHeader)
+			YesNo(ns.ExpandSkillHeader and ns.CollapseSkillHeader),
+			YesNo(_G.SkillFrame and _G.SkillFrame:IsShown())
 		)
 	end
 	lines[#lines + 1] = string.format(
@@ -1023,6 +1043,34 @@ local function AppendMacroWriting(lines)
 		#replacedRunning > 0 and table.concat(replacedRunning, ", ") or "(none)"
 	)
 	--[[
+	    MIGRATION (remove after 2026-12-08)
+	    The settings import (Legacy-Migration.lua) reads an old add-on's table
+	    only in a session where that add-on is loaded, and only while its
+	    legacyImported entry is unset or from an older rule: 2 means done,
+	    "declined" means the player said no, and neither is asked again.
+	]]
+	local imported = global and global.legacyImported
+	local imports = {}
+	for _, legacy in ipairs(ns.LEGACY_ADDONS or {}) do
+		local key = legacy.savedVariables
+		if key then
+			local _, _, _, loadable, reason = C_AddOns.GetAddOnInfo(legacy.folder)
+			imports[#imports + 1] = string.format(
+				"%s loaded %s (%s), its table present %s, import stamp %s",
+				legacy.folder,
+				YesNo(C_AddOns.IsAddOnLoaded(legacy.folder)),
+				tostring(reason or (loadable and "loadable") or "not loadable"),
+				YesNo(type(_G[key]) == "table"),
+				tostring(type(imported) == "table" and imported[key] or nil)
+			)
+		end
+	end
+	lines[#lines + 1] = string.format(
+		"Settings import: %s // question waiting for this login: %s",
+		#imports > 0 and table.concat(imports, "; ") or "(none)",
+		YesNo(ns.IsLegacyImportPending and ns.IsLegacyImportPending())
+	)
+	--[[
 	    Macro names on action buttons are hidden by fading each button's name
 	    text (Action-Button-Text.lua); a bar add-on that removes those texts
 	    leaves nothing to fade.
@@ -1065,7 +1113,9 @@ local function AppendMacroWriting(lines)
 	--[[
 	    A body at the length cap has shed its optional lines (Body-Builder.lua's
 	    trim), and the items a body uses show whether it still matches the
-	    last scan's picks below.
+	    last scan's picks below. The writes go to whichever macro of that name
+	    is found first, which is in the character tab when its index is past
+	    the General cap.
 	]]
 	local typeNames = {}
 	for typeName in pairs(ns.MACRO_CONFIG) do
@@ -1075,7 +1125,8 @@ local function AppendMacroWriting(lines)
 	for _, typeName in ipairs(typeNames) do
 		local macroName = ns.MACRO_CONFIG[typeName].macro
 		local state = "NOT WRITTEN"
-		if (GetMacroIndexByName(macroName) or 0) > 0 then
+		local index = GetMacroIndexByName(macroName) or 0
+		if index > 0 then
 			local body = GetMacroBody(macroName) or ""
 			local itemIDs, seen = {}, {}
 			for itemID in string.gmatch(body, "item:(%d+)") do
@@ -1085,7 +1136,8 @@ local function AppendMacroWriting(lines)
 				end
 			end
 			state = string.format(
-				"written, %d of %d bytes, items: %s",
+				"written in %s, %d of %d bytes, items: %s",
+				index > generalCap and "the CHARACTER tab" or "General",
 				#body,
 				ns.MACRO_BODY_MAX_LENGTH,
 				#itemIDs > 0 and table.concat(itemIDs, ", ") or "(none)"
@@ -1103,6 +1155,32 @@ local function AppendMacroWriting(lines)
 end
 
 --[[
+    Whether this TOC's scroll file loaded: the scan-order types it has rows for,
+    the ones it lacks, and any gap Scanner-Auras.lua filled with an empty list
+    at load. Printed whatever the settings, so a flavor shipping no scroll
+    data shows it before anyone turns scrolls on.
+]]
+local function AppendScrollData(lines)
+	local loaded, absent = {}, {}
+	local scrollData = type(ns.SCROLL_DATA) == "table" and ns.SCROLL_DATA or {}
+	for _, scrollType in ipairs(ns.SCROLL_CHECK_ORDER or {}) do
+		local data = scrollData[scrollType]
+		if data and type(data.items) == "table" and #data.items > 0 then
+			loaded[#loaded + 1] = string.format("%s %d", scrollType, #data.items)
+		else
+			absent[#absent + 1] = scrollType
+		end
+	end
+	local gaps = ns.SCROLL_DATA_GAPS or {}
+	lines[#lines + 1] = string.format(
+		"Scroll data: %s // no rows: %s // filled in at load: %s",
+		#loaded > 0 and table.concat(loaded, ", ") or "(none)",
+		#absent > 0 and table.concat(absent, ", ") or "(none)",
+		#gaps > 0 and table.concat(gaps, ", ") or "(none)"
+	)
+end
+
+--[[
     Each ticked scroll type: the best scroll the last scan's bags hold for it,
     by Scanner-Scrolls.lua's rules (class, Ignore List; never level), and the
     snapshot readings that say whether its buff is already covered -- the
@@ -1112,6 +1190,7 @@ end
 local function AppendScrollTypes(lines, profile)
 	local snapshot = ns.GetPlayerBuffSnapshot()
 	lines[#lines + 1] = string.format("Well Fed now: %s", ExpirationText(snapshot.wellFedExpiration))
+	AppendScrollData(lines)
 	if not (profile.useScrolls and profile.scrollTypes) then
 		return
 	end
@@ -1245,8 +1324,12 @@ local function AppendChoices(lines)
 	)
 end
 
-local function CannibalizeCooldownText()
-	local spellID = ns.CANNIBALIZE_SPELL_ID
+--[[
+    A racial's cooldown as ns.RacialSpellReady reads it, read directly here,
+    since that function also times a rebuild: on cooldown, the macro leaves
+    the cast out.
+]]
+local function RacialCooldownText(spellID)
 	if not spellID then
 		return "(no spell on this client)"
 	end
@@ -1382,7 +1465,7 @@ local function AppendClassAndRace(lines)
 		lines[#lines + 1] = string.format(
 			"Cannibalize now: target Humanoid or Undead %s // cooldown %s",
 			cannibalizable == nil and "restricted right now" or YesNo(cannibalizable),
-			CannibalizeCooldownText()
+			RacialCooldownText(ns.CANNIBALIZE_SPELL_ID)
 		)
 	else
 		lines[#lines + 1] = "Cannibalize now: Tools-Forsaken.lua not loaded (restart the client)"
@@ -1390,9 +1473,10 @@ local function AppendClassAndRace(lines)
 	-- Rapid Regeneration exists only on WoW Forever (Tools-Troll.lua).
 	if ns.RAPID_REGENERATION_SPELL_ID then
 		lines[#lines + 1] = string.format(
-			"Rapid Regeneration: eating %s // name: %s",
+			"Rapid Regeneration: eating %s // name: %s // cooldown %s",
 			OnOff(profile.enableRapidRegenerationEating),
-			tostring(ns.rapidRegenerationSpellName)
+			tostring(ns.rapidRegenerationSpellName),
+			RacialCooldownText(ns.RAPID_REGENERATION_SPELL_ID)
 		)
 	end
 	-- A buff-food pick takes Cannibalize's place in the eating macro (Tools-Forsaken.lua).
@@ -1500,6 +1584,82 @@ local function AppendSelection(lines)
 end
 
 --[[
+    What the mini-map button shows and its consumable clicks do
+    (Minimap-Button.lua, Minimap-Menu.lua, Macro-Notes.lua). The icon is
+    redrawn at the end of each macro update and settings refresh, from the
+    Food pick or the default food. Current Food needs the pick's link as well, and reads as
+    no suitable food without it. Buff Food & Scrolls reads Paused while a
+    switch is on but its When to Use doesn't hold, and Left-Click turns both
+    on only while both are off. Right-Click ignores the Current Food on this
+    character's list.
+]]
+local function AppendMinimap(lines)
+	local profile = ns.db and ns.db.profile
+	if not profile then
+		return
+	end
+	lines[#lines + 1] = "-- Mini-map button --"
+	local broker = ns.dataBrokerObject
+	local defaultFood = ns.MACRO_DEFAULT_ITEM_IDS and ns.MACRO_DEFAULT_ITEM_IDS["Food"]
+	local pickIcon = (ns.bestFoodID or defaultFood) and C_Item.GetItemIconByID(ns.bestFoodID or defaultFood)
+	lines[#lines + 1] = string.format(
+		"Icon now: %s // icon the Food pick gives: %s",
+		tostring(type(broker) == "table" and broker.icon or nil),
+		tostring(pickIcon)
+	)
+	lines[#lines + 1] = string.format(
+		"Current Food row: %s, link loaded %s // Right-Click would ignore it: %s",
+		ItemText(ns.bestFoodID),
+		YesNo(ns.bestFoodLink),
+		YesNo(ns.bestFoodID and not ns.IsIgnored(ns.bestFoodID))
+	)
+	local rowState = "Off"
+	for _, switch in ipairs({ { profile.useBuffFood, "buffFood" }, { profile.useScrolls, "scrolls" } }) do
+		if switch[1] then
+			if ns.IsUseWhenActive(profile, switch[2]) then
+				rowState = "On"
+				break
+			end
+			rowState = "Paused"
+		end
+	end
+	lines[#lines + 1] = string.format(
+		"Buff Food & Scrolls row: %s // Left-Click turns both: %s",
+		rowState,
+		OnOff(not (profile.useBuffFood or profile.useScrolls))
+	)
+	-- Macro-Notes.lua is new in the TOCs, so a client updated while running lacks it until a restart.
+	if not ns.GetClassMacroNotes then
+		lines[#lines + 1] = "[Class] Macros row: Macro-Notes.lua not loaded (restart the client)"
+		return
+	end
+	--[[
+	    No row while the class has no notes or knows none of their spells; an
+	    item shows under it only once its link has loaded.
+	]]
+	local _, _, blocks = ns.GetClassMacroNotes()
+	local notes, items = {}, {}
+	for _, block in ipairs(blocks or {}) do
+		if block.rows then
+			notes[#notes + 1] = table.concat(block.types or {}, "/")
+		elseif block.itemID or block.slot then
+			items[#items + 1] = string.format(
+				"%s %s, link loaded %s",
+				tostring(block.slot),
+				ItemText(block.itemID),
+				YesNo(block.itemLink)
+			)
+		end
+	end
+	lines[#lines + 1] = string.format(
+		"[Class] Macros row: %s // notes for: %s // items: %s",
+		blocks and "shown" or "none",
+		#notes > 0 and table.concat(notes, ", ") or "(none)",
+		#items > 0 and table.concat(items, "; ") or "(none)"
+	)
+end
+
+--[[
     The ignoreTarget and checkUnique flags each macro's resolver hands
     ns.GetSmartSpell (Tools-Mages.lua, Tools-Warlocks.lua), so the "casts:"
     line names what the macro would cast. A list not named here, like the
@@ -1530,7 +1690,12 @@ local function AppendSpells(lines)
 		end
 	end
 
-	-- Each conjure ladder: how many of its ranks are known, and what the macros' /cast line would name now.
+	--[[
+	    Each conjure ladder: how many of its ranks are known, and what the
+	    macros' /cast line would name now. Its target reads wait while Forever
+	    hides the target's identity.
+	]]
+	local targetHidden = ns.IsUnitIdentitySecret("target")
 	lines[#lines + 1] = ""
 	lines[#lines + 1] = "-- Conjure ranks --"
 	local listNames = {}
@@ -1547,15 +1712,17 @@ local function AppendSpells(lines)
 			end
 		end
 		local flags = CONJURE_CAST_FLAGS[listName] or {}
-		local castName = ns.GetSmartSpell(list, flags[1], flags[2])
-		lines[#lines + 1] =
-			string.format("%s: %d of %d ranks known // casts: %s", listName, known, #list, tostring(castName))
+		local castName = "(target restricted right now)"
+		if not targetHidden or flags[1] then
+			castName = tostring(ns.GetSmartSpell(list, flags[1], flags[2]))
+		end
+		lines[#lines + 1] = string.format("%s: %d of %d ranks known // casts: %s", listName, known, #list, castName)
 	end
 	-- A friendly player target below your level caps the rank of what you conjure for them (Smart-Spell.lua).
 	lines[#lines + 1] = string.format(
 		"Friendly player target: %s // target level: %s",
-		YesNo(ns.HasFriendlyPlayerTarget()),
-		tostring(UnitLevel("target"))
+		FriendlyTargetText(),
+		targetHidden and "restricted right now" or tostring(UnitLevel("target"))
 	)
 end
 
@@ -1570,6 +1737,8 @@ function ns:BuildConnoisseurContextReport()
 	AppendClassAndRace(lines)
 	lines[#lines + 1] = ""
 	AppendSelection(lines)
+	lines[#lines + 1] = ""
+	AppendMinimap(lines)
 	lines[#lines + 1] = ""
 	AppendSpells(lines)
 	return (table.concat(lines, "\n"):gsub("|", "||"))
@@ -1587,7 +1756,8 @@ end
     it never rescans, so the report can never disagree with the macros the
     player is actually looking at. Then every consumable in that scan's bags
     with the usability gate it meets, read from its cached record against the
-    level, skills and map the scan reads.
+    level, skills and map the scan reads, and the food, drink, potions and
+    bandages there that no macro's data carries.
 ]]
 
 local function DescribeItem(itemID)
@@ -1733,6 +1903,46 @@ local function AppendBagGates(lines)
 	end
 end
 
+--[[
+    Food, drink, potions and bandages in the last scan's bags that no
+    consumable table in this data folder carries: the scan passes them over,
+    so no macro ever uses one. Told apart by item class (Consumable, with the
+    subclasses for those and Classic's plain Consumable), which every client
+    answers without a server request.
+]]
+local MACRO_ITEM_SUBCLASSES = { [0] = true, [1] = true, [5] = true, [7] = true }
+
+local function AppendUnknownConsumables(lines)
+	local GetItemInfoInstant = C_Item and C_Item.GetItemInfoInstant
+	if not GetItemInfoInstant then
+		return
+	end
+	local otherTables = { ns.SCROLL_ITEM_LOOKUP, ns.PET_FOOD_DATA, ns.PET_BUFF_FOODS, ns.POISON_DATA }
+	local unknown = {}
+	for itemID in pairs(ns.scannedItemCounts or {}) do
+		local carried = ns.HasRawData(itemID)
+		for index = 1, 4 do
+			local other = otherTables[index]
+			carried = carried or (type(other) == "table" and other[itemID] ~= nil)
+		end
+		if not carried then
+			local _, _, _, _, _, classID, subclassID = GetItemInfoInstant(itemID)
+			if classID == 0 and MACRO_ITEM_SUBCLASSES[subclassID] then
+				unknown[#unknown + 1] = itemID
+			end
+		end
+	end
+	table.sort(unknown)
+	local named = {}
+	for index, itemID in ipairs(unknown) do
+		named[index] = DescribeItem(itemID)
+	end
+	lines[#lines + 1] = string.format(
+		"Consumables in bags no macro data carries: %s",
+		#named > 0 and table.concat(named, ", ") or "(none)"
+	)
+end
+
 function ns:BuildSelectionReport()
 	local lines = { GetClientHeader(), "" }
 
@@ -1813,6 +2023,7 @@ function ns:BuildSelectionReport()
 	lines[#lines + 1] = ""
 	lines[#lines + 1] = "-- Bag consumables and the gate each one meets --"
 	AppendBagGates(lines)
+	AppendUnknownConsumables(lines)
 
 	return table.concat(lines, "\n")
 end
@@ -1985,11 +2196,13 @@ function ns:BuildReadinessDiagnosticReport()
 					YesNo(ns.GroupHasSoulstone()),
 					YesNo(ns.SoulstonesOnCooldown())
 				),
+				-- A Shaman in your party covers the main hand, except where weapon enchants stack (Forever).
 				string.format(
-					"Weapon buffs missing: main hand %s, off hand %s // Shaman in party (covers the main hand) %s",
+					"Weapon buffs missing: main hand %s, off hand %s // Shaman in party %s, covers the main hand %s",
 					YesNo(mainHandMissing),
 					YesNo(offHandMissing),
-					YesNo(ns.PartyHasClass("SHAMAN"))
+					YesNo(ns.PartyHasClass("SHAMAN")),
+					YesNo(not ns.WEAPON_ENCHANTS_STACK and ns.PartyHasClass("SHAMAN"))
 				),
 				string.format(
 					"Warlock in group (Healthstone) %s // knows Conjure Mana Gem %s // uses mana %s // talent tabs %s",

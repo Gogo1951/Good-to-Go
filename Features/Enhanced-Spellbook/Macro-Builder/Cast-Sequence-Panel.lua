@@ -349,7 +349,7 @@ local function CreatePanel(page)
 		panel.rows[i] = CreateStep(panel, i)
 	end
 	panel.add = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-	panel.add:SetSize(150, 22)
+	panel.add:SetSize(160, 22)
 	panel.add:SetText(L["CAST_SEQUENCE_ADD"])
 	panel.add:SetMotionScriptsWhileDisabled(true)
 	-- the new step has no spell yet, so pick mode starts for it at once

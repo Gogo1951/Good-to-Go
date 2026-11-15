@@ -23,17 +23,19 @@ ns.SAVED_VARIABLES_NAME = "GoodToGoDB"
 ns.OLD_SAVED_VARIABLES_NAME = "BagsBuffsButtonsDB"
 
 --[[
-    The add-ons Good to Go replaces that rewrite its macros if both run, by
-    installed folder. Features/Core.lua turns any of them that is running off at
-    login and offers a reload. This is no migration and has no end date: a
+    The add-ons Good to Go replaces that rewrite its macros, or report every
+    low rank twice, if both run, by installed folder (Rank Sentinel under
+    either folder name it has shipped with, Data.RANK_WATCH.STANDALONE_FOLDERS).
+    Features/Replaced-Addons.lua turns any of them that is
+    running off at login and offers a reload. This is no migration and has no end date: a
     player can install Good to Go, or turn the old add-on back on, long after
     the settings import below is gone.
 ]]
-ns.REPLACED_ADDONS = { "Consumable-Connoisseur" }
+ns.REPLACED_ADDONS = { "Consumable-Connoisseur", "Rank-Sentinel", "RankSentinel" }
 
 --[[
     MIGRATION (remove after 2026-12-08): the add-ons Good to Go
-    replaces, by installed folder. Features/Core.lua copies the settings of the
+    replaces, by installed folder. Features/Legacy-Migration.lua copies the settings of the
     ones with a saved-variables table here from their own table, which the
     client loads only while that add-on is enabled, then turns every one of
     them off itself and offers a reload. The ones also in ns.REPLACED_ADDONS
@@ -103,6 +105,14 @@ ns.SAMPLE_NAMES = {
 	WARLOCK = "Greasy",
 	WARRIOR = "Prima",
 }
+
+--[[
+    The pets the Example lines name: a hunter's pet by its own name, a proper
+    name the same in every locale, and a warlock's demon by its kind, the
+    client's name for this creature family (Imp).
+]]
+ns.SAMPLE_PET_NAME = "Fluffy"
+ns.SAMPLE_DEMON_FAMILY_ID = 23
 
 --------------------------------------------------------------------------------
 -- URLs
@@ -176,75 +186,18 @@ ns.OPTIONS_REGISTRY = {
 }
 
 --------------------------------------------------------------------------------
--- Options Layout Grid
---------------------------------------------------------------------------------
-
---[[
-    Widths for the label-beside-control rows in Options/. A row is an
-    ns.OptionsRowLabel cell plus its control, and the two always total
-    ns.OPTIONS_ROW_WIDTH, so every row ends where every other row ends. A row
-    whose control needs more room passes its own width to ns.OptionsRowLabel and
-    gives the control the remainder.
-
-    A toggle with a dropdown that tunes it is the same row, the toggle standing
-    in for the label: it takes ns.OPTIONS_LABEL_WIDTH and the dropdown
-    ns.OPTIONS_CONTROL_WIDTH, on every panel. The dropdown carries no caption,
-    so its values must read on their own beside the toggle ("When Leveling",
-    "20%"), and like every sub-option it hides until the toggle is on.
-]]
-ns.OPTIONS_ROW_WIDTH = 3.4
-ns.OPTIONS_LABEL_WIDTH = 2.1
-ns.OPTIONS_CONTROL_WIDTH = ns.OPTIONS_ROW_WIDTH - ns.OPTIONS_LABEL_WIDTH
-
--- The item lists' remove column, sized to its icon rather than a caption.
-ns.OPTIONS_REMOVE_ICON_WIDTH = 0.25
-
--- The blank cell a sub-option row leads with, sized to the parent's checkbox.
-ns.OPTIONS_SUB_INDENT_WIDTH = 0.115
-
--- The item lists' promote column, sized to hold its button caption.
-ns.OPTIONS_PROMOTE_WIDTH = 0.9
-
---[[
-    A tree panel's sidebar eats into the pane its rows are laid out in, so rows
-    inside one spend a shorter budget than ns.OPTIONS_ROW_WIDTH. Both match
-    Magic Eraser's list panels: AceGUI's tree defaults to 175px, and this is a
-    hair wider. Widening it costs the item pane exactly what it gains, hence the
-    paired constant. The tree stays drag-resizable, and a drag wins over this
-    seed.
-]]
-ns.OPTIONS_TREE_WIDTH = 176
-ns.OPTIONS_TREE_ROW_WIDTH = 2.5
-
---[[
-    The same row inside an inline group (a class's box of buffs). The box insets
-    its content 10 pixels -- in width units, where AceConfigDialog makes 1 unit
-    170 pixels -- and its border takes room besides, so the label gives back 0.3
-    or the control wraps under it. A row outside a box that should line up with
-    the boxed ones below it uses the inset label width: same control, same x.
-]]
-ns.OPTIONS_INLINE_LABEL_WIDTH = ns.OPTIONS_LABEL_WIDTH - 0.3
-ns.OPTIONS_INLINE_INSET_WIDTH = 10 / 170
-ns.OPTIONS_ALIGNED_LABEL_WIDTH = ns.OPTIONS_INLINE_LABEL_WIDTH + ns.OPTIONS_INLINE_INSET_WIDTH
-
--- A spell or item link cell, three to a row.
-ns.OPTIONS_LINK_WIDTH = ns.OPTIONS_ROW_WIDTH / 3
-
---------------------------------------------------------------------------------
 -- Options Widgets
 --------------------------------------------------------------------------------
 
 --[[
     dialogControl names for the add-on's own AceGUI widgets, each registered in
-    the Options/ utilities file that builds it. Derived from ADDON_NAME so none
+    Options/Options-Widgets.lua, which builds them. Derived from ADDON_NAME so none
     can collide with another add-on's widget of the same shape.
 
-      ITEM_LINK_WIDGET_TYPE      An item-list row: icon, colored link, tooltip.
       ICON_CHECKBOX_WIDGET_TYPE  The stock checkbox with a gap between its icon
                                  and its label, cleared again where there is no
                                  stock checkbox to build on.
 ]]
-ns.ITEM_LINK_WIDGET_TYPE = ADDON_NAME .. "_ItemLink"
 ns.ICON_CHECKBOX_WIDGET_TYPE = ADDON_NAME .. "_IconCheckBox"
 
 --------------------------------------------------------------------------------
@@ -429,12 +382,22 @@ ns.LEVEL_FILTER_ORDER = { "any", "leveling", "maxlevel" }
 
 --[[
     Every restock reminder is either a headline on its own or a headline plus one
-    line per item you are short of. Stored as a mode rather than a boolean so the
+    line per item it counts as low or out. Stored as a mode rather than a boolean so the
     option reads as a choice ("Simple" or "Verbose") instead of an unlabeled
     switch, and so a third level could be added without another setting.
 ]]
 ns.REMINDER_SIMPLE = "simple"
 ns.REMINDER_VERBOSE = "verbose"
+
+--[[
+    What "low" means to the reminders, as a percentage of a row's Keep amount:
+    an item counts as low while the bags hold less than this share of it, and
+    as out at none. Anything at or above the line is left out of the reminders
+    entirely, so a list that is merely topped-off-short stays quiet. 100 counts
+    any shortfall at all. The merchant restock ignores it and still buys every
+    row up to its full amount. Ships at 80 (Data/Default-Settings.lua).
+]]
+ns.RESTOCK_LOW_THRESHOLDS = { 50, 60, 70, 80, 90, 100 }
 
 --[[
     Alert played when you reach an inn or city with something left to restock.
@@ -542,467 +505,6 @@ ns.SCROLL_CHECK_ORDER = {
 	"Intellect",
 	"Spirit",
 	"Stamina",
-}
-
---------------------------------------------------------------------------------
--- Starter List Categories
---------------------------------------------------------------------------------
-
---[[
-    What the staples pop-up can offer, one row per checkbox.
-    Features/Restocker/Restocker-Starter-List.lua owns every decision made about
-    these rows -- which ladder each resolves to, who is offered it, what a tick
-    adds. This table only says what exists.
-
-    One table serves every client because it holds no game IDs. `chainKey`
-    names a ladder in ns.CONSUMABLE_UPGRADE_CHAINS, and the loaded flavor
-    folder's own ladders supply the items; the feature file resolves the key
-    at load and drops any row whose ladder that folder does not carry.
-]]
-
---[[
-    The popup asks for WHOLE STACKS, not raw counts, because stacks are the
-    unit a bag slot thinks in. A stack is whatever the item itself stacks to,
-    so no row below carries a size: the staples do not share one, and some
-    differ by client. A Symbol of Divinity stacks to 5, a Symbol of Kings to
-    100, and an Ankh to 5 on Classic Era but 10 on TBC.
-    Features/Restocker/Restocker-Starter-List.lua reads the size off the item.
-
-    A tick defaults to one stack -- or to defaultStacks, where one is the
-    wrong opening offer -- and the dropdown beside it runs to a per-category
-    cap: 18 for ammo, where a hunter genuinely fills an 18-slot quiver, and a
-    tighter 4 everywhere else, where more stacks than that is just a heavier
-    corpse run.
-
-    countsItems turns the same dropdown into a plain count, which is what an
-    item that never stacks needs: Soul Shards take a bag slot each, so the
-    choice is how many slots to give them, and the dropdown says "20" rather
-    than "20 Stacks". It is declared here rather than read off the item
-    because the dropdown's labels are drawn before a cold item resolves.
-
-    A category with an explicit choices list offers those counts INSTEAD of
-    every number up to a cap. Soul Shards step in fours from 12 to 40 -- a
-    soul bag's worth at each of the sizes a warlock actually carries -- which
-    is the same question a forty-entry dropdown would ask, without the
-    scrolling. maxStacks is the cap for the every-number kind and is what
-    choices replaces, so a category sets one or the other, never both.
-
-    A category with fixedAmount gets no dropdown at all: totems are tools
-    you own one of.
-]]
-local FOOD_MAX_STACKS = 4
-local AMMO_MAX_STACKS = 18
-local POISON_MAX_STACKS = 4
-local REAGENT_MAX_STACKS = 4
-local SOUL_SHARD_CHOICES = { 12, 16, 20, 24, 28, 32, 36, 40 }
-local SOUL_SHARD_DEFAULT = 20
-
---------------------------------------------------------------------------------
--- Ladder And Class Keys
---------------------------------------------------------------------------------
-
---[[
-    Canonical diet numbering; the English keys are always present alongside
-    the localized aliases.
-]]
-local PET_DIET_MAP = ns.PET_DIET_MAP
-
--- Canonical poison-group numbering.
-local POISON_GROUP = ns.POISON_GROUPS
-
---[[
-    Class sets. classes on a category is WHO IS OFFERED it (absent = every
-    class); defaultFor is who gets it PRE-TICKED when the window opens. Mana
-    classes get water ticked; the manaless still see the row, unticked -- a
-    warrior can carry water for a druid friend, but nobody decides that for
-    them. Death Knights exist on Wrath, Mists and Mainline clients, yet their
-    entries need no expansion gate of their own: only the Wrath folder gives
-    Corpse Dust a tier, and every other folder's empty ladder keeps the row
-    from being offered.
-]]
-local AMMO_CLASSES = { HUNTER = true, WARRIOR = true, ROGUE = true }
-local MANA_CLASSES =
-	{ DRUID = true, HUNTER = true, MAGE = true, PALADIN = true, PRIEST = true, SHAMAN = true, WARLOCK = true }
-
---[[
-    One entry per checkbox. section groups entries under the popup's
-    headings.
-
-    A row that stands for a kind of item -- a food, water, an ammo type --
-    carries a label, and the food labels reuse the DIET_ keys so the popup
-    names bread whatever the pet-food tooltips call it. Every other row has no
-    label: it shows the client's own name for an item on its ladder, so it
-    needs no translation and always reads as the item does in bags and at
-    vendors. That item is the one a tick would add right now, or, for a row
-    marked namesFirstTier, the ladder's first item -- the poison types, whose
-    first item's name is the type's own ("Instant Poison").
-
-    The order HERE is for the maintainer's eye -- grouped by section, then
-    by class. Display order is the popup's to compute (SectionCategories in
-    Features/Restocker/Restocker-Starter-Window.lua): dropdown staples first, fixed-amount
-    singles after, each run alphabetical by the name it shows.
-
-    A category whose ladder went missing is dropped by
-    Features/Restocker/Restocker-Starter-List.lua rather than crashing the popup
-    open.
-]]
-ns.STARTER_LIST_CATEGORIES = {
-	--[[
-	    Food, everyone. Bread arrives ticked for all; meat ticked for hunters
-	    (their pet eats it too).
-	]]
-	{
-		key = "bread",
-		section = "food",
-		label = ns.L["DIET_BREAD"],
-		chainKey = "food:" .. PET_DIET_MAP["Bread"],
-		maxStacks = FOOD_MAX_STACKS,
-		defaultFor = "all",
-	},
-	{
-		key = "cheese",
-		section = "food",
-		label = ns.L["DIET_CHEESE"],
-		chainKey = "food:" .. PET_DIET_MAP["Cheese"],
-		maxStacks = FOOD_MAX_STACKS,
-	},
-	{
-		key = "fish",
-		section = "food",
-		label = ns.L["DIET_FISH"],
-		chainKey = "food:" .. PET_DIET_MAP["Fish"],
-		maxStacks = FOOD_MAX_STACKS,
-	},
-	{
-		key = "fruit",
-		section = "food",
-		label = ns.L["DIET_FRUIT"],
-		chainKey = "food:" .. PET_DIET_MAP["Fruit"],
-		maxStacks = FOOD_MAX_STACKS,
-	},
-	{
-		key = "fungus",
-		section = "food",
-		label = ns.L["DIET_FUNGUS"],
-		chainKey = "food:" .. PET_DIET_MAP["Fungus"],
-		maxStacks = FOOD_MAX_STACKS,
-	},
-	{
-		key = "meat",
-		section = "food",
-		label = ns.L["DIET_MEAT"],
-		chainKey = "food:" .. PET_DIET_MAP["Meat"],
-		maxStacks = FOOD_MAX_STACKS,
-		defaultFor = { HUNTER = true },
-	},
-
-	-- Water, everyone; pre-ticked for the classes that drink for mana.
-	{
-		key = "water",
-		section = "water",
-		label = ns.L["LABEL_WATER"],
-		chainKey = "water",
-		maxStacks = FOOD_MAX_STACKS,
-		defaultFor = MANA_CLASSES,
-	},
-
-	-- Ammo, launcher classes only.
-	{
-		key = "bullets",
-		section = "ammo",
-		label = ns.L["STARTER_POPUP_BULLETS"],
-		chainKey = "bullet",
-		maxStacks = AMMO_MAX_STACKS,
-		classes = AMMO_CLASSES,
-	},
-	{
-		key = "arrows",
-		section = "ammo",
-		label = ns.L["STARTER_POPUP_ARROWS"],
-		chainKey = "arrow",
-		maxStacks = AMMO_MAX_STACKS,
-		classes = AMMO_CLASSES,
-	},
-
-	--[[
-	    Poisons, their own headed section for rogues (alphabetical, like the
-	    foods) -- the popup adds a note under its header that the ingredients
-	    buy themselves. Availability does the level work: every ladder opens
-	    at its spell's training level, so the section fills out as the rogue
-	    earns each type -- and Anesthetic's all-TBC ladder simply never comes
-	    up on Era. Atrophic, Numbing, Occult and Sebacious are Season of
-	    Discovery's: only the Discovery folder has their ladders, so every
-	    other client drops the rows.
-	]]
-	{
-		key = "anesthetic",
-		section = "poisons",
-		namesFirstTier = true,
-		chainKey = "poison:" .. POISON_GROUP.ANESTHETIC,
-		maxStacks = POISON_MAX_STACKS,
-		classes = { ROGUE = true },
-	},
-	{
-		key = "atrophic",
-		section = "poisons",
-		namesFirstTier = true,
-		chainKey = "poison:" .. POISON_GROUP.ATROPHIC,
-		maxStacks = POISON_MAX_STACKS,
-		classes = { ROGUE = true },
-	},
-	{
-		key = "crippling",
-		section = "poisons",
-		namesFirstTier = true,
-		chainKey = "poison:" .. POISON_GROUP.CRIPPLING,
-		maxStacks = POISON_MAX_STACKS,
-		classes = { ROGUE = true },
-	},
-	{
-		key = "deadly",
-		section = "poisons",
-		namesFirstTier = true,
-		chainKey = "poison:" .. POISON_GROUP.DEADLY,
-		maxStacks = POISON_MAX_STACKS,
-		classes = { ROGUE = true },
-	},
-	{
-		key = "instant",
-		section = "poisons",
-		namesFirstTier = true,
-		chainKey = "poison:" .. POISON_GROUP.INSTANT,
-		maxStacks = POISON_MAX_STACKS,
-		classes = { ROGUE = true },
-	},
-	{
-		key = "mindnumbing",
-		section = "poisons",
-		namesFirstTier = true,
-		chainKey = "poison:" .. POISON_GROUP.MIND_NUMBING,
-		maxStacks = POISON_MAX_STACKS,
-		classes = { ROGUE = true },
-	},
-	{
-		key = "numbing",
-		section = "poisons",
-		namesFirstTier = true,
-		chainKey = "poison:" .. POISON_GROUP.NUMBING,
-		maxStacks = POISON_MAX_STACKS,
-		classes = { ROGUE = true },
-	},
-	{
-		key = "occult",
-		section = "poisons",
-		namesFirstTier = true,
-		chainKey = "poison:" .. POISON_GROUP.OCCULT,
-		maxStacks = POISON_MAX_STACKS,
-		classes = { ROGUE = true },
-	},
-	{
-		key = "sebacious",
-		section = "poisons",
-		namesFirstTier = true,
-		chainKey = "poison:" .. POISON_GROUP.SEBACIOUS,
-		maxStacks = POISON_MAX_STACKS,
-		classes = { ROGUE = true },
-	},
-	{
-		key = "wound",
-		section = "poisons",
-		namesFirstTier = true,
-		chainKey = "poison:" .. POISON_GROUP.WOUND,
-		maxStacks = POISON_MAX_STACKS,
-		classes = { ROGUE = true },
-	},
-	--[[
-	    Reagents & Tools. Hearthstone is offered to every class -- the worked
-	    example that ANYTHING can go on the Restock List, not just the
-	    consumables the add-on curates -- alongside each class's own entries.
-	]]
-	{
-		key = "hearthstone",
-		section = "reagents",
-		chainKey = "reagent:hearthstone",
-		fixedAmount = 1,
-	},
-	{
-		key = "blindingpowder",
-		section = "reagents",
-		chainKey = "reagent:blinding-powder",
-		maxStacks = REAGENT_MAX_STACKS,
-		classes = { ROGUE = true },
-	},
-	{
-		key = "flashpowder",
-		section = "reagents",
-		chainKey = "reagent:flash-powder",
-		maxStacks = REAGENT_MAX_STACKS,
-		classes = { ROGUE = true },
-	},
-	-- A tool, not a consumable: you own one.
-	{
-		key = "thievestools",
-		section = "reagents",
-		chainKey = "reagent:thieves-tools",
-		fixedAmount = 1,
-		classes = { ROGUE = true },
-	},
-
-	{
-		key = "corpsedust",
-		section = "reagents",
-		chainKey = "reagent:corpse-dust",
-		maxStacks = REAGENT_MAX_STACKS,
-		classes = { DEATHKNIGHT = true },
-	},
-
-	{
-		key = "seeds",
-		section = "reagents",
-		chainKey = "reagent:seeds",
-		maxStacks = REAGENT_MAX_STACKS,
-		classes = { DRUID = true },
-	},
-	{
-		key = "wilds",
-		section = "reagents",
-		chainKey = "reagent:wilds",
-		maxStacks = REAGENT_MAX_STACKS,
-		classes = { DRUID = true },
-	},
-
-	{
-		key = "arcanepowder",
-		section = "reagents",
-		chainKey = "reagent:arcane-powder",
-		maxStacks = REAGENT_MAX_STACKS,
-		classes = { MAGE = true },
-	},
-	-- Light Feather serves the mage's Slow Fall and the priest's Levitate.
-	{
-		key = "lightfeather",
-		section = "reagents",
-		chainKey = "reagent:light-feather",
-		maxStacks = REAGENT_MAX_STACKS,
-		classes = { MAGE = true, PRIEST = true },
-	},
-	{
-		key = "teleportrunes",
-		section = "reagents",
-		chainKey = "reagent:rune-of-teleportation",
-		maxStacks = REAGENT_MAX_STACKS,
-		classes = { MAGE = true },
-	},
-	{
-		key = "portalrunes",
-		section = "reagents",
-		chainKey = "reagent:rune-of-portals",
-		maxStacks = REAGENT_MAX_STACKS,
-		classes = { MAGE = true },
-	},
-
-	{
-		key = "divinitysymbol",
-		section = "reagents",
-		chainKey = "reagent:symbol-of-divinity",
-		maxStacks = REAGENT_MAX_STACKS,
-		classes = { PALADIN = true },
-	},
-	{
-		key = "kingssymbol",
-		section = "reagents",
-		chainKey = "reagent:symbol-of-kings",
-		maxStacks = REAGENT_MAX_STACKS,
-		classes = { PALADIN = true },
-	},
-
-	{
-		key = "candles",
-		section = "reagents",
-		chainKey = "reagent:candles",
-		maxStacks = REAGENT_MAX_STACKS,
-		classes = { PRIEST = true },
-	},
-
-	{
-		key = "ankh",
-		section = "reagents",
-		chainKey = "reagent:ankh",
-		maxStacks = REAGENT_MAX_STACKS,
-		classes = { SHAMAN = true },
-	},
-	{
-		key = "fishscales",
-		section = "reagents",
-		chainKey = "reagent:fish-scales",
-		maxStacks = REAGENT_MAX_STACKS,
-		classes = { SHAMAN = true },
-	},
-	{
-		key = "fishoil",
-		section = "reagents",
-		chainKey = "reagent:fish-oil",
-		maxStacks = REAGENT_MAX_STACKS,
-		classes = { SHAMAN = true },
-	},
-	-- Totems are tools: one each, no dropdown.
-	{
-		key = "earthtotem",
-		section = "reagents",
-		chainKey = "reagent:earth-totem",
-		fixedAmount = 1,
-		classes = { SHAMAN = true },
-	},
-	{
-		key = "firetotem",
-		section = "reagents",
-		chainKey = "reagent:fire-totem",
-		fixedAmount = 1,
-		classes = { SHAMAN = true },
-	},
-	{
-		key = "watertotem",
-		section = "reagents",
-		chainKey = "reagent:water-totem",
-		fixedAmount = 1,
-		classes = { SHAMAN = true },
-	},
-	{
-		key = "airtotem",
-		section = "reagents",
-		chainKey = "reagent:air-totem",
-		fixedAmount = 1,
-		classes = { SHAMAN = true },
-	},
-
-	{
-		key = "figurine",
-		section = "reagents",
-		chainKey = "reagent:demonic-figurine",
-		maxStacks = REAGENT_MAX_STACKS,
-		classes = { WARLOCK = true },
-	},
-	{
-		key = "infernalstone",
-		section = "reagents",
-		chainKey = "reagent:infernal-stone",
-		maxStacks = REAGENT_MAX_STACKS,
-		classes = { WARLOCK = true },
-	},
-	--[[
-	    Soul Shards never stack, so their dropdown counts bag slots rather than
-	    stacks (countsItems), offering the soul-bag sizes above and opening on
-	    a middling one.
-	]]
-	{
-		key = "soulshards",
-		section = "reagents",
-		chainKey = "reagent:soul-shard",
-		countsItems = true,
-		choices = SOUL_SHARD_CHOICES,
-		defaultStacks = SOUL_SHARD_DEFAULT,
-		classes = { WARLOCK = true },
-	},
 }
 
 --------------------------------------------------------------------------------

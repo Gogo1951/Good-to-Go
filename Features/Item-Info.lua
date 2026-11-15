@@ -16,8 +16,9 @@ local GetColor = ns.GetColor
 --[[
     GET_ITEM_INFO_RECEIVED has more than one waiter -- the consumable macros' bag
     scan (ns.RegisterDataRetry); the Restock List, which defers an add, an
-    upgrade or a Starter List tick on the same cold-cache miss; and each options
-    panel showing items that have not loaded yet (ns.WarmItemCache). The client
+    upgrade or a Starter List tick on the same cold-cache miss; the Staples
+    window showing items that have not loaded yet (ns.WarmItemCache); and a
+    What's Next? tooltip waiting on a grimoire's name. The client
     answers this event once per item it resolves, which during a login is a
     flood, so it is registered only while somebody is actually waiting.
 
@@ -35,21 +36,25 @@ local rememberedMisses = {}
 
 local MODULE = "ItemInfo"
 
+local OnWindowItemInfoReceived -- Window Item Warming, below
+
 --[[
     Every answer goes to each waiter in this order: the Restocker forgets the
-    item's remembered miss and retries its rows first, then the options item
-    lists waiting on it repaint, asking only once the miss is gone, then the
-    consumable macros rebuild if the item is one of theirs.
+    item's remembered miss and retries its rows first, then a window waiting
+    on it (ns.WarmItemCache) repaints, asking only once the miss is gone, then the
+    consumable macros rebuild if the item is one of theirs, then a What's Next?
+    row tooltip waiting on a grimoire's name is drawn again.
 ]]
 ns.RegisterEventModule(MODULE, function(_, itemID, success)
 	if ns.OnRestockerItemInfoReceived then
 		ns.OnRestockerItemInfoReceived(itemID, success)
 	end
-	if ns.OnOptionsItemInfoReceived then
-		ns.OnOptionsItemInfoReceived(itemID, success)
-	end
+	OnWindowItemInfoReceived(itemID, success)
 	if ns.OnConsumableItemInfoReceived then
 		ns.OnConsumableItemInfoReceived(itemID, success)
+	end
+	if ns.OnWhatsNextItemInfoReceived then
+		ns.OnWhatsNextItemInfoReceived(itemID, success)
 	end
 end)
 
@@ -71,14 +76,96 @@ function ns.ReleaseItemInfoEvents(key)
 end
 
 --------------------------------------------------------------------------------
+-- Window Item Warming
+--------------------------------------------------------------------------------
+
+--[[
+    C_Item.GetItemInfo answers nil for an item the client has not cached yet, which is
+    the normal state for a list of item ids on a fresh login -- nothing has put
+    those items in front of the player, so nothing has pulled their data. A
+    window that lists items (the Restocker's Staples window; the options
+    panels' item lists warm through the kit's Kit.WarmItems) renders those
+    rows as L["LOADING_ITEM"] and hands the cold ids here, with its own key
+    and the function that repaints it.
+
+    Each id is requested from the server, and the window's key holds a
+    GET_ITEM_INFO_RECEIVED waiter (ns.RequestItemInfoEvents) while any id it
+    handed in is still outstanding. Every answer the dispatcher above hears
+    repaints the windows waiting on that id and releases a window's waiter
+    once nothing it asked about is left. A repaint that re-enters with
+    still-cold ids just adds to the window's pending set. An id the client
+    has no item for, one whose answer already failed, or one already cached is
+    never requested: no answer may come for it, so a wait on it could hold the
+    event for the rest of the session.
+]]
+
+-- windowKey -> { [itemID] = true }, the ids each window still waits on.
+local warming = {}
+
+-- windowKey -> the function the window repaints itself with.
+local arriveHandlers = {}
+
+-- [itemID] = true for every id whose answer came back failed this session.
+local failedItemIDs = {}
+
+local function WaiterKey(windowKey)
+	return "window:" .. windowKey
+end
+
+function ns.WarmItemCache(itemIDs, windowKey, onArrive)
+	assert(type(onArrive) == "function", "ns.WarmItemCache needs the window's repaint")
+	if not (itemIDs and itemIDs[1] and windowKey) then
+		return
+	end
+	arriveHandlers[windowKey] = onArrive
+
+	local pending = warming[windowKey] or {}
+	local requested = false
+	for _, itemID in ipairs(itemIDs) do
+		local cold = not C_Item.IsItemDataCachedByID(itemID)
+		if cold and not failedItemIDs[itemID] and C_Item.DoesItemExistByID(itemID) then
+			pending[itemID] = true
+			C_Item.RequestLoadItemDataByID(itemID)
+			requested = true
+		end
+	end
+	if requested then
+		warming[windowKey] = pending
+		ns.RequestItemInfoEvents(WaiterKey(windowKey))
+	end
+end
+
+--[[
+    One GET_ITEM_INFO_RECEIVED answer, after the Restocker has forgotten the
+    item's remembered miss. A failed answer settles the wait too, and is
+    remembered so the repaint that follows does not ask again: its row keeps
+    its loading text.
+]]
+function OnWindowItemInfoReceived(itemID, success)
+	if success ~= true then
+		failedItemIDs[itemID] = true
+	end
+	for windowKey, pending in pairs(warming) do
+		if pending[itemID] then
+			pending[itemID] = nil
+			arriveHandlers[windowKey]()
+			if next(pending) == nil then
+				warming[windowKey] = nil
+				ns.ReleaseItemInfoEvents(WaiterKey(windowKey))
+			end
+		end
+	end
+end
+
+--------------------------------------------------------------------------------
 -- Session Item Data
 --------------------------------------------------------------------------------
 
 --[[
     A plain memo over C_Item.GetItemInfo, and the link builder that rides on it. Distinct
     from the consumable cache (Features/Macros-for-Consumables/Item-Cache.lua): that one is
-    persisted, enriched from the consumable tables, and only ever holds consumables, while
-    this one is thrown away at logout and answers for any item at all. Reach for
+    enriched from the consumable tables and only ever holds consumables, while this one
+    answers for any item at all. Both are built per session and never saved. Reach for
     the consumable cache when a consumable's own facts are wanted, and for this
     when a name, an icon or a link is.
 ]]

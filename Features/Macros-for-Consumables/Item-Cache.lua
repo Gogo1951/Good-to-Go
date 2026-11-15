@@ -62,7 +62,8 @@ end
     MIGRATION (remove after 2026-12-08)
     Releases before this one saved the item cache on every profile, with its
     itemCacheVersion and itemCacheFolder stamps. InitializeDatabase in
-    Features/Core.lua clears them from every profile once, at login.
+    Features/Core.lua clears them from every profile at every login, which is
+    harmless to repeat once they are gone.
 ]]
 function ns.RetireSavedItemCache()
 	for _, profile in pairs(ns.db.sv.profiles or {}) do
