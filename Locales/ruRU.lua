@@ -2519,7 +2519,8 @@ L["WHATS_NEXT_PET_TOOLTIP_HUNTER_KNOWS"] =
 	"Вы это знаете. Обучите этому питомца с помощью Дрессировки."
 L["WHATS_NEXT_PET_TOOLTIP_HOW_DEMON_TRAINER"] =
 	"Купите гримуар у учителя демонов, затем используйте его, когда призван демон, который может это изучить."
-L["WHATS_NEXT_PET_TOOLTIP_HOW_DEMON_TRAINER_TEACHES"] = "Этому обучает ваш учитель демонов."
+L["WHATS_NEXT_PET_TOOLTIP_HOW_DEMON_TRAINER_TEACHES"] =
+	"Этому обучает ваш учитель демонов."
 L["WHATS_NEXT_PET_TOOLTIP_GRIMOIRE"] = "Гримуар"
 L["WHATS_NEXT_PET_TOOLTIP_GRIMOIRE_IN_BAGS"] =
 	"Гримуар есть в ваших сумках. Используйте его, когда призван этот демон."
