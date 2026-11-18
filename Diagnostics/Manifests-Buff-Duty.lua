@@ -140,10 +140,6 @@ local function PetState(BW, pet)
 	if not (pet and UnitExists(pet)) then
 		return "none"
 	end
-	-- On WoW Forever a pet takes its owner's buffs, so the window never lists one.
-	if ns.FLAVOR == "Camelot" then
-		return "not listed on this client"
-	end
 	if BW.CanBuffPet(pet) then
 		BW.ReadAuras(pet)
 		return string.format("buffable aurasReadable=%s held=%s", tostring(BW.AurasReadable()), HeldBuffs(BW, pet))
@@ -311,7 +307,7 @@ function ns:BuildBuffDutyContextReport()
 	local onForClass = ns.IsBuffDutyOnForClass and ns.IsBuffDutyOnForClass()
 	local classTicked = (db.showClasses or {})[class] ~= false
 	lines[#lines + 1] = string.format(
-		"Switches: enabled=%s onForYourClass=%s closedThisSession=%s hideInCombat=%s locked=%s selfBuffs=%s returnTheFavor=%s target=%s askOtherClasses=%s",
+		"Switches: enabled=%s onForYourClass=%s closedThisSession=%s hideInCombat=%s locked=%s selfBuffs=%s returnTheFavor=%s target=%s targetNPCs=%s askOtherClasses=%s",
 		tostring(db.enabled),
 		tostring(onForClass),
 		tostring((db.enabled and classTicked and not onForClass) and true or false),
@@ -320,6 +316,7 @@ function ns:BuildBuffDutyContextReport()
 		tostring(db.selfEnabled),
 		tostring(db.favorEnabled),
 		tostring(db.targetEnabled),
+		tostring(db.targetNPCs),
 		tostring(db.askOtherClasses)
 	)
 	lines[#lines + 1] = string.format(
@@ -470,6 +467,19 @@ function ns:BuildBuffDutyContextReport()
 			end
 		end
 	end
+	-- Your group buffs on yourself: Self Buffs offers them by the Self-Buffs panel's timing, never your party row.
+	for _, entry in ipairs(BW.entries) do
+		if entry.row.class == class then
+			any = true
+			local buff = castableSelf[entry.key]
+			lines[#lines + 1] = string.format(
+				"  %s (group buff, on you): shows=%s inWindow=%s",
+				SpellLabel(entry),
+				tostring(db.selfRefresh[entry.key]),
+				buff and ("yes cast=" .. tostring(buff.ranks[1] and buff.ranks[1].castText)) or "NO"
+			)
+		end
+	end
 	if not any then
 		lines[#lines + 1] = "  (none for this class on this client)"
 	end
@@ -518,6 +528,20 @@ function ns:BuildBuffDutyContextReport()
 				CountKnown(entry.ids),
 				#entry.ids,
 				CountUnnamed(entry.ids)
+			)
+		end
+		-- A warlock stone line: its Create ranks, which the icon casts while none is in the bags.
+		if entry.row.class == class and entry.create then
+			local createIds = {}
+			for _, rank in ipairs(entry.create) do
+				createIds[#createIds + 1] = rank.id
+			end
+			lines[#lines + 1] = string.format(
+				"  item %s: createRanksKnown=%d/%d unnamed=%d",
+				tostring(entry.key),
+				CountKnown(createIds),
+				#createIds,
+				CountUnnamed(createIds)
 			)
 		end
 	end
@@ -1458,6 +1482,13 @@ local function CollectWeaponEnchants(kind)
 					row = { row = row, level = rank[2], enchant = EnchantText(rank[3]) },
 				}
 			end
+			-- A warlock stone's Create spells are spells too; they put on no enchant themselves.
+			if kind ~= "item" then
+				for _, rank in ipairs(row.create or {}) do
+					found[#found + 1] =
+						{ id = rank[1], key = index, row = { row = row, level = rank[2], enchant = "create" } }
+				end
+			end
 		end
 		return found
 	end
@@ -1517,6 +1548,23 @@ local function CollectSoulstone(kind)
 	end
 end
 
+-- The Self-Buffs consumables: each item, and the auras it leaves as spells.
+local function CollectSelfItems(kind)
+	return function(rows)
+		local found = {}
+		for index, row in ipairs(rows) do
+			if kind == "item" then
+				found[#found + 1] = { id = row[1], key = index, row = { role = "item", default = row.default } }
+			else
+				for _, id in ipairs(row.auras or {}) do
+					found[#found + 1] = { id = id, key = index, row = { role = "aura" } }
+				end
+			end
+		end
+		return found
+	end
+end
+
 -- The Buff Key's resurrections: bare rank ids, one row per class.
 local function CollectResurrections(rows)
 	local found = {}
@@ -1551,6 +1599,7 @@ function IsBuffDutySpell(id)
 			{ ns.BUFF_DUTY_SELF_SPELLS, CollectSelfBuffs },
 			{ ns.BUFF_DUTY_WEAPON_ENCHANTS, CollectWeaponEnchants("spell") },
 			{ ns.BUFF_DUTY_SOULSTONE, CollectSoulstone("spell") },
+			{ ns.BUFF_DUTY_SELF_ITEMS, CollectSelfItems("spell") },
 			{ ns.BUFF_DUTY_RESURRECTIONS, CollectResurrections },
 		}) do
 			if type(source[1]) == "table" then
@@ -1665,6 +1714,23 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_DATA_SOURCES, {
 				table = "BUFF_DUTY_SOULSTONE",
 				kind = "item",
 				collect = CollectSoulstone("item"),
+				dataColumns = {
+					{ "DATA_ROLE", FoundField("role") },
+				},
+			},
+			{
+				table = "BUFF_DUTY_SELF_ITEMS",
+				kind = "item",
+				collect = CollectSelfItems("item"),
+				dataColumns = {
+					{ "DATA_ROLE", FoundField("role") },
+					{ "DATA_DEFAULT", FoundField("default") },
+				},
+			},
+			{
+				table = "BUFF_DUTY_SELF_ITEMS",
+				kind = "spell",
+				collect = CollectSelfItems("spell"),
 				dataColumns = {
 					{ "DATA_ROLE", FoundField("role") },
 				},

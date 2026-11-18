@@ -8,7 +8,10 @@ local SHAMAN_SHIELD, WARLOCK_ARMOR, WARLOCK_DEMON = "SHAMAN_SHIELD", "WARLOCK_AR
 local MISSING = Data.SELF_REFRESH_MISSING
 local MAIN, OFF_HAND = "MAIN", "OFF"
 
--- { class, single = { { spell id, level learned } }, group = { spell ids }, greater = { spell ids }, exclusive, manaOnly, noCasters, talent, default }, -- Name
+-- On this client a pet takes no stat buffs: Buff Duty offers a pet only the rows marked pets = true.
+ns.BUFF_DUTY_PETS_FLAGGED_ONLY = true
+
+-- { class, single = { { spell id, level learned } }, group = { spell ids }, greater = { spell ids }, exclusive, manaOnly, noCasters, pets, talent, default, selfDefault }, -- Name
 ns.BUFF_DUTY_SPELLS = {
 	-- Druid ---------------------------------------------------------------------
 	{
@@ -20,7 +23,9 @@ ns.BUFF_DUTY_SPELLS = {
 	{
 		class = "DRUID",
 		single = { { 467, 6 }, { 782, 14 }, { 1075, 24 }, { 8914, 34 }, { 9756, 44 }, { 9910, 54 } },
+		pets = true,
 		default = TANK,
+		selfDefault = MISSING,
 	}, -- Thorns
 	-- Mage ----------------------------------------------------------------------
 	{
@@ -310,7 +315,7 @@ ns.BUFF_DUTY_SELF_SPELLS = {
 	}, -- Battle Shout
 }
 
--- { class, duration (minutes), ranks = { { spell id, level learned, enchant id } } or items = { { item id, level required, enchant id } } }, -- Name
+-- { class, duration (minutes), ranks = { { spell id, level learned, enchant id } } or items = { { item id, level required, enchant id } }, create = { { spell id, level learned } } }, -- Name
 ns.BUFF_DUTY_WEAPON_ENCHANTS = {
 	-- Rogue ---------------------------------------------------------------------
 	{
@@ -377,12 +382,24 @@ ns.BUFF_DUTY_WEAPON_ENCHANTS = {
 		duration = 60,
 		ranks = { { 8232, 30, 283 }, { 8235, 40, 284 }, { 10486, 50, 525 }, { 16362, 60, 1669 } },
 	}, -- Windfury Weapon
+	-- Warlock -------------------------------------------------------------------
+	{
+		class = "WARLOCK",
+		items = { { 13699, 36, 1823 }, { 1254, 28, 1803 }, { 13700, 46, 1824 }, { 13701, 56, 1825 } },
+		create = { { 6366, 28 }, { 17951, 36 }, { 17952, 46 }, { 17953, 56 } },
+	}, -- Firestone
+	{
+		class = "WARLOCK",
+		items = { { 5522, 36, 8059 }, { 13602, 48, 8060 }, { 13603, 60, 8061 } },
+		create = { { 2362, 36 }, { 17727, 48 }, { 17728, 60 } },
+	}, -- Spellstone
 }
 
 -- The weapons each class keeps a poison or imbue on. Only a rogue dual wields here.
 ns.BUFF_DUTY_WEAPON_HANDS = {
 	ROGUE = { MAIN, OFF_HAND },
 	SHAMAN = { MAIN },
+	WARLOCK = { MAIN },
 }
 
 --[[
@@ -412,19 +429,13 @@ ns.BUFF_DUTY_WEAPON_ITEMS = {
 	{ 12643, 35, 1703, 9264, STONE, 45 }, -- Dense Weightstone
 	{ 18262, 50, 2506, 42483, STONE, 60 }, -- Elemental Sharpening Stone
 	{ 287980, 1, 2506, 42483, STONE, 60 }, -- Elemental Sharpening Stone
-	{ 13699, 0, 1823, 0, OIL, 36 }, -- Firestone
 	{ 7307, 0, 265, 1048576, LURE, 30 }, -- Flesh Eating Worm
 	{ 3829, 30, 26, 173555, OIL, 40 }, -- Frost Oil
-	{ 13700, 0, 1824, 0, OIL, 46 }, -- Greater Firestone
-	{ 13602, 0, 8060, 0, OIL, 48 }, -- Greater Spellstone
 	{ 2871, 15, 14, 33219, STONE, 25 }, -- Heavy Sharpening Stone
 	{ 3241, 15, 21, 9264, STONE, 25 }, -- Heavy Weightstone
-	{ 1254, 0, 1803, 0, OIL, 28 }, -- Lesser Firestone
 	{ 20747, 40, 2625, 0, OIL, 50 }, -- Lesser Mana Oil
 	{ 20746, 30, 2626, 0, OIL, 40 }, -- Lesser Wizard Oil
 	{ 287979, 1, 2626, 0, OIL, 40 }, -- Lesser Wizard Oil
-	{ 13701, 0, 1825, 0, OIL, 56 }, -- Major Firestone
-	{ 13603, 0, 8061, 0, OIL, 60 }, -- Major Spellstone
 	{ 20745, 20, 2624, 0, OIL, 30 }, -- Minor Mana Oil
 	{ 20744, 5, 2623, 0, OIL, 15 }, -- Minor Wizard Oil
 	{ 6530, 0, 264, 1048576, LURE, 20 }, -- Nightcrawlers
@@ -437,7 +448,6 @@ ns.BUFF_DUTY_WEAPON_ITEMS = {
 	{ 6529, 0, 263, 1048576, LURE, 10 }, -- Shiny Bauble
 	{ 7964, 25, 483, 33219, STONE, 35 }, -- Solid Sharpening Stone
 	{ 7965, 25, 484, 9264, STONE, 35 }, -- Solid Weightstone
-	{ 5522, 0, 8059, 0, OIL, 36 }, -- Spellstone
 	{ 20750, 40, 2627, 0, OIL, 50 }, -- Wizard Oil
 }
 
@@ -449,17 +459,15 @@ ns.BUFF_DUTY_WEAPON_ITEMS = {
 ]]
 ns.WEAPON_ENCHANTS_STACK = true
 
--- The weapon items whose enchant goes in the imbue layer, beside a poison's or a shaman imbue's.
+-- The weapon items whose enchant goes in the imbue layer, beside a poison's, a shaman imbue's or a warlock stone's.
 ns.BUFF_DUTY_WEAPON_IMBUE_ITEMS = {
-	13699, -- Firestone
-	13700, -- Greater Firestone
-	13602, -- Greater Spellstone
-	1254, -- Lesser Firestone
-	13701, -- Major Firestone
-	13603, -- Major Spellstone
 	275067, -- Scroll of Imbue Chillknife
 	274947, -- Scroll of Imbue Lesser Flame
-	5522, -- Spellstone
+}
+
+-- { item id, auras = { spell ids }, default (minutes left, MISSING or OFF) }, -- Name
+ns.BUFF_DUTY_SELF_ITEMS = {
+	{ 12820, auras = { 17038 }, default = MISSING }, -- Winterfall Firewater
 }
 
 -- { class, create = { { spell id, level learned } }, auras, items (lowest rank first), default }
@@ -489,12 +497,14 @@ Notes
 	- Paladin blessings share exclusive = BLESSING: a target holds one blessing from each paladin, and a second replaces the first. So once one of yours is on a player, the window stops offering your others to them, and only offers that one again when it runs low. With none of yours on them, every blessing you turned on is offered and you pick.
 	- greater lists every rank of a blessing's Greater version. It only counts toward "already has it" -- a Greater Blessing covers a class across the raid, not a party, so it is never offered as a party's group icon.
 	- noCasters drops the buff for the classes in Data.CASTER_CLASSES, who get nothing from melee attack power (Blessing of Might).
+	- pets marks the buffs a hunter's or warlock's pet can take here. Blizzard's Hunter and Druid deep dive for WoW Forever says pets "can no longer receive player buffs that increase their stats" (they draw stats from their owner instead), so with BUFF_DUTY_PETS_FLAGGED_ONLY set a pet is offered only these. Thorns is the one marked: it adds no stats, and a player reported casting it on hunter and warlock pets (issue #43). Mark of the Wild, Intellect, Spirit, Fortitude and the Blessings stay off pets. Pets take Tanks buffs per Count as Tanks > Pets, as on the other clients.
 	- Left out for lasting two minutes or less: Power Infusion, Innervate, Levitate, Slow Fall. Battle Shout lasts three minutes on this client, but it's shouted for the whole party rather than cast on one target, so a warrior keeps it up as a self buff instead, below. Left out for being item uses rather than spells: the stat scrolls. The Soulstone has a table of its own, below.
 	- single is every rank of the single-target buff, and group every rank of its party-wide version. A player counts as buffed by any rank of either, because each rank's aura carries its own ID.
 	- Each single-target rank carries the level it is learned at, because Classic doesn't pick a rank for the target: casting a rank on a player more than 10 levels below its learn level fails with "Target is too low level". The button casts the highest known rank the target can take, by its rank text ("Name(Rank 2)"), and offers nothing when even rank 1 is too high. Group versions always cast their highest rank, by name.
 	- The learn levels are the client's own, checked against the SPELL_LEVEL_LEARNED column of a Validate Data run from this client.
 	- manaOnly drops the buff for classes with no mana (Data.NO_MANA_CLASSES), where Intellect and Spirit do nothing worth a reagent or a global cooldown.
 	- default is who the buff is offered to until the player picks: ALL, TANK, HEALER or OFF, from Data.BUFF_AUDIENCE in Data/Data.lua. The everyday raid buffs start on ALL (Kings, Wisdom and Might among them, since not every paladin has Kings), Thorns and Fear Ward on TANK, and the situational ones OFF. A player's own choice is never overwritten.
+	- selfDefault is when a group buff shows on the caster themselves, on the Self-Buffs panel, until the player picks: the window offers your own group buffs under Self Buffs, timed per buff, and leaves you off your party row. Without one it's 3 minutes for a buff that starts on ALL and OFF for the rest, from default. Thorns starts on MISSING (When Missing): it's short, and a druid keeps it up on themselves while soloing (issue #42).
 	- Blessing of Sanctuary, Blessing of Salvation and Blessing of Light, with their Greater versions, are left out because this client doesn't have them.
 	- Amplify and Dampen Magic replace each other on the target, so turning both on offers each to everyone carrying the other.
 	- The setting is keyed by the first single-target ID, the lowest rank.
@@ -509,20 +519,22 @@ Notes
 	- The self-buff learn levels are checked the same way.
 	- Shadowguard (Troll) and Touch of Weakness (Undead) are priest racial self buffs. Only a priest of that race knows them, and a row offers only the ranks the player knows. Their learn levels come from SpellLevels.
 	- Left out of the self buffs: tracking, stealth, mounts, pet spells, Feign Death, totems, and cooldowns spent on the next action (Presence of Mind, Nature's Swiftness, Inner Focus, Cold Blood, Divine Favor, Elemental Mastery, Combustion). Moonkin Aura is left out because Moonkin Form puts it up, not a cast. Omen of Clarity is left out because it's passive on this client: a trained spell with no duration or cost, flagged Passive on Wowhead's WoW Forever page (spell 16864), where Classic Era's is a 10-minute buff. So druids have nothing to keep up.
-	- BUFF_WINDOW_WEAPON_ENCHANTS are the rogue poisons and shaman imbues. Each hand has its own timing per row on the Self-Buffs panel, and every row starts on for every hand: the window only offers an imbue you know or a poison in your bags, so a row you can't use yet stays out of the way.
+	- BUFF_WINDOW_WEAPON_ENCHANTS are the rogue poisons, shaman imbues and warlock stones. Each hand has its own timing per row on the Self-Buffs panel, and every row starts on for every hand: the window only offers an imbue you know or a poison in your bags, so a row you can't use yet stays out of the way.
 	- A poison row is every item of its line with the level it requires, from Consumable Connoisseur's Poisons-Camelot.lua (validated 2026-10-16 on this client); Instant Toxin is a lower Instant Poison and shares its row. The button uses the best one in the rogue's bags they can use, on that hand's slot. The setting is keyed by the first item ID.
 	- An imbue row is every rank, as a self buff's, and its duration: 60 minutes on this client, as each rank's tooltip states. A row's duration only matters once it's no longer than a Reapply choice, when the imbue is offered only once it's gone (a poison lasts longer than any, so carries none).
 	- Each poison item and imbue rank carries the enchant id it puts on the weapon, which is what GetWeaponEnchantInfo reports, so the window can tell which of the player's picks a hand holds. Pulled from this client's SpellEffect (the ENCHANT_ITEM_TEMPORARY effect's misc value) and ItemEffect tables on wago.tools.
-	- BUFF_WINDOW_WEAPON_HANDS is which hands each class is asked about: a shaman only the main hand, since nothing here teaches one to dual wield.
+	- The warlock rows are the Firestone and Spellstone lines, which this client makes weapon imbues (Blizzard's Rogue and Warlock class deep dive, below). Like a poison row, items is every stone of the line, and the button applies the best one in the bags to the main hand. Unlike a poison, the warlock conjures them: create is every rank of Create Firestone or Create Spellstone with its learn level, and with no stone of the line in the bags the button casts it instead, by its bare name, which fires the best rank known as Create Soulstone's does. The stones need no level (ItemSparse), so each item's level column is the learn level of the rank that makes it (Trainer-Spells-Camelot.lua), which only orders them best first: Lesser Firestone 1254 from Create Firestone 6366 (28), Firestone 13699 from 17951 (36), Greater 13700 from 17952 (46), Major 13701 from 17953 (56); Spellstone 5522 from Create Spellstone 2362 (36), Greater 13602 from 17727 (48), Major 13603 from 17728 (60). Each row's first item is the plain Firestone or Spellstone, so the panel names the line by it. They moved here from the weapon items, below, which offered them to every class and never conjured; a conjured stone is soulbound, so no other class holds one. A stone needs a Soul Shard to create, which the button doesn't check, as with the Soulstone.
+	- BUFF_WINDOW_WEAPON_HANDS is which hands each class is asked about: a shaman only the main hand, since nothing here teaches one to dual wield, and a warlock only the main hand, since a warlock can't dual wield.
 	- BUFF_WINDOW_SOULSTONE is the Soulstone reminder: create is every Create Soulstone rank (cast by its bare name), auras the Soulstone Resurrection buff each stone leaves, and items the stones, lowest first, the same lists as Consumable Connoisseur's Soulstones-Camelot.lua and Conjure-Spells-Camelot.lua.
+	- BUFF_DUTY_SELF_ITEMS are the consumables any class keeps up on itself, offered under Self Buffs while one is in your bags and its buff is missing (issue #40): each item id, the aura ids its use leaves, and when it shows by default. Winterfall Firewater (item 12820) leaves Winterfall Firewater (17038), +35 melee attack power for 20 minutes, the same aura the Elixirs table lists. Its default is When Missing, since the request was to show it once the buff is gone.
 	- BUFF_WINDOW_RESURRECTIONS is what the Buff Key casts first, on a dead target: every rank of each class's resurrection, cast by its bare name, which resolves to the highest known. Only priests and paladins are listed.
 	- Water Shield (408510) is learned at 20 on this client, and its text is WoW Forever's own. Aspect of the Beast ranks 2 to 4 (1299445 to 1299447) are WoW Forever's new ranks, learned at 40, 50 and 60.
 	- Trueshot Aura's ranks 1 and 2 (1299346 and 1299348) are WoW Forever's new ranks, learned at 25 and 32, below the talent rank (19506) at 40. They're listed after the talent's ranks so the row keeps 19506 as its key, and with it each player's saved choice; the row casts the highest rank known whatever the order.
 	- Season of Discovery's rune buffs sit in this client's tables unchanged (Beacon of Light, Earth Shield, Spirit of the Alpha, Fel Armor, Aspect of the Viper, Aspect of the Falcon, Heart of the Lion, the second Righteous Fury) with no learn level, as does Commanding Shout. WoW Forever has no runes to teach them, so they're left out. Swift Judgement is left out because it's spent on the next Judgement.
-	- BUFF_WINDOW_WEAPON_ITEMS is every other temporary weapon enchant, offered to any class: each item with the level it requires, the enchant id it puts on (SpellEffect's ENCHANT_ITEM_TEMPORARY misc value, through ItemXItemEffect), and the weapon types its spell takes (SpellEquippedItems' EquippedItemSubclass mask, 0 for any weapon). kind files it under Oils, Stones or Lures on the Weapon Buffs panel: LURE for a fishing pole's, STONE for a sharpening stone or weightstone, OIL for the rest (oils, coatings, Bloodboil Poison, Scourgebane, the Weapon Cleaning Cloth, and here the warlock's Firestones and Spellstones and the Scrolls of Imbue). item level (ItemSparse) ranks them, strongest first: it orders a line Rough to Dense where the required level can't (every lure needs level 0). Fishing lures take only a fishing pole, a sharpening stone only a bladed weapon, a weightstone only a blunt one. Picked from the IDs supplied on 2026-10-19, keeping only items whose spell enchants a hand weapon or fishing pole. Left out: rogue-only poisons (the rogue rows above), armor runes and other enchants that go on armor, shield coatings, and test or placeholder items. zones, on an item whose tooltip says it only works in certain places, names those places: instances by the map ID GetInstanceInfo reports and outdoor zones by the UiMap ID C_Map.GetBestMapForUnit reports, both from this client's Map and UiMap tables. The window offers such an item only there (Features/Buff-Duty/Buff-Duty-Self.lua); an item without zones, anywhere. Here the Blackfathom Sharpening Stone carries one: Blackfathom Deeps (Map 48).
-	- The weapon items were then checked against this client's tables: every item whose use spell puts a temporary enchant on a hand weapon or fishing pole (SpellEffect 54, or 360, which this client's rogue poisons use with the same enchant ids). That added the warlock's Firestones and Spellstones, which this client makes weapon enchants (Create Firestone and Create Spellstone make them), and the two Scrolls of Imbue that QuestieDB has dropping from a Bundle of Scrolls (Lesser Flame, Chillknife). A Firestone or Spellstone needs no level here, by ItemSparse.
+	- BUFF_WINDOW_WEAPON_ITEMS is every other temporary weapon enchant, offered to any class: each item with the level it requires, the enchant id it puts on (SpellEffect's ENCHANT_ITEM_TEMPORARY misc value, through ItemXItemEffect), and the weapon types its spell takes (SpellEquippedItems' EquippedItemSubclass mask, 0 for any weapon). kind files it under Oils, Stones or Lures on the Weapon Buffs panel: LURE for a fishing pole's, STONE for a sharpening stone or weightstone, OIL for the rest (oils, coatings, Bloodboil Poison, Scourgebane, the Weapon Cleaning Cloth, and here the Scrolls of Imbue). item level (ItemSparse) ranks them, strongest first: it orders a line Rough to Dense where the required level can't (every lure needs level 0). Fishing lures take only a fishing pole, a sharpening stone only a bladed weapon, a weightstone only a blunt one. Picked from the IDs supplied on 2026-10-19, keeping only items whose spell enchants a hand weapon or fishing pole. Left out: rogue-only poisons (the rogue rows above), armor runes and other enchants that go on armor, shield coatings, and test or placeholder items. zones, on an item whose tooltip says it only works in certain places, names those places: instances by the map ID GetInstanceInfo reports and outdoor zones by the UiMap ID C_Map.GetBestMapForUnit reports, both from this client's Map and UiMap tables. The window offers such an item only there (Features/Buff-Duty/Buff-Duty-Self.lua); an item without zones, anywhere. Here the Blackfathom Sharpening Stone carries one: Blackfathom Deeps (Map 48).
+	- The weapon items were then checked against this client's tables: every item whose use spell puts a temporary enchant on a hand weapon or fishing pole (SpellEffect 54, or 360, which this client's rogue poisons use with the same enchant ids). That turned up the warlock's Firestones and Spellstones, which this client makes weapon enchants (Create Firestone and Create Spellstone make them) and which now sit in the warlock rows above, and added the two Scrolls of Imbue that QuestieDB has dropping from a Bundle of Scrolls (Lesser Flame, Chillknife).
 	- Left out from that check: the other fourteen Scrolls of Imbue, which neither QuestieDB nor any spell here gives a source for, so likely unobtainable for now; Creeping Anguish and Creeping Torment, poisons whose creating spells nobody can learn; Season of Discovery's poisons (Sebacious, Numbing, Atrophic, Occult) and its other weapon items, whose IDs this client's tables carry just as the Classic Era client's do; and the Wide-Brimmed Fishing Hat, whose lure only works while the hat is worn, and which using from the bags would put on instead.
-	- WEAPON_ENCHANTS_STACK and BUFF_DUTY_WEAPON_IMBUE_ITEMS: on this client a weapon carries an imbue and an oil or stone at once. Blizzard's Rogue and Warlock class deep dive says poisons "can now be applied to weapons at the same time as temporary enchantments like Weightstones and Sharpening Stones", and that Firestone and Spellstone now apply weapon imbues that stack with Wizard Oil. Shaman guides (Conquest Capped, LFCarry, 2026-11-07) say the four imbues stack with sharpening stones, weightstones and wizard oils. This client's C_Item.GetWeaponEnchantInfo(weaponSlot) returns a list per hand, each entry with an enchantType (Temporary or Imbue). The window files each enchant by the row that puts it on (imbue for the poisons, shaman imbues and the items listed, temporary for every other weapon item), and by enchantType for an enchant no row names. The two Scrolls of Imbue are filed with the imbues as ForeverAuras files them; not yet checked in game.
+	- WEAPON_ENCHANTS_STACK and BUFF_DUTY_WEAPON_IMBUE_ITEMS: on this client a weapon carries an imbue and an oil or stone at once. Blizzard's Rogue and Warlock class deep dive says poisons "can now be applied to weapons at the same time as temporary enchantments like Weightstones and Sharpening Stones", and that Firestone and Spellstone now apply weapon imbues that stack with Wizard Oil. Shaman guides (Conquest Capped, LFCarry, 2026-11-07) say the four imbues stack with sharpening stones, weightstones and wizard oils. This client's C_Item.GetWeaponEnchantInfo(weaponSlot) returns a list per hand, each entry with an enchantType (Temporary or Imbue). The window files each enchant by the row that puts it on (imbue for the poisons, shaman imbues, warlock stones and the items listed, temporary for every other weapon item), and by enchantType for an enchant no row names. The two Scrolls of Imbue are filed with the imbues as ForeverAuras files them; not yet checked in game.
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query

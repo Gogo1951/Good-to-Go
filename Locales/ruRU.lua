@@ -1837,6 +1837,9 @@ L["BUFF_DUTY_FAVOR_SECONDS_DESCRIPTION"] =
 L["BUFF_DUTY_TARGET_ENABLE"] = "Ваша цель"
 L["BUFF_DUTY_TARGET_ENABLE_DESCRIPTION"] =
 	"Показывает вашу цель, если это игрок вне вашей группы, которому не хватает баффа, доступного вам."
+L["BUFF_DUTY_TARGET_NPCS"] = "Включать НИП"
+L["BUFF_DUTY_TARGET_NPCS_DESCRIPTION"] =
+	"Также показывает дружественного НИП в цели, например раненого солдата из задания, с баффами, которые вы можете ему дать."
 L["BUFF_DUTY_ASK_OTHERS"] = "Просить баффы у других классов"
 L["BUFF_DUTY_ASK_OTHERS_DESCRIPTION"] =
 	'Показывает в разделе "Нет баффов группы" рейдовые баффы, которых не хватает вашей группе, и сколько игроков нуждается в каждом. ЛКМ по баффу, чтобы попросить его у группы, или ПКМ, чтобы шепотом обратиться к игрокам, которые могут его наложить.'
@@ -1877,12 +1880,13 @@ L["BUFF_DUTY_BUFFS_DESCRIPTION"] =
 -- The Self-Buffs panel, under Buff Duty: its name and description.
 L["BUFF_DUTY_SELF_HEADER"] = "Баффы на себя"
 L["BUFF_DUTY_SELF_DESCRIPTION"] =
-	"Ваши собственные баффы, закрепленные вверху окна."
+	"Все баффы, которые вы можете наложить на себя, закрепленные вверху окна. Здесь и ваши групповые баффы, для вас самих: кому еще их давать, выбирается в разделе Баффы группы."
 --[[
     Muted note after a class name on the Self-Buffs panel, for a family of self
     buffs only one of which can be up at a time. Keyed by the family.
 ]]
 L["BUFF_DUTY_SELF_NOTE_ASPECT"] = "подойдет любой дух"
+L["BUFF_DUTY_SELF_NOTE_BLESSING"] = "подойдет любое ваше благословение"
 L["BUFF_DUTY_SELF_NOTE_MAGE_ARMOR"] = "подойдет любая броня"
 L["BUFF_DUTY_SELF_NOTE_PALADIN_AURA"] = "подойдет любая аура"
 L["BUFF_DUTY_SELF_NOTE_SHAMAN_SHIELD"] = "подойдет любой щит"
@@ -1895,6 +1899,8 @@ L["BUFF_DUTY_SELF_REFRESH_MISSING"] = "Если нет"
 L["BUFF_DUTY_SELF_REFRESH_UNDER"] = "Меньше, чем %s"
 L["BUFF_DUTY_SELF_REFRESH_DESCRIPTION"] =
 	"Задает, когда показывать %s: никогда, после окончания действия или когда осталось меньше этого времени."
+L["BUFF_DUTY_SELF_ITEMS_HEADER"] = "Расходуемые"
+L["BUFF_DUTY_SELF_ITEMS_NOTE"] = "если есть в сумках"
 -- The Weapon Buffs panel, under Buff Duty after Self-Buffs.
 L["BUFF_DUTY_WEAPON_PANEL_HEADER"] = "Баффы оружия"
 L["BUFF_DUTY_WEAPON_DESCRIPTION"] =
@@ -1915,7 +1921,7 @@ L["BUFF_DUTY_WEAPON_PICK_DESCRIPTION"] =
 	"Предлагает %s для оружия (%s). Пока на оружии нет ни одного из отмеченных вариантов, предлагается каждый, который у вас есть."
 L["BUFF_DUTY_SELF_ENABLE"] = "Ваши баффы на себя"
 L["BUFF_DUTY_SELF_ENABLE_DESCRIPTION"] =
-	"Показывает вверху окна баффы, которые вы можете наложить только на себя, например броню или Внутренний огонь, когда их нет или они скоро закончатся. Выберите нужные в разделе Баффы на себя."
+	"Показывает вверху окна ваши собственные баффы, когда их нет или они скоро закончатся: те, что можно наложить только на себя, например броню или Внутренний огонь, и ваши групповые баффы на вас. Выберите нужные в разделе Баффы на себя."
 L["BUFF_DUTY_WEAPON_ENABLE"] = "Ваши баффы оружия"
 L["BUFF_DUTY_WEAPON_ENABLE_DESCRIPTION"] =
 	"Показывает яды, чары оружия, масла, камни и приманки, которых нет на вашем оружии или которые скоро закончатся, вместе с баффами на себя вверху окна. Нажмите на один из них, чтобы нанести его. Выберите нужные в разделе Баффы оружия."
@@ -1933,6 +1939,8 @@ L["BUFF_DUTY_TOOLTIP_WEAPON"] = "Наносит на оружие (%s)."
 L["BUFF_DUTY_TOOLTIP_USE"] =
 	"Ни у кого в группе нет камня души. Использует его на игроке %s."
 L["BUFF_DUTY_TOOLTIP_CREATE"] = "Ни у кого в группе нет камня души. Создаёт его."
+L["BUFF_DUTY_TOOLTIP_CREATE_WEAPON"] = "В сумках нет ни одного. Создаёт его."
+L["BUFF_DUTY_TOOLTIP_USE_ITEM"] = "Использует один из ваших сумок."
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "Применяет к игроку %s и его группе."
 L["BUFF_DUTY_TOOLTIP_FAVOR"] = "Выбирает игрока %s целью и применяет."
 -- A Party Buffs icon's menu, its ask rows: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it: %s is one or two names (LIST_PAIR_FORMAT), or BUFF_DUTY_OTHERS_ASK_PEOPLE past two.

@@ -102,6 +102,7 @@ local function DefineMessageRows(args, spec, message, key, order)
 		get = Text,
 		set = function(_, value)
 			ns.SetMessageText(message.field, value or "")
+			ns.RefreshSettings()
 		end,
 	}
 	args[key .. "SignOff"] = Label(
@@ -196,6 +197,7 @@ function ns.DefineWhisperComposer(args, spec, order)
 			end,
 			set = function(_, value)
 				ns.SetMessageLanguage(value)
+				ns.RefreshSettings()
 			end,
 		}
 		args[prefix .. "LanguageSpace"] = Kit.Spacer(order + 0.05, hidden)

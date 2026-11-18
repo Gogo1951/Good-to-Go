@@ -1763,6 +1763,9 @@ L["BUFF_DUTY_FAVOR_SECONDS_DESCRIPTION"] =
 L["BUFF_DUTY_TARGET_ENABLE"] = "Seu alvo"
 L["BUFF_DUTY_TARGET_ENABLE_DESCRIPTION"] =
 	"Lista o seu alvo quando ele é um jogador de fora do seu grupo sem um buff que você pode dar."
+L["BUFF_DUTY_TARGET_NPCS"] = "Incluir PNJs"
+L["BUFF_DUTY_TARGET_NPCS_DESCRIPTION"] =
+	"Também lista um PNJ amistoso que você tem como alvo, como o soldado ferido de uma missão, com os buffs que você pode dar a ele."
 L["BUFF_DUTY_ASK_OTHERS"] = "Pedir buffs a outras classes"
 L["BUFF_DUTY_ASK_OTHERS_DESCRIPTION"] =
 	"Em Buffs de grupo faltando, mostra os buffs de raide de que seu grupo precisa e quantos jogadores precisam de cada um. Clique com o botão esquerdo em um para pedi-lo ao seu grupo, ou com o botão direito para sussurrar aos jogadores que podem lançá-lo."
@@ -1802,12 +1805,14 @@ L["BUFF_DUTY_BUFFS_DESCRIPTION"] =
 
 -- The Self-Buffs panel, under Buff Duty: its name and description.
 L["BUFF_DUTY_SELF_HEADER"] = "Buffs próprios"
-L["BUFF_DUTY_SELF_DESCRIPTION"] = "Seus próprios buffs, fixados no topo da janela."
+L["BUFF_DUTY_SELF_DESCRIPTION"] =
+	"Todos os buffs que você pode lançar em si mesmo, fixados no topo da janela. Seus buffs de grupo também estão aqui, para quando estão em você: em Buffs de grupo você escolhe quem mais os recebe."
 --[[
     Muted note after a class name on the Self-Buffs panel, for a family of self
     buffs only one of which can be up at a time. Keyed by the family.
 ]]
 L["BUFF_DUTY_SELF_NOTE_ASPECT"] = "qualquer aspecto conta"
+L["BUFF_DUTY_SELF_NOTE_BLESSING"] = "qualquer uma das suas bênçãos conta"
 L["BUFF_DUTY_SELF_NOTE_MAGE_ARMOR"] = "qualquer armadura conta"
 L["BUFF_DUTY_SELF_NOTE_PALADIN_AURA"] = "qualquer aura conta"
 L["BUFF_DUTY_SELF_NOTE_SHAMAN_SHIELD"] = "qualquer escudo conta"
@@ -1819,6 +1824,8 @@ L["BUFF_DUTY_SELF_REFRESH_MISSING"] = "Quando faltar"
 L["BUFF_DUTY_SELF_REFRESH_UNDER"] = "Menos de %s"
 L["BUFF_DUTY_SELF_REFRESH_DESCRIPTION"] =
 	"Define quando %s aparece: nunca, quando acabar ou quando restar menos que esse tempo."
+L["BUFF_DUTY_SELF_ITEMS_HEADER"] = "Consumíveis"
+L["BUFF_DUTY_SELF_ITEMS_NOTE"] = "quando há um nas suas bolsas"
 -- The Weapon Buffs panel, under Buff Duty after Self-Buffs.
 L["BUFF_DUTY_WEAPON_PANEL_HEADER"] = "Buffs de arma"
 L["BUFF_DUTY_WEAPON_DESCRIPTION"] =
@@ -1839,7 +1846,7 @@ L["BUFF_DUTY_WEAPON_PICK_DESCRIPTION"] =
 	"Oferece %s para a sua arma (%s). Enquanto a arma não tiver nenhuma das opções marcadas, cada uma que você tiver é oferecida."
 L["BUFF_DUTY_SELF_ENABLE"] = "Seus buffs próprios"
 L["BUFF_DUTY_SELF_ENABLE_DESCRIPTION"] =
-	"Mostra no topo da janela os buffs que só você pode lançar em si mesmo, como uma armadura ou Fogo Interior, quando estão faltando ou acabando. Escolha quais em Buffs próprios."
+	"Mostra no topo da janela seus próprios buffs quando estão faltando ou acabando: os que só você pode lançar em si mesmo, como uma armadura ou Fogo Interior, e seus buffs de grupo em você. Escolha quais em Buffs próprios."
 L["BUFF_DUTY_WEAPON_ENABLE"] = "Seus buffs de arma"
 L["BUFF_DUTY_WEAPON_ENABLE_DESCRIPTION"] =
 	"Mostra os venenos, imbuições, óleos, pedras e iscas que estão faltando ou acabando nas suas armas, junto com seus buffs próprios no topo da janela. Clique em um para aplicá-lo. Escolha quais em Buffs de arma."
@@ -1856,6 +1863,8 @@ L["BUFF_DUTY_TOOLTIP_CAST"] = "Lança em %s."
 L["BUFF_DUTY_TOOLTIP_WEAPON"] = "Aplica na sua arma (%s)."
 L["BUFF_DUTY_TOOLTIP_USE"] = "Ninguém no seu grupo tem uma Pedra da Alma. Usa uma em %s."
 L["BUFF_DUTY_TOOLTIP_CREATE"] = "Ninguém no seu grupo tem uma Pedra da Alma. Cria uma."
+L["BUFF_DUTY_TOOLTIP_CREATE_WEAPON"] = "Nenhuma nas suas bolsas. Cria uma."
+L["BUFF_DUTY_TOOLTIP_USE_ITEM"] = "Usa um das suas bolsas."
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "Lança em %s e no grupo dele."
 L["BUFF_DUTY_TOOLTIP_FAVOR"] = "Seleciona %s como alvo e lança."
 -- A Party Buffs icon's menu, its ask rows: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it: %s is one or two names (LIST_PAIR_FORMAT), or BUFF_DUTY_OTHERS_ASK_PEOPLE past two.

@@ -4,7 +4,7 @@ local L = ns.L
 
 --[[
     Buff Duty's lookups: which of this client's ns.BUFF_DUTY_SPELLS,
-    self buff, weapon enchant, weapon item and Soulstone rows have live ids,
+    self buff, self item, weapon enchant, weapon item and Soulstone rows have live ids,
     filled into the tables Buff-Duty-Castable.lua keeps on ns.BuffDuty; and
     the options panels' class categories.
 ]]
@@ -19,6 +19,7 @@ local weaponEntries = BuffDuty.weaponEntries
 local weaponLookup = BuffDuty.weaponLookup
 local weaponItemEntries = BuffDuty.weaponItemEntries
 local weaponByEnchant = BuffDuty.weaponByEnchant
+local selfItemEntries = BuffDuty.selfItemEntries
 
 --------------------------------------------------------------------------------
 -- Lookups
@@ -156,11 +157,19 @@ function BuffDuty.BuildLookup()
 			table.sort(items, function(a, b)
 				return a.level > b.level
 			end)
+			-- A warlock's stone line also names the spells that conjure it, offered while none is in the bags.
+			local create = {}
+			for _, rank in ipairs(row.create or {}) do
+				if C_Spell.DoesSpellExist(rank[1]) then
+					create[#create + 1] = { id = rank[1], level = rank[2] }
+				end
+			end
 			entry = {
 				key = ids[1],
 				row = row,
 				ids = ids,
 				items = items,
+				create = create[1] and create or nil,
 				enchants = enchants,
 				layer = stack and IMBUE or TEMPORARY,
 			}
@@ -215,6 +224,25 @@ function BuffDuty.BuildLookup()
 		}
 		weaponItemEntries[#weaponItemEntries + 1] = entry
 		weaponByEnchant[row[3]] = weaponByEnchant[row[3]] or entry
+	end
+
+	--[[
+	    A self item is counted by its auras and named on the panel by the
+	    first. Its key is "item:<id>", so it can't meet a spell id among the
+	    selfRefresh keys. Items aren't checked against the client, as with
+	    poisons: one it doesn't know is one no bag ever holds.
+	]]
+	wipe(selfItemEntries)
+	for _, row in ipairs(ns.BUFF_DUTY_SELF_ITEMS or {}) do
+		local auras = LiveIds(row.auras)
+		if auras[1] then
+			local auraIds = {}
+			for _, id in ipairs(auras) do
+				auraIds[id] = true
+			end
+			selfItemEntries[#selfItemEntries + 1] =
+				{ key = "item:" .. row[1], row = row, itemId = row[1], ids = auras, auraIds = auraIds }
+		end
 	end
 
 	--[[
@@ -289,8 +317,8 @@ end
     with nothing to give on this client.
 ]]
 function ns.BuffDutyHasClassRows()
-	-- Any class can use an oil or a stone.
-	if weaponItemEntries[1] then
+	-- Any class can use an oil, a stone or a self item.
+	if weaponItemEntries[1] or selfItemEntries[1] then
 		return true
 	end
 	local _, playerClass = UnitClass("player")

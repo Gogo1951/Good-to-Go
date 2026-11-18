@@ -1726,6 +1726,9 @@ L["BUFF_DUTY_FAVOR_SECONDS_DESCRIPTION"] = "Sets how long a stranger stays on th
 L["BUFF_DUTY_TARGET_ENABLE"] = "Your Target"
 L["BUFF_DUTY_TARGET_ENABLE_DESCRIPTION"] =
 	"Lists your target when they are a player outside your group missing a buff you can give."
+L["BUFF_DUTY_TARGET_NPCS"] = "Include NPCs"
+L["BUFF_DUTY_TARGET_NPCS_DESCRIPTION"] =
+	"Also lists a friendly NPC you target, like a quest's wounded soldier, with the buffs you can give it."
 L["BUFF_DUTY_ASK_OTHERS"] = "Ask Other Classes for Buffs"
 L["BUFF_DUTY_ASK_OTHERS_DESCRIPTION"] =
 	"Under Missing Party Buffs, shows the raid buffs your group needs and how many players need each. Left-Click one to ask your group for it, or Right-Click to whisper the players who can cast it."
@@ -1764,12 +1767,14 @@ L["BUFF_DUTY_BUFFS_DESCRIPTION"] =
 
 -- The Self-Buffs panel, under Buff Duty: its name and description.
 L["BUFF_DUTY_SELF_HEADER"] = "Self-Buffs"
-L["BUFF_DUTY_SELF_DESCRIPTION"] = "Your own buffs, pinned to the top of the window."
+L["BUFF_DUTY_SELF_DESCRIPTION"] =
+	"Every buff you can put on yourself, pinned to the top of the window. Your group buffs are here too, for when they're on you: Group Buffs picks who else gets them."
 --[[
     Muted note after a class name on the Self-Buffs panel, for a family of self
     buffs only one of which can be up at a time. Keyed by the family.
 ]]
 L["BUFF_DUTY_SELF_NOTE_ASPECT"] = "any one aspect counts"
+L["BUFF_DUTY_SELF_NOTE_BLESSING"] = "any one of your blessings counts"
 L["BUFF_DUTY_SELF_NOTE_MAGE_ARMOR"] = "any one armor counts"
 L["BUFF_DUTY_SELF_NOTE_PALADIN_AURA"] = "any one aura counts"
 L["BUFF_DUTY_SELF_NOTE_SHAMAN_SHIELD"] = "any one shield counts"
@@ -1781,6 +1786,9 @@ L["BUFF_DUTY_SELF_REFRESH_MISSING"] = "When Missing"
 L["BUFF_DUTY_SELF_REFRESH_UNDER"] = "Under %s"
 L["BUFF_DUTY_SELF_REFRESH_DESCRIPTION"] =
 	"Sets when %s shows: never, once it's gone, or once it has less than this left."
+-- The Self-Buffs panel's last box: consumables any class keeps up on itself (Winterfall Firewater), with a muted note after its name.
+L["BUFF_DUTY_SELF_ITEMS_HEADER"] = "Consumables"
+L["BUFF_DUTY_SELF_ITEMS_NOTE"] = "when one is in your bags"
 -- The Weapon Buffs panel, under Buff Duty after Self-Buffs.
 L["BUFF_DUTY_WEAPON_PANEL_HEADER"] = "Weapon Buffs"
 L["BUFF_DUTY_WEAPON_DESCRIPTION"] =
@@ -1801,7 +1809,7 @@ L["BUFF_DUTY_WEAPON_PICK_DESCRIPTION"] =
 	"Offers %s for your %s. While the weapon carries none of your checked choices, each one you have is offered."
 L["BUFF_DUTY_SELF_ENABLE"] = "Your Self-Buffs"
 L["BUFF_DUTY_SELF_ENABLE_DESCRIPTION"] =
-	"Shows the buffs only you can put on yourself, like an armor or Inner Fire, at the top of the window when they're missing or running low. Pick which ones under Self-Buffs."
+	"Shows your own buffs at the top of the window when they're missing or running low: the ones only you can put on yourself, like an armor or Inner Fire, and your group buffs, on you. Pick which ones under Self-Buffs."
 L["BUFF_DUTY_WEAPON_ENABLE"] = "Your Weapon Buffs"
 L["BUFF_DUTY_WEAPON_ENABLE_DESCRIPTION"] =
 	"Shows the poisons, imbues, oils, stones, and lures your weapons are missing or running low on, with your self-buffs at the top of the window. Click one to put it on. Pick which ones under Weapon Buffs."
@@ -1818,6 +1826,10 @@ L["BUFF_DUTY_TOOLTIP_CAST"] = "Casts on %s."
 L["BUFF_DUTY_TOOLTIP_WEAPON"] = "Applies to your %s."
 L["BUFF_DUTY_TOOLTIP_USE"] = "Nobody in your group has a Soulstone. Uses one on %s."
 L["BUFF_DUTY_TOOLTIP_CREATE"] = "Nobody in your group has a Soulstone. Creates one."
+-- A Firestone or Spellstone icon with none in the bags conjures one.
+L["BUFF_DUTY_TOOLTIP_CREATE_WEAPON"] = "None in your bags. Creates one."
+-- A Self-Buffs consumable's icon (Winterfall Firewater).
+L["BUFF_DUTY_TOOLTIP_USE_ITEM"] = "Uses one from your bags."
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "Casts on %s and their party."
 L["BUFF_DUTY_TOOLTIP_FAVOR"] = "Targets %s and casts."
 -- A Party Buffs icon's menu, its ask rows: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it: %s is one or two names (LIST_PAIR_FORMAT), or BUFF_DUTY_OTHERS_ASK_PEOPLE past two.

@@ -1775,6 +1775,9 @@ L["BUFF_DUTY_FAVOR_SECONDS_DESCRIPTION"] =
 L["BUFF_DUTY_TARGET_ENABLE"] = "Votre cible"
 L["BUFF_DUTY_TARGET_ENABLE_DESCRIPTION"] =
 	"Liste votre cible quand c'est un joueur hors de votre groupe à qui il manque une amélioration que vous pouvez lancer."
+L["BUFF_DUTY_TARGET_NPCS"] = "Inclure les PNJ"
+L["BUFF_DUTY_TARGET_NPCS_DESCRIPTION"] =
+	"Liste aussi un PNJ amical que vous ciblez, comme le soldat blessé d'une quête, avec les améliorations que vous pouvez lui lancer."
 L["BUFF_DUTY_ASK_OTHERS"] = "Demander des améliorations aux autres classes"
 L["BUFF_DUTY_ASK_OTHERS_DESCRIPTION"] =
 	"Affiche sous \"Améliorations de groupe manquantes\" les améliorations de raid qui manquent à votre groupe, avec le nombre de joueurs concernés par chacune. Clic gauche sur l'une d'elles pour la demander à votre groupe, ou clic droit pour chuchoter aux joueurs qui peuvent la lancer."
@@ -1814,12 +1817,14 @@ L["BUFF_DUTY_BUFFS_DESCRIPTION"] =
 
 -- The Self-Buffs panel, under Buff Duty: its name and description.
 L["BUFF_DUTY_SELF_HEADER"] = "Améliorations personnelles"
-L["BUFF_DUTY_SELF_DESCRIPTION"] = "Vos propres améliorations, épinglées en haut de la fenêtre."
+L["BUFF_DUTY_SELF_DESCRIPTION"] =
+	"Toutes les améliorations que vous pouvez vous lancer, épinglées en haut de la fenêtre. Vos améliorations de groupe y figurent aussi, pour quand elles sont sur vous : Améliorations de groupe choisit qui d'autre les reçoit."
 --[[
     Muted note after a class name on the Self-Buffs panel, for a family of self
     buffs only one of which can be up at a time. Keyed by the family.
 ]]
 L["BUFF_DUTY_SELF_NOTE_ASPECT"] = "n'importe quel aspect compte"
+L["BUFF_DUTY_SELF_NOTE_BLESSING"] = "n'importe laquelle de vos bénédictions compte"
 L["BUFF_DUTY_SELF_NOTE_MAGE_ARMOR"] = "n'importe quelle armure compte"
 L["BUFF_DUTY_SELF_NOTE_PALADIN_AURA"] = "n'importe quelle aura compte"
 L["BUFF_DUTY_SELF_NOTE_SHAMAN_SHIELD"] = "n'importe quel bouclier compte"
@@ -1831,6 +1836,8 @@ L["BUFF_DUTY_SELF_REFRESH_MISSING"] = "Si absente"
 L["BUFF_DUTY_SELF_REFRESH_UNDER"] = "Moins de %s"
 L["BUFF_DUTY_SELF_REFRESH_DESCRIPTION"] =
 	"Définit quand %s s'affiche : jamais, une fois l'effet terminé, ou quand il en reste moins que cette durée."
+L["BUFF_DUTY_SELF_ITEMS_HEADER"] = "Consommables"
+L["BUFF_DUTY_SELF_ITEMS_NOTE"] = "si vous en avez un dans vos sacs"
 -- The Weapon Buffs panel, under Buff Duty after Self-Buffs.
 L["BUFF_DUTY_WEAPON_PANEL_HEADER"] = "Améliorations d'arme"
 L["BUFF_DUTY_WEAPON_DESCRIPTION"] =
@@ -1851,7 +1858,7 @@ L["BUFF_DUTY_WEAPON_PICK_DESCRIPTION"] =
 	"Propose %s pour votre arme (%s). Tant que l'arme ne porte aucun de vos choix cochés, chacun de ceux que vous possédez est proposé."
 L["BUFF_DUTY_SELF_ENABLE"] = "Vos améliorations personnelles"
 L["BUFF_DUTY_SELF_ENABLE_DESCRIPTION"] =
-	"Affiche en haut de la fenêtre les améliorations que vous seul pouvez vous lancer, comme une armure ou Feu intérieur, quand elles manquent ou arrivent bientôt à expiration. Choisissez lesquelles dans Améliorations personnelles."
+	"Affiche en haut de la fenêtre vos propres améliorations quand elles manquent ou arrivent bientôt à expiration : celles que vous seul pouvez vous lancer, comme une armure ou Feu intérieur, et vos améliorations de groupe sur vous. Choisissez lesquelles dans Améliorations personnelles."
 L["BUFF_DUTY_WEAPON_ENABLE"] = "Vos améliorations d'arme"
 L["BUFF_DUTY_WEAPON_ENABLE_DESCRIPTION"] =
 	"Affiche les poisons, imprégnations, huiles, pierres et appâts qui manquent à vos armes ou arrivent bientôt à expiration, avec vos améliorations personnelles en haut de la fenêtre. Cliquez sur l'un d'eux pour l'appliquer. Choisissez lesquelles dans Améliorations d'arme."
@@ -1868,6 +1875,8 @@ L["BUFF_DUTY_TOOLTIP_CAST"] = "Lance le sort sur %s."
 L["BUFF_DUTY_TOOLTIP_WEAPON"] = "S'applique à votre arme (%s)."
 L["BUFF_DUTY_TOOLTIP_USE"] = "Personne dans votre groupe n'a de pierre d'âme. En utilise une sur %s."
 L["BUFF_DUTY_TOOLTIP_CREATE"] = "Personne dans votre groupe n'a de pierre d'âme. En crée une."
+L["BUFF_DUTY_TOOLTIP_CREATE_WEAPON"] = "Aucune dans vos sacs. En crée une."
+L["BUFF_DUTY_TOOLTIP_USE_ITEM"] = "En utilise un de vos sacs."
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "Lance le sort sur %s et son groupe."
 L["BUFF_DUTY_TOOLTIP_FAVOR"] = "Cible %s et lance le sort."
 -- A Party Buffs icon's menu, its ask rows: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it: %s is one or two names (LIST_PAIR_FORMAT), or BUFF_DUTY_OTHERS_ASK_PEOPLE past two.

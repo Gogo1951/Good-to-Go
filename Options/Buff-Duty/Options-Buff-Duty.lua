@@ -239,6 +239,10 @@ function ns.BuildBuffDutyOptions()
 				L["BUFF_DUTY_TARGET_ENABLE_DESCRIPTION"],
 				12
 			),
+			-- Shown only while Your Target is on: friendly NPCs are part of that row.
+			targetNPCs = Kit.SubToggleRow(12.1, function()
+				return Hidden() or not Settings().targetEnabled
+			end, Toggle("targetNPCs", L["BUFF_DUTY_TARGET_NPCS"], L["BUFF_DUTY_TARGET_NPCS_DESCRIPTION"])),
 			spaceAsk = Kit.Spacer(12.3, Hidden),
 			askOtherClasses = Toggle(
 				"askOtherClasses",

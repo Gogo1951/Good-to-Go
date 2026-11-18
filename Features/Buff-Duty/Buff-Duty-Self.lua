@@ -2,12 +2,14 @@ local _, ns = ...
 local L = ns.L
 
 --[[
-    The Buff Duty window's Self Buffs section: your self-only buffs and a Soulstone
-    while nobody in your group carries one, as icons on the Self Buffs header
-    in a grid of its own; then a row per hand for the poison, imbue, oil,
-    stone or lure each weapon needs, each row in a grid of its own
-    (Buff-Duty-Weapons.lua). Shared with the other Buff Duty files through
-    ns.BuffDuty.
+    The Buff Duty window's Self Buffs section, as icons on the Self Buffs
+    header in a grid of its own: your self-only buffs; your class's group buffs
+    on you, timed by the Self-Buffs panel and left off your party row; a
+    Soulstone while nobody in your group carries one; and the consumables any
+    class keeps up (Winterfall Firewater) while one is in your bags. Then a row
+    per hand for the poison, imbue, oil, stone or lure each weapon needs, each
+    row in a grid of its own (Buff-Duty-Weapons.lua). Shared with the other
+    Buff Duty files through ns.BuffDuty.
 ]]
 
 local BuffDuty = ns.BuffDuty
@@ -118,6 +120,34 @@ local function SoulstoneIcon()
 end
 
 --------------------------------------------------------------------------------
+-- Self Items
+--------------------------------------------------------------------------------
+
+--[[
+    A consumable any class keeps up on itself (Winterfall Firewater): offered
+    while one is in your bags and its buff is missing or running low, by your
+    own time for it. Any version on you counts, whoever's it is.
+]]
+local function SelfItemIcon(buff)
+	if GetItemCount(buff.itemId) == 0 then
+		return nil
+	end
+	local has, expires, duration = Has(buff, "player")
+	if has then
+		return nil
+	end
+	return BuffDuty.WithTimeLeft({
+		itemId = buff.itemId,
+		item = "item:" .. buff.itemId,
+		selfItem = true,
+		column = buff.column,
+		unit = "player",
+		targetName = GetUnitName("player", false) or "",
+		hint = L["BUFF_DUTY_TOOLTIP_USE_ITEM"],
+	}, expires, duration)
+end
+
+--------------------------------------------------------------------------------
 -- Section
 --------------------------------------------------------------------------------
 
@@ -151,6 +181,11 @@ function BuffDuty.AddSelfSection(sections)
 
 	if selfEnabled then
 		icons[#icons + 1] = SoulstoneIcon()
+		-- SoulstoneIcon reads the group's auras: read yours again.
+		ReadAuras("player")
+		for _, buff in ipairs(BuffDuty.selfItemBuffs) do
+			icons[#icons + 1] = SelfItemIcon(buff)
+		end
 	end
 
 	if #icons > 0 or #rows > 0 then

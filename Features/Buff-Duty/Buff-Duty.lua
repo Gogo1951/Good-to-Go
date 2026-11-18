@@ -171,9 +171,10 @@ function ns.QueueBuffDutySettings()
 	settingsPending = true
 end
 
--- The options panel's entry point after any Buff Duty setting changes.
+-- The options panel's entry point after any Buff Duty setting changes; it ends in ns.RefreshSettings.
 function ns.RefreshBuffDuty()
 	if not BuffDuty.isSetUp then
+		ns.RefreshSettings()
 		return
 	end
 	BuffDuty.BuildBuffs()
@@ -182,6 +183,7 @@ function ns.RefreshBuffDuty()
 	ns.RequestBuffDutyRefresh()
 	-- Your class ticked or unticked turns the window's events on or off with it.
 	ns.UpdateBuffDutyEvents()
+	ns.RefreshSettings()
 end
 
 --[[
@@ -383,10 +385,27 @@ function ns.SetupBuffDuty()
 	inCombat = InCombatLockdown() and true or false
 	BuffDuty.BuildLookup()
 	ns.buffDutyCategories = BuffDuty.BuildCategories(BuffDuty.entries)
-	-- The Self-Buffs panel lists the Soulstone with the warlock's self buffs.
+	--[[
+	    The Self-Buffs panel lists every buff you can put on yourself: your
+	    class's self buffs, its group buffs (timed for you; Group Buffs says
+	    who else gets them), and the Soulstone with the warlock's.
+	]]
 	local selfListed = { unpack(BuffDuty.selfEntries) }
+	for _, entry in ipairs(BuffDuty.entries) do
+		selfListed[#selfListed + 1] = entry
+	end
 	selfListed[#selfListed + 1] = BuffDuty.soulstoneEntry
 	ns.buffDutySelfCategories = BuffDuty.BuildCategories(selfListed)
+	-- Then the consumables any class can use, in a box of their own.
+	local items = {}
+	for _, entry in ipairs(BuffDuty.selfItemEntries) do
+		local spellName = C_Spell.GetSpellName(entry.ids[1])
+		items[#items + 1] = { key = entry.key, ids = entry.ids, spellName = spellName or tostring(entry.itemId) }
+	end
+	if items[1] then
+		ns.buffDutySelfCategories[#ns.buffDutySelfCategories + 1] =
+			{ id = "ITEMS", name = L["BUFF_DUTY_SELF_ITEMS_HEADER"], entries = items }
+	end
 	ns.PopulateBuffDutyAudience()
 	BuffDuty.BuildBuffs()
 	ns.CreateBuffDutyFrame()

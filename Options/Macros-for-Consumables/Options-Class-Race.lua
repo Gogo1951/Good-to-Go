@@ -100,6 +100,7 @@ local function PoisonHandDropdown(description, settingKey)
 			ns.db.profile[settingKey] = value
 			ns.ResetMacroState()
 			ns.RequestUpdate()
+			ns.RefreshSettings()
 		end,
 	}
 end
@@ -159,6 +160,7 @@ function ns.BuildClassRaceOptions()
 					ns.db.profile.druidReturnForm = value
 					ns.ResetMacroState()
 					ns.RequestUpdate()
+					ns.RefreshSettings()
 				end,
 			},
 		}),

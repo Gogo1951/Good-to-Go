@@ -145,22 +145,27 @@ end
     Hovering the caption shows the spell's own game tooltip (ns.SpellTooltipLink),
     and hovering the dropdown says what it sets (`desc`).
 
-    `select` carries the dropdown's values, sorting, get and set.
+    `select` carries the dropdown's values, sorting, get and set, and
+    optionally labelWidth and width, for a row in a tree's narrower pane.
 ]]
 function ns.DefineSpellSelectRow(args, entry, order, desc, select)
 	local primary = entry.ids[1]
 	local texture = GetSpellTexture(primary)
 	local caption = texture and ("|T" .. texture .. ":16|t " .. entry.spellName) or entry.spellName
 
-	args["label_" .. primary] =
-		ns.OptionsAbilityLabel(caption, order, ns.OPTIONS_INLINE_LABEL_WIDTH, ns.SpellTooltipLink(entry.ids))
+	args["label_" .. primary] = ns.OptionsAbilityLabel(
+		caption,
+		order,
+		select.labelWidth or ns.OPTIONS_INLINE_LABEL_WIDTH,
+		ns.SpellTooltipLink(entry.ids)
+	)
 	args["select_" .. primary] = {
 		type = "select",
 		name = "",
 		desc = desc,
 		values = select.values,
 		sorting = select.sorting,
-		width = ns.OPTIONS_CONTROL_WIDTH,
+		width = select.width or ns.OPTIONS_CONTROL_WIDTH,
 		order = order + 0.5,
 		get = select.get,
 		set = select.set,

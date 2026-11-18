@@ -126,7 +126,8 @@ local function GoldReserveAmounts()
 end
 
 -- A reminder's on/off toggle, and the Gold Reserve's; width defaults to the label cell its dropdown sits beside.
-local function ReminderToggle(labelKey, descKey, settingKey, order, onSet, width)
+-- It ends in ns.RefreshSettings, which also reveals or hides the rows that hang off it.
+local function ReminderToggle(labelKey, descKey, settingKey, order, width)
 	return {
 		type = "toggle",
 		name = L[labelKey],
@@ -142,9 +143,7 @@ local function ReminderToggle(labelKey, descKey, settingKey, order, onSet, width
 			if settings then
 				settings[settingKey] = value
 			end
-			if onSet then
-				onSet()
-			end
+			ns.RefreshSettings()
 		end,
 	}
 end
@@ -229,8 +228,7 @@ function ns.BuildRestockerOptions()
 				"OPTIONS_RESTOCKER_GOLD_RESERVE",
 				"OPTIONS_RESTOCKER_GOLD_RESERVE_DESCRIPTION",
 				"goldReserve",
-				5,
-				ns.RefreshSettings
+				5
 			),
 			amountGoldReserve = {
 				type = "select",
@@ -253,6 +251,7 @@ function ns.BuildRestockerOptions()
 					if settings then
 						settings.goldReserveAmount = value
 					end
+					ns.RefreshSettings()
 				end,
 			},
 			exampleGoldReserve = Kit.Example(6.5, GoldReserveOff, GoldReserveExampleLine),
@@ -283,6 +282,7 @@ function ns.BuildRestockerOptions()
 					if settings then
 						settings.restockLowThreshold = value
 					end
+					ns.RefreshSettings()
 				end,
 			}),
 			spaceLowThreshold = Spacer(9.5, AllRemindersOff),
@@ -299,8 +299,6 @@ function ns.BuildRestockerOptions()
 				"OPTIONS_RESTOCKER_REMIND_DESCRIPTION",
 				"restockReminderChat",
 				10,
-				-- Reveal or hide its mode and sound rows without a reopen.
-				ns.RefreshSettings,
 				"full"
 			),
 			-- Two settings of its own, so its mode takes an indented sub-row under the toggle rather than its line.
@@ -333,6 +331,7 @@ function ns.BuildRestockerOptions()
 					if settings then
 						settings.restockReminderSound = value
 					end
+					ns.RefreshSettings()
 				end,
 			}, { preview = Kit.SoundPreview(PlayAlert), hidden = RemindHidden }),
 			exampleRestockerRemind = ReminderExample(12.5, "restockReminderChat", "restockReminderMode", TownHeadline),
@@ -349,8 +348,7 @@ function ns.BuildRestockerOptions()
 				"OPTIONS_RESTOCKER_MERCHANT_REMIND",
 				"OPTIONS_RESTOCKER_MERCHANT_REMIND_DESCRIPTION",
 				"merchantReminder",
-				14,
-				ns.RefreshSettings
+				14
 			),
 			modeRestockerMerchantRemind = ReminderModeSelect("merchantReminderMode", "merchantReminder", 15),
 			exampleRestockerMerchantRemind = ReminderExample(
@@ -365,8 +363,7 @@ function ns.BuildRestockerOptions()
 				"OPTIONS_RESTOCKER_BANK_REMIND",
 				"OPTIONS_RESTOCKER_BANK_REMIND_DESCRIPTION",
 				"bankReminder",
-				17,
-				ns.RefreshSettings
+				17
 			),
 			modeRestockerBankRemind = ReminderModeSelect("bankReminderMode", "bankReminder", 18),
 			exampleRestockerBankRemind = ReminderExample(18.5, "bankReminder", "bankReminderMode", ClosingHeadline),
@@ -392,6 +389,7 @@ function ns.BuildRestockerOptions()
 					if settings then
 						settings.autoOpenAtBank = value
 					end
+					ns.RefreshSettings()
 				end,
 			},
 			spaceWindow3 = Spacer(26),
@@ -410,6 +408,7 @@ function ns.BuildRestockerOptions()
 					if settings then
 						settings.autoOpenAtMerchant = value
 					end
+					ns.RefreshSettings()
 				end,
 			},
 		},

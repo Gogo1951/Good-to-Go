@@ -23,7 +23,11 @@ end
 
 local heldMembers
 
--- Your group as { unit, subgroup }: the raid by roster order, or you and your party. Read only; see HoldGroupMembers.
+--[[
+    Your group as { unit, subgroup, isPlayer }: the raid by roster order, or you and your party. isPlayer marks
+    your own entry; a raid token the client won't compare plainly counts as someone else. Read only; see
+    HoldGroupMembers.
+]]
 function BuffDuty.GroupMembers()
 	if heldMembers then
 		return heldMembers
@@ -33,11 +37,14 @@ function BuffDuty.GroupMembers()
 		for i = 1, GetNumGroupMembers() do
 			local _, _, subgroup = GetRaidRosterInfo(i)
 			if subgroup then
-				members[#members + 1] = { unit = "raid" .. i, subgroup = subgroup }
+				local unit = "raid" .. i
+				local isPlayer = UnitIsUnit(unit, "player")
+				members[#members + 1] =
+					{ unit = unit, subgroup = subgroup, isPlayer = ns.IsPlain(isPlayer) and isPlayer or false }
 			end
 		end
 	else
-		members[1] = { unit = "player", subgroup = 1 }
+		members[1] = { unit = "player", subgroup = 1, isPlayer = true }
 		for i = 1, 4 do
 			if UnitExists("party" .. i) then
 				members[#members + 1] = { unit = "party" .. i, subgroup = 1 }

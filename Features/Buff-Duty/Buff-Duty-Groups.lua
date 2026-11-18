@@ -53,6 +53,8 @@ end
     A dead member you can resurrect gets a row with that one icon, in its own
     column on the left, and drops off once they're back up (or a resurrection
     is waiting on them to accept).
+
+    You are left out: your own buffs show under Self Buffs (Buff-Duty-Self.lua).
 ]]
 function BuffDuty.AddGroupSections(sections)
 	local grouped = IsInGroup()
@@ -70,7 +72,14 @@ function BuffDuty.AddGroupSections(sections)
 		local _, class = UnitClass(unit)
 		local name = GetUnitName(unit, false) or ""
 		local row
-		if CanBuff(unit) then
+		--[[
+		    Your own buffs are the Self Buffs section's, by the Self-Buffs
+		    panel's timing (BuffDuty.BuildBuffs), so your row here only holds
+		    your pet's place, and you never count toward a group icon.
+		]]
+		if member.isPlayer then
+			row = nil
+		elseif CanBuff(unit) then
 			ReadAuras(unit)
 			local role = RoleOf(unit, class)
 			for _, buff in ipairs(buffs) do

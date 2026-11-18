@@ -8,7 +8,7 @@ local SHAMAN_SHIELD = "SHAMAN_SHIELD"
 local MISSING = Data.SELF_REFRESH_MISSING
 local MAIN, OFF_HAND = "MAIN", "OFF"
 
--- { class, single = { { spell id, level learned } }, group = { spell ids }, greater = { spell ids }, exclusive, manaOnly, noCasters, talent, default }, -- Name
+-- { class, single = { { spell id, level learned } }, group = { spell ids }, greater = { spell ids }, exclusive, manaOnly, noCasters, talent, default, selfDefault }, -- Name
 ns.BUFF_DUTY_SPELLS = {
 	-- Druid ---------------------------------------------------------------------
 	{
@@ -338,6 +338,11 @@ ns.BUFF_DUTY_WEAPON_ITEMS = {
 	{ 20750, 40, 2627, 0, OIL, 50 }, -- Wizard Oil
 }
 
+-- { item id, auras = { spell ids }, default (minutes left, MISSING or OFF) }, -- Name
+ns.BUFF_DUTY_SELF_ITEMS = {
+	{ 12820, auras = { 17038 }, default = MISSING }, -- Winterfall Firewater
+}
+
 -- { class, create = { { spell id, level learned } }, auras, items (lowest rank first), default }
 ns.BUFF_DUTY_SOULSTONE = {
 	class = "WARLOCK",
@@ -372,6 +377,7 @@ Notes
 	- talent marks Legacy of the White Tiger, a Windwalker spell, so Party-Buffs counts it only once someone in the group carries it.
 	- Each single carries its learn level from SpellLevels.BaseLevel (Specialization spells and talents too), which Validate Data's SPELL_LEVEL_LEARNED column hasn't confirmed yet on this client. Features/Buff-Duty/Buff-Duty-Castable.lua's RankFor still applies Classic's "Target is too low level" gap of 10 below that level, which this client no longer has.
 	- default: the raid buffs start on ALL (Kings and Might both, the paladin picking), Fear Ward on TANK, and the situational ones OFF. Beacon of Light and Earth Shield go on one target per caster, so they start OFF, as Earth Shield does on TBC.
+	- selfDefault is when a group buff shows on the caster themselves, on the Self-Buffs panel, until the player picks: the window offers your own group buffs under Self Buffs, timed per buff, and leaves you off your party row. No row here sets one, so each is 3 minutes for a buff that starts on ALL and OFF for the rest, from default.
 	- Left out of the single buffs: anything under two minutes (Hand spells, Power Infusion, Innervate, Pain Suppression, Guardian Spirit, Life Cocoon, Ironbark, Vigilance); passive auras (Trueshot Aura, Leader of the Pack, Grace of Air, Unholy Aura, Moonkin and Shadowform's haste); hunter pet buffs; Battle Shout, Commanding Shout and Horn of Winter, which have a cooldown of their own (60, 60 and 20 seconds in SpellCooldowns.CategoryRecoveryTime) and that GetSpellBaseCooldown may not report, so the Buff Key could spend them; Symbiosis, whose target buff depends on the target's class; and Soulstone, now a spell cast on a target with a 10-minute cooldown (see BUFF_DUTY_SOULSTONE). Thorns, Amplify Magic, Dampen Magic, Shadow Protection, Divine Spirit, Water Breathing, Detect Invisibility, Arcane Intellect, the other Blessings and every group version are gone from this client.
 	- BUFF_DUTY_PET_ICONS: a demon wears its own summoning spell's icon, matched by creature ID, which is the SUMMON_PET effect's misc value in SpellEffect. The Grimoire of Supremacy demons (Fel Imp, Voidlord, Shivarra, Observer, Wrathguard) and the Incubus are added. The Grimoire of Service demons, the Infernal and the Doomguard are temporary and left out, as on TBC.
 	- BUFF_DUTY_SELF_SPELLS: the long self buffs. Aspect of the Iron Hawk shares Hawk's row, since the talent replaces it (Talent.OverridesSpellID 13165) and lands in tier 3, level 45 (CLASS_TALENT_LEVELS in the client's FrameXML Constants.lua). Mage armors, Inner Fire, Inner Will, Shadowform, the seals and the aspects have no timer here (SpellDuration -1), so they default to MISSING or OFF; Lightning Shield, Water Shield and the poisons last an hour.
@@ -382,6 +388,7 @@ Notes
 	- BUFF_DUTY_WEAPON_HANDS: shamans only, both hands (Enhancement dual wields). Rogues have no weapon row: their poisons are self buffs.
 	- BUFF_DUTY_WEAPON_ITEMS: every item this client's tables say puts a temporary enchant on a hand weapon or fishing pole (ItemEffect to a spell with ENCHANT_ITEM_TEMPORARY), with SpellEquippedItems' subclass mask, ItemSparse's required level and item level, and the same kinds as TBC. Changed from TBC: Blessed Wizard Oil's enchant (3592), Consecrated Sharpening Stone's (3593), Elemental Sharpening Stone's weapon types (41411), and Isle of Quel'Danas, UiMap 122 here. Added: Exceptional Mana Oil, Feathered Lure, Glass Fishing Bobber (a drop in QuestieDB's MoP item table), Glow Worm and Heat-Treated Spinning Lure. Left out: Weather-Beaten Fishing Hat and Nat's Hat (worn lures), Ninja Hook [PH] and Test Sharpening Stone (placeholders), armor items (Comfortable Insoles, Runes of Warding), and Corpse Worm (69907), a quest bait that only catches Corpse-Fed Pike in Brightwater Lake. Whether the older items still drop or sell on this client isn't checked: those with a crafting spell on a profession skill line are craftable here.
 	- BUFF_DUTY_SOULSTONE is declared with no spells: on this client Soulstone (20707) is cast straight on a party member, with no stone item and a 10-minute cooldown, which the Soulstone reminder (Features/Buff-Duty/Buff-Duty-Self.lua) doesn't handle. Its fields are empty lists so every reader skips it.
+	- BUFF_DUTY_SELF_ITEMS are the consumables any class keeps up on itself, offered under Self Buffs while one is in your bags and its buff is missing (issue #40): each item id, the aura ids its use leaves, and when it shows by default. Winterfall Firewater (item 12820) leaves Winterfall Firewater (17038), +35 melee attack power for 20 minutes, the same aura the Elixirs table lists. Its default is When Missing, since the request was to show it once the buff is gone.
 	- BUFF_DUTY_RESURRECTIONS: one spell per class, now with Druid (Revive) and Monk (Resuscitate). Rebirth and Raise Ally stay out (combat resurrections on a cooldown), as does Mass Resurrection (83968, a 10-minute cooldown).
 
 SQL (CMaNGOS)

@@ -195,7 +195,8 @@ local function TargetSection(listed)
 	end
 
 	local isPet = IsOutsiderPet("target")
-	local isNPC = not isPet and BuffDuty.CanBuffNPC("target")
+	-- A friendly NPC is listed only while Include NPCs (targetNPCs, under Your Target) is on.
+	local isNPC = not isPet and ns.db.global.buffWindow.targetNPCs and BuffDuty.CanBuffNPC("target")
 	if not isPet and not isNPC and not IsOutsider("target") then
 		return nil
 	end

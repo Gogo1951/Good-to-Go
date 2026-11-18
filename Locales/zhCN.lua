@@ -1732,6 +1732,9 @@ L["BUFF_DUTY_FAVOR_SECONDS_DESCRIPTION"] = "设置陌生人在最后一次施放
 L["BUFF_DUTY_TARGET_ENABLE"] = "你的目标"
 L["BUFF_DUTY_TARGET_ENABLE_DESCRIPTION"] =
 	"当你的目标是缺少你可施放增益的队伍外玩家时，将其列出。"
+L["BUFF_DUTY_TARGET_NPCS"] = "包括NPC"
+L["BUFF_DUTY_TARGET_NPCS_DESCRIPTION"] =
+	"同时列出你选中的友方NPC（例如任务中的受伤士兵），以及你可以为其施放的增益。"
 L["BUFF_DUTY_ASK_OTHERS"] = "向其他职业请求增益"
 L["BUFF_DUTY_ASK_OTHERS_DESCRIPTION"] =
 	'在"缺少的队伍增益"下显示你的队伍缺少的团队增益，以及每种增益有多少人需要。左键点击一个即可向队伍请求，右键点击则密语能施放它的玩家。'
@@ -1771,12 +1774,14 @@ L["BUFF_DUTY_BUFFS_DESCRIPTION"] =
 
 -- The Self-Buffs panel, under Buff Duty: its name and description.
 L["BUFF_DUTY_SELF_HEADER"] = "自身增益"
-L["BUFF_DUTY_SELF_DESCRIPTION"] = "你自己的增益，固定在窗口顶部。"
+L["BUFF_DUTY_SELF_DESCRIPTION"] =
+	"你能对自己施放的所有增益，固定在窗口顶部。你的队伍增益也在这里，用于你自己身上；给其他人的设置在队伍增益中。"
 --[[
     Muted note after a class name on the Self-Buffs panel, for a family of self
     buffs only one of which can be up at a time. Keyed by the family.
 ]]
 L["BUFF_DUTY_SELF_NOTE_ASPECT"] = "任意一种守护即可"
+L["BUFF_DUTY_SELF_NOTE_BLESSING"] = "你的任意一种祝福即可"
 L["BUFF_DUTY_SELF_NOTE_MAGE_ARMOR"] = "任意一种护甲即可"
 L["BUFF_DUTY_SELF_NOTE_PALADIN_AURA"] = "任意一种光环即可"
 L["BUFF_DUTY_SELF_NOTE_SHAMAN_SHIELD"] = "任意一种护盾即可"
@@ -1788,6 +1793,8 @@ L["BUFF_DUTY_SELF_REFRESH_MISSING"] = "缺失时"
 L["BUFF_DUTY_SELF_REFRESH_UNDER"] = "剩余不足%s"
 L["BUFF_DUTY_SELF_REFRESH_DESCRIPTION"] =
 	"设置 %s 何时显示：从不、消失后，或剩余时间少于此值时。"
+L["BUFF_DUTY_SELF_ITEMS_HEADER"] = "消耗品"
+L["BUFF_DUTY_SELF_ITEMS_NOTE"] = "背包中有时"
 -- The Weapon Buffs panel, under Buff Duty after Self-Buffs.
 L["BUFF_DUTY_WEAPON_PANEL_HEADER"] = "武器增益"
 L["BUFF_DUTY_WEAPON_DESCRIPTION"] =
@@ -1808,7 +1815,7 @@ L["BUFF_DUTY_WEAPON_PICK_DESCRIPTION"] =
 	"提供%s，用于你的%s武器。当武器上没有任何已勾选的选项时，会提供你拥有的每一种。"
 L["BUFF_DUTY_SELF_ENABLE"] = "你的自身增益"
 L["BUFF_DUTY_SELF_ENABLE_DESCRIPTION"] =
-	"当只能对自己施放的增益（例如护甲类法术或心灵之火）缺失或即将结束时，将其显示在窗口顶部。可在自身增益中选择要显示哪些。"
+	"当你自己的增益缺失或即将结束时，将其显示在窗口顶部：包括只能对自己施放的增益（例如护甲类法术或心灵之火），以及你身上的队伍增益。可在自身增益中选择要显示哪些。"
 L["BUFF_DUTY_WEAPON_ENABLE"] = "你的武器增益"
 L["BUFF_DUTY_WEAPON_ENABLE_DESCRIPTION"] =
 	"将武器上缺失或即将结束的毒药、武器强化、油、磨刀石和鱼饵，与你的自身增益一起显示在窗口顶部。点击即可施加。可在武器增益中选择要显示哪些。"
@@ -1825,6 +1832,8 @@ L["BUFF_DUTY_TOOLTIP_CAST"] = "对 %s 施放。"
 L["BUFF_DUTY_TOOLTIP_WEAPON"] = "施加到你的%s武器。"
 L["BUFF_DUTY_TOOLTIP_USE"] = "你的队伍中没有人有灵魂石。对 %s 使用一块。"
 L["BUFF_DUTY_TOOLTIP_CREATE"] = "你的队伍中没有人有灵魂石。制造一块。"
+L["BUFF_DUTY_TOOLTIP_CREATE_WEAPON"] = "你的背包里没有。制造一块。"
+L["BUFF_DUTY_TOOLTIP_USE_ITEM"] = "从你的背包中使用一个。"
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "对 %s 及其小队施放。"
 L["BUFF_DUTY_TOOLTIP_FAVOR"] = "选中 %s 为目标并施放。"
 -- A Party Buffs icon's menu, its ask rows: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it: %s is one or two names (LIST_PAIR_FORMAT), or BUFF_DUTY_OTHERS_ASK_PEOPLE past two.

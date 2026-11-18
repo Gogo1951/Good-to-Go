@@ -272,6 +272,21 @@ local function WeaponIcon(hand, pick)
 	}
 	if pick.items then
 		local item = BestItem(pick.items)
+		--[[
+		    No stone of a warlock's line in the bags: the button conjures one
+		    instead, by the bare name, which fires the best rank known (as
+		    Create Soulstone does). The next refresh offers the stone itself.
+		]]
+		if not item and pick.create then
+			spec.spellId = pick.create.id
+			spec.spellName = pick.create.name
+			spec.castSpell = pick.create.name
+			spec.unit = "player"
+			spec.level = pick.create.level
+			spec.confirmReplace = nil
+			spec.hint = L["BUFF_DUTY_TOOLTIP_CREATE_WEAPON"]
+			return spec
+		end
 		if not item then
 			return nil
 		end
@@ -291,8 +306,9 @@ local function WeaponIcon(hand, pick)
 end
 
 --[[
-    A hand's icons left to right: your class's poisons or imbues, then the
-    items in the imbue layer (a Firestone), then the oils, stones and lures,
+    A hand's icons left to right: your class's poisons, imbues or warlock
+    stones, then the items in the imbue layer (a Scroll of Imbue), then the
+    oils, stones and lures,
     each by the level of what it uses, highest first -- Instant Poison IV
     (44) before Deadly Poison II (38), Solid Sharpening Stone before Rough.
     Each hand's row is its own grid, so the icons' order is their columns.
@@ -416,6 +432,8 @@ function BuffDuty.BuildWeaponBuffs(playerClass)
 				key = entry.key,
 				ranks = ranks,
 				items = entry.items,
+				-- A warlock stone's best known Create rank, or nil before one is learned.
+				create = entry.create and KnownRanks({ ranks = entry.create })[1],
 				enchants = entry.enchants,
 				types = entry.types,
 				zones = entry.zones,

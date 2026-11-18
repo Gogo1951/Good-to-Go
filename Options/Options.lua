@@ -36,6 +36,10 @@ local function RegisterBuffDutyPanels()
 	Kit.RegisterPanel("BuffDuty", ns.BuildBuffDutyOptions, L["TAB_BUFF_DUTY"])
 	Kit.RegisterPanel("BuffDutyBuffs", ns.BuildBuffDutyBuffsOptions, L["BUFF_DUTY_TRACKED_HEADER"], "BuffDuty")
 	Kit.RegisterPanel("BuffDutySelfBuffs", ns.BuildBuffDutySelfBuffsOptions, L["BUFF_DUTY_SELF_HEADER"], "BuffDuty")
+	-- A tree of classes, reopening on the player's own (or the first class, for one with none listed).
+	Kit.PrepareTree("BuffDutySelfBuffs", function()
+		return select(2, UnitClass("player"))
+	end)
 	Kit.RegisterPanel(
 		"BuffDutyWeaponBuffs",
 		ns.BuildBuffDutyWeaponBuffsOptions,
