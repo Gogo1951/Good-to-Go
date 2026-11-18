@@ -22,8 +22,9 @@ end
 
 --[[
     Buff Duty's feature switch, the one setter both copies of its options
-    toggle and the per-class calls below use: it redraws the window and
-    repaints every open panel. Turning it on clears the close button's hide.
+    toggle and the per-class calls below use: ns.RefreshBuffDuty redraws the
+    window, every open panel and the menu. Turning it on clears the close
+    button's hide.
 ]]
 function ns.IsBuffDutyOn()
 	return ns.db.global.buffWindow.enabled and true or false
@@ -35,10 +36,6 @@ function ns.SetBuffDutyOn(value)
 		hiddenThisSession = false
 	end
 	ns.RefreshBuffDuty()
-	local registry = LibStub("AceConfigRegistry-3.0")
-	for _, name in pairs(ns.OPTIONS_REGISTRY) do
-		registry:NotifyChange(name)
-	end
 end
 
 --[[

@@ -6,8 +6,9 @@ local Kit = ns.OptionsKit
 --[[
     "Weapon Buffs" panel, under Buff Duty after Self-Buffs: one Reapply
     timing for everything at the top, then a grid of checkboxes -- a row per
-    choice, a Main Hand and an Off Hand column. A rogue's poisons and a
-    shaman's imbues come first, then the oils, stones and lures any class can
+    choice, a Main Hand and an Off Hand column. A rogue's poisons, a
+    shaman's imbues and, on WoW Forever, a warlock's Firestone and
+    Spellstone come first, then the oils, stones and lures any class can
     use, strongest first. Everything is listed, whatever is in your bags (these settings
     are account-wide); the window offers only what you have and can
     use. An item name still loading is warmed when its row draws, and the

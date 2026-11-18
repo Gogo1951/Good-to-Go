@@ -1,6 +1,5 @@
 local _, ns = ...
 local MACRO_CONFIG = ns.MACRO_CONFIG
-local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
 
 --[[
     Engine -- the shared macro-writing machinery. Owns the update loop that
@@ -405,8 +404,7 @@ function ns.ToggleMacroSetting(key, value)
 	end
 	ns.ResetMacroState()
 	ns.RequestUpdate()
-	AceConfigRegistry:NotifyChange(ns.OPTIONS_REGISTRY.Macros)
-	AceConfigRegistry:NotifyChange(ns.OPTIONS_REGISTRY.ClassRace)
+	ns.RefreshSettings()
 end
 
 --[[

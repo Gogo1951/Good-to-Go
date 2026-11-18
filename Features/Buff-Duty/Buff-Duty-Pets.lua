@@ -73,8 +73,15 @@ end
     no role of its own, and its "class" is the creature's, not a player class.
     Whether it has mana is read off its power bar instead, so a warlock's demon
     gets Intellect and a hunter's beast doesn't.
+
+    On WoW Forever a pet takes no stat buffs (ns.BUFF_DUTY_PETS_FLAGGED_ONLY),
+    so it is offered only the buffs its data marks pets = true: Thorns, not
+    Mark of the Wild.
 ]]
 local function PetWants(buff, unit)
+	if ns.BUFF_DUTY_PETS_FLAGGED_ONLY and not buff.pets then
+		return false
+	end
 	if buff.audience == Data.BUFF_AUDIENCE.TANK then
 		if not CountsAsTank(Data.TANK_WHEN_PET) then
 			return false
@@ -113,14 +120,8 @@ end
 
     A phase-shifted imp drops off too: nothing can reach it until it phases
     back in.
-
-    On WoW Forever no pet is ever listed: a hunter's or warlock's pet takes its
-    owner's buffs, and can't be buffed on its own.
 ]]
 local function CanBuffPet(unit)
-	if ns.FLAVOR == "Camelot" then
-		return false
-	end
 	if not UnitExists(unit) or UnitIsPlayer(unit) or UnitIsDeadOrGhost(unit) then
 		return false
 	end

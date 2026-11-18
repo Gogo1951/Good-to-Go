@@ -1,6 +1,6 @@
 local _, ns = ...
 
--- { class, single = { { spell id, level learned } }, group = { spell ids }, greater = { spell ids }, exclusive, manaOnly, noCasters, talent, default }, -- Name
+-- { class, single = { { spell id, level learned } }, group = { spell ids }, greater = { spell ids }, exclusive, manaOnly, noCasters, talent, default, selfDefault }, -- Name
 ns.BUFF_DUTY_SPELLS = {}
 
 -- { beast = spell id, demons = { [npc id] = spell id } }: the icon a pet's row wears, from its summoning spell
@@ -16,6 +16,9 @@ ns.BUFF_DUTY_WEAPON_HANDS = {}
 
 -- { item id, level required, enchant id, weapon types, kind, item level, zones }, -- Name
 ns.BUFF_DUTY_WEAPON_ITEMS = {}
+
+-- { item id, auras = { spell ids }, default (minutes left, MISSING or OFF) }, -- Name
+ns.BUFF_DUTY_SELF_ITEMS = {}
 
 -- { class, create = { { spell id, level learned } }, auras, items (lowest rank first), default }
 ns.BUFF_DUTY_SOULSTONE = {}

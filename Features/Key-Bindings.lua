@@ -1,8 +1,6 @@
 local _, ns = ...
 local L = ns.L
 
-local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
-
 --[[
 	The key bindings every feature shares: the header the game's Key Bindings list files Bindings.xml's
 	bindings under, the route the General panel's Set Key buttons take to that list, and the repaint that keeps
@@ -96,7 +94,7 @@ local MODULE = "KeyBindings"
 	shows a Cast Next Buff tip only while that key is unbound (Buff-Duty-Frame.lua).
 ]]
 local function OnUpdateBindings()
-	AceConfigRegistry:NotifyChange(ns.OPTIONS_REGISTRY.General)
+	ns.RefreshSettings()
 	ns.RequestBuffDutyRefresh()
 end
 

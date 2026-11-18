@@ -78,6 +78,7 @@ end
 local function UseWhenChanged()
 	ns.ResetMacroState()
 	ns.RequestUpdate()
+	ns.RefreshSettings()
 end
 
 local function FeatureModeSelect(prefix, description)
@@ -161,6 +162,7 @@ local function SubsetToggle(subtableKey, key, label, order)
 			ns.db.profile[subtableKey][key] = value
 			ns.ResetMacroState()
 			ns.RequestUpdate()
+			ns.RefreshSettings()
 		end,
 	}
 end
@@ -237,6 +239,7 @@ local function MacroToggle(macroName, key, order)
 			ns.db.global.enabledMacros[key] = value
 			ns.ResetMacroState()
 			ns.RequestUpdate()
+			ns.RefreshSettings()
 		end,
 	}
 end
@@ -305,6 +308,7 @@ function ns.BuildMacrosOptions()
 			end,
 			set = function(_, value)
 				ns.ToggleMacroNames(value)
+				ns.RefreshSettings()
 			end,
 		},
 
@@ -458,6 +462,7 @@ function ns.BuildMacrosOptions()
 				ns.db.profile.potionsUseFoodAndWater = value
 				ns.ResetMacroState()
 				ns.RequestUpdate()
+				ns.RefreshSettings()
 			end,
 		},
 		spacePotions3 = Spacer(46),
@@ -475,6 +480,7 @@ function ns.BuildMacrosOptions()
 				ns.db.profile.combineHealthstones = value
 				ns.ResetMacroState()
 				ns.RequestUpdate()
+				ns.RefreshSettings()
 			end,
 		},
 
@@ -500,6 +506,7 @@ function ns.BuildMacrosOptions()
 				ns.db.profile.includeManaRunes = value
 				ns.ResetMacroState()
 				ns.RequestUpdate()
+				ns.RefreshSettings()
 			end,
 		},
 
@@ -527,6 +534,7 @@ function ns.BuildMacrosOptions()
 				ns.db.profile.earlyReapply = value
 				ns.ResetMacroState()
 				ns.RequestUpdate()
+				ns.RefreshSettings()
 			end,
 		},
 		reapplyThreshold = {
@@ -553,6 +561,7 @@ function ns.BuildMacrosOptions()
 				ns.db.profile.earlyReapplyThreshold = value
 				ns.ResetMacroState()
 				ns.RequestUpdate()
+				ns.RefreshSettings()
 			end,
 		},
 
@@ -587,6 +596,7 @@ function ns.BuildMacrosOptions()
 				ns.UpdateAuraTracking()
 				ns.ResetMacroState()
 				ns.RequestUpdate()
+				ns.RefreshSettings()
 			end,
 		},
 		petBuffFoodLevel = ModeSubRow("petBuffFood", ModeDescription(L["OPTIONS_PET_HEADER"]), PetBuffActive, 306),
@@ -629,6 +639,7 @@ function ns.BuildMacrosOptions()
 				ns.db.profile.explosivesClickMode = value
 				ns.ResetMacroState()
 				ns.RequestUpdate()
+				ns.RefreshSettings()
 			end,
 		},
 	}

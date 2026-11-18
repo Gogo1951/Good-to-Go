@@ -1758,6 +1758,9 @@ L["BUFF_DUTY_FAVOR_SECONDS_DESCRIPTION"] =
 L["BUFF_DUTY_TARGET_ENABLE"] = "Tu objetivo"
 L["BUFF_DUTY_TARGET_ENABLE_DESCRIPTION"] =
 	"Muestra a tu objetivo cuando es un jugador de fuera de tu grupo al que le falta un beneficio que puedes dar."
+L["BUFF_DUTY_TARGET_NPCS"] = "Incluir PNJ"
+L["BUFF_DUTY_TARGET_NPCS_DESCRIPTION"] =
+	"También muestra a un PNJ amistoso que tengas como objetivo, como el soldado herido de una misión, con los beneficios que puedes darle."
 L["BUFF_DUTY_ASK_OTHERS"] = "Pedir beneficios a otras clases"
 L["BUFF_DUTY_ASK_OTHERS_DESCRIPTION"] =
 	"En Beneficios de grupo faltantes, muestra los beneficios de banda que necesita tu grupo y cuántos jugadores necesitan cada uno. Haz clic izquierdo en uno para pedírselo a tu grupo, o clic derecho para susurrar a los jugadores que pueden lanzarlo."
@@ -1797,12 +1800,14 @@ L["BUFF_DUTY_BUFFS_DESCRIPTION"] =
 
 -- The Self-Buffs panel, under Buff Duty: its name and description.
 L["BUFF_DUTY_SELF_HEADER"] = "Beneficios propios"
-L["BUFF_DUTY_SELF_DESCRIPTION"] = "Tus propios beneficios, fijados en la parte superior de la ventana."
+L["BUFF_DUTY_SELF_DESCRIPTION"] =
+	"Todos los beneficios que puedes lanzarte a ti mismo, fijados en la parte superior de la ventana. Tus beneficios de grupo también están aquí, para cuando los llevas tú: en Beneficios de grupo eliges quién más los recibe."
 --[[
     Muted note after a class name on the Self-Buffs panel, for a family of self
     buffs only one of which can be up at a time. Keyed by the family.
 ]]
 L["BUFF_DUTY_SELF_NOTE_ASPECT"] = "cualquier aspecto cuenta"
+L["BUFF_DUTY_SELF_NOTE_BLESSING"] = "cualquiera de tus bendiciones cuenta"
 L["BUFF_DUTY_SELF_NOTE_MAGE_ARMOR"] = "cualquier armadura cuenta"
 L["BUFF_DUTY_SELF_NOTE_PALADIN_AURA"] = "cualquier aura cuenta"
 L["BUFF_DUTY_SELF_NOTE_SHAMAN_SHIELD"] = "cualquier escudo cuenta"
@@ -1814,6 +1819,8 @@ L["BUFF_DUTY_SELF_REFRESH_MISSING"] = "Si falta"
 L["BUFF_DUTY_SELF_REFRESH_UNDER"] = "Menos de %s"
 L["BUFF_DUTY_SELF_REFRESH_DESCRIPTION"] =
 	"Establece cuándo aparece %s: nunca, cuando ya no está activo o cuando le queda menos de este tiempo."
+L["BUFF_DUTY_SELF_ITEMS_HEADER"] = "Consumibles"
+L["BUFF_DUTY_SELF_ITEMS_NOTE"] = "si tienes uno en las bolsas"
 -- The Weapon Buffs panel, under Buff Duty after Self-Buffs.
 L["BUFF_DUTY_WEAPON_PANEL_HEADER"] = "Beneficios de arma"
 L["BUFF_DUTY_WEAPON_DESCRIPTION"] =
@@ -1834,7 +1841,7 @@ L["BUFF_DUTY_WEAPON_PICK_DESCRIPTION"] =
 	"Ofrece %s para tu arma (%s). Mientras el arma no lleve ninguna de las opciones marcadas, se ofrece cada una que tengas."
 L["BUFF_DUTY_SELF_ENABLE"] = "Tus beneficios propios"
 L["BUFF_DUTY_SELF_ENABLE_DESCRIPTION"] =
-	"Muestra en la parte superior de la ventana los beneficios que solo puedes lanzarte a ti mismo, como una armadura o Fuego interno, cuando faltan o están por agotarse. Elige cuáles en Beneficios propios."
+	"Muestra en la parte superior de la ventana tus propios beneficios cuando faltan o están por agotarse: los que solo puedes lanzarte a ti mismo, como una armadura o Fuego interno, y tus beneficios de grupo sobre ti. Elige cuáles en Beneficios propios."
 L["BUFF_DUTY_WEAPON_ENABLE"] = "Tus beneficios de arma"
 L["BUFF_DUTY_WEAPON_ENABLE_DESCRIPTION"] =
 	"Muestra los venenos, imbuiciones, aceites, piedras y cebos que faltan o están por agotarse en tus armas, junto con tus beneficios propios en la parte superior de la ventana. Haz clic en uno para aplicarlo. Elige cuáles en Beneficios de arma."
@@ -1851,6 +1858,8 @@ L["BUFF_DUTY_TOOLTIP_CAST"] = "Lo lanza sobre %s."
 L["BUFF_DUTY_TOOLTIP_WEAPON"] = "Lo aplica a tu arma (%s)."
 L["BUFF_DUTY_TOOLTIP_USE"] = "Nadie en tu grupo tiene una piedra de alma. Usa una sobre %s."
 L["BUFF_DUTY_TOOLTIP_CREATE"] = "Nadie en tu grupo tiene una piedra de alma. Crea una."
+L["BUFF_DUTY_TOOLTIP_CREATE_WEAPON"] = "No tienes ninguna en las bolsas. Crea una."
+L["BUFF_DUTY_TOOLTIP_USE_ITEM"] = "Usa uno de tus bolsas."
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "Lo lanza sobre %s y su grupo."
 L["BUFF_DUTY_TOOLTIP_FAVOR"] = "Selecciona a %s como objetivo y lo lanza."
 -- A Party Buffs icon's menu, its ask rows: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it: %s is one or two names (LIST_PAIR_FORMAT), or BUFF_DUTY_OTHERS_ASK_PEOPLE past two.

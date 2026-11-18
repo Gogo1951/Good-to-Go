@@ -9,6 +9,7 @@ local _, ns = ...
 
 local BuffDuty = ns.BuffDuty
 local buffs = BuffDuty.buffs
+local selfBuffs = BuffDuty.selfBuffs
 local exclusiveIds = BuffDuty.exclusiveIds
 local RankFor = BuffDuty.RankFor
 
@@ -345,25 +346,28 @@ function BuffDuty.NoteBounce(unit, buffKey)
 	if not ns.IsPlain(guid) or not guid then
 		return
 	end
-	for _, buff in ipairs(buffs) do
-		if buff.key == buffKey then
-			local seen = {}
-			for i = 1, 40 do
-				local data = C_UnitAuras.GetBuffDataByIndex(unit, i, "HELPFUL")
-				if not data then
-					break
+	-- A group buff turned off for others is still offered to you, from Self Buffs.
+	for _, list in ipairs({ buffs, selfBuffs }) do
+		for _, buff in ipairs(list) do
+			if buff.key == buffKey then
+				local seen = {}
+				for i = 1, 40 do
+					local data = C_UnitAuras.GetBuffDataByIndex(unit, i, "HELPFUL")
+					if not data then
+						break
+					end
+					local id, expires = data.spellId, data.expirationTime
+					if ns.IsPlain(id) and ns.IsPlain(expires) and buff.auraIds[id] then
+						seen[id] = expires
+					end
 				end
-				local id, expires = data.spellId, data.expirationTime
-				if ns.IsPlain(id) and ns.IsPlain(expires) and buff.auraIds[id] then
-					seen[id] = expires
+				if next(seen) then
+					bounced[guid] = bounced[guid] or {}
+					bounced[guid][buffKey] = seen
+					dirtyGUIDs[guid] = true
 				end
+				return
 			end
-			if next(seen) then
-				bounced[guid] = bounced[guid] or {}
-				bounced[guid][buffKey] = seen
-				dirtyGUIDs[guid] = true
-			end
-			return
 		end
 	end
 end

@@ -596,6 +596,8 @@ AddDefaults("global", {
 		-- One of Data.BUFF_DUTY_FAVOR_CHOICES.
 		favorSeconds = 40,
 		targetEnabled = true,
+		-- Whether the Target row also lists a friendly NPC you can buff.
+		targetNPCs = true,
 		--[[
 			    The Party-Buffs raid buffs, and the asks its clicks send. The
 			    whispered ask's own text, askMessage, has no default here: unset,

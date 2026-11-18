@@ -30,9 +30,18 @@ local exclusiveIds = {}
 local buffs = {} -- the entries this character can cast right now, built by BuildBuffs
 --[[
     The same three for self buffs (ns.BUFF_DUTY_SELF_SPELLS), whose setting is
-    when each one shows rather than who it is for.
+    when each one shows rather than who it is for. selfBuffs also holds your
+    class's group buffs on yourself, which BuildBuffs adds after the self-only
+    ones.
 ]]
 local selfEntries, selfLookup, selfBuffs = {}, {}, {}
+--[[
+    One per ns.BUFF_DUTY_SELF_ITEMS row, the consumables any class keeps up
+    on itself (Winterfall Firewater): { key, row, itemId, ids, auraIds }, ids
+    being its auras. selfItemBuffs holds the ones turned on, offered while
+    one is in your bags.
+]]
+local selfItemEntries, selfItemBuffs = {}, {}
 --[[
     The same three for weapon enchants (ns.BUFF_DUTY_WEAPON_ENCHANTS), the
     poisons and imbues. Their setting is what goes on each hand, so the
@@ -61,6 +70,8 @@ BuffDuty.buffs = buffs
 BuffDuty.selfEntries = selfEntries
 BuffDuty.selfLookup = selfLookup
 BuffDuty.selfBuffs = selfBuffs
+BuffDuty.selfItemEntries = selfItemEntries
+BuffDuty.selfItemBuffs = selfItemBuffs
 BuffDuty.weaponEntries = weaponEntries
 BuffDuty.weaponLookup = weaponLookup
 BuffDuty.weaponBuffs = weaponBuffs
@@ -162,6 +173,7 @@ function BuffDuty.BuildBuffs()
 					rankLevels = entry.rankLevels,
 					manaOnly = entry.row.manaOnly,
 					noCasters = entry.row.noCasters,
+					pets = entry.row.pets,
 					exclusive = entry.row.exclusive,
 					ranks = ranks,
 					-- Set when you know any single-target rank at all.
@@ -201,6 +213,43 @@ function BuffDuty.BuildBuffs()
 		end
 	end
 
+	--[[
+	    Your class's group buffs on yourself (Fortitude, Mark of the Wild, a
+	    blessing): Self Buffs offers them, timed by the Self-Buffs panel, and
+	    the party sections leave you out (Buff-Duty-Groups.lua), so Group
+	    Buffs' "who" is for everyone else. Each casts its single-target rank on
+	    you, and carries its group version so Has weighs your own Prayer of
+	    Fortitude by the strength it landed with. Built before the Soulstone
+	    and the self items, whose columns follow these.
+	]]
+	for _, entry in ipairs(entries) do
+		local when = selfRefresh[entry.key]
+		local row = entry.row
+		if
+			row.class == playerClass
+			and when
+			and when ~= Data.SELF_REFRESH_OFF
+			and not (row.manaOnly and Data.NO_MANA_CLASSES[playerClass])
+			and not (row.noCasters and Data.CASTER_CLASSES[playerClass])
+		then
+			local ranks = KnownRanks(entry)
+			if ranks[1] then
+				selfBuffs[#selfBuffs + 1] = {
+					column = #selfBuffs + 1,
+					key = entry.key,
+					auraIds = entry.auraIds,
+					rankLevels = entry.rankLevels,
+					exclusive = row.exclusive,
+					ranks = ranks,
+					singleName = ranks[1].name,
+					groupId = HighestKnown(entry.groupIds),
+					refreshSeconds = when * 60,
+					isGroupBuff = true,
+				}
+			end
+		end
+	end
+
 	-- One per hand with anything ticked (Buff-Duty-Weapons.lua).
 	BuffDuty.BuildWeaponBuffs(playerClass)
 
@@ -230,6 +279,26 @@ function BuffDuty.BuildBuffs()
 		end
 	end
 
+	--[[
+	    Self items are for any class, after the Soulstone's column. Shaped like
+	    the Soulstone: no ranks, only auras, so any version on you counts.
+	]]
+	wipe(selfItemBuffs)
+	for _, entry in ipairs(selfItemEntries) do
+		local when = selfRefresh[entry.key]
+		if when and when ~= Data.SELF_REFRESH_OFF then
+			selfItemBuffs[#selfItemBuffs + 1] = {
+				column = #selfBuffs + 2 + #selfItemBuffs,
+				key = entry.key,
+				itemId = entry.itemId,
+				auraIds = entry.auraIds,
+				rankLevels = {},
+				ranks = {},
+				refreshSeconds = when * 60,
+			}
+		end
+	end
+
 	-- The Buff Key's resurrection (Buff-Duty-Resurrections.lua).
 	BuffDuty.PickResurrection(playerClass)
 end
@@ -238,6 +307,7 @@ end
 function BuffDuty.HasAnythingToOffer()
 	return #buffs > 0
 		or #selfBuffs > 0
+		or #selfItemBuffs > 0
 		or #weaponBuffs > 0
 		or BuffDuty.soulstoneBuff ~= nil
 		or BuffDuty.resurrection ~= nil

@@ -1774,6 +1774,9 @@ L["BUFF_DUTY_FAVOR_SECONDS_DESCRIPTION"] =
 L["BUFF_DUTY_TARGET_ENABLE"] = "Dein Ziel"
 L["BUFF_DUTY_TARGET_ENABLE_DESCRIPTION"] =
 	"Listet dein Ziel auf, wenn es ein Spieler außerhalb deiner Gruppe ist, dem ein Buff fehlt, den du geben kannst."
+L["BUFF_DUTY_TARGET_NPCS"] = "NPCs einbeziehen"
+L["BUFF_DUTY_TARGET_NPCS_DESCRIPTION"] =
+	"Listet auch einen freundlichen NPC auf, den du anvisierst, etwa den verwundeten Soldaten einer Quest, mit den Buffs, die du ihm geben kannst."
 L["BUFF_DUTY_ASK_OTHERS"] = "Andere Klassen um Buffs bitten"
 L["BUFF_DUTY_ASK_OTHERS_DESCRIPTION"] =
 	'Zeigt unter "Fehlende Gruppenbuffs" die Schlachtzugsbuffs, die deiner Gruppe fehlen, und wie viele jeweils einen brauchen. Linksklicke auf einen, um deine Gruppe darum zu bitten, oder rechtsklicke, um die Spieler anzuflüstern, die ihn wirken können.'
@@ -1813,12 +1816,14 @@ L["BUFF_DUTY_BUFFS_DESCRIPTION"] =
 
 -- The Self-Buffs panel, under Buff Duty: its name and description.
 L["BUFF_DUTY_SELF_HEADER"] = "Selbstbuffs"
-L["BUFF_DUTY_SELF_DESCRIPTION"] = "Deine eigenen Buffs, oben im Fenster angeheftet."
+L["BUFF_DUTY_SELF_DESCRIPTION"] =
+	"Jeder Buff, den du dir selbst geben kannst, oben im Fenster angeheftet. Auch deine Gruppenbuffs stehen hier, für dich selbst: Wer sie sonst bekommt, legst du unter Gruppenbuffs fest."
 --[[
     Muted note after a class name on the Self-Buffs panel, for a family of self
     buffs only one of which can be up at a time. Keyed by the family.
 ]]
 L["BUFF_DUTY_SELF_NOTE_ASPECT"] = "ein beliebiger Aspekt genügt"
+L["BUFF_DUTY_SELF_NOTE_BLESSING"] = "einer deiner Segen genügt"
 L["BUFF_DUTY_SELF_NOTE_MAGE_ARMOR"] = "eine beliebige Rüstung genügt"
 L["BUFF_DUTY_SELF_NOTE_PALADIN_AURA"] = "eine beliebige Aura genügt"
 L["BUFF_DUTY_SELF_NOTE_SHAMAN_SHIELD"] = "ein beliebiger Schild genügt"
@@ -1830,6 +1835,8 @@ L["BUFF_DUTY_SELF_REFRESH_MISSING"] = "Bei Fehlen"
 L["BUFF_DUTY_SELF_REFRESH_UNDER"] = "Unter %s"
 L["BUFF_DUTY_SELF_REFRESH_DESCRIPTION"] =
 	"Legt fest, wann %s angezeigt wird: nie, nach dem Ablaufen oder wenn weniger als diese Zeit übrig ist."
+L["BUFF_DUTY_SELF_ITEMS_HEADER"] = "Verbrauchsgüter"
+L["BUFF_DUTY_SELF_ITEMS_NOTE"] = "wenn eins in deinen Taschen ist"
 -- The Weapon Buffs panel, under Buff Duty after Self-Buffs.
 L["BUFF_DUTY_WEAPON_PANEL_HEADER"] = "Waffenbuffs"
 L["BUFF_DUTY_WEAPON_DESCRIPTION"] =
@@ -1850,7 +1857,7 @@ L["BUFF_DUTY_WEAPON_PICK_DESCRIPTION"] =
 	"Bietet %s für die Waffe in deiner %s an. Solange die Waffe keine deiner angehakten Optionen trägt, wird jede angeboten, die du hast."
 L["BUFF_DUTY_SELF_ENABLE"] = "Deine Selbstbuffs"
 L["BUFF_DUTY_SELF_ENABLE_DESCRIPTION"] =
-	"Zeigt oben im Fenster die Buffs, die nur du dir selbst geben kannst, etwa eine Rüstung oder Inneres Feuer, wenn sie fehlen oder bald ablaufen. Welche, legst du unter Selbstbuffs fest."
+	"Zeigt oben im Fenster deine eigenen Buffs, wenn sie fehlen oder bald ablaufen: die, die nur du dir selbst geben kannst, etwa eine Rüstung oder Inneres Feuer, und deine Gruppenbuffs auf dir. Welche, legst du unter Selbstbuffs fest."
 L["BUFF_DUTY_WEAPON_ENABLE"] = "Deine Waffenbuffs"
 L["BUFF_DUTY_WEAPON_ENABLE_DESCRIPTION"] =
 	"Zeigt die Gifte, Waffenverzauberungen, Öle, Steine und Köder, die deinen Waffen fehlen oder bald ablaufen, zusammen mit deinen Selbstbuffs oben im Fenster. Klicke auf einen Eintrag, um ihn aufzutragen. Welche, legst du unter Waffenbuffs fest."
@@ -1867,6 +1874,8 @@ L["BUFF_DUTY_TOOLTIP_CAST"] = "Wirkt auf %s."
 L["BUFF_DUTY_TOOLTIP_WEAPON"] = "Trägt es auf die Waffe in deiner %s auf."
 L["BUFF_DUTY_TOOLTIP_USE"] = "Niemand in deiner Gruppe hat einen Seelenstein. Wendet einen auf %s an."
 L["BUFF_DUTY_TOOLTIP_CREATE"] = "Niemand in deiner Gruppe hat einen Seelenstein. Stellt einen her."
+L["BUFF_DUTY_TOOLTIP_CREATE_WEAPON"] = "Keiner in deinen Taschen. Stellt einen her."
+L["BUFF_DUTY_TOOLTIP_USE_ITEM"] = "Benutzt eins aus deinen Taschen."
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "Wirkt auf %s samt Gruppe."
 L["BUFF_DUTY_TOOLTIP_FAVOR"] = "Nimmt %s ins Ziel und wirkt."
 -- A Party Buffs icon's menu, its ask rows: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it: %s is one or two names (LIST_PAIR_FORMAT), or BUFF_DUTY_OTHERS_ASK_PEOPLE past two.

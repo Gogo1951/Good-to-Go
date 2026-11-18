@@ -1784,6 +1784,9 @@ L["BUFF_DUTY_FAVOR_SECONDS_DESCRIPTION"] =
 L["BUFF_DUTY_TARGET_ENABLE"] = "내 대상"
 L["BUFF_DUTY_TARGET_ENABLE_DESCRIPTION"] =
 	"대상이 그룹 외부의 플레이어이고 당신이 줄 수 있는 버프가 빠져 있으면 대상을 보여 줍니다."
+L["BUFF_DUTY_TARGET_NPCS"] = "NPC 포함"
+L["BUFF_DUTY_TARGET_NPCS_DESCRIPTION"] =
+	"대상으로 잡은 우호적 NPC(예: 퀘스트의 부상병)도 당신이 줄 수 있는 버프와 함께 보여 줍니다."
 L["BUFF_DUTY_ASK_OTHERS"] = "다른 직업에게 버프 요청"
 L["BUFF_DUTY_ASK_OTHERS_DESCRIPTION"] =
 	"파티에 없는 공격대 버프를 누락된 파티 버프 항목에 표시하고, 각 버프가 필요한 인원 수도 보여 줍니다. 좌클릭하면 파티에 요청하고, 우클릭하면 그 버프를 걸 수 있는 플레이어에게 귓속말을 보냅니다."
@@ -1823,12 +1826,14 @@ L["BUFF_DUTY_BUFFS_DESCRIPTION"] =
 
 -- The Self-Buffs panel, under Buff Duty: its name and description.
 L["BUFF_DUTY_SELF_HEADER"] = "자기 버프"
-L["BUFF_DUTY_SELF_DESCRIPTION"] = "자신의 버프로, 창 맨 위에 고정됩니다."
+L["BUFF_DUTY_SELF_DESCRIPTION"] =
+	"자신에게 걸 수 있는 모든 버프로, 창 맨 위에 고정됩니다. 그룹 버프도 여기 있으며 자신에게 걸릴 때를 정합니다. 다른 사람에게 줄지는 그룹 버프에서 고르세요."
 --[[
     Muted note after a class name on the Self-Buffs panel, for a family of self
     buffs only one of which can be up at a time. Keyed by the family.
 ]]
 L["BUFF_DUTY_SELF_NOTE_ASPECT"] = "상 중 하나면 충분"
+L["BUFF_DUTY_SELF_NOTE_BLESSING"] = "내 축복 중 하나면 충분"
 L["BUFF_DUTY_SELF_NOTE_MAGE_ARMOR"] = "갑옷 중 하나면 충분"
 L["BUFF_DUTY_SELF_NOTE_PALADIN_AURA"] = "오라 중 하나면 충분"
 L["BUFF_DUTY_SELF_NOTE_SHAMAN_SHIELD"] = "보호막 중 하나면 충분"
@@ -1840,6 +1845,8 @@ L["BUFF_DUTY_SELF_REFRESH_MISSING"] = "없을 때"
 L["BUFF_DUTY_SELF_REFRESH_UNDER"] = "%s 미만"
 L["BUFF_DUTY_SELF_REFRESH_DESCRIPTION"] =
 	"%s을(를) 언제 표시할지 설정합니다. 표시 안 함, 사라졌을 때, 남은 시간이 이 값보다 적을 때 중에서 선택합니다."
+L["BUFF_DUTY_SELF_ITEMS_HEADER"] = "소모품"
+L["BUFF_DUTY_SELF_ITEMS_NOTE"] = "가방에 있을 때"
 -- The Weapon Buffs panel, under Buff Duty after Self-Buffs.
 L["BUFF_DUTY_WEAPON_PANEL_HEADER"] = "무기 버프"
 L["BUFF_DUTY_WEAPON_DESCRIPTION"] =
@@ -1860,7 +1867,7 @@ L["BUFF_DUTY_WEAPON_PICK_DESCRIPTION"] =
 	"%s을(를) %s 무기용으로 제공합니다. 선택한 항목이 무기에 하나도 없으면, 가지고 있는 항목을 각각 제공합니다."
 L["BUFF_DUTY_SELF_ENABLE"] = "내 자기 버프"
 L["BUFF_DUTY_SELF_ENABLE_DESCRIPTION"] =
-	"갑옷 주문이나 내면의 열정처럼 자신에게만 걸 수 있는 버프가 없거나 곧 끝날 때 창 맨 위에 표시합니다. 어떤 버프를 표시할지는 자기 버프에서 고르세요."
+	"자신의 버프가 없거나 곧 끝날 때 창 맨 위에 표시합니다. 갑옷 주문이나 내면의 열정처럼 자신에게만 걸 수 있는 버프와, 자신에게 건 그룹 버프입니다. 어떤 버프를 표시할지는 자기 버프에서 고르세요."
 L["BUFF_DUTY_WEAPON_ENABLE"] = "내 무기 버프"
 L["BUFF_DUTY_WEAPON_ENABLE_DESCRIPTION"] =
 	"무기에 없거나 곧 끝나는 독, 무기 강화, 오일, 숫돌, 미끼를 창 맨 위에 자기 버프와 함께 표시합니다. 클릭하면 적용합니다. 표시할 항목은 무기 버프에서 고르세요."
@@ -1878,6 +1885,8 @@ L["BUFF_DUTY_TOOLTIP_WEAPON"] = "%s 무기에 적용합니다."
 L["BUFF_DUTY_TOOLTIP_USE"] =
 	"파티에 영혼석을 지닌 사람이 없습니다. %s에게 영혼석을 사용합니다."
 L["BUFF_DUTY_TOOLTIP_CREATE"] = "파티에 영혼석을 지닌 사람이 없습니다. 영혼석을 만듭니다."
+L["BUFF_DUTY_TOOLTIP_CREATE_WEAPON"] = "가방에 없습니다. 하나 만듭니다."
+L["BUFF_DUTY_TOOLTIP_USE_ITEM"] = "가방에서 하나를 사용합니다."
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "%s와(과) 그 파티에게 시전합니다."
 L["BUFF_DUTY_TOOLTIP_FAVOR"] = "%s을(를) 대상으로 지정하고 시전합니다."
 -- A Party Buffs icon's menu, its ask rows: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it: %s is one or two names (LIST_PAIR_FORMAT), or BUFF_DUTY_OTHERS_ASK_PEOPLE past two.

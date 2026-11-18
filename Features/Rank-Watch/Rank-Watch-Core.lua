@@ -3,7 +3,6 @@ local L = ns.L
 local Data = ns.Data
 
 local RANK_WATCH = Data.RANK_WATCH
-local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
 
 --------------------------------------------------------------------------------
 -- Rank Watch
@@ -186,7 +185,7 @@ function ns.SetRankWatchEnabled(value)
 		ns:PrintMessage(L["RANK_WATCH_STANDALONE"]:format(standaloneTitle))
 	end
 	ns.SyncRankWatchEvents()
-	AceConfigRegistry:NotifyChange(ns.OPTIONS_REGISTRY.RankWatch)
+	ns.RefreshSettings()
 end
 
 --------------------------------------------------------------------------------
@@ -266,7 +265,7 @@ function ns.IgnoreRankWatchPlayer(typed)
 	settings.ignoredPlayers[guid] = name
 	settings.ignoredClasses[guid] = class
 	ns:PrintMessage(L["RANK_WATCH_IGNORE_ADDED"]:format(ns.ClassColoredName(name, class)))
-	AceConfigRegistry:NotifyChange(ns.OPTIONS_REGISTRY.RankWatchIgnored)
+	ns.RefreshSettings()
 end
 
 --------------------------------------------------------------------------------
@@ -310,9 +309,7 @@ function resetListener.OnProfileReset()
 	end
 	wipe(settings.untracked)
 	ns.SyncRankWatchEvents()
-	for _, registryName in pairs(ns.OPTIONS_REGISTRY) do
-		AceConfigRegistry:NotifyChange(registryName)
-	end
+	ns.RefreshSettings()
 end
 
 local function OnPlayerLogin()

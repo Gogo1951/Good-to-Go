@@ -72,6 +72,27 @@ local function PopulateBuffDutyAudience()
 			selfRefresh[key] = entry.row.default
 		end
 	end
+	--[[
+	    A group buff on yourself: the row's selfDefault, or else 3 minutes for
+	    one the data offers to everyone and Off for the rest (Tanks and
+	    situational buffs), from the row's default, never the player's own
+	    audience pick.
+	]]
+	for key, entry in pairs(lookup) do
+		if selfRefresh[key] == nil then
+			local row = entry.row
+			local default = row.selfDefault
+			if default == nil then
+				default = row.default == Data.BUFF_AUDIENCE.ALL and 3 or Data.SELF_REFRESH_OFF
+			end
+			selfRefresh[key] = default
+		end
+	end
+	for _, entry in ipairs(BuffDuty.selfItemEntries) do
+		if selfRefresh[entry.key] == nil then
+			selfRefresh[entry.key] = entry.row.default
+		end
+	end
 	local stone = BuffDuty.soulstoneEntry
 	if stone and selfRefresh[stone.key] == nil then
 		selfRefresh[stone.key] = stone.row.default

@@ -254,12 +254,13 @@ end
 local function Candidates(sections, now)
 	local list, added = {}, {}
 	--[[
-	    Weapon icons are never candidates: putting a poison or oil on, and
-	    answering the game's "replace your enchant?" question, is a click on
-	    the window, not a key run through a list.
+	    Weapon icons and Self Buffs consumables (Winterfall Firewater) are
+	    never candidates: putting a poison or oil on, answering the game's
+	    "replace your enchant?" question, or spending a consumable is a click
+	    on the window, not a key run through a list.
 	]]
 	local function Add(spec)
-		if spec and not spec.weapon and not added[spec] then
+		if spec and not spec.weapon and not spec.selfItem and not added[spec] then
 			added[spec] = true
 			list[#list + 1] = spec
 		end

@@ -203,7 +203,7 @@ local function OnChatMsgWhisper(text, sender, ...)
 	settings.ignoredClasses[guid] = class
 	ns:QueueAutomatedWhisper(sender, ns:BuildOptOutDoneWhisper(ns.GetMessageText("rankWatchOptOutDone")))
 	ns:PrintMessage(L["RANK_WATCH_OPT_OUT_ADDED"]:format(ns.ClassColoredName(name, class)))
-	LibStub("AceConfigRegistry-3.0"):NotifyChange(ns.OPTIONS_REGISTRY.RankWatchIgnored)
+	ns.RefreshSettings()
 end
 ns.SetRankWatchHandler("CHAT_MSG_WHISPER", OnChatMsgWhisper)
 

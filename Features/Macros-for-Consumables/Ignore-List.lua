@@ -1,7 +1,5 @@
 local _, ns = ...
 
-local AceConfigRegistry = LibStub("AceConfigRegistry-3.0")
-
 --------------------------------------------------------------------------------
 -- Ignore List
 --------------------------------------------------------------------------------
@@ -67,11 +65,8 @@ end
     keep meaning what the player just read. The Global list is edited from the
     Ignore List panel instead, through ns.SetIgnoredInScope below.
 
-    Both repaint that panel as well. It is registered as a builder function, so
-    a repaint rebuilds its rows straight off the live lists -- but something has
-    to ask for one, and a mini-map click while the panel is already on screen is
-    the one edit path with nothing that does. NotifyChange costs nothing while
-    nothing is displaying the table.
+    Both end in ns.RefreshSettings, so an Ignore List panel already on screen
+    rebuilds its rows straight off the live lists, and the menu redraws.
 
     Right-Click only ever adds: in combat or with the Macro UI open the rebuild
     waits, so the tooltip still offers the same food, and a second click must not
@@ -90,7 +85,7 @@ function ns.IgnoreItem(itemID)
 	end
 	ignoreList[itemID] = true
 	RefreshMacros()
-	AceConfigRegistry:NotifyChange(ns.OPTIONS_REGISTRY.IgnoreList)
+	ns.RefreshSettings()
 	return true
 end
 
@@ -105,7 +100,7 @@ function ns.ClearIgnoreList()
 		wipe(ignoreList)
 	end
 	RefreshMacros()
-	AceConfigRegistry:NotifyChange(ns.OPTIONS_REGISTRY.IgnoreList)
+	ns.RefreshSettings()
 	return cleared
 end
 

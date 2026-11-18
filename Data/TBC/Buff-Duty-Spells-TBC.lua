@@ -8,7 +8,7 @@ local SHAMAN_SHIELD, WARLOCK_ARMOR, WARLOCK_DEMON = "SHAMAN_SHIELD", "WARLOCK_AR
 local MISSING = Data.SELF_REFRESH_MISSING
 local MAIN, OFF_HAND = "MAIN", "OFF"
 
--- { class, single = { { spell id, level learned } }, group = { spell ids }, greater = { spell ids }, exclusive, manaOnly, noCasters, talent, default }, -- Name
+-- { class, single = { { spell id, level learned } }, group = { spell ids }, greater = { spell ids }, exclusive, manaOnly, noCasters, talent, default, selfDefault }, -- Name
 ns.BUFF_DUTY_SPELLS = {
 	-- Druid ---------------------------------------------------------------------
 	{
@@ -30,6 +30,7 @@ ns.BUFF_DUTY_SPELLS = {
 		class = "DRUID",
 		single = { { 467, 6 }, { 782, 14 }, { 1075, 24 }, { 8914, 34 }, { 9756, 44 }, { 9910, 54 }, { 26992, 64 } },
 		default = TANK,
+		selfDefault = MISSING,
 	}, -- Thorns
 	-- Mage ----------------------------------------------------------------------
 	{
@@ -598,6 +599,11 @@ ns.BUFF_DUTY_WEAPON_ITEMS = {
 	{ 20750, 40, 2627, 0, OIL, 50 }, -- Wizard Oil
 }
 
+-- { item id, auras = { spell ids }, default (minutes left, MISSING or OFF) }, -- Name
+ns.BUFF_DUTY_SELF_ITEMS = {
+	{ 12820, auras = { 17038 }, default = MISSING }, -- Winterfall Firewater
+}
+
 -- { class, create = { { spell id, level learned } }, auras, items (lowest rank first), default }
 ns.BUFF_DUTY_SOULSTONE = {
 	class = "WARLOCK",
@@ -632,6 +638,7 @@ Notes
 	- Earth Shield starts OFF even though it belongs on a tank: only one can be up per shaman, so offering it to every tank would offer it to some who can't have it.
 	- manaOnly drops the buff for classes with no mana (Data.NO_MANA_CLASSES), where Intellect and Spirit do nothing worth a reagent or a global cooldown.
 	- default is who the buff is offered to until the player picks: ALL, TANK, HEALER or OFF, from Data.BUFF_AUDIENCE in Data/Data.lua. The everyday raid buffs start on ALL (Kings, Wisdom and Might among them, since not every paladin has Kings), Thorns and Fear Ward on TANK, and the situational ones OFF. A player's own choice is never overwritten.
+	- selfDefault is when a group buff shows on the caster themselves, on the Self-Buffs panel, until the player picks: the window offers your own group buffs under Self Buffs, timed per buff, and leaves you off your party row. Without one it's 3 minutes for a buff that starts on ALL and OFF for the rest, from default. Thorns starts on MISSING (When Missing): it's short, and a druid keeps it up on themselves while soloing (issue #42).
 	- Amplify and Dampen Magic replace each other on the target, so turning both on offers each to everyone carrying the other.
 	- The setting is keyed by the first single-target ID, the lowest rank.
 	- BUFF_DUTY_PET_ICONS picks the icon in front of a pet's name: a warlock demon wears its own summoning spell's icon, found by the creature ID inside the pet's GUID, and any other pet wears Call Pet's. Only the spell IDs are stored; the icons come from the client.
@@ -654,6 +661,7 @@ Notes
 	- Each poison item and imbue rank carries the enchant id it puts on the weapon, which is what GetWeaponEnchantInfo reports, so the window can tell which of the player's picks a hand holds. Pulled from this client's SpellEffect (the ENCHANT_ITEM_TEMPORARY effect's misc value) and ItemEffect tables on wago.tools.
 	- BUFF_DUTY_WEAPON_HANDS is which hands each class is asked about: both, since a TBC shaman can dual wield.
 	- BUFF_DUTY_SOULSTONE is the Soulstone reminder: create is every Create Soulstone rank (cast by its bare name, which casts the best rank known), auras the Soulstone Resurrection buff each stone leaves, and items the stones, lowest first, the same lists as Consumable Connoisseur's Soulstones-TBC.lua and Conjure-Spells-TBC.lua.
+	- BUFF_DUTY_SELF_ITEMS are the consumables any class keeps up on itself, offered under Self Buffs while one is in your bags and its buff is missing (issue #40): each item id, the aura ids its use leaves, and when it shows by default. Winterfall Firewater (item 12820) leaves Winterfall Firewater (17038), +35 melee attack power for 20 minutes, the same aura the Elixirs table lists. Its default is When Missing, since the request was to show it once the buff is gone.
 	- BUFF_DUTY_RESURRECTIONS is what the Buff Key casts first, on a dead target: every rank of each class's resurrection, cast by its bare name, which resolves to the highest known. Paladins, priests and shamans are listed. Rebirth stays out: it's a combat resurrection on a 20-minute cooldown. Mass Resurrection (32841) stays out too: this client's tables carry it with a priest skill row, but it isn't a rank of Resurrection, and no Validate Data run has shown a priest can learn it here.
 	- BUFF_DUTY_WEAPON_ITEMS is every other temporary weapon enchant, offered to any class: each item with the level it requires, the enchant id it puts on (SpellEffect's ENCHANT_ITEM_TEMPORARY misc value, through ItemEffect), and the weapon types its spell takes (SpellEquippedItems' EquippedItemSubclass mask, 0 for any weapon). kind files it under Oils, Stones or Lures on the Weapon Buffs panel: LURE for a fishing pole's, STONE for a sharpening stone or weightstone, OIL for the rest (oils, coatings, Bloodboil Poison, Scourgebane, the Weapon Cleaning Cloth). item level (ItemSparse) ranks them, strongest first: it orders a line Rough to Dense where the required level can't (every lure needs level 0). Fishing lures take only a fishing pole, a sharpening stone only a bladed weapon, a weightstone only a blunt one. Picked from the IDs supplied on 2026-10-19, plus every item this client's tables say puts a temporary enchant on a hand weapon, keeping only items whose spell enchants a hand weapon or fishing pole. Left out: rogue-only poisons (the rogue rows above), armor runes and other enchants that go on armor, shield coatings, and test or placeholder items. zones, on an item whose tooltip says it only works in certain places, names those places: instances by the map ID GetInstanceInfo reports and outdoor zones by the UiMap ID C_Map.GetBestMapForUnit reports, both from this client's Map and UiMap tables. The window offers such an item only there (Features/Buff-Duty/Buff-Duty-Self.lua); an item without zones, anywhere. Here the Blessed and Righteous Weapon Coatings carry one: Magisters' Terrace (Map 585), Sunwell Plateau (Map 580, "The Sunwell") and the Isle of Quel'Danas (UiMap 1957).
 	- Also left out of the weapon items: the Weather-Beaten Fishing Hat, whose lure only works while the hat is worn, and which using from the bags would put on instead; and Instant Toxin (5654), a poison that neither QuestieDB nor any spell on this client gives a source for, so likely unobtainable here.

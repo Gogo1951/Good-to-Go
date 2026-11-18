@@ -12,7 +12,7 @@ local SHAMAN_SHIELD, WARLOCK_ARMOR, WARLOCK_DEMON = "SHAMAN_SHIELD", "WARLOCK_AR
 local MISSING = Data.SELF_REFRESH_MISSING
 local MAIN, OFF_HAND = "MAIN", "OFF"
 
--- { class, single = { { spell id, level learned } }, group = { spell ids }, greater = { spell ids }, exclusive, manaOnly, noCasters, talent, default }, -- Name
+-- { class, single = { { spell id, level learned } }, group = { spell ids }, greater = { spell ids }, exclusive, manaOnly, noCasters, talent, default, selfDefault }, -- Name
 ns.BUFF_DUTY_SPELLS = {
 	-- Druid ---------------------------------------------------------------------
 	{
@@ -25,6 +25,7 @@ ns.BUFF_DUTY_SPELLS = {
 		class = "DRUID",
 		single = { { 467, 6 }, { 782, 14 }, { 1075, 24 }, { 8914, 34 }, { 9756, 44 }, { 9910, 54 } },
 		default = TANK,
+		selfDefault = MISSING,
 	}, -- Thorns
 	-- Mage ----------------------------------------------------------------------
 	{
@@ -451,6 +452,11 @@ ns.BUFF_DUTY_WEAPON_ITEMS = {
 	{ 20750, 40, 2627, 0, OIL, 50 }, -- Wizard Oil
 }
 
+-- { item id, auras = { spell ids }, default (minutes left, MISSING or OFF) }, -- Name
+ns.BUFF_DUTY_SELF_ITEMS = {
+	{ 12820, auras = { 17038 }, default = MISSING }, -- Winterfall Firewater
+}
+
 -- { class, create = { { spell id, level learned } }, auras, items (lowest rank first), default }
 ns.BUFF_DUTY_SOULSTONE = {
 	class = "WARLOCK",
@@ -484,6 +490,7 @@ Notes
 	- The learn levels are the client's own, checked against the SPELL_LEVEL_LEARNED column of a Validate Data run from this client.
 	- manaOnly drops the buff for classes with no mana (Data.NO_MANA_CLASSES), where Intellect and Spirit do nothing worth a reagent or a global cooldown.
 	- default is who the buff is offered to until the player picks: ALL, TANK, HEALER or OFF, from Data.BUFF_AUDIENCE in Data/Data.lua. The everyday raid buffs start on ALL (Kings, Wisdom and Might among them, since not every paladin has Kings), Thorns and Fear Ward on TANK, and the situational ones OFF. A player's own choice is never overwritten.
+	- selfDefault is when a group buff shows on the caster themselves, on the Self-Buffs panel, until the player picks: the window offers your own group buffs under Self Buffs, timed per buff, and leaves you off your party row. Without one it's 3 minutes for a buff that starts on ALL and OFF for the rest, from default. Thorns starts on MISSING (When Missing): it's short, and a druid keeps it up on themselves while soloing (issue #42).
 	- Amplify and Dampen Magic replace each other on the target, so turning both on offers each to everyone carrying the other.
 	- The setting is keyed by the first single-target ID, the lowest rank.
 	- BUFF_DUTY_PET_ICONS picks the icon in front of a pet's name: a warlock demon wears its own summoning spell's icon, found by the creature ID inside the pet's GUID, and any other pet wears Call Pet's. Only the spell IDs are stored; the icons come from the client.
@@ -503,6 +510,7 @@ Notes
 	- Each poison item and imbue rank carries the enchant id it puts on the weapon, which is what GetWeaponEnchantInfo reports, so the window can tell which of the player's picks a hand holds. Pulled from this client's SpellEffect (the ENCHANT_ITEM_TEMPORARY effect's misc value) and ItemEffect tables on wago.tools.
 	- BUFF_DUTY_WEAPON_HANDS is which hands each class is asked about. A Classic Era shaman can't dual wield, so only the main hand.
 	- BUFF_DUTY_SOULSTONE is the Soulstone reminder: create is every Create Soulstone rank (cast by its bare name, since each tier here is its own spell), auras the Soulstone Resurrection buff each stone leaves, and items the stones, lowest first, the same lists as Consumable Connoisseur's Soulstones-Vanilla.lua and Conjure-Spells-Vanilla.lua.
+	- BUFF_DUTY_SELF_ITEMS are the consumables any class keeps up on itself, offered under Self Buffs while one is in your bags and its buff is missing (issue #40): each item id, the aura ids its use leaves, and when it shows by default. Winterfall Firewater (item 12820) leaves Winterfall Firewater (17038), +35 melee attack power for 20 minutes, the same aura the Elixirs table lists. Its default is When Missing, since the request was to show it once the buff is gone.
 	- BUFF_DUTY_RESURRECTIONS is what the Buff Key casts first, on a dead target: every rank of each class's resurrection, cast by its bare name, which resolves to the highest known. Paladins, priests and shamans are listed.
 	- This client's tables also carry Season of Discovery's rune buffs (Beacon of Light, Earth Shield, Spirit of the Alpha, Water Shield, Fel Armor, Aspect of the Viper, Aspect of the Falcon, Heart of the Lion, the second Righteous Fury) and Commanding Shout, and its weapon items: the Blackfathom Sharpening Stone and Mana Oil, the Weapon Cleaning Cloth, Enchanted Repellent, the Weighted Consecrated Sharpening Stone, the reissued Blessed Wizard Oil and Consecrated Sharpening Stone (238234, 238241), and the Sebacious, Numbing, Atrophic and Occult poisons. They belong to Data/Discovery/, so they're left out here.
 	- BUFF_DUTY_WEAPON_ITEMS is every other temporary weapon enchant, offered to any class: each item with the level it requires, the enchant id it puts on (SpellEffect's ENCHANT_ITEM_TEMPORARY misc value, through ItemEffect), and the weapon types its spell takes (SpellEquippedItems' EquippedItemSubclass mask, 0 for any weapon). kind files it under Oils, Stones or Lures on the Weapon Buffs panel: LURE for a fishing pole's, STONE for a sharpening stone or weightstone, OIL for the rest (oils, coatings, Bloodboil Poison, Scourgebane, the Weapon Cleaning Cloth). item level (ItemSparse) ranks them, strongest first: it orders a line Rough to Dense where the required level can't (every lure needs level 0). Fishing lures take only a fishing pole, a sharpening stone only a bladed weapon, a weightstone only a blunt one. Picked from the IDs supplied on 2026-10-19, keeping only items whose spell enchants a hand weapon or fishing pole. Left out: rogue-only poisons (the rogue rows above), armor runes and other enchants that go on armor, shield coatings, and test or placeholder items. zones, on an item whose tooltip says it only works in certain places, names those places: instances by the map ID GetInstanceInfo reports and outdoor zones by the UiMap ID C_Map.GetBestMapForUnit reports, both from this client's Map and UiMap tables. The window offers such an item only there (Features/Buff-Duty/Buff-Duty-Self.lua); an item without zones, anywhere. No item on this client carries one.
