@@ -307,8 +307,8 @@ local SECTIONS = {
 --[[
     Opens a section: a break, its header, then a break under it -- the house
     rhythm every other panel's sections open with. Every row already ends with
-    its own break, so only the first section, which follows the Example,
-    adds the break above its header. Returns the next order.
+    its own break, so only the first section, which follows the switch, adds
+    the break above its header. Returns the next order.
 ]]
 local function AddSection(args, section, order, isFirst)
 	if isFirst then
@@ -411,6 +411,19 @@ function ns.BuildReadinessReportOptions()
 	args.toggleReadiness = Kit.FeatureSwitch("readinessReportEnabled", order)
 	order = order + 1
 
+	for index, section in ipairs(SECTIONS) do
+		order = AddSection(args, section, order, index == 1)
+		for _, row in ipairs(section.rows) do
+			order = AddReportRow(args, row, order)
+		end
+	end
+
+	-- The report as it prints, under the switches that shape it.
+	args.exampleReadiness = Kit.Example(order, ReportsHidden, function()
+		return ns.PrintedExampleLines(ns.BuildReadinessSampleLines())
+	end)
+	order = order + 1
+
 	--[[
 	    Deliberately NOT gated on the report being on: it is what returns the
 	    categories to their defaults, and those keep their values while the
@@ -428,20 +441,6 @@ function ns.BuildReadinessReportOptions()
 		ResetReadinessSettings,
 		L["OPTIONS_READINESS_RESET_CONFIRM"]
 	)
-	order = order + 1
-
-	-- The report as it prints, following the switches below.
-	args.exampleReadiness = Kit.Example(order, ReportsHidden, function()
-		return ns.PrintedExampleLines(ns.BuildReadinessSampleLines())
-	end)
-	order = order + 1
-
-	for index, section in ipairs(SECTIONS) do
-		order = AddSection(args, section, order, index == 1)
-		for _, row in ipairs(section.rows) do
-			order = AddReportRow(args, row, order)
-		end
-	end
 
 	return {
 		type = "group",
