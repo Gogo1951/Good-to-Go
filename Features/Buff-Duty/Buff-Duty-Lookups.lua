@@ -266,6 +266,28 @@ function BuffDuty.BuildLookup()
 	end
 
 	--[[
+	    Scrolls, for any class, wherever the flavor has them: one entry for
+	    every scroll type, offered as an icon per type (Buff-Duty-Self.lua).
+	    Named on the panel as Scrolls, with the first type's lowest scroll buff
+	    for its icon. Shows When Missing by default on WoW Forever, like Well
+	    Fed, and is off elsewhere.
+	]]
+	local firstScroll = ns.SCROLL_DATA and ns.SCROLL_DATA[ns.SCROLL_CHECK_ORDER[1]]
+	local lowestScroll = firstScroll and firstScroll.items and firstScroll.items[#firstScroll.items]
+	local scrollIds = lowestScroll and LiveIds({ lowestScroll[2] }) or {}
+	if scrollIds[1] then
+		selfItemEntries[#selfItemEntries + 1] = {
+			key = "scrolls",
+			row = { default = ns.FLAVOR == "Camelot" and Data.SELF_REFRESH_MISSING or Data.SELF_REFRESH_OFF },
+			scrolls = true,
+			name = L["BUFF_DUTY_SCROLLS"],
+			ids = scrollIds,
+			auraIds = {},
+			desc = L["BUFF_DUTY_SCROLLS_DESCRIPTION"],
+		}
+	end
+
+	--[[
 	    The Soulstone is offered by its Create Soulstone ranks, counted by its
 	    Soulstone Resurrection auras, and named on the panel by the aura.
 	]]

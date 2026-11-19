@@ -292,6 +292,7 @@ function BuffDuty.BuildBuffs()
 				key = entry.key,
 				itemId = entry.itemId,
 				wellFed = entry.wellFed,
+				scrolls = entry.scrolls,
 				auraIds = entry.auraIds,
 				rankLevels = {},
 				ranks = {},

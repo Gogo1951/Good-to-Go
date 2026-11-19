@@ -399,7 +399,7 @@ function ns.SetupBuffDuty()
 	-- Then the consumables any class can use, in a box of their own.
 	local items = {}
 	for _, entry in ipairs(BuffDuty.selfItemEntries) do
-		local spellName = C_Spell.GetSpellName(entry.ids[1])
+		local spellName = entry.name or C_Spell.GetSpellName(entry.ids[1])
 		items[#items + 1] =
 			{ key = entry.key, ids = entry.ids, spellName = spellName or tostring(entry.itemId), desc = entry.desc }
 	end

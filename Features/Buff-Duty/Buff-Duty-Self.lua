@@ -6,7 +6,8 @@ local L = ns.L
     header in a grid of its own: your self-only buffs; your class's group buffs
     on you, timed by the Self-Buffs panel and left off your party row; a
     Soulstone while nobody in your group carries one; and the consumables any
-    class keeps up (Winterfall Firewater) while one is in your bags. Then a row
+    class keeps up (Winterfall Firewater, buff food, scrolls) while one is in
+    your bags. Then a row
     per hand for the poison, imbue, oil, stone or lure each weapon needs, each
     row in a grid of its own (Buff-Duty-Weapons.lua). Shared with the other
     Buff Duty files through ns.BuffDuty.
@@ -210,6 +211,58 @@ local function WellFedIcon(buff)
 	}, expires, duration)
 end
 
+--[[
+    Bag counts read live, in the shape ns.FindBestScroll takes, so a scroll
+    just looted or read counts on the next redraw (BAG_UPDATE_DELAYED asks
+    for one) without waiting on the macros' bag scan.
+]]
+local liveItemCounts = setmetatable({}, {
+	__index = function(_, itemId)
+		return GetItemCount(itemId)
+	end,
+})
+
+--[[
+    Scrolls: an icon per scroll type you carry and lack the buff of, or have
+    it running low by your own time for Scrolls, in the Food macro's order
+    (ns.SCROLL_CHECK_ORDER). Only the types the Food & Water page ticks count,
+    by default the ones your class gets use from. Each reads the strongest
+    scroll of its type in your bags (ns.FindBestScroll, which keeps to the
+    Ignore List), and a stronger elixir or class buff already on you covers
+    its type, as it does for the macro. Nothing while auras can't be read
+    (WoW Forever), as with Well Fed. The icons share Scrolls' column, a
+    tenth apart, so the grid keeps them together and in order.
+]]
+local function AddScrollIcons(buff, icons)
+	local types = ns.db.profile.scrollTypes
+	if not types or ns.AreAurasSecret() then
+		return
+	end
+	local snapshot = ns.GetPlayerBuffSnapshot()
+	local now = GetTime()
+	local name = GetUnitName("player", false) or ""
+	for index, scrollType in ipairs(ns.SCROLL_CHECK_ORDER) do
+		local itemId, amount
+		if types[scrollType] then
+			itemId, amount = ns.FindBestScroll(scrollType, liveItemCounts)
+		end
+		local aura = itemId and snapshot.scrolls[scrollType]
+		local covered = aura and aura.conflictAmount and aura.conflictAmount >= (amount or 0)
+		local expires = aura and aura.expiration
+		if aura and not covered and (expires == nil or (expires ~= 0 and expires - now < buff.refreshSeconds)) then
+			icons[#icons + 1] = {
+				itemId = itemId,
+				item = "item:" .. itemId,
+				selfItem = true,
+				column = buff.column + index / 10,
+				unit = "player",
+				targetName = name,
+				hint = L["BUFF_DUTY_TOOLTIP_READ"],
+			}
+		end
+	end
+end
+
 --------------------------------------------------------------------------------
 -- Section
 --------------------------------------------------------------------------------
@@ -249,6 +302,8 @@ function BuffDuty.AddSelfSection(sections)
 		for _, buff in ipairs(BuffDuty.selfItemBuffs) do
 			if buff.wellFed then
 				icons[#icons + 1] = WellFedIcon(buff)
+			elseif buff.scrolls then
+				AddScrollIcons(buff, icons)
 			else
 				icons[#icons + 1] = SelfItemIcon(buff)
 			end

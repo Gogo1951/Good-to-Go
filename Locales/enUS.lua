@@ -1817,6 +1817,10 @@ L["BUFF_DUTY_SELF_ITEMS_NOTE"] = "when one is in your bags"
 ]]
 L["BUFF_DUTY_WELL_FED_DESCRIPTION_FORMAT"] =
 	"Shows while you're missing %s and carry buff food. Click it in the window to eat your best one, the one your Food macro would pick."
+-- The Consumables box's Scrolls row: one icon per scroll buff you're missing, for the types ticked on the Food & Water page.
+L["BUFF_DUTY_SCROLLS"] = "Scrolls"
+L["BUFF_DUTY_SCROLLS_DESCRIPTION"] =
+	"Shows a scroll for each scroll buff you're missing while you carry that scroll. Click one in the window to read it. The scroll types it watches are the ones ticked on the Food & Water page."
 -- The Weapon Buffs panel, under Buff Duty after Self-Buffs.
 L["BUFF_DUTY_WEAPON_PANEL_HEADER"] = "Weapon Buffs"
 L["BUFF_DUTY_WEAPON_DESCRIPTION"] =
@@ -1858,6 +1862,7 @@ L["BUFF_DUTY_TOOLTIP_CREATE"] = "Nobody in your group has a Soulstone. Creates o
 L["BUFF_DUTY_TOOLTIP_CREATE_WEAPON"] = "None in your bags. Creates one."
 -- A Self-Buffs consumable's icon (Winterfall Firewater).
 L["BUFF_DUTY_TOOLTIP_USE_ITEM"] = "Uses one from your bags."
+L["BUFF_DUTY_TOOLTIP_READ"] = "Reads one from your bags."
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "Casts on %s and their party."
 L["BUFF_DUTY_TOOLTIP_FAVOR"] = "Targets %s and casts."
 -- A Party Buffs icon's menu, its ask rows: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it: %s is one or two names (LIST_PAIR_FORMAT), or BUFF_DUTY_OTHERS_ASK_PEOPLE past two.
