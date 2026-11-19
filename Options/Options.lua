@@ -22,6 +22,7 @@ local Kit = ns.OptionsKit
         Enhanced Spellbook
         Consumable Macros       Food & Water, Class & Race, Ignore List
         Rank Watch              Reported Ranks, Ignored Players (where the flavor has ranks)
+        Ability Alerts While Leveling   (where Rank Watch loads)
         Inventory Report
         Readiness Report
         Profiles, Feedback & Support, Diagnostic Tools
@@ -67,8 +68,9 @@ end
 
 --[[
     Rank Watch, where its TOC loads it (every flavor with ranks to compare), with its Reported Ranks and
-    Ignored Players under it. Reported Ranks is a tree of classes, opened on the player's own and seeded with
-    the shared tree width; a player dragging the splitter or picking a class overwrites either from then on.
+    Ignored Players under it, then Ability Alerts While Leveling, a panel of its own beside it. Reported
+    Ranks is a tree of classes, opened on the player's own and seeded with the shared tree width; a player
+    dragging the splitter or picking a class overwrites either from then on.
 ]]
 local function RegisterRankWatchPanels()
 	if not ns.BuildRankWatchOptions then
@@ -82,6 +84,8 @@ local function RegisterRankWatchPanels()
 	trackedStatus.groups = trackedStatus.groups or {}
 	trackedStatus.groups.treewidth = trackedStatus.groups.treewidth or ns.OPTIONS_TREE_WIDTH
 	trackedStatus.groups.selected = trackedStatus.groups.selected or select(2, UnitClass("player"))
+
+	Kit.RegisterPanel("AbilityAlerts", ns.BuildAbilityAlertsOptions, L["RANK_WATCH_LEVEL_UP_HEADER"])
 end
 
 function ns.RegisterOptionsPanels()

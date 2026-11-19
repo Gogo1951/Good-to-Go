@@ -1156,12 +1156,6 @@ L["RANK_WATCH_WHISPERER_NONE"] = 'Никто: "Шептать участника
 -- Ability Alerts While Leveling: the Rank Watch panel's section for the level-up prints (LEVEL_UP_SPELLS and the rest)
 L["RANK_WATCH_LEVEL_UP_HEADER"] =
 	"Оповещения о способностях при повышении уровня"
-L["RANK_WATCH_LEVEL_UP_DESCRIPTION"] =
-	"При повышении уровня в чате появляется список способностей, которые для вас есть у классового наставника, каждая со значком и ссылкой для наведения. У этого свой переключатель, независимо от того, включён ли Дозор рангов."
-L["RANK_WATCH_LEVEL_UP"] =
-	"Сообщать о новых способностях при повышении уровня"
-L["RANK_WATCH_LEVEL_UP_TOGGLE_DESCRIPTION"] =
-	"Перечисляет способности, которые открываются на только что полученном уровне."
 L["RANK_WATCH_LEVEL_UP_PAST"] = "Включать пропущенные способности"
 L["RANK_WATCH_LEVEL_UP_PAST_DESCRIPTION"] =
 	"Добавляет строку со способностями прошлых уровней, которые вы ещё не изучили."

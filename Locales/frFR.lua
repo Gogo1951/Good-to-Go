@@ -1125,11 +1125,6 @@ L["RANK_WATCH_WHISPERER_NONE"] = "Personne : Chuchoter aux membres du groupe est
 
 -- Ability Alerts While Leveling: the Rank Watch panel's section for the level-up prints (LEVEL_UP_SPELLS and the rest)
 L["RANK_WATCH_LEVEL_UP_HEADER"] = "Alertes de compétences en montant de niveau"
-L["RANK_WATCH_LEVEL_UP_DESCRIPTION"] =
-	"Quand vous montez de niveau, le chat liste les compétences que votre maître de classe a pour vous, chacune avec son icône et un lien à survoler. Cette option a son propre interrupteur, que la Veille des rangs soit activée ou non."
-L["RANK_WATCH_LEVEL_UP"] = "Annoncer les nouvelles compétences à chaque niveau"
-L["RANK_WATCH_LEVEL_UP_TOGGLE_DESCRIPTION"] =
-	"Liste les compétences qui se débloquent au niveau que vous venez d'atteindre."
 L["RANK_WATCH_LEVEL_UP_PAST"] = "Inclure les compétences manquées"
 L["RANK_WATCH_LEVEL_UP_PAST_DESCRIPTION"] =
 	"Ajoute une ligne pour les compétences des niveaux précédents que vous n'avez pas encore apprises."

@@ -367,6 +367,7 @@ Options/Readiness-Report/Options-Readiness-Report.lua
 Options/Rank-Watch/Options-Rank-Watch.lua
 Options/Rank-Watch/Options-Rank-Watch-Tracked.lua
 Options/Rank-Watch/Options-Rank-Watch-Ignored.lua
+Options/Rank-Watch/Options-Ability-Alerts.lua
 Options/Restocker/Options-Restocker.lua
 Options/Inventory-Report/Options-Inventory-Report.lua
 Options/Buff-Duty/Options-Buff-Duty-Utilities.lua

@@ -89,7 +89,11 @@ ns.FEATURES = {
 	},
 }
 
--- Rank Watch, after Consumable Macros, wherever its TOC loads it: Mists has no ranks and leaves it out.
+--[[
+    Rank Watch, after Consumable Macros, wherever its TOC loads it: Mists has no ranks and leaves it out.
+    Ability Alerts While Leveling follows it, with the level-up prints Rank Watch's files carry; they run
+    whether Rank Watch is on or not, so the switch only writes its setting.
+]]
 if ns.SetRankWatchEnabled then
 	table.insert(ns.FEATURES, 5, {
 		store = "global",
@@ -100,6 +104,13 @@ if ns.SetRankWatchEnabled then
 		apply = function(value)
 			ns.SetRankWatchEnabled(value)
 		end,
+	})
+	table.insert(ns.FEATURES, 6, {
+		store = "global",
+		setting = "rankWatch.levelUpAlerts",
+		name = "RANK_WATCH_LEVEL_UP_HEADER",
+		caption = "SWITCH_ABILITY_ALERTS",
+		desc = "SWITCH_ABILITY_ALERTS_DESCRIPTION",
 	})
 end
 

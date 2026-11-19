@@ -178,6 +178,7 @@ ns.OPTIONS_REGISTRY = {
 	RankWatch = ADDON_NAME .. "_RankWatch",
 	RankWatchTracked = ADDON_NAME .. "_RankWatchTracked",
 	RankWatchIgnored = ADDON_NAME .. "_RankWatchIgnored",
+	AbilityAlerts = ADDON_NAME .. "_AbilityAlerts",
 	InventoryReport = ADDON_NAME .. "_InventoryReport",
 	ReadinessReport = ADDON_NAME .. "_ReadinessReport",
 

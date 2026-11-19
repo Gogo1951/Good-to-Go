@@ -1122,10 +1122,6 @@ L["RANK_WATCH_WHISPERER_NONE"] = "Ninguém: Sussurrar aos membros do grupo está
 
 -- Ability Alerts While Leveling: the Rank Watch panel's section for the level-up prints (LEVEL_UP_SPELLS and the rest)
 L["RANK_WATCH_LEVEL_UP_HEADER"] = "Alertas de habilidades ao subir de nível"
-L["RANK_WATCH_LEVEL_UP_DESCRIPTION"] =
-	"Quando você sobe de nível, o chat lista as habilidades que seu instrutor de classe tem para você, cada uma com seu ícone e um link para passar o mouse. Isso tem um interruptor próprio, esteja Vigia de graus ligado ou não."
-L["RANK_WATCH_LEVEL_UP"] = "Anunciar novas habilidades ao subir de nível"
-L["RANK_WATCH_LEVEL_UP_TOGGLE_DESCRIPTION"] = "Lista as habilidades liberadas no nível que você acabou de alcançar."
 L["RANK_WATCH_LEVEL_UP_PAST"] = "Incluir habilidades puladas"
 L["RANK_WATCH_LEVEL_UP_PAST_DESCRIPTION"] =
 	"Adiciona uma linha com as habilidades de níveis anteriores que você ainda não aprendeu."

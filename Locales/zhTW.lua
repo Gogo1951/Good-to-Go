@@ -1099,10 +1099,6 @@ L["RANK_WATCH_WHISPERER_NONE"] = "無人：密語隊伍成員已關閉。"
 
 -- Ability Alerts While Leveling: the Rank Watch panel's section for the level-up prints (LEVEL_UP_SPELLS and the rest)
 L["RANK_WATCH_LEVEL_UP_HEADER"] = "升級時的技能提醒"
-L["RANK_WATCH_LEVEL_UP_DESCRIPTION"] =
-	"升級時，聊天框會列出職業訓練師可以教你的技能，每個都附有圖示和可懸停查看的連結。它有自己的開關，無論等級守望是否開啟都會生效。"
-L["RANK_WATCH_LEVEL_UP"] = "升級時通告新技能"
-L["RANK_WATCH_LEVEL_UP_TOGGLE_DESCRIPTION"] = "列出剛達到的等級解鎖的技能。"
 L["RANK_WATCH_LEVEL_UP_PAST"] = "包含跳過的技能"
 L["RANK_WATCH_LEVEL_UP_PAST_DESCRIPTION"] = "新增一行，列出之前等級中你還沒有學習的技能。"
 L["RANK_WATCH_LEVEL_UP_PET"] = "包含寵物技能"

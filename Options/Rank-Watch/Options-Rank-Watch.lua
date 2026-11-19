@@ -14,7 +14,7 @@ local Spacer = Kit.Spacer
 
 --[[
     The switch and the two grace periods, how Rank Watch speaks up, how a player opts out, and who reports for
-    the group; then Ability Alerts While Leveling, which shares the panel but not the switch. Which ranks
+    the group. Ability Alerts While Leveling has its own panel and switch (Options-Ability-Alerts.lua). Which ranks
     it watches and the players it leaves alone are the Reported Ranks and Ignored Players panels under this
     one. Every setting is
     account-wide (ns.db.global.rankWatch; Data/Default-Settings.lua says why). The whispers are the player's to
@@ -167,10 +167,6 @@ local function PrintExample()
 	return ns.PrintedExampleLines(ns.BuildRankWatchOtherLine(name, castRow, betterRow))
 end
 
-local function LevelUpExample()
-	return ns.PrintedExampleLines(ns.LevelUpAlertExample())
-end
-
 -- An Example shows only while its message is on, so it never shows a message the player hasn't chosen.
 local function WhisperOff()
 	return not Settings().whisper
@@ -226,36 +222,6 @@ local function GraceRow(args, key, name, desc, order)
 	}
 end
 
---[[
-    Ability Alerts While Leveling: the switch, then its three sub-options on indented rows, each hidden while
-    what it hangs off is off. Skipped pet abilities hang off the pet abilities.
-]]
-local function LevelUpOff()
-	return not Settings().levelUpAlerts
-end
-
-local function LevelUpPetOff()
-	return LevelUpOff() or not Settings().levelUpAlertsPet
-end
-
-local function LevelUpSubRow(key, name, desc, order, hidden)
-	return Kit.SubRow(order, hidden, {
-		{
-			type = "toggle",
-			name = Kit.SubLabel(L[name]),
-			desc = L[desc],
-			width = 3,
-			get = function()
-				return Settings()[key]
-			end,
-			set = function(_, value)
-				Settings()[key] = value
-				ns.RefreshSettings()
-			end,
-		},
-	})
-end
-
 -- The standalone add-on's notice and the space above it, shown only while that add-on runs.
 local function StandaloneHidden()
 	return not ns.RankWatchStandaloneTitle()
@@ -307,35 +273,6 @@ function ns.BuildRankWatchOptions()
 			whispererDescription = Desc(L["RANK_WATCH_WHISPERER_DESCRIPTION"], 20.2),
 			whispererSpace2 = Spacer(20.3),
 			whisperer = Desc(WhispererText, 21),
-
-			levelUpSpace0 = Spacer(22),
-			levelUpHeader = Header(L["RANK_WATCH_LEVEL_UP_HEADER"], 23),
-			levelUpSpace1 = Spacer(23.1),
-			levelUpDescription = Desc(L["RANK_WATCH_LEVEL_UP_DESCRIPTION"], 23.2),
-			levelUpSpace2 = Spacer(23.3),
-			levelUp = Toggle("levelUpAlerts", "RANK_WATCH_LEVEL_UP", "RANK_WATCH_LEVEL_UP_TOGGLE_DESCRIPTION", 24),
-			levelUpPast = LevelUpSubRow(
-				"levelUpAlertsPast",
-				"RANK_WATCH_LEVEL_UP_PAST",
-				"RANK_WATCH_LEVEL_UP_PAST_DESCRIPTION",
-				25,
-				LevelUpOff
-			),
-			levelUpPet = LevelUpSubRow(
-				"levelUpAlertsPet",
-				"RANK_WATCH_LEVEL_UP_PET",
-				"RANK_WATCH_LEVEL_UP_PET_DESCRIPTION",
-				26,
-				LevelUpOff
-			),
-			levelUpPetPast = LevelUpSubRow(
-				"levelUpAlertsPetPast",
-				"RANK_WATCH_LEVEL_UP_PET_PAST",
-				"RANK_WATCH_LEVEL_UP_PET_PAST_DESCRIPTION",
-				27,
-				LevelUpPetOff
-			),
-			levelUpExample = Kit.Example(29, LevelUpOff, LevelUpExample),
 		},
 	}
 	ns.DefineWhisperComposer(options.args, {

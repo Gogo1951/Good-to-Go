@@ -1120,12 +1120,16 @@ L["RANK_WATCH_WHISPERER_SELF"] = "You do."
 L["RANK_WATCH_WHISPERER_OTHER"] = "%s does, so you only see the print."
 L["RANK_WATCH_WHISPERER_NONE"] = "Nobody: Whisper Group Members is off."
 
--- Ability Alerts While Leveling: the Rank Watch panel's section for the level-up prints (LEVEL_UP_SPELLS and the rest)
+--[[
+    Ability Alerts While Leveling: the panel for the level-up prints (LEVEL_UP_SPELLS and the rest), after
+    Rank Watch. RANK_WATCH_LEVEL_UP_HEADER is its name in the settings tree, the page title and the
+    mini-map menu; its switch is SWITCH_ABILITY_ALERTS, also in the root panel's Features section.
+]]
 L["RANK_WATCH_LEVEL_UP_HEADER"] = "Ability Alerts While Leveling"
-L["RANK_WATCH_LEVEL_UP_DESCRIPTION"] =
-	"When you level, chat lists the abilities your class trainer has for you, each with its icon and a link you can hover. This runs on its own switch, whether Rank Watch is on or not."
-L["RANK_WATCH_LEVEL_UP"] = "Announce New Abilities When You Level"
-L["RANK_WATCH_LEVEL_UP_TOGGLE_DESCRIPTION"] = "Lists the abilities that open at the level you just reached."
+L["ABILITY_ALERTS_DESCRIPTION"] =
+	"When you level, chat lists the abilities your class trainer has for you, each with its icon and a link you can hover."
+L["SWITCH_ABILITY_ALERTS"] = "Enable Ability Alerts While Leveling"
+L["SWITCH_ABILITY_ALERTS_DESCRIPTION"] = "When you level, lists in chat the abilities your class trainer has for you."
 L["RANK_WATCH_LEVEL_UP_PAST"] = "Include Abilities You Skipped"
 L["RANK_WATCH_LEVEL_UP_PAST_DESCRIPTION"] = "Adds a line for abilities from earlier levels you haven't learned yet."
 L["RANK_WATCH_LEVEL_UP_PET"] = "Include Pet Abilities"
