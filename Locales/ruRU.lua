@@ -1130,7 +1130,6 @@ L["RANK_WATCH_GRACE_LEVELING_DESCRIPTION"] =
 L["RANK_WATCH_GRACE_LEVEL"] = "1 уровень"
 L["RANK_WATCH_GRACE_LEVELS"] = "Уровней: %d"
 
-L["RANK_WATCH_OPT_OUT_HEADER"] = "Отказ от подсказок"
 --[[
     The opt-out whispers' composer, in the Opt Out section: the offer sent with a player's second tip in a
     session, and the reply to a group member who whispers "Opt Out" back.
@@ -1145,9 +1144,6 @@ L["RANK_WATCH_OPT_OUT_DONE_MESSAGE_DESCRIPTION"] =
 	'Задаёт, что Good to Go шепчет в ответ участнику группы, который шепнул "Opt Out". Оставьте пустым, чтобы не отправлять ответ.'
 L["RANK_WATCH_OPT_OUT_DESCRIPTION"] =
 	'Шепнув кому-то во второй раз за сеанс, дозор рангов следом объясняет, как отказаться от подсказок. Если игрок шепнёт вам "Opt Out", находясь в вашей группе, он попадёт в раздел "Игнорируемые игроки", вы ответите ему подтверждением, и он больше никогда не услышит от вас о рангах. Чтобы самому оставить кого-то в покое, возьмите его в цель и введите /gtg ignore.'
-L["RANK_WATCH_WHISPERER_HEADER"] = "Кто сообщает за группу"
-L["RANK_WATCH_WHISPERER_DESCRIPTION"] =
-	"Если дозор рангов или Rank Sentinel есть у нескольких игроков в группе, шепот отправляет только один из них, чтобы игрок, применивший низкий ранг, услышал об этом один раз, а не от всех. Остальные лишь выводят сообщение в свой чат. Здесь показано, кто отправляет шепот сейчас."
 L["RANK_WATCH_WHISPERER_SELF"] = "Вы."
 -- %s is the player whose Rank Watch or Rank Sentinel whispers for the group.
 L["RANK_WATCH_WHISPERER_OTHER"] = "%s, поэтому вы видите только сообщение в чате."

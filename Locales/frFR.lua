@@ -1100,7 +1100,6 @@ L["RANK_WATCH_GRACE_LEVELING_DESCRIPTION"] =
 L["RANK_WATCH_GRACE_LEVEL"] = "1 niveau"
 L["RANK_WATCH_GRACE_LEVELS"] = "%d niveaux"
 
-L["RANK_WATCH_OPT_OUT_HEADER"] = "Désinscription"
 --[[
     The opt-out whispers' composer, in the Opt Out section: the offer sent with a player's second tip in a
     session, and the reply to a group member who whispers "Opt Out" back.
@@ -1115,9 +1114,6 @@ L["RANK_WATCH_OPT_OUT_DONE_MESSAGE_DESCRIPTION"] =
 	'Définit ce que Good to Go répond en chuchotant au membre du groupe qui chuchote "Opt Out". Laissez vide pour n\'envoyer aucune réponse.'
 L["RANK_WATCH_OPT_OUT_DESCRIPTION"] =
 	"La deuxième fois que la Veille des rangs chuchote à quelqu'un au cours d'une session, elle lui explique ensuite comment se désinscrire. S'il vous chuchote \"Opt Out\" pendant qu'il est dans votre groupe, il rejoint les Joueurs ignorés, vous lui répondez pour confirmer et il n'entend plus jamais parler de rangs de votre part. Pour laisser vous-même quelqu'un tranquille, ciblez-le et tapez /gtg ignore."
-L["RANK_WATCH_WHISPERER_HEADER"] = "Qui prévient pour votre groupe"
-L["RANK_WATCH_WHISPERER_DESCRIPTION"] =
-	"Quand plusieurs joueurs de votre groupe utilisent la Veille des rangs ou Rank Sentinel, un seul d'entre eux envoie les chuchotements, pour qu'un joueur qui lance un rang inférieur n'en entende parler qu'une fois au lieu de l'entendre de tout le monde. Les autres l'affichent seulement dans leur propre chat. Voici qui les envoie en ce moment."
 L["RANK_WATCH_WHISPERER_SELF"] = "Vous."
 -- %s is the player whose Rank Watch or Rank Sentinel whispers for the group.
 L["RANK_WATCH_WHISPERER_OTHER"] = "%s, vous ne voyez donc que le message dans le chat."

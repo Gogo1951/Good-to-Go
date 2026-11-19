@@ -1102,7 +1102,6 @@ L["RANK_WATCH_GRACE_LEVELING_DESCRIPTION"] =
 L["RANK_WATCH_GRACE_LEVEL"] = "1 Stufe"
 L["RANK_WATCH_GRACE_LEVELS"] = "%d Stufen"
 
-L["RANK_WATCH_OPT_OUT_HEADER"] = "Abmeldung"
 --[[
     The opt-out whispers' composer, in the Opt Out section: the offer sent with a player's second tip in a
     session, and the reply to a group member who whispers "Opt Out" back.
@@ -1117,9 +1116,6 @@ L["RANK_WATCH_OPT_OUT_DONE_MESSAGE_DESCRIPTION"] =
 	'Legt fest, was Good to Go einem Gruppenmitglied zurückflüstert, das "Opt Out" flüstert. Leer lassen, um keine Antwort zu senden.'
 L["RANK_WATCH_OPT_OUT_DESCRIPTION"] =
 	'Wenn Rangwache jemanden in einer Sitzung zum zweiten Mal anflüstert, erklärt sie danach, wie man sich abmeldet. Flüstert er dir "Opt Out", während er in deiner Gruppe ist, landet er unter Ignorierte Spieler, du antwortest mit einer Bestätigung, und er hört von dir nie wieder etwas über Ränge. Um selbst jemanden in Ruhe zu lassen, nimm ihn ins Ziel und gib /gtg ignore ein.'
-L["RANK_WATCH_WHISPERER_HEADER"] = "Wer für deine Gruppe meldet"
-L["RANK_WATCH_WHISPERER_DESCRIPTION"] =
-	"Nutzen mehrere Leute in deiner Gruppe Rangwache oder Rank Sentinel, schickt nur einer von ihnen die Flüsternachrichten, sodass ein Spieler, der einen niedrigen Rang wirkt, nur einmal davon hört statt von allen. Die anderen geben es nur in ihrem eigenen Chat aus. Hier siehst du, wer sie gerade schickt."
 L["RANK_WATCH_WHISPERER_SELF"] = "Du selbst."
 -- %s is the player whose Rank Watch or Rank Sentinel whispers for the group.
 L["RANK_WATCH_WHISPERER_OTHER"] = "%s, daher siehst du nur die Chatmeldung."

@@ -13,14 +13,13 @@ local Spacer = Kit.Spacer
 --------------------------------------------------------------------------------
 
 --[[
-    The switch and the two grace periods, how Rank Watch speaks up, how a player opts out, and who reports for
-    the group. Ability Alerts While Leveling has its own panel and switch (Options-Ability-Alerts.lua). Which ranks
-    it watches and the players it leaves alone are the Reported Ranks and Ignored Players panels under this
-    one. Every setting is
-    account-wide (ns.db.global.rankWatch; Data/Default-Settings.lua says why). The whispers are the player's to
-    word: the tip, in its own form for a hunter's pet and a warlock's demon, under the whisper toggle, and the
-    opt-out offer and reply under Opt Out, each in a whisper composer (Options/Options-Message-Composer.lua)
-    that shows only while the whisper toggle is on. The print is fixed.
+    The switch, then, while Rank Watch is on, the two grace periods and how Rank Watch speaks up. Under the
+    whisper toggle, while it is on: who whispers for the group right now, the tip's composer, and how a player
+    opts out with the opt-out offer and reply's composer (Options/Options-Message-Composer.lua). The tip has its
+    own form for a hunter's pet and a warlock's demon; the print is fixed. Ability Alerts While Leveling has
+    its own panel and switch (Options-Ability-Alerts.lua). Which ranks it watches and the players it leaves
+    alone are the Reported Ranks and Ignored Players panels under this one. Every setting is account-wide
+    (ns.db.global.rankWatch; Data/Default-Settings.lua says why).
 ]]
 
 local function Settings()
@@ -187,6 +186,19 @@ local function WhispererText()
 end
 
 --[[
+    Who whispers for the group: a silver line under the whisper toggle, in the control column like Kit.Helper's,
+    read each time the panel draws. Only one Rank Watch or Rank Sentinel in a group whispers.
+]]
+local function WhispererHelper(order, hidden)
+	return Kit.Row(order, hidden, {
+		Kit.Label(" ", nil, Kit.LABEL_WIDTH),
+		Kit.Label(function()
+			return Kit.Color("HELP", L["RANK_WATCH_WHO_WHISPERS_FORMAT"]:format(WhispererText()))
+		end, nil, Kit.CONTROL_WIDTH),
+	})
+end
+
+--[[
     A grace period: a label, then a dropdown of 0 to 5 levels beside it. The check takes this many levels off the
     caster's level before asking which rank they could have, so a rank only just reached isn't reported.
 ]]
@@ -227,6 +239,10 @@ local function StandaloneHidden()
 	return not ns.RankWatchStandaloneTitle()
 end
 
+local function RankWatchOff()
+	return not Settings().enabled
+end
+
 function ns.BuildRankWatchOptions()
 	local options = {
 		name = L["TAB_RANK_WATCH"],
@@ -254,25 +270,16 @@ function ns.BuildRankWatchOptions()
 			messagesDescription = Desc(L["RANK_WATCH_MESSAGES_DESCRIPTION"], 10.2),
 			messagesSpace2 = Spacer(10.3),
 			whisper = Toggle("whisper", "RANK_WATCH_WHISPER", "RANK_WATCH_WHISPER_DESCRIPTION", 11),
+			whisperer = WhispererHelper(11.02, WhisperOff),
 			-- 11.1 through 11.49 belong to the tip's whisper composer, added below.
 			tipComposerSpace = Spacer(11.05, WhisperOff),
+			optOutSpace0 = Spacer(11.6, WhisperOff),
+			optOutDescription = Desc(Kit.Color("HELP", L["RANK_WATCH_OPT_OUT_DESCRIPTION"]), 11.7, WhisperOff),
+			optOutSpace1 = Spacer(11.8, WhisperOff),
+			-- 12 through 12.29 belong to the opt-out whispers' composer, added below.
 			whisperSpace = Spacer(13, WhisperOff),
 			print = Toggle("print", "RANK_WATCH_PRINT", "RANK_WATCH_PRINT_DESCRIPTION", 14),
 			printExample = Kit.Example(15, PrintOff, PrintExample),
-
-			optOutSpace0 = Spacer(16),
-			optOutHeader = Header(L["RANK_WATCH_OPT_OUT_HEADER"], 17),
-			optOutSpace1 = Spacer(17.1),
-			optOutDescription = Desc(L["RANK_WATCH_OPT_OUT_DESCRIPTION"], 17.2),
-			optOutSpace2 = Spacer(17.3, WhisperOff),
-			-- 17.4 through 17.69 belong to the opt-out whispers' composer, added below.
-
-			whispererSpace0 = Spacer(19),
-			whispererHeader = Header(L["RANK_WATCH_WHISPERER_HEADER"], 20),
-			whispererSpace1 = Spacer(20.1),
-			whispererDescription = Desc(L["RANK_WATCH_WHISPERER_DESCRIPTION"], 20.2),
-			whispererSpace2 = Spacer(20.3),
-			whisperer = Desc(WhispererText, 21),
 		},
 	}
 	ns.DefineWhisperComposer(options.args, {
@@ -330,8 +337,14 @@ function ns.BuildRankWatchOptions()
 				end,
 			},
 		},
-	}, 17.4)
+	}, 12)
 	GraceRow(options.args, "graceMaxLevel", "RANK_WATCH_GRACE_MAX_LEVEL", "RANK_WATCH_GRACE_MAX_LEVEL_DESCRIPTION", 6)
 	GraceRow(options.args, "graceLeveling", "RANK_WATCH_GRACE_LEVELING", "RANK_WATCH_GRACE_LEVELING_DESCRIPTION", 7)
+	-- While Rank Watch is off, only its description, its switch and the standalone add-on's notice show.
+	Kit.HideAllExcept(
+		options.args,
+		RankWatchOff,
+		{ "description", "space0", "switch", "standaloneSpace", "standalone" }
+	)
 	return options
 end

@@ -1097,10 +1097,9 @@ L["RANK_WATCH_GRACE_LEVELING_DESCRIPTION"] =
 L["RANK_WATCH_GRACE_LEVEL"] = "1 Level"
 L["RANK_WATCH_GRACE_LEVELS"] = "%d Levels"
 
-L["RANK_WATCH_OPT_OUT_HEADER"] = "Opt-Out"
 --[[
-    The opt-out whispers' composer, in the Opt Out section: the offer sent with a player's second tip in a
-    session, and the reply to a group member who whispers "Opt Out" back.
+    The opt-out whispers' composer, under the tip's while Whisper Group Members is on: the offer sent with a
+    player's second tip in a session, and the reply to a group member who whispers "Opt Out" back.
     TRANSLATORS: keep "Opt Out" in English; it is the words a player whispers back, and Good to Go listens for
     exactly those.
 ]]
@@ -1112,9 +1111,11 @@ L["RANK_WATCH_OPT_OUT_DONE_MESSAGE_DESCRIPTION"] =
 	'Sets what Good to Go whispers back to a group member who whispers "Opt Out". Leave it empty to send no reply.'
 L["RANK_WATCH_OPT_OUT_DESCRIPTION"] =
 	'The second time Rank Watch whispers someone in a session, it follows up with how to opt out. If they whisper you "Opt Out" while in your group, they go on Ignored Players, you reply to confirm, and they never hear from you about ranks again. To leave someone alone yourself, target them and type /gtg ignore.'
-L["RANK_WATCH_WHISPERER_HEADER"] = "Who Reports for Your Group"
-L["RANK_WATCH_WHISPERER_DESCRIPTION"] =
-	"When several people in your group run Rank Watch or Rank Sentinel, only one of them sends the whispers, so a player who casts a low rank hears about it once instead of from everyone. The others only print it in their own chat. This is who sends them right now."
+--[[
+    Who whispers for your group: a silver line under Whisper Group Members. %s is one of the three answers
+    below, RANK_WATCH_WHISPERER_SELF, _OTHER or _NONE.
+]]
+L["RANK_WATCH_WHO_WHISPERS_FORMAT"] = "Who whispers for your group right now: %s"
 L["RANK_WATCH_WHISPERER_SELF"] = "You do."
 -- %s is the player whose Rank Watch or Rank Sentinel whispers for the group.
 L["RANK_WATCH_WHISPERER_OTHER"] = "%s does, so you only see the print."

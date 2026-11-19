@@ -1104,7 +1104,6 @@ L["RANK_WATCH_GRACE_LEVELING_DESCRIPTION"] =
 L["RANK_WATCH_GRACE_LEVEL"] = "1레벨"
 L["RANK_WATCH_GRACE_LEVELS"] = "%d레벨"
 
-L["RANK_WATCH_OPT_OUT_HEADER"] = "수신 거부"
 --[[
     The opt-out whispers' composer, in the Opt Out section: the offer sent with a player's second tip in a
     session, and the reply to a group member who whispers "Opt Out" back.
@@ -1119,9 +1118,6 @@ L["RANK_WATCH_OPT_OUT_DONE_MESSAGE_DESCRIPTION"] =
 	'"Opt Out"이라고 귓속말한 그룹원에게 Good to Go가 보낼 답장을 정합니다. 비워 두면 답장을 보내지 않습니다.'
 L["RANK_WATCH_OPT_OUT_DESCRIPTION"] =
 	'주문 레벨 감시가 한 세션에서 같은 사람에게 두 번째로 귓속말을 보내면, 이어서 수신 거부 방법을 알려 줍니다. 그 사람이 내 그룹에 있는 동안 "Opt Out"이라고 귓속말하면 제외한 플레이어에 추가되고, 확인 답장이 나가며, 다시는 나에게서 주문 레벨 알림을 받지 않습니다. 직접 누군가를 제외하려면 대상으로 지정하고 /gtg ignore를 입력하세요.'
-L["RANK_WATCH_WHISPERER_HEADER"] = "그룹 알림 담당자"
-L["RANK_WATCH_WHISPERER_DESCRIPTION"] =
-	"그룹에서 여러 명이 주문 레벨 감시나 Rank Sentinel을 사용하면 그중 한 명만 귓속말을 보내므로, 낮은 레벨을 시전한 플레이어는 모두에게서가 아니라 한 번만 알림을 받습니다. 나머지는 자기 대화창에만 출력합니다. 지금 귓속말을 보내는 사람은 다음과 같습니다."
 L["RANK_WATCH_WHISPERER_SELF"] = "나입니다."
 -- %s is the player whose Rank Watch or Rank Sentinel whispers for the group.
 L["RANK_WATCH_WHISPERER_OTHER"] = "%s 님이 보내므로, 나는 출력만 봅니다."

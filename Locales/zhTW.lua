@@ -1074,7 +1074,6 @@ L["RANK_WATCH_GRACE_LEVELING_DESCRIPTION"] =
 L["RANK_WATCH_GRACE_LEVEL"] = "1 級"
 L["RANK_WATCH_GRACE_LEVELS"] = "%d 級"
 
-L["RANK_WATCH_OPT_OUT_HEADER"] = "免打擾"
 --[[
     The opt-out whispers' composer, in the Opt Out section: the offer sent with a player's second tip in a
     session, and the reply to a group member who whispers "Opt Out" back.
@@ -1089,9 +1088,6 @@ L["RANK_WATCH_OPT_OUT_DONE_MESSAGE_DESCRIPTION"] =
 	'設定 Good to Go 回覆密語"Opt Out"的隊伍成員的內容。留空則不傳送回覆。'
 L["RANK_WATCH_OPT_OUT_DESCRIPTION"] =
 	'等級守望在一次登入期間第二次密語某人時，會接著告訴對方如何退訂。如果對方在你的隊伍中時向你密語"Opt Out"，就會被加入"已忽略的玩家"，你會回覆確認，之後對方再也不會收到你發出的等級提醒。若要自行忽略某人，請選取對方並輸入 /gtg ignore。'
-L["RANK_WATCH_WHISPERER_HEADER"] = "由誰為隊伍回報"
-L["RANK_WATCH_WHISPERER_DESCRIPTION"] =
-	"當你的隊伍中有多人使用等級守望或 Rank Sentinel 時，只有其中一人會傳送密語，這樣施放了低等級法術的玩家只會收到一次提醒，而不是每個人都提醒一遍。其他人只會在自己的聊天視窗中輸出。以下是目前負責傳送密語的人。"
 L["RANK_WATCH_WHISPERER_SELF"] = "由你傳送。"
 -- %s is the player whose Rank Watch or Rank Sentinel whispers for the group.
 L["RANK_WATCH_WHISPERER_OTHER"] = "由 %s 傳送，所以你只會看到聊天輸出。"
