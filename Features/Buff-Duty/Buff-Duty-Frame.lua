@@ -91,6 +91,8 @@ local FOOTER_HEIGHT = ICON_SIZE
 local FOOTER_GAP = 16
 local FOOTER_DIVIDER_ALPHA = 0.35
 local FOOTER_HIGHLIGHT_ALPHA = 0.16
+-- From the window's edge to the Options flyout beside it.
+local FOOTER_FLYOUT_GAP = 8
 
 local BACKDROP = Data.BUFF_DUTY_BACKDROP
 
@@ -499,11 +501,12 @@ function ns.CreateBuffDutyFrame()
 	keyHint:Hide()
 
 	--[[
-	    The Options line, placed by RenderBuffDuty: blue like a menu's click
-	    hint, the menu kit's submenu arrow at its right, and a click opens the
-	    window's switches (Buff-Duty-Options-Menu.lua). A plain button, not a
-	    secure one, so it works in combat too, where the menu's changes wait
-	    for the redraw combat holds back.
+	    The Options line, placed by RenderBuffDuty: gold with the menu kit's
+	    submenu arrow, as a mini-map menu title that opens a flyout is, and
+	    hovering it opens the window's switches beside it
+	    (Buff-Duty-Options-Menu.lua); a click does too. A plain button, not a
+	    secure one, so it works in combat too, where a change waits for the
+	    redraw combat holds back.
 	]]
 	footerDivider = content:CreateTexture(nil, "ARTWORK")
 	local separator = ns.COLORS_RGB.SEPARATOR
@@ -513,7 +516,7 @@ function ns.CreateBuffDutyFrame()
 	footer:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 	local footerText = footer:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	footerText:SetPoint("LEFT")
-	footerText:SetText(GetColor("INFO") .. L["BUFF_DUTY_MENU_OPTIONS"] .. "|r")
+	footerText:SetText(GetColor("TITLE") .. L["BUFF_DUTY_MENU_OPTIONS"] .. "|r")
 	local footerArrow = footer:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	footerArrow:SetPoint("RIGHT")
 	footerArrow:SetText(ns.MenuKit.SUBMENU_ARROW)
@@ -522,9 +525,12 @@ function ns.CreateBuffDutyFrame()
 	highlight:SetColorTexture(gold.r, gold.g, gold.b, FOOTER_HIGHLIGHT_ALPHA)
 	highlight:SetPoint("TOPLEFT", -ICON_GAP, 0)
 	highlight:SetPoint("BOTTOMRIGHT", ICON_GAP, 0)
-	footer:SetScript("OnClick", function(self)
-		ns.OpenBuffDutyOptionsMenu(self)
-	end)
+	-- Past the window's padding, so the flyout clears the plate as a mini-map flyout clears its menu.
+	local function OpenOptions(self)
+		ns.ShowBuffDutyOptions(self, PADDING + FOOTER_FLYOUT_GAP)
+	end
+	footer:SetScript("OnEnter", OpenOptions)
+	footer:SetScript("OnClick", OpenOptions)
 
 	content:Hide()
 end
