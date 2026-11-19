@@ -83,6 +83,14 @@ local TITLE_GAP = 32
 local CLOSE_SIZE = 22
 -- Room between the end of the title and the close button.
 local TITLE_CLOSE_GAP = 8
+--[[
+    The Options line at the foot of the window: one icon-high row, FOOTER_GAP
+    under everything else with a faint divider across the middle of the gap.
+]]
+local FOOTER_HEIGHT = ICON_SIZE
+local FOOTER_GAP = 16
+local FOOTER_DIVIDER_ALPHA = 0.35
+local FOOTER_HIGHLIGHT_ALPHA = 0.16
 
 local BACKDROP = Data.BUFF_DUTY_BACKDROP
 
@@ -90,7 +98,7 @@ local BACKDROP = Data.BUFF_DUTY_BACKDROP
 -- State
 --------------------------------------------------------------------------------
 
-local anchor, content, title, keyHint
+local anchor, content, title, keyHint, footer, footerDivider
 local labels, usedLabels = {}, 0
 -- The list's icons, shared with the cooldown and range passes (Buff-Duty-Icon-State.lua).
 local pool = ns.buffDutyIconPool
@@ -327,6 +335,16 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 			keyHint:Hide()
 		end
 
+		-- The gap with the divider across its middle, then the Options line.
+		local footerTop = bottom - FOOTER_GAP
+		footerDivider:ClearAllPoints()
+		footerDivider:SetPoint("TOPLEFT", content, "TOPLEFT", PADDING, footerTop + FOOTER_GAP / 2)
+		footerDivider:SetWidth(width)
+		footer:ClearAllPoints()
+		footer:SetPoint("TOPLEFT", content, "TOPLEFT", PADDING, footerTop)
+		footer:SetSize(width, FOOTER_HEIGHT)
+		bottom = footerTop - FOOTER_HEIGHT
+
 		anchor:SetSize(PADDING * 2 + width, -bottom + PADDING)
 		-- MIGRATION (remove after 2026-11-29)
 		ns.MigrateBuffDutyPosition(anchor)
@@ -479,6 +497,34 @@ function ns.CreateBuffDutyFrame()
 	keyHint:SetJustifyV("TOP")
 	keyHint:SetWordWrap(true)
 	keyHint:Hide()
+
+	--[[
+	    The Options line, placed by RenderBuffDuty: blue like a menu's click
+	    hint, the menu kit's submenu arrow at its right, and a click opens the
+	    window's switches (Buff-Duty-Options-Menu.lua). A plain button, not a
+	    secure one, so it works in combat too, where the menu's changes wait
+	    for the redraw combat holds back.
+	]]
+	footerDivider = content:CreateTexture(nil, "ARTWORK")
+	local separator = ns.COLORS_RGB.SEPARATOR
+	footerDivider:SetColorTexture(separator.r, separator.g, separator.b, FOOTER_DIVIDER_ALPHA)
+	footerDivider:SetHeight(1)
+	footer = CreateFrame("Button", nil, content)
+	footer:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+	local footerText = footer:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	footerText:SetPoint("LEFT")
+	footerText:SetText(GetColor("INFO") .. L["BUFF_DUTY_MENU_OPTIONS"] .. "|r")
+	local footerArrow = footer:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	footerArrow:SetPoint("RIGHT")
+	footerArrow:SetText(ns.MenuKit.SUBMENU_ARROW)
+	local highlight = footer:CreateTexture(nil, "HIGHLIGHT")
+	local gold = ns.COLORS_RGB.TITLE
+	highlight:SetColorTexture(gold.r, gold.g, gold.b, FOOTER_HIGHLIGHT_ALPHA)
+	highlight:SetPoint("TOPLEFT", -ICON_GAP, 0)
+	highlight:SetPoint("BOTTOMRIGHT", ICON_GAP, 0)
+	footer:SetScript("OnClick", function(self)
+		ns.OpenBuffDutyOptionsMenu(self)
+	end)
 
 	content:Hide()
 end

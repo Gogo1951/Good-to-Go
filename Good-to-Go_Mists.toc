@@ -225,6 +225,7 @@ Features/Buff-Duty/Buff-Duty-Switches.lua
 Features/Buff-Duty/Buff-Duty-Cast-Results.lua
 Features/Buff-Duty/Buff-Duty-Key-Picker.lua
 Features/Buff-Duty/Buff-Duty-Keys.lua
+Features/Buff-Duty/Buff-Duty-Options-Menu.lua
 
 # Enhanced Spellbook
 Features/Enhanced-Spellbook/Spellbook-Core.lua

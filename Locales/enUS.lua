@@ -1863,6 +1863,15 @@ L["BUFF_DUTY_TOOLTIP_CREATE_WEAPON"] = "None in your bags. Creates one."
 -- A Self-Buffs consumable's icon (Winterfall Firewater).
 L["BUFF_DUTY_TOOLTIP_USE_ITEM"] = "Uses one from your bags."
 L["BUFF_DUTY_TOOLTIP_READ"] = "Reads one from your bags."
+--[[
+    The Options line at the foot of the Buff Duty window, and the menu it opens: the window's switches, its
+    consumables and weapon buffs. %s in the weapon row's hover is the poison, imbue, oil, stone or lure.
+]]
+L["BUFF_DUTY_MENU_OPTIONS"] = "Options"
+L["BUFF_DUTY_MENU_WEAPON_DESCRIPTION_FORMAT"] = "Offers %s in the window when a weapon is missing its buff."
+L["BUFF_DUTY_MENU_ALL_SETTINGS"] = "All Buff Duty Settings"
+L["BUFF_DUTY_MENU_ALL_SETTINGS_DESCRIPTION"] =
+	"Opens the Buff Duty settings, with every timing, class, and buff the window can show."
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "Casts on %s and their party."
 L["BUFF_DUTY_TOOLTIP_FAVOR"] = "Targets %s and casts."
 -- A Party Buffs icon's menu, its ask rows: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it: %s is one or two names (LIST_PAIR_FORMAT), or BUFF_DUTY_OTHERS_ASK_PEOPLE past two.
