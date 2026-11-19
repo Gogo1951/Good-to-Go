@@ -291,6 +291,7 @@ function BuffDuty.BuildBuffs()
 				column = #selfBuffs + 2 + #selfItemBuffs,
 				key = entry.key,
 				itemId = entry.itemId,
+				wellFed = entry.wellFed,
 				auraIds = entry.auraIds,
 				rankLevels = {},
 				ranks = {},

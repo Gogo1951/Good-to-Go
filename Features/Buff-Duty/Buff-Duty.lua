@@ -400,7 +400,8 @@ function ns.SetupBuffDuty()
 	local items = {}
 	for _, entry in ipairs(BuffDuty.selfItemEntries) do
 		local spellName = C_Spell.GetSpellName(entry.ids[1])
-		items[#items + 1] = { key = entry.key, ids = entry.ids, spellName = spellName or tostring(entry.itemId) }
+		items[#items + 1] =
+			{ key = entry.key, ids = entry.ids, spellName = spellName or tostring(entry.itemId), desc = entry.desc }
 	end
 	if items[1] then
 		ns.buffDutySelfCategories[#ns.buffDutySelfCategories + 1] =

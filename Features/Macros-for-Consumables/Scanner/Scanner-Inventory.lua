@@ -25,6 +25,14 @@ local CaptureDiagnosticCandidates = Ranking.CaptureDiagnosticCandidates
 
 ns.bestFoodID = nil
 ns.bestFoodLink = nil
+--[[
+    The buff food the Food macro would eat while it puts buff food first: the
+    best one in the bags by the same ladder, ignored items aside. Buff Duty's
+    Well Fed icon uses it (Features/Buff-Duty/Buff-Duty-Self.lua). nil when
+    the bags hold none, including in an arena, where none can be eaten.
+]]
+ns.bestBuffFoodID = nil
+local bestBuffFood = {}
 
 --------------------------------------------------------------------------------
 -- Bag Scanning
@@ -167,6 +175,7 @@ function ns.ScanBags()
 	for _, entry in pairs(best) do
 		ResetBest(entry)
 	end
+	ResetBest(bestBuffFood)
 
 	for _, list in pairs(rankedCandidates) do
 		wipe(list)
@@ -301,6 +310,26 @@ function ns.ScanBags()
 				if usable then
 					local totalCount = itemCounts[id]
 
+					-- The best buff food for Buff Duty, ranked as the Food macro ranks it while putting buff food first.
+					if
+						data.isBuffFood
+						and not ignored
+						and (data.itemType == "food" or data.itemType == "foodwater")
+						and IsBetter(
+							data,
+							totalCount,
+							data.price,
+							bestBuffFood,
+							data.healthValue,
+							"first",
+							true,
+							ns.allowConjuredFirst,
+							ns.allowRestockLast
+						)
+					then
+						FillRecord(bestBuffFood, data, totalCount, data.price, data.healthValue)
+					end
+
 					--[[
 					    Dispatch the item to every registered definition
 					    whose itemTypes set claims its cached itemType.
@@ -375,6 +404,10 @@ function ns.ScanBags()
 
 	ns.bestFoodID = best["Food"].id
 	ns.bestFoodLink = best["Food"].link
+	if bestBuffFood.id ~= ns.bestBuffFoodID then
+		ns.bestBuffFoodID = bestBuffFood.id
+		ns.RequestBuffDutyRefresh()
+	end
 
 	return best, dataRetry
 end

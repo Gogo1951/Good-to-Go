@@ -109,7 +109,7 @@ function ns.BuildBuffDutySelfBuffsOptions()
 				page.args,
 				entry,
 				entryOrder,
-				L["BUFF_DUTY_SELF_REFRESH_DESCRIPTION"]:format(entry.spellName),
+				entry.desc or L["BUFF_DUTY_SELF_REFRESH_DESCRIPTION"]:format(entry.spellName),
 				{
 					values = refreshValues,
 					sorting = Data.SELF_REFRESH_CHOICES,

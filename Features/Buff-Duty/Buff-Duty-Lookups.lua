@@ -246,6 +246,26 @@ function BuffDuty.BuildLookup()
 	end
 
 	--[[
+	    Well Fed, for any class, wherever the flavor knows the buff: offered
+	    with whatever buff food the Food macro would eat (ns.bestBuffFoodID),
+	    so it has no item of its own, and counted by every Well Fed aura, which
+	    the window reads itself (Buff-Duty-Self.lua). Named on the panel by
+	    the Well Fed spell. Shows When Missing by default on WoW Forever, where
+	    buff food is nearly all anyone carries, and is off elsewhere.
+	]]
+	if ns.WELL_FED_SPELL_ID and (next(ns.WELL_FED_BUFF_IDS or {}) or next(ns.WELL_FED_ICON_IDS or {})) then
+		local default = ns.FLAVOR == "Camelot" and Data.SELF_REFRESH_MISSING or Data.SELF_REFRESH_OFF
+		selfItemEntries[#selfItemEntries + 1] = {
+			key = "wellFed",
+			row = { default = default },
+			wellFed = true,
+			ids = { ns.WELL_FED_SPELL_ID },
+			auraIds = {},
+			desc = L["BUFF_DUTY_WELL_FED_DESCRIPTION_FORMAT"]:format(ns.GetWellFedName()),
+		}
+	end
+
+	--[[
 	    The Soulstone is offered by its Create Soulstone ranks, counted by its
 	    Soulstone Resurrection auras, and named on the panel by the aura.
 	]]

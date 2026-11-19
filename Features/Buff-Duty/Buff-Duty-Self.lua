@@ -147,6 +147,69 @@ local function SelfItemIcon(buff)
 	}, expires, duration)
 end
 
+--[[
+    Well Fed's time left on you: the longest Well Fed aura, matched by spell
+    id or, for a food the tables don't list, by its icon, as the Food macro
+    matches it (Scanner-Auras.lua). Returns had, expires, duration; had is nil
+    when an aura can't be read (secret on WoW Forever), so the window doesn't
+    nag about a buff that may be there.
+]]
+local function WellFedAura()
+	local had, expires, duration = false, nil, nil
+	for i = 1, 40 do
+		local aura = C_UnitAuras.GetBuffDataByIndex("player", i, "HELPFUL")
+		if not aura then
+			break
+		end
+		local spellId, icon = aura.spellId, aura.icon
+		if not (ns.IsPlain(spellId) and ns.IsPlain(icon)) then
+			return nil
+		end
+		if ns.WELL_FED_BUFF_IDS[spellId] or ns.WELL_FED_ICON_IDS[icon] then
+			local auraExpires = ns.IsPlain(aura.expirationTime) and aura.expirationTime or 0
+			if not had or auraExpires == 0 or (expires ~= 0 and auraExpires > expires) then
+				expires = auraExpires
+				duration = ns.IsPlain(aura.duration) and aura.duration or 0
+			end
+			had = true
+		end
+	end
+	return had, expires, duration
+end
+
+--[[
+    Well Fed: offered while it's missing or running low, by your own time for
+    it, with the buff food the Food macro would eat. It uses that item, so
+    the Ignore List and the arena already keep it out (ns.bestBuffFoodID).
+]]
+local function WellFedIcon(buff)
+	local itemId = ns.bestBuffFoodID
+	if not itemId or GetItemCount(itemId) == 0 then
+		return nil
+	end
+	local had, expires, duration = WellFedAura()
+	if had == nil then
+		return nil
+	end
+	if had then
+		local threshold = buff.refreshSeconds
+		if expires == 0 or duration <= threshold or expires - GetTime() >= threshold then
+			return nil
+		end
+	else
+		expires, duration = nil, nil
+	end
+	return BuffDuty.WithTimeLeft({
+		itemId = itemId,
+		item = "item:" .. itemId,
+		selfItem = true,
+		column = buff.column,
+		unit = "player",
+		targetName = GetUnitName("player", false) or "",
+		hint = L["BUFF_DUTY_TOOLTIP_USE_ITEM"],
+	}, expires, duration)
+end
+
 --------------------------------------------------------------------------------
 -- Section
 --------------------------------------------------------------------------------
@@ -184,7 +247,11 @@ function BuffDuty.AddSelfSection(sections)
 		-- SoulstoneIcon reads the group's auras: read yours again.
 		ReadAuras("player")
 		for _, buff in ipairs(BuffDuty.selfItemBuffs) do
-			icons[#icons + 1] = SelfItemIcon(buff)
+			if buff.wellFed then
+				icons[#icons + 1] = WellFedIcon(buff)
+			else
+				icons[#icons + 1] = SelfItemIcon(buff)
+			end
 		end
 	end
 

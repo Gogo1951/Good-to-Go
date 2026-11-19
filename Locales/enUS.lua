@@ -1806,6 +1806,12 @@ L["BUFF_DUTY_SELF_REFRESH_DESCRIPTION"] =
 -- The Self-Buffs panel's last box: consumables any class keeps up on itself (Winterfall Firewater), with a muted note after its name.
 L["BUFF_DUTY_SELF_ITEMS_HEADER"] = "Consumables"
 L["BUFF_DUTY_SELF_ITEMS_NOTE"] = "when one is in your bags"
+--[[
+    Hover text on the Consumables box's Well Fed row, whose buff food is
+    whichever the Food macro would eat. %s is the client's name for Well Fed.
+]]
+L["BUFF_DUTY_WELL_FED_DESCRIPTION_FORMAT"] =
+	"Shows while you're missing %s and carry buff food. Click it in the window to eat your best one, the one your Food macro would pick."
 -- The Weapon Buffs panel, under Buff Duty after Self-Buffs.
 L["BUFF_DUTY_WEAPON_PANEL_HEADER"] = "Weapon Buffs"
 L["BUFF_DUTY_WEAPON_DESCRIPTION"] =
