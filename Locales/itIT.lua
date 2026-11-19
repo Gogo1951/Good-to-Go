@@ -625,8 +625,6 @@ L["OPTIONS_MACRO_TOGGLE_DESCRIPTION"] = "Crea e mantiene questa macro e la rimuo
     what it does.
 ]]
 L["OPTIONS_FOOD_WATER_HEADER"] = "Cibo e acqua"
-L["OPTIONS_FOOD_WATER_DESCRIPTION"] =
-	"Le tue macro Cibo e Acqua usano il miglior cibo e la miglior bevanda nelle tue borse. Queste opzioni possono mettere al primo posto il cibo potenziante, le pergamene o il cibo e l'acqua evocati, e all'ultimo posto il cibo e l'acqua della lista di rifornimento."
 
 --[[
     Buff Food, the first option under Food & Water. Its hover text carries the
@@ -680,9 +678,6 @@ L["OPTIONS_INCLUDE_MANA_RUNES_DESCRIPTION_FORMAT"] =
 	"Inserisce nella stessa classifica delle tue Gemme di Mana %s, %s e ogni altro oggetto per il mana che ne condivide il tempo di recupero, così la macro Gemma di Mana ne usa uno quando è la tua opzione migliore o quando hai finito le gemme."
 
 -- Buff Reapplication
-L["OPTIONS_REAPPLY_HEADER"] = "Rinnovo dei potenziamenti"
-L["OPTIONS_REAPPLY_SECTION_DESCRIPTION"] =
-	"Le macro non possono cambiare durante il combattimento, quindi un potenziamento che scade a metà scontro resta assente fino alla fine del combattimento."
 L["OPTIONS_REAPPLY"] = "Rinnova i potenziamenti in scadenza"
 L["OPTIONS_REAPPLY_DESCRIPTION"] =
 	"Considera scaduti Cibo potenziante, Potenziamenti delle pergamene e Potenziamenti del cibo per famigli quando resta meno tempo della tua soglia, così le tue macro te ne propongono uno nuovo prima dello scontro."
@@ -697,7 +692,6 @@ L["REAPPLY_THRESHOLD_MANY"] = "Quando rimangono < %d minuti"
 
 -- Pet Food Buffs
 L["OPTIONS_PET_HEADER"] = "Potenziamenti del cibo per famigli"
-L["OPTIONS_PET_SECTION_DESCRIPTION_FORMAT"] = 'Alcuni cibi danno al tuo famiglio un potenziamento "%s" tutto suo.'
 L["OPTIONS_USE_PET_BUFFS"] = "Usa i potenziamenti del cibo per famigli"
 L["OPTIONS_USE_PET_BUFFS_DESCRIPTION_FORMAT"] =
 	'Aggiunge il cibo per famigli alla tua macro Cibo quando al tuo famiglio manca "%s", tranne nelle arene.'

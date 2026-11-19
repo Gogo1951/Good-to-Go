@@ -619,8 +619,6 @@ L["OPTIONS_MACRO_TOGGLE_DESCRIPTION"] = "创建并维护此宏，取消勾选时
     what it does.
 ]]
 L["OPTIONS_FOOD_WATER_HEADER"] = "食物与水"
-L["OPTIONS_FOOD_WATER_DESCRIPTION"] =
-	"你的食物和水宏会使用背包中最好的食物和饮料。这些选项可以让增益食物、卷轴或魔法制造的食物和水优先，并让补货清单中的食物和水最后使用。"
 
 --[[
     Buff Food, the first option under Food & Water. Its hover text carries the
@@ -674,9 +672,6 @@ L["OPTIONS_INCLUDE_MANA_RUNES_DESCRIPTION_FORMAT"] =
 	"将你的%s、%s，以及任何其他与法力宝石共享冷却时间的法力物品，和你的法力宝石一同排序，这样当其中某件物品是你的最佳选择，或你的法力宝石用完时，法力宝石宏就会使用该物品。"
 
 -- Buff Reapplication
-L["OPTIONS_REAPPLY_HEADER"] = "增益补充"
-L["OPTIONS_REAPPLY_SECTION_DESCRIPTION"] =
-	"宏在战斗中无法更改，因此战斗中途到期的增益会一直缺失，直到战斗结束。"
 L["OPTIONS_REAPPLY"] = "补充即将到期的增益"
 L["OPTIONS_REAPPLY_DESCRIPTION"] =
 	"将剩余时间低于你所设阈值的增益食物、卷轴增益和宠物食物增益视为已到期，让你的宏在开怪前提供新的增益。"
@@ -691,7 +686,6 @@ L["REAPPLY_THRESHOLD_MANY"] = "当剩余不足 %d 分钟时"
 
 -- Pet Food Buffs
 L["OPTIONS_PET_HEADER"] = "宠物食物增益"
-L["OPTIONS_PET_SECTION_DESCRIPTION_FORMAT"] = '少数食物会为你的宠物提供专属的"%s"增益。'
 L["OPTIONS_USE_PET_BUFFS"] = "使用宠物食物增益"
 L["OPTIONS_USE_PET_BUFFS_DESCRIPTION_FORMAT"] =
 	'当你的宠物缺少"%s"增益时，将宠物食物加入你的食物宏，竞技场中除外。'

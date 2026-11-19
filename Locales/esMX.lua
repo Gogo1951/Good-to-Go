@@ -622,8 +622,6 @@ L["OPTIONS_MACRO_TOGGLE_DESCRIPTION"] = "Crea y mantiene esta macro, y la elimin
     what it does.
 ]]
 L["OPTIONS_FOOD_WATER_HEADER"] = "Comida y agua"
-L["OPTIONS_FOOD_WATER_DESCRIPTION"] =
-	"Tus macros de Comida y Agua usan la mejor comida y bebida de tus bolsas. Estas opciones pueden poner primero la comida con beneficio, los pergaminos o la comida y el agua mágicas, y al final la comida y el agua de la lista de reabastecimiento."
 
 --[[
     Buff Food, the first option under Food & Water. Its hover text carries the
@@ -677,9 +675,6 @@ L["OPTIONS_INCLUDE_MANA_RUNES_DESCRIPTION_FORMAT"] =
 	"Clasifica %s, %s y cualquier otro objeto de maná que comparta tiempo de reutilización con las Gemas de maná, junto a tus gemas, para que la macro de Gema de maná use uno de ellos cuando sea tu mejor opción o cuando te quedes sin gemas."
 
 -- Buff Reapplication
-L["OPTIONS_REAPPLY_HEADER"] = "Renovación de beneficios"
-L["OPTIONS_REAPPLY_SECTION_DESCRIPTION"] =
-	"Las macros no pueden cambiar durante el combate, así que si un beneficio expira en pleno combate, seguirás sin él hasta que el combate termine."
 L["OPTIONS_REAPPLY"] = "Renovar beneficios a punto de expirar"
 L["OPTIONS_REAPPLY_DESCRIPTION"] =
 	"Considera expirados Comida con beneficio, Beneficios de pergaminos y Beneficios de comida de mascota cuando les quede menos tiempo que tu umbral, para que tus macros ofrezcan uno nuevo antes del combate."
@@ -694,7 +689,6 @@ L["REAPPLY_THRESHOLD_MANY"] = "Cuando queden < %d minutos"
 
 -- Pet Food Buffs
 L["OPTIONS_PET_HEADER"] = "Beneficios de comida de mascota"
-L["OPTIONS_PET_SECTION_DESCRIPTION_FORMAT"] = 'Algunas comidas dan a tu mascota su propio beneficio "%s".'
 L["OPTIONS_USE_PET_BUFFS"] = "Usar beneficios de comida de mascota"
 L["OPTIONS_USE_PET_BUFFS_DESCRIPTION_FORMAT"] =
 	'Añade comida de mascota a tu macro de Comida cuando a tu mascota le falta el beneficio "%s", excepto en arenas.'

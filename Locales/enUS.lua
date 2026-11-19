@@ -613,17 +613,29 @@ L["OPTIONS_OPEN_MACRO_WINDOW_DESCRIPTION"] =
 L["OPTIONS_MACRO_TOGGLE_DESCRIPTION"] = "Creates and maintains this macro, and removes it when unchecked."
 
 --[[
-    Food & Water: Prioritize Buff Food, Enable Scroll Buffs, Use Conjured
-    Food & Water First, and Use Restock List Food & Water Last, in page
-    order. One description serves all four, so each option's hover text says
-    what it does.
+    Food & Water, the page under Consumable Macros (Options-Food-Water.lua).
+    OPTIONS_FOOD_WATER_HEADER is its label in the settings tree and the end of
+    its title; OPTIONS_FOOD_WATER_ELSEWHERE is the silver line closing the
+    Consumable Macros page that points to it. The page has two sections:
+    Buffs Before You Eat (Prioritize Buff Food, Enable Scroll Buffs, Use Pet
+    Food Buffs, Reapply Expiring Buffs) and Which Food Comes First (Use
+    Conjured Food & Water First, Use Restock List Food & Water Last). In
+    OPTIONS_FOOD_BUFFS_DESCRIPTION_FORMAT, %s is the client's name for the
+    Well Fed buff.
 ]]
 L["OPTIONS_FOOD_WATER_HEADER"] = "Food & Water"
-L["OPTIONS_FOOD_WATER_DESCRIPTION"] =
-	"Your Food and Water macros use the best food and drink in your bags. These options can put buff food, scrolls, or conjured food and water first, and Restock List food and water last."
+L["OPTIONS_FOOD_WATER_PANEL_DESCRIPTION"] =
+	"Your Food and Water macros eat and drink the best you're carrying. These options put buffs on you first, and change which food counts as best."
+L["OPTIONS_FOOD_WATER_ELSEWHERE"] = "Food and drink settings are on the Food & Water page under this one."
+L["OPTIONS_FOOD_BUFFS_HEADER"] = "Buffs Before You Eat"
+L["OPTIONS_FOOD_BUFFS_DESCRIPTION_FORMAT"] =
+	'Your Food macro can top up your buffs before you eat: buff food for "%s", then any missing scrolls and your pet\'s food. Macros can\'t change during combat, so a buff that runs out mid-fight stays gone until the fight ends.'
+L["OPTIONS_FOOD_ORDER_HEADER"] = "Which Food Comes First"
+L["OPTIONS_FOOD_ORDER_DESCRIPTION"] =
+	"Between two foods or drinks, your macros use the one that restores the most. These change that order."
 
 --[[
-    Buff Food, the first option under Food & Water. Its hover text carries the
+    Buff Food, the first option under Buffs Before You Eat. Its hover text carries the
     arena exception, which the mini-map menu's shared Buff Food & Scrolls
     line has no room for.
 ]]
@@ -631,7 +643,7 @@ L["OPTIONS_BUFF_FOOD"] = "Prioritize Buff Food"
 L["OPTIONS_BUFF_FOOD_DESCRIPTION_FORMAT"] =
 	'Prioritizes food that grants "%s" whenever the buff is missing, except in arenas.'
 
--- Scroll Buffs, the second option under Food & Water.
+-- Scroll Buffs, under Buffs Before You Eat.
 L["OPTIONS_USE_SCROLLS"] = "Enable Scroll Buffs"
 L["OPTIONS_USE_SCROLLS_DESCRIPTION"] =
 	"Your Food macro applies missing scrolls on the first press and eats on the next, skipping scrolls when you target a friendly player or are in an arena."
@@ -641,14 +653,14 @@ L["OPTIONS_SCROLL_PROTECTION"] = "Protection"
 -- Hover text on each scroll type and pet food type; %s is the scroll type's label or the pet food's item name.
 L["OPTIONS_BUFF_TYPE_DESCRIPTION"] = "Includes %s when checking for missing buffs."
 
--- Use Conjured Food & Water First, the third option under Food & Water.
+-- Use Conjured Food & Water First, the first option under Which Food Comes First.
 L["OPTIONS_CONJURED_FIRST"] = "Use Conjured Food & Water First"
 L["OPTIONS_CONJURED_FIRST_DESCRIPTION"] =
 	"Your Food and Water macros use conjured food and water before anything else, even when something in your bags restores more, since it costs nothing and vanishes soon after you log out. Buff food still comes first while Prioritize Buff Food is on."
 L["OPTIONS_CONJURED_FIRST_MODE_DESCRIPTION"] =
 	"Chooses the levels at which conjured food and water come first: any level, only while leveling, or only at max level. The checkboxes below choose which groups."
 
--- Use Restock List Food & Water Last, the fourth option under Food & Water.
+-- Use Restock List Food & Water Last, the second option under Which Food Comes First.
 L["OPTIONS_RESTOCK_LAST"] = "Use Restock List Food & Water Last"
 L["OPTIONS_RESTOCK_LAST_DESCRIPTION"] =
 	"Between two foods or drinks that restore the same amount, your Food and Water macros use the one that isn't on your Restock List, saving what the Restocker buys for later."
@@ -673,10 +685,7 @@ L["OPTIONS_INCLUDE_MANA_RUNES"] = "Add Runes & Other Mana Items to Mana Gem Macr
 L["OPTIONS_INCLUDE_MANA_RUNES_DESCRIPTION_FORMAT"] =
 	"Ranks your %s, your %s, and any other mana item that shares the Mana Gem cooldown, alongside your Mana Gems, so the Mana Gem macro uses one when it's your best option or when you're out of gems."
 
--- Buff Reapplication
-L["OPTIONS_REAPPLY_HEADER"] = "Buff Reapplication"
-L["OPTIONS_REAPPLY_SECTION_DESCRIPTION"] =
-	"Macros can't change during combat, so a buff that runs out mid-fight stays gone until the fight ends."
+-- Reapply Expiring Buffs, closing Buffs Before You Eat.
 L["OPTIONS_REAPPLY"] = "Reapply Expiring Buffs"
 L["OPTIONS_REAPPLY_DESCRIPTION"] =
 	"Treats Buff Food, Scroll Buffs, and Pet Food Buffs with less time left than your threshold as expired, so your macros offer a fresh one before the pull."
@@ -689,9 +698,8 @@ L["OPTIONS_REAPPLY_THRESHOLD_DESCRIPTION"] =
 L["REAPPLY_THRESHOLD_ONE"] = "When < 1 Minute Left"
 L["REAPPLY_THRESHOLD_MANY"] = "When < %d Minutes Left"
 
--- Pet Food Buffs
+-- Pet Food Buffs, under Buffs Before You Eat. OPTIONS_PET_HEADER names the feature in its When to Use hover text.
 L["OPTIONS_PET_HEADER"] = "Pet Food Buffs"
-L["OPTIONS_PET_SECTION_DESCRIPTION_FORMAT"] = 'A few foods give your pet a "%s" buff of its own.'
 L["OPTIONS_USE_PET_BUFFS"] = "Use Pet Food Buffs"
 L["OPTIONS_USE_PET_BUFFS_DESCRIPTION_FORMAT"] =
 	'Adds pet food to your Food macro when your pet is missing "%s", except in arenas.'

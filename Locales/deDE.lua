@@ -627,8 +627,6 @@ L["OPTIONS_MACRO_TOGGLE_DESCRIPTION"] =
     what it does.
 ]]
 L["OPTIONS_FOOD_WATER_HEADER"] = "Essen und Wasser"
-L["OPTIONS_FOOD_WATER_DESCRIPTION"] =
-	"Deine Essen- und Wasser-Makros verwenden das beste Essen und die besten Getränke in deinen Taschen. Diese Optionen können Buff-Essen, Schriftrollen oder herbeigezaubertes Essen und Wasser an die erste Stelle und Essen und Wasser der Nachschubliste an die letzte Stelle setzen."
 
 --[[
     Buff Food, the first option under Food & Water. Its hover text carries the
@@ -682,9 +680,6 @@ L["OPTIONS_INCLUDE_MANA_RUNES_DESCRIPTION_FORMAT"] =
 	"Nimmt %s, %s sowie jeden anderen Mana-Gegenstand, der sich die Abklingzeit mit Manasteinen teilt, in die Rangfolge deiner Manasteine auf, sodass das Manastein-Makro einen davon verwendet, wenn das deine beste Wahl ist oder du keine Manasteine mehr hast."
 
 -- Buff Reapplication
-L["OPTIONS_REAPPLY_HEADER"] = "Buff-Erneuerung"
-L["OPTIONS_REAPPLY_SECTION_DESCRIPTION"] =
-	"Makros können während des Kampfes nicht geändert werden, daher bleibt ein Buff, der mitten im Kampf abläuft, bis zum Ende des Kampfes weg."
 L["OPTIONS_REAPPLY"] = "Ablaufende Buffs erneuern"
 L["OPTIONS_REAPPLY_DESCRIPTION"] =
 	"Behandelt Buff-Essen, Schriftrollen-Buffs und Tierfutter-Buffs mit weniger Restzeit als deinem Schwellenwert als abgelaufen, sodass deine Makros vor dem Pull einen frischen anbieten."
@@ -699,7 +694,6 @@ L["REAPPLY_THRESHOLD_MANY"] = "Wenn < %d Minuten übrig"
 
 -- Pet Food Buffs
 L["OPTIONS_PET_HEADER"] = "Tierfutter-Buffs"
-L["OPTIONS_PET_SECTION_DESCRIPTION_FORMAT"] = 'Ein paar Futtersorten verleihen deinem Tier einen eigenen "%s"-Buff.'
 L["OPTIONS_USE_PET_BUFFS"] = "Tierfutter-Buffs verwenden"
 L["OPTIONS_USE_PET_BUFFS_DESCRIPTION_FORMAT"] =
 	'Fügt deinem Essen-Makro Tierfutter hinzu, wenn deinem Tier der "%s"-Buff fehlt, außer in Arenen.'

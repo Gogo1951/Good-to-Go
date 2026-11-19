@@ -360,6 +360,7 @@ Options/Options-Message-Composer.lua
 Options/Options-Feature-Switches.lua
 Options/Options-General.lua
 Options/Macros-for-Consumables/Options-Macros.lua
+Options/Macros-for-Consumables/Options-Food-Water.lua
 Options/Macros-for-Consumables/Options-Class-Race.lua
 Options/Macros-for-Consumables/Options-Ignore-List.lua
 Options/Readiness-Report/Options-Readiness-Report.lua

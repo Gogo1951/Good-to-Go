@@ -624,8 +624,6 @@ L["OPTIONS_MACRO_TOGGLE_DESCRIPTION"] = "Crée et gère cette macro, et la suppr
     what it does.
 ]]
 L["OPTIONS_FOOD_WATER_HEADER"] = "Nourriture et eau"
-L["OPTIONS_FOOD_WATER_DESCRIPTION"] =
-	"Vos macros Nourriture et Eau utilisent la meilleure nourriture et la meilleure boisson de vos sacs. Ces options peuvent faire passer en premier la nourriture à amélioration, les parchemins ou la nourriture et l'eau invoquées, et en dernier la nourriture et l'eau de la liste de réapprovisionnement."
 
 --[[
     Buff Food, the first option under Food & Water. Its hover text carries the
@@ -679,9 +677,6 @@ L["OPTIONS_INCLUDE_MANA_RUNES_DESCRIPTION_FORMAT"] =
 	"Intègre %s, %s, ainsi que tout autre objet de mana qui partage le temps de recharge des Gemmes de mana, au classement de vos Gemmes de mana, pour que la macro Gemme de mana utilise l'un d'eux quand c'est votre meilleure option ou quand vous n'avez plus de gemmes."
 
 -- Buff Reapplication
-L["OPTIONS_REAPPLY_HEADER"] = "Renouvellement des améliorations"
-L["OPTIONS_REAPPLY_SECTION_DESCRIPTION"] =
-	"Les macros ne peuvent pas être modifiées en combat, donc une amélioration qui expire en plein combat reste absente jusqu'à la fin du combat."
 L["OPTIONS_REAPPLY"] = "Renouveler les améliorations qui expirent"
 L["OPTIONS_REAPPLY_DESCRIPTION"] =
 	"Considère comme expirées la Nourriture à amélioration, les Améliorations de parchemins et les Améliorations de nourriture pour familier dont le temps restant est inférieur à votre seuil, afin que vos macros en proposent une nouvelle avant le combat."
@@ -696,8 +691,6 @@ L["REAPPLY_THRESHOLD_MANY"] = "Quand il reste < %d minutes"
 
 -- Pet Food Buffs
 L["OPTIONS_PET_HEADER"] = "Améliorations de nourriture pour familier"
-L["OPTIONS_PET_SECTION_DESCRIPTION_FORMAT"] =
-	'Certains aliments confèrent à votre familier sa propre amélioration "%s".'
 L["OPTIONS_USE_PET_BUFFS"] = "Utiliser les améliorations de nourriture pour familier"
 L["OPTIONS_USE_PET_BUFFS_DESCRIPTION_FORMAT"] =
 	"Ajoute de la nourriture pour familier à votre macro Nourriture quand votre familier n'a pas l'amélioration \"%s\", sauf en arène."

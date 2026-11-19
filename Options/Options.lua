@@ -20,7 +20,7 @@ local Kit = ns.OptionsKit
         Buff Duty               Group Buffs, Self-Buffs, Weapon Buffs
         Restocker
         Enhanced Spellbook
-        Consumable Macros       Class & Race, Ignore List
+        Consumable Macros       Food & Water, Class & Race, Ignore List
         Rank Watch              Reported Ranks, Ignored Players (where the flavor has ranks)
         Inventory Report
         Readiness Report
@@ -50,12 +50,14 @@ end
 
 --[[
     Consumable Macros -- every macro setting, led by its on/off switch, with
-    Class & Race and the Ignore List nested under it: the list only says what
-    the macros may offer. The Ignore List's tree takes the kit's 176-point
+    Food & Water, Class & Race and the Ignore List nested under it: Food &
+    Water holds what the Food and Water macros eat and drink, and the list
+    only says what the macros may offer. The Ignore List's tree takes the kit's 176-point
     sidebar (Kit.PrepareTree) and reopens on the character being played.
 ]]
 local function RegisterMacrosPanels()
 	Kit.RegisterPanel("Macros", ns.BuildMacrosOptions, L["TAB_CONSUMABLE_MACROS"])
+	Kit.RegisterPanel("FoodWater", ns.BuildFoodWaterOptions, L["OPTIONS_FOOD_WATER_HEADER"], "Macros")
 	Kit.RegisterPanel("ClassRace", ns.BuildClassRaceOptions, L["TAB_CLASS_RACE"], "Macros")
 	Kit.RegisterPanel("IgnoreList", ns.BuildIgnoreListOptions, L["TAB_IGNORE_LIST"], "Macros")
 	Kit.PrepareTree("IgnoreList", function()

@@ -627,8 +627,6 @@ L["OPTIONS_MACRO_TOGGLE_DESCRIPTION"] = "Cria e mantém esta macro, e a remove q
     what it does.
 ]]
 L["OPTIONS_FOOD_WATER_HEADER"] = "Comida e água"
-L["OPTIONS_FOOD_WATER_DESCRIPTION"] =
-	"Suas macros de Comida e Água usam a melhor comida e bebida das suas bolsas. Estas opções podem colocar primeiro a comida com buff, os pergaminhos ou a comida e água conjuradas, e por último a comida e água da lista de reabastecimento."
 
 --[[
     Buff Food, the first option under Food & Water. Its hover text carries the
@@ -682,9 +680,6 @@ L["OPTIONS_INCLUDE_MANA_RUNES_DESCRIPTION_FORMAT"] =
 	"Classifica %s, %s e qualquer outro item de mana que compartilhe o tempo de recarga das Gemas de Mana, junto com suas Gemas de Mana, para que a macro de Gema de Mana use um deles quando for sua melhor opção ou quando você estiver sem gemas."
 
 -- Buff Reapplication
-L["OPTIONS_REAPPLY_HEADER"] = "Reaplicação de buffs"
-L["OPTIONS_REAPPLY_SECTION_DESCRIPTION"] =
-	"As macros não podem ser alteradas durante o combate, então um buff que expira no meio da luta continua ausente até o combate terminar."
 L["OPTIONS_REAPPLY"] = "Reaplicar buffs prestes a expirar"
 L["OPTIONS_REAPPLY_DESCRIPTION"] =
 	"Considera expirados Comida com Buff, Buffs de Pergaminho e Buffs de Comida de Ajudante que tenham menos tempo restante que o seu limite, para que suas macros ofereçam um novo antes do combate."
@@ -699,7 +694,6 @@ L["REAPPLY_THRESHOLD_MANY"] = "Quando restarem < %d minutos"
 
 -- Pet Food Buffs
 L["OPTIONS_PET_HEADER"] = "Buffs de Comida de Ajudante"
-L["OPTIONS_PET_SECTION_DESCRIPTION_FORMAT"] = 'Algumas comidas dão ao seu ajudante um buff "%s" próprio.'
 L["OPTIONS_USE_PET_BUFFS"] = "Usar Buffs de Comida de Ajudante"
 L["OPTIONS_USE_PET_BUFFS_DESCRIPTION_FORMAT"] =
 	'Adiciona comida de ajudante à sua macro de Comida quando falta o buff "%s" no seu ajudante, exceto em arenas.'

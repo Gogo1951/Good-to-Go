@@ -172,6 +172,7 @@ ns.OPTIONS_REGISTRY = {
 	Restocker = ADDON_NAME .. "_Restocker",
 	Spellbook = ADDON_NAME .. "_Spellbook",
 	Macros = ADDON_NAME .. "_Macros",
+	FoodWater = ADDON_NAME .. "_FoodWater",
 	ClassRace = ADDON_NAME .. "_ClassRace",
 	IgnoreList = ADDON_NAME .. "_IgnoreList",
 	RankWatch = ADDON_NAME .. "_RankWatch",

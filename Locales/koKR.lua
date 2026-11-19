@@ -627,8 +627,6 @@ L["OPTIONS_MACRO_TOGGLE_DESCRIPTION"] =
     what it does.
 ]]
 L["OPTIONS_FOOD_WATER_HEADER"] = "음식 및 물"
-L["OPTIONS_FOOD_WATER_DESCRIPTION"] =
-	"음식 및 물 매크로는 가방에 있는 가장 좋은 음식과 음료를 사용합니다. 이 옵션들로 버프 음식, 두루마리, 창조된 음식과 물을 먼저 사용하고, 보충 목록의 음식과 물은 나중에 사용하게 할 수 있습니다."
 
 --[[
     Buff Food, the first option under Food & Water. Its hover text carries the
@@ -682,9 +680,6 @@ L["OPTIONS_INCLUDE_MANA_RUNES_DESCRIPTION_FORMAT"] =
 	"%s, %s, 그리고 마나 보석과 재사용 대기시간을 공유하는 다른 마나 회복 아이템도 마나 보석과 함께 우선순위를 매겨, 그중 하나가 가장 좋은 선택이거나 보석이 다 떨어졌을 때 마나 보석 매크로가 이를 사용합니다."
 
 -- Buff Reapplication
-L["OPTIONS_REAPPLY_HEADER"] = "버프 재적용"
-L["OPTIONS_REAPPLY_SECTION_DESCRIPTION"] =
-	"전투 중에는 매크로를 변경할 수 없으므로, 전투 도중 만료된 버프는 전투가 끝날 때까지 사라진 채로 남습니다."
 L["OPTIONS_REAPPLY"] = "만료 임박 버프 재적용"
 L["OPTIONS_REAPPLY_DESCRIPTION"] =
 	"남은 시간이 설정한 기준값보다 적은 버프 음식, 두루마리 버프, 소환수 음식 버프를 만료된 것으로 간주하여, 전투 전에 매크로가 새 버프를 제안합니다."
@@ -699,7 +694,6 @@ L["REAPPLY_THRESHOLD_MANY"] = "%d분 미만 남았을 때"
 
 -- Pet Food Buffs
 L["OPTIONS_PET_HEADER"] = "소환수 음식 버프"
-L["OPTIONS_PET_SECTION_DESCRIPTION_FORMAT"] = '일부 음식은 소환수에게 별도의 "%s" 버프를 줍니다.'
 L["OPTIONS_USE_PET_BUFFS"] = "소환수 음식 버프 사용"
 L["OPTIONS_USE_PET_BUFFS_DESCRIPTION_FORMAT"] =
 	'투기장을 제외하고, 소환수에게 "%s" 버프가 없을 때 음식 매크로에 소환수 음식을 추가합니다.'

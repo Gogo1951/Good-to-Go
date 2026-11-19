@@ -619,8 +619,6 @@ L["OPTIONS_MACRO_TOGGLE_DESCRIPTION"] = "建立並維護此巨集，取消勾選
     what it does.
 ]]
 L["OPTIONS_FOOD_WATER_HEADER"] = "食物與水"
-L["OPTIONS_FOOD_WATER_DESCRIPTION"] =
-	"你的食物和水巨集會使用背包中最好的食物和飲料。這些選項可以讓增益食物、卷軸或魔法製造的食物和水優先，並讓補貨清單中的食物和水最後使用。"
 
 --[[
     Buff Food, the first option under Food & Water. Its hover text carries the
@@ -674,9 +672,6 @@ L["OPTIONS_INCLUDE_MANA_RUNES_DESCRIPTION_FORMAT"] =
 	"將你的%s、%s，以及任何其他與法力寶石共用冷卻時間的法力物品，和你的法力寶石一同排序，這樣當其中某件物品是你的最佳選擇，或你的法力寶石用完時，法力寶石巨集就會使用該物品。"
 
 -- Buff Reapplication
-L["OPTIONS_REAPPLY_HEADER"] = "增益重新施加"
-L["OPTIONS_REAPPLY_SECTION_DESCRIPTION"] =
-	"巨集在戰鬥中無法更改，因此戰鬥中途到期的增益會一直缺失，直到戰鬥結束。"
 L["OPTIONS_REAPPLY"] = "重新施加即將到期的增益"
 L["OPTIONS_REAPPLY_DESCRIPTION"] =
 	"將剩餘時間低於你所設門檻的增益食物、卷軸增益和寵物食物增益視為已到期，讓你的巨集在開怪前提供新的增益。"
@@ -691,7 +686,6 @@ L["REAPPLY_THRESHOLD_MANY"] = "當剩餘不足 %d 分鐘時"
 
 -- Pet Food Buffs
 L["OPTIONS_PET_HEADER"] = "寵物食物增益"
-L["OPTIONS_PET_SECTION_DESCRIPTION_FORMAT"] = '少數食物會為你的寵物提供專屬的"%s"增益。'
 L["OPTIONS_USE_PET_BUFFS"] = "使用寵物食物增益"
 L["OPTIONS_USE_PET_BUFFS_DESCRIPTION_FORMAT"] =
 	'當你的寵物缺少"%s"增益時，將寵物食物加入你的食物巨集，競技場中除外。'
