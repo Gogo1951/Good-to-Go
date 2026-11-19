@@ -24,6 +24,11 @@ local function GetRestockerSettings()
 	return ns.restockSettings
 end
 
+-- Everything under the switch hides while the Restocker is off.
+local function RestockerOff()
+	return not (ns.db and ns.db.global.restockerEnabled)
+end
+
 -- The mode and sound rows only mean anything while the in-town reminder itself is on.
 local function RemindHidden()
 	local settings = GetRestockerSettings()
@@ -187,8 +192,8 @@ end
 
 --[[
     Page order: the description, the Restocker's master switch, then the Gold Reserve, Reminders and window
-    sections, each laid out spacer, header, spacer, description, spacer, controls. The Inventory Report has its own page in the tree
-    (Options/Inventory-Report/Options-Inventory-Report.lua).
+    sections, each laid out spacer, header, spacer, description, spacer, controls, all hidden while the switch is
+    off. The Inventory Report has its own page in the tree (Options/Inventory-Report/Options-Inventory-Report.lua).
 
     The three reminders are peers under their header. The merchant and bank
     reminders are a toggle with the dropdown choosing how much it reports on
@@ -413,5 +418,6 @@ function ns.BuildRestockerOptions()
 			},
 		},
 	}
+	Kit.HideAllExcept(options.args, RestockerOff, { "descRestocker", "spaceEnabled", "toggleRestockerEnabled" })
 	return options
 end
