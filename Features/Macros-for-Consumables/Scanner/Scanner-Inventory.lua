@@ -122,14 +122,22 @@ function ns.ScanBags()
 
 	--[[
 	    How the Food and Water ladders treat buff food (RANKING_PRIORITY):
-	    "first" while the buff is wanted, otherwise "last", so plain food wins
-	    and buff food is still eaten when it's all the bags hold. Targeting
+	    "first" while the buff is wanted; otherwise false while Eat Buff Food
+	    When Already Well Fed is on, so it competes on what it restores, or
+	    "last", so plain food wins and buff food is still eaten when it's all
+	    the bags hold. Targeting
 	    yourself is the plain-food testing aid above, so it keeps buff food out
 	    entirely (the Food and Water accepts hooks read ns.excludeBuffFood).
 	    Arenas need nothing here: the usable gate below already drops food
 	    that can't be eaten there, buff food included.
 	]]
-	ns.buffFoodRank = ns.allowBuffFood and "first" or "last"
+	if ns.allowBuffFood then
+		ns.buffFoodRank = "first"
+	elseif settings.useBuffFoodWhenFed then
+		ns.buffFoodRank = false
+	else
+		ns.buffFoodRank = "last"
+	end
 	ns.excludeBuffFood = targetingSelf and true or false
 
 	--[[

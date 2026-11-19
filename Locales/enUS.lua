@@ -617,7 +617,8 @@ L["OPTIONS_MACRO_TOGGLE_DESCRIPTION"] = "Creates and maintains this macro, and r
     OPTIONS_FOOD_WATER_HEADER is its label in the settings tree and the end of
     its title; OPTIONS_FOOD_WATER_ELSEWHERE is the silver line closing the
     Consumable Macros page that points to it. The page has two sections:
-    Buffs Before You Eat (Prioritize Buff Food, Enable Scroll Buffs, Use Pet
+    Buffs Before You Eat (Prioritize Buff Food, Eat Buff Food When Already
+    Well Fed, Enable Scroll Buffs, Use Pet
     Food Buffs, Reapply Expiring Buffs) and Which Food Comes First (Use
     Conjured Food & Water First, Use Restock List Food & Water Last). In
     OPTIONS_FOOD_BUFFS_DESCRIPTION_FORMAT, %s is the client's name for the
@@ -629,7 +630,7 @@ L["OPTIONS_FOOD_WATER_PANEL_DESCRIPTION"] =
 L["OPTIONS_FOOD_WATER_ELSEWHERE"] = "Food and drink settings are on the Food & Water page under this one."
 L["OPTIONS_FOOD_BUFFS_HEADER"] = "Buffs Before You Eat"
 L["OPTIONS_FOOD_BUFFS_DESCRIPTION_FORMAT"] =
-	'Your Food macro can top up your buffs before you eat: buff food for "%s", then any missing scrolls and your pet\'s food. Macros can\'t change during combat, so a buff that runs out mid-fight stays gone until the fight ends.'
+	"Your Food macro can top up your buffs before you eat: buff food for \"%s\", then any missing scrolls and your pet's food. Macros can't change during combat, so a buff that runs out mid-fight stays gone until the fight ends."
 L["OPTIONS_FOOD_ORDER_HEADER"] = "Which Food Comes First"
 L["OPTIONS_FOOD_ORDER_DESCRIPTION"] =
 	"Between two foods or drinks, your macros use the one that restores the most. These change that order."
@@ -642,6 +643,14 @@ L["OPTIONS_FOOD_ORDER_DESCRIPTION"] =
 L["OPTIONS_BUFF_FOOD"] = "Prioritize Buff Food"
 L["OPTIONS_BUFF_FOOD_DESCRIPTION_FORMAT"] =
 	'Prioritizes food that grants "%s" whenever the buff is missing, except in arenas.'
+
+--[[
+    Eat Buff Food When Already Well Fed, under Prioritize Buff Food. %s in
+    its hover text is the client's name for the Well Fed buff.
+]]
+L["OPTIONS_BUFF_FOOD_WHEN_FED"] = "Eat Buff Food When Already Well Fed"
+L["OPTIONS_BUFF_FOOD_WHEN_FED_DESCRIPTION_FORMAT"] =
+	"While you're already \"%s\", or whenever Prioritize Buff Food isn't putting it first, your Food and Water macros treat buff food like any other food and eat whatever restores the most. Off saves buff food for when the buff is missing, unless it's all you carry."
 
 -- Scroll Buffs, under Buffs Before You Eat.
 L["OPTIONS_USE_SCROLLS"] = "Enable Scroll Buffs"

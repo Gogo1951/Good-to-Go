@@ -137,6 +137,14 @@ ns.DATABASE_DEFAULTS = {
 		earlyReapplyThreshold = 180,
 		-- Prioritize Buff Food: on by default, at every level.
 		useBuffFood = true,
+		--[[
+		    Eat Buff Food When Already Well Fed: buff food counts as ordinary
+		    food whenever it isn't being put first, so the Food and Water macros
+		    eat whatever restores the most. On by default on WoW Forever, where
+		    buff food is cheap and nearly all anyone carries; off elsewhere,
+		    where it's worth saving for the buff.
+		]]
+		useBuffFoodWhenFed = ns.FLAVOR == "Camelot",
 		buffFoodIn = { solo = true, party = true, raid = true, battleground = true },
 		buffFoodLevel = "any",
 		--[[

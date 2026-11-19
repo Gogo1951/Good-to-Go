@@ -232,6 +232,25 @@ function ns.BuildFoodWaterOptions()
 			end,
 		}, { control = FeatureModeSelect("buffFood", ModeDescription(L["FEATURE_BUFF_FOOD"])) }),
 		spaceBuffFood = Spacer(22),
+		--[[
+		    Not under Prioritize Buff Food's switch: it matters most when that
+		    is off, or when the buff is already up.
+		]]
+		toggleBuffFoodWhenFed = {
+			type = "toggle",
+			name = L["OPTIONS_BUFF_FOOD_WHEN_FED"],
+			desc = SpellDescription("OPTIONS_BUFF_FOOD_WHEN_FED_DESCRIPTION_FORMAT", ns.WELL_FED_SPELL_ID),
+			order = 25,
+			width = "full",
+			get = function()
+				local settings = GetSettings()
+				return settings and settings.useBuffFoodWhenFed
+			end,
+			set = function(_, value)
+				ns.ToggleMacroSetting("useBuffFoodWhenFed", value)
+			end,
+		},
+		spaceBuffFoodWhenFed = Spacer(26),
 		toggleScrolls = {
 			type = "toggle",
 			name = L["OPTIONS_USE_SCROLLS"],

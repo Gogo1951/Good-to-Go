@@ -112,7 +112,9 @@ local RANKING_PRIORITY = {
 	    Buff food first when the Food or Water macro wants the Well Fed buff
 	    (ns.allowBuffFood), last when it doesn't: plain food then wins, and
 	    buff food is eaten only when it's all the bags hold, rather than the
-	    macro coming up empty.
+	    macro coming up empty. While Eat Buff Food When Already Well Fed is
+	    on, neither step runs outside the "first" case and buff food competes
+	    on what it restores.
 	]]
 	{ field = "isBuffFood", kind = "bool", buffFood = "first" },
 	{ field = "isBuffFood", kind = "bool", buffFood = "last", falsyWins = true },

@@ -1236,6 +1236,11 @@ local function AppendChoices(lines)
 		UseWhenText(profile, "buffFood"),
 		YesNo(ns.allowBuffFood)
 	)
+	lines[#lines + 1] = string.format(
+		"Eat buff food when already Well Fed: %s // buff food ranks now: %s",
+		OnOff(profile.useBuffFoodWhenFed),
+		ns.buffFoodRank == false and "with other food" or tostring(ns.buffFoodRank)
+	)
 
 	-- What holds buff food back while it is on (Scanner-Inventory.lua), as the last scan read it.
 	local targetingSelf = ns.CanCompareUnitTokens("target", "player")
