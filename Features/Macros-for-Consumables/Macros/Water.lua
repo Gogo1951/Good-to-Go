@@ -28,8 +28,8 @@ ns.RegisterMacroType({
 	--[[
 	    Selection: any drink competes, including the water half of a
 	    foodwater hybrid (which also feeds Food), by raw mana value. The
-	    buff-food gate matches Food's — a buff drink only competes while
-	    ns.allowBuffFood is on — and so does conjured-first: while
+	    buff-food rank matches Food's — a buff drink comes first while
+	    ns.allowBuffFood is on and last otherwise — and so does conjured-first: while
 	    ns.allowConjuredFirst holds, a conjured drink beats anything but a
 	    buff drink. Restock-last matches too: a drink off the Restock List
 	    beats an equal one on it. Unlike Food, ties prefer the DEDICATED
@@ -38,7 +38,7 @@ ns.RegisterMacroType({
 	]]
 	itemTypes = { water = true, foodwater = true },
 	accepts = function(data)
-		return not (data.isBuffFood and not ns.allowBuffFood)
+		return not (data.isBuffFood and ns.excludeBuffFood)
 	end,
 	score = function(data)
 		return data.manaValue

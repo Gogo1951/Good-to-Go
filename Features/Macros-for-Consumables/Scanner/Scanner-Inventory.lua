@@ -121,6 +121,18 @@ function ns.ScanBags()
 		and not aurasHidden
 
 	--[[
+	    How the Food and Water ladders treat buff food (RANKING_PRIORITY):
+	    "first" while the buff is wanted, otherwise "last", so plain food wins
+	    and buff food is still eaten when it's all the bags hold. Targeting
+	    yourself is the plain-food testing aid above, so it keeps buff food out
+	    entirely (the Food and Water accepts hooks read ns.excludeBuffFood).
+	    Arenas need nothing here: the usable gate below already drops food
+	    that can't be eaten there, buff food included.
+	]]
+	ns.buffFoodRank = ns.allowBuffFood and "first" or "last"
+	ns.excludeBuffFood = targetingSelf and true or false
+
+	--[[
 	    Use Conjured Food & Water First: the setting and its When to Use, the
 	    same checkboxes and level filter Buff Food's has (the default level is
 	    "leveling", below max level). Group reads join the group signature and
@@ -304,13 +316,13 @@ function ns.ScanBags()
 							else
 								local entry = best[definition.typeName]
 								--[[
-								    allowBuffFood, allowConjuredFirst and
+								    buffFood, allowConjuredFirst and
 								    allowRestockLast defs track the live
 								    scan preferences;
 								    everyone else compares with those
 								    steps gated off.
 								]]
-								local allowBuffFood = definition.allowBuffFood and ns.allowBuffFood
+								local buffFood = definition.allowBuffFood and ns.buffFoodRank
 								local allowConjuredFirst = definition.allowConjuredFirst and ns.allowConjuredFirst
 								local allowRestockLast = definition.allowRestockLast and ns.allowRestockLast
 								if
@@ -320,7 +332,7 @@ function ns.ScanBags()
 										data.price,
 										entry,
 										score,
-										allowBuffFood,
+										buffFood,
 										definition.preferHybrid,
 										allowConjuredFirst,
 										allowRestockLast
@@ -336,7 +348,7 @@ function ns.ScanBags()
 									RetainCandidate(
 										definition.typeName,
 										FillRecord(candidateRecord, data, totalCount, data.price, score),
-										allowBuffFood,
+										buffFood,
 										definition.preferHybrid,
 										allowConjuredFirst,
 										allowRestockLast

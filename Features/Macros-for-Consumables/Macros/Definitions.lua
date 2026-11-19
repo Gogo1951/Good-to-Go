@@ -27,9 +27,9 @@ local _, ns = ...
       ranked            -- true: collect all candidates and rank into the
                            winner's topIDs (the multi-use types); otherwise
                            a single running winner is kept
-      allowBuffFood     -- true: compare with the scanner's live
-                           ns.allowBuffFood preference (Food, Water); absent:
-                           the ladder's buff-food step stays gated off
+      allowBuffFood     -- true: rank buff food by the scanner's live
+                           ns.buffFoodRank, first or last (Food, Water);
+                           absent: the ladder's buff-food steps stay gated off
       allowConjuredFirst -- true: compare with the scanner's live
                            ns.allowConjuredFirst preference (Food, Water);
                            absent: the ladder's conjured-first step stays

@@ -6,7 +6,8 @@ local _, ns = ...
 
 --[[
     The busiest macro definition: plain food by default, buff food when the
-    live ns.allowBuffFood preference allows it (the scanner computes that
+    live ns.allowBuffFood preference wants the buff or when it's all the bags
+    hold (the scanner computes that
     flag from setting/When to Use/Well Fed/arena state; the selection fields below
     declare how it applies), a pet-buff-food override when the Hunter
     feature wants the pet fed, and a full-body scroll-only mode when scroll
@@ -84,11 +85,12 @@ ns.RegisterMacroType({
 
 	--[[
 	    Selection: any food competes, including the food half of a foodwater
-	    hybrid (which also feeds Water), by raw food value. Buff food only
-	    competes while the scanner's live ns.allowBuffFood preference is on
-	    (setting + When to Use + not Well Fed + not self-targeting + not arena),
-	    and the allowBuffFood flag additionally makes the ladder prefer buff
-	    food outright when it is. While Use Conjured Food & Water First holds
+	    hybrid (which also feeds Water), by raw food value. Buff food always
+	    competes (except while targeting yourself, ns.excludeBuffFood) and
+	    ranks by ns.buffFoodRank: first while the live ns.allowBuffFood
+	    preference is on (setting + When to Use + not Well Fed + not
+	    self-targeting + not arena), last otherwise, so a bag of only buff
+	    food still feeds you. While Use Conjured Food & Water First holds
 	    (ns.allowConjuredFirst), conjured food comes next, ahead of anything
 	    that restores more. While Use Restock List Food & Water Last holds
 	    (ns.allowRestockLast), food off the Restock List beats an equal one
@@ -99,7 +101,7 @@ ns.RegisterMacroType({
 	]]
 	itemTypes = { food = true, foodwater = true },
 	accepts = function(data)
-		return not (data.isBuffFood and not ns.allowBuffFood)
+		return not (data.isBuffFood and ns.excludeBuffFood)
 	end,
 	score = function(data)
 		return data.healthValue

@@ -79,13 +79,12 @@ end
     and the entries below it are the real runners-up rather than whichever
     items the bag walk happened to reach first.
 ]]
-local function RetainCandidate(typeName, record, allowBuffFood, preferHybrid, allowConjuredFirst, allowRestockLast)
+local function RetainCandidate(typeName, record, buffFood, preferHybrid, allowConjuredFirst, allowRestockLast)
 	local list = GetCandidateList(typeName)
 
 	local position = #list + 1
 	for i = 1, #list do
-		local outranks =
-			CompareRecords(record, list[i], allowBuffFood, preferHybrid, allowConjuredFirst, allowRestockLast)
+		local outranks = CompareRecords(record, list[i], buffFood, preferHybrid, allowConjuredFirst, allowRestockLast)
 		if outranks then
 			position = i
 			break
@@ -114,7 +113,7 @@ local function CaptureDiagnosticCandidates()
 
 	for _, definition in ipairs(ns.REGISTERED_MACRO_DEFINITIONS) do
 		local list
-		local allowBuffFood, preferHybrid, allowConjuredFirst, allowRestockLast
+		local buffFood, preferHybrid, allowConjuredFirst, allowRestockLast
 
 		if definition.ranked then
 			local source = rankedCandidates[definition.typeName]
@@ -122,10 +121,10 @@ local function CaptureDiagnosticCandidates()
 			for i = 1, math.min(#source, DIAGNOSTIC_CANDIDATE_LIMIT) do
 				list[i] = CopyCandidateRecord(source[i])
 			end
-			allowBuffFood, preferHybrid, allowConjuredFirst, allowRestockLast = false, false, false, false
+			buffFood, preferHybrid, allowConjuredFirst, allowRestockLast = false, false, false, false
 		else
 			list = diagnosticCandidates[definition.typeName]
-			allowBuffFood = definition.allowBuffFood and ns.allowBuffFood
+			buffFood = definition.allowBuffFood and ns.buffFoodRank
 			preferHybrid = definition.preferHybrid
 			allowConjuredFirst = definition.allowConjuredFirst and ns.allowConjuredFirst
 			allowRestockLast = definition.allowRestockLast and ns.allowRestockLast
@@ -135,7 +134,7 @@ local function CaptureDiagnosticCandidates()
 			local winner = list[1]
 			for i = 2, #list do
 				local _, decidedBy =
-					CompareRecords(winner, list[i], allowBuffFood, preferHybrid, allowConjuredFirst, allowRestockLast)
+					CompareRecords(winner, list[i], buffFood, preferHybrid, allowConjuredFirst, allowRestockLast)
 				list[i].decidedBy = decidedBy
 			end
 		end
