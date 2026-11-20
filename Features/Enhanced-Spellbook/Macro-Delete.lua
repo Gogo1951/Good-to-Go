@@ -74,7 +74,7 @@ function ns.DeleteAddonMacros(general)
 		owned[GetMacroInfo(index)] = nil
 		DeleteMacro(index)
 	end
-	ns:PrintMessage(L["CHAT_MACROS_DELETED"]:format(#indexes))
+	ns:PrintMessage(#indexes == 1 and L["CHAT_MACROS_DELETED_ONE"] or L["CHAT_MACROS_DELETED"]:format(#indexes))
 	ns:RefreshOpenPages()
 end
 
@@ -89,8 +89,8 @@ end
 
 --[[
 	The menu's Delete: deletes the page macro's WoW macro, which takes it off the action bars, with its
-	ownership record, and puts the macro back as it started: a spell's options all reset, its focus
-	copy's WoW macro deleted too, and a Duplicate copy taken off the page. A spell's macro keeps its tag, so one
+	ownership record, and puts the macro back as it started: a spell's options all reset, and a
+	Duplicate copy taken off the page. A spell's macro keeps its tag, so one
 	placed again gets it back. Macros can't be deleted in combat or while the Blizzard Macro UI is open.
 ]]
 function ns.DeletePageMacro(macro)
@@ -103,53 +103,10 @@ function ns.DeletePageMacro(macro)
 		return
 	end
 	DeleteWowMacro(macro)
-	-- the spell's focus copy goes with its options, so its WoW macro does too; a Duplicate's or a rank's has none
-	for _, other in ipairs(ns.macros) do
-		if other.focus and other.name == macro.name and not macro.copy and not macro.rank then
-			DeleteWowMacro(other)
-		end
-	end
 	if macro.copy then
 		ns.RemoveMacroCopy(macro)
 	else
 		ns.ResetMacroOptions(macro)
-	end
-end
-
---[[
-	The menu's Remove Focus Copy, from the spell's menu or the copy's own (macro is either): turns the spell's
-	focus option off and deletes the copy's WoW macro, which takes it off the action bars, so no copy is left
-	there that nothing rewrites any more. One on the bars asks first. done runs once it is removed. Macros
-	can't be deleted in combat or while the Blizzard Macro UI is open.
-]]
-function ns.RemoveFocusCopy(macro, done)
-	local copy
-	for _, other in ipairs(ns.macros) do
-		if other.focus and other.name == macro.name then
-			copy = other
-			break
-		end
-	end
-	local function remove()
-		if InCombatLockdown() then
-			ns.ShowUIError(ERR_NOT_IN_COMBAT)
-			return
-		end
-		if ns.IsMacroUIOpen() then
-			ns.ShowUIError(L["ADDON_SHORT_NAME"] .. " // " .. L["ERROR_MACRO_WINDOW_OPEN"])
-			return
-		end
-		if copy then
-			DeleteWowMacro(copy)
-		end
-		ns.SetOption(macro, "focus", false)
-		done()
-	end
-	local index = copy and ns.FindMacroIndex(copy) or 0
-	if index ~= 0 and ns.MacroBarCount(index) > 0 and not InCombatLockdown() then
-		ns.ConfirmDelete(ns.WowMacroName(copy), remove)
-	else
-		remove()
 	end
 end
 

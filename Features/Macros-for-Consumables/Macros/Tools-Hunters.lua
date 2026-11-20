@@ -18,7 +18,7 @@ local MACRO_CONFIG = ns.MACRO_CONFIG
     for every Hunter, then routes the engine's update to UpdateFeedPetMacro or
     removes the macro when disabled; for non-Hunters it does nothing at all.
     The scan sits outside that branch because ns.bestPetFoodID is read by the
-    mini-map tooltip and by Diagnostics whether or not the macro exists.
+    mini-map menu and by Diagnostics whether or not the macro exists.
 ]]
 
 --------------------------------------------------------------------------------
@@ -373,7 +373,7 @@ ns.RegisterMacroType({
 		--[[
 		    Ahead of the enabled check, because ns.bestPetFoodID and
 		    ns.bestPetFoodLink are published state with readers that stay live
-		    whether or not the macro is built -- the mini-map tooltip's pet-food
+		    whether or not the macro is built -- the mini-map menu's pet-food
 		    row and two Diagnostics reports. Scanning only when the macro is on
 		    would freeze all three at whatever the last enabled pass left. It
 		    costs nothing extra: the scan reads ns.scannedItemCounts, which

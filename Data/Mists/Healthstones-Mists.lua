@@ -9,7 +9,7 @@ ns.HEALTHSTONES = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-19, wago.tools, Mists of Pandaria Classic 5.5.4.71060
 
 Notes
 	- Every item that heals instantly on the healthstone cooldown, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Healthstone and Health Potion macros. Required Level is the level the tooltip requires (0 for none).
@@ -29,6 +29,13 @@ wago.tools
 	https://wago.tools/db2/SpellEffect?build=5.5.4.70631
 	https://wago.tools/db2/SpellCategory?build=5.5.4.70631
 	https://wago.tools/db2/Item?build=5.5.4.70631
+	https://wago.tools/db2/Item?build=5.5.4.70960
+	https://wago.tools/db2/ItemSparse?build=5.5.4.70960
+	https://wago.tools/db2/ItemEffect?build=5.5.4.70960
+	https://wago.tools/db2/Item?build=5.5.4.71060
+	https://wago.tools/db2/ItemSparse?build=5.5.4.71060
+	https://wago.tools/db2/ItemEffect?build=5.5.4.71060
+	https://wago.tools/db2/SpellEffect?build=5.5.4.71060
 
 QuestieDB
 	None.

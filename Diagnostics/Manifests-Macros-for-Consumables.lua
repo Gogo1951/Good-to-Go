@@ -712,6 +712,13 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(C_Item) == "table" and type(C_Item.GetItemIconByID) == "function"
 		end,
 	},
+	-- The Poisons macro's /run GtGReplace() confirms only the replace-enchant pop-up, found through this (Runtime.lua).
+	{
+		"StaticPopup_Visible",
+		function()
+			return type(StaticPopup_Visible) == "function"
+		end,
+	},
 	-- The rank text a Warlock's Healthstone /cast line carries (Smart-Spell.lua).
 	{
 		"C_Spell.GetSpellSubtext",
@@ -1043,6 +1050,16 @@ local function AppendMacroWriting(lines)
 		#replacedRunning > 0 and table.concat(replacedRunning, ", ") or "(none)"
 	)
 	--[[
+	    The globals a macro's /run lines call when it is pressed (Runtime.lua):
+	    one missing, or taken over by another add-on, makes that line error
+	    silently while scriptErrors is off.
+	]]
+	local callbacks = {}
+	for _, name in ipairs({ "GtGFire", "GtGTip", "GtGTipIf", "GtGNoItem", "GtGReplace" }) do
+		callbacks[#callbacks + 1] = string.format("%s %s", name, YesNo(type(_G[name]) == "function"))
+	end
+	lines[#lines + 1] = "Macro callbacks defined: " .. table.concat(callbacks, ", ")
+	--[[
 	    MIGRATION (remove after 2026-12-08)
 	    The settings import (Legacy-Migration.lua) reads an old add-on's table
 	    only in a session where that add-on is loaded, and only while its
@@ -1191,7 +1208,7 @@ local function AppendScrollTypes(lines, profile)
 	local snapshot = ns.GetPlayerBuffSnapshot()
 	lines[#lines + 1] = string.format("Well Fed now: %s", ExpirationText(snapshot.wellFedExpiration))
 	AppendScrollData(lines)
-	if not (profile.useScrolls and profile.scrollTypes) then
+	if not profile.scrollTypes then
 		return
 	end
 	local counts = ns.scannedItemCounts or {}
@@ -1231,25 +1248,15 @@ local function AppendChoices(lines)
 	local global = ns.db.global
 	lines[#lines + 1] = "-- Choices that steer the picks --"
 	lines[#lines + 1] = string.format(
-		"Buff food: %s (%s) // in force now: %s",
-		OnOff(profile.useBuffFood),
-		UseWhenText(profile, "buffFood"),
-		YesNo(ns.allowBuffFood)
-	)
-	lines[#lines + 1] = string.format(
 		"Eat buff food when already Well Fed: %s // buff food ranks now: %s",
 		OnOff(profile.useBuffFoodWhenFed),
 		ns.buffFoodRank == false and "with other food" or tostring(ns.buffFoodRank)
 	)
 
-	-- What holds buff food back while it is on (Scanner-Inventory.lua), as the last scan read it.
-	local targetingSelf = ns.CanCompareUnitTokens("target", "player")
-		and UnitExists("target")
-		and UnitIsUnit("target", "player")
+	-- What keeps buff food out of the Food macro (Scanner-Inventory.lua), as the last scan read it.
 	lines[#lines + 1] = string.format(
-		"Buff food held back by: Well Fed %s, targeting yourself %s, arena %s // aura data restricted now: %s",
-		YesNo(ns.wellFedState),
-		YesNo(targetingSelf),
+		"Buff food kept out by: targeting yourself %s, arena %s // aura data restricted now: %s",
+		YesNo(ns.excludeBuffFood),
 		YesNo(select(2, IsInInstance()) == "arena"),
 		YesNo(ns.AreAurasSecret())
 	)
@@ -1266,20 +1273,31 @@ local function AppendChoices(lines)
 		YesNo(ns.allowRestockLast),
 		tostring(ns.restockSettings and ns.restockSettings.currentList)
 	)
+	-- Scrolls are Buff Duty's now; the types it offers, and the scrolls you'd read now.
+	local missingScrolls = ns.FindMissingScrolls(ns.scannedItemCounts)
 	lines[#lines + 1] = string.format(
-		"Scrolls: %s (%s) // types: %s // picked now: %s",
-		OnOff(profile.useScrolls),
-		UseWhenText(profile, "scrolls"),
+		"Scroll types (Buff Duty): %s // missing now: %s",
 		EnabledKeys(profile.scrollTypes),
-		(ns.scrollOverrideIDs and #ns.scrollOverrideIDs > 0) and table.concat(ns.scrollOverrideIDs, ", ") or "(none)"
+		missingScrolls and table.concat(missingScrolls, ", ") or "(none)"
 	)
 	AppendScrollTypes(lines, profile)
-	-- Tracked means every gate passes: the switch, its mode, the level the food needs, and a live pet of any class.
+	--[[
+	    Tracked means every gate passes: the switch, its mode, the level the
+	    food needs (the lowest of this client's pet buff foods, Scanner-Auras.lua),
+	    and a live pet of any class. A client with no pet buff foods never tracks.
+	]]
+	local petBuffFoods, petBuffMinLevel = 0, nil
+	for _, row in pairs(ns.PET_BUFF_FOODS or {}) do
+		petBuffFoods = petBuffFoods + 1
+		petBuffMinLevel = math.min(petBuffMinLevel or row[4], row[4])
+	end
 	lines[#lines + 1] = string.format(
-		"Pet buff food: %s (%s) // types: %s // tracked now: %s // picked now: %s",
+		"Pet buff food: %s (%s) // types: %s // foods on this client: %d, from level %s // tracked now: %s // picked now: %s",
 		OnOff(profile.usePetBuffFood),
 		UseWhenText(profile, "petBuffFood"),
 		EnabledKeys(profile.petBuffTypes),
+		petBuffFoods,
+		tostring(petBuffMinLevel),
 		YesNo(ns.ShouldTrackPetFood()),
 		tostring(ns.petBuffOverrideID)
 	)
@@ -1307,6 +1325,17 @@ local function AppendChoices(lines)
 		"Item cache: %d items this session // data folder %s",
 		ns.CountCachedItems(),
 		tostring(ns.DATA_FOLDER)
+	)
+
+	-- The bags every scan walks (ns.CARRIED_BAG_IDS); a bag reading 0 slots adds nothing to any macro.
+	local bags = {}
+	for _, bagID in ipairs(ns.CARRIED_BAG_IDS or {}) do
+		bags[#bags + 1] = string.format("%d (%d slots)", bagID, C_Container.GetContainerNumSlots(bagID) or 0)
+	end
+	lines[#lines + 1] = string.format(
+		"Bags scanned: %s // distinct items at the last scan: %d",
+		#bags > 0 and table.concat(bags, ", ") or "(none)",
+		CountKeys(ns.scannedItemCounts)
 	)
 
 	--[[
@@ -1478,8 +1507,9 @@ local function AppendClassAndRace(lines)
 	-- Rapid Regeneration exists only on WoW Forever (Tools-Troll.lua).
 	if ns.RAPID_REGENERATION_SPELL_ID then
 		lines[#lines + 1] = string.format(
-			"Rapid Regeneration: eating %s // name: %s // cooldown %s",
+			"Rapid Regeneration: eating in combat %s // bandaging out of combat %s // name: %s // cooldown %s",
 			OnOff(profile.enableRapidRegenerationEating),
+			OnOff(profile.enableRapidRegenerationBandage),
 			tostring(ns.rapidRegenerationSpellName),
 			RacialCooldownText(ns.RAPID_REGENERATION_SPELL_ID)
 		)
@@ -1592,11 +1622,9 @@ end
     What the mini-map button shows and its consumable clicks do
     (Minimap-Button.lua, Minimap-Menu.lua, Macro-Notes.lua). The icon is
     redrawn at the end of each macro update and settings refresh, from the
-    Food pick or the default food. Current Food needs the pick's link as well, and reads as
-    no suitable food without it. Buff Food & Scrolls reads Paused while a
-    switch is on but its When to Use doesn't hold, and Left-Click turns both
-    on only while both are off. Right-Click ignores the Current Food on this
-    character's list.
+    Food pick or the default food. Current Food needs the pick's link as
+    well, and reads as no suitable food without it. Right-Click ignores the
+    Current Food on this character's list.
 ]]
 local function AppendMinimap(lines)
 	local profile = ns.db and ns.db.profile
@@ -1617,21 +1645,6 @@ local function AppendMinimap(lines)
 		ItemText(ns.bestFoodID),
 		YesNo(ns.bestFoodLink),
 		YesNo(ns.bestFoodID and not ns.IsIgnored(ns.bestFoodID))
-	)
-	local rowState = "Off"
-	for _, switch in ipairs({ { profile.useBuffFood, "buffFood" }, { profile.useScrolls, "scrolls" } }) do
-		if switch[1] then
-			if ns.IsUseWhenActive(profile, switch[2]) then
-				rowState = "On"
-				break
-			end
-			rowState = "Paused"
-		end
-	end
-	lines[#lines + 1] = string.format(
-		"Buff Food & Scrolls row: %s // Left-Click turns both: %s",
-		rowState,
-		OnOff(not (profile.useBuffFood or profile.useScrolls))
 	)
 	-- Macro-Notes.lua is new in the TOCs, so a client updated while running lacks it until a restart.
 	if not ns.GetClassMacroNotes then
@@ -1979,7 +1992,7 @@ function ns:BuildSelectionReport()
 		end
 	end
 
-	lines[#lines + 1] = string.format("allowBuffFood (live scan preference): %s", tostring(ns.allowBuffFood))
+	lines[#lines + 1] = string.format("buffFoodRank (live scan preference): %s", tostring(ns.buffFoodRank))
 	lines[#lines + 1] = string.format("allowConjuredFirst (live scan preference): %s", tostring(ns.allowConjuredFirst))
 	lines[#lines + 1] = string.format("allowRestockLast (live scan preference): %s", tostring(ns.allowRestockLast))
 	lines[#lines + 1] = string.format("Runners-up kept (these tools on): %s", YesNo(ns.diagnostics.enabled))
@@ -2079,7 +2092,40 @@ function ns:BuildReadinessDiagnosticReport()
 		return table.concat(lines, "\n")
 	end
 
-	lines[#lines + 1] = string.format("Report enabled: %s", tostring(reports.readinessReportEnabled))
+	-- Both tables are needed: with no profile the report has nothing to say (ns.BuildReadinessLines).
+	lines[#lines + 1] = string.format(
+		"Report enabled: %s // profile loaded: %s",
+		tostring(reports.readinessReportEnabled),
+		YesNo(ns.db.profile)
+	)
+	--[[
+	    The report hears READY_CHECK only while its switch is on
+	    (ns.SyncReadinessReportEvents, at login and from the switch). The
+	    subscription itself is Core's own state, so this reads the event's
+	    standing on this client; the Event Log shows each READY_CHECK that
+	    arrives.
+	]]
+	local isEventValid = C_EventUtils and C_EventUtils.IsEventValid
+	local listed = false
+	for _, event in ipairs(ns.EVENT_NAMES or {}) do
+		if event == "READY_CHECK" then
+			listed = true
+			break
+		end
+	end
+	lines[#lines + 1] = string.format(
+		"READY_CHECK valid on this client: %s // in the add-on's event list: %s // switch hook present: %s",
+		isEventValid and YesNo(isEventValid("READY_CHECK")) or "n/a",
+		YesNo(listed),
+		YesNo(type(ns.SyncReadinessReportEvents) == "function")
+	)
+	-- Every report line is a print, which lands in the default chat frame whatever tab is showing.
+	local chatFrame = _G.DEFAULT_CHAT_FRAME
+	lines[#lines + 1] = string.format(
+		"Prints to: %s // shown now: %s",
+		tostring(chatFrame and chatFrame.GetName and chatFrame:GetName()),
+		YesNo(chatFrame and chatFrame.IsVisible and chatFrame:IsVisible())
+	)
 	-- An arena drops the buff, expiring and missing-item clauses, and an arena or battleground the PvP entry.
 	lines[#lines + 1] = string.format("Instance type: %s", tostring(select(2, IsInInstance())))
 	-- A ready check can only start in a group, so solo the report never runs.
@@ -2121,6 +2167,8 @@ function ns:BuildReadinessDiagnosticReport()
 		local profile = ns.db.profile
 		local okGates, gates = pcall(function()
 			local mainHandMissing, offHandMissing = ns.GetMissingWeaponBuffs()
+			-- The temporary enchants each hand carries now, as the weapon lines count them.
+			local worn = ns.BuffDuty.ReadWeaponEnchants()
 			local gemsCarried = 0
 			for gemID in pairs(ns.MANA_GEMS) do
 				gemsCarried = gemsCarried + (ns.scannedItemCounts[gemID] or 0)
@@ -2169,21 +2217,13 @@ function ns:BuildReadinessDiagnosticReport()
 					YesNo(ns.ReadinessAsksSoulstone(reports)),
 					YesNo(ns.ReadinessAsksManaGem(reports))
 				),
-				string.format(
-					"Well Fed: buff food %s, When to Use holds %s // Scrolls: %s, When to Use holds %s",
-					OnOff(profile.useBuffFood),
-					YesNo(ns.IsUseWhenActive(profile, "buffFood")),
-					OnOff(profile.useScrolls),
-					YesNo(ns.IsUseWhenActive(profile, "scrolls"))
-				),
 				-- Any Well Fed aura or pet food buff counts, however little of it is left.
 				string.format(
 					"Well Fed now: %s // pet food buff now: %s // scroll types covered: %s // scrolls in bags to use: %s",
 					ExpirationText(snapshot.wellFedExpiration),
 					ExpirationText(ns.GetPetFoodBuffExpiration()),
 					#scrollCoverage > 0 and table.concat(scrollCoverage, ", ") or "(none ticked)",
-					(ns.scrollOverrideIDs and #ns.scrollOverrideIDs > 0) and table.concat(ns.scrollOverrideIDs, ", ")
-						or "(none)"
+					table.concat(ns.FindMissingScrolls(ns.scannedItemCounts, snapshot) or { "(none)" }, ", ")
 				),
 				-- An empty flask or elixir table reads as covered, so the Flask line stays silent.
 				string.format(
@@ -2201,11 +2241,18 @@ function ns:BuildReadinessDiagnosticReport()
 					YesNo(ns.GroupHasSoulstone()),
 					YesNo(ns.SoulstonesOnCooldown())
 				),
-				-- A Shaman in your party covers the main hand, except where weapon enchants stack (Forever).
+				--[[
+				    A Shaman in your party covers the main hand, except where weapon
+				    enchants stack (Forever), where a hand your class keeps a poison
+				    or imbue on wants two.
+				]]
 				string.format(
-					"Weapon buffs missing: main hand %s, off hand %s // Shaman in party %s, covers the main hand %s",
+					"Weapon buffs missing: main hand %s, off hand %s // enchants on: main hand %d, off hand %d // enchants stack on this client %s // Shaman in party %s, covers the main hand %s",
 					YesNo(mainHandMissing),
 					YesNo(offHandMissing),
+					#(worn[16] or {}),
+					#(worn[17] or {}),
+					YesNo(ns.WEAPON_ENCHANTS_STACK),
 					YesNo(ns.PartyHasClass("SHAMAN")),
 					YesNo(not ns.WEAPON_ENCHANTS_STACK and ns.PartyHasClass("SHAMAN"))
 				),
@@ -2407,7 +2454,7 @@ for _, constant in ipairs({ "NIGHT_ELF_RACE_ID", "TROLL_RACE_ID", "UNDEAD_RACE_I
 		return info and info.raceName
 	end)
 end
-for _, classToken in ipairs({ "DRUID", "ROGUE" }) do
+for _, classToken in ipairs({ "DRUID", "HUNTER", "ROGUE" }) do
 	AddLookup("LOCALIZED_CLASS_NAMES_MALE." .. classToken, "class", classToken, function()
 		return LOCALIZED_CLASS_NAMES_MALE[classToken]
 	end)
@@ -2625,13 +2672,16 @@ end)
     the collect reads ns[name], and DATA_CONSTANT names the constant on its row.
 ]]
 ns.DIAGNOSTIC_SPELL_ID_CONSTANTS = {
+	"BLOODRAGE_SPELL_ID",
 	"CALL_PET_SPELL_ID",
 	"CANNIBALIZE_SPELL_ID",
 	"DISMISS_PET_SPELL_ID",
+	"DRINK_SPELL_ID",
 	"DRUID_BEAR_FORM_SPELL_ID",
 	"DRUID_CAT_FORM_SPELL_ID",
 	"DRUID_DIRE_BEAR_FORM_SPELL_ID",
 	"FEED_PET_SPELL_ID",
+	"FOOD_SPELL_ID",
 	"GLOBAL_COOLDOWN_SPELL_ID",
 	"GOBLIN_ENGINEER_SPELL_ID",
 	"MEND_PET_SPELL_ID",
@@ -2647,12 +2697,14 @@ ns.DIAGNOSTIC_SPELL_ID_CONSTANTS = {
 ns.DIAGNOSTIC_ITEM_ID_CONSTANTS = {
 	"DARK_RUNE_ITEM_ID",
 	"DEMONIC_RUNE_ITEM_ID",
+	"HEARTHSTONE_ITEM_ID",
 	"SAMPLE_RESTOCK_ITEM_ID",
 }
 
 --[[
     The IDs no lookup kind reads: Game Names checks the skill lines' and the
-    races' names instead, the Call Pet flyout's is counted only, and
+    races' names instead, the Imp's creature family is checked there by
+    name too, the Call Pet flyout's is counted only, and
     SOD_FIRST_SPELL_ID is a threshold, the lowest spell ID the season's
     abilities use, not one spell.
 ]]
@@ -2661,6 +2713,7 @@ ns.DIAGNOSTIC_OTHER_ID_CONSTANTS = {
 	"CALL_PET_FLYOUT_ID",
 	"ENGINEERING_SKILL_LINE_ID",
 	"FIRST_AID_SKILL_LINE_ID",
+	"IMP_CREATURE_FAMILY_ID",
 	"NIGHT_ELF_RACE_ID",
 	"SOD_FIRST_SPELL_ID",
 	"TROLL_RACE_ID",

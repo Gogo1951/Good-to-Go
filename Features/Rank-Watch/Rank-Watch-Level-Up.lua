@@ -3,8 +3,8 @@ local L = ns.L
 
 --[[
 	Ability Alerts While Leveling: on a ding, chat lists what the class trainer has for the new level, and as
-	the settings ask, the spells skipped at earlier levels and the pet's. Set on the Rank Watch panel
-	(ns.db.global.rankWatch) but on its own switch, so it runs whether Rank Watch is on or not, and whether the
+	the settings ask, the spells skipped at earlier levels and the pet's. Set on the Ability Alerts panel
+	under Enhanced Spellbook (stored in ns.db.global.rankWatch) on its own switch, so it runs whether Rank Watch is on or not, and whether the
 	Enhanced Spellbook is: the rows are the What's Next? tab's reading (ns.WhatsNextRows, ns.WhatsNextPetRows),
 	which needs neither.
 

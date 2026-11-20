@@ -910,7 +910,7 @@ ns.TRAINER_SPELLS = {
 		{ level = 22, id = 2870 }, -- Cure Disease
 		{ level = 22, id = 408342, requires = { 408341 } }, -- Fire Nova
 		{ level = 22, id = 8166 }, -- Poison Cleansing Totem
-		{ level = 22, id = 437009 }, -- Totemic Projection
+		{ level = 22, id = 437009 }, -- Totemic Call
 		{ level = 22, id = 131 }, -- Water Breathing
 		{ level = 24, id = 20609, requires = { 2008 } }, -- Ancestral Spirit
 		{ level = 24, id = 8046, requires = { 8045 } }, -- Earth Shock
@@ -1277,7 +1277,7 @@ ns.TRAINER_SPELLS = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, WoW Forever 1.60.1.70938
+	2026-11-19, wago.tools, WoW Forever 1.60.1.70959
 
 Notes
 	- Every class spell this client's class trainers teach, one row per rank, so the spellbook page can list the spells a character hasn't learned yet. Features/Enhanced-Spellbook/Unlearned-Spells.lua shows only each spell's rank 1; the higher ranks keep the list in level order and let it tell rank 1 apart.
@@ -1305,6 +1305,11 @@ wago.tools
 	https://wago.tools/db2/SpellEffect?build=1.60.1.70862
 	https://wago.tools/db2/SkillLineAbility?build=1.60.1.70862
 	https://wago.tools/db2/Talent?build=1.60.1.70862
+	https://wago.tools/db2/SpellName?build=1.60.1.70959
+	https://wago.tools/db2/Spell?build=1.60.1.70959
+	https://wago.tools/db2/SpellMisc?build=1.60.1.70959
+	https://wago.tools/db2/SpellEffect?build=1.60.1.70959
+	https://wago.tools/db2/SpellLevels?build=1.60.1.70959
 
 QuestieDB
 	None.

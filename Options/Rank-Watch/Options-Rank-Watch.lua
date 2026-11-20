@@ -17,7 +17,8 @@ local Spacer = Kit.Spacer
     whisper toggle, while it is on: who whispers for the group right now, the tip's composer, and how a player
     opts out with the opt-out offer and reply's composer (Options/Options-Message-Composer.lua). The tip has its
     own form for a hunter's pet and a warlock's demon; the print is fixed. Ability Alerts While Leveling has
-    its own panel and switch (Options-Ability-Alerts.lua). Which ranks it watches and the players it leaves
+    its own switch and a panel under Enhanced Spellbook
+    (Options/Enhanced-Spellbook/Options-Ability-Alerts.lua). Which ranks it watches and the players it leaves
     alone are the Reported Ranks and Ignored Players panels under this one. Every setting is account-wide
     (ns.db.global.rankWatch; Data/Default-Settings.lua says why).
 ]]
@@ -82,7 +83,7 @@ end
 local function SampleDemonName()
 	local info = C_CreatureInfo
 		and C_CreatureInfo.GetCreatureFamilyInfo
-		and C_CreatureInfo.GetCreatureFamilyInfo(ns.SAMPLE_DEMON_FAMILY_ID)
+		and C_CreatureInfo.GetCreatureFamilyInfo(ns.IMP_CREATURE_FAMILY_ID)
 	return info and info.name or ns.SAMPLE_PET_NAME
 end
 
@@ -252,9 +253,13 @@ function ns.BuildRankWatchOptions()
 			space0 = Spacer(2),
 			switch = Kit.FeatureSwitch("rankWatch.enabled", 3),
 			standaloneSpace = Spacer(3.1, StandaloneHidden),
-			standalone = Desc(function()
+			-- A status line: it shows only while another add-on changes what this page does.
+			standalone = Kit.StatusLine(function()
+				if StandaloneHidden() then
+					return nil
+				end
 				return L["RANK_WATCH_STANDALONE"]:format(ns.RankWatchStandaloneTitle() or "")
-			end, 3.2, StandaloneHidden),
+			end, 3.2),
 
 			graceSpace0 = Spacer(4),
 			graceHeader = Header(L["RANK_WATCH_GRACE_HEADER"], 5),

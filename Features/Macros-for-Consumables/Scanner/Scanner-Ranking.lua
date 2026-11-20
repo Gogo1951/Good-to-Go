@@ -88,8 +88,8 @@ end
       field — record field to compare
       kind  — "bool" (truthy side wins), "higher", or "lower"
       buffFood                   — step runs only when the caller's buff food
-                                   rank matches: "first" (the macro wants the
-                                   Well Fed buff) or "last" (plain food wins,
+                                   rank matches: "first" (Buff Duty's buff food
+                                   pick wants the Well Fed buff) or "last" (plain food wins,
                                    buff food only when nothing else is left)
       falsyWins                  — a "bool" step where the falsy side wins
       gatedOnAllowConjuredFirst  — step runs only when the caller allows
@@ -109,12 +109,11 @@ end
 
 local RANKING_PRIORITY = {
 	--[[
-	    Buff food first when the Food or Water macro wants the Well Fed buff
-	    (ns.allowBuffFood), last when it doesn't: plain food then wins, and
-	    buff food is eaten only when it's all the bags hold, rather than the
-	    macro coming up empty. While Eat Buff Food When Already Well Fed is
-	    on, neither step runs outside the "first" case and buff food competes
-	    on what it restores.
+	    Buff food last while Eat Buff Food When Already Well Fed is off
+	    (ns.buffFoodRank "last"): plain food then wins, and buff food is
+	    eaten only when it's all the bags hold, rather than the macro coming
+	    up empty. While it's on, buff food competes on what it restores.
+	    Buff Duty ranks with "first" for its own buff food pick.
 	]]
 	{ field = "isBuffFood", kind = "bool", buffFood = "first" },
 	{ field = "isBuffFood", kind = "bool", buffFood = "last", falsyWins = true },

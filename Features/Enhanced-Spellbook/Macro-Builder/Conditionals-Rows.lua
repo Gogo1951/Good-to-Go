@@ -18,7 +18,7 @@ local CurrentMacro, Change, RedrawPage, Update = UI.CurrentMacro, UI.Change, UI.
 local PADDING, INNER_WIDTH = ns.DockedPanel.PADDING, ns.DockedPanel.INNER_WIDTH
 local ROWS_TOP, ROW_HEIGHT, ROW_GAP = UI.ROWS_TOP, UI.ROW_HEIGHT, UI.ROW_GAP
 local SLOT_ICON, TEXTURE_ARROW = Widgets.SLOT_ICON, UI.TEXTURE_ARROW
-local DROPDOWN_MIN_WIDTH = 56
+local DROPDOWN_MIN_WIDTH = 64
 local SLOT_HEIGHT = 32
 
 local COLORS = Widgets.COLORS
@@ -89,7 +89,8 @@ local function OpenConditionMenu(owner, index, place)
 	if not row then
 		return
 	end
-	MenuUtil.CreateContextMenu(owner, function(_, root)
+	-- on the add-on's own panels (Macro-Menu-Panels.lua), off the field's corner; a pick closes it
+	ns.OpenMacroMenuPanels(owner, function(_, root)
 		local function AddChoices(menu, at)
 			local other = row.when[at == 1 and 2 or 1]
 			local opposite = other and ns.ConditionRow(other) and ns.ConditionRow(other).opposite
@@ -104,6 +105,7 @@ local function OpenConditionMenu(owner, index, place)
 						Change(function(own)
 							ns.SetConditionalCondition(own, index, at, key)
 						end)
+						return MenuResponse.CloseAll
 					end)
 					local reason = ns.ConditionBlockReason(macro, key)
 					SetTip(element, label, L[condition.descKey], reason)
@@ -114,12 +116,14 @@ local function OpenConditionMenu(owner, index, place)
 			end
 		end
 		AddChoices(root, place)
+		-- a gap before the And submenu, a group of its own; a gap and a line before Drop, an action at the foot
 		if place == 1 and #row.when < ns.CONDITIONALS_MAX_CONDITIONS then
-			root:CreateDivider()
+			root:CreateSpacer()
 			local andMenu = root:CreateButton(L["CONDITIONALS_AND_MENU"])
 			SetTip(andMenu, L["CONDITIONALS_AND_MENU"], L["CONDITIONALS_AND_DESCRIPTION"])
 			AddChoices(andMenu, 2)
 		elseif place == 2 then
+			root:CreateSpacer()
 			root:CreateDivider()
 			local element = root:CreateButton(L["CONDITIONALS_DROP_SECOND"], function()
 				Change(function(own)
@@ -128,7 +132,7 @@ local function OpenConditionMenu(owner, index, place)
 			end)
 			SetTip(element, L["CONDITIONALS_DROP_SECOND"], L["CONDITIONALS_DROP_SECOND_DESCRIPTION"])
 		end
-	end)
+	end, true)
 end
 
 --[[
@@ -156,7 +160,7 @@ end
 
 -- A row's spell slot: the spell's icon and name, or what to do to give it one.
 local function CreateSlot(row)
-	local slot = Widgets.CreateSlot(row, SLOT_HEIGHT, SLOT_ICON, 3, UI.PickOwner)
+	local slot = Widgets.CreateSlot(row, SLOT_HEIGHT, SLOT_ICON, 8, UI.PickOwner)
 	--[[
 		the spell's own tooltip, as a tile shows it, or what to do while the slot is empty; then why the row never
 		casts, if it doesn't, and the clicks
@@ -197,13 +201,13 @@ local function CreateRow(parent, index)
 		end)
 	end, Update)
 	row.first = CreateDropdown(row, 1)
-	row.first:SetPoint("LEFT", row.grip, "RIGHT", 6, 0)
+	row.first:SetPoint("LEFT", row.grip, "RIGHT", 8, 0)
 	row.andText = SizedFontString(row, "GameFontHighlightSmall", 12)
 	row.andText:SetTextColor(unpack(ARROW_INK))
-	row.andText:SetPoint("LEFT", row.first, "RIGHT", 6, 0)
+	row.andText:SetPoint("LEFT", row.first, "RIGHT", 8, 0)
 	row.andText:SetText(L["CONDITIONALS_AND"])
 	row.second = CreateDropdown(row, 2)
-	row.second:SetPoint("LEFT", row.andText, "RIGHT", 6, 0)
+	row.second:SetPoint("LEFT", row.andText, "RIGHT", 8, 0)
 	row.arrow = row:CreateTexture(nil, "ARTWORK")
 	row.arrow:SetTexture(TEXTURE_ARROW)
 	row.arrow:SetVertexColor(unpack(ARROW_INK))
@@ -214,7 +218,7 @@ local function CreateRow(parent, index)
 		end)
 	end)
 	row.slot = CreateSlot(row)
-	row.slot:SetPoint("LEFT", row.arrow, "RIGHT", 6, 0)
+	row.slot:SetPoint("LEFT", row.arrow, "RIGHT", 8, 0)
 	row.slot:SetPoint("RIGHT", row.remove, "LEFT", -4, 0)
 	return row
 end
@@ -233,7 +237,7 @@ local function UpdateRow(row, macro, conditional)
 	row.second:SetShown(two)
 	row.second:SetLabel(two and ConditionLabel(when[2]) or "")
 	row.arrow:ClearAllPoints()
-	row.arrow:SetPoint("LEFT", two and row.second or row.first, "RIGHT", 6, 0)
+	row.arrow:SetPoint("LEFT", two and row.second or row.first, "RIGHT", 8, 0)
 	local slot = row.slot
 	if UI.IsPicking(row.index) then
 		Widgets.DrawPickingSlot(slot)

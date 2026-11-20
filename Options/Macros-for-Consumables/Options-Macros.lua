@@ -16,38 +16,13 @@ local Spacer = Kit.Spacer
     the player put it on another. The exceptions on this panel are
     account-wide and read ns.db.global directly: the Macros master switch,
     Macro Names on Buttons and the Which Macros to Create toggles (see
-    Data/Default-Settings.lua for why each one stays there). Food and drink
-    settings have their own page under this one (Options-Food-Water.lua).
+    Data/Default-Settings.lua for why each one stays there). Each macro's own
+    settings are on a page of its own under this one.
 ]]
-
-local GetSettings = ns.OptionsProfileSettings
 
 -- Everything under the switch hides while Consumable Macros is off.
 local function MacrosOff()
 	return not (ns.db and ns.db.global.macrosEnabled)
-end
-
---------------------------------------------------------------------------------
--- Shared Widget Factories
---------------------------------------------------------------------------------
-
---[[
-    A Mana Gem text naming the two runes, each as its icon and the client's
-    name, built when it shows; a rune still loading shows its loading text and
-    is warmed so the panel repaints.
-]]
-local function ManaRuneText(formatKey)
-	return function()
-		local runeIDs = { ns.DEMONIC_RUNE_ITEM_ID, ns.DARK_RUNE_ITEM_ID }
-		local coldItemIDs = {}
-		for _, itemID in ipairs(runeIDs) do
-			if not C_Item.GetItemInfo(itemID) then
-				coldItemIDs[#coldItemIDs + 1] = itemID
-			end
-		end
-		Kit.WarmItems(coldItemIDs, ns.OPTIONS_REGISTRY.Macros)
-		return string.format(L[formatKey], Kit.ItemName(runeIDs[1]), Kit.ItemName(runeIDs[2]))
-	end
 end
 
 --[[
@@ -92,7 +67,7 @@ local function MacroToggle(macroName, key, order)
 end
 
 --[[
-    The Open Macros Window button. The Settings window closes first, since the
+    The Macros Window row's Open button. The Settings window closes first, since the
     Macros window would otherwise open behind it. MacroFrame_LoadUI is the
     loader every client ships (Classic's UIParent and Forever's MacroUI
     bootstrap; Classic has no ShowMacroFrame), and the window always opens on
@@ -119,15 +94,17 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Everything that shapes the macros Consumable Macros builds, apart from
-    food and drink: which macros exist, then how each behaves. Page order is
-    the Macros master switch, Macro Names on Buttons, Which Macros to Create
-    (with the Open Macros Window button), Potions & Healthstones, Mana Gems &
-    Runes, then Explosives, and a line pointing to Food & Water. Food & Water
-    (Options-Food-Water.lua), the class and race sections
-    (Options-Class-Race.lua) and the Ignore List (Options-Ignore-List.lua)
-    have their own panels, nested under this one. While the switch is off,
-    only the description and the switch stay (Kit.HideAllExcept).
+    Which macros Consumable Macros builds: the Macros master switch, then
+    Which Macros to Create with the Macros Window row and an example (hidden
+    while the Food macro is off, since it shows that macro's line), and
+    Action Bars at the foot with Macro Names on Buttons. How each macro picks its item is on a page of its
+    own nested under this one: Food & Drinks (Options-Food-Drinks.lua);
+    Potions & Mana Gems, Bandages, Healthstone and Explosives (a file each,
+    as Options-Bandages.lua); Class Macros (Options-Class-Macros.lua); and
+    the Ignore List (Options-Ignore-List.lua). While the switch is off, only
+    the description, the switch and Action Bars stay (Kit.HideAllExcept):
+    the names switch hides every button's name, not only this feature's, and
+    applies at once and at each login whether the feature is on or off.
 
     Order values are spaced blocks so a section can be reordered or extended
     without renumbering its neighbors. The switch atop the panel is also in the
@@ -143,23 +120,6 @@ function ns.BuildMacrosOptions()
 		descIntro = Desc(L["OPTIONS_MACROS_DESCRIPTION"], 1),
 		spaceIntro = Spacer(2),
 		toggleMacrosEnabled = Kit.FeatureSwitch("macrosEnabled", 2.5),
-
-		-- Macro Names on Buttons
-		toggleMacroNames = {
-			type = "toggle",
-			name = L["OPTIONS_MACRO_NAMES"],
-			desc = L["OPTIONS_MACRO_NAMES_DESCRIPTION"],
-			order = 3,
-			width = "full",
-			get = function()
-				return ns.db and ns.db.global.showMacroNames
-			end,
-			set = function(_, value)
-				ns.ToggleMacroNames(value)
-				ns.RefreshSettings()
-			end,
-		},
-
 		-- Which Macros to Create
 		spaceEnable0 = Spacer(10),
 		headerEnableMacros = Header(L["OPTIONS_MACROS_TO_CREATE_HEADER"], 11),
@@ -186,122 +146,47 @@ function ns.BuildMacrosOptions()
 			},
 		},
 		spaceEnable3 = Spacer(16),
-		openMacroWindow = {
+		-- In the control column, as every button on a page sits, not a lone button at the left edge.
+		openMacroWindow = Kit.LabelRow(17, nil, L["OPTIONS_MACROS_WINDOW"], {
 			type = "execute",
-			name = L["OPTIONS_OPEN_MACRO_WINDOW"],
+			name = L["OPTIONS_OPEN"],
 			desc = L["OPTIONS_OPEN_MACRO_WINDOW_DESCRIPTION"],
-			order = 17,
-			width = ns.OPTIONS_CONTROL_WIDTH,
 			func = OpenMacroWindow,
-		},
-		-- What a macro prints when your bags hold nothing it can use, as the Food macro prints it.
-		exampleNoItem = Kit.Example(19, nil, function()
+		}),
+		-- What a macro prints when your bags hold nothing it can use, as the Food macro prints it; gone while the Food macro is off.
+		exampleNoItem = Kit.Example(19, function()
+			return not ns.IsMacroEnabled("Food")
+		end, function()
 			return ns.PrintedExampleLines(ns.BuildNoItemLine("Food"))
 		end),
 
-		-- Potions & Healthstones
-		spacePotions0 = Spacer(40),
-		headerPotions = Header(L["OPTIONS_POTIONS_HEADER"], 41),
-		spacePotions1 = Spacer(42),
-		descPotions = Desc(GetColor("BODY") .. L["OPTIONS_POTIONS_DESCRIPTION"] .. "|r", 43),
-		spacePotions2 = Spacer(44),
-		togglePotionsUseFoodAndWater = {
+		-- Action Bars: shown even while Consumable Macros is off, since the names it hides aren't only this feature's.
+		toggleMacroNames = {
 			type = "toggle",
-			name = L["OPTIONS_POTIONS_USE_FOOD_AND_WATER"],
-			desc = L["OPTIONS_POTIONS_USE_FOOD_AND_WATER_DESCRIPTION"],
-			order = 45,
+			name = L["OPTIONS_MACRO_NAMES"],
+			desc = L["OPTIONS_MACRO_NAMES_DESCRIPTION"],
+			order = 31,
 			width = "full",
 			get = function()
-				local settings = GetSettings()
-				return settings and settings.potionsUseFoodAndWater
+				return ns.db and ns.db.global.showMacroNames
 			end,
 			set = function(_, value)
-				ns.db.profile.potionsUseFoodAndWater = value
-				ns.ResetMacroState()
-				ns.RequestUpdate()
+				ns.ToggleMacroNames(value)
 				ns.RefreshSettings()
 			end,
 		},
-		spacePotions3 = Spacer(46),
-		toggleCombineHealthstones = {
-			type = "toggle",
-			name = L["OPTIONS_COMBINE_HEALTHSTONES"],
-			desc = L["OPTIONS_COMBINE_HEALTHSTONES_DESCRIPTION"],
-			order = 47,
-			width = "full",
-			get = function()
-				local settings = GetSettings()
-				return settings and settings.combineHealthstones
-			end,
-			set = function(_, value)
-				ns.db.profile.combineHealthstones = value
-				ns.ResetMacroState()
-				ns.RequestUpdate()
-				ns.RefreshSettings()
-			end,
-		},
-
-		-- Mana Gems & Runes
-		spaceManaGems0 = Spacer(50),
-		headerManaGems = Header(L["OPTIONS_MANA_GEMS_HEADER"], 51),
-		spaceManaGems1 = Spacer(52),
-		descManaGems = Desc(function()
-			return GetColor("BODY") .. ManaRuneText("OPTIONS_MANA_GEMS_DESCRIPTION_FORMAT")() .. "|r"
-		end, 53),
-		spaceManaGems2 = Spacer(54),
-		toggleIncludeManaRunes = {
-			type = "toggle",
-			name = L["OPTIONS_INCLUDE_MANA_RUNES"],
-			desc = ManaRuneText("OPTIONS_INCLUDE_MANA_RUNES_DESCRIPTION_FORMAT"),
-			order = 55,
-			width = "full",
-			get = function()
-				local settings = GetSettings()
-				return settings and settings.includeManaRunes
-			end,
-			set = function(_, value)
-				ns.db.profile.includeManaRunes = value
-				ns.ResetMacroState()
-				ns.RequestUpdate()
-				ns.RefreshSettings()
-			end,
-		},
-
-		-- Explosives
-		spaceExplosives0 = Spacer(350),
-		headerExplosives = Header(L["OPTIONS_EXPLOSIVES_HEADER"], 351),
-		spaceExplosives1 = Spacer(352),
-		descExplosives = Desc(GetColor("BODY") .. L["OPTIONS_EXPLOSIVES_DESCRIPTION"] .. "|r", 353),
-		spaceExplosives2 = Spacer(354),
-		labelExplosivesClickMode = Kit.Label(GetColor("BODY") .. L["OPTIONS_EXPLOSIVES_CLICK_LAYOUT"] .. "|r", 355),
-		explosivesClickMode = {
-			type = "select",
-			name = "",
-			desc = L["OPTIONS_EXPLOSIVES_CLICK_LAYOUT_DESCRIPTION"],
-			order = 356,
-			width = ns.OPTIONS_CONTROL_WIDTH,
-			values = {
-				atplayer = L["EXPLOSIVES_MODE_ATPLAYER"],
-				toss = L["EXPLOSIVES_MODE_TOSS"],
-			},
-			sorting = { "atplayer", "toss" },
-			get = function()
-				return ns.db.profile.explosivesClickMode
-			end,
-			set = function(_, value)
-				ns.db.profile.explosivesClickMode = value
-				ns.ResetMacroState()
-				ns.RequestUpdate()
-				ns.RefreshSettings()
-			end,
-		},
-
-		-- Where the food and drink settings went: their own page under this one.
-		spaceFoodWater = Spacer(360),
-		descFoodWater = Desc(Kit.Color("HELP", L["OPTIONS_FOOD_WATER_ELSEWHERE"]), 361),
 	}
+	Kit.Section(args, "actionBars", 30, L["OPTIONS_ACTION_BARS_HEADER"])
 
-	Kit.HideAllExcept(args, MacrosOff, { "descIntro", "spaceIntro", "toggleMacrosEnabled" })
+	Kit.HideAllExcept(args, MacrosOff, {
+		"descIntro",
+		"spaceIntro",
+		"toggleMacrosEnabled",
+		"actionBarsSpace0",
+		"actionBarsHeader",
+		"actionBarsSpace1",
+		"toggleMacroNames",
+	})
 
 	return {
 		type = "group",

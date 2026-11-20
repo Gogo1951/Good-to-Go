@@ -113,15 +113,22 @@ function ns.PrintRestockShortfall(headline, mode, out, low)
 end
 
 --[[
-    The "orders outstanding" count, singular or plural, for the Restock
-    window's status line (Restocker-Window-Footer.lua). The count is of
-    grocery-list rows, not of missing units, which is what the wording says.
+    The Restock window's status line (Restocker-Window-Footer.lua): how many
+    rows are short, Buy on or off, and how many of those a merchant would be
+    asked for ("Short on 3 items, 2 to buy."), or, with none to buy, that the
+    rest come from the bank. The counts are of rows, not of missing units.
     Every short row counts here, whatever the reminders' threshold: the window
     is the full picture, the reminders the nudge.
 ]]
-function ns.RestockShortfallHeadline(count)
-	if count == 1 then
-		return L["RESTOCKER_STILL_SHORT_ONE"]
+function ns.RestockShortfallHeadline(short, buy)
+	if buy == 0 then
+		if short == 1 then
+			return L["RESTOCKER_SHORT_ONE_NONE_TO_BUY"]
+		end
+		return string.format(L["RESTOCKER_SHORT_NONE_TO_BUY"], short)
 	end
-	return string.format(L["RESTOCKER_STILL_SHORT_MANY"], count)
+	if short == 1 then
+		return L["RESTOCKER_SHORT_ONE_BUY"]
+	end
+	return string.format(L["RESTOCKER_SHORT_BUY"], short, buy)
 end

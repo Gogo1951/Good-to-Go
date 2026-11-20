@@ -17,17 +17,6 @@ local Kit = ns.OptionsKit
 -- The item lists' promote column, sized to hold its button caption.
 ns.OPTIONS_PROMOTE_WIDTH = 0.9
 
---[[
-    The same row inside an inline group (a class's box of buffs). The box insets
-    its content 10 pixels -- in width units, where AceConfigDialog makes 1 unit
-    170 pixels -- and its border takes room besides, so the label gives back 0.3
-    or the control wraps under it. A row outside a box that should line up with
-    the boxed ones below it uses the inset label width: same control, same x.
-]]
-ns.OPTIONS_INLINE_LABEL_WIDTH = ns.OPTIONS_LABEL_WIDTH - 0.3
-ns.OPTIONS_INLINE_INSET_WIDTH = 10 / 170
-ns.OPTIONS_ALIGNED_LABEL_WIDTH = ns.OPTIONS_INLINE_LABEL_WIDTH + ns.OPTIONS_INLINE_INSET_WIDTH
-
 -- A spell or item link cell, three to a row.
 ns.OPTIONS_LINK_WIDTH = ns.OPTIONS_ROW_WIDTH / 3
 
@@ -52,6 +41,30 @@ Kit.SetText({
 	inCombat = L["CHAT_OPTIONS_IN_COMBAT"],
 	reset = L["OPTIONS_RESET"],
 })
+
+--[[
+    A lone button on a row of its own: its own name on it, at the control
+    column's width, in the control column, never at the left edge at its
+    default width. caption, when given, sits in the label column.
+]]
+function ns.OptionsButtonRow(order, hidden, button, caption)
+	local name = button.name
+	local row = Kit.LabelRow(order, hidden, caption or " ", button, caption and button.desc or nil)
+	button.name = name
+	return row
+end
+
+--[[
+    An on/off choice under the control it belongs to, with a sound switch's
+    speaker (Kit.SoundPreview) past the row's end where Kit.ToggleRow puts
+    every other speaker. It stays while the switch is off: it plays whether
+    or not the sound is on, and hearing it first is the point.
+]]
+function ns.OptionsSubToggleRow(order, hidden, toggle, preview)
+	toggle.name = Kit.SubLabel(toggle.name)
+	toggle.width = Kit.ROW_WIDTH - Kit.SUB_INDENT_WIDTH
+	return Kit.SubRow(order, hidden, { toggle, preview })
+end
 
 -- The character's AceDB profile, the Consumable Macros panels' settings table, or nil before the database is open.
 function ns.OptionsProfileSettings()
@@ -120,20 +133,36 @@ local GROUP_CONTEXT_TOGGLE_WIDTH = 0.75
     description. The settings stay editable, so they can be set up first. `setting`
     is the feature's ns.FEATURES setting; its name leads the line in gold.
 ]]
-function ns.AddFeatureOffLine(args, setting)
+function ns.AddFeatureOffLine(args, setting, pageSwitch)
 	local feature = ns.FindFeature(setting)
 	local isOn = Kit.Get(feature.store, feature.setting)
 	local function FeatureOn()
 		return isOn() and true or false
 	end
+	--[[
+	    pageSwitch, where a sub-page has a switch of its own under the feature's
+	    ({ isOn, name, page }, each name a locale key): with the feature on and
+	    that switch off, the line names that switch and the page that holds it.
+	]]
+	local function PageOn()
+		return not pageSwitch or pageSwitch.isOn()
+	end
+	local function StatusOff(name, page)
+		return L["OPTIONS_FEATURE_OFF_STATUS"]:format(Kit.Color("TITLE", name) .. ns.GetColor("HELP"), page)
+	end
 	args.featureOff = Kit.StatusLine(function()
-		if FeatureOn() then
-			return nil
+		if not FeatureOn() then
+			local name = L[feature.name]
+			return StatusOff(name, name)
 		end
-		local name = L[feature.name]
-		return L["OPTIONS_FEATURE_OFF_STATUS"]:format(Kit.Color("TITLE", name) .. ns.GetColor("HELP"), name)
+		if not PageOn() then
+			return StatusOff(L[pageSwitch.name], L[pageSwitch.page])
+		end
+		return nil
 	end, 0.1)
-	args.featureOffSpace = Kit.Spacer(0.2, FeatureOn)
+	args.featureOffSpace = Kit.Spacer(0.2, function()
+		return FeatureOn() and PageOn()
+	end)
 end
 
 function ns.OptionsGroupContextRow(order, hidden, getTable, onChange)

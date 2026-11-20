@@ -12,7 +12,7 @@ local NameBefore = ns.SpellNameBefore
 	A section's header, the space under it and the space over the next one; then each spell's row. The page
 	draws its headers and rows at these sizes (ns.WHATS_NEXT_METRICS).
 ]]
-local HEADER_HEIGHT, HEADER_GAP, SECTION_GAP = 20, 8, 16
+local HEADER_HEIGHT, HEADER_GAP, SECTION_GAP = 16, 8, 16
 local ROW_HEIGHT = 32
 ns.WHATS_NEXT_METRICS = { HEADER_HEIGHT = HEADER_HEIGHT, HEADER_GAP = HEADER_GAP, ROW_HEIGHT = ROW_HEIGHT }
 

@@ -75,66 +75,22 @@ local function WornLayer(enchant, enchantType)
 end
 
 --[[
-    WoW Forever's C_Item.GetWeaponEnchantInfo(weaponSlot): a list per hand,
-    one entry for each enchant, permanent ones included. Only the temporary
-    and imbue ones count. A secret field skips its entry, as if bare.
-]]
-local function ReadModernEnchants(worn)
-	local types, slots = Enum.ItemEnchantType, Enum.WeaponSlot
-	for slot, weaponSlot in pairs({ [MAIN_SLOT] = slots.MainHand, [OFF_SLOT] = slots.OffHand }) do
-		local list = C_Item.GetWeaponEnchantInfo(weaponSlot)
-		if ns.IsPlain(list) and type(list) == "table" then
-			for _, info in ipairs(list) do
-				local has = ns.IsPlain(info) and info.hasEnchant
-				local kind, left, enchant = has and info.enchantType, has and info.timeLeft, has and info.enchantID
-				if
-					ns.IsPlain(has)
-					and has
-					and ns.IsPlain(kind)
-					and (kind == types.Temporary or kind == types.Imbue)
-					and ns.IsPlain(left)
-					and left
-				then
-					enchant = ns.IsPlain(enchant) and enchant or nil
-					local hand = worn[slot]
-					hand[#hand + 1] = { seconds = left / 1000, enchant = enchant, layer = WornLayer(enchant, kind) }
-				end
-			end
-		end
-	end
-end
-
---[[
-    The older GetWeaponEnchantInfo: one enchant per hand. It has returned
-    three values per hand on some clients and four (with the enchant id) on
-    others, so the off hand is found by counting.
-]]
-local function ReadLegacyEnchants(worn)
-	local count = select("#", GetWeaponEnchantInfo())
-	local stride = count >= 8 and 4 or 3
-	local values = { GetWeaponEnchantInfo() }
-	for index, slot in ipairs({ MAIN_SLOT, OFF_SLOT }) do
-		local base = (index - 1) * stride
-		local has, expiration = values[base + 1], values[base + 2]
-		if ns.IsPlain(has) and has and ns.IsPlain(expiration) and expiration then
-			local enchant = stride == 4 and values[base + 4]
-			enchant = ns.IsPlain(enchant) and enchant or nil
-			worn[slot][1] = { seconds = expiration / 1000, enchant = enchant, layer = WornLayer(enchant) }
-		end
-	end
-end
-
---[[
     Each hand's temporary enchants, by slot: a list of { seconds left,
     enchant id (nil where the client names none), layer }. Empty for a bare
     weapon. Diagnostics reads it too.
 ]]
 function BuffDuty.ReadWeaponEnchants()
 	local worn = { [MAIN_SLOT] = {}, [OFF_SLOT] = {} }
-	if C_Item.GetWeaponEnchantInfo and Enum.ItemEnchantType and Enum.WeaponSlot then
-		ReadModernEnchants(worn)
-	else
-		ReadLegacyEnchants(worn)
+	local read = ns.GetWeaponEnchants()
+	for slot, hand in pairs({ [MAIN_SLOT] = read.main, [OFF_SLOT] = read.off }) do
+		for _, info in ipairs(hand) do
+			local list = worn[slot]
+			list[#list + 1] = {
+				seconds = info.timeLeft / 1000,
+				enchant = info.enchantID,
+				layer = WornLayer(info.enchantID, info.enchantType),
+			}
+		end
 	end
 	return worn
 end
@@ -253,7 +209,7 @@ end
     secure template picks that slot. An imbue never asks -- see ImbueLandsOn
     -- so its button just casts. Either way the game's "replace your
     enchant?" question is answered for you (confirmReplace): the click was
-    the answer. The Buff Key passes every weapon icon by (weapon). `level`
+    the answer, for the Buff Key's press too (weapon). `level`
     ranks what it uses, for SortWeaponIcons: an oil's, stone's or lure's item
     level, a poison's required level, or an imbue rank's learn level.
 ]]
@@ -341,7 +297,7 @@ local function WeaponRowLabel(hand)
 	if not ns.IsPlain(texture) or not texture then
 		return name
 	end
-	return ("|T%s:%d:%d|t %s"):format(texture, Data.BUFF_DUTY_ICON_SIZE, Data.BUFF_DUTY_ICON_SIZE, name)
+	return ("|T%s:%d:%d|t %s"):format(texture, Data.BUFF_DUTY_LABEL_ICON_SIZE, Data.BUFF_DUTY_LABEL_ICON_SIZE, name)
 end
 
 --[[

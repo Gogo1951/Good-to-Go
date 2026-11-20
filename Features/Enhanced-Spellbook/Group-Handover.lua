@@ -32,8 +32,8 @@ local function ReplacedSpells(name, members)
 end
 
 --[[
-	Gives a learned spell the WoW macro of the nearest spell it replaced that has one, settings, focus copy and
-	Duplicates included, when it has no macro of its own yet. The sync then finds each of those macros by its
+	Gives a learned spell the WoW macro of the nearest spell it replaced that has one, settings and Duplicates
+	included, when it has no macro of its own yet. The sync then finds each of those macros by its
 	tag, rewrites it to cast the new spell and renames it (see SyncAt in Features/Enhanced-Spellbook/Macro-Sync.lua,
 	which reads macro.replaces). baseID is the learned spell's Rank 1 ID, replacedIds the replaced spells'.
 ]]

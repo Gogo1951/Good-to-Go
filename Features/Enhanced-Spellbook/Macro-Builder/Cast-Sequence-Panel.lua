@@ -26,11 +26,11 @@ local Box, ShowTip = Widgets.Box, Widgets.ShowTip
 
 local PADDING, INNER_WIDTH = Docked.PADDING, Docked.INNER_WIDTH
 local SLOT_ICON = Widgets.SLOT_ICON
-local ROWS_TOP = 72
+local ROWS_TOP = 80
 local ROW_HEIGHT, ROW_GAP = 32, 4 -- a tighter gap than a Conditionals row's, so eight steps leave the footer room
-local NUMBER_WIDTH = 18
-local SLOT_HEIGHT = 24
-local SETTING_HEIGHT, SETTING_LABEL_WIDTH = 32, 150
+local NUMBER_WIDTH = 16
+local SLOT_HEIGHT = 32
+local SETTING_HEIGHT, SETTING_LABEL_WIDTH = 32, 160
 
 local COLORS = Widgets.COLORS
 local PANEL_FILL = COLORS.PANEL_FILL
@@ -129,10 +129,10 @@ local function OpenEndMenu(menuOwner)
 	if not macro then
 		return
 	end
-	MenuUtil.CreateContextMenu(menuOwner, function(_, root)
+	ns.OpenMacroMenuPanels(menuOwner, function(_, root)
 		for _, choice in ipairs({
-			{ false, "CAST_SEQUENCE_END_LOOP", "CAST_SEQUENCE_END_LOOP_DESCRIPTION" },
-			{ true, "CAST_SEQUENCE_END_STOP", "CAST_SEQUENCE_END_STOP_DESCRIPTION" },
+			{ false, "CAST_SEQUENCE_END_LOOP", "CAST_SEQUENCE_END_LOOP_DESCRIPTION", "CAST_SEQUENCE_END_LOOP" },
+			{ true, "CAST_SEQUENCE_END_STOP_SHORT", "CAST_SEQUENCE_END_STOP_DESCRIPTION", "CAST_SEQUENCE_END_STOP" },
 		}) do
 			local stops = choice[1]
 			local element = root:CreateRadio(L[choice[2]], function()
@@ -141,10 +141,12 @@ local function OpenEndMenu(menuOwner)
 				Change(function(own)
 					ns.SetCastSequenceStops(own, stops)
 				end)
+				return MenuResponse.CloseAll
 			end)
-			SetTip(element, L[choice[2]], L[choice[3]])
+			-- the tooltip's title names what Stop leaves the macro on (NULL)
+			SetTip(element, L[choice[4]], L[choice[3]])
 		end
-	end)
+	end, true)
 end
 
 -- Start Over When: each reset key, ticked on or off, then the seconds idle, a choice of one.
@@ -153,7 +155,7 @@ local function OpenResetMenu(menuOwner)
 	if not macro then
 		return
 	end
-	MenuUtil.CreateContextMenu(menuOwner, function(_, root)
+	ns.OpenMacroMenuPanels(menuOwner, function(_, root)
 		for _, reset in ipairs(ns.CAST_SEQUENCE_RESETS) do
 			local key = reset.key
 			local element = root:CreateCheckbox(L[reset.labelKey], function()
@@ -165,8 +167,14 @@ local function OpenResetMenu(menuOwner)
 			end)
 			SetTip(element, L[reset.labelKey], L[reset.descKey])
 		end
-		root:CreateDivider()
+		root:CreateSpacer()
 		local secondsMenu = root:CreateButton(L["CAST_SEQUENCE_RESET_SECONDS_MENU"])
+		-- the seconds it waits ("5 Seconds"), or Off, gray on the right, as every submenu's value is
+		secondsMenu:SetValue(function()
+			local seconds = ns.CastSequenceSeconds(macro)
+			return seconds and L["CAST_SEQUENCE_RESET_SECONDS_VALUE"]:format(seconds)
+				or L["CAST_SEQUENCE_RESET_SECONDS_OFF"]
+		end)
 		SetTip(secondsMenu, L["CAST_SEQUENCE_RESET_SECONDS_MENU"], L["CAST_SEQUENCE_RESET_SECONDS_MENU_DESCRIPTION"])
 		local choices = { false }
 		for _, seconds in ipairs(ns.CAST_SEQUENCE_SECONDS) do
@@ -183,7 +191,7 @@ local function OpenResetMenu(menuOwner)
 				end)
 			end)
 		end
-	end)
+	end, true)
 end
 
 --------------------------------------------------------------------------------
@@ -205,16 +213,16 @@ local function CreateFirst(parent)
 	row:EnableMouse(true)
 	Box(row, PANEL_FILL, ROW_EDGE)
 	local number = NumberText(row, "1")
-	number:SetPoint("LEFT", 6 + 12 + 6, 0) -- in line with the steps' numbers, after their grips
+	number:SetPoint("LEFT", Widgets.ROW_EDGE + Widgets.GRIP_WIDTH + 8, 0) -- in line with the steps' numbers, after their grips
 	row.icon = row:CreateTexture(nil, "ARTWORK")
 	row.icon:SetSize(SLOT_ICON, SLOT_ICON)
-	row.icon:SetPoint("LEFT", number, "RIGHT", 9, 0)
+	row.icon:SetPoint("LEFT", number, "RIGHT", 8, 0)
 	local first = SizedFontString(row, "GameFontHighlightSmall", 12)
 	first:SetTextColor(unpack(MUTED_INK))
 	first:SetPoint("RIGHT", -10, 0)
 	first:SetText(L["CAST_SEQUENCE_FIRST"])
 	row.text = SizedFontString(row, "GameFontNormal", 13)
-	row.text:SetPoint("LEFT", row.icon, "RIGHT", 6, 0)
+	row.text:SetPoint("LEFT", row.icon, "RIGHT", 8, 0)
 	row.text:SetPoint("RIGHT", first, "LEFT", -8, 0)
 	row.text:SetJustifyH("LEFT")
 	row.text:SetWordWrap(false)
@@ -227,7 +235,7 @@ end
 
 -- A step's spell slot: the spell's icon and name, or what to do to give it one.
 local function CreateSlot(row)
-	local slot = Widgets.CreateSlot(row, SLOT_HEIGHT, SLOT_ICON - 2, 2, function()
+	local slot = Widgets.CreateSlot(row, SLOT_HEIGHT, SLOT_ICON, 8, function()
 		return owner
 	end)
 	-- the spell's own tooltip, or what to do while the slot is empty; then the clicks
@@ -260,14 +268,14 @@ local function CreateStep(parent, index)
 		end)
 	end, Update)
 	local number = NumberText(row, tostring(index + 1))
-	number:SetPoint("LEFT", row.grip, "RIGHT", 6, 0)
+	number:SetPoint("LEFT", row.grip, "RIGHT", 8, 0)
 	row.remove = Widgets.CreateRemove(row, "CAST_SEQUENCE_REMOVE_DESCRIPTION", function()
 		Change(function(macro)
 			ns.RemoveCastSequenceStep(macro, index)
 		end)
 	end)
 	row.slot = CreateSlot(row)
-	row.slot:SetPoint("LEFT", number, "RIGHT", 6, 0)
+	row.slot:SetPoint("LEFT", number, "RIGHT", 8, 0)
 	row.slot:SetPoint("RIGHT", row.remove, "LEFT", -4, 0)
 	return row
 end
@@ -322,7 +330,7 @@ Update = function()
 	y = y + 22 + 12
 	panel.finish:SetPoint("TOPLEFT", PADDING, -y)
 	panel.finish.dropdown:SetLabel(
-		L[ns.CastSequenceStops(macro) and "CAST_SEQUENCE_END_STOP" or "CAST_SEQUENCE_END_LOOP"]
+		L[ns.CastSequenceStops(macro) and "CAST_SEQUENCE_END_STOP_SHORT" or "CAST_SEQUENCE_END_LOOP"]
 	)
 	y = y + SETTING_HEIGHT + 4
 	panel.reset:SetPoint("TOPLEFT", PADDING, -y)

@@ -4,7 +4,7 @@ local _, ns = ...
 -- Bandage Macro
 --------------------------------------------------------------------------------
 
--- Standard single-item macro; the engine's default body needs no hooks.
+-- Standard single-item macro; its one hook is the Troll's Rapid Regeneration.
 ns.RegisterMacroType({
 	typeName = "Bandage",
 
@@ -15,5 +15,14 @@ ns.RegisterMacroType({
 	itemTypes = { bandage = true },
 	score = function(data)
 		return data.healthValue
+	end,
+
+	--[[
+	    Troll Rapid Regeneration: out of combat, while it is off cooldown, a
+	    press casts it instead of bandaging (Tools-Troll.lua). In combat the
+	    macro always bandages.
+	]]
+	leadSpell = function()
+		return ns.RapidRegenerationBandageCast()
 	end,
 })

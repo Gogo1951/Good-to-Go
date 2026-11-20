@@ -93,6 +93,20 @@ end
 local READINESS_KEY_PATTERN = "^readiness"
 local MASTER_SWITCH_KEY = "readinessReportEnabled"
 
+-- Whether every category already holds its default, so Reset has nothing to do and grays out.
+local function ReadinessAtDefaults()
+	local defaults = ns.DATABASE_DEFAULTS and ns.DATABASE_DEFAULTS.global
+	if not (ns.db and defaults) then
+		return true
+	end
+	for key, value in pairs(defaults) do
+		if key ~= MASTER_SWITCH_KEY and key:find(READINESS_KEY_PATTERN) and ns.db.global[key] ~= value then
+			return false
+		end
+	end
+	return true
+end
+
 local function ResetReadinessSettings()
 	local defaults = ns.DATABASE_DEFAULTS and ns.DATABASE_DEFAULTS.global
 	if not (ns.db and defaults) then
@@ -187,6 +201,7 @@ local SECTIONS = {
 	{
 		key = "Buffs",
 		title = "OPTIONS_READINESS_BUFFS_HEADER",
+		summary = "OPTIONS_READINESS_BUFFS_SUMMARY",
 		rows = {
 			{
 				key = "readinessFlask",
@@ -197,7 +212,7 @@ local SECTIONS = {
 			{
 				key = "readinessWellFed",
 				name = ns.GetWellFedName,
-				description = "OPTIONS_READINESS_BUFF_FOOD_DESCRIPTION_FORMAT",
+				description = "OPTIONS_READINESS_WELL_FED_DESCRIPTION_FORMAT",
 				descriptionArg = ns.GetWellFedName,
 			},
 			{
@@ -211,7 +226,7 @@ local SECTIONS = {
 			{
 				key = "readinessScrolls",
 				name = "FEATURE_SCROLL_BUFFS",
-				description = "OPTIONS_READINESS_SCROLL_BUFFS_DESCRIPTION",
+				description = "OPTIONS_READINESS_SCROLLS_DESCRIPTION",
 			},
 			{
 				key = "readinessSoulstone",
@@ -241,6 +256,7 @@ local SECTIONS = {
 	{
 		key = "Items",
 		title = "OPTIONS_READINESS_ITEMS_HEADER",
+		summary = "OPTIONS_READINESS_ITEMS_SUMMARY",
 		rows = {
 			{
 				key = "readinessHealthstone",
@@ -279,6 +295,7 @@ local SECTIONS = {
 	{
 		key = "Character",
 		title = "OPTIONS_READINESS_CHARACTER_HEADER",
+		summary = "OPTIONS_READINESS_CHARACTER_SUMMARY",
 		rows = {
 			{
 				key = "readinessSpec",
@@ -305,8 +322,8 @@ local SECTIONS = {
 --------------------------------------------------------------------------------
 
 --[[
-    Opens a section: a break, its header, then a break under it -- the house
-    rhythm every other panel's sections open with. Every row already ends with
+    Opens a section: a break, its header, a break, its summary line and a
+    break under that -- the house rhythm every other panel's sections open with. Every row already ends with
     its own break, so only the first section, which follows the switch, adds
     the break above its header. Returns the next order.
 ]]
@@ -316,7 +333,9 @@ local function AddSection(args, section, order, isFirst)
 	end
 	args["header" .. section.key] = Header(L[section.title], order + 1, ReportsHidden)
 	args["space" .. section.key .. "Under"] = Spacer(order + 2, ReportsHidden)
-	return order + 3
+	args["desc" .. section.key] = Desc(L[section.summary], order + 3, ReportsHidden)
+	args["space" .. section.key .. "Summary"] = Spacer(order + 4, ReportsHidden)
+	return order + 5
 end
 
 -- A row's label or sentence: a function as it stands, or a key, filled with its arg when it has one.
@@ -437,7 +456,7 @@ function ns.BuildReadinessReportOptions()
 		nil,
 		L["OPTIONS_READINESS_RESET"],
 		L["OPTIONS_READINESS_RESET_DESCRIPTION"],
-		nil,
+		ReadinessAtDefaults,
 		ResetReadinessSettings,
 		L["OPTIONS_READINESS_RESET_CONFIRM"]
 	)

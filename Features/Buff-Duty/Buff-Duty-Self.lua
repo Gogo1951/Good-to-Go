@@ -37,7 +37,7 @@ end
 -- Soulstone
 --------------------------------------------------------------------------------
 
--- The best stone in your bags; the list runs from the lowest rank up.
+-- The best stone in your bags; BuffDuty.BuildLookup sorts the list lowest level first.
 local function BestStone(items)
 	for index = #items, 1, -1 do
 		if GetItemCount(items[index]) > 0 then
@@ -149,14 +149,71 @@ local function SelfItemIcon(buff)
 end
 
 --[[
+    Eating or drinking: the aura a meal or a drink puts on you while you sit.
+    Matched by name, since every food and drink has an aura id of its own:
+    the generic Food and Drink nearly all of them show, and the buff food's
+    own spell (by id and name) for one whose aura is named for itself.
+]]
+local function EatingMatcher()
+	local names = {}
+	for _, id in ipairs({ ns.FOOD_SPELL_ID, ns.DRINK_SPELL_ID }) do
+		local name = C_Spell.GetSpellName(id)
+		if ns.IsPlain(name) and name then
+			names[name] = true
+		end
+	end
+	local foodSpellId
+	local itemId = ns.bestBuffFoodID
+	if itemId then
+		local name, id = C_Item.GetItemSpell(itemId)
+		if ns.IsPlain(name) and name then
+			names[name] = true
+		end
+		foodSpellId = ns.IsPlain(id) and id or nil
+	end
+	return function(aura)
+		local spellId, name = aura.spellId, aura.name
+		return (foodSpellId and spellId == foodSpellId) or (ns.IsPlain(name) and name and names[name]) or false
+	end
+end
+
+--[[
+    Whether you're eating or drinking right now; nil when your auras can't be
+    read (secret on WoW Forever, in combat). The Buff Key does nothing while
+    you are (Buff-Duty-Keys.lua): another press would start the meal over,
+    or stand you up for a cast.
+]]
+function BuffDuty.IsEating()
+	if ns.AreAurasSecret() then
+		return nil
+	end
+	local IsEatingAura = EatingMatcher()
+	for i = 1, 40 do
+		local aura = C_UnitAuras.GetBuffDataByIndex("player", i, "HELPFUL")
+		if not aura then
+			return false
+		end
+		if not ns.IsPlain(aura.spellId) then
+			return nil
+		end
+		if IsEatingAura(aura) then
+			return true
+		end
+	end
+	return false
+end
+
+--[[
     Well Fed's time left on you: the longest Well Fed aura, matched by spell
     id or, for a food the tables don't list, by its icon, as the Food macro
-    matches it (Scanner-Auras.lua). Returns had, expires, duration; had is nil
-    when an aura can't be read (secret on WoW Forever), so the window doesn't
-    nag about a buff that may be there.
+    matches it (Scanner-Auras.lua). Returns had, expires, duration, eating;
+    had is nil when an aura can't be read (secret on WoW Forever), so the
+    window doesn't nag about a buff that may be there. eating is true while
+    you're eating or drinking (EatingMatcher), before Well Fed lands.
 ]]
 local function WellFedAura()
-	local had, expires, duration = false, nil, nil
+	local had, expires, duration, eating = false, nil, nil, false
+	local IsEatingAura = EatingMatcher()
 	for i = 1, 40 do
 		local aura = C_UnitAuras.GetBuffDataByIndex("player", i, "HELPFUL")
 		if not aura then
@@ -165,6 +222,9 @@ local function WellFedAura()
 		local spellId, icon = aura.spellId, aura.icon
 		if not (ns.IsPlain(spellId) and ns.IsPlain(icon)) then
 			return nil
+		end
+		if IsEatingAura(aura) then
+			eating = true
 		end
 		if ns.WELL_FED_BUFF_IDS[spellId] or ns.WELL_FED_ICON_IDS[icon] then
 			local auraExpires = ns.IsPlain(aura.expirationTime) and aura.expirationTime or 0
@@ -175,21 +235,24 @@ local function WellFedAura()
 			had = true
 		end
 	end
-	return had, expires, duration
+	return had, expires, duration, eating
 end
 
 --[[
     Well Fed: offered while it's missing or running low, by your own time for
     it, with the buff food the Food macro would eat. It uses that item, so
     the Ignore List and the arena already keep it out (ns.bestBuffFoodID).
+    Nothing while you're eating it: Well Fed lands when the meal ends, and
+    another bite would only spend a second one. The Buff Key eats it too,
+    last of all (wellFed, Buff-Duty-Key-Picker.lua).
 ]]
 local function WellFedIcon(buff)
 	local itemId = ns.bestBuffFoodID
 	if not itemId or GetItemCount(itemId) == 0 then
 		return nil
 	end
-	local had, expires, duration = WellFedAura()
-	if had == nil then
+	local had, expires, duration, eating = WellFedAura()
+	if had == nil or eating then
 		return nil
 	end
 	if had then
@@ -207,7 +270,8 @@ local function WellFedIcon(buff)
 		column = buff.column,
 		unit = "player",
 		targetName = GetUnitName("player", false) or "",
-		hint = L["BUFF_DUTY_TOOLTIP_USE_ITEM"],
+		wellFed = true,
+		hint = L["BUFF_DUTY_TOOLTIP_EAT"],
 	}, expires, duration)
 end
 
@@ -225,7 +289,7 @@ local liveItemCounts = setmetatable({}, {
 --[[
     Scrolls: an icon per scroll type you carry and lack the buff of, or have
     it running low by your own time for Scrolls, in the Food macro's order
-    (ns.SCROLL_CHECK_ORDER). Only the types the Food & Water page ticks count,
+    (ns.SCROLL_CHECK_ORDER). Only the types Buff Duty's Self-Buffs page ticks count,
     by default the ones your class gets use from. Each reads the strongest
     scroll of its type in your bags (ns.FindBestScroll, which keeps to the
     Ignore List), and a stronger elixir or class buff already on you covers
@@ -257,10 +321,107 @@ local function AddScrollIcons(buff, icons)
 				column = buff.column + index / 10,
 				unit = "player",
 				targetName = name,
+				scroll = true,
 				hint = L["BUFF_DUTY_TOOLTIP_READ"],
 			}
 		end
 	end
+end
+
+--[[
+    Bloodrage first, as a warlock's Soulstone icon conjures the stone it
+    lacks: a warrior without the rage for a self buff that costs it (Battle
+    Shout) has its icon cast Bloodrage, then the buff, from one macro. The
+    rage often isn't there yet for the buff's line on that same press, so
+    the next press casts it; Bloodrage on its cooldown by then just errors
+    and the buff still goes off. Read when the window draws and at each Buff
+    Key press; while Bloodrage is on its own cooldown, the icon casts the
+    buff alone.
+]]
+
+local function RageCost(spellId)
+	local costs = spellId and C_Spell.GetSpellPowerCost(spellId)
+	if type(costs) ~= "table" then
+		return nil
+	end
+	for _, cost in ipairs(costs) do
+		if ns.IsPlain(cost.type) and cost.type == Enum.PowerType.Rage and ns.IsPlain(cost.cost) then
+			return cost.cost
+		end
+	end
+	return nil
+end
+
+--[[
+    Short on rage for it: the client's own answer first (usable false,
+    noMana true, as the Buff Key reads it), then the spell's rage cost
+    against your rage, for a client that leaves either unread.
+]]
+local function ShortOnRage(spellId)
+	local usable, noMana = C_Spell.IsSpellUsable(spellId)
+	if ns.IsPlain(usable) and ns.IsPlain(noMana) and noMana and not usable then
+		return RageCost(spellId) ~= nil or UnitPowerType("player") == Enum.PowerType.Rage
+	end
+	local cost = RageCost(spellId)
+	local rage = UnitPower("player", Enum.PowerType.Rage)
+	return cost ~= nil and cost > 0 and ns.IsPlain(rage) and rage < cost
+end
+
+-- A client without Bloodrage leaves its ID out, which reads as never known.
+local function KnowsBloodrage()
+	return ns.BLOODRAGE_SPELL_ID ~= nil and ns.IsPlayerSpell(ns.BLOODRAGE_SPELL_ID)
+end
+
+-- Whether a press should Bloodrage first: short on rage for the spell, with Bloodrage known and off its own cooldown.
+local function NeedsRageFirst(spellId)
+	if not KnowsBloodrage() or not ShortOnRage(spellId) then
+		return false
+	end
+	if ns.AreCooldownsSecret() then
+		return false
+	end
+	local info = C_Spell.GetSpellCooldown(ns.BLOODRAGE_SPELL_ID)
+	local start, duration = info and info.startTime, info and info.duration
+	if not (ns.IsPlain(start) and ns.IsPlain(duration) and start and duration and duration > 0) then
+		return true
+	end
+	return start + duration <= BuffDuty.GlobalCooldownEnd()
+end
+
+--[[
+    Spell id -> the NeedsRageFirst answer the window drew each rage-costing
+    self buff's icon with. The window isn't redrawn on rage alone, so rage
+    decaying after a fight, or Bloodrage coming off its cooldown, asks for a
+    redraw only when one of these answers would change
+    (BuffDuty.CheckRageFirst).
+]]
+local rageFirstDrawn = {}
+
+function BuffDuty.CheckRageFirst()
+	for spellId, drawn in pairs(rageFirstDrawn) do
+		if NeedsRageFirst(spellId) ~= drawn then
+			ns.RequestBuffDutyRefresh()
+			return
+		end
+	end
+end
+
+local function WithRageFirst(spec)
+	if not spec or spec.macrotext or not KnowsBloodrage() then
+		return spec
+	end
+	if not RageCost(spec.spellId) and UnitPowerType("player") ~= Enum.PowerType.Rage then
+		return spec
+	end
+	local needs = NeedsRageFirst(spec.spellId)
+	rageFirstDrawn[spec.spellId] = needs
+	local bloodrage = needs and C_Spell.GetSpellName(ns.BLOODRAGE_SPELL_ID)
+	if not bloodrage then
+		return spec
+	end
+	spec.macrotext = "/cast " .. bloodrage .. "\n/cast " .. (spec.castSpell or spec.spellName)
+	spec.rageFirst = true
+	return spec
 end
 
 --------------------------------------------------------------------------------
@@ -283,12 +444,18 @@ function BuffDuty.AddSelfSection(sections)
 	local icons, rows = {}, {}
 
 	ReadAuras("player")
+	wipe(rageFirstDrawn)
 	local name = GetUnitName("player", false) or ""
 	for _, buff in ipairs(selfEnabled and selfBuffs or {}) do
 		if HasPet() or not buff.needsPet then
 			local has, expires, duration = Has(buff, "player")
 			if not has then
-				icons[#icons + 1] = BuffDuty.WithTimeLeft(SingleIcon(buff, "player", "player", name), expires, duration)
+				local icon =
+					BuffDuty.WithTimeLeft(WithRageFirst(SingleIcon(buff, "player", "player", name)), expires, duration)
+				if icon then
+					icon.castLast = buff.castLast
+				end
+				icons[#icons + 1] = icon
 			end
 		end
 	end
@@ -312,6 +479,6 @@ function BuffDuty.AddSelfSection(sections)
 
 	if #icons > 0 or #rows > 0 then
 		sections[#sections + 1] =
-			{ kind = "self", label = L["BUFF_DUTY_MISSING_SELF_HEADER"], icons = icons, rows = rows, grid = "self" }
+			{ kind = "self", label = L["BUFF_DUTY_SELF_HEADER"], icons = icons, rows = rows, grid = "self" }
 	end
 end

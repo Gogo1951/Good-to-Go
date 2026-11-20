@@ -769,7 +769,7 @@ ns.DEMON_ABILITIES = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, WoW Forever 1.60.1.70938
+	2026-11-19, wago.tools, WoW Forever 1.60.1.70959
 
 Notes
 	- The hunter pet ability ranks for the Pet What's Next? tab (Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Pet.lua), which shows only where this table has rows, and for Ability Alerts While Leveling's pet lines (Features/Rank-Watch/Rank-Watch-Level-Up.lua), which take only the HUNTER_TRAINER rows.
@@ -794,6 +794,12 @@ wago.tools
 	https://wago.tools/db2/SpellLevels?build=1.60.1.70888
 	https://wago.tools/db2/CreatureFamily?build=1.60.1.70888
 	https://wago.tools/db2/AreaTable?build=1.60.1.70888
+	https://wago.tools/db2/SpellName?build=1.60.1.70959
+	https://wago.tools/db2/AreaTable?build=1.60.1.70959
+	https://wago.tools/db2/Spell?build=1.60.1.70959
+	https://wago.tools/db2/SpellMisc?build=1.60.1.70959
+	https://wago.tools/db2/SpellEffect?build=1.60.1.70959
+	https://wago.tools/db2/SpellLevels?build=1.60.1.70959
 
 Petopia
 	https://www.wow-petopia.com/forever/abilities.php (2026-11-15)

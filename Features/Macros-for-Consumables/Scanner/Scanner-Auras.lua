@@ -3,8 +3,8 @@ local _, ns = ...
 --[[
     Scanner-Auras -- reads live player/pet auras and decides which buffs the
     character still needs: aura probes (Well Fed, scroll, and pet-food buffs),
-    early re-application, and the UNIT_AURA handler. The scroll override
-    resolver is Scanner-Scrolls.lua.
+    early re-application, and the UNIT_AURA handler. Scrolls are Buff Duty's
+    (Buff-Duty-Self.lua), which reads Scanner-Scrolls.lua.
 ]]
 
 --------------------------------------------------------------------------------
@@ -163,7 +163,7 @@ end
     firehose and the Well Fed probe runs on every tick. That makes the return
     value a single shared buffer, not a private copy: a caller must not hold it
     across another call to this function, and one that needs several answers
-    takes one snapshot and passes it down (see ns.FindScrollOverrides).
+    takes one snapshot and passes it down (see ns.FindMissingScrolls).
 
     While the client restricts aura data (Forever, which is Retail's engine),
     every field read comes back secret and comparing one errors, so the walk is
@@ -233,20 +233,6 @@ function ns.GetPlayerBuffSnapshot()
 	end
 
 	return snapshot
-end
-
---------------------------------------------------------------------------------
--- Well Fed
---------------------------------------------------------------------------------
-
---[[
-    Takes a snapshot rather than walking the auras, so the aura handler and
-    ns.UpdateAuraTracking settle Well Fed from the same pass they use for
-    scrolls.
-]]
-local function WellFedFromSnapshot(currentSnapshot)
-	local expiration = currentSnapshot.wellFedExpiration
-	return expiration ~= nil and BuffCountsAsActive(expiration)
 end
 
 --------------------------------------------------------------------------------
@@ -379,66 +365,20 @@ function ns.HasPetFoodBuff()
 end
 
 --------------------------------------------------------------------------------
--- Scroll Aura Baseline
+-- Pet Food Reading
 --------------------------------------------------------------------------------
 
---[[
-    Last-seen aura inputs to the scroll decision, one entry per scroll type.
-    ns.HasScrollBuff answers from exactly two snapshot fields -- the scroll's own
-    expiration and the largest conflicting buff amount -- so tracking those
-    two is what separates an aura change that could flip a scroll line from the
-    firehose of unrelated ones. The verdict itself is deliberately not recomputed
-    here: it needs the scroll amount from the bag scan, which this path has no
-    access to, and the early-reapply threshold it applies moves with time rather
-    than with any event (ScheduleExpiryRecheck owns that case).
-
-    Every scan records these through ns.UpdateAuraTracking, not only the aura
-    handler. The dispatcher never calls the handler in combat, so a baseline the
-    handler alone wrote would still hold the pre-fight reading after the
-    post-combat rebuild, and a buff that changed mid-fight and changed back
-    afterward would read as no change, leaving the macros built for the fight.
-]]
-local lastScrollExpiration = {}
-local lastScrollConflict = {}
-local scrollStateKnown = false
-
--- The pet food decision's last reading, kept the same way: nil until a scan or the handler records one.
+-- The pet food decision's last reading: nil until a scan or the handler records one.
 local lastPetFoodBuff
 
 --[[
-    Called from ns.ResetMacroState: a forced rebuild drops the baseline so
-    nothing is compared against readings taken under the old settings. The next
-    scan records a fresh one, and an aura event that arrives first counts as a
-    change.
+    Called from ns.ResetMacroState: a forced rebuild drops the pet food
+    reading so nothing is compared against one taken under the old settings.
+    The next scan records a fresh one, and an aura event that arrives first
+    counts as a change.
 ]]
 function ns.ResetScrollBuffTracking()
-	wipe(lastScrollExpiration)
-	wipe(lastScrollConflict)
-	scrollStateKnown = false
 	lastPetFoodBuff = nil
-end
-
---[[
-    Records this pass's values and reports whether any moved. The loop always
-    runs to completion -- returning early on the first difference would leave the
-    remaining types holding stale values and report a phantom change next call.
-]]
-local function ScrollAurasChanged(currentSnapshot, scrollTypes)
-	local changed = not scrollStateKnown
-	scrollStateKnown = true
-
-	for _, scrollType in ipairs(ns.SCROLL_CHECK_ORDER) do
-		local entry = scrollTypes[scrollType] and currentSnapshot.scrolls[scrollType]
-		local expiration = entry and entry.expiration or nil
-		local conflictAmount = entry and entry.conflictAmount or nil
-		if expiration ~= lastScrollExpiration[scrollType] or conflictAmount ~= lastScrollConflict[scrollType] then
-			changed = true
-		end
-		lastScrollExpiration[scrollType] = expiration
-		lastScrollConflict[scrollType] = conflictAmount
-	end
-
-	return changed
 end
 
 --------------------------------------------------------------------------------
@@ -448,54 +388,27 @@ end
 local auraEventRegistered
 
 --[[
-    Whether each player-side aura feature is live: its switch is on and its
-    When to Use holds. ns.UpdateAuraTracking and ns.OnUnitAura both ask, so what
-    the scan tracks and what the aura handler diffs can never disagree.
-]]
-local function PlayerAuraFeaturesActive(settings)
-	local buffFoodActive = (settings.useBuffFood and ns.IsUseWhenActive(settings, "buffFood")) and true or false
-	local scrollsActive = (settings.useScrolls and ns.IsUseWhenActive(settings, "scrolls")) and true or false
-	return buffFoodActive, scrollsActive
-end
-
---[[
-    Returns the player snapshot it took, or nil when neither player-side
-    feature is active, so ns.ScanBags can hand it on to ns.FindScrollOverrides
-    instead of walking the auras a second time. While scrolls are live it also
-    records the scroll baseline from that same snapshot, so the aura handler
-    compares against what the latest scan saw (see Scroll Aura Baseline).
-    UNIT_AURA is only re-registered when the wanted state flips, since every
-    bag scan passes through here.
+    Keeps UNIT_AURA on for the pet while Pet Food Buffs is live and records
+    the pet food reading the aura handler diffs against. Buff food and scrolls
+    for the player are Buff Duty's, which watches its own auras. UNIT_AURA
+    is only re-registered when the wanted state flips, since every bag scan
+    passes through here.
 ]]
 function ns.UpdateAuraTracking()
 	local settings = ns.db.profile
-
-	local buffFoodActive, scrollsActive = PlayerAuraFeaturesActive(settings)
 	local petBuffActive = HAS_PET_BUFF_FOODS and settings.usePetBuffFood and ns.IsUseWhenActive(settings, "petBuffFood")
 
-	local currentSnapshot
-	if buffFoodActive or scrollsActive then
-		currentSnapshot = ns.GetPlayerBuffSnapshot()
-		ns.wellFedState = WellFedFromSnapshot(currentSnapshot)
-		if scrollsActive and settings.scrollTypes then
-			ScrollAurasChanged(currentSnapshot, settings.scrollTypes)
-		end
-	else
-		ns.wellFedState = false
-	end
 	if petBuffActive and ns.ShouldTrackPetFood() then
 		lastPetFoodBuff = ns.HasPetFoodBuff()
 	else
 		lastPetFoodBuff = nil
 	end
 
-	local wantAuraEvent = (buffFoodActive or scrollsActive or petBuffActive) and true or false
+	local wantAuraEvent = petBuffActive and true or false
 	if wantAuraEvent ~= auraEventRegistered then
 		auraEventRegistered = wantAuraEvent
-		ns.SetEventRegistered("UNIT_AURA", wantAuraEvent, "player", "pet")
+		ns.SetEventRegistered("UNIT_AURA", wantAuraEvent, "pet")
 	end
-
-	return currentSnapshot
 end
 
 --------------------------------------------------------------------------------
@@ -503,15 +416,11 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    UNIT_AURA handler routed from Core's dispatcher. One snapshot pass settles
-    both player-side features, and each requests a rebuild only on a real change
-    while it is live: Well Fed diffs its own state, scrolls diff the two inputs
-    above. UNIT_AURA is a firehose and a rebuild is a full bag rescan, so an
-    unconditional request here costs one of those per unrelated buff; and a diff
-    against a feature ns.UpdateAuraTracking is not tracking reads as a change on
-    every firing, since the scan resets that state. The pet branch diffs the one
-    thing its decision reads, whether the pet food buff is up: a raid's buff
-    round lands blessings and totems on the pet too.
+    UNIT_AURA handler routed from Core's dispatcher, registered for the pet
+    alone (ns.UpdateAuraTracking). It diffs the one thing the pet decision
+    reads, whether the pet food buff is up: UNIT_AURA is a firehose, a rebuild
+    is a full bag rescan, and a raid's buff round lands blessings and totems
+    on the pet too.
 ]]
 function ns.OnUnitAura(unit)
 	local needsUpdate = false
@@ -525,31 +434,7 @@ function ns.OnUnitAura(unit)
 	]]
 	local reason
 
-	if unit == "player" then
-		local settings = ns.db and ns.db.profile
-		local buffFoodActive, scrollsActive = false, false
-		if settings then
-			buffFoodActive, scrollsActive = PlayerAuraFeaturesActive(settings)
-		end
-
-		if buffFoodActive or scrollsActive then
-			local currentSnapshot = ns.GetPlayerBuffSnapshot()
-
-			local wellFedState = WellFedFromSnapshot(currentSnapshot)
-			if wellFedState ~= ns.wellFedState then
-				ns.wellFedState = wellFedState
-				needsUpdate = true
-				reason = "wellfed"
-			end
-
-			if scrollsActive and settings.scrollTypes then
-				if ScrollAurasChanged(currentSnapshot, settings.scrollTypes) then
-					needsUpdate = true
-					reason = reason and (reason .. "+scrolls") or "scrolls"
-				end
-			end
-		end
-	elseif unit == "pet" then
+	if unit == "pet" then
 		if ns.ShouldTrackPetFood() then
 			local hasPetFoodBuff = ns.HasPetFoodBuff()
 			if hasPetFoodBuff ~= lastPetFoodBuff then

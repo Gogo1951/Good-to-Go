@@ -31,6 +31,15 @@ local cooldownsThisPass = {}
 
 -- An item icon (a poison, a Soulstone) shows the item's own cooldown; a spell icon its spell's.
 local function GetCooldown(spec)
+	-- An ask (Buff-Duty-Asks.lua) shows the wait before that player can be asked for it again.
+	if spec.ask then
+		local BuffDuty = ns.BuffDuty
+		local at = BuffDuty.AskedAt(spec.ask.guid, spec.askKey)
+		if at then
+			return at, BuffDuty.ASK_TARGET_COOLDOWN, 1
+		end
+		return 0, 0, 1
+	end
 	if spec.itemId then
 		local start, duration = GetItemCooldown(spec.itemId)
 		return start, duration, 1
@@ -96,6 +105,8 @@ end
 
 local function OnSpellUpdateCooldown()
 	ns.UpdateBuffDutyCooldowns()
+	-- Bloodrage coming off its cooldown puts it back ahead of Battle Shout.
+	ns.BuffDuty.CheckRageFirst()
 end
 
 ns.SetBuffDutyEventHandler("SPELL_UPDATE_COOLDOWN", OnSpellUpdateCooldown)

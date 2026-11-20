@@ -30,7 +30,7 @@ ns.RESTOCK_WINDOW_BANDS = {
 	FOOTER_HEIGHT = 32,
 	FRAME_BORDER = 4,
 	INSET_LEFT = 4, -- the portrait frame's border, as ButtonFrameTemplate places its own inset
-	INSET_RIGHT = 6,
+	INSET_RIGHT = 4,
 }
 
 local BANDS = ns.RESTOCK_WINDOW_BANDS
@@ -69,10 +69,15 @@ function ns.CreateRestockerPortraitFrame(name, title)
 	return frame
 end
 
--- The inset holding a window's body, between its header and its footer.
-function ns.CreateRestockerBodyInset(frame)
+--[[
+    The inset holding a window's body, between its header and its footer; with
+    noControls, straight under the title bar, for a window with no controls row
+    (the Staples window).
+]]
+function ns.CreateRestockerBodyInset(frame, noControls)
 	local inset = CreateFrame("Frame", nil, frame, "InsetFrameTemplate3")
-	inset:SetPoint("TOPLEFT", frame, "TOPLEFT", BANDS.INSET_LEFT, -(BANDS.TITLE_HEIGHT + BANDS.CONTROLS_HEIGHT))
+	local top = BANDS.TITLE_HEIGHT + (noControls and 0 or BANDS.CONTROLS_HEIGHT)
+	inset:SetPoint("TOPLEFT", frame, "TOPLEFT", BANDS.INSET_LEFT, -top)
 	inset:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -BANDS.INSET_RIGHT, BANDS.FRAME_BORDER + BANDS.FOOTER_HEIGHT)
 	return inset
 end

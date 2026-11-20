@@ -37,7 +37,7 @@ local HEADER_SIZE, CONTINUED_SIZE, NAME_SIZE, NOTE_SIZE = 16, 12, 13, 12
 	wide as the page's widest source label, so "Demon Trainer" stays on one line, and never narrower than
 	MIN_SOURCE_WIDTH, so the columns line up between pages with short labels.
 ]]
-local MIN_SOURCE_WIDTH, LEVEL_WIDTH, STATUS_WIDTH = 64, 64, 124
+local MIN_SOURCE_WIDTH, LEVEL_WIDTH, STATUS_WIDTH = 64, 64, 128
 local EMPTY_WIDTH = 464 -- the empty note's wrap width, a Spell Book column's
 
 local INK, FADED_INK = ns.INK_COLOR, ns.FADED_INK_COLOR
@@ -90,6 +90,40 @@ local function BuildPage(frame, model)
 		return header
 	end
 
+	--[[
+		What a click on a row opens, or nil when it names nothing that opens: a class spell's tile on the
+		Enhanced Spellbook page, a pet ability the pet knows in the Pet Spell Book, or, on a page that places
+		spells, the spell on the cursor. Each comes with its tooltip's click line.
+	]]
+	local function RowClick(row)
+		if model.pickup then
+			return { key = "TOOLTIP_KEY_CLICK_DRAG", action = "TOOLTIP_ACTION_PLACE_ON_BAR", run = model.pickup }
+		end
+		if model == MODELS.CLASS then
+			local pageNumber = page.spellPages and page.spellPages[ns.SpellName(row.id) or ""]
+			if pageNumber then
+				return {
+					key = "TOOLTIP_KEY_CLICK",
+					action = "WHATS_NEXT_CLICK_SPELL",
+					run = function()
+						ns.ShowSpellbookPageNumber(pageNumber)
+					end,
+				}
+			end
+			return nil
+		end
+		if row.status == "KNOWN" and ns.HasPetSpellbook() then
+			return {
+				key = "TOOLTIP_KEY_CLICK",
+				action = "WHATS_NEXT_CLICK_PET",
+				run = function()
+					ns.ShowSpellbookTab(ns.SPELLBOOK_TAB_PET_BOOK)
+				end,
+			}
+		end
+		return nil
+	end
+
 	local function ShowRowTooltip(self)
 		local row = self.row
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -107,13 +141,22 @@ local function BuildPage(frame, model)
 			GameTooltip:AddLine(" ")
 			ns.AddSpellRankLines(row, ranks)
 		end
-		if C_Spell.GetSpellLink then
+		local click = self.click
+		-- The pickup line is the Pet Spell Book model's own (Whats-Next-Models.lua); the others are added here.
+		if click and not model.pickup then
 			GameTooltip:AddLine(" ")
 			GameTooltip:AddDoubleLine(
-				GetColor("INFO") .. L["TOOLTIP_KEY_SHIFT_CLICK"] .. "|r",
-				GetColor("INFO") .. L["TOOLTIP_ACTION_LINK_IN_CHAT"] .. "|r"
+				GetColor("INFO") .. L[click.key] .. "|r",
+				GetColor("INFO") .. L[click.action] .. "|r"
 			)
 		end
+		if not (click and not model.pickup) then
+			GameTooltip:AddLine(" ")
+		end
+		GameTooltip:AddDoubleLine(
+			GetColor("INFO") .. L["TOOLTIP_KEY_SHIFT_CLICK"] .. "|r",
+			GetColor("INFO") .. L["TOOLTIP_ACTION_LINK_IN_CHAT"] .. "|r"
+		)
 		GameTooltip:Show()
 	end
 
@@ -123,12 +166,12 @@ local function BuildPage(frame, model)
 	]]
 	local function ClickRow(self)
 		if IsModifiedClick("CHATLINK") then
-			local link = C_Spell.GetSpellLink and C_Spell.GetSpellLink(self.row.id)
+			local link = C_Spell.GetSpellLink(self.row.id)
 			if link then
 				ChatEdit_InsertLink(link)
 			end
-		elseif model.pickup then
-			model.pickup(self.row)
+		elseif self.click then
+			self.click.run(self.row)
 		end
 	end
 
@@ -154,9 +197,10 @@ local function BuildPage(frame, model)
 		button.name:SetShadowOffset(0, 0)
 		button.name:SetJustifyH("LEFT")
 		button.name:SetWordWrap(false)
-		button.name:SetPoint("LEFT", button.icon, "RIGHT", 6, 0)
+		button.name:SetPoint("LEFT", button.icon, "RIGHT", 8, 0)
 		button.name:SetPoint("RIGHT", button.source, "LEFT", -8, 0)
 		local highlight = button:CreateTexture(nil, "HIGHLIGHT")
+		button.highlight = highlight
 		highlight:SetAllPoints()
 		highlight:SetColorTexture(INK[1], INK[2], INK[3], 0.08)
 		button:SetScript("OnEnter", ShowRowTooltip)
@@ -173,6 +217,9 @@ local function BuildPage(frame, model)
 
 	local function SetRow(button, row, byLevel)
 		button.row = row
+		-- A row that opens nothing doesn't light up on hover, so it stops looking clickable.
+		button.click = RowClick(row)
+		button.highlight:SetShown(button.click ~= nil)
 		button.icon:SetTexture(row.icon)
 		-- known, or not this pet's to learn: faded
 		local faded = row.status == "KNOWN" or row.status == "OTHER"
@@ -219,6 +266,10 @@ local function BuildPage(frame, model)
 	local function Layout()
 		page.headers:ReleaseAll()
 		page.rowButtons:ReleaseAll()
+		-- Read once a draw, for the rows that open their spell's page (RowClick).
+		if model == MODELS.CLASS then
+			page.spellPages = ns.SpellbookPagesBySpellName()
+		end
 		local controls = page.pagingControls
 		local sections = Sections(page, model)
 		if #sections == 0 then
@@ -253,7 +304,7 @@ local function BuildPage(frame, model)
 				header.Text:SetTextColor(unpack(block.section.status and INKS[block.section.status] or HEADER_INK))
 				-- an empty "(Continued)" sits flush against the name, so the rule starts where it always does
 				header.Continued:SetText(block.continued and L["PAGE_CONTINUED"] or "")
-				header.Continued:SetPoint("LEFT", header.Text, "RIGHT", block.continued and 6 or 0, 0)
+				header.Continued:SetPoint("LEFT", header.Text, "RIGHT", block.continued and 8 or 0, 0)
 				top = top + HEADER_HEIGHT + HEADER_GAP
 				for r = block.first, block.last do
 					local button = page.rowButtons:Acquire()

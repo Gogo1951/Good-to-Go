@@ -130,7 +130,7 @@ ns.CLASS_SPELL_LISTS = {
 			99, -- Disorienting Roar
 			102793, -- Ursol's Vortex
 			78675, -- Solar Beam
-			99, -- Demoralizing Roar
+			99, -- Disorienting Roar
 		},
 		offensives = {
 			5217, -- Tiger's Fury
@@ -228,7 +228,6 @@ ns.CLASS_SPELL_LISTS = {
 			1513, -- Scare Beast
 			34490, -- Silencing Shot
 			5116, -- Concussive Shot
-			2974, -- Wing Clip
 		},
 		defensives = {
 			19263, -- Deterrence
@@ -567,7 +566,7 @@ ns.CLASS_SPELL_LISTS = {
 		},
 		threat = {
 			25780, -- Righteous Fury
-			62124, -- Hand of Reckoning
+			62124, -- Reckoning
 		},
 		noCooldown = {
 			1044, -- Hand of Freedom
@@ -654,7 +653,7 @@ ns.CLASS_SPELL_LISTS = {
 		},
 		crowdControl = {
 			8122, -- Psychic Scream
-			605, -- Mind Control
+			605, -- Dominate Mind
 			9484, -- Shackle Undead
 			88625, -- Holy Word: Chastise
 			64044, -- Psychic Horror
@@ -924,7 +923,7 @@ ns.CLASS_SPELL_LISTS = {
 			710, -- Banish
 			30283, -- Shadowfury
 			111397, -- Blood Horror
-			1098, -- Enslave Demon
+			1098, -- Subjugate Demon
 		},
 		defensives = {
 			104773, -- Unending Resolve
@@ -941,7 +940,7 @@ ns.CLASS_SPELL_LISTS = {
 		noCooldown = {
 			20707, -- Soulstone
 			698, -- Ritual of Summoning
-			29893, -- Ritual of Souls
+			29893, -- Create Soulwell
 			48018, -- Demonic Circle: Summon
 			48020, -- Demonic Circle: Teleport
 			126, -- Eye of Kilrogg
@@ -1077,12 +1076,13 @@ ns.CLASS_SPELL_LISTS = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-19, wago.tools, Mists of Pandaria Classic 5.5.4.71060
 
 Notes
 	- Each class's lists for the spellbook page: the spells whose macros get the mouseover, cursor and channeled options, stealth, the aspects that offer "!Name" casting, the ability each demon summon's macro can cast. Features/Enhanced-Spellbook/Macro-Builder/Macro-Builder.lua reads them.
 	- One ID per spell: this client has no spell ranks, and spells are matched by the name this client gives them.
 	- Built from this client's game tables after a Validate Data report that found every table here empty; the next report confirmed every row on this client.
+	- Left out because this client's spell table doesn't have it: Wing Clip (2974), which the hunter's crowdControl list carried.
 	- The class's spells are the ones on its class skill line, its specializations or its talents (SkillLineAbility, SpecializationSpells, Talent), leaving out passive and hidden spells and the effects other spells fire.
 	- mouseoverEnemy: spells cast on an enemy unit (SpellEffect target) from range, plus the melee-range interrupts, crowd control and taunts. Melee strikes are left out; any harmful spell with a range gets the mouseover option anyway (TargetsEnemy in Features/Enhanced-Spellbook/Macro-Builder/Macro-Builder.lua).
 	- mouseoverFriend: spells cast on a friendly unit, resurrections, and the raid buffs cast on a target. A spell that heals a friend or hurts an enemy (Holy Shock, Penance, Chi Wave, Cascade, Holy Prism, Execution Sentence, Mind Sear, Gorefiend's Grasp, Shadowstep) is on both lists, so its macro casts on any unit.
@@ -1118,6 +1118,12 @@ wago.tools
 	https://wago.tools/db2/SpellShapeshift?build=5.5.4.70579
 	https://wago.tools/db2/SpellShapeshiftForm?build=5.5.4.70579
 	https://wago.tools/db2/CreatureFamily?build=5.5.4.70579
+	https://wago.tools/db2/SpellName?build=5.5.4.70960
+	https://wago.tools/db2/Spell?build=5.5.4.70960
+	https://wago.tools/db2/SpellMisc?build=5.5.4.70960
+	https://wago.tools/db2/SpellEffect?build=5.5.4.70960
+	https://wago.tools/db2/SpellLevels?build=5.5.4.70960
+	https://wago.tools/db2/SpellName?build=5.5.4.71060
 
 QuestieDB
 	None.

@@ -33,9 +33,9 @@ local Box, ShowTip = Widgets.Box, Widgets.ShowTip
 
 local PADDING, INNER_WIDTH = Docked.PADDING, Docked.INNER_WIDTH
 local SLOT_ICON = Widgets.SLOT_ICON
-local ROWS_TOP = 72
+local ROWS_TOP = 80
 local ROW_HEIGHT, ROW_GAP = 32, 8
-local OTHERWISE_LABEL_WIDTH = 96
+local OTHERWISE_LABEL_WIDTH = 128
 
 local COLORS = Widgets.COLORS
 local PANEL_FILL, ROW_EDGE = COLORS.PANEL_FILL, COLORS.ROW_EDGE
@@ -72,8 +72,7 @@ local function Change(set)
 end
 
 --[[
-	Whether the panel is open for a page macro, so its tile is outlined on the page. A focus copy shares its
-	spell's settings key but has no Conditionals, so it is never the one.
+	Whether the panel is open for a page macro, so its tile is outlined on the page.
 ]]
 function ns.IsConditionalsPanelFor(macro)
 	return panel ~= nil and panel:IsShown() and ns.OffersConditionals(macro) and SettingsKey(macro) == panel.key
@@ -106,13 +105,13 @@ local function CreateOtherwise(parent)
 	arrow:SetTexture(TEXTURE_ARROW)
 	arrow:SetVertexColor(unpack(ARROW_INK))
 	arrow:SetSize(12, 12)
-	arrow:SetPoint("LEFT", label, "RIGHT", 6, 0)
+	arrow:SetPoint("LEFT", label, "RIGHT", 8, 0)
 	row.icon = row:CreateTexture(nil, "ARTWORK")
 	row.icon:SetSize(SLOT_ICON, SLOT_ICON)
-	row.icon:SetPoint("LEFT", arrow, "RIGHT", 9, 0)
+	row.icon:SetPoint("LEFT", arrow, "RIGHT", 8, 0)
 	row.text = SizedFontString(row, "GameFontNormal", 13)
-	row.text:SetPoint("LEFT", row.icon, "RIGHT", 6, 0)
-	row.text:SetPoint("RIGHT", -6, 0)
+	row.text:SetPoint("LEFT", row.icon, "RIGHT", 8, 0)
+	row.text:SetPoint("RIGHT", -8, 0)
 	row.text:SetJustifyH("LEFT")
 	row.text:SetWordWrap(false)
 	return row

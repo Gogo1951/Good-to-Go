@@ -14,7 +14,7 @@ ns.SCROLL_DATA = {
 		},
 		-- [spellID] = amount, -- Name
 		conflictSpells = {
-			[28497] = 35, -- Elixir of Mighty Agility
+			[28497] = 35, -- Elixir of Major Agility
 			[11334] = 25, -- Elixir of Greater Agility
 			[17538] = 25, -- Elixir of the Mongoose
 			[10669] = 25, -- Ground Scorpok Assay
@@ -163,7 +163,7 @@ ns.SCROLL_DATA = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, TBC Anniversary 2.5.6.70577
+	2026-11-19, wago.tools, TBC Anniversary 2.5.6.70577
 
 Notes
 	- The stat scrolls, read by Features/Macros-for-Consumables/Scanner/Scanner-Auras.lua (FindBestScroll) to pick a scroll whose buff the player lacks. Each type lists its scrolls as { itemID, buffID, requiredLevel, amount }: the buff is the aura the scroll leaves, requiredLevel the level the tooltip requires, amount the stat it grants.
@@ -187,6 +187,8 @@ wago.tools
 	https://wago.tools/db2/SpellEffect?build=2.5.6.70006
 	https://wago.tools/db2/SpellMisc?build=2.5.6.70006
 	https://wago.tools/db2/SpellDuration?build=2.5.6.70006
+	https://wago.tools/db2/Item?build=2.5.6.70577
+	https://wago.tools/db2/SpellName?build=2.5.6.70577
 
 QuestieDB
 	None.

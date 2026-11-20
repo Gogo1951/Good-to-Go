@@ -50,7 +50,6 @@ local RESET_WIDTH = 0.5
 local INPUT_WIDTH = ns.OPTIONS_ROW_WIDTH - LABEL_WIDTH - MARKER_WIDTH - SIGN_OFF_WIDTH - RESET_WIDTH
 -- The hint rows' first cell spans the label and the marker, so their second starts under the box.
 local HINT_INDENT = LABEL_WIDTH + MARKER_WIDTH
-local LANGUAGE_WIDTH = ns.OPTIONS_ROW_WIDTH - LABEL_WIDTH
 local TEST_WIDTH = 1.0
 
 --[[
@@ -114,13 +113,14 @@ local function DefineMessageRows(args, spec, message, key, order)
 	)
 	args[key .. "Reset"] = {
 		type = "execute",
-		name = L["WHISPER_TEXT_RESET"],
+		name = L["OPTIONS_RESET"],
 		desc = L["WHISPER_TEXT_RESET_DESCRIPTION"],
 		width = RESET_WIDTH,
 		order = order + 0.04,
 		hidden = hidden,
 		func = function()
 			ns.SetMessageText(message.field, nil)
+			ns.RefreshSettings()
 		end,
 	}
 
@@ -176,18 +176,18 @@ end
     In first, then each whisper a tenth further on, a blank line between two.
 ]]
 function ns.DefineWhisperComposer(args, spec, order)
-	local prefix, hidden = spec.prefix, spec.hidden
+	local prefix = spec.prefix
+	--[[
+	    Send Messages In can hide on its own (spec.languageHidden) where two
+	    composers on one panel each show it only while the other is hidden.
+	]]
+	local languageHidden = spec.languageHidden or spec.hidden
 
 	if spec.language ~= false then
-		args[prefix .. "LanguageLabel"] =
-			Label(L["SEND_MESSAGES_IN"], order, LABEL_WIDTH, hidden, L["SEND_MESSAGES_IN_DESCRIPTION"])
-		args[prefix .. "Language"] = {
+		-- A setting like any other dropdown on the page, so it takes the house caption-and-control row.
+		args[prefix .. "Language"] = Kit.LabelRow(order, languageHidden, L["SEND_MESSAGES_IN"], {
 			type = "select",
-			name = "",
 			desc = L["SEND_MESSAGES_IN_DESCRIPTION"],
-			width = LANGUAGE_WIDTH,
-			order = order + 0.01,
-			hidden = hidden,
 			values = function()
 				return (LanguageChoices())
 			end,
@@ -199,14 +199,14 @@ function ns.DefineWhisperComposer(args, spec, order)
 				ns.SetMessageLanguage(value)
 				ns.RefreshSettings()
 			end,
-		}
-		args[prefix .. "LanguageSpace"] = Kit.Spacer(order + 0.05, hidden)
+		})
+		args[prefix .. "LanguageSpace"] = Kit.Spacer(order + 0.05, languageHidden)
 	end
 
 	for index, message in ipairs(spec.messages) do
 		local messageOrder = order + 0.1 * index
 		if index > 1 then
-			args[prefix .. index .. "Space"] = Kit.Spacer(messageOrder - 0.01, hidden)
+			args[prefix .. index .. "Space"] = Kit.Spacer(messageOrder - 0.01, spec.hidden)
 		end
 		DefineMessageRows(args, spec, message, prefix .. index, messageOrder)
 	end

@@ -11,29 +11,25 @@ local Spacer = Kit.Spacer
 --------------------------------------------------------------------------------
 
 --[[
-	A button deleting the Spellbook's macros from one list (ns.DeleteAddonMacros), behind a confirm, and
-	grayed out while the list holds none, on a row of its own in the control column. Every panel repaints
-	after, so the button grays out at once.
+	A Delete button deleting the Spellbook's macros from one list (ns.DeleteAddonMacros), behind a confirm,
+	and grayed out while the list holds none, in the control column beside its caption (which list). Every
+	panel repaints after, so the button grays out at once.
 ]]
-local function DeleteMacrosButton(general, nameKey, descKey, confirmKey, order)
-	return Kit.Row(order, nil, {
-		Kit.Label(" ", nil, Kit.LABEL_WIDTH),
-		{
-			type = "execute",
-			name = L[nameKey],
-			desc = L[descKey],
-			width = Kit.CONTROL_WIDTH,
-			confirm = true,
-			confirmText = L[confirmKey],
-			disabled = function()
-				return ns.CountAddonMacros(general) == 0
-			end,
-			func = function()
-				ns.DeleteAddonMacros(general)
-				ns.RefreshSettings()
-			end,
-		},
-	})
+local function DeleteMacrosButton(general, captionKey, descKey, confirmKey, order)
+	return ns.OptionsButtonRow(order, nil, {
+		type = "execute",
+		name = L["OPTIONS_DELETE"],
+		desc = L[descKey],
+		confirm = true,
+		confirmText = L[confirmKey],
+		disabled = function()
+			return ns.CountAddonMacros(general) == 0
+		end,
+		func = function()
+			ns.DeleteAddonMacros(general)
+			ns.RefreshSettings()
+		end,
+	}, L[captionKey])
 end
 
 --------------------------------------------------------------------------------
@@ -79,6 +75,7 @@ function ns.BuildSpellbookOptions()
 				if ns.db then
 					ns.db.global.abilityTooltipRanks = value
 				end
+				ns.RefreshSettings()
 			end,
 		},
 
@@ -90,14 +87,15 @@ function ns.BuildSpellbookOptions()
 		spacerDeleteMacros2 = Spacer(64),
 		deleteCharacterMacros = DeleteMacrosButton(
 			false,
-			"OPTIONS_DELETE_CHARACTER_MACROS",
+			"OPTIONS_DELETE_CHARACTER_MACROS_CAPTION",
 			"OPTIONS_DELETE_CHARACTER_MACROS_DESCRIPTION",
 			"OPTIONS_DELETE_CHARACTER_MACROS_CONFIRM",
 			65
 		),
+		spacerDeleteMacros3 = Spacer(65.5),
 		deleteGeneralMacros = DeleteMacrosButton(
 			true,
-			"OPTIONS_DELETE_GENERAL_MACROS",
+			"OPTIONS_DELETE_GENERAL_MACROS_CAPTION",
 			"OPTIONS_DELETE_GENERAL_MACROS_DESCRIPTION",
 			"OPTIONS_DELETE_GENERAL_MACROS_CONFIRM",
 			66

@@ -85,23 +85,34 @@ ns.ENGINEERING_SKILL_LINE_ID = 202
 -- The Engineering specialization Diagnostics checks the player for.
 ns.GOBLIN_ENGINEER_SPELL_ID = 20222
 
+-- The creature family the Rank Watch Example names a warlock's demon by.
+ns.IMP_CREATURE_FAMILY_ID = 23 -- Imp
+
+-- The Inventory Report Example's item when the bags hold no consumable: every character carries one.
+ns.HEARTHSTONE_ITEM_ID = 6948 -- Hearthstone
+
 -- Buff Duty
 -- [constant] = spell id, -- Spell Name
 ns.GAME_IDS = {
 	PHASE_SHIFT_SPELL_ID = 4511, -- Phase Shift
 }
 
+-- Buff Duty: the generic eating and drinking auras, and Bloodrage
+ns.FOOD_SPELL_ID = 433
+ns.DRINK_SPELL_ID = 430
+ns.BLOODRAGE_SPELL_ID = 2687
+
 --[[
 How We Got the Data
 
 Last Validated
-	2026-11-15, WoW Forever 1.60.1.70938
+	2026-11-19, wago.tools, WoW Forever 1.60.1.70959
 
 Notes
 	- Single spell, item, race and skill-line IDs the feature code reads by name, grouped by use. The client supplies every name the player sees from these IDs.
 	- Shadowmeld and Stealth are the spells the Food and Water macros cast for Stealth Eating and Shadowmeld Drinking. Stealth is rank 1: C_Spell.GetSpellName resolves the base name "Stealth", which a bare /cast fires at the highest rank the rogue knows.
 	- Cannibalize is the Forsaken racial, which channels off a corpse of the creature types listed (6 Undead, 7 Humanoid). It restores health and mana on this client, 7% of each every 2 sec, so CANNIBALIZE_RESTORES_MANA decides whether the Water macro may cast it.
-	- Rapid Regeneration is the Troll racial on this client. The Food macro casts it in place of eating while it is off cooldown (Tools-Troll.lua); the other clients have no such spell, so the constant is left nil there and the Class & Race panel hides the Troll section.
+	- Rapid Regeneration is the Troll racial on this client. The Food macro casts it in combat in place of eating, and the Bandage macro out of combat in place of bandaging while it is off cooldown (Tools-Troll.lua); the other clients have no such spell, so the constant is left nil there and the Class & Race panel hides the Troll section.
 	- Poisons (2842) is the rogue poison-crafting skill, the same ID on Era and TBC. Knowing it gates the Poisons macro (a rogue without it can't apply poisons at all) and provides the middle-click crafting branch.
 	- Well Fed (19705) is read for the buff's name, which is Well Fed in every locale on every client. The two mana runes are read for the names the Mana Gem panel shows.
 	- ns.PET_BUFF_FOODS holds the Hunter and Warlock pet buff foods: the pet-buff override offers the highest rank the bags hold, settingKey names each food's petBuffTypes toggle, and requiredLevel is the level a player needs before the food is offered. This client has none.
@@ -120,6 +131,15 @@ wago.tools
 	https://wago.tools/db2/ManifestInterfaceData?build=1.60.1.70450
 	https://wago.tools/db2/SpellName?build=1.60.1.70862
 	https://wago.tools/db2/ItemSparse?build=1.60.1.70862
+	https://wago.tools/db2/Item?build=1.60.1.70959
+	https://wago.tools/db2/SpellName?build=1.60.1.70959
+	https://wago.tools/db2/ItemSparse?build=1.60.1.70959
+	https://wago.tools/db2/ItemXItemEffect?build=1.60.1.70959
+	https://wago.tools/db2/Spell?build=1.60.1.70959
+	https://wago.tools/db2/SpellMisc?build=1.60.1.70959
+	https://wago.tools/db2/SpellEffect?build=1.60.1.70959
+	https://wago.tools/db2/SpellLevels?build=1.60.1.70959
+	https://wago.tools/db2/CreatureFamily?build=1.60.1.70959
 
 QuestieDB
 	None.

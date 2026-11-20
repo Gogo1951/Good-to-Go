@@ -36,7 +36,7 @@ ns.EXPLOSIVES = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-19, wago.tools, Mists of Pandaria Classic 5.5.4.71060
 
 Notes
 	- Every Engineering explosive this client knows that deals damage, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Explosive macro. The family is the items sharing Coarse Dynamite's (4365) use category (24) and its class and subclass (Trade Goods, Explosives).
@@ -44,6 +44,7 @@ Notes
 	- Where this client's text states a different range, the row carries the client's, as Validate Data reported on build 5.5.4.70631; the tables' range rounds a point away at one end or both on most explosives.
 	- Required Spell ID is the specialization the item needs: Goblin Engineer (20222) for the Global Thermal Sapper Charge and Big Daddy.
 	- Items in the family that deal no damage are left out: Explosive Sheep, Goblin Land Mine, Flash Bomb, Arcane Bomb, Gnomish Flame Turret, Saronite Grenade, Explosive Decoy and The Naked Bomb. Test Sapper Charge (23418) and Ninja Grenade [PH] (35499) are test items. Shrapnel Grenade (44598) and Crafty Bomb (50422) have no source: no drop, vendor or quest reward in QuestieDB's MoP item table and no spell that creates them.
+	- Stormbound Tome (43663) and Unique Equippable Test Item (24420) share the explosive cooldown and deal damage, but both are armor records with no drop, vendor or quest reward in QuestieDB's MoP item table and no spell that creates them, so they are left out.
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query
@@ -58,6 +59,19 @@ wago.tools
 	https://wago.tools/db2/Spell?build=5.5.4.70631
 	https://wago.tools/db2/SpellEffect?build=5.5.4.70631
 	https://wago.tools/db2/SpellScaling?build=5.5.4.70631
+	https://wago.tools/db2/Item?build=5.5.4.70960
+	https://wago.tools/db2/SpellName?build=5.5.4.70960
+	https://wago.tools/db2/ItemSparse?build=5.5.4.70960
+	https://wago.tools/db2/ItemEffect?build=5.5.4.70960
+	https://wago.tools/db2/Spell?build=5.5.4.70960
+	https://wago.tools/db2/SpellMisc?build=5.5.4.70960
+	https://wago.tools/db2/SpellEffect?build=5.5.4.70960
+	https://wago.tools/db2/SpellLevels?build=5.5.4.70960
+	https://wago.tools/db2/Item?build=5.5.4.71060
+	https://wago.tools/db2/ItemSparse?build=5.5.4.71060
+	https://wago.tools/db2/SpellName?build=5.5.4.71060
+	https://wago.tools/db2/ItemEffect?build=5.5.4.71060
+	https://wago.tools/db2/SpellEffect?build=5.5.4.71060
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/MoP/mopItemDB.lua

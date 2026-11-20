@@ -404,12 +404,14 @@ end
 function ns.DescribeStarterCategory(category)
 	local itemID = ns.BestChainItemID(category.chain, UnitLevel("player") or 1)
 	local amount = CategoryAmount(category, ns.GetStarterCategoryStackSize(category))
-	if not (amount and itemID and C_Item.GetItemInfo(itemID)) then
+	local name = itemID and C_Item.GetItemInfo(itemID)
+	if not (amount and name) then
 		return nil
 	end
 	local template = (#category.chain.tiers > 1) and L["STARTER_POPUP_ITEM_DESCRIPTION"]
 		or L["STARTER_POPUP_ITEM_DESCRIPTION_STATIC"]
-	return string.format(template, ns.GetItemLabel(itemID, nil), amount)
+	-- the item's name as the title, and the sentence under it
+	return name, string.format(template, ns.GetItemLabel(itemID, nil), amount)
 end
 
 --------------------------------------------------------------------------------
@@ -496,13 +498,13 @@ function ns.MaybeShowStarterListPopup()
 	end
 
 	--[[
-	    The Restock List window opens first and the staples over it, so a new
-	    character sees both: the pre-ticks above already on the list, and each
-	    tick landing on it. Every other route to the staples is the Pick Staples
-	    button, which is in that window, so it is already open behind them.
+	    The staples open alone, one window to read at a time, and the Restock
+	    List opens once Done is clicked, with the pre-ticks above and every tick
+	    already on it (Restocker-Starter-Window.lua). Every other route to the
+	    staples is the Pick Staples button, which is in that window, so it is
+	    already open behind them.
 	]]
-	ns.ShowRestockWindow()
-	-- Told it is the login route: the pre-ticks above mean the list no longer reads as empty.
+	-- Told it is the login route: Done opens the list, and the footer names the command.
 	ns.ShowStarterListPopup(true)
 end
 

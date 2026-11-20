@@ -66,6 +66,7 @@ ns.EVENT_NAMES = {
 	"UNIT_INVENTORY_CHANGED",
 	"UNIT_LEVEL",
 	"UNIT_PET",
+	"UNIT_POWER_UPDATE",
 	"UNIT_SPELLCAST_SENT",
 	"UNIT_SPELLCAST_SUCCEEDED",
 	"UNIT_TARGET",
@@ -358,7 +359,7 @@ end
     MIGRATION (remove after 2026-12-13)
     Before Send Messages In, Buff Duty's whispered ask and Rank Watch's
     whispers always went out in the client's language. An account that had
-    either turned on -- Buff Duty on with Ask Other Classes for Buffs, or Rank
+    either turned on -- Buff Duty on with Ask for Buffs, or Rank
     Watch on with Whisper Group Members -- keeps whispering in that language:
     it gets the client's locale as its message language, when Good to Go
     lists it. A whisper with no saved text follows that language's default,
@@ -394,6 +395,56 @@ local function MigrateMessageLanguage()
 end
 
 --[[
+    MIGRATION (remove after 2026-12-19)
+    The Poisons macro became off by default for new players, now that Buff
+    Duty offers poisons too. An account that already had Good to Go keeps the
+    macro it had: left at the old default (absent from the saved table), it
+    gets an explicit true, so the new default doesn't remove a macro sitting
+    on someone's bar. Runs after the legacy import, so an account carried
+    over from Connoisseur keeps its macro too, and reads the raw saved table
+    before AceDB fills in defaults. A table holding only the import's own
+    record (legacyImported) is a fresh install, which gets the new default.
+    Runs once per account, stamped (poisonsDefaultMigrated, right after AceDB
+    opens), fresh installs included, so a later uncheck stays.
+]]
+local function HasSavedSettings(sv)
+	for key in pairs(sv) do
+		if key ~= "global" then
+			return true
+		end
+	end
+	for key in pairs(type(sv.global) == "table" and sv.global or {}) do
+		if key ~= "legacyImported" then
+			return true
+		end
+	end
+	return false
+end
+
+local function KeepPoisonsMacro()
+	local sv = _G[ns.SAVED_VARIABLES_NAME]
+	if type(sv) ~= "table" or not HasSavedSettings(sv) then
+		return
+	end
+	if sv.global ~= nil and type(sv.global) ~= "table" then
+		return
+	end
+	local global = sv.global or {}
+	if global.poisonsDefaultMigrated then
+		return
+	end
+	if global.enabledMacros ~= nil and type(global.enabledMacros) ~= "table" then
+		return
+	end
+	local enabled = global.enabledMacros or {}
+	if enabled["Poisons"] == nil then
+		enabled["Poisons"] = true
+		global.enabledMacros = enabled
+		sv.global = global
+	end
+end
+
+--[[
     One account-wide SavedVariable managed by AceDB-3.0, Per-Character: every
     character lands on a profile of its own, named as AceDB names the
     character (its first name and surname on WoW Forever, "Name - Realm" on
@@ -415,12 +466,17 @@ local function InitializeDatabase()
 	-- MIGRATION (remove after 2026-12-08)
 	ns.ImportLegacySettings()
 
+	-- MIGRATION (remove after 2026-12-19): an account that had Good to Go, or Connoisseur before it, keeps its Poisons macro.
+	KeepPoisonsMacro()
+
 	ns.db = LibStub("AceDB-3.0"):New(ns.SAVED_VARIABLES_NAME, ns.DATABASE_DEFAULTS)
 	PruneOtherClientCharacters()
 	UseOwnProfileWhenUnnamed()
 
 	-- MIGRATION (remove after 2026-12-13): stamps the account so MigrateMessageLanguage runs once, fresh installs included.
 	ns.db.global.messageLanguageMigrated = true
+	-- MIGRATION (remove after 2026-12-19): stamps the account so KeepPoisonsMacro runs once, fresh installs included.
+	ns.db.global.poisonsDefaultMigrated = true
 
 	-- MIGRATION (remove after 2026-12-11): group settings onto the Solo / Party / Raid / Battleground checkboxes.
 	ns.MoveGroupSettingsOntoCheckboxes()

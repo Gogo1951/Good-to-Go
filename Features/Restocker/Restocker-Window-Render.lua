@@ -77,6 +77,32 @@ local function ListMembershipChanged(listName, list)
 	return true
 end
 
+--[[
+    What the removed row waits on: the list's every row and setting, the
+    filter and the category. Any change to one of them drops the removed row
+    (ns.restockLastRemoved) at the next redraw. Item names are left out, since
+    the client fills them in as they load.
+]]
+local function ListSignature(list)
+	local parts = { tostring(ns.restockListFilter or ""), tostring(ns.restockSelectedGroup or "") }
+	local itemIDs = {}
+	for itemID in pairs(list) do
+		itemIDs[#itemIDs + 1] = itemID
+	end
+	table.sort(itemIDs)
+	for _, itemID in ipairs(itemIDs) do
+		local fields = {}
+		for key, value in pairs(list[itemID]) do
+			if key ~= "itemName" and type(value) ~= "table" then
+				fields[#fields + 1] = key .. "=" .. tostring(value)
+			end
+		end
+		table.sort(fields)
+		parts[#parts + 1] = itemID .. ":" .. table.concat(fields, ",")
+	end
+	return table.concat(parts, "|")
+end
+
 -- A row drawn before the client had its item, repainted in place once the answer lands.
 function ns.RepaintRestockRows(itemID)
 	for _, row in ipairs(ns.restockRowPool) do
@@ -101,6 +127,12 @@ function ns.UpdateRestockList()
 
 	local settings = ns.restockSettings
 	local currentList = settings.lists[settings.currentList]
+
+	-- The removed row goes once anything it waits on has changed since it was drawn (ListSignature).
+	local removed = ns.restockLastRemoved
+	if removed and removed.signature and removed.signature ~= ListSignature(currentList) then
+		ns.restockLastRemoved, removed = nil, nil
+	end
 
 	-- Every list edit redraws through here.
 	if ListMembershipChanged(settings.currentList, currentList) and ns.db.profile.useRestockLast then
@@ -130,9 +162,22 @@ function ns.UpdateRestockList()
 	    One view per redraw: each item's group resolved once and the filter lowered
 	    once, shared by the category pane and the render list.
 	]]
-	local view = ns.BuildRestockView(restockItemList)
+	--[[
+	    The removed row is drawn in its place among the rest, sorted as it was,
+	    but counts in no category and is acted on by no column menu.
+	]]
+	local removedItem = removed
+		and removed.listName == settings.currentList
+		and currentList[removed.item.itemID] == nil
+		and removed.item
+	local drawList = restockItemList
+	if removedItem then
+		drawList = { unpack(restockItemList) }
+		drawList[#drawList + 1] = removedItem
+	end
+	local view = ns.BuildRestockView(drawList)
 	ns.UpdateRestockGroupPane(restockItemList, view)
-	local renderList = ns.BuildRestockRenderList(restockItemList, view)
+	local renderList = ns.BuildRestockRenderList(drawList, view)
 
 	--[[
 	    Release every pooled item row back to the hidden frame. A row can come back
@@ -166,7 +211,9 @@ function ns.UpdateRestockList()
 	for index, item in ipairs(renderList) do
 		local row = ns.AcquireRestockListRow(item)
 
-		shownItems[index] = item
+		if item ~= removedItem then
+			shownItems[#shownItems + 1] = item
+		end
 		row.isInUse = true
 		row:SetParent(scrollChild)
 		row:ClearAllPoints()
@@ -195,8 +242,12 @@ function ns.UpdateRestockList()
 	if #renderList == 0 and #restockItemList > 0 then
 		nothingShown = view.filter and L["RESTOCKER_NO_MATCH_FILTER"] or L["RESTOCKER_NO_MATCH_GROUP"]
 	end
-	ns.UpdateRestockEmptyState(#restockItemList == 0, nothingShown)
+	-- The last item's removed row holds the list open, so its Undo stays in reach.
+	ns.UpdateRestockEmptyState(#restockItemList == 0 and not removedItem, nothingShown)
 	ns.UpdateRestockStatus()
+	if ns.restockLastRemoved then
+		ns.restockLastRemoved.signature = ListSignature(currentList)
+	end
 end
 
 --------------------------------------------------------------------------------

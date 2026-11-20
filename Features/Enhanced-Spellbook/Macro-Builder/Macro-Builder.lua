@@ -22,16 +22,12 @@ local ReadSpellbook = ns.ReadSpellbook
 local ReplacedSpells = ns.ReplacedSpells
 local FoldRangedAttacks = ns.FoldRangedAttacks
 
-local FOCUS_SUFFIX = L["MACRO_NAME_FOCUS_SUFFIX"] -- ends a focus copy's WoW macro name, keeping it apart from the spell's own
-ns.FOCUS_SUFFIX = FOCUS_SUFFIX
-
 local UNLISTED = math.huge -- the Unlearned section sorts after everything else
 local NO_IDS = {}
 
 --[[
-	One macro per learned class spell (and unlearned one, when shown) with its focus copy when that's on, in
-	page order. Rebuilt by ns.CollectMacros when the page draws, the spells change, or Dynamic Rank finds it
-	empty.
+	One macro per learned class spell (and unlearned one, when shown), in page order. Rebuilt by
+	ns.CollectMacros when the page draws, the spells change, or Dynamic Rank finds it empty.
 ]]
 ns.macros = {}
 
@@ -109,26 +105,8 @@ local function MakeMacro(name, icon, unlearned, id, section, ranks, grouped)
 end
 
 --[[
-	A copy of a spell macro that casts on the focus target, falling back to the current target. Its menu
-	offers only the focus option, which removes it.
-]]
-local function MakeFocusMacro(macro)
-	local copy = {}
-	for key, value in pairs(macro) do
-		copy[key] = value
-	end
-	copy.focus = true
-	copy.cursor = false
-	copy.petAbility = nil
-	copy.petFamily = nil
-	copy.macroName = ns.TrimMacroName(macro.name, ns.MACRO_NAME_MAX_LENGTH - #FOCUS_SUFFIX) .. FOCUS_SUFFIX
-	copy.body = MacroBody(copy)
-	return copy
-end
-
---[[
 	A copy of a spell macro made with Duplicate (see ns.DuplicateMacro): the same spell, named with its
-	number, with settings of its own (ns.SettingsKey) and no focus copy.
+	number, with settings of its own (ns.SettingsKey).
 ]]
 local function MakeCopyMacro(macro, number)
 	local copy = {}
@@ -182,12 +160,12 @@ end
 	Folds each learned profession specialization (ns.PROFESSION_SPECIALIZATIONS) into its profession: the
 	profession's own macro takes the specialization's name and icon on the page (label, icon, and sortName for
 	the page's alphabetical order) and still casts the profession, and the specialization's macros, a passive
-	that does nothing when cast, go off the page (hidden). Its Duplicate and focus copies keep their own names.
+	that does nothing when cast, go off the page (hidden). Its Duplicates keep their own names.
 ]]
 local function FoldSpecializations()
 	local own = {}
 	for _, macro in ipairs(ns.macros) do
-		if not macro.copy and not macro.focus and not macro.rank then
+		if not macro.copy and not macro.rank then
 			own[macro.name] = macro
 		end
 	end
@@ -252,11 +230,6 @@ function ns.CollectMacros()
 		macro.hidden = not unlearned and not ns.ShowsGroupedSpells() and LaterGroupSpellLearned(name, members)
 		taken[macro.macroName] = true
 		ns.macros[#ns.macros + 1] = macro
-		if ns.IsOptionOn(macro, "focus") then
-			local copy = MakeFocusMacro(macro)
-			taken[copy.macroName] = true
-			ns.macros[#ns.macros + 1] = copy
-		end
 		if not unlearned then
 			for _, number in ipairs(ns.MacroCopies(ns.MacroSpellKey(macro))) do
 				local copy = MakeCopyMacro(macro, number)
@@ -293,13 +266,13 @@ function ns.CollectMacros()
 			AddMacro(name, icon, true, id, { UNLISTED, L["SECTION_UNLEARNED"], position }, level, talent)
 		end, seen)
 	end
-	-- 0 for the spell's own macro, 1 for its focus copy, then one step per lower rank.
+	-- 0 for the spell's own macro, then one step per lower rank.
 	local function CopyOrder(macro)
-		return macro.rankIndex and (1 + macro.rankIndex) or (macro.focus and 1 or 0)
+		return macro.rankIndex and (1 + macro.rankIndex) or 0
 	end
 	--[[
-		by section; within one, spellbook (or learn level) order, then by name: the spell's own macro, its focus
-		copy, then its lower-rank copies highest rank first, and each Duplicate copy after those, by number
+		by section; within one, spellbook (or learn level) order, then by name: the spell's own macro, then its
+		lower-rank copies highest rank first, and each Duplicate copy after those, by number
 	]]
 	table.sort(ns.macros, function(a, b)
 		if a.categoryRank ~= b.categoryRank then

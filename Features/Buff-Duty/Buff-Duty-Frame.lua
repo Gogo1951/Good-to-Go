@@ -1,6 +1,7 @@
 local _, ns = ...
 local Data = ns.Data
 local L = ns.L
+local Kit = ns.MenuKit
 
 local GetColor = ns.GetColor
 local UpdateCooldowns = ns.UpdateBuffDutyCooldowns
@@ -33,7 +34,7 @@ local PlaceLines = Layout.PlaceLines
     belongs to a secure state driver (Hide in Combat), and the content inside it
     is shown and hidden by this file, out of combat only. The content carries a
     title bar whose close button hides Buff Duty until the next login or
-    reload, saving nothing (ns.CloseBuffDuty).
+    reload, or until you join a group, saving nothing (ns.CloseBuffDuty).
 ]]
 
 --------------------------------------------------------------------------------
@@ -48,7 +49,6 @@ local PlaceLines = Layout.PlaceLines
 ]]
 local ICON_SIZE = Data.BUFF_DUTY_ICON_SIZE
 local ICON_GAP = Layout.ICON_GAP
-local ROW_HEIGHT = Layout.ROW_HEIGHT
 --[[
     The name column fits the longest name on the list, between these bounds:
     never narrower than a short name needs to look tidy, and never so wide that a
@@ -63,6 +63,8 @@ local MAX_NAME_WIDTH = 256
 local NAME_STEP = 16
 local NAME_GAP = Layout.NAME_GAP
 local MAIN_GRID = Layout.MAIN_GRID
+local SECTION_SPACE = Layout.SECTION_SPACE
+local FOLD_INDENT = Layout.FOLD_INDENT
 -- A member's role icon lines up with the header above it.
 local MEMBER_INDENT = 0
 --[[
@@ -73,34 +75,55 @@ local PARTIES_PER_ROW = 2
 local COLUMN_GAP = 16
 -- A pet sits one step further in, under its owner.
 local PET_INDENT = 16
-local PADDING = 8
 --[[
-    The title bar: one icon-high row for the title and close button, then a
-    32-point gap before the first section so the title doesn't read as one of them.
+    From the plate's edge to the title, names and icons on every side: the
+    Spacing Scale's 16, so nothing crowds the angled corners.
 ]]
-local TITLE_HEIGHT = ICON_SIZE
-local TITLE_GAP = 32
+local PADDING = 16
+--[[
+    The title bar: one row as high as the close button, holding the title and
+    the button, so the button's top sits PADDING from the plate's edge like
+    everything else; then a 16-point gap, so the title doesn't read as one
+    of the sections.
+]]
 local CLOSE_SIZE = 22
+local TITLE_HEIGHT = CLOSE_SIZE
+local TITLE_GAP = 16
+--[[
+    The window's width and height each round up to a multiple of this, as
+    the Spacing Scale asks of anything bigger than 128. The height's extra
+    goes into the gap above the Options divider, so the foot keeps its PADDING
+    like the other edges.
+]]
+local WINDOW_STEP = 16
+--[[
+    No window is narrower than this, so solo, party and weapon windows share
+    one width and the window holds still on screen as its contents change,
+    growing only for a long name or a long row of icons.
+]]
+local MIN_WINDOW_WIDTH = 208
 -- Room between the end of the title and the close button.
 local TITLE_CLOSE_GAP = 8
 --[[
-    The Options line at the foot of the window: one icon-high row, FOOTER_GAP
-    under everything else with a faint divider across the middle of the gap.
+    The Options line at the foot of the window, one icon high with PADDING
+    alone under it, under a thin divider on the Spacing Scale: 16 from the
+    last line's content to the divider (more, from the height's rounding),
+    8 from the divider to the Options row.
 ]]
 local FOOTER_HEIGHT = ICON_SIZE
-local FOOTER_GAP = 16
-local FOOTER_DIVIDER_ALPHA = 0.35
+local DIVIDER_ABOVE = 16
+local DIVIDER_BELOW = 8
+local DIVIDER_ALPHA = 0.35
 local FOOTER_HIGHLIGHT_ALPHA = 0.16
--- From the window's edge to the Options flyout beside it.
-local FOOTER_FLYOUT_GAP = 8
-
-local BACKDROP = Data.BUFF_DUTY_BACKDROP
 
 --------------------------------------------------------------------------------
 -- State
 --------------------------------------------------------------------------------
 
 local anchor, content, title, keyHint, footer, footerDivider
+
+-- Set when a drag is let go in combat, so ns.ApplyBuffDutySettings stops and saves it once combat ends.
+local stopPending = false
 local labels, usedLabels = {}, 0
 -- The list's icons, shared with the cooldown and range passes (Buff-Duty-Icon-State.lua).
 local pool = ns.buffDutyIconPool
@@ -162,6 +185,7 @@ local function ReleaseAll()
 	end
 	usedLabels, pool.used = 0, 0
 	ns.ReleaseBuffDutyOtherIcons()
+	Layout.ReleaseFoldButtons()
 end
 
 --[[
@@ -173,8 +197,8 @@ end
 local PARTY_BUFFS_GRID = "partyBuffs"
 
 --[[
-    The window's last line while Cast Next Buff has no key: a blank row under
-    everything else, then a tip pointing at the Key Bindings section. It wraps
+    The window's last line while Cast Next Buff has no key: a section's space
+    under the Options line, then a tip naming the key and where to bind it. It wraps
     to the window's width rather than widening it, and goes away once a key is
     bound (UPDATE_BINDINGS asks for a redraw, Features/Key-Bindings.lua).
 ]]
@@ -182,10 +206,9 @@ local function KeyHintText()
 	local info = GetColor("INFO")
 	local help = GetColor("HELP")
 	return help
-		.. L["BUFF_DUTY_KEY_HINT"]:format(
-			info .. L["BUFF_KEY"] .. "|r" .. help,
-			L["OPTIONS_KEY_BINDINGS_HEADER"],
-			info .. L["OPTIONS_COMMAND"] .. "|r" .. help
+		.. L["BUFF_DUTY_KEY_TIP"]:format(
+			info .. L["OPTIONS_COMMAND"] .. "|r" .. help,
+			info .. L["BUFF_KEY"] .. "|r" .. help
 		)
 		.. "|r"
 end
@@ -222,7 +245,7 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 		local partyBuffsPlaced = #otherBuffs == 0
 		local function AddPartyBuffs()
 			partyBuffsPlaced = true
-			local label, labelWidth = MeasureLabel(GetColor("TITLE") .. L["BUFF_DUTY_PARTY_BUFFS_HEADER"] .. "|r", 0)
+			local label, labelWidth = MeasureLabel(GetColor("TITLE") .. L["BUFF_DUTY_ASK_OTHERS"] .. "|r", 0)
 			top[#top + 1] = {
 				label = label,
 				indent = 0,
@@ -231,10 +254,6 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 				grid = PARTY_BUFFS_GRID,
 				header = true,
 				sectionEnd = true,
-				-- a blank row between Self-Buffs and Party-Buffs, as under the title
-				spaceBefore = #top > 0,
-				-- and one under it, before the list that follows
-				spaceAfter = true,
 			}
 			nameWidth = math.max(nameWidth, labelWidth)
 		end
@@ -253,10 +272,22 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 			local grid = section.grid or MAIN_GRID
 			local function Measure(text, indent, specs, lineGrid, header)
 				local label, width = MeasureLabel(text, indent)
-				lines[#lines + 1] = { label = label, indent = indent, specs = specs, grid = lineGrid, header = header }
+				local line = { label = label, indent = indent, specs = specs, grid = lineGrid, header = header }
+				lines[#lines + 1] = line
 				nameWidth = math.max(nameWidth, width)
+				return line
 			end
-			Measure(GetColor("TITLE") .. section.label .. "|r", 0, section.icons, grid, true)
+			-- A raid group's name sits past its fold glyph (Buff-Duty-Layout.lua's fold buttons).
+			local head = Measure(
+				GetColor("TITLE") .. section.label .. "|r",
+				section.foldable and FOLD_INDENT or 0,
+				section.icons,
+				grid,
+				true
+			)
+			if section.foldable then
+				head.fold = { subgroup = section.subgroup, folded = section.folded or false }
+			end
 			for _, row in ipairs(section.rows) do
 				-- A row can set its own indent: the weapon hands sit flush with their header.
 				Measure(row.label, row.indent or (row.pet and PET_INDENT or MEMBER_INDENT), row.icons, row.grid or grid)
@@ -290,16 +321,28 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 		end
 
 		--[[
-		    The close button sits over the far-right icon column (see
-		    CreateBuffDutyFrame), so the window is never narrower than the
-		    title plus that column. A short list widens its name column to make
-		    up the difference, which pushes the icons right until the last one
-		    sits under the close button.
+		    The close button sits at the far right (see CreateBuffDutyFrame),
+		    so the window is never narrower than the title plus the button. The
+		    minimum width below already clears it at the usual font sizes; a
+		    larger font that doesn't widens the name column to make up the
+		    difference.
 		]]
-		local minWidth = math.ceil(title:GetStringWidth()) + TITLE_CLOSE_GAP + (CLOSE_SIZE + ICON_SIZE) / 2
+		local minWidth = math.ceil(title:GetStringWidth()) + TITLE_CLOSE_GAP + CLOSE_SIZE
 		local width = ContentWidth()
 		if width < minWidth then
 			nameWidth = SnapUp(nameWidth + (minWidth - width), NAME_STEP)
+			width = ContentWidth()
+		end
+		--[[
+		    The window's width rounds up to WINDOW_STEP, and to at least
+		    MIN_WINDOW_WIDTH. With one window column
+		    the extra goes to the names; with parties side by side it widens the gap between them,
+		    since widening the names would widen each party by it. held.nameWidth
+		    keeps the width from before, so the rounding never builds on itself.
+		]]
+		local windowWidth = math.max(SnapUp(PADDING * 2 + width, WINDOW_STEP), MIN_WINDOW_WIDTH)
+		if math.min(parties, PARTIES_PER_ROW) <= 1 then
+			nameWidth = nameWidth + (windowWidth - PADDING * 2 - width)
 			width = ContentWidth()
 		end
 
@@ -307,47 +350,57 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 		    Rows sit ROW_HEIGHT apart, middle to middle, but the first and last
 		    are measured by what they show: TITLE_GAP under the title bar to the
 		    top of the first line's content, and PADDING from the bottom of the
-		    lowest's to the window's edge, the same as the sides. The parties in a
-		    row start level, and the next row starts under the taller of them.
+		    lowest's to the window's edge, the same as the sides. Sections stand SECTION_SPACE apart,
+		    edge to edge. The parties in a row start level, and the next row
+		    starts under the taller of them.
 		]]
 		local firstMiddle = -(PADDING + TITLE_HEIGHT + TITLE_GAP + ICON_SIZE / 2)
-		local y, bottom = PlaceLines(top, PADDING, firstMiddle, nameWidth, offsetsByGrid)
+		local right = windowWidth - PADDING
+		local y, bottom = PlaceLines(top, PADDING, right, firstMiddle, nameWidth, offsetsByGrid, iconWidths)
 		local partyWidth = ColumnWidth(MAIN_GRID)
 		for _, partyRow in ipairs(partyRows) do
 			local nextY = y
 			for index, lines in ipairs(partyRow) do
-				local x = PADDING + (index - 1) * (partyWidth + COLUMN_GAP)
-				local partyY, partyBottom = PlaceLines(lines, x, y, nameWidth, offsetsByGrid)
+				-- The rounding's extra width widens the gap, so the last party's icons end at the right edge too.
+				local x = PADDING + (index - 1) * (partyWidth + COLUMN_GAP + right - PADDING - width)
+				local partyY, partyBottom =
+					PlaceLines(lines, x, x + partyWidth, y, nameWidth, offsetsByGrid, iconWidths)
 				nextY = math.min(nextY, partyY)
 				bottom = math.min(bottom, partyBottom)
 			end
 			y = nextY
 		end
 
-		-- A blank row, then the tip, its top where that row's content would end.
+		--[[
+		    A gap, the Options line, then the tip (a section's space under it)
+		    last of all. The footer's height is measured first, so the height's
+		    rounding can widen the gap above it instead of padding the foot.
+		]]
+		local footerHeight = FOOTER_HEIGHT
 		if showKeyHint then
-			local hintTop = bottom - ROW_HEIGHT - ICON_GAP
-			keyHint:ClearAllPoints()
-			keyHint:SetPoint("TOPLEFT", content, "TOPLEFT", PADDING, hintTop)
 			keyHint:SetWidth(width)
 			keyHint:SetText(KeyHintText())
+			footerHeight = footerHeight + SECTION_SPACE + math.ceil(keyHint:GetStringHeight())
+		end
+		local rawHeight = -bottom + DIVIDER_ABOVE + 1 + DIVIDER_BELOW + footerHeight + PADDING
+		local windowHeight = SnapUp(rawHeight, WINDOW_STEP)
+		local dividerTop = bottom - DIVIDER_ABOVE - (windowHeight - rawHeight)
+		footerDivider:ClearAllPoints()
+		footerDivider:SetPoint("TOPLEFT", content, "TOPLEFT", PADDING, dividerTop)
+		footerDivider:SetWidth(width)
+		local footerTop = dividerTop - 1 - DIVIDER_BELOW
+		footer:ClearAllPoints()
+		footer:SetPoint("TOPLEFT", content, "TOPLEFT", PADDING, footerTop)
+		footer:SetSize(width, FOOTER_HEIGHT)
+		if showKeyHint then
+			keyHint:ClearAllPoints()
+			keyHint:SetPoint("TOPLEFT", content, "TOPLEFT", PADDING, footerTop - FOOTER_HEIGHT - SECTION_SPACE)
 			keyHint:Show()
-			bottom = hintTop - math.ceil(keyHint:GetStringHeight())
 		else
 			keyHint:Hide()
 		end
 
-		-- The gap with the divider across its middle, then the Options line.
-		local footerTop = bottom - FOOTER_GAP
-		footerDivider:ClearAllPoints()
-		footerDivider:SetPoint("TOPLEFT", content, "TOPLEFT", PADDING, footerTop + FOOTER_GAP / 2)
-		footerDivider:SetWidth(width)
-		footer:ClearAllPoints()
-		footer:SetPoint("TOPLEFT", content, "TOPLEFT", PADDING, footerTop)
-		footer:SetSize(width, FOOTER_HEIGHT)
-		bottom = footerTop - FOOTER_HEIGHT
-
-		anchor:SetSize(PADDING * 2 + width, -bottom + PADDING)
+		anchor:SetSize(windowWidth, windowHeight)
 		-- MIGRATION (remove after 2026-11-29)
 		ns.MigrateBuffDutyPosition(anchor)
 	end
@@ -406,6 +459,12 @@ function ns.ApplyBuffDutySettings()
 	if InCombatLockdown() or not anchor then
 		return false
 	end
+	-- A drag let go in combat (OnDragStop below) ends here, where the anchor may move again.
+	if stopPending then
+		stopPending = false
+		anchor:StopMovingOrSizing()
+		ns.SaveBuffDutyPosition(anchor)
+	end
 	if ns.db.global.buffWindow.hideInCombat then
 		RegisterStateDriver(anchor, "visibility", "[combat] hide; show")
 	else
@@ -430,12 +489,11 @@ function ns.CreateBuffDutyFrame()
 	anchor:SetClampedToScreen(true)
 	anchor:SetFrameStrata("MEDIUM")
 
-	content = CreateFrame("Frame", nil, anchor, "BackdropTemplate")
+	content = CreateFrame("Frame", nil, anchor)
 	pool.content = content
 	content:SetAllPoints(anchor)
-	content:SetBackdrop(BACKDROP)
-	content:SetBackdropColor(0, 0, 0, Data.BUFF_DUTY_BACKDROP_ALPHA)
-	content:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
+	-- The menus' dark plate with angled corners, so the window reads as one of them.
+	Kit.AddPlate(content)
 	content:EnableMouse(true)
 	content:RegisterForDrag("LeftButton")
 	-- Set only while a drag really moves the window, so a drag of a locked one saves no position.
@@ -451,19 +509,20 @@ function ns.CreateBuffDutyFrame()
 	    nearest (often CENTER), so a resize after a drag would grow from the
 	    middle. Re-applying the saved top-right keeps the close button fixed. The
 	    anchor holds the secure icons, so a drag let go once combat has begun
-	    waits for it to end before re-anchoring.
+	    stops, saves and re-anchors once it ends (ns.ApplyBuffDutySettings).
 	]]
 	content:SetScript("OnDragStop", function()
 		if not moving then
 			return
 		end
 		moving = false
-		anchor:StopMovingOrSizing()
-		ns.SaveBuffDutyPosition(anchor)
 		if InCombatLockdown() then
+			stopPending = true
 			ns.QueueBuffDutySettings()
 			return
 		end
+		anchor:StopMovingOrSizing()
+		ns.SaveBuffDutyPosition(anchor)
 		ns.RestoreBuffDutyPosition(anchor)
 	end)
 
@@ -489,8 +548,8 @@ function ns.CreateBuffDutyFrame()
 	]]
 	local close = CreateFrame("Button", nil, content, "UIPanelCloseButton")
 	close:SetSize(CLOSE_SIZE, CLOSE_SIZE)
-	-- Centered over the far-right icon column, which ends PADDING from the edge.
-	close:SetPoint("CENTER", content, "TOPRIGHT", -(PADDING + ICON_SIZE / 2), -(PADDING + TITLE_HEIGHT / 2))
+	-- PADDING in from the top and right edges, like everything else on the plate.
+	close:SetPoint("TOPRIGHT", content, "TOPRIGHT", -PADDING, -PADDING)
 	close:SetScript("OnClick", ns.CloseBuffDuty)
 
 	-- The Cast Next Buff tip under the list (KeyHintText); placed and shown by RenderBuffDuty.
@@ -501,22 +560,22 @@ function ns.CreateBuffDutyFrame()
 	keyHint:Hide()
 
 	--[[
-	    The Options line, placed by RenderBuffDuty: gold with the menu kit's
-	    submenu arrow, as a mini-map menu title that opens a flyout is, and
-	    hovering it opens the window's switches beside it
+	    The divider and the Options line, placed by RenderBuffDuty: blue as a
+	    Pretty Wide Quest Log menu's footer line is, with the menu kit's
+	    submenu arrow, and hovering it opens the window's switches beside it
 	    (Buff-Duty-Options-Menu.lua); a click does too. A plain button, not a
 	    secure one, so it works in combat too, where a change waits for the
 	    redraw combat holds back.
 	]]
 	footerDivider = content:CreateTexture(nil, "ARTWORK")
 	local separator = ns.COLORS_RGB.SEPARATOR
-	footerDivider:SetColorTexture(separator.r, separator.g, separator.b, FOOTER_DIVIDER_ALPHA)
+	footerDivider:SetColorTexture(separator.r, separator.g, separator.b, DIVIDER_ALPHA)
 	footerDivider:SetHeight(1)
 	footer = CreateFrame("Button", nil, content)
 	footer:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 	local footerText = footer:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	footerText:SetPoint("LEFT")
-	footerText:SetText(GetColor("TITLE") .. L["BUFF_DUTY_MENU_OPTIONS"] .. "|r")
+	footerText:SetText(GetColor("INFO") .. L["BUFF_DUTY_MENU_OPTIONS"] .. "|r")
 	local footerArrow = footer:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
 	footerArrow:SetPoint("RIGHT")
 	footerArrow:SetText(ns.MenuKit.SUBMENU_ARROW)
@@ -525,9 +584,9 @@ function ns.CreateBuffDutyFrame()
 	highlight:SetColorTexture(gold.r, gold.g, gold.b, FOOTER_HIGHLIGHT_ALPHA)
 	highlight:SetPoint("TOPLEFT", -ICON_GAP, 0)
 	highlight:SetPoint("BOTTOMRIGHT", ICON_GAP, 0)
-	-- Past the window's padding, so the flyout clears the plate as a mini-map flyout clears its menu.
 	local function OpenOptions(self)
-		ns.ShowBuffDutyOptions(self, PADDING + FOOTER_FLYOUT_GAP)
+		-- Overlapping the window as any flyout overlaps its menu (Kit.FLYOUT_OVERLAP), measured from the line's right end.
+		ns.ShowBuffDutyOptions(self, PADDING - ns.MenuKit.FLYOUT_OVERLAP)
 	end
 	footer:SetScript("OnEnter", OpenOptions)
 	footer:SetScript("OnClick", OpenOptions)

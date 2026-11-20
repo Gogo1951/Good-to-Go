@@ -7,33 +7,27 @@ local GetColor = ns.GetColor
 --------------------------------------------------------------------------------
 
 --[[
-    (list controls) ...                                  7 restocking orders outstanding.
+    (list controls) ...                                  Short on 7 items, 5 to buy.
 
     The right of the window's bottom line, under the list; its left holds the
-    list controls (Restocker-Window-List-Bar.lua). The undo offer is built here
-    too, though it sits above the list (Undo Offer, below).
+    list controls (Restocker-Window-List-Bar.lua).
 
-    At the right end is the answer the list exists to give: how many restocking orders
-    are outstanding (ns.RestockShortfallHeadline). Hovering it lists the orders the way the
-    mini-map's Restocker Report does -- icon, name, have/wanted -- capped, so a
+    At the right end is the answer the list exists to give: how many items
+    the bags are short of, Buy on or off, and how many of those a merchant
+    would be asked for (ns.RestockShortfallHeadline); with none to buy it says
+    to take them from the bank. Hovering it lists every short item the way the
+    mini-map's Restocker Report does -- icon, name, have/keep -- capped, so a
     long list cannot run the tooltip off the screen.
 
-    The count comes from ns.CountRestockOrders and the tooltip from
-    ns.BuildGroceryList, which count by the same rules as the mini-map tooltip,
-    so neither can disagree about what is outstanding. The chat reminders start
-    from the same list but name only what is low or out (ns.SplitRestockShortfall),
-    so a row nearly topped off counts here and stays out of chat. An
-    order is a row with Buy on that the bags are short of, and the count is
-    drawn in the yellow of the Keep marks it counts (KEEP_SHORT in
-    Data/Data.lua): the line is where a player learns what a yellow Keep
-    number means. Red is kept for errors, and being short of something is not
-    one.
-
-    The Keep marks in the list are every short row, Buy or not, so with Buy
-    off on a short row there is a mark and no order -- and the line says "no
-    orders", in plain white, rather than congratulating a list that is visibly
-    short of something. The congratulation is kept for a list with no mark on
-    it at all.
+    The counts come from ns.CountRestockOrders and the tooltip from
+    ns.BuildRestockShortfallList, so the two agree about what is short. The
+    mini-map menu and the chat reminders list only what is low or out
+    (ns.SplitRestockShortfall), so they can differ from this list: a row
+    nearly topped off counts here and stays out of both. The line is drawn in
+    the yellow of the Keep marks it counts (KEEP_SHORT in Data/Data.lua): it
+    is where a player learns what a yellow Keep number means. Red is kept for
+    errors, and being short of something is not one. The congratulation is
+    kept for a list with no mark on it at all.
 
     An empty list says nothing here: the invitation in its place already does.
 
@@ -41,18 +35,13 @@ local GetColor = ns.GetColor
     to the window lands at its middle and disappears behind the list.
 ]]
 local FOOTER_X = ns.RESTOCK_FOOTER_X
-local FOOTER_RIGHT_INSET = 26 -- clear of the resize grip
+local FOOTER_RIGHT_INSET = 32 -- clear of the resize grip
 local FOOTER_ROW_HEIGHT = 22
 -- Centered in the window's footer band (ns.RESTOCK_WINDOW_BANDS), as the Spell Book's legend is.
 local FOOTER_Y = ns.RESTOCK_WINDOW_BANDS.FRAME_BORDER + (ns.RESTOCK_WINDOW_BANDS.FOOTER_HEIGHT - FOOTER_ROW_HEIGHT) / 2
-local UNDO_GAP = 8 -- "Removed [item]." to the Undo button
-local UNDO_HEIGHT = 20
 
--- The most orders the hover lists one per row; past it, one closing line counts the rest.
+-- The most short items the hover lists one per row; past it, one closing line counts the rest.
 local ORDERS_TOOLTIP_MAX_ROWS = 20
-
--- Forward-declared: the status repaint and the undo offer's resize handler both call it, and it is defined below them.
-local FitUndoOffer
 
 local TITLE = ns.COLORS_RGB.TITLE
 -- The Keep marks' own color, as an escape for the orders count. Append |r at the point of use.
@@ -71,25 +60,25 @@ local UNKNOWN_ICON = ns.QUESTION_MARK_ICON
 
 local function ItemWithIcon(itemID)
 	local icon = itemID and C_Item.GetItemIconByID(itemID) or UNKNOWN_ICON
-	return string.format("|T%s:14:14|t %s", icon, ns.GetItemLabel(itemID))
+	return string.format("|T%s:16:16|t %s", icon, ns.GetItemLabel(itemID))
 end
 
 --[[
-    The orders themselves, in the mini-map Restocker Report's row form under the
-    Restock List's title (L["MENU_RESTOCKER"]): the item, then have/wanted, the
-    ratio the verbose reminder prints.
+    Every short item, Buy on or off, in the mini-map Restocker Report's row form
+    under "Short Items": the item, then have/keep, the ratio the verbose
+    reminder prints.
 
     Built on hover rather than kept, so it is as current as the bags are.
     Nothing to list draws no tooltip: the line above has already said so.
 ]]
 local function ShowOrdersTooltip(owner)
-	local groceries = ns.BuildGroceryList()
+	local groceries = ns.BuildRestockShortfallList()
 	if #groceries == 0 then
 		return
 	end
 
 	GameTooltip:SetOwner(owner, "ANCHOR_TOPRIGHT")
-	GameTooltip:SetText(L["MENU_RESTOCKER"], TITLE.r, TITLE.g, TITLE.b)
+	GameTooltip:SetText(L["RESTOCKER_SHORT_ITEMS_TITLE"], TITLE.r, TITLE.g, TITLE.b)
 	for index = 1, math.min(#groceries, ORDERS_TOOLTIP_MAX_ROWS) do
 		local entry = groceries[index]
 		GameTooltip:AddDoubleLine(
@@ -109,18 +98,15 @@ end
 -- Status Text
 --------------------------------------------------------------------------------
 
--- The order count, then whether any row is short in the bags, Buy or not, as the rows' Keep marks show.
+-- Every short row, Buy or not, as the rows' Keep marks show, and how many of them it buys.
 local function StatusText(list)
 	if next(list) == nil then
 		return ""
 	end
 
-	local orders, anyShort = ns.CountRestockOrders(list)
-	if orders > 0 then
-		return SHORT .. ns.RestockShortfallHeadline(orders) .. "|r"
-	end
-	if anyShort then
-		return L["RESTOCKER_NO_ORDERS"]
+	local orders, short = ns.CountRestockOrders(list)
+	if short > 0 then
+		return SHORT .. ns.RestockShortfallHeadline(short, orders) .. "|r"
 	end
 	return GetColor("ON") .. L["MINIMAP_RESTOCKER_STOCKED"] .. "|r"
 end
@@ -132,8 +118,7 @@ end
 
     The count's button is sized to its text, so the hover is over the words
     and not over the empty run of footer beside them. The "Used by" line on
-    the left then ends short of it. The undo offer is repainted here too, as
-    a removal is one of the things that moves the count.
+    the left then ends short of it.
 ]]
 function ns.UpdateRestockStatus()
 	local window = ns.restockWindow
@@ -144,104 +129,6 @@ function ns.UpdateRestockStatus()
 	footer.statusText:SetText(text)
 	footer.status:SetWidth(math.max(1, footer.statusText:GetStringWidth()))
 	ns.SetRestockUsersLineEnd((text ~= "") and footer.status or nil)
-
-	local removed = ns.restockLastRemoved
-	window.removedText:SetShown(removed ~= nil)
-	window.undo:SetShown(removed ~= nil)
-	if removed then
-		window.removedText:SetText(string.format(L["RESTOCKER_REMOVED_ITEM"], ItemWithIcon(removed.item.itemID)))
-		-- Sized again here: a font not yet resolved at login measures as nothing when built.
-		ns.FitRestockButton(window.undo)
-		FitUndoOffer(window)
-	end
-end
-
---------------------------------------------------------------------------------
--- Undo Offer
---------------------------------------------------------------------------------
-
---[[
-    Removed (icon) Major Mana Potion. [Undo]           Bank        Merchant
-                                     Item        Keep  Take Store  Buy ...
-
-    The offer to take back the last removal (ns.UndoRestockRemove in
-    Restocker-List.lua): a sentence naming what went, by its icon and
-    its name, and an Undo button. It sits on the group bands' line, starting
-    where the category pane's type names start and running right, through
-    the empty corner over the pane and on over Item and Keep, so it is beside
-    the rows it belongs to and never crowds the footer.
-
-    The button follows the sentence. A name too long for the room truncates,
-    and stops short of Keep's right edge, where the Bank band begins.
-]]
-local function CreateUndoOffer(addonFrame)
-	local header = ns.restockColumnHeader
-	--[[
-	    The room it has: the bands' line, from the pane's left edge to the Keep
-	    heading's right. Two corners, each from its own frame; the left one is
-	    set again on every repaint (FitUndoOffer), as the pane's width is
-	    measured rather than fixed.
-	]]
-	local tier = CreateFrame("Frame", nil, header.bandRow)
-	tier:SetPoint("BOTTOMRIGHT", header.amountCaption, "TOPRIGHT", 0, 0)
-
-	local removedText = tier:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-	removedText:SetPoint("LEFT", tier, "LEFT", ns.RESTOCK_GROUP_ROW_INSET, 0)
-	removedText:SetJustifyH("LEFT")
-	removedText:SetWordWrap(false)
-	removedText:Hide()
-
-	--[[
-	    Undo is a panel button, as everything a click acts on in this window is.
-	    A word in the interaction blue reads as information, not as something to
-	    press.
-	]]
-	local undo = CreateFrame("Button", nil, tier, "UIPanelButtonTemplate")
-	undo:SetPoint("LEFT", removedText, "RIGHT", UNDO_GAP, 0)
-	undo:SetHeight(UNDO_HEIGHT)
-	undo:SetText(L["RESTOCKER_UNDO"])
-	ns.FitRestockButton(undo)
-	ns.SetRestockControlClick(undo, function()
-		-- The click hides the button under the mouse, which would leave its tooltip up.
-		GameTooltip:Hide()
-		ns.UndoRestockRemove()
-	end)
-	ns.SetupRestockerTooltip(undo, L["RESTOCKER_UNDO_TOOLTIP"])
-	undo:Hide()
-
-	-- A drag on the resize grip moves Keep, and the room with it.
-	tier:SetScript("OnSizeChanged", function()
-		if undo:IsShown() then
-			FitUndoOffer(addonFrame)
-		end
-	end)
-
-	addonFrame.undoTier = tier
-	addonFrame.removedText = removedText
-	addonFrame.undo = undo
-end
-
---[[
-    Set the undo offer's left edge to the pane's, and the sentence to its own
-    width or the room left beside the button, whichever is less. The room is
-    unknown until the window has been laid out once, and then the sentence is
-    left at its own width.
-]]
-function FitUndoOffer(window)
-	local tier, text = window.undoTier, window.removedText
-	tier:SetPoint(
-		"TOPLEFT",
-		ns.restockColumnHeader.bandRow,
-		"TOPLEFT",
-		-(ns.restockGroupPaneWidth + ns.RESTOCK_GROUP_PANE_GAP),
-		0
-	)
-	text:SetWidth(0)
-	local natural = text:GetUnboundedStringWidth()
-	local room = (tier:GetWidth() or 0) - ns.RESTOCK_GROUP_ROW_INSET - UNDO_GAP - window.undo:GetWidth()
-	if room > 0 and natural > room then
-		text:SetWidth(room)
-	end
 end
 
 --------------------------------------------------------------------------------
@@ -272,6 +159,5 @@ function ns.CreateRestockWindowFooter(addonFrame)
 	footer.status = status
 	footer.statusText = statusText
 	addonFrame.footer = footer
-	CreateUndoOffer(addonFrame)
 	return footer
 end

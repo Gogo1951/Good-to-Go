@@ -56,8 +56,7 @@ end
 
 --[[
 	MIGRATION (remove after 2026-11-23): the name the add-on gave a WoW macro before the prefix, when names ran
-	to the full 16 bytes: a spell macro's name cut to 16, a focus copy's or a Duplicate's cut to fit
-	its suffix in 16.
+	to the full 16 bytes: a spell macro's name cut to 16, a Duplicate's cut to fit its suffix in 16.
 ]]
 local LEGACY_NAME_MAX_LENGTH = 16
 
@@ -77,8 +76,6 @@ local function LegacyMacroName(macro)
 	if macro.copy then
 		local suffix = " " .. macro.copy
 		return ns.TrimMacroName(macro.name, LEGACY_NAME_MAX_LENGTH - #suffix) .. suffix
-	elseif macro.focus then
-		return ns.TrimMacroName(macro.name, LEGACY_NAME_MAX_LENGTH - #ns.FOCUS_SUFFIX) .. ns.FOCUS_SUFFIX
 	end
 	return ns.TrimMacroName(macro.name, LEGACY_NAME_MAX_LENGTH)
 end

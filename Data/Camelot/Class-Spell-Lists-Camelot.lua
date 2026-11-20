@@ -667,7 +667,6 @@ ns.CLASS_SPELL_LISTS = {
 			14251, -- Riposte
 			13877, -- Blade Flurry
 			13750, -- Adrenaline Rush
-			1310707, -- Mutilate
 			1310703, -- Venom
 		},
 		forms = {
@@ -786,9 +785,7 @@ ns.CLASS_SPELL_LISTS = {
 			131, -- Water Breathing
 			546, -- Water Walking
 		},
-		cursor = {
-			437009, -- Totemic Projection
-		},
+		cursor = {},
 		channeled = {},
 		stealth = {},
 		extraSpells = {
@@ -1064,7 +1061,7 @@ ns.CLASS_SPELL_LISTS = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, WoW Forever 1.60.1.70938
+	2026-11-19, wago.tools, WoW Forever 1.60.1.70959
 
 Notes
 	- Each class's lists for the spellbook page: the spells whose macros get the mouseover, cursor, channeled and stealth options; the stance bar order and the stances each spell needs; the ability each demon or pet summon's macro can cast; the spells listed until learned that no trainer row covers (extraSpells: quest-learned spells and talents without trainer ranks). Features/Enhanced-Spellbook/Macro-Builder/Macro-Builder.lua reads them.
@@ -1075,6 +1072,8 @@ Notes
 	- crowdControl, offensives, defensives, selfBuffs, pageBuffs, heals, noCooldown, attacks, traps, totems, seals, blessings, curses, shocks, finishers, pets, teleports and threat are the page's own headings for spells their kind would file wrong under Sort By Category. They only sort the page; no macro reads them. A spell on two takes the first in PAGE_TAGS (Features/Enhanced-Spellbook/Macro-Builder/Macro-Builder.lua). ns.SHARED_PAGE_SPELLS (Shared-Page-Spells-Camelot.lua) holds the professions, tracking and racials every class shares.
 	- Data/Vanilla/ copied its lists from this folder.
 	- Left out because this client's Validate Data report says it doesn't have them: Detect Magic; the Exodar, Silvermoon and Shattrath Teleports and Portals; Blessing of Light, Greater Blessing of Light, Blessing of Salvation and Greater Blessing of Salvation; Tiger's Fury ranks 2 to 4 (6793, 9845, 9846); and Improved Slice and Dice (14166) from the rogue's extraSpells.
+	- Left out because this client's spell table no longer has it: Mutilate (1310707), gone from the rogue's extraSpells since build 1.60.1.70862.
+	- Totemic Call (437009) isn't in the shaman's cursor list: on this client the spell moves your totems to you, not to a spot you pick (Totemic Projection on Season of Discovery).
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query
@@ -1084,6 +1083,11 @@ Wowhead
 
 wago.tools
 	https://wago.tools/db2/SpellName?build=1.60.1.70862
+	https://wago.tools/db2/SpellName?build=1.60.1.70959
+	https://wago.tools/db2/Spell?build=1.60.1.70959
+	https://wago.tools/db2/SpellMisc?build=1.60.1.70959
+	https://wago.tools/db2/SpellEffect?build=1.60.1.70959
+	https://wago.tools/db2/SpellLevels?build=1.60.1.70959
 
 QuestieDB
 	None.

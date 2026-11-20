@@ -6,7 +6,9 @@ local L = ns.L
     one press at a time, the way Pally Power's auto-buff keys do. A
     resurrection on your dead target, then on your group's dead, then Return
     the Favor, your target, your self-buffs, and your group -- your target's
-    party first. For each buff a party is missing, the key casts the group
+    party first. A press can also whisper your target an ask for a buff of
+    theirs you're missing (Buff-Duty-Asks.lua), before the buffs you can
+    give them. For each buff a party is missing, the key casts the group
     version when it costs less mana than buffing everyone it would reach one
     at a time, and the single one otherwise (AddParty, in
     Buff-Duty-Key-Picker.lua, which makes the pick).
@@ -14,7 +16,7 @@ local L = ns.L
     The key is a hidden SecureActionButtonTemplate button bound by
     Bindings.xml ("CLICK <button>:LeftButton"), and a macro reaches the same
     button with "/click GtGBuffKey" -- the way Pally Power's macros
-    click its buttons. A slash command of our own
+    click its buttons. The name is case-sensitive. A slash command of our own
     can't do it: the game only lets its own secure code cast, and an add-on's
     command never is. Casting from a key press is
     protected, so the pick happens in PreClick: it reads the group fresh,
@@ -22,7 +24,10 @@ local L = ns.L
     writes the first castable icon's attributes onto the button, and the
     secure template casts it. PostClick clears them again. All of it needs
     combat to be over -- a secure button's attributes are locked in combat
-    -- so a press mid-fight does nothing.
+    -- so a press mid-fight does nothing, except the buff a Bloodrage-first
+    press left on the button (OnKeyPostClick), which it then casts. So does a press while you're eating
+    or drinking, casting or channeling (Busy): it would start the meal over,
+    stand you up, or cut the cast short.
 ]]
 
 local BuffDuty = ns.BuffDuty
@@ -89,12 +94,16 @@ local pending -- { key, ids, seconds, expires }: the last press, until its cast 
 
 --[[
     What a press remembers a cast by: who it went on (a party, for a group
-    buff) and the spell's name. Nil for an item (a Soulstone), whose result
-    the window reads straight off your bags and the group's auras.
+    buff) and the spell's name. An item the key uses on you (a scroll, buff
+    food, a poison) by the item and the weapon slot it went on, so a scroll
+    read a moment ago isn't read again before its aura shows.
 ]]
 local function SkipKey(spec)
 	local name = spec.spellName
 	if not name then
+		if spec.itemId and (spec.selfItem or spec.weapon) then
+			return "item:" .. spec.itemId .. ":" .. tostring(spec.targetSlot or "")
+		end
 		return nil
 	end
 	if spec.subgroup then
@@ -144,6 +153,13 @@ local function Remember(spec)
 	local ids = {}
 	for _, id in ipairs(spec.castIds or { spec.spellId }) do
 		ids[id] = true
+	end
+	-- An item's cast goes off as the item's own spell.
+	if spec.itemId and not spec.spellId then
+		local _, itemSpellId = C_Item.GetItemSpell(spec.itemId)
+		if ns.IsPlain(itemSpellId) and itemSpellId then
+			ids[itemSpellId] = true
+		end
 	end
 	pending = {
 		key = key,
@@ -209,21 +225,57 @@ local function PickForPress(down)
 	return spec, waitingOn
 end
 
+--[[
+    Eating or drinking, casting, channeling, or the cursor waiting on a
+    target (a poison used from your bags, waiting on a weapon). A cast or
+    channel that can't be read counts as one, so a doubtful press stays quiet.
+]]
+local function Busy()
+	if SpellIsTargeting() then
+		return true
+	end
+	local casting = UnitCastingInfo("player")
+	if not ns.IsPlain(casting) or casting then
+		return true
+	end
+	local channeling = UnitChannelInfo("player")
+	if not ns.IsPlain(channeling) or channeling then
+		return true
+	end
+	return BuffDuty.IsEating() and true or false
+end
+
 local function OnKeyPreClick(self, _, down)
 	local acting = not down
 	if InCombatLockdown() then
+		--[[
+		    Silent, like a busy press below. The button is locked as it was left:
+		    empty, but for a Bloodrage-first press's buff (OnKeyPostClick).
+		]]
 		downPick = nil
-		if acting then
-			ns.ShowUIError(ERR_NOT_IN_COMBAT)
-		end
+		return
+	end
+	if Busy() then
+		-- Nothing on the button, so the template casts nothing, and no message.
+		downPick = nil
+		ns.SetBuffButtonAttributes(self, nil)
+		self.lastSpec = nil
 		return
 	end
 	local spec, waitingOn = PickForPress(down)
 	ns.SetBuffButtonAttributes(self, spec)
+	self.lastSpec = spec
 	if not acting then
 		return
 	end
-	if spec then
+	if spec and spec.ask then
+		-- An ask casts nothing (its attributes are cleared): the whisper goes out here.
+		ns.AskTargetForBuffs(spec)
+	elseif spec then
+		-- A weapon buff's "replace your enchant?" is answered, as for a click on its icon.
+		if spec.confirmReplace then
+			ns.ExpectReplaceEnchant()
+		end
 		Remember(spec)
 		ns.NoteBuffCastAttempt(spec)
 	elseif waitingOn then
@@ -238,8 +290,19 @@ local function OnKeyPreClick(self, _, down)
 	end
 end
 
-local function OnKeyPostClick(self)
-	if not InCombatLockdown() then
+local function OnKeyPostClick(self, _, down)
+	if InCombatLockdown() then
+		return
+	end
+	local spec = not down and self.lastSpec
+	--[[
+	    A Bloodrage-first press (rageFirst, Buff-Duty-Self.lua) leaves its
+	    buff's own cast on the button: Bloodrage can start combat, which locks
+	    the button, and the next press then casts the buff.
+	]]
+	if spec and spec.rageFirst then
+		ns.SetBuffButtonAttributes(self, { spellName = spec.spellName, castSpell = spec.castSpell, unit = spec.unit })
+	else
 		ns.SetBuffButtonAttributes(self, nil)
 	end
 end
@@ -256,22 +319,26 @@ _G[OLD_KEY_BUTTON] = keyButton
 
 --[[
     Run from Buff Duty's setup at login. A key still bound to an old
-    command now presses this button: the Group Buff key's (MIGRATION (remove
-    after 2026-11-21)), since this one picks group buffs itself, and this
-    button's own under its old name (MIGRATION (remove after 2026-12-03)).
-    Once moved, nothing is left to move. Bindings are locked in combat, so a
-    /reload mid-fight tries again next login.
+    command now presses this button: the Group Buff key's, since this one
+    picks group buffs itself, and this button's own under its old name. Each
+    move is its own loop, so each deletes on its own date. Once moved,
+    nothing is left to move. Bindings are locked in combat, so a /reload
+    mid-fight tries again next login.
 ]]
 function ns.MigrateBuffKeys()
 	if InCombatLockdown() then
 		return
 	end
 	local moved = false
-	for _, command in ipairs({ OLD_GROUP_COMMAND, OLD_KEY_COMMAND }) do
-		for _, key in ipairs({ GetBindingKey(command) }) do
-			SetBinding(key, ns.BUFF_KEY_COMMAND)
-			moved = true
-		end
+	-- MIGRATION (remove after 2026-11-21)
+	for _, key in ipairs({ GetBindingKey(OLD_GROUP_COMMAND) }) do
+		SetBinding(key, ns.BUFF_KEY_COMMAND)
+		moved = true
+	end
+	-- MIGRATION (remove after 2026-12-03)
+	for _, key in ipairs({ GetBindingKey(OLD_KEY_COMMAND) }) do
+		SetBinding(key, ns.BUFF_KEY_COMMAND)
+		moved = true
 	end
 	if moved then
 		SaveBindings(GetCurrentBindingSet())

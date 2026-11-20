@@ -25,8 +25,7 @@ end
 
 --[[
 	A friendly spell with more than one rank known offers "targetRank", and so does one whose right-click
-	spell has (Arcane Brilliance, right-clicking for Arcane Intellect), which takes its ranks the same way. A
-	focus copy shares its setting.
+	spell has (Arcane Brilliance, right-clicking for Arcane Intellect), which takes its ranks the same way.
 ]]
 function ns.OffersTargetRank(macro)
 	local function ranked(ranks)

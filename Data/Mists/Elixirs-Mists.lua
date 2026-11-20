@@ -213,7 +213,7 @@ ns.ELIXIR_BUFF_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-19, wago.tools, Mists of Pandaria Classic 5.5.4.71060
 
 Notes
 	- What counts as being flasked, for the Readiness Report's Flask or 2x Elixirs check (Features/Readiness-Report/Readiness-Report-Probes.lua): a flask, OR two different elixirs. Two different elixirs is the whole test, and it is enough because the client enforces the rest: a character may carry one battle and one guardian elixir at a time, so any two elixir auras up together are already one of each.
@@ -237,6 +237,13 @@ wago.tools
 	https://wago.tools/db2/Spell?build=5.5.4.70631
 	https://wago.tools/db2/SpellName?build=5.5.4.70631
 	https://wago.tools/db2/SpellEffect?build=5.5.4.70631
+	https://wago.tools/db2/SpellName?build=5.5.4.70960
+	https://wago.tools/db2/Spell?build=5.5.4.70960
+	https://wago.tools/db2/SpellMisc?build=5.5.4.70960
+	https://wago.tools/db2/SpellEffect?build=5.5.4.70960
+	https://wago.tools/db2/SpellLevels?build=5.5.4.70960
+	https://wago.tools/db2/SpellName?build=5.5.4.71060
+	https://wago.tools/db2/ItemEffect?build=5.5.4.71060
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/MoP/mopItemDB.lua

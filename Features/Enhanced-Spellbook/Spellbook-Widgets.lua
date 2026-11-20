@@ -60,12 +60,12 @@ local function CreateDropdown(parent, width, setup)
 	if HasTemplate("WowStyle1DropdownTemplate") then
 		dropdown = CreateFrame("DropdownButton", nil, parent, "WowStyle1DropdownTemplate")
 		dropdown:SetWidth(width)
-		dropdown:SetupMenu(setup)
+		ns.SetupKitDropdown(dropdown, setup)
 	else
 		dropdown = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
 		dropdown:SetSize(width, 22)
 		dropdown:SetScript("OnClick", function(self)
-			MenuUtil.CreateContextMenu(self, setup)
+			ns.MenuKit.OpenContextMenu(self, setup)
 		end)
 	end
 	return dropdown
@@ -84,8 +84,8 @@ local function CreateFilterBox(page, hint, onChange)
 		filterBox = CreateFrame("EditBox", nil, page, "InputBoxTemplate")
 	end
 	filterBox:SetAutoFocus(false)
-	filterBox:SetSize(160, 20)
-	filterBox:SetPoint("LEFT", page, "TOPLEFT", CONTROLS_LEFT + 6, -(TITLE_HEIGHT + CONTROLS_HEIGHT / 2))
+	filterBox:SetSize(160, 16)
+	filterBox:SetPoint("LEFT", page, "TOPLEFT", CONTROLS_LEFT + 8, -(TITLE_HEIGHT + CONTROLS_HEIGHT / 2))
 	local instructions = filterBox.Instructions
 	if instructions then
 		instructions:SetText(hint)

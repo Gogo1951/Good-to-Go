@@ -1,7 +1,6 @@
 local _, ns = ...
 local L = ns.L
 local GetColor = ns.GetColor
-local AceGUI = LibStub("AceGUI-3.0")
 
 --------------------------------------------------------------------------------
 -- List Bar
@@ -20,8 +19,7 @@ local AceGUI = LibStub("AceGUI-3.0")
       Restocker-Window-List-Manage.lua
                                     Manage Lists, its menu and Delete confirm,
                                     and the rename field with its two buttons
-      Restocker-Window-Footer.lua   the orders at the footer's right, and the
-                                    undo offer
+      Restocker-Window-Footer.lua   the orders at the footer's right
 
     The window's list management lives along the bottom-left of its footer:
     which Restock List this character is on, the button that acts on a whole
@@ -44,21 +42,23 @@ local AceGUI = LibStub("AceGUI-3.0")
     ships one) restyle it and nothing around it, moving the geometry its
     neighbors are positioned against.
 
-    It opens an AceGUI Dropdown-Pullout on click, the same way the reputation
-    column's menu in Restocker-Window-Menus.lua does: Blizzard's UIDropDownMenu drives
-    shared global frames its own secure code uses and leaves taint behind, so
-    the pullout stays. Manage Lists opens one the same way.
+    It opens the window's kit menu on click (ns.RestockMenu, in
+    Restocker-Window-Menus.lua), as the reputation and column menus do:
+    Blizzard's UIDropDownMenu drives shared global frames its own secure code
+    uses and leaves taint behind, and the kit's frames are its own. Manage
+    Lists opens the same menu.
 ]]
 local BAR_HEIGHT = ns.RESTOCK_BAR_HEIGHT -- the header's, so the two bars match (Restocker-Window-Header.lua)
 local BAR_INSET_RIGHT = ns.RESTOCK_BAR_INSET_RIGHT
 local FOOTER_X = ns.RESTOCK_FOOTER_X
 local LIST_SELECTOR_WIDTH = 192 -- holds a full Name-Realm, which an old list can be named
 local SELECTOR_ARROW_SIZE = 16
+-- The list picker and the rename box in its place, on the Spacing Scale.
+ns.RESTOCK_BAR_FIELD_HEIGHT = 16
 local BAR_ITEM_GAP = 16
 -- Shared with the Manage Lists button and the rename field (Restocker-Window-List-Manage.lua).
 ns.RESTOCK_LIST_SELECTOR_WIDTH = LIST_SELECTOR_WIDTH
 ns.RESTOCK_LIST_BAR_ITEM_GAP = BAR_ITEM_GAP
-local LIST_MENU_WIDTH = 304 -- a list's name with its characters beside it
 
 --------------------------------------------------------------------------------
 -- Used By
@@ -105,24 +105,16 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Two pullouts, the list menu's here and Manage Lists' in
-    Restocker-Window-List-Manage.lua, each built on first use and reused, which is how AceGUI's own
-    Dropdown treats its pullout. Creating and releasing one per open would leak
-    here: an Execute item closes its own pullout from inside its OnClick, so a
-    release driven off OnClose would free the very item whose handler is still
-    running. Reuse sidesteps that entirely -- items are cleared at open, not at
-    close.
-
-    Both live as long as the window, which is built once per session and only
-    ever hidden.
+    The list menu and Manage Lists' menu (Restocker-Window-List-Manage.lua)
+    both open the window's one kit menu, so only one is ever up. Each closes
+    it only while it is open for its own anchor, so closing this one never
+    shuts a menu something else opened.
 ]]
-local listPullout
-local listPulloutOpen = false
+local listAnchor
 
 local function CloseListMenus()
-	if listPullout and listPulloutOpen then
-		listPulloutOpen = false
-		listPullout:Close()
+	if listAnchor and ns.RestockMenu:IsOpenFor(listAnchor) then
+		ns.RestockMenu:Close()
 	end
 end
 
@@ -135,7 +127,7 @@ ns.CloseRestockListMenus = CloseListMenus
     Rebuilt on every open rather than cached, so a rename or a delete needs
     nothing kept in sync -- the next open reads the lists as they now are.
 
-    The characters ride beside each name because they are what a list's name
+    The characters ride on each row's right because they are what a list's name
     leaves out: "Druid" and "Druid (2)" say nothing about whose each one is,
     and switching onto a list another character uses means editing theirs.
     Each is in its class color, and muted until its class is known, so a name
@@ -143,66 +135,45 @@ ns.CloseRestockListMenus = CloseListMenus
 ]]
 local function OpenListPullout(anchor)
 	local settings = ns.restockSettings
-
-	if not listPullout then
-		listPullout = AceGUI:Create("Dropdown-Pullout")
-		listPullout:SetCallback("OnClose", function()
-			listPulloutOpen = false
-		end)
-	end
-	listPullout:Clear()
+	-- No header: the selector names the list (Style Guide → MENUS).
+	local entries = {}
 
 	-- In the shared A-to-Z order, whose first entry is also where a delete lands (ns.GetRestockListAfterDelete).
 	for _, name in ipairs(ns.GetRestockListNames()) do
-		local entry = AceGUI:Create("Dropdown-Item-Toggle")
 		local users = JoinUsers(ns.GetRestockListUsers(name), GetColor("MUTED"))
-		entry:SetText(users and (name .. "  " .. users) or name)
-		entry:SetValue(name == settings.currentList)
-		entry:SetCallback("OnValueChanged", function()
-			-- A toggle item does not close its own pullout, unlike an execute item.
-			CloseListMenus()
+		entries[#entries + 1] = ns.RestockChoiceRow(name, users, name == settings.currentList, function()
 			-- The list already in use only closes the menu: a switch would clear New and rerun the restock.
 			if name ~= ns.restockSettings.currentList then
 				ns.SwitchRestockList(name)
 			end
 		end)
-		listPullout:AddItem(entry)
 	end
 
-	--[[
-	    A rule between the lists and the action under them. Inert by construction:
-	    AceGUI's ItemBase gives every item only OnEnter and OnLeave, and Separator
-	    is the one item type that never adds an OnClick, so the line cannot be
-	    picked and needs no handler of its own.
-	]]
-	listPullout:AddItem(AceGUI:Create("Dropdown-Item-Separator"))
+	-- A gap and a rule between the lists and the action under them.
+	entries[#entries + 1] = { kind = "spacer" }
+	entries[#entries + 1] = { kind = "separator" }
+	entries[#entries + 1] = {
+		kind = "action",
+		left = L["RESTOCKER_NEW_PROFILE"],
+		onClick = function()
+			ns.CreateRestockList()
+		end,
+	}
 
-	--[[
-	    New List is an Execute, not a Toggle: it performs an action rather than
-	    selecting a value, so it draws no tick beside it and closes the menu itself.
-	]]
-	local newList = AceGUI:Create("Dropdown-Item-Execute")
-	newList:SetText(L["RESTOCKER_NEW_PROFILE"])
-	newList:SetCallback("OnClick", function()
-		ns.CreateRestockList()
-	end)
-	listPullout:AddItem(newList)
-
-	listPulloutOpen = true
-	listPullout:SetWidth(LIST_MENU_WIDTH)
+	listAnchor = anchor
 	-- The control's own tooltip would sit over the menu it opened.
 	GameTooltip:Hide()
 	-- Opening upward: the selector sits in the footer, so a menu below it would leave the window.
-	listPullout:Open("BOTTOMLEFT", anchor, "TOPLEFT", 0, 0)
+	ns.RestockMenu:Open(anchor, entries, nil, true)
 end
 
 -- The selector and its arrow open the menu, and close it again when it is already open.
 local function ToggleListPullout(anchor)
-	if listPulloutOpen then
-		CloseListMenus()
+	if ns.RestockMenu:IsOpenFor(anchor) then
+		ns.RestockMenu:Close()
 		return
 	end
-	-- One menu at a time: none of them closes on a click elsewhere, so each open clears the rest.
+	-- One menu at a time: each open clears the rest.
 	ns.CloseRestockMenus()
 	OpenListPullout(anchor)
 end
@@ -225,7 +196,7 @@ local function CreateListSelector(bar)
 	local selector = ns.CreateRestockMenuField(bar, SELECTOR_ARROW_SIZE, ToggleListPullout)
 	selector:SetPoint("LEFT", label, "RIGHT", BAR_ITEM_GAP, 0)
 	selector:SetWidth(LIST_SELECTOR_WIDTH)
-	selector:SetHeight(20)
+	selector:SetHeight(ns.RESTOCK_BAR_FIELD_HEIGHT)
 
 	ns.SetupRestockerTooltip(selector, L["RESTOCKER_PROFILE_LABEL"], L["RESTOCKER_PROFILE_TOOLTIP"])
 	bar.selector = selector

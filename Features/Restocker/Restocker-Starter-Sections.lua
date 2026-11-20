@@ -119,7 +119,7 @@ local function OfferedSections()
 			    The crafting-reagent half of the Restocker already shops for a
 			    listed poison's makings, and a fresh rogue has no way to know
 			    that, so the section says so, opening with the class-colored
-			    class name the mini-map tooltip's notes open with.
+			    class name the mini-map menu's notes open with.
 			]]
 			note = string.format(
 				L["STARTER_POPUP_POISONS_NOTE"],

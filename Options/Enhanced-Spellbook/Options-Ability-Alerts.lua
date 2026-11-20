@@ -11,10 +11,10 @@ local Spacer = Kit.Spacer
 
 --[[
     The level-up prints (Features/Rank-Watch/Rank-Watch-Level-Up.lua): when you
-    ding, chat lists what your class trainer now has for you. They have nothing
-    to do with other players' ranks and run whether Rank Watch is on or not, so
-    they have their own panel and switch, right after Rank Watch, loaded
-    wherever Rank Watch is. The switch is also in the root panel's Features
+    ding, chat lists what your class trainer now has for you, read from the
+    Spellbook's What's Next? rows. They have nothing to do with other players'
+    ranks and run whether Rank Watch is on or not, so they have their own
+    switch and a panel under Enhanced Spellbook, loaded wherever Rank Watch is. The switch is also in the root panel's Features
     section and the mini-map menu's More Features. Its three sub-options sit on
     indented rows, each hidden while what it hangs off is off: skipped pet
     abilities hang off the pet abilities. Every setting is account-wide
@@ -54,7 +54,7 @@ end
 
 function ns.BuildAbilityAlertsOptions()
 	return {
-		name = L["RANK_WATCH_LEVEL_UP_HEADER"],
+		name = Kit.SubPanelTitle(L["TAB_ENHANCED_SPELLBOOK"], L["RANK_WATCH_LEVEL_UP_HEADER"]),
 		type = "group",
 		args = {
 			description = Desc(L["ABILITY_ALERTS_DESCRIPTION"], 1),

@@ -109,10 +109,9 @@ ns.SAMPLE_NAMES = {
 --[[
     The pets the Example lines name: a hunter's pet by its own name, a proper
     name the same in every locale, and a warlock's demon by its kind, the
-    client's name for this creature family (Imp).
+    client's name for its creature family (ns.IMP_CREATURE_FAMILY_ID).
 ]]
 ns.SAMPLE_PET_NAME = "Fluffy"
-ns.SAMPLE_DEMON_FAMILY_ID = 23
 
 --------------------------------------------------------------------------------
 -- URLs
@@ -171,14 +170,18 @@ ns.OPTIONS_REGISTRY = {
 	BuffDutyWeaponBuffs = ADDON_NAME .. "_BuffDutyWeaponBuffs",
 	Restocker = ADDON_NAME .. "_Restocker",
 	Spellbook = ADDON_NAME .. "_Spellbook",
+	AbilityAlerts = ADDON_NAME .. "_AbilityAlerts",
 	Macros = ADDON_NAME .. "_Macros",
-	FoodWater = ADDON_NAME .. "_FoodWater",
-	ClassRace = ADDON_NAME .. "_ClassRace",
+	FoodDrinks = ADDON_NAME .. "_FoodDrinks",
+	PotionsManaGems = ADDON_NAME .. "_PotionsManaGems",
+	Bandages = ADDON_NAME .. "_Bandages",
+	Healthstone = ADDON_NAME .. "_Healthstone",
+	Explosives = ADDON_NAME .. "_Explosives",
+	ClassMacros = ADDON_NAME .. "_ClassMacros",
 	IgnoreList = ADDON_NAME .. "_IgnoreList",
 	RankWatch = ADDON_NAME .. "_RankWatch",
 	RankWatchTracked = ADDON_NAME .. "_RankWatchTracked",
 	RankWatchIgnored = ADDON_NAME .. "_RankWatchIgnored",
-	AbilityAlerts = ADDON_NAME .. "_AbilityAlerts",
 	InventoryReport = ADDON_NAME .. "_InventoryReport",
 	ReadinessReport = ADDON_NAME .. "_ReadinessReport",
 
@@ -768,15 +771,11 @@ Data.BUFF_DUTY_REFRESH_CHOICES = { 3, 5, 10 }
 Data.BUFF_DUTY_FAVOR_CHOICES = { 20, 40, 60 }
 Data.BUFF_DUTY_FAVOR_MAX = 5
 
--- The Buff Duty window's buff buttons, and the role icon in front of each name.
-Data.BUFF_DUTY_ICON_SIZE = 16
-
--- The Buff Duty window's frame, and the Party-Buffs hover list of who needs a buff.
-Data.BUFF_DUTY_BACKDROP = {
-	bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-	edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-	edgeSize = 12,
-	insets = { left = 3, right = 3, top = 3, bottom = 3 },
-}
--- The background's alpha, shared by the window and its Party-Buffs hover panel so they read as one.
-Data.BUFF_DUTY_BACKDROP_ALPHA = 0.75
+-- The Buff Duty window's buff buttons.
+Data.BUFF_DUTY_ICON_SIZE = 20
+--[[
+    The small icons inside its names, sized to the text rather than the
+    buttons: the role icon in front of each name, a pet's family, a weapon
+    hand's item, and a raid group's fold plus or minus.
+]]
+Data.BUFF_DUTY_LABEL_ICON_SIZE = 16

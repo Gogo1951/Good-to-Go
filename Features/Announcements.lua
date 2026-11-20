@@ -46,18 +46,12 @@ end
     Branded sent messages -- Rank Watch's whispers and Buff Duty's buff asks:
     {rt1} Message // GtG. The editable whispers (Editable Whispers, below) are
     signed off here too, so the marker and the name are never part of the
-    player's saved text. The body carries a spell link, and MarkerPrefix adds
+    player's saved text. The body carries a spell link, and SignOff adds
     the leading raid-target marker; the chat system renders both on send (the
-    marker becomes the Star icon), so the pipes and braces pass through unchanged. WoW Forever blocks
-    raid-marker tokens in group and channel chat but allows them in whispers, so
-    there the marker leads whispers only.
+    marker becomes the Star icon), so the pipes and braces pass through unchanged.
+    WoW Forever blocks raid-marker tokens only in numbered channels, which the
+    add-on never sends to.
 ]]
-local function MarkerPrefix(isWhisper)
-	if ns.FLAVOR == "Camelot" and not isWhisper then
-		return ""
-	end
-	return ns.TARGET_MARKER .. " "
-end
 
 --[[
     The name signs off a sent message, so the body gives up its closing
@@ -90,25 +84,25 @@ local function TrimSentBody(body)
 	return body
 end
 
-local function SignOff(body, isWhisper)
-	return MarkerPrefix(isWhisper) .. TrimSentBody(body) .. " // " .. L["ADDON_SHORT_NAME"]
+local function SignOff(body)
+	return ns.TARGET_MARKER .. " " .. TrimSentBody(body) .. " // " .. L["ADDON_SHORT_NAME"]
 end
 
 -- L[formatKey] formatted and signed off, or nil for a key with no text. Bodies carry links, so pipes stay.
-local function BuildSent(isWhisper, formatKey, ...)
+local function BuildSent(formatKey, ...)
 	local template = L[formatKey]
 	if not template or template == "" then
 		return nil
 	end
-	return SignOff(string.format(template, ...), isWhisper)
+	return SignOff(string.format(template, ...))
 end
 
 --[[
     A sent line for group chat, built without sending so a caller can measure
-    it first. On WoW Forever it carries no marker (MarkerPrefix).
+    it first.
 ]]
 function ns:BuildAnnounceMessage(formatKey, ...)
-	return BuildSent(false, formatKey, ...)
+	return BuildSent(formatKey, ...)
 end
 
 -- Every chat line the add-on sends goes through here, which sends nothing without a channel and a message.
@@ -159,6 +153,19 @@ local function Deliver(channel, target, message)
 	end
 end
 
+--[[
+    Every message to other players built from a fixed L key goes through here:
+    L[formatKey] formatted, signed off for its channel and delivered. Sends
+    nothing without a channel, or for a key with no text. Editable whispers
+    keep their own build functions and go through ns:QueueAutomatedWhisper.
+]]
+function ns:Announce(channel, target, formatKey, ...)
+	if not channel then
+		return
+	end
+	Deliver(channel, target, BuildSent(formatKey, ...))
+end
+
 --------------------------------------------------------------------------------
 -- Buff Requests
 --------------------------------------------------------------------------------
@@ -170,16 +177,21 @@ local ASK_MAX_NAMES = 5
     Names joined the way a sentence lists them: "Katz", "Katz and Aero",
     "Katz, Aero, and Spek". Exposed for the Party Buffs menu's whisper row.
 ]]
-local function JoinNames(names)
+local function JoinNames(names, pairFormat, lastFormat)
 	if #names == 1 then
 		return names[1]
 	elseif #names == 2 then
-		return L["LIST_PAIR_FORMAT"]:format(names[1], names[2])
+		return L[pairFormat or "LIST_PAIR_FORMAT"]:format(names[1], names[2])
 	end
 	local head = table.concat(names, L["LIST_SEPARATOR"], 1, #names - 1)
-	return L["LIST_LAST_FORMAT"]:format(head, names[#names])
+	return L[lastFormat or "LIST_LAST_FORMAT"]:format(head, names[#names])
 end
 ns.JoinNames = JoinNames
+
+-- Choices joined the same way with "or": "[Fortitude] or [Shadow Protection]".
+local function JoinChoices(names)
+	return JoinNames(names, "LIST_OR_PAIR_FORMAT", "LIST_OR_LAST_FORMAT")
+end
 
 -- Whether an ask counts its players rather than naming them: past ASK_MAX_NAMES, or without a name for each.
 local function AsksByCount(names, count)
@@ -193,18 +205,27 @@ end
     or fewer are missing it, and "7 people are missing the [Arcane Intellect]
     buff // GtG" past that. `names` are the missing players' names without
     their realms, `count` how many. A statement, not a question, so the
-    sign-off reads cleanly after it. It follows the group-chat rule
-    (MarkerPrefix); the whispered ask is the player's own text
-    (ns:BuildBuffAskWhisper, below).
+    sign-off reads cleanly after it. The whispered ask is the player's own
+    text (ns:BuildBuffAskWhisper, below).
 ]]
-function ns:BuildBuffRequestMessage(names, count, link)
+local function BuffRequestParts(names, count, link)
 	names = names or {}
 	if AsksByCount(names, count) then
-		return ns:BuildAnnounceMessage("BUFF_DUTY_OTHERS_ASK_COUNT", count, link)
+		return "BUFF_DUTY_OTHERS_ASK_COUNT", count, link
 	elseif count == 1 then
-		return ns:BuildAnnounceMessage("BUFF_DUTY_OTHERS_ASK_ONE", names[1], link)
+		return "BUFF_DUTY_OTHERS_ASK_ONE", names[1], link
 	end
-	return ns:BuildAnnounceMessage("BUFF_DUTY_OTHERS_ASK_NAMES", JoinNames(names), link)
+	return "BUFF_DUTY_OTHERS_ASK_NAMES", JoinNames(names), link
+end
+
+-- The ask built without sending, for the panel's Example and the diagnostics to measure.
+function ns:BuildBuffRequestMessage(names, count, link)
+	return ns:BuildAnnounceMessage(BuffRequestParts(names, count, link))
+end
+
+-- A Party-Buffs icon's click: the ask said to the whole group.
+function ns:SayBuffRequest(names, count, link)
+	ns:Announce(ns:GetGroupChatChannel(), nil, BuffRequestParts(names, count, link))
 end
 
 ns.BUFF_ASK_MAX_NAMES = ASK_MAX_NAMES
@@ -278,13 +299,30 @@ function ns.FillBuffAskWhisper(template, names, count, link)
 	else
 		values.names = JoinNames(names)
 	end
-	return SignOff(FillTokens(template, values), true)
+	return SignOff(FillTokens(template, values))
 end
 
 function ns:BuildBuffAskWhisper(template, names, count, link)
 	return BuildEditable(template, function(text)
 		return ns.FillBuffAskWhisper(text, names, count, link)
 	end, "buffAsk")
+end
+
+--[[
+    Buff Duty's ask to your target for the buffs of theirs you're missing (a
+    click on an ask icon under Target, or the Buff Key). {name} is their name
+    without the realm, and {spells} the buffs, linked or named, offered as
+    choices: "any chance I could snag a [Fortitude] or [Shadow Protection]".
+]]
+function ns.FillBuffAskTargetWhisper(template, name, spells)
+	local joined = spells and spells[1] and JoinChoices(spells) or ""
+	return SignOff(FillTokens(template, { name = name or "", spells = joined }))
+end
+
+function ns:BuildBuffAskTargetWhisper(template, name, spells)
+	return BuildEditable(template, function(text)
+		return ns.FillBuffAskTargetWhisper(text, name, spells)
+	end, "buffAskTarget")
 end
 
 --[[
@@ -304,7 +342,7 @@ end
 function ns.FillRankWatchTipWhisper(template, linkedSpell, namedSpell, level, petName)
 	local message
 	for _, spell in ipairs({ linkedSpell or "", namedSpell or "" }) do
-		message = SignOff(FillTokens(template, { spell = spell, level = level, pet = petName }), true)
+		message = SignOff(FillTokens(template, { spell = spell, level = level, pet = petName }))
 		if #message <= ns.CHAT_MESSAGE_MAX_LENGTH then
 			return message
 		end
@@ -320,7 +358,7 @@ end
 
 -- Rank Watch's opt-out offer, with a player's second tip in a session. It has no tokens.
 function ns.FillOptOutOfferWhisper(template)
-	return SignOff(template, true)
+	return SignOff(template)
 end
 
 function ns:BuildOptOutOfferWhisper(template)
@@ -329,7 +367,7 @@ end
 
 -- Rank Watch's reply to a group member who whispered "Opt Out". It has no tokens.
 function ns.FillOptOutDoneWhisper(template)
-	return SignOff(template, true)
+	return SignOff(template)
 end
 
 function ns:BuildOptOutDoneWhisper(template)
@@ -350,11 +388,6 @@ function ns:GetGroupChatChannel()
 		return "PARTY"
 	end
 	return nil
-end
-
--- A Party-Buffs icon's click, to the whole group: a line already built.
-function ns:SayBuffRequest(message)
-	Deliver(ns:GetGroupChatChannel(), nil, message)
 end
 
 --[[

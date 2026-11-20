@@ -10,7 +10,7 @@ ns.CONJURED_ITEM_IDS_BY_SPELL = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-19, wago.tools, Mists of Pandaria Classic 5.5.4.71060
 
 Notes
 	- Conjure spell ID to the items it makes, read by GetSmartSpell (Features/Macros-for-Consumables/Macros/Smart-Spell.lua) when it is called with checkUnique. A conjure whose item the player already holds is skipped; with one spell per conjure on this client, the fallback then casts the same spell.
@@ -29,6 +29,17 @@ wago.tools
 	https://wago.tools/db2/SpellName?build=5.5.4.70631
 	https://wago.tools/db2/SkillLineAbility?build=5.5.4.70631
 	https://wago.tools/db2/ItemSparse?build=5.5.4.70631
+	https://wago.tools/db2/Item?build=5.5.4.70960
+	https://wago.tools/db2/SpellName?build=5.5.4.70960
+	https://wago.tools/db2/ItemSparse?build=5.5.4.70960
+	https://wago.tools/db2/ItemEffect?build=5.5.4.70960
+	https://wago.tools/db2/Spell?build=5.5.4.70960
+	https://wago.tools/db2/SpellMisc?build=5.5.4.70960
+	https://wago.tools/db2/SpellEffect?build=5.5.4.70960
+	https://wago.tools/db2/SpellLevels?build=5.5.4.70960
+	https://wago.tools/db2/Item?build=5.5.4.71060
+	https://wago.tools/db2/ItemSparse?build=5.5.4.71060
+	https://wago.tools/db2/SpellName?build=5.5.4.71060
 
 QuestieDB
 	None.

@@ -92,9 +92,9 @@ local function TooltipSpellID(macro)
 	return info and info.spellID or macro.spellID
 end
 
--- Whether any of the game's menus is open, a macro's options menu included.
+-- Whether a macro's options menu (on Menu-Kit's panels) or any of the game's menus is open.
 local function MenuOpen()
-	return Menu ~= nil and Menu.GetManager ~= nil and Menu.GetManager():IsAnyMenuOpen()
+	return ns.IsMacroMenuPanelsShown() or (Menu ~= nil and Menu.GetManager ~= nil and Menu.GetManager():IsAnyMenuOpen())
 end
 
 -- A keybind and what it does, both in the interaction blue, as a pair across the tooltip.
@@ -378,7 +378,7 @@ end
 
 --[[
 	The note under the name, or nil for none: why the page can't place the macro, in red; else a consumable's
-	Dynamic Item (and Dynamic Rank, when the class also casts it), Focus,
+	Dynamic Item (and Dynamic Rank, when the class also casts it),
 	the rank and the options that are on (ns.MacroOptionSubText in Macro-Button-Notes.lua), when an unlearned spell can be learned, or the spell's own subtext as the game's spellbook shows it ("Racial").
 ]]
 local function NoteText(button, macro)
@@ -386,8 +386,6 @@ local function NoteText(button, macro)
 		return GetColor("OFF") .. L["SUBTEXT_TOO_LONG"] .. "|r"
 	elseif macro.consumable then
 		return L[macro.dynamicRank and "SUBTEXT_DYNAMIC_RANK_ITEM" or "SUBTEXT_DYNAMIC_ITEM"]
-	elseif macro.focus then
-		return L["SUBTEXT_FOCUS"]
 	end
 	--[[
 		a learned spell with ranks ("Rank 4") leads with "Max Rank", since the macro casts the highest rank known,

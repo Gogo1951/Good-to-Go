@@ -3,7 +3,6 @@ local L = ns.L
 local GetColor = ns.GetColor
 
 local SetTip = ns.MenuSetTip
-local LabelAndValue = ns.MenuLabelAndValue
 local DESCRIPTIONS, NOTES = ns.MENU_DESCRIPTIONS, ns.MENU_NOTES
 local COMBAT, REPEAT, FIRST, ERRORS = ns.MENU_COMBAT, ns.MENU_REPEAT, ns.MENU_FIRST, ns.MENU_ERRORS
 
@@ -16,11 +15,11 @@ local COMBAT, REPEAT, FIRST, ERRORS = ns.MENU_COMBAT, ns.MENU_REPEAT, ns.MENU_FI
 
 --[[
 	Target: who the macro tries, in turn, as up to three priorities, each a submenu of the units it can
-	pick. A lower priority leaves out the units a higher one took, and Third waits for Second. The menu
-	can't drop an entry once drawn, so a pick reopens it, drawn afresh.
+	pick. A lower priority leaves out the units a higher one took, and Third waits for Second. A pick redraws
+	the menu built afresh, so the places below it follow.
 ]]
 function ns.MacroMenuTarget(menuState)
-	local section, group, change, button = menuState.section, menuState.group, menuState.change, menuState.button
+	local section, group, change = menuState.section, menuState.group, menuState.change
 	if ns.OffersTargetPriority(menuState.macro) then
 		section()
 		local function unitLabel(unit)
@@ -47,10 +46,7 @@ function ns.MacroMenuTarget(menuState)
 				change(function()
 					ns.SetTargetPriorityUnit(menuState.macro, place, unit)
 				end)
-				C_Timer.After(0, function()
-					ns.ShowMacroMenu(button)
-				end)
-				return MenuResponse.CloseAll
+				return MenuResponse.Refresh
 			end
 		end
 		-- an empty priority after the last to fill, but none after Self, since nothing after the player is ever tried
@@ -58,13 +54,9 @@ function ns.MacroMenuTarget(menuState)
 		for place = 1, math.min(places, ns.TARGET_PRIORITY_SLOTS) do
 			local placeKey = "MENU_PRIORITY_" .. place
 			local slotMenu = targetMenu:CreateButton(L[placeKey])
-			slotMenu:AddInitializer(function(frame)
+			slotMenu:SetValue(function()
 				local unit = ns.TargetPriority(menuState.macro)[place]
-				return LabelAndValue(
-					frame,
-					L[placeKey],
-					GetColor("INFO") .. (unitLabel(unit) or L["MENU_UNIT_NONE"]) .. "|r"
-				)
+				return GetColor("MUTED") .. (unitLabel(unit) or L["MENU_UNIT_NONE"]) .. "|r"
 			end)
 			SetTip(slotMenu, L[placeKey], L["MENU_PRIORITY_DESCRIPTION"])
 			local taken = {}
@@ -107,13 +99,11 @@ local function MenuRank(known, id, name, level)
 	return { status = reached and "AVAILABLE" or "LATER", source = "TRAINER", level = level }
 end
 
--- Puts a rank's note at the right of its checkbox or radio (ns.MenuChoiceNote), where it has one.
+-- Puts a rank's note beside its checkbox or radio, where it has one.
 local function AddRankNote(element, rank)
 	local note = rank.status ~= "KNOWN" and ns.RankNote(rank)
 	if note then
-		element:AddInitializer(function(frame)
-			return ns.MenuChoiceNote(frame, note)
-		end)
+		element:SetNote(note)
 	end
 end
 
@@ -130,7 +120,7 @@ function ns.MacroMenuGroupedSpells(menuState)
 		section()
 		local groupedMenu = group("MENU_GROUP_GROUPED", function()
 			local on = ns.IsOptionOn(menuState.macro, "groupVersion") or ns.IsGrouped(menuState.macro)
-			return on and { L["MENU_ENABLED"] } or {}
+			return on and { L["MENU_ON"] } or {}
 		end)
 		if offersRightClick then
 			local label = L["MENU_RIGHT_CLICK_FOR"]:format(rightClick)
@@ -156,17 +146,22 @@ function ns.MacroMenuGroupedSpells(menuState)
 		end
 		if ns.OffersGroupedSpells(menuState.macro) then
 			if offersRightClick then
-				groupedMenu:CreateDivider()
+				groupedMenu:CreateSpacer()
 			end
 			for _, member in ipairs(menuState.macro.groupMembers) do
 				local name = member.name
 				local rank = MenuRank(member.learned, nil, name)
-				local element = groupedMenu:CreateCheckbox(ns.RankLabel(rank, name), function()
+				local function isOn()
 					return ns.IsGroupedSpellOn(menuState.macro, name)
-				end, function()
+				end
+				local element = groupedMenu:CreateCheckbox(name, isOn, function()
 					change(function()
 						ns.ToggleGroupedSpell(menuState.macro, name)
 					end)
+				end)
+				-- in its rank color while on, gray like every option while off
+				element:SetLabel(function()
+					return isOn() and ns.RankLabel(rank, name) or name
 				end)
 				SetTip(
 					element,
@@ -207,9 +202,7 @@ function ns.MacroMenuRank(menuState)
 		-- the rank Max Rank casts today, so a rank still to learn reads as not in use yet (ranks lists highest first)
 		local casts = menuState.macro.ranks and menuState.macro.ranks[1]
 		if casts then
-			highest:AddInitializer(function(frame)
-				return ns.MenuChoiceNote(frame, GetColor("HELP") .. casts.text .. "|r")
-			end)
+			highest:SetNote(GetColor("MUTED") .. casts.text .. "|r")
 		end
 		if ns.OffersTargetRank(menuState.macro) then
 			radio(
@@ -222,7 +215,7 @@ function ns.MacroMenuRank(menuState)
 			)
 		end
 		if menuState.macro.ranks then
-			rankMenu:CreateDivider()
+			rankMenu:CreateSpacer()
 		end
 		local all = {}
 		for _, list in ipairs({ menuState.macro.ranks or {}, menuState.macro.unknownRanks or {} }) do
@@ -270,9 +263,8 @@ function ns.MacroMenuConditionals(menuState)
 		local element = root:CreateButton(L["MENU_GROUP_CONDITIONALS"], function()
 			ns.ShowConditionalsPanel(menuState.macro, page)
 		end)
-		element:AddInitializer(function(frame)
-			local value = ns.MacroMenuGroupValue(ns.ConditionalSummaries(menuState.macro))
-			return LabelAndValue(frame, L["MENU_GROUP_CONDITIONALS"], value and GetColor("INFO") .. value .. "|r")
+		element:SetValue(function()
+			return ns.MacroMenuGroupValue(ns.ConditionalSummaries(menuState.macro))
 		end)
 		SetTip(element, L["MENU_GROUP_CONDITIONALS"], L["MENU_CONDITIONALS_DESCRIPTION"])
 	end
@@ -289,16 +281,14 @@ function ns.MacroMenuCastSequence(menuState)
 		local element = root:CreateButton(L["MENU_GROUP_CAST_SEQUENCE"], function()
 			ns.ShowCastSequencePanel(menuState.macro, page)
 		end)
-		element:AddInitializer(function(frame)
+		element:SetValue(function()
 			local count = ns.IsCastSequenceOn(menuState.macro) and ns.CastSequenceStepCount(menuState.macro) + 1
 			-- the spell then NULL alone reads "Rend, Stop" rather than a count of one
-			local text = count
+			return count
 				and (
 					count > 1 and L["MENU_CAST_SEQUENCE_STEPS"]:format(count)
 					or ns.CastSequenceSummary(menuState.macro)
 				)
-			local value = text and GetColor("INFO") .. text .. "|r"
-			return LabelAndValue(frame, L["MENU_GROUP_CAST_SEQUENCE"], value)
 		end)
 		SetTip(element, L["MENU_GROUP_CAST_SEQUENCE"], L["MENU_CAST_SEQUENCE_DESCRIPTION"])
 	end
@@ -339,7 +329,7 @@ function ns.MacroMenuWhen(menuState)
 		end, L[choice[3]])
 	end
 	if ns.OffersOption(menuState.macro, "oncePerTarget") then
-		whenMenu:CreateDivider()
+		whenMenu:CreateSpacer()
 		for _, choice in ipairs(REPEAT) do
 			local rule = choice[1]
 			radio(whenMenu, L[choice[2]], function()
@@ -349,7 +339,7 @@ function ns.MacroMenuWhen(menuState)
 			end, L[choice[3]])
 		end
 	end
-	whenMenu:CreateDivider()
+	whenMenu:CreateSpacer()
 	checkbox(whenMenu, "stopIfChanneling", L["MENU_STOP_IF_CHANNELING"])
 	checkbox(whenMenu, "stopIfStealthed", L["MENU_STOP_IF_STEALTHED"])
 end
@@ -357,7 +347,7 @@ end
 --[[
 	First: what runs before the cast, the items last, each labeled with its place in the order. The
 	slots are the equipped on-use items, plus any slot already ticked so it can be unticked after a gear
-	swap.
+	swap. True when it added its submenu.
 ]]
 function ns.MacroMenuFirst(menuState)
 	local group, checkbox, change = menuState.group, menuState.checkbox, menuState.change
@@ -398,7 +388,7 @@ function ns.MacroMenuFirst(menuState)
 			end
 		end
 		if offered and #slots > 0 then
-			firstMenu:CreateDivider()
+			firstMenu:CreateSpacer()
 		end
 		for _, slot in ipairs(slots) do
 			local element = firstMenu:CreateCheckbox(ns.SlotLabel(slot), function()
@@ -408,21 +398,22 @@ function ns.MacroMenuFirst(menuState)
 					ns.ToggleUseSlot(menuState.macro, slot)
 				end)
 			end)
-			-- the icon, and the slot's place in the order, set each time the menu redraws
-			element:AddInitializer(function(frame)
-				local at = ns.IsUsingSlot(menuState.macro, slot)
+			-- the icon at line height, and the slot's place in the order gray beside it, read each time the menu redraws
+			element:SetLabel(function()
 				local icon = GetInventoryItemTexture("player", slot)
-				frame.fontString:SetTextToFit(
-					(icon and "|T" .. icon .. ":16|t " or "")
-						.. (at and L["NAME_WITH_DETAIL_FORMAT"]:format(ns.SlotLabel(slot), at) or ns.SlotLabel(slot))
-				)
+				return (icon and "|T" .. icon .. ":0|t " or "") .. ns.SlotLabel(slot)
+			end)
+			element:SetNote(function()
+				local at = ns.IsUsingSlot(menuState.macro, slot)
+				return at and GetColor("MUTED") .. at .. "|r"
 			end)
 			SetTip(element, ns.SlotLabel(slot), L["MENU_USE_ITEM_DESCRIPTION"])
 		end
 	end
+	return firstOffered
 end
 
--- Then: what runs after the cast, less what sits at the top already
+-- Then: what runs after the cast, less what sits at the top already; true when it added its submenu
 function ns.MacroMenuThen(menuState)
 	local group, checkbox, isFeatured = menuState.group, menuState.checkbox, menuState.isFeatured
 	local THEN = ns.MenuThenOptions()
@@ -446,6 +437,7 @@ function ns.MacroMenuThen(menuState)
 			checkbox(thenMenu, option[1], option[2])
 		end
 	end
+	return #thenOptions > 0
 end
 
 function ns.MacroMenuErrorMessages(menuState)

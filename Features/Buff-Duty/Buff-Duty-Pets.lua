@@ -20,7 +20,7 @@ local IsPhaseShifted = BuffDuty.IsPhaseShifted
 --------------------------------------------------------------------------------
 
 -- A pet's inline icon in front of its name, the window's icon size.
-local LABEL_ICON_SIZE = Data.BUFF_DUTY_ICON_SIZE
+local LABEL_ICON_SIZE = Data.BUFF_DUTY_LABEL_ICON_SIZE
 
 --[[
     A pet's row label: its summoning spell's icon, then the name in its owner's
@@ -102,12 +102,14 @@ end
     controlled mob on Classic Era, so a pet that is neither a known demon nor a
     Focus beast (PetOwnerClass) and has no pet family is taken for one too: a
     humanoid has none, while a real pet's family names it ("Imp", "Cat").
+    A secret answer to either question keeps the pet on.
 ]]
 local function IsCharmedPet(unit)
-	if UnitIsCharmed(unit) then
+	if ns.IsPlainTrue(UnitIsCharmed(unit)) then
 		return true
 	end
-	return not BuffDuty.PetOwnerClass(unit) and not UnitCreatureFamily(unit)
+	local family = UnitCreatureFamily(unit)
+	return not BuffDuty.PetOwnerClass(unit) and ns.IsPlain(family) and not family
 end
 
 --[[

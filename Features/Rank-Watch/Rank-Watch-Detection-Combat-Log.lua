@@ -5,7 +5,7 @@ local _, ns = ...
 --------------------------------------------------------------------------------
 
 --[[
-    Casts from the combat log, listed by every TOC but WoW Forever's, which keeps the combat log from add-ons
+    Casts from the combat log, listed in the Vanilla and TBC TOCs; WoW Forever keeps the combat log from add-ons
     (Rank-Watch-Detection-Forever.lua reads casts there). The log names the caster and the recipient of every
     cast in the group, pets' casts included: a hunter pet's or demon's goes to its owner. Every cast ends in
     ns.CheckRankWatchCast, with the recipient's level when it landed on another friendly player, none when it
@@ -41,8 +41,10 @@ local function PetAndOwner(petGUID)
 	return nil
 end
 
--- The friendly player a cast landed on, when that was someone other than the caster: their level, or false
--- when it can't be read (the cast is dropped), or nil for no such recipient.
+--[[
+    The friendly player a cast landed on, when that was someone other than the caster: their level, or false
+    when it can't be read (the cast is dropped), or nil for no such recipient.
+]]
 local function RecipientLevel(destGUID, destFlags, ...)
 	if not destGUID or destGUID == "" or band(destFlags or 0, FRIENDLY_REACTION) == 0 then
 		return nil

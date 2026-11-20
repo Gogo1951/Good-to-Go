@@ -53,12 +53,11 @@ function ns.ForEachUnlearnedSpell(fn, learned)
 		end
 	end
 	local sources = ns.EXTRA_SPELL_SOURCES or {}
-	local levelLearned = C_Spell.GetSpellLevelLearned
 	for _, entry in ipairs(ns.ClassExtraSpells()) do
 		local id = type(entry) == "table" and entry[1] or entry
 		local source, level = unpack(sources[id] or {})
-		if not level and levelLearned then
-			level = levelLearned(id)
+		if not level then
+			level = C_Spell.GetSpellLevelLearned(id)
 		end
 		spells[#spells + 1] = { id = id, level = level and level > 0 and level or nil, talent = source == "TALENT" }
 	end

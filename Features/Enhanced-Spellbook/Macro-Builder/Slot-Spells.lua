@@ -67,7 +67,7 @@ end
 ]]
 function ns.ConditionalPickOfSpell(spellID)
 	for _, macro in ipairs(ns.macros or NO_ROWS) do
-		if not macro.copy and not macro.focus and not macro.rank and IsKnownRank(macro, spellID) then
+		if not macro.copy and not macro.rank and IsKnownRank(macro, spellID) then
 			if macro.ranks[1].id ~= spellID then
 				return { spellID = spellID, fixed = true }
 			end

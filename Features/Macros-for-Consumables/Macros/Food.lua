@@ -5,61 +5,19 @@ local _, ns = ...
 --------------------------------------------------------------------------------
 
 --[[
-    The busiest macro definition: plain food by default, buff food when the
-    live ns.allowBuffFood preference wants the buff or when it's all the bags
-    hold (the scanner computes that
-    flag from setting/When to Use/Well Fed/arena state; the selection fields below
-    declare how it applies), a pet-buff-food override when the Hunter
-    feature wants the pet fed, and a full-body scroll-only mode when scroll
-    buffs are missing.
+    The busiest macro definition: the food that restores the most, buff food
+    with the rest or kept for last (ns.buffFoodRank, from Eat Buff Food When
+    Already Well Fed), and a pet-buff-food override when the Hunter feature
+    wants the pet fed. Buff Duty offers buff food for the buff, and scrolls:
+    its window offers them while they're missing (Buff-Duty-Self.lua).
 ]]
 
 --[[
     Pet buff override flag — set by modifyItem, read by appendBlock and
     buildUseLine later in the same update iteration (the engine always calls
     modifyItem first). The override replaces the Food slot item with pet food.
-    It never shares a body with scrolls: scroll-only mode replaces the whole
-    body, pet line included, until the scrolls are applied.
 ]]
 local petBuffOverride = false
-
---[[
-    When the player has missing scroll buffs and is not targeting a friendly
-    player, the Food macro becomes a dedicated scroll-fire macro. The body
-    is just `#showtooltip` plus one /use [@player] item:NNN line per scroll
-    in ns.SCROLL_CHECK_ORDER priority. No food, no conjure, no state-write —
-    the user taps once to apply scrolls; the next tap (with all scrolls
-    applied) sees the macro flip back to its normal food form. WoW Forever is
-    the exception: scrolls trigger the global cooldown there, so one press
-    lands one scroll, and the body holds only the first missing scroll until
-    it lands.
-
-    Bare `#showtooltip` lets the action bar resolve the icon from the first
-    usable line — the first scroll — which is exactly what the user should
-    see when the button is about to fire scrolls.
-
-    All scrolls fit comfortably under the 255 macro ceiling: 14 bytes for
-    the tooltip line + at most 6 scrolls × ~25 bytes ≈ 164 bytes. The lines are
-    pure ASCII (no localized names), so the count cannot grow in another locale.
-
-    A Troll with Rapid Regeneration on (only on WoW Forever, where the body
-    holds one scroll) gets the combat cast ahead of the scroll, like the
-    eating body; the spell name is the one localized line, and one scroll
-    leaves it well over 150 bytes of room. combatCast is that name or nil.
-]]
-local function BuildScrollOnlyBody(scrollList, combatCast)
-	local lines = { "#showtooltip" }
-	if combatCast then
-		lines[1] = "#showtooltip [combat] " .. combatCast .. "; item:" .. scrollList[1]
-		lines[#lines + 1] = "/cast [combat] " .. combatCast
-		lines[#lines + 1] = "/stopmacro [combat]"
-	end
-	local count = (ns.FLAVOR == "Camelot") and 1 or #scrollList
-	for index = 1, count do
-		lines[#lines + 1] = "/use [@player] item:" .. scrollList[index]
-	end
-	return table.concat(lines, "\n") .. "\n"
-end
 
 --[[
     Stealth Eating's spell and state flag, or nil while the option is off or
@@ -87,17 +45,16 @@ ns.RegisterMacroType({
 	    Selection: any food competes, including the food half of a foodwater
 	    hybrid (which also feeds Water), by raw food value. Buff food always
 	    competes (except while targeting yourself, ns.excludeBuffFood) and
-	    ranks by ns.buffFoodRank: first while the live ns.allowBuffFood
-	    preference is on (setting + When to Use + not Well Fed + not
-	    self-targeting + not arena), last otherwise, so a bag of only buff
-	    food still feeds you. While Use Conjured Food & Water First holds
+	    ranks by ns.buffFoodRank: with the rest while Eat Buff Food When
+	    Already Well Fed is on, last otherwise, so a bag of only buff food
+	    still feeds you. While Use Conjured Food & Water First holds
 	    (ns.allowConjuredFirst), conjured food comes next, ahead of anything
 	    that restores more. While Use Restock List Food & Water Last holds
 	    (ns.allowRestockLast), food off the Restock List beats an equal one
 	    on it. Hybrids beat dedicated food on ties — one bag
 	    slot covering both needs. The winner record carries the item link,
 	    which the scanner publishes as ns.bestFoodLink for the mini-map
-	    tooltip.
+	    menu.
 	]]
 	itemTypes = { food = true, foodwater = true },
 	accepts = function(data)
@@ -144,30 +101,12 @@ ns.RegisterMacroType({
 	end,
 
 	--[[
-	    Scroll mode. The "SCROLLS:" state-key prefix can never collide with
-	    the standard ITEMID-prefixed key, which guarantees a rewrite happens
-	    at every transition into and out of scroll mode (target-change,
-	    scroll-applied, bag scan removing the last scroll item, etc).
-	]]
-	buildModeOverride = function(context)
-		local scrollIDs = context.activeScrollIDs
-		if not scrollIDs or #scrollIDs == 0 then
-			return nil
-		end
-		local combatCast = ns.RapidRegenerationCombatCast()
-		return BuildScrollOnlyBody(scrollIDs, combatCast),
-			"SCROLLS:" .. table.concat(scrollIDs, ",") .. (combatCast and ":RC" or "")
-	end,
-
-	--[[
 	    Stealth Eating: appends a stealth cast below the food line -- Stealth
 	    for Rogues, Shadowmeld for other Night Elves -- so the player stealths
 	    while eating. The "SE" flag keeps the append in the state key so
 	    toggling the option rewrites the macro. Only a body the player eats
 	    from carries it: with no food the press would stealth for nothing, and
-	    the pet-buff override feeds the pet rather than the player. Scroll-only
-	    mode bypasses this too (mode overrides never reach appendBlock), which
-	    is correct: a scroll tap is not a meal.
+	    the pet-buff override feeds the pet rather than the player.
 	]]
 	appendBlock = function(itemID)
 		if not itemID or petBuffOverride then
@@ -198,17 +137,9 @@ ns.RegisterMacroType({
 	end,
 
 	--[[
-	    Troll Rapid Regeneration: while it is off cooldown the body casts it
-	    instead of eating (Tools-Troll.lua). Asked under the same rule as
-	    corpseSpell, so the pet-buff override never carries it.
-	]]
-	leadSpell = function(entry)
-		return ns.RapidRegenerationCast(entry)
-	end,
-
-	--[[
-	    And on a press in combat, where nobody eats, the eating body casts it
-	    instead, cooldown or not (Tools-Troll.lua).
+	    Troll Rapid Regeneration: a press in combat, where nobody eats, casts
+	    it instead (Tools-Troll.lua). Asked under the same rule as corpseSpell,
+	    so the pet-buff override never carries it.
 	]]
 	combatSpell = function()
 		return ns.RapidRegenerationCombatCast()

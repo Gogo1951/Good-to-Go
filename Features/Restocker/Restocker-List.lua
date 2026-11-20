@@ -20,9 +20,9 @@ local L = ns.L
     view state for one sitting and must never reach SavedVariables. A selected
     New category goes with the items, or the window would show an empty list.
 
-    The offer to undo the last removal (ns.restockLastRemoved, below) is the
-    same kind of note and ends at the same
-    moments, so it is dropped here with the flags.
+    The last removal, kept in its row for an Undo (ns.restockLastRemoved,
+    below), is the same kind of note and ends at the same moments, so it is
+    dropped here with the flags.
 ]]
 ns.restockNewItems = {}
 
@@ -237,11 +237,14 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The row a remove click just took off the list, kept so the status line can
-    offer it back (ns.UndoRestockRemove): the button sits beside the last
-    column, and a row's Keep amount and flags go with it. One step deep -- a
-    second removal replaces it -- and dropped with the "New" flags, whenever the
-    window closes or the list changes (ns.ClearRestockNewItems).
+    The row a remove click just took off the list, kept in its place on the
+    list, grayed, with an Undo button where its remove button was
+    (ns.UndoRestockRemove); a row's Keep amount and flags go back with it. One
+    step deep -- a second removal replaces it. The render
+    (Restocker-Window-Render.lua) drops it on the next change to the list, the
+    filter or the category, and it goes with the "New" flags whenever the
+    window closes or the list in use changes (ns.ClearRestockNewItems), and
+    when Staples opens (ns.ForgetRestockRemoval).
 ]]
 ns.restockLastRemoved = nil
 
@@ -255,6 +258,17 @@ function ns.RemoveRestockItem(item)
 	ns.restockLastRemoved = { item = item, listName = settings.currentList }
 	ns.UpdateRestockList()
 	return true
+end
+
+-- Drops the removed row, if one waits, and redraws so it goes.
+function ns.ForgetRestockRemoval()
+	if not ns.restockLastRemoved then
+		return
+	end
+	ns.restockLastRemoved = nil
+	if ns.restockWindow and ns.restockWindow:IsShown() then
+		ns.UpdateRestockList()
+	end
 end
 
 --[[

@@ -11,15 +11,14 @@ local format = string.format
 --[[
     The mini-map button's menu, drawn on the shared Menu Kit
     (Features/Menu-Kit.lua): the add-on's name, then Current Food, then a block
-    for each thing a player flips mid-session (Buff Food & Scrolls, Buff Duty,
-    the Restocker), each a gold title with where it stands on the right, a line
+    for each thing a player flips mid-session (Buff Duty, the Restocker), each a gold title with where it stands on the right, a line
     saying what it does and a blue Toggle row. Then the class's macro notes
     behind a [Class] Macros flyout with the class's live items under it, this
     character's Ignore List, the More Features flyout, and Options last.
 
     Hovering the button opens it; it closes a moment after the cursor leaves
     the button, the menu and the flyout. Every row is a plain click, so a
-    controller's cursor reaches all of it, and the button keeps its six clicks,
+    controller's cursor reaches all of it, and the button keeps its clicks,
     each named on the row that does the same job (Button Clicks, below). Every
     click, row or button, ends in ns.RefreshSettings, which redraws the open
     menu, every open options panel and the button's icon.
@@ -46,7 +45,27 @@ flyout:SetFrameLevel(menu:GetFrameLevel() + 20)
 -- Escape closes it, as it does any game menu.
 table.insert(UISpecialFrames, menu:GetName())
 
-Kit.SetToggleText(L["MENU_ON"], L["MENU_OFF"])
+-- Every string the kit draws, localized, handed over once (Menu-Kit.lua → Text).
+Kit.SetText({
+	on = L["MENU_ON"],
+	off = L["MENU_OFF"],
+	toggle = L["MENU_TOGGLE"],
+	more = L["MENU_MORE"],
+	moreFeatures = L["MENU_MORE_FEATURES"],
+	featuresOn = L["MENU_FEATURE_COUNT_ON"],
+	featuresOff = L["MENU_FEATURE_COUNT_OFF"],
+	count = L["ITEM_QUANTITY"],
+	loading = L["LOADING_ITEM"],
+	shortName = L["ADDON_SHORT_NAME"],
+	clicks = {
+		LeftButton = L["MENU_CLICK_LEFT"],
+		RightButton = L["MENU_CLICK_RIGHT"],
+		MiddleButton = L["MENU_CLICK_MIDDLE"],
+		ShiftLeftButton = L["MENU_CLICK_SHIFT_LEFT"],
+		ShiftRightButton = L["MENU_CLICK_SHIFT_RIGHT"],
+		ShiftMiddleButton = L["MENU_CLICK_SHIFT_MIDDLE"],
+	},
+})
 
 local state = {
 	anchor = nil,
@@ -72,34 +91,13 @@ local function OptionTooltip(name, desc)
 	end
 end
 
--- An item's own tooltip, as hovering it in the bags shows it.
-local function ItemTooltip(itemID)
-	if not itemID then
-		return nil
-	end
-	return function(tooltip)
-		tooltip:SetItemByID(itemID)
-	end
-end
-
--- An icon at line height, then the item's name.
-local function ItemText(icon, label)
-	return format("|T%s:0|t %s", icon or ns.QUESTION_MARK_ICON, label)
-end
-
 --[[
-    An item row until Menu-Kit v2 brings the `item` kind: an action row with no
-    click, so the kit puts no gap above it as it does above a heading, the icon
-    and the colored name on its left and its value or slot on the right.
+    An item row: the kit draws the icon and the name in its quality color, 4 in
+    under its heading, with the count after the name when there is one, and
+    shows the item's own tooltip on hover. right is its value or slot, gray.
 ]]
-local function ItemRow(left, right, rightColor, itemID)
-	return {
-		kind = "action",
-		left = left,
-		right = right,
-		rightColor = rightColor,
-		tooltip = ItemTooltip(itemID),
-	}
+local function ItemRow(itemID, right, count)
+	return { kind = "item", itemID = itemID, count = count, right = right, rightColor = "MUTED" }
 end
 
 -- The right side of a feature's title: On in green, Off in gray.
@@ -149,18 +147,6 @@ StaticPopupDialogs.GOODTOGO_MENU_FEATURE_OFF = {
 --------------------------------------------------------------------------------
 
 --[[
-    Buff Food and Scroll Buffs as one pair. Either one on turns both off, both
-    off turns both on, so a click always lands them together; each keeps its
-    own When to Use on the Macros page.
-]]
-local function ToggleBuffFoodAndScrolls()
-	local settings = ns.db.profile
-	local value = not (settings.useBuffFood or settings.useScrolls)
-	ns.ToggleMacroSetting("useBuffFood", value)
-	ns.ToggleMacroSetting("useScrolls", value)
-end
-
---[[
     Buff Duty on the class you're playing, the same per-class switch as the
     window's close button, so turning it off on a rogue leaves it up on a druid.
 ]]
@@ -168,11 +154,17 @@ local function ToggleBuffDuty()
 	ns.SetBuffDutyForClass(not ns.IsBuffDutyOnForClass())
 end
 
--- Both Ignore List edits change what the macros use, so each says what it did in chat; neither asks first.
+-- Every Ignore List edit changes what the macros use, so each says what it did in chat; none asks first.
 local function IgnoreCurrentFood()
 	local foodID = ns.bestFoodID
 	if foodID and ns.IgnoreItem(foodID) then
 		ns:PrintMessage(format(L["MESSAGE_IGNORE_ADDED"], ns.GetItemHyperlink(foodID)))
+	end
+end
+
+local function UnignoreItem(itemID)
+	if ns.UnignoreItem(itemID) then
+		ns:PrintMessage(format(L["MESSAGE_IGNORE_REMOVED"], ns.GetItemHyperlink(itemID)))
 	end
 end
 
@@ -192,16 +184,11 @@ end
 --[[
     One table, both ways: the button's OnClick looks the click up here, and the
     row that does the same job names the click on its right, so a row never
-    names a click that does something else. All six clicks have a job, so
-    hover alone opens the menu (Minimap-Button.lua).
+    names a click that does something else. A click whose `available` says
+    no (Shift + Left-Click while the Enhanced Spellbook is off) has no job, so
+    it opens the menu, as hover does (Minimap-Button.lua).
 ]]
 local CLICKS = {
-	buffFood = {
-		button = "LeftButton",
-		shift = false,
-		name = "MENU_CLICK_LEFT",
-		run = ToggleBuffFoodAndScrolls,
-	},
 	ignore = {
 		button = "RightButton",
 		shift = false,
@@ -216,8 +203,8 @@ local CLICKS = {
 	},
 	buffDuty = {
 		button = "LeftButton",
-		shift = true,
-		name = "MENU_CLICK_SHIFT_LEFT",
+		shift = false,
+		name = "MENU_CLICK_LEFT",
 		run = ToggleBuffDuty,
 	},
 	restockList = {
@@ -227,6 +214,19 @@ local CLICKS = {
 		-- The same as a bare /restock: while the Restocker is off it only says so in chat.
 		run = function()
 			ns.ToggleRestockWindow()
+		end,
+	},
+	spellbook = {
+		button = "LeftButton",
+		shift = true,
+		name = "MENU_CLICK_SHIFT_LEFT",
+		available = function()
+			return ns.IsSpellbookEnabled()
+		end,
+		-- What the Enhanced Spellbook's key binding does; opening a window closes the menu.
+		run = function()
+			ns.HideMenu()
+			GoodToGo_ToggleSpellbook()
 		end,
 	},
 	options = {
@@ -244,7 +244,7 @@ local CLICKS = {
 function ns.RunButtonClick(button)
 	local shift = IsShiftKeyDown() and true or false
 	for _, click in pairs(CLICKS) do
-		if click.button == button and click.shift == shift then
+		if click.button == button and click.shift == shift and (not click.available or click.available()) then
 			if not ns.db and click ~= CLICKS.options then
 				return true
 			end
@@ -304,13 +304,17 @@ end
 -- Each flyout's rows by its submenu key; a submenu row opens the flyout its key names.
 local FLYOUTS = {}
 
+-- Buff Duty's title opens the window's own flyout (Buff-Duty-Options-Menu.lua) rather than one built here, so its submenus come with it.
+local BUFF_DUTY_WINDOW = "buffDutyWindow"
+
 --[[
     The class's macro notes, one section per macro: what each click does on
     the left, as a verb, and the click on the right in gray, the same way round
     as an action row and its button click. These are clicks on the macro, not
-    on this menu, so they sit here rather than in the main menu. A value row is
-    an action row with no click until Menu-Kit v2 brings the `value` kind, so
-    the kit puts no gap above each one as it does above a heading.
+    on this menu, so they sit here rather than in the main menu, as value rows
+    with nothing to click. A block's how-to note stays off the menu
+    (MINIMAP MENU: no how-to notes); its options page and the macro's Spellbook
+    tooltip say it.
 ]]
 function FLYOUTS.macros()
 	local entries = {}
@@ -319,16 +323,7 @@ function FLYOUTS.macros()
 		if block.rows then
 			entries[#entries + 1] = { kind = "section", left = block.title }
 			for _, row in ipairs(block.rows) do
-				entries[#entries + 1] = {
-					kind = "action",
-					left = row[2],
-					leftColor = "BODY",
-					right = row[1],
-					rightColor = "MUTED",
-				}
-			end
-			if block.note then
-				entries[#entries + 1] = { kind = "note", left = block.note }
+				entries[#entries + 1] = { kind = "value", left = row[2], right = row[1], rightColor = "MUTED" }
 			end
 		end
 	end
@@ -386,84 +381,40 @@ local function AddCurrentFood(entries)
 	entries[#entries + 1] = { kind = "status", left = L["MINIMAP_BEST_FOOD"] }
 	local foodID, foodLink = ns.bestFoodID, ns.bestFoodLink
 	if not (foodID and foodLink) then
-		entries[#entries + 1] = { kind = "description", left = format(L["MESSAGE_NO_ITEM"], L["LABEL_FOOD"]) }
+		entries[#entries + 1] = { kind = "note", left = format(L["MESSAGE_NO_ITEM"], L["LABEL_FOOD"]) }
 		return
 	end
-	entries[#entries + 1] =
-		ItemRow(ItemText(C_Item.GetItemIconByID(foodID), ns.UnbracketItemLink(foodLink)), nil, nil, foodID)
+	entries[#entries + 1] = ItemRow(foodID, nil, C_Item.GetItemCount(foodID))
 	entries[#entries + 1] = ClickRow(L["MENU_IGNORE"], "ignore")
 end
 
 --[[
-    What a switch that is on waits for while its When to Use does not hold:
-    the level filter's label when that is what fails (When Leveling), and
-    otherwise the contexts it is ticked for (Party, Raid), or Never with none.
+    Buff Duty reads On or Off for the class you're playing, the same switch its
+    click flips. While it's on, its title opens the window's own Options
+    flyout, as every feature's title opens its flyout, so the window's
+    switches are reachable even while it has hidden itself with nothing to
+    show; while it's off the title is a plain heading. Its Toggle's tooltip is
+    the feature's Enable option, with a line saying it's this class's switch.
 ]]
-local function WaitingLabel(settings, prefix)
-	if ns.IsGroupContextOn(settings[prefix .. "In"]) then
-		return ns.LEVEL_FILTER_VALUES[settings[prefix .. "Level"]] or L["GROUP_CONTEXT_NEVER"]
-	end
-	local ticked = {}
-	for _, context in ipairs(ns.GROUP_CONTEXTS) do
-		if ns.IsGroupContextOn(settings[prefix .. "In"], context) then
-			ticked[#ticked + 1] = L["GROUP_CONTEXT_" .. context:upper()]
-		end
-	end
-	if #ticked == 0 then
-		return L["GROUP_CONTEXT_NEVER"]
-	end
-	return table.concat(ticked, L["LIST_SEPARATOR"])
-end
-
---[[
-    Buff Food & Scrolls reads On while either switch is on and its When to Use
-    holds, Off while both are off, and Paused while one is on but waiting
-    (ticked for Raid only, and the player is solo): the Food macro isn't acting
-    on it, and a note under the description says what it waits for. It stays
-    live while Consumable Macros is switched off, the maintainer's choice:
-    these are settings for when it is back on.
-]]
-local function AddBuffFoodAndScrolls(entries)
-	local settings = ns.db.profile
-	local right, rightColor = OnOff(false)
-	local waiting
-	for _, switch in ipairs({ { settings.useBuffFood, "buffFood" }, { settings.useScrolls, "scrolls" } }) do
-		if switch[1] then
-			if ns.IsUseWhenActive(settings, switch[2]) then
-				right, rightColor, waiting = L["MENU_ON"], "ON", nil
-				break
-			end
-			right, rightColor = L["MENU_PAUSED"], "MUTED"
-			waiting = waiting or WaitingLabel(settings, switch[2])
-		end
-	end
-
-	local wellFed = ns.GetWellFedName()
-	entries[#entries + 1] =
-		{ kind = "status", left = L["MINIMAP_BUFF_FOOD_SCROLLS"], right = right, rightColor = rightColor }
-	entries[#entries + 1] =
-		{ kind = "description", left = format(L["MINIMAP_BUFF_FOOD_SCROLLS_DESCRIPTION_FORMAT"], wellFed) }
-	if waiting then
-		entries[#entries + 1] = { kind = "note", left = format(L["MENU_WAITING_FOR"], waiting) }
-	end
-	-- Two switches answer to one click, so the tooltip names both, as the Macros page does.
-	entries[#entries + 1] = ClickRow(L["MENU_TOGGLE"], "buffFood", function(tooltip)
-		tooltip:SetText(L["OPTIONS_BUFF_FOOD"], 1, 0.82, 0, 1, true)
-		tooltip:AddLine(format(L["OPTIONS_BUFF_FOOD_DESCRIPTION_FORMAT"], wellFed), 1, 1, 1, true)
-		tooltip:AddLine(" ")
-		tooltip:AddLine(L["OPTIONS_USE_SCROLLS"], 1, 0.82, 0, true)
-		tooltip:AddLine(L["OPTIONS_USE_SCROLLS_DESCRIPTION"], 1, 1, 1, true)
-	end)
-end
-
--- Buff Duty reads On or Off for the class you're playing, the same switch its click flips.
 local function AddBuffDuty(entries)
 	local feature = ns.FindFeature("buffWindow.enabled")
-	local right, rightColor = OnOff(ns.IsBuffDutyOnForClass())
-	entries[#entries + 1] = { kind = "status", left = L["TAB_BUFF_DUTY"], right = right, rightColor = rightColor }
+	local enabled = ns.IsBuffDutyOnForClass() and true or false
+	local right, rightColor = OnOff(enabled)
+	entries[#entries + 1] = {
+		kind = enabled and "submenu" or "status",
+		left = L["TAB_BUFF_DUTY"],
+		right = right,
+		rightColor = rightColor,
+		submenu = enabled and BUFF_DUTY_WINDOW or nil,
+		onClick = enabled and function()
+			ns.OpenFlyout(BUFF_DUTY_WINDOW)
+		end or nil,
+	}
 	entries[#entries + 1] = { kind = "description", left = L["BUFF_DUTY_DESCRIPTION"] }
-	entries[#entries + 1] =
-		ClickRow(L["MENU_TOGGLE"], "buffDuty", feature and OptionTooltip(L[feature.caption], L[feature.desc]))
+	local className = UnitClass("player")
+	local tooltip = feature
+		and OptionTooltip(L[feature.caption], format(L["MENU_BUFF_DUTY_TOGGLE_CLASS_DESCRIPTION"], className))
+	entries[#entries + 1] = ClickRow(L["MENU_TOGGLE"], "buffDuty", tooltip)
 end
 
 --[[
@@ -487,12 +438,7 @@ local function AddRestockOrders(entries)
 	for _, list in ipairs({ out, low }) do
 		for _, entry in ipairs(list) do
 			isLoading = isLoading or not C_Item.GetItemInfo(entry.itemID)
-			rows[#rows + 1] = ItemRow(
-				ItemText(C_Item.GetItemIconByID(entry.itemID), ns.GetItemLabel(entry.itemID, entry.itemName)),
-				format(L["MINIMAP_RESTOCKER_ITEM_COUNT"], entry.have, entry.wanted),
-				"BODY",
-				entry.itemID
-			)
+			rows[#rows + 1] = ItemRow(entry.itemID, format(L["MINIMAP_RESTOCKER_ITEM_COUNT"], entry.have, entry.wanted))
 		end
 	end
 
@@ -529,6 +475,19 @@ local function AddRestocker(entries)
 end
 
 --[[
+    The Enhanced Spellbook, while it's on: its name, a line saying what it's
+    for, and Open, which opens its window as Shift + Left-Click does.
+]]
+local function AddSpellbook(entries)
+	if not ns.IsSpellbookEnabled() then
+		return
+	end
+	entries[#entries + 1] = { kind = "status", left = L["TAB_ENHANCED_SPELLBOOK"] }
+	entries[#entries + 1] = { kind = "description", left = L["MENU_SPELLBOOK_DESCRIPTION"] }
+	entries[#entries + 1] = ClickRow(L["MENU_OPEN"], "spellbook")
+end
+
+--[[
     [Class] Macros, in the class color, opens the flyout of the class's macro
     notes; under it, the items the class's own macros will use, each with what
     it is for on the right. A class with no notes, or a character who knows
@@ -554,12 +513,7 @@ local function AddClassMacros(entries)
 	}
 	for _, block in ipairs(blocks) do
 		if not block.rows and block.itemID and block.itemLink then
-			entries[#entries + 1] = ItemRow(
-				ItemText(C_Item.GetItemIconByID(block.itemID), ns.UnbracketItemLink(block.itemLink)),
-				block.slot,
-				"MUTED",
-				block.itemID
-			)
+			entries[#entries + 1] = ItemRow(block.itemID, block.slot)
 		end
 	end
 end
@@ -568,7 +522,9 @@ end
     This character's own Ignore List, the one Right-Click adds to and
     Middle-Click clears; the Global list lives in the Ignore List panel.
     Sorted by name, each item in its quality color, and only while it holds
-    something. Returns whether any item was still loading.
+    something. A click on an item takes it off the list (MINIMAP MENU →
+    Editable list), the delete icon showing on the right while it's hovered.
+    Returns whether any item was still loading.
 ]]
 local function AddIgnoreList(entries)
 	local ignoreList = ns.GetIgnoreList()
@@ -578,8 +534,8 @@ local function AddIgnoreList(entries)
 
 	local items, isLoading = {}, false
 	for itemID in pairs(ignoreList) do
-		local name, _, quality, _, _, _, _, _, _, texture = C_Item.GetItemInfo(itemID)
-		items[#items + 1] = { id = itemID, name = name, quality = quality, texture = texture }
+		local name = C_Item.GetItemInfo(itemID)
+		items[#items + 1] = { id = itemID, name = name }
 		isLoading = isLoading or not name
 	end
 	-- Loading items sort last, by ID, so the cached ones keep their places as the rest arrive.
@@ -595,14 +551,14 @@ local function AddIgnoreList(entries)
 
 	local rows = {}
 	for _, item in ipairs(items) do
-		if item.name then
-			local _, _, _, colorHex = C_Item.GetItemQualityColor(item.quality or 1)
-			local label = format("|c%s%s|r", colorHex, item.name)
-			rows[#rows + 1] = ItemRow(ItemText(item.texture, label), nil, nil, item.id)
-		else
-			rows[#rows + 1] = ItemRow(format(L["LOADING_ITEM"], item.id), nil, nil, item.id)
-			rows[#rows].leftColor = "MUTED"
+		local row = ItemRow(item.id, Kit.REMOVE_ICON)
+		local itemID = item.id
+		row.rightOnHover = true
+		row.onClick = function()
+			UnignoreItem(itemID)
+			AfterChange()
 		end
+		rows[#rows + 1] = row
 	end
 
 	entries[#entries + 1] = { kind = "status", left = L["MINIMAP_IGNORE_LIST"] }
@@ -643,9 +599,9 @@ local function BuildMainEntries()
 	}
 
 	AddCurrentFood(entries)
-	AddBuffFoodAndScrolls(entries)
 	AddBuffDuty(entries)
 	local restockLoading = AddRestocker(entries)
+	AddSpellbook(entries)
 	AddClassMacros(entries)
 	local ignoreLoading = AddIgnoreList(entries)
 	AddMoreFeatures(entries)
@@ -676,6 +632,12 @@ end
 local function RenderFlyout()
 	local key = state.flyoutKey
 	local row = key and menu:SubmenuRow(key)
+	if key == BUFF_DUTY_WINDOW and row then
+		flyout:Hide()
+		ns.ShowBuffDutyOptions(row, Kit.FLYOUT_GAP)
+		return
+	end
+	ns.HideBuffDutyOptions(menu)
 	local builder = key and FLYOUTS[key]
 	if not (row and builder) then
 		state.flyoutKey = nil
@@ -746,14 +708,19 @@ local function PositionMenu(anchor)
 	menu.tooltipAnchor = state.openLeft and "ANCHOR_LEFT" or "ANCHOR_RIGHT"
 end
 
--- Closes a moment after the cursor has left the button, the menu and the flyout.
+-- Closes a moment after the cursor has left the button, the menu and the flyout (Buff Duty's too).
 menu:SetScript("OnUpdate", function(self, elapsed)
 	local anchor = state.anchor
 	if not anchor or not anchor:IsVisible() then
 		self:Hide()
 		return
 	end
-	if Kit.IsCursorOver(anchor) or Kit.IsCursorOver(self) or Kit.IsCursorOver(flyout) then
+	if
+		Kit.IsCursorOver(anchor)
+		or Kit.IsCursorOver(self)
+		or Kit.IsCursorOver(flyout)
+		or ns.IsCursorOverBuffDutyOptions()
+	then
 		state.idle = 0
 		return
 	end
@@ -767,6 +734,7 @@ menu:SetScript("OnHide", function()
 	state.flyoutKey = nil
 	state.anchor = nil
 	flyout:Hide()
+	ns.HideBuffDutyOptions(menu)
 	if ns.IsMenuFrame(GameTooltip:GetOwner()) then
 		GameTooltip:Hide()
 	end

@@ -28,7 +28,7 @@ local _, ns = ...
                            winner's topIDs (the multi-use types); otherwise
                            a single running winner is kept
       allowBuffFood     -- true: rank buff food by the scanner's live
-                           ns.buffFoodRank, first or last (Food, Water);
+                           ns.buffFoodRank, last or with the rest (Food, Water);
                            absent: the ladder's buff-food steps stay gated off
       allowConjuredFirst -- true: compare with the scanner's live
                            ns.allowConjuredFirst preference (Food, Water);
@@ -81,19 +81,15 @@ local _, ns = ...
                            Cannibalize. entry is the scanned pick; the
                            engine asks only when the body uses that pick, and
                            a potion macro asks its outOfCombatTypeName's
-      leadSpell(entry)  -- a spell cast instead of the action while it can be,
-                           or nil: Food's Troll Rapid Regeneration while off
-                           cooldown. Asked under corpseSpell's rule, only
-                           when the body uses the scanned pick
+      leadSpell(entry)  -- a spell a press out of combat casts in place of the
+                           action, which then stops, or nil: Bandage's Troll
+                           Rapid Regeneration while off cooldown. Asked under
+                           corpseSpell's rule, only when the body uses the
+                           scanned pick
       combatSpell(entry) -- a spell a press in combat casts in place of the
                            action, which then stops, or nil: Food's Troll
                            Rapid Regeneration, since nobody eats in combat.
                            Asked under corpseSpell's rule
-      buildModeOverride(context) -- full-body takeover; returns body, stateKey
-                           or nil (Food's scroll-only mode). Mode state keys
-                           MUST use their own prefix (e.g. "SCROLLS:") so they
-                           can never collide with standard ITEMID-keys — a
-                           transition into or out of the mode always rewrites.
       stateExtras(parts, id) -- append extra state-key parts (Explosive's
                            "EX:mode" click layout)
       appendBlock(id)   -- returns (text, stateFlag) appended after the action

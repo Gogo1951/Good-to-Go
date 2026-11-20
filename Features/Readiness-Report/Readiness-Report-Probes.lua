@@ -472,6 +472,7 @@ local MANA_CLASSES = {
 	DRUID = true,
 	HUNTER = true,
 	MAGE = true,
+	MONK = true,
 	PALADIN = true,
 	PRIEST = true,
 	SHAMAN = true,

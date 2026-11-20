@@ -21,15 +21,14 @@ local AceGUI = LibStub("AceGUI-3.0")
     Built on every open rather than kept, from the bags as they are then and
     the list in use, so nothing has to be kept in step with either.
 
-    A field and a pullout, like the list selector in the footer: the field is the
-    window's own (ns.CreateRestockMenuField in Restocker-Window-Widgets.lua), and
-    Restocker-Window-List-Bar.lua says why the menu is an AceGUI pullout.
+    A field and a pullout: the field is the window's own
+    (ns.CreateRestockMenuField in Restocker-Window-Widgets.lua), and the
+    pullout is the window's one AceGUI pullout.
     Restocker-Window-Header.lua places the field on the row and sizes it.
 ]]
 local ARROW_SIZE = 16 -- the height of the row's fields
 local MENU_WIDTH = 288 -- an icon and an item's whole name
 local MENU_MAX_HEIGHT = 352 -- about twenty items, and the pullout scrolls past that
-local ICON_SIZE = 16
 local UNKNOWN_ICON = ns.QUESTION_MARK_ICON -- the list's own stand-in for an icon it cannot name
 
 --------------------------------------------------------------------------------
@@ -63,9 +62,9 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    One pullout, built on first use and reused, like the list bar's two and for
-    the same reason: an Execute item closes its own pullout from inside its
-    OnClick, so items are cleared at the next open, never at close.
+    One pullout, built on first use and reused: an Execute item closes its
+    own pullout from inside its OnClick, so items are cleared at the next
+    open, never at close.
 ]]
 local bagPullout
 local bagPulloutOpen = false
@@ -86,6 +85,8 @@ local function OpenBagMenu(anchor)
 		bagPullout:SetCallback("OnClose", function()
 			bagPulloutOpen = false
 		end)
+		-- The kit plates a dropdown's pullout; this one stands alone and is never released, so it's plated once.
+		ns.MenuKit.PlatePullout({ pullout = bagPullout })
 	end
 	bagPullout:Clear()
 	--[[
@@ -100,7 +101,7 @@ local function OpenBagMenu(anchor)
 		local entry = AceGUI:Create("Dropdown-Item-Execute")
 		-- The item's icon and its name in its quality color, without the link's brackets, as the orders tooltip shows one.
 		local name = ns.UnbracketItemLink(item.link)
-		entry:SetText(string.format("|T%s:%d:%d|t %s", item.icon or UNKNOWN_ICON, ICON_SIZE, ICON_SIZE, name))
+		entry:SetText(string.format("|T%s:0|t %s", item.icon or UNKNOWN_ICON, name)) -- the icon at line height
 		entry:SetCallback("OnClick", function()
 			ns.AddRestockItem(item.itemID)
 		end)

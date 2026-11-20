@@ -84,13 +84,13 @@ function ns.ScanActionBars()
 end
 
 --[[
-	How many action slots hold the WoW macro at index. A tagged macro is matched by its tag, as
+	The action slots that hold the WoW macro at index. A tagged macro is matched by its tag, as
 	ns.ScanActionBars matches; an untagged one by the name GetActionText gives, or by the index where the slot
 	gives one rather than the spell's.
 ]]
-function ns.MacroBarCount(index)
+function ns.MacroBarSlots(index)
 	local name, _, body = GetMacroInfo(index)
-	local tag, count = ns.BodyTag(body), 0
+	local tag, slots = ns.BodyTag(body), {}
 	for slot = 1, MAX_ACTION_SLOTS do
 		local actionType, id, subType = GetActionInfo(slot)
 		if actionType == "macro" then
@@ -101,17 +101,22 @@ function ns.MacroBarCount(index)
 				matches = GetActionText(slot) == name or (subType ~= "spell" and id == index)
 			end
 			if matches then
-				count = count + 1
+				slots[#slots + 1] = slot
 			end
 		end
 	end
-	return count
+	return slots
+end
+
+-- How many action slots hold the WoW macro at index.
+function ns.MacroBarCount(index)
+	return #ns.MacroBarSlots(index)
 end
 
 --[[
 	Whether a page macro is on the action bars, scanned by ns.ScanActionBars. A spell macro with no
 	options on also counts when its plain spell is on a bar, and with ns.CountsSpellsOnBars() any spell
-	macro does. A focus copy, a Duplicate or a rank counts only as its own macro. The Shoot macro's plain spell
+	macro does. A Duplicate or a rank counts only as its own macro. The Shoot macro's plain spell
 	is any of the ranged attacks it stands for.
 ]]
 function ns.IsOnActionBars(macro, bars)
@@ -126,7 +131,7 @@ function ns.IsOnActionBars(macro, bars)
 	for name in pairs(macro.rangedAttacks or NO_INDEXES) do
 		spell = spell or bars.spells[name] and name
 	end
-	if macro.focus or macro.copy or macro.rank or not spell then
+	if macro.copy or macro.rank or not spell then
 		return false
 	end
 	return ns.CountsSpellsOnBars() or macro.body == ns.TaggedBody(macro, ns.BareBody(spell))

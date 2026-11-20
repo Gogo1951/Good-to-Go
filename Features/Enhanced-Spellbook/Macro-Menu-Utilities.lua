@@ -13,26 +13,6 @@ local AutoShotLabel = ns.MenuAutoShotLabel
 local PET_CLASSES = { HUNTER = true, WARLOCK = true }
 
 --[[
-	Lays text out in a menu title's font string as a left-aligned block width wide, wrapping as it needs, and
-	returns the block's size for the menu to take. The menu gives a title's text a fixed 20 high, which
-	would cut it to one line, so the height is freed before the text is measured.
-]]
-local function TextBlock(fontString, text, width)
-	width = math.ceil(width)
-	fontString:SetJustifyH("LEFT")
-	fontString:SetWordWrap(true)
-	if fontString.SetMaxLines then
-		fontString:SetMaxLines(0)
-	end
-	fontString:SetWidth(width)
-	fontString:SetHeight(0)
-	fontString:SetText(text)
-	local height = math.ceil(fontString:GetStringHeight())
-	fontString:SetHeight(height)
-	return width, height
-end
-
---[[
 	What is on in a group, its value: "In Combat" for one, "2 Options" for more, nil for none, so a group left
 	alone says nothing.
 ]]
@@ -98,54 +78,19 @@ local function FeaturedTip(element, macro, key, label)
 end
 
 --[[
-	Makes this macro's options its kind's defaults, its target priority among them; read every value first,
-	since a default moves what follows it. A macro of the kind with a Conditional on Right-Click keeps
-	Right-Click For off, by a setting of its own, when the default turns it on.
-]]
-local function MakeDefault(macro)
-	if ns.OffersTargetPriority(macro) then
-		ns.MakeTargetPriorityDefault(macro)
-	end
-	local values = {}
-	for _, key in ipairs(ns.DEFAULTABLE_OPTIONS) do
-		if ns.OffersOption(macro, key) then
-			values[key] = ns.IsOptionOn(macro, key)
-		end
-	end
-	local keepOff = {}
-	if values.groupVersion then
-		for _, other in ipairs(ns.macros) do
-			local off = not ns.IsOptionOn(other, "groupVersion")
-			if other.kind == macro.kind and off and ns.ConditionalsUseRightClick(other) then
-				keepOff[#keepOff + 1] = other
-			end
-		end
-	end
-	for key, on in pairs(values) do
-		ns.SetKindDefault(macro.kind, key, on)
-		ns.ClearOwnSetting(macro, key)
-	end
-	for _, other in ipairs(keepOff) do
-		ns.SetOption(other, "groupVersion", false)
-	end
-	ns:RefreshMacros()
-	ns:PrintMessage(L["MENU_DEFAULT_SET"]:format(L[ns.KindRow(macro.kind).labelKey]))
-end
-
---[[
 	The page's macro for the one a menu was opened on, after a rebuild has replaced every entry in ns.macros:
-	the same settings key, and a focus copy for a focus copy. The old entry where the rebuild dropped it.
+	the same settings key. The old entry where the rebuild dropped it.
 ]]
 local function RebuiltMacro(old)
 	local key = ns.SettingsKey(old)
 	for _, macro in ipairs(ns.macros) do
-		if ns.SettingsKey(macro) == key and (macro.focus and true or false) == (old.focus and true or false) then
+		if ns.SettingsKey(macro) == key then
 			return macro
 		end
 	end
 	return old
 end
 
-ns.MacroMenuTextBlock, ns.MacroMenuGroupValue, ns.MacroMenuBodyLines = TextBlock, GroupValue, BodyLines
+ns.MacroMenuGroupValue, ns.MacroMenuBodyLines = GroupValue, BodyLines
 ns.MacroMenuFeaturedOptions, ns.MacroMenuFeaturedTip = FeaturedOptions, FeaturedTip
-ns.MacroMenuMakeDefault, ns.MacroMenuRebuiltMacro = MakeDefault, RebuiltMacro
+ns.MacroMenuRebuiltMacro = RebuiltMacro

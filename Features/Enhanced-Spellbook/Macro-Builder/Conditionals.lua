@@ -145,8 +145,8 @@ end
 	combat check in When writes a /stopmacro on the other side of combat, so In Combat would always match and
 	Out Of Combat never, or the other way about. Grouped Spells' Right-Click For writes btn:2 clauses of its
 	own, and the two never share the right-click: Right-Click For wins, since it is a kind default on buffs, so
-	this condition waits until it is turned off (the menus and Make Default, in turn, won't turn it on while a
-	row uses Right-Click).
+	this condition waits until it is turned off (the menus, in turn, won't turn it on while a row uses
+	Right-Click).
 ]]
 function ns.ConditionBlockReason(macro, key)
 	local condition = BY_KEY[key]
@@ -167,11 +167,10 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-	Every spell macro offers Conditionals but a focus copy, which shares its spell's settings key and casts only
-	on the focus, and a consumable's, which is Consumable Macros'.
+	Every spell macro offers Conditionals but a consumable's, which is Consumable Macros'.
 ]]
 function ns.OffersConditionals(macro)
-	return ns.HasOptions(macro) and not macro.focus
+	return ns.HasOptions(macro)
 end
 
 local NO_ROWS = {}

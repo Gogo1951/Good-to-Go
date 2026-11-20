@@ -157,18 +157,6 @@ function ns.UpdateMacros(forced)
 		return
 	end
 
-	--[[
-	    Scrolls are dropped from the macro when targeting a friendly player so
-	    the macro reads cleanly as a conjure-for-friend action (Mage food).
-	    Computed once per update and handed to buildModeOverride hooks via the
-	    shared context (only Food consumes it today).
-	]]
-	local friendlyPlayerTarget = ns.HasFriendlyPlayerTarget()
-	local context = {
-		best = best,
-		activeScrollIDs = (not friendlyPlayerTarget) and ns.scrollOverrideIDs or nil,
-	}
-
 	for _, definition in ipairs(ns.REGISTERED_MACRO_DEFINITIONS) do
 		local typeName = definition.typeName
 		local config = MACRO_CONFIG[typeName]
@@ -194,7 +182,7 @@ function ns.UpdateMacros(forced)
 				corpseCast = definition.corpseSpell(bestEntry)
 			end
 
-			-- Definition hook: a spell cast instead of the action (Food's Rapid Regeneration), under the same rule.
+			-- Definition hook: a spell a press out of combat casts instead (Bandage's Rapid Regeneration), same rule.
 			local leadCast
 			if definition.leadSpell and itemID == (bestEntry and bestEntry.id) then
 				leadCast = definition.leadSpell(bestEntry)
@@ -275,36 +263,13 @@ function ns.UpdateMacros(forced)
 				)
 			end
 
-			--[[
-			    Definition hook: full-body mode override (Food's scroll-only
-			    mode). Built after the class override but written ahead of it,
-			    so a mode body always wins.
-			]]
-			local modeBody, modeStateID
-			if definition.buildModeOverride then
-				modeBody, modeStateID = definition.buildModeOverride(context)
-			end
-
-			if modeBody then
-				--[[
-				    Mode override: the definition produced a fully formed body
-				    and a state key it owns. Mode state keys use their own
-				    prefix ("SCROLLS:") so they can never collide with the
-				    standard ITEMID-prefixed key, which guarantees a rewrite
-				    happens at every transition into and out of the mode
-				    (target-change, scroll-applied, bag scan removing the last
-				    scroll item, etc).
-				]]
-				if currentMacroState[typeName] ~= modeStateID or forced then
-					WriteMacro(config.macro, modeBody, modeStateID, typeName)
-				end
-			elseif classBody then
+			if classBody then
 				--[[
 				    Class-override mode. The class builder produced a fully
 				    formed macro body and a state key it owns; we just write
 				    it. State keys from class builders MUST be prefixed
 				    distinctly (e.g. "DMH:") so they cannot collide with the
-				    standard or mode-override keys — a transition into or out
+				    standard keys — a transition into or out
 				    of override mode always triggers a rewrite.
 				]]
 				if currentMacroState[typeName] ~= classStateID or forced then
@@ -387,21 +352,14 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    ns.ToggleMacroSetting is the setter the mini-map's Left-Click and most of
-    the profile switches that reshape macro bodies use. The buff-food and
-    scroll switches also change which auras are tracked. The Macros and Class & Race panels repaint either way, since a
-    mini-map click has nothing else to ask for one while a panel is open.
+    ns.ToggleMacroSetting is the setter the profile switches that reshape
+    macro bodies use: the Consumable Macros options panels' checkboxes and
+    Buff Duty's options flyout (Buff-Duty-Options-Menu.lua). The panels
+    repaint either way, since a flyout click has nothing else to ask for one
+    while a panel is open.
 ]]
-local AURA_TRACKED_SETTINGS = {
-	useBuffFood = true,
-	useScrolls = true,
-}
-
 function ns.ToggleMacroSetting(key, value)
 	ns.db.profile[key] = value
-	if AURA_TRACKED_SETTINGS[key] then
-		ns.UpdateAuraTracking()
-	end
 	ns.ResetMacroState()
 	ns.RequestUpdate()
 	ns.RefreshSettings()
@@ -411,7 +369,7 @@ end
     Whether the player's own cast changes what the macros hold: a conjure spell
     in ns.spellCache, Cannibalize, whose cooldown takes its line out of the
     Food and Water macros, or Rapid Regeneration, whose cooldown hands the
-    Food macro back to eating.
+    Bandage macro back to bandaging.
 ]]
 function ns.SpellCastChangesMacros(spellID)
 	return (ns.spellCache ~= nil and ns.spellCache[spellID] ~= nil)

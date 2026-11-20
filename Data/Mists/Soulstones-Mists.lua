@@ -12,7 +12,7 @@ ns.SOULSTONE_BUFF_SPELL_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-19, wago.tools, Mists of Pandaria Classic 5.5.4.71060
 
 Notes
 	- ns.SOULSTONES is empty: this client's Soulstone (20707) is cast straight on a target and makes no item.
@@ -30,6 +30,12 @@ wago.tools
 	https://wago.tools/db2/SpellEffect?build=5.5.4.70631
 	https://wago.tools/db2/SpellMisc?build=5.5.4.70631
 	https://wago.tools/db2/SpellDuration?build=5.5.4.70631
+	https://wago.tools/db2/SpellName?build=5.5.4.70960
+	https://wago.tools/db2/Spell?build=5.5.4.70960
+	https://wago.tools/db2/SpellMisc?build=5.5.4.70960
+	https://wago.tools/db2/SpellEffect?build=5.5.4.70960
+	https://wago.tools/db2/SpellLevels?build=5.5.4.70960
+	https://wago.tools/db2/SpellName?build=5.5.4.71060
 
 QuestieDB
 	None.

@@ -76,7 +76,7 @@ local GROUP_PANE_MAX_WIDTH = 176
 
 ns.restockGroupPaneWidth = GROUP_PANE_MIN_WIDTH
 ns.RESTOCK_GROUP_PANE_GAP = 8 -- pane to table
-ns.RESTOCK_GROUP_ROW_INSET = GROUP_ROW_INSET -- where a type name starts; the undo offer starts there too
+ns.RESTOCK_GROUP_ROW_INSET = GROUP_ROW_INSET -- where a type name starts
 
 -- Scratch FontString used only to measure the row font; never shown.
 local measureFontString

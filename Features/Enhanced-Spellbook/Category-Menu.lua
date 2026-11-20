@@ -1,9 +1,7 @@
 local _, ns = ...
 local L = ns.L
-local GetColor = ns.GetColor
 -- Shared with the macro's own menu (Features/Enhanced-Spellbook/Menu-Utilities.lua, loaded before both).
 local SetTip, OptionTip = ns.MenuSetTip, ns.MenuOptionTip
-local LabelAndValue = ns.MenuLabelAndValue
 local DESCRIPTIONS, NOTES = ns.MENU_DESCRIPTIONS, ns.MENU_NOTES
 local COMBAT, REPEAT, FIRST, ERRORS = ns.MENU_COMBAT, ns.MENU_REPEAT, ns.MENU_FIRST, ns.MENU_ERRORS
 
@@ -12,6 +10,14 @@ local COMBAT, REPEAT, FIRST, ERRORS = ns.MENU_COMBAT, ns.MENU_REPEAT, ns.MENU_FI
 	the submenu layout and the option tables it shares with a macro's own right-click menu live in
 	Features/Enhanced-Spellbook/Menu-Utilities.lua.
 ]]
+
+-- A category's name for its gear's tooltip and its menu's header: "All 6 Heals", or This Spell for one.
+function ns.CategoryMenuTitle(name, count)
+	if count == 1 then
+		return L["PAGE_CATEGORY_SETTINGS_ONE"]
+	end
+	return L["MENU_CATEGORY_TITLE"]:format(count, name)
+end
 
 -- The category menu's reset, asked first; data is the reset itself, run on Reset.
 StaticPopupDialogs.GOODTOGO_RESET_CATEGORY = {
@@ -31,14 +37,14 @@ StaticPopupDialogs.GOODTOGO_RESET_CATEGORY = {
 	A category's menu, from the gear on its header (Features/Enhanced-Spellbook/Spellbook-Page.lua): the right-click menu's
 	options, each applied to every macro in the category that offers it, so Hide Errors can go on all of them at
 	once. A checkbox is ticked, or a choice picked, only when every one of those macros has it. The spells'
-	own choices (a fixed rank, the grouped spells, the pet ability, the stance, the focus copy) and the actions
+	own choices (a fixed rank, the grouped spells, the pet ability, the stance) and the actions
 	stay on each macro's own menu. A macro not on the bars yet only has its settings stored; its WoW macro is
 	made with them when it is first placed. onChange runs after each change, to redraw the page.
 ]]
 function ns.ShowCategoryMenu(owner, name, macros, onChange)
 	local list = {}
 	for _, macro in ipairs(macros) do
-		if not macro.focus and ns.HasOptions(macro) then
+		if ns.HasOptions(macro) then
 			list[#list + 1] = macro
 		end
 	end
@@ -79,15 +85,41 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 		onChange()
 	end
 
-	MenuUtil.CreateContextMenu(owner, function(_, root)
-		root:CreateTitle(GetColor("TITLE") .. L["MENU_CATEGORY_TITLE"]:format(name) .. "|r")
-		root:CreateDivider()
+	-- on the add-on's own panels (Macro-Menu-Panels.lua), off the gear's corner
+	ns.OpenMacroMenuPanels(owner, function(_, root)
+		root:CreateHeader(ns.CategoryMenuTitle(name, #macros), L["ADDON_SHORT_NAME"])
+		-- groups of rows sit apart by a gap, as the mini-map menu's do; the reset sits under a line as well
+		local function gap()
+			root:CreateSpacer()
+		end
 
-		-- a submenu button, as wide as its label and the room the single-spell menu leaves before the arrow
-		local function submenu(parent, label)
+		--[[
+			what each submenu holds that is ticked or picked on every macro, by label, so its button can show them
+			on the right as the single-spell menu does (ns.MacroMenuGroupValue: the one label, or a count)
+		]]
+		local picked = {}
+		local function track(menu, label, isOn)
+			picked[menu] = picked[menu] or {}
+			table.insert(picked[menu], { label = label, isOn = isOn })
+		end
+		local function pickedLabels(menu)
+			local labels = {}
+			for _, entry in ipairs(picked[menu] or {}) do
+				if entry.isOn() then
+					labels[#labels + 1] = entry.label
+				end
+			end
+			return labels
+		end
+
+		--[[
+			a submenu button: its label, and what's on in it gray against the arrow, read each time the menu
+			redraws; labelsOf lists those labels, its own picks unless given
+		]]
+		local function submenu(parent, label, labelsOf)
 			local button = parent:CreateButton(label)
-			button:AddInitializer(function(frame)
-				return LabelAndValue(frame, label, nil)
+			button:SetValue(function()
+				return ns.MacroMenuGroupValue((labelsOf or pickedLabels)(button))
 			end)
 			return button
 		end
@@ -113,17 +145,20 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 				end)
 			end)
 			OptionTip(element, key, label)
+			track(menu, label, isOn)
 			return true
 		end
 		-- a choice of one for targets: picked when each of them has it, and set on all of them
 		local function radio(menu, label, targets, isOn, set, tip, note)
-			local element = menu:CreateRadio(label, function()
+			local function isPicked()
 				return all(targets, isOn)
-			end, function()
+			end
+			local element = menu:CreateRadio(label, isPicked, function()
 				apply(targets, set)
 				return MenuResponse.Refresh
 			end)
 			SetTip(element, label, tip, note)
+			track(menu, label, isPicked)
 		end
 		-- whether any of these options is offered here, before a submenu for them is drawn
 		local function anyOffered(options)
@@ -139,21 +174,35 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 		for _, option in ipairs({ { "cursor", L["MENU_CAST_AT_CURSOR"] }, { "noToggle", L["MENU_NEVER_TURN_OFF"] } }) do
 			above = checkbox(root, option[1], option[2]) or above
 		end
+		-- Target, Grouped and Rank are one group, opened by a gap below the checkboxes
+		local opened = false
 		local function section()
-			if above then
-				root:CreateDivider()
+			if above and not opened then
+				gap()
 			end
-			above = true
+			above, opened = true, true
 		end
 
 		-- Target: the unit at each place in the target priority, on every macro whose kind can pick it
 		local prioritized = offering(ns.OffersTargetPriority)
 		if #prioritized > 0 then
 			section()
-			local targetMenu = submenu(root, L["MENU_GROUP_TARGET"])
+			-- its value: each place's unit, in turn, as the single-spell menu shows them
+			local slotMenus = {}
+			local targetMenu = submenu(root, L["MENU_GROUP_TARGET"], function()
+				local units = {}
+				for _, slotMenu in ipairs(slotMenus) do
+					local unit = pickedLabels(slotMenu)[1]
+					if unit and unit ~= L["MENU_UNIT_NONE"] then
+						units[#units + 1] = unit
+					end
+				end
+				return #units > 0 and { table.concat(units, L["LIST_SEPARATOR"]) } or {}
+			end)
 			for place = 1, ns.TARGET_PRIORITY_SLOTS do
 				local placeKey = "MENU_PRIORITY_" .. place
 				local slotMenu = submenu(targetMenu, L[placeKey])
+				slotMenus[place] = slotMenu
 				SetTip(slotMenu, L[placeKey], L["MENU_PRIORITY_DESCRIPTION"])
 				if place > 1 then
 					radio(slotMenu, L["MENU_UNIT_NONE"], prioritized, function(macro)
@@ -213,7 +262,7 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 			end
 		end
 		if above then
-			root:CreateDivider()
+			gap()
 		end
 
 		-- When: the combat check, how often it casts, and when it does nothing
@@ -229,7 +278,7 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 		end
 		local repeating = offeringOption("oncePerTarget")
 		if #repeating > 0 then
-			whenMenu:CreateDivider()
+			whenMenu:CreateSpacer()
 			for _, choice in ipairs(REPEAT) do
 				local rule = choice[1]
 				radio(whenMenu, L[choice[2]], repeating, function(macro)
@@ -239,21 +288,22 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 				end, L[choice[3]])
 			end
 		end
-		whenMenu:CreateDivider()
+		whenMenu:CreateSpacer()
 		checkbox(whenMenu, "stopIfChanneling", L["MENU_STOP_IF_CHANNELING"])
 		checkbox(whenMenu, "stopIfStealthed", L["MENU_STOP_IF_STEALTHED"])
 
-		-- First: what runs before the cast, then the equipped on-use items
+		-- First: what runs before the cast, then the equipped on-use items, a group apart from When
 		local itemUsers = offering(ns.OffersUseItems)
 		local slots = #itemUsers > 0 and ns.UsableSlots() or {}
 		if anyOffered(FIRST) or #slots > 0 then
+			gap()
 			local firstMenu = submenu(root, L["MENU_GROUP_FIRST"])
 			local offered = false
 			for _, option in ipairs(FIRST) do
 				offered = checkbox(firstMenu, option[1], L[option[2]]) or offered
 			end
 			if offered and #slots > 0 then
-				firstMenu:CreateDivider()
+				firstMenu:CreateSpacer()
 			end
 			for _, usable in ipairs(slots) do
 				local slot = usable.slot
@@ -263,7 +313,7 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 					end)
 				end
 				local icon = GetInventoryItemTexture("player", slot)
-				local label = (icon and "|T" .. icon .. ":16|t " or "") .. ns.SlotLabel(slot)
+				local label = (icon and "|T" .. icon .. ":0|t " or "") .. ns.SlotLabel(slot)
 				local element = firstMenu:CreateCheckbox(label, isOn, function()
 					local on = not isOn()
 					apply(itemUsers, function(macro)
@@ -273,6 +323,7 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 					end)
 				end)
 				SetTip(element, ns.SlotLabel(slot), L["MENU_USE_ITEM_DESCRIPTION"])
+				track(firstMenu, ns.SlotLabel(slot), isOn)
 			end
 		end
 
@@ -287,15 +338,19 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 			end
 		end
 
+		gap()
 		local errorsMenu = submenu(root, L["MENU_GROUP_ERRORS"])
 		for _, option in ipairs(ERRORS) do
 			checkbox(errorsMenu, option[1], L[option[2]])
 		end
 
 		-- last, apart from the options: every macro here back to its kind's defaults, as a tile's middle-click
+		gap()
 		root:CreateDivider()
 		-- a whole category's hand-set options take real effort to set again, so it asks first
-		local reset = root:CreateButton(L["TOOLTIP_ACTION_RESET_CATEGORY"]:format(name), function()
+		local resetLabel = #macros == 1 and L["TOOLTIP_ACTION_RESET_OPTIONS"]
+			or L["TOOLTIP_ACTION_RESET_CATEGORY"]:format(#macros, name)
+		local reset = root:CreateButton(resetLabel, function()
 			StaticPopup_Show("GOODTOGO_RESET_CATEGORY", name, nil, function()
 				for _, macro in ipairs(list) do
 					ns.ResetMacroSettings(macro)
@@ -304,6 +359,6 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 				ns:PrintMessage(L["CHAT_CATEGORY_OPTIONS_RESET"]:format(name))
 			end)
 		end)
-		SetTip(reset, L["TOOLTIP_ACTION_RESET_CATEGORY"]:format(name), L["MENU_RESET_CATEGORY_DESCRIPTION"])
-	end)
+		SetTip(reset, resetLabel, L["MENU_RESET_CATEGORY_DESCRIPTION"])
+	end, true)
 end

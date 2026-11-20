@@ -2,9 +2,9 @@ local _, ns = ...
 
 --[[
     How short the bags are of the Restock List, with no merchant involved: the
-    shortfall list the reminders and the mini-map tooltip read (every short
-    row), the grocery list the window's footer reads (the short rows with Buy
-    on), and the one-row test behind the Keep box's mark. The merchant restock
+    shortfall list the reminders and the mini-map menu read (every short
+    row, also behind the window's footer count and tooltip), the grocery list
+    Diagnostics reads (the short rows with Buy on), and the one-row test behind the Keep box's mark. The merchant restock
     itself is Restocker-Merchant.lua.
 ]]
 
@@ -58,7 +58,7 @@ end
     Every row the current list is short of right now, Buy on or off, as the
     Restock window marks them: a row the bank is meant to fill still counts
     when the bank had none. Used by the entering-town reminder, the reminders
-    after a merchant or bank window closes, and the mini-map tooltip, so all of
+    after a merchant or bank window closes, and the mini-map menu, so all of
     them agree with the window.
 ]]
 function ns.BuildRestockShortfallList()
@@ -67,8 +67,8 @@ end
 
 --[[
     What a merchant would be asked for right now: the short rows with Buy on,
-    the same shortfall BuildPurchaseOrder computes, minus the vendor. Used by
-    the window's footer count and its tooltip, which name orders.
+    the same shortfall BuildPurchaseOrder computes, minus the vendor. Read by
+    Diagnostics' Restocker report.
 
     Two differences from a real purchase order, both because there is no vendor:
     the required-reputation gate is skipped (it depends on which vendor you walk
@@ -102,23 +102,23 @@ function ns.IsRestockItemShort(record)
 end
 
 --[[
-    The grocery list's length and whether any row is short at all, Buy or not,
-    in one pass and without building the list: the window's status line asks on
-    every redraw and every bag change while it is open. Counts by the same rules
-    as ns.BuildGroceryList and ns.IsRestockItemShort, so the three always agree.
-    anyShort is true exactly when ns.BuildRestockShortfallList has a row.
+    The grocery list's length and how many rows are short at all, Buy or not,
+    in one pass and without building either list: the window's status line asks
+    on every redraw and every bag change while it is open. Counts by the same
+    rules as ns.BuildGroceryList and ns.IsRestockItemShort, so the three always
+    agree: short is ns.BuildRestockShortfallList's length.
 ]]
 function ns.CountRestockOrders(restockList)
-	local orders, anyShort = 0, false
+	local orders, short = 0, 0
 	for _, record in pairs(restockList) do
 		if ns.IsRestockItemShort(record) then
-			anyShort = true
+			short = short + 1
 			if record.buyFromMerchant == nil or record.buyFromMerchant then
 				orders = orders + 1
 			end
 		end
 	end
-	return orders, anyShort
+	return orders, short
 end
 
 --------------------------------------------------------------------------------

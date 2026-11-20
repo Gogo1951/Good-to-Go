@@ -47,32 +47,6 @@ local function CreateBag(bag)
 	return NewBagDefinition("bag", bag)
 end
 
--- Bank bag ids follow the player's own, offset by NUM_BAG_SLOTS: 5..10 on Classic Era (six slots), 5..11 on TBC.
-local BANK_BAG_COUNT = 7
-
---[[
-    The character bank's container IDs, the main bank first. The layout is chosen
-    once, by whether the client has bank tabs at all, never by what the tab list
-    answers: Forever's is the C_Bank tabs the player has bought, which can change
-    at any visit, and none (an empty list) while that answer isn't in yet; Era
-    and TBC have BANK_CONTAINER and seven bank bag IDs, TBC's count, whose
-    seventh holds no slots on Era and so reads as empty. The Inventory Report
-    reads the bank through the same list.
-]]
-if C_Bank and C_Bank.FetchPurchasedBankTabIDs then
-	function ns.BankBagIDs()
-		return ns.FetchPurchasedBankTabIDs() or {}
-	end
-else
-	function ns.BankBagIDs()
-		local bagIDs = { BANK_CONTAINER }
-		for index = 1, BANK_BAG_COUNT do
-			bagIDs[#bagIDs + 1] = NUM_BAG_SLOTS + index
-		end
-		return bagIDs
-	end
-end
-
 -- Read afresh at every bank visit, since Forever's tabs can change between them.
 function ns.LoadRestockBankBags()
 	local bagIDs = ns.BankBagIDs()

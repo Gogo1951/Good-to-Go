@@ -314,7 +314,7 @@ ns.FOOD_AND_WATER = {
 	[85504] = { 0, 0, 66668, 0, 0, nil, nil, 85, 375, 20, 0 }, -- Krasarang Fritters
 	[105700] = { 0, 0, 0, 0, 100000, nil, nil, 85, 1300, 20, 0 }, -- Kun-Lai Kicker
 	[39520] = { 0, 0, 0, 0, 19200, nil, nil, 75, 200, 20, 0 }, -- Kungaloosh
-	[4696] = { 0, 0, 0, 0, 2070, nil, nil, 54, 36147, 1, 2 }, -- Lapidis Tankard of Tidesippe
+	[4696] = { 0, 0, 0, 0, 2070, nil, nil, 54, 5537, 1, 2 }, -- Lapidis Tankard of Tidesippe
 	[62654] = { 1, 0, 67500, 0, 45000, nil, nil, 80, 437, 20, 0 }, -- Lavascale Fillet
 	[62663] = { 1, 0, 96000, 0, 96000, nil, nil, 80, 500, 20, 0 }, -- Lavascale Minestrone
 	[5480] = { 1, 0, 580, 0, 0, nil, nil, 15, 95, 20, 0 }, -- Lean Venison
@@ -666,7 +666,7 @@ ns.FOOD_AND_WATER = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-19, wago.tools, Mists of Pandaria Classic 5.5.4.71060
 
 Notes
 	- Every food and drink this client knows that restores health or mana while seated, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Food and Water macros and the buff-food choices. The family is the items whose use spell is on the food (11) or drink (59) cooldown category, plus the few on no category whose spell says "Must remain seated".
@@ -699,6 +699,14 @@ wago.tools
 	https://wago.tools/db2/SpellCastingRequirements?build=5.5.4.70631
 	https://wago.tools/db2/AreaGroupMember?build=5.5.4.70631
 	https://wago.tools/db2/UiMapAssignment?build=5.5.4.70631
+	https://wago.tools/db2/Item?build=5.5.4.70960
+	https://wago.tools/db2/ItemSparse?build=5.5.4.70960
+	https://wago.tools/db2/ItemEffect?build=5.5.4.70960
+	https://wago.tools/db2/Item?build=5.5.4.71060
+	https://wago.tools/db2/ItemSparse?build=5.5.4.71060
+	https://wago.tools/db2/ItemEffect?build=5.5.4.71060
+	https://wago.tools/db2/Spell?build=5.5.4.71060
+	https://wago.tools/db2/SpellEffect?build=5.5.4.71060
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/MoP/mopItemDB.lua

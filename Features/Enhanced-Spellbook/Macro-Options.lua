@@ -70,7 +70,7 @@ end
 
 --[[
 	Enemy spell macros offer "petAttack", whatever the class: any class can have a pet out for a while (a
-	Shadowfiend, a mind-controlled enemy). A focus copy shares its spell's setting.
+	Shadowfiend, a mind-controlled enemy).
 ]]
 function ns.OffersPetAttack(macro)
 	return macro.target == "harm"
@@ -78,7 +78,7 @@ end
 
 --[[
 	Every spell macro offers "startAttack" except a stealth spell's: attacking would break the stealth. Every
-	spell macro offers "stopCast" too, whatever the class. A focus copy shares its spell's settings.
+	spell macro offers "stopCast" too, whatever the class.
 ]]
 function ns.OffersStopCast()
 	return true
@@ -98,9 +98,9 @@ local function Always()
 	return true
 end
 
--- An enemy spell offers "targetEnemy".
+-- An enemy spell offers "targetEnemy", and so does an auto attack (Attack, Shoot, Auto Shot), which hits one too.
 local function TargetsHarm(macro)
-	return macro.target == "harm"
+	return macro.target == "harm" or ns.IsBasicAttack(macro)
 end
 
 -- A friendly spell offers "targetFriend", which picks a living friend, so not a resurrection.
@@ -110,10 +110,6 @@ end
 
 -- Whether each option is offered on a macro, by key; ns.OffersOption offers no key missing here.
 local OFFERED = {
-	-- the Classic Era client, Season of Discovery included, has no focus target, so no focus copy; nor has a duplicate or a rank
-	focus = function(macro)
-		return macro.target ~= nil and ns.FLAVOR ~= "Vanilla" and not macro.copy and not macro.rank
-	end,
 	cursor = function(macro)
 		return macro.cursor
 	end,
@@ -225,7 +221,7 @@ function ns.IsOptionOn(macro, key)
 	return on == true
 end
 
--- Every spell macro offers using equipped items before the cast. A focus copy shares its spell's slots.
+-- Every spell macro offers using equipped items before the cast.
 function ns.OffersUseItems()
 	return true
 end

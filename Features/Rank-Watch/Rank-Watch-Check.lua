@@ -135,7 +135,7 @@ end
     whisper queue, a beat apart from every other whisper, so a burst never trips the server's chat squelch.
     A whisper also waits for the client's text for the rank it names (ns.RankWatchHasRankText), and is built
     only then: the data's number can disagree with the reader's spellbook. After RANK_TEXT_TRIES seconds of
-    waiting it is dropped rather than sent with that number. Every held whisper is checked again when it would
+    waiting, timed from the first check rather than the cast so combat doesn't use it up, it is dropped rather than sent with that number. Every held whisper is checked again when it would
     go: one for a player since ignored, or held while Whisper went off or another copy took the lead, is
     dropped.
 ]]
@@ -235,6 +235,7 @@ function ns.ProcessRankWatchQueue()
 				held[#held + 1] = whisper
 				retry = retry or RANK_WATCH.TARGET_BUSY_RETRY
 			elseif not ns.RankWatchHasRankText(whisper.castRow) then
+				whisper.firstTry = whisper.firstTry or GetTime()
 				if GetTime() - whisper.firstTry < RANK_TEXT_TRIES * RANK_TEXT_RETRY then
 					held[#held + 1] = whisper
 					retry = RANK_TEXT_RETRY
@@ -257,7 +258,7 @@ end
 
 local function QueueWhisper(guid, target, castRow, betterRow, pet)
 	session.queue[#session.queue + 1] =
-		{ guid = guid, target = target, castRow = castRow, betterRow = betterRow, pet = pet, firstTry = GetTime() }
+		{ guid = guid, target = target, castRow = castRow, betterRow = betterRow, pet = pet }
 	ns.ProcessRankWatchQueue()
 end
 

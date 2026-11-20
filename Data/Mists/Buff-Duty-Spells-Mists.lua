@@ -8,7 +8,10 @@ local SHAMAN_SHIELD = "SHAMAN_SHIELD"
 local MISSING = Data.SELF_REFRESH_MISSING
 local MAIN, OFF_HAND = "MAIN", "OFF"
 
--- { class, single = { { spell id, level learned } }, group = { spell ids }, greater = { spell ids }, exclusive, manaOnly, noCasters, talent, default, selfDefault }, -- Name
+-- Whether Well Fed and Scrolls show on the Self-Buffs list When Missing by default (else Off).
+ns.BUFF_DUTY_ITEM_BUFFS_SHOWN = false
+
+-- { class, single = { { spell id, level learned } }, group = { spell ids }, greater = { spell ids }, exclusive, manaOnly, noCasters, talent, noAsk, default, selfDefault }, -- Name
 ns.BUFF_DUTY_SPELLS = {
 	-- Druid ---------------------------------------------------------------------
 	{
@@ -72,12 +75,14 @@ ns.BUFF_DUTY_SPELLS = {
 	{
 		class = "PRIEST",
 		single = { { 6346, 54 } },
+		noAsk = true,
 		default = TANK,
 	}, -- Fear Ward
 	-- Shaman --------------------------------------------------------------------
 	{
 		class = "SHAMAN",
 		single = { { 974, 26 } },
+		noAsk = true,
 		default = OFF,
 	}, -- Earth Shield
 	{
@@ -117,7 +122,7 @@ ns.BUFF_DUTY_PET_ICONS = {
 	},
 }
 
--- { class, ranks = { { spell id, level learned } }, auras, exclusive, needsPet, default (minutes left, MISSING or OFF) }, -- Name
+-- { class, ranks = { { spell id, level learned } }, auras, exclusive, needsPet, castLast, default (minutes left, MISSING or OFF) }, -- Name
 ns.BUFF_DUTY_SELF_SPELLS = {
 	-- Hunter --------------------------------------------------------------------
 	{
@@ -198,6 +203,7 @@ ns.BUFF_DUTY_SELF_SPELLS = {
 		class = "PRIEST",
 		ranks = { { 15473, 24 } },
 		default = MISSING,
+		castLast = true,
 	}, -- Shadowform
 	-- Rogue ---------------------------------------------------------------------
 	{
@@ -343,7 +349,7 @@ ns.BUFF_DUTY_SELF_ITEMS = {
 	{ 12820, auras = { 17038 }, default = MISSING }, -- Winterfall Firewater
 }
 
--- { class, create = { { spell id, level learned } }, auras, items (lowest rank first), default }
+-- { class, create = { { spell id, level learned } }, auras, items = { { item id, level its create rank is learned } }, default }
 ns.BUFF_DUTY_SOULSTONE = {
 	class = "WARLOCK",
 	create = {},
@@ -365,12 +371,12 @@ ns.BUFF_DUTY_RESURRECTIONS = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-19, wago.tools, Mists of Pandaria Classic 5.5.4.71060
 
 Notes
 	- Built offline from this client's game tables, not yet checked against a Validate Data run from a Mists client. Every ID below is in this build's SpellName or ItemSparse, under the name its comment gives.
 	- Every buff one player can put on another that lasts more than two minutes, as on the other flavors. This client has no ranks: each buff is one spell, and the raid buffs reach the whole party or raid when cast on any member of it ("If target is in your party or raid, all party and raid members will be affected").
-	- So a raid buff's single and group are the same spell. single makes the row and its per-member icons; group makes it a raid-wide buff for the party headers and the Party-Buffs Ask Other Classes count (Features/Buff-Duty/Buff-Duty-Other-Classes.lua), as a TBC group version does. Mark of the Wild, Arcane Brilliance, Legacy of the Emperor, Legacy of the White Tiger, Power Word: Fortitude and Dark Intent carry one. The Blessings don't, being exclusive: a target holds one Blessing from each paladin, as on TBC.
+	- So a raid buff's single and group are the same spell. single makes the row and its per-member icons; group makes it a raid-wide buff for the party headers and the Party-Buffs Ask for Buffs count (Features/Buff-Duty/Buff-Duty-Other-Classes.lua), as a TBC group version does. Mark of the Wild, Arcane Brilliance, Legacy of the Emperor, Legacy of the White Tiger, Power Word: Fortitude and Dark Intent carry one. The Blessings don't, being exclusive: a target holds one Blessing from each paladin, as on TBC.
 	- greater, as on TBC, only counts toward "already has it" and is never cast. Here it lists the other spells that fill the same raid-buff slot and don't stack with the row's: the 5% stats of Mark of the Wild, Blessing of Kings, Legacy of the Emperor and the Shale Spider's Embrace of the Shale Spider; Power Word: Fortitude's Stamina from Commanding Shout, Dark Intent and the Silithid's Qiraji Fortitude; Blessing of Might's Mastery from Grace of Air and Roar of Courage; Legacy of the White Tiger's critical strike from Leader of the Pack, Arcane Brilliance, Dalaran Brilliance, Still Water, Furious Howl, Terrifying Roar and Fearless Roar. Each is listed by the aura ID the target carries, from SpellEffect (APPLY_AURA or APPLY_AREA_AURA_RAID with the same aura type). Arcane Brilliance and Dark Intent each fill two slots (spell power with critical strike, spell power with Stamina), so neither carries a greater list: no one other spell covers both.
 	- Legacy of the Emperor's cast (115921) is a dummy: the target keeps 117666 (raid) or 117667 (single), both in its greater list, so the row counts them.
 	- Arcane Brilliance and Dalaran Brilliance share a row, as ranks with different names do: the same buff, Dalaran Brilliance (61316) replacing it for an Arcane mage. 61316's skill line row has no learn method, so where it comes from is unverified; the row offers only the spells the player knows.
@@ -381,6 +387,7 @@ Notes
 	- Left out of the single buffs: anything under two minutes (Hand spells, Power Infusion, Innervate, Pain Suppression, Guardian Spirit, Life Cocoon, Ironbark, Vigilance); passive auras (Trueshot Aura, Leader of the Pack, Grace of Air, Unholy Aura, Moonkin and Shadowform's haste); hunter pet buffs; Battle Shout, Commanding Shout and Horn of Winter, which have a cooldown of their own (60, 60 and 20 seconds in SpellCooldowns.CategoryRecoveryTime) and that GetSpellBaseCooldown may not report, so the Buff Key could spend them; Symbiosis, whose target buff depends on the target's class; and Soulstone, now a spell cast on a target with a 10-minute cooldown (see BUFF_DUTY_SOULSTONE). Thorns, Amplify Magic, Dampen Magic, Shadow Protection, Divine Spirit, Water Breathing, Detect Invisibility, Arcane Intellect, the other Blessings and every group version are gone from this client.
 	- BUFF_DUTY_PET_ICONS: a demon wears its own summoning spell's icon, matched by creature ID, which is the SUMMON_PET effect's misc value in SpellEffect. The Grimoire of Supremacy demons (Fel Imp, Voidlord, Shivarra, Observer, Wrathguard) and the Incubus are added. The Grimoire of Service demons, the Infernal and the Doomguard are temporary and left out, as on TBC.
 	- BUFF_DUTY_SELF_SPELLS: the long self buffs. Aspect of the Iron Hawk shares Hawk's row, since the talent replaces it (Talent.OverridesSpellID 13165) and lands in tier 3, level 45 (CLASS_TALENT_LEVELS in the client's FrameXML Constants.lua). Mage armors, Inner Fire, Inner Will, Shadowform, the seals and the aspects have no timer here (SpellDuration -1), so they default to MISSING or OFF; Lightning Shield, Water Shield and the poisons last an hour.
+	- castLast puts a self buff after every other cast of yours on the Buff Key: Shadowform shuts out Holy spells, so it waits until your other casts are out.
 	- A rogue's poisons are self buffs on this client: each one's cast puts an hour-long aura on the rogue (APPLY_AURA, PROC_TRIGGER_SPELL), not a weapon enchant. Leeching Poison (tier 3, level 45) and Paralytic Poison (tier 5, level 75) are talents.
 	- The seals, Inner Fire and Inner Will, and the lethal and non-lethal poisons each allow only one up at a time, but they carry no exclusive family: the Self-Buffs panel names a family of two or more by L["BUFF_DUTY_SELF_NOTE_<family>"], and this locale has no such entry for them yet, so a new family would raise a missing-entry error. Instead one of each starts on (Seal of Truth, Inner Fire, Deadly Poison, Crippling Poison) and the rest start OFF. Seal of Command shares Seal of Truth's row: Truth replaces it at 24 (SkillLineAbility.SupercedesSpell).
 	- Left out of the self buffs: stances, presences (Death Knight) and Monk stances, as Warrior stances are on TBC; Omen of Clarity, now passive; forms, tracking and mounts; Grimoire of Sacrifice and Soul Link, which have cooldowns; Battle Shout, which now has a cooldown. Druid, Death Knight, Monk, Warlock and Warrior have no rows here.
@@ -417,6 +424,20 @@ wago.tools
 	https://wago.tools/db2/Item?build=5.5.4.70631
 	https://wago.tools/db2/Map?build=5.5.4.70631
 	https://wago.tools/db2/UiMap?build=5.5.4.70631
+	https://wago.tools/db2/Item?build=5.5.4.70960
+	https://wago.tools/db2/SpellName?build=5.5.4.70960
+	https://wago.tools/db2/ItemSparse?build=5.5.4.70960
+	https://wago.tools/db2/ItemEffect?build=5.5.4.70960
+	https://wago.tools/db2/Spell?build=5.5.4.70960
+	https://wago.tools/db2/SpellMisc?build=5.5.4.70960
+	https://wago.tools/db2/SpellEffect?build=5.5.4.70960
+	https://wago.tools/db2/SpellLevels?build=5.5.4.70960
+	https://wago.tools/db2/Item?build=5.5.4.71060
+	https://wago.tools/db2/ItemSparse?build=5.5.4.71060
+	https://wago.tools/db2/SpellName?build=5.5.4.71060
+	https://wago.tools/db2/SpellLevels?build=5.5.4.71060
+	https://wago.tools/db2/ItemEffect?build=5.5.4.71060
+	https://wago.tools/db2/Spell?build=5.5.4.71060
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/MoP/mopItemDB.lua

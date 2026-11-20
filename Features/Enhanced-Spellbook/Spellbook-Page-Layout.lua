@@ -12,7 +12,7 @@ local HEADER_HEIGHT, ROW_HEIGHT = ns.SPELLBOOK_HEADER_HEIGHT, ns.SPELLBOOK_ROW_H
 
 --[[
 	CATEGORY_GAP is the clear space over a category's header, from the tiles of the one before. A header's name
-	sits about 34 above its first tiles (the header's lower half and a row strip), so the gap is about as wide:
+	sits about 32 above its first tiles (the header's lower half and a row strip), so the gap is about as wide:
 	at least as much air above a header as below it, so each name reads with the spells under it.
 ]]
 local CATEGORY_GAP = 32

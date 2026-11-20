@@ -2,7 +2,7 @@ local _, ns = ...
 local L = ns.L
 
 --[[
-	Consumable Macros' macros on the page, in a GtG Consumables section after every other: the consumable macros
+	Consumable Macros' macros on the page, in a Consumable Macros section after every other: the consumable macros
 	it keeps pointed at the best item in the bags. Consumable Macros writes and owns those WoW macros
 	(Features/Macros-for-Consumables/Macros); the page only shows the ones that exist and picks them up, so nothing here
 	creates, rewrites or tags one. A tile's icon is the item the macro uses now, read again whenever the tile is

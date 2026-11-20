@@ -142,7 +142,6 @@ local function CollectRows(talentLevels)
 	for _, row in ipairs(ns.RecordedTrainerSpells and ns.RecordedTrainerSpells() or NO_IDS) do
 		add(row.id, "TRAINER", row.level)
 	end
-	local levelLearned = C_Spell.GetSpellLevelLearned
 	for _, entry in ipairs(ns.ClassExtraSpells()) do
 		local ids = type(entry) == "table" and entry or { entry }
 		local id = ids[1]
@@ -152,8 +151,8 @@ local function CollectRows(talentLevels)
 			local name = ns.SpellName(id)
 			level = name and talentLevels[name]
 		end
-		if not level and levelLearned then
-			level = levelLearned(id)
+		if not level then
+			level = C_Spell.GetSpellLevelLearned(id)
 		end
 		add(id, source, level and level > 0 and level or nil, nil, true, ids)
 	end

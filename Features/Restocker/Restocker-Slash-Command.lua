@@ -46,6 +46,16 @@ local function PrintProfileHelp()
 	end
 end
 
+local function PrintHelp()
+	for _, eachCommand in ipairs(COMMAND_ORDER) do
+		if eachCommand == "profile" then
+			PrintProfileHelp()
+		else
+			ns:PrintMessage(RESTOCKER_COMMANDS[eachCommand])
+		end
+	end
+end
+
 --------------------------------------------------------------------------------
 -- Slash Commands
 --------------------------------------------------------------------------------
@@ -91,31 +101,32 @@ function ns.HandleRestockerCommand(args)
 		if subcommand == "add" then
 			ns.AddRestockList(name)
 		elseif subcommand == "delete" then
-			ns.DeleteRestockList(name)
+			-- A Restock List has no undo, so this asks first, with the window's own Delete confirm.
+			ns.ConfirmDeleteRestockList(name)
 		elseif subcommand == "rename" then
 			ns.RenameCurrentRestockList(name)
 		elseif subcommand == "use" then
 			ns.SwitchRestockList(name)
 		elseif subcommand == "copy" then
-			ns.CopyIntoCurrentRestockList(name)
+			-- The copy replaces the list in use, which has no undo, so this asks first.
+			ns.ConfirmCopyIntoCurrentRestockList(name)
 		else
 			PrintProfileHelp()
 			return
 		end
 	elseif command == "help" then
-		for _, eachCommand in ipairs(COMMAND_ORDER) do
-			if eachCommand == "profile" then
-				PrintProfileHelp()
-			else
-				ns:PrintMessage(RESTOCKER_COMMANDS[eachCommand])
-			end
-		end
+		PrintHelp()
 		return
 	elseif command == "config" then
 		ns:OpenOptionsPanel("Restocker")
 		return
-	else
-		-- Opening redraws by itself (OnShow); the profile subcommands redraw on their own.
+	elseif command == "" then
+		-- Only a bare /restock opens the window. Opening redraws by itself (OnShow); the profile subcommands redraw on their own.
 		ns.ToggleRestockWindow()
+	else
+		-- A word it doesn't know says so and lists the commands, rather than guessing and opening the window.
+		local helpCommand = GetColor("INFO") .. L["RESTOCKER_COMMAND"] .. " help|r" .. GetColor("TEXT")
+		ns:PrintMessage(L["RESTOCKER_SLASH_UNKNOWN"]:format(command, helpCommand))
+		PrintHelp()
 	end
 end

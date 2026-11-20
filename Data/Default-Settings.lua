@@ -97,8 +97,7 @@ ns.DATABASE_DEFAULTS = {
 		ignoreList = {},
 		--[[
 		    Use Conjured Food & Water First: the Food and Water macros rank
-		    conjured items above anything that restores more (buff food still
-		    comes first). On by default, in every group context but only while
+		    conjured items above anything that restores more. On by default, in every group context but only while
 		    leveling (level filter "leveling", below max level): leveling is
 		    when free conjured food matters, solo or in a dungeon with a Mage
 		    friend, while at max level a raider wants the best. Per-character
@@ -120,42 +119,35 @@ ns.DATABASE_DEFAULTS = {
 		--[[
 		    Use Food & Water in Potion Macros Out of Combat: the Health Potion
 		    macro eats the Food macro's pick and the Mana Potion macro drinks
-		    the Water macro's pick while the player is out of combat, the way
-		    an older add-on's single button did. Off by default.
+		    the Water macro's pick while the player is out of combat. Off by
+		    default.
 		]]
 		potionsUseFoodAndWater = false,
 		combineHealthstones = false,
 		includeManaRunes = false,
 		--[[
-		    Early re-application: with earlyReapply on, a food/scroll/pet buff
-		    whose remaining time is under earlyReapplyThreshold (seconds)
-		    counts as already expired, so the macros offer a fresh application
-		    before a pull. See BuffCountsAsActive in Scanner-Auras.lua. On by
+		    Early re-application: with earlyReapply on, a pet food buff (and,
+		    for the Readiness Report, a scroll buff) whose remaining time is
+		    under earlyReapplyThreshold (seconds) counts as already expired, so
+		    the Feed Pet macro offers a fresh one before a pull. See BuffCountsAsActive in Scanner-Auras.lua. On by
 		    default at three minutes, so a buff can't lapse mid-fight unseen.
 		]]
 		earlyReapply = true,
 		earlyReapplyThreshold = 180,
-		-- Prioritize Buff Food: on by default, at every level.
-		useBuffFood = true,
 		--[[
 		    Eat Buff Food When Already Well Fed: buff food counts as ordinary
-		    food whenever it isn't being put first, so the Food and Water macros
-		    eat whatever restores the most. On by default on WoW Forever, where
+		    food, so the Food and Water macros eat whatever restores the most;
+		    off, they keep it for last. Eating it for the buff is Buff Duty's
+		    (its Well Fed icon), never the macros'. On by default on WoW Forever, where
 		    buff food is cheap and nearly all anyone carries; off elsewhere,
 		    where it's worth saving for the buff.
 		]]
 		useBuffFoodWhenFed = ns.FLAVOR == "Camelot",
-		buffFoodIn = { solo = true, party = true, raid = true, battleground = true },
-		buffFoodLevel = "any",
 		--[[
-		    Scrolls: on by default, at every level, for the types the class
-		    can use (DefaultScrollTypes above). A scroll in the bags is there
-		    to be read, and the Food macro only turns to scrolls while their
-		    buff is missing.
+		    The scroll types Buff Duty's window offers (and the Readiness
+		    Report asks about): the ones the class can use (DefaultScrollTypes
+		    above).
 		]]
-		useScrolls = true,
-		scrollsIn = { solo = true, party = true, raid = true, battleground = true },
-		scrollsLevel = "any",
 		scrollTypes = DefaultScrollTypes(),
 		--[[
 		    Off by default. Pet buff food
@@ -196,12 +188,14 @@ ns.DATABASE_DEFAULTS = {
 		enableCannibalizeEating = false,
 		enableCannibalizeDrinking = false,
 		--[[
-		    Troll: the Food macro casts Rapid Regeneration instead of eating
-		    while the spell is off cooldown
-		    (Features/Macros-for-Consumables/Macros/Tools-Troll.lua). Only WoW
-		    Forever has the spell (ns.RAPID_REGENERATION_SPELL_ID).
+		    Troll Rapid Regeneration
+		    (Features/Macros-for-Consumables/Macros/Tools-Troll.lua): the Food
+		    macro casts it in combat, where eating can't happen, and the
+		    Bandage macro casts it out of combat while it is off cooldown.
+		    Only WoW Forever has the spell (ns.RAPID_REGENERATION_SPELL_ID).
 		]]
 		enableRapidRegenerationEating = false,
+		enableRapidRegenerationBandage = false,
 		--[[
 		    Rogue poison groups per weapon slot, keyed by ns.POISON_GROUP_BASE_ITEMS
 		    group IDs (4 = Instant Poison). See ns.POISON_GROUPS in Data/Data.lua.
@@ -378,7 +372,8 @@ ns.DATABASE_DEFAULTS = {
 		    are class-gated on top of this toggle and build only for Hunters and
 		    Rogues; the conjure-capable macros (Healthstone, Mana Gem,
 		    Soulstone) are built for every class, with only their conjure clicks
-		    class-gated.
+		    class-gated. Poisons starts off, since Buff Duty offers poisons too
+		    (Features/Core.lua keeps it on for accounts that had it).
 		]]
 		enabledMacros = {
 			["Bandage"] = true,
@@ -389,7 +384,7 @@ ns.DATABASE_DEFAULTS = {
 			["Healthstone"] = true,
 			["Mana Gem"] = true,
 			["Mana Potion"] = true,
-			["Poisons"] = true,
+			["Poisons"] = false,
 			["Soulstone"] = true,
 			["Water"] = true,
 		},
@@ -477,7 +472,6 @@ local SPELLBOOK_DEFAULTS = {
 			self = {},
 		},
 		cursor = {},
-		focus = {},
 		pet = {},
 		stance = {},
 		petAttack = {},
@@ -507,6 +501,8 @@ local SPELLBOOK_DEFAULTS = {
 		castSequenceEnd = {}, -- "stop" where a spell's Cast Sequence stops on NULL rather than starting over
 		castSequenceReset = {}, -- each spell's Cast Sequence resets, where not the default (see ns.CastSequenceResetText)
 		useItems = {},
+		-- "general" where a spell's WoW macro goes in the General list rather than the character's own (see ns.MacroTab)
+		macroTab = {},
 		macroCopies = {}, -- the Duplicate copies of each spell's macro, by its Rank 1 ID, as a list of copy numbers
 		trainerSpells = {}, -- by class token, then spell id -> required level (see Features/Enhanced-Spellbook/Trainer-Recording.lua)
 	},
@@ -583,6 +579,7 @@ AddDefaults("global", {
 			]]
 		selfEnabled = true,
 		selfRefresh = {},
+		menuSelfRefresh = {},
 		-- MIGRATION (remove after 2026-11-21): the selfRefresh keys already moved from 5 minutes to 3.
 		selfRefreshMigrated = {},
 		--[[
@@ -606,6 +603,19 @@ AddDefaults("global", {
 		targetEnabled = true,
 		-- Whether the Target row also lists a friendly NPC you can buff.
 		targetNPCs = true,
+		--[[
+			    Whether a targeted player outside your group gets an Ask row
+			    of the buffs of theirs you're missing (Buff-Duty-Asks.lua).
+			    Its whisper's own text, askTargetMessage, has no default here,
+			    like askMessage below.
+			]]
+		askTarget = true,
+		--[[
+			    Buff food the Options flyout turned off, by item id: Well Fed's
+			    icon passes over them for the next best in your bags. Unset
+			    reads as on, so food you pick up later is offered.
+			]]
+		buffFoodOff = {},
 		--[[
 			    The Party-Buffs raid buffs, and the asks its clicks send. The
 			    whispered ask's own text, askMessage, has no default here: unset,
