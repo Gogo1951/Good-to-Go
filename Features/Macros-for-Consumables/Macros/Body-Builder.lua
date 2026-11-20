@@ -74,6 +74,16 @@ local function CombatBlock(combatName)
 	return "/cast [combat] " .. combatName .. "\n/stopmacro [combat]\n"
 end
 
+--[[
+    The Bandage macro's out-of-combat cast (its definition's leadSpell: Troll
+    Rapid Regeneration while it is off cooldown). A press out of combat casts
+    the spell and stops before the bandage, or the no-item message, below it;
+    a press in combat bandages as usual.
+]]
+local function LeadBlock(leadName)
+	return "/cast [nocombat] " .. leadName .. "\n/stopmacro [nocombat]\n"
+end
+
 -- A press on a corpse with nothing in the bags cast the corpse spell, so it skips the no-item message.
 local function NoItemStop(corpseName)
 	return corpseName and "/stopmacro [dead]\n" or ""
@@ -193,10 +203,15 @@ end
       /cast [dead] <spell>    -- definition.corpseSpell (Forsaken Cannibalize), below the
                                  conjure clicks so they still work; a press that
                                  cannot cast it falls through to the action
-      /cast [combat] <spell>  -- definition.combatSpell (Troll Rapid Regeneration), with
-      /stopmacro [combat]        its stop, so a press in combat casts it and
+      /cast [combat] <spell>  -- definition.combatSpell (Food's Troll Rapid Regeneration),
+      /stopmacro [combat]        with its stop, so a press in combat casts it and
                                  eats nothing; the tooltip line then shows the
                                  spell in combat and the item out of it
+      /cast [nocombat] <spell>  -- definition.leadSpell (Bandage's Troll Rapid
+      /stopmacro [nocombat]      Regeneration while it is off cooldown), with its
+                                 stop, so a press out of combat casts it and uses
+                                 nothing; the tooltip line then shows the spell
+                                 out of combat and the item in it
       /run GtGFire(<id>)     -- StateWriteLine (macro-fire context for the
                                  zone-error handler); only when an item exists
       /cast [nocombat,dead] <spell>  -- definition.outOfCombatTypeName's best item,
@@ -219,18 +234,11 @@ end
     when it already knows it, else /run GtGNoItem("<typeName>");
     an out-of-combat item still goes above it, so that line is only reached in
     combat.
-    A lead cast (definition.leadSpell: Troll Rapid Regeneration while it is
-    off cooldown) replaces everything below the conjure clicks:
-
-      #showtooltip <spell>
-      <conjure block>
-      /cast <spell>
-
     Ends with the macro-length trim, which sheds the Cannibalize lines first,
     the one extra that is a convenience rather than a consumable, then stacked
     healthstone lines, then ranked fallback /use lines from the bottom up,
     then the stealth line and the out-of-combat block, then the appended
-    Stealth or Shadowmeld line, and last the combat cast.
+    Stealth or Shadowmeld line, and last the combat and lead casts.
 ]]
 function ns.BuildStandardBody(
 	definition,
@@ -246,12 +254,6 @@ function ns.BuildStandardBody(
 	leadCast,
 	combatCast
 )
-	-- A lead cast stands in for the whole action, so a press casts it and nothing else; the conjure clicks still work.
-	if leadCast then
-		local conjureBlock = conjureInfo and BuildConjureBlock(conjureInfo) or ""
-		return "#showtooltip " .. leadCast .. "\n" .. conjureBlock .. "/cast " .. leadCast .. "\n"
-	end
-
 	local tooltipLine, actionBlock
 
 	-- Everything above the /use lines; the macro-length trim rebuilds only what follows it.
@@ -306,6 +308,13 @@ function ns.BuildStandardBody(
 	if outOfCombatID then
 		tooltipLine = ns.OutOfCombatTooltipLine(itemID or ns.MACRO_DEFAULT_ITEM_IDS[definition.typeName], outOfCombatID)
 			.. "\n"
+	elseif leadCast then
+		-- The spell's icon out of combat, so the button shows what a press will do.
+		tooltipLine = "#showtooltip [nocombat] "
+			.. leadCast
+			.. "; item:"
+			.. (itemID or ns.MACRO_DEFAULT_ITEM_IDS[definition.typeName])
+			.. "\n"
 	elseif combatCast then
 		-- The spell's icon in combat, so the button shows what a press will do.
 		tooltipLine = "#showtooltip [combat] "
@@ -332,6 +341,9 @@ function ns.BuildStandardBody(
 	if combatCast then
 		conjureBlock = conjureBlock .. CombatBlock(combatCast)
 	end
+	if leadCast then
+		conjureBlock = conjureBlock .. LeadBlock(leadCast)
+	end
 
 	local appendedBlock = appendText or ""
 
@@ -354,7 +366,7 @@ function ns.BuildStandardBody(
 			outOfCombatStealth,
 			nil,
 			nil,
-			nil,
+			leadCast,
 			combatCast
 		)
 	end
@@ -411,7 +423,7 @@ function ns.BuildStandardBody(
 			nil,
 			nil,
 			nil,
-			nil,
+			leadCast,
 			combatCast
 		)
 	end
@@ -427,7 +439,7 @@ function ns.BuildStandardBody(
 			nil,
 			nil,
 			nil,
-			nil,
+			leadCast,
 			combatCast
 		)
 	end
@@ -450,12 +462,12 @@ function ns.BuildStandardBody(
 			nil,
 			nil,
 			nil,
-			nil,
+			leadCast,
 			combatCast
 		)
 	end
-	-- Then the combat cast, the last line that is not the consumable itself.
-	if #body > ns.MACRO_BODY_MAX_LENGTH and combatCast then
+	-- Then the combat and lead casts, the last lines that are not the consumable itself.
+	if #body > ns.MACRO_BODY_MAX_LENGTH and (combatCast or leadCast) then
 		return ns.BuildStandardBody(definition, itemID, useIDs, stackIDs, conjureInfo, nil, nil, nil)
 	end
 	if #body > ns.MACRO_BODY_MAX_LENGTH then
@@ -486,10 +498,10 @@ end
     Eating line). _OOC:id is the food or water a potion macro uses out of
     combat, with :S added while it stealths as it does and :CN while it
     cannibalizes on a dead target. _CN marks the Food or Water macro's own
-    Cannibalize lines, _RR the Food macro's Rapid Regeneration body, and _RC
-    its combat Rapid Regeneration line. Mode overrides use their own prefix
-    ("SCROLLS:...") instead, so the key spaces never collide and a
-    transition between modes always triggers a rewrite. Every input that
+    Cannibalize lines, _RR the Bandage macro's out-of-combat Rapid
+    Regeneration line, and _RC the Food macro's combat one. Class overrides use their own prefix
+    ("DMH:...") instead, so the key spaces never collide and a
+    transition between them always triggers a rewrite. Every input that
     affects the body MUST appear in the key — a lossy key causes stale
     macros.
 ]]

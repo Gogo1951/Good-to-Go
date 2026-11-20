@@ -56,7 +56,7 @@ local CreateFilterBox = ns.CreateSpellbookFilterBox
 -- The footer's legend at its left: a dark square ringed in the glow's gold, for a spell not on the bars yet.
 local function BuildLegend(page)
 	local glow = CreateFrame("Frame", nil, page)
-	glow:SetSize(11, 11)
+	glow:SetSize(16, 16)
 	glow:SetPoint("LEFT", page, "BOTTOMLEFT", 16, FRAME_BORDER + FOOTER_HEIGHT / 2)
 	local ring = glow:CreateTexture(nil, "BACKGROUND")
 	ring:SetAllPoints()
@@ -77,7 +77,7 @@ end
 ]]
 function ns.BuildSpellbookControls(page)
 	local function SetupSettingsMenu(_, rootDescription)
-		rootDescription:CreateTitle(SETTINGS)
+		rootDescription:CreateHeader(SETTINGS, L["ADDON_SHORT_NAME"])
 		-- the page's list toggles, each changing which macros it lists, so it starts again from its first page
 		local function listToggle(labelKey, descKey, getter, setter)
 			AddMenuTooltip(
@@ -117,6 +117,7 @@ function ns.BuildSpellbookControls(page)
 			glows again. Listed only while something is marked, since there's nothing to undo otherwise.
 		]]
 		if ns.HasPlacedMarks() then
+			rootDescription:CreateSpacer()
 			rootDescription:CreateDivider()
 			AddMenuTooltip(
 				rootDescription:CreateButton(L["SETTINGS_HIGHLIGHT_AGAIN"], function()
@@ -135,15 +136,16 @@ function ns.BuildSpellbookControls(page)
 	-- the page-wide settings menu, from the gear at the row's right end
 	local options = CreateGearButton(page, 16)
 	page.options = options
-	options:SetPoint("RIGHT", page, "TOPRIGHT", -10, rowY)
+	options:SetPoint("RIGHT", page, "TOPRIGHT", -8, rowY)
 	options:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_LEFT")
 		GameTooltip:SetText(SETTINGS, TITLE.r, TITLE.g, TITLE.b, 1, true)
+		GameTooltip:AddLine(L["TOOLTIP_PAGE_SETTINGS_DESCRIPTION"], BODY.r, BODY.g, BODY.b, true)
 		GameTooltip:Show()
 	end)
 	options:SetScript("OnClick", function(self)
 		HideTooltip(self)
-		MenuUtil.CreateContextMenu(self, SetupSettingsMenu)
+		ns.OpenMacroMenuPanels(self, SetupSettingsMenu, true)
 	end)
 
 	-- the filter box: the page lists only the macros whose names hold its text, as it is typed

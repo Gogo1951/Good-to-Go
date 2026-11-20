@@ -13,7 +13,7 @@ local SpellbookTabs = ns.SpellbookTabs
 SpellbookTabs:RegisterTab(ADDON_NAME, {
 	name = ns.SpellbookTabTitle(),
 	description = ns.L["SPELLBOOK_TAB_DESCRIPTION"],
-	hint = { ns.L["TOOLTIP_KEY_CLICK"], ns.L["TOOLTIP_ACTION_OPEN_PAGE"] },
+	hint = { ns.L["TOOLTIP_KEY_CLICK"], ns.L["MENU_OPEN_SPELLBOOK"] },
 	icon = ICON_ADDON,
 	onClick = ns.ToggleSpellbookWindow,
 	isSelected = ns.IsSpellbookWindowShown,

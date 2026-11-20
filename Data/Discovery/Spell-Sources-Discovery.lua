@@ -80,7 +80,7 @@ ns.EXTRA_SPELL_SOURCES = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, Season of Discovery 1.15.9.70576
+	2026-11-19, wago.tools, Season of Discovery 1.15.9.70576
 
 Notes
 	- Where each class list's extraSpells entry (Data/Discovery/Class-Spell-Lists-Discovery.lua) is learned, and at what level, for the What's Next? tab (Features/Enhanced-Spellbook/Whats-Next/Whats-Next.lua). The trainer rows (Data/Discovery/Trainer-Spells-Discovery.lua) say their own source: a plain row is the trainer, book marks a book and talent a talent. extraSpells entries carry no source, so this table gives one.
@@ -99,7 +99,7 @@ Wowhead
 	None.
 
 wago.tools
-	None.
+	https://wago.tools/db2/SpellName?build=1.15.9.70576
 
 QuestieDB
 	None.

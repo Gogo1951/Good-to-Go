@@ -274,7 +274,7 @@ ns.FOOD_AND_WATER = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, Season of Discovery 1.15.9.70576
+	2026-11-19, wago.tools, Season of Discovery 1.15.9.70576
 
 Notes
 	- Every food and drink this client knows that restores health or mana while seated, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Food and Water macros and the buff-food choices.
@@ -284,6 +284,7 @@ Notes
 	- Left out on purpose: Scorpid Surprise (5473) and Green Tea Leaf (1401), oddballs that share the food cooldown, and items that share it but restore nothing (alcohol, Deviate fish, holiday novelties, feasts that place a table).
 	- Green Garden Tea (17405) and Lapidis Tankard of Tidesippe (4696) are Classic Era foods the Classic Era report confirms, copied in. Season of Discovery's own foods (Pine Nut Butter, Jungle Durian, Drinkable Stratholme Holy Water, Darkclaw Bisque, Smoked Redgill, Prowler Steak, Filet o' Flank, Sunrise Omelette, Slice of Carrie's Apple Pie) came from the Classic Era tables on wago.tools (build 1.15.9.70003: the regen value times the duration over 5, rounded down), and the Season of Discovery report's tooltips confirm their amounts.
 	- Blessed Sunfruit Juice (13813) and Bottled Alterac Spring Water (19318) are left out; their Well Fed buffs are still recognized through ns.WELL_FED_BUFF_IDS.
+	- Tasty Summer Treat (23175, an iCoke promotion) is left out: nothing drops, sells or rewards it in QuestieDB's Classic items or its Season of Discovery item base, and no spell makes it. So are the placeholders the client names Deprecated (761, 1321, 4418).
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query
@@ -308,5 +309,6 @@ wago.tools
 	https://wago.tools/db2/SpellEffect?build=1.15.9.70576
 
 QuestieDB
-	None.
+	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Classic/classicItemDB.lua
+	https://raw.githubusercontent.com/Questie/QuestieDB/master/src/corrections/Sod/sodBaseItems.lua
 ]]

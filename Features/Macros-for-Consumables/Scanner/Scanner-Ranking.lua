@@ -87,8 +87,11 @@ end
     Step shape:
       field — record field to compare
       kind  — "bool" (truthy side wins), "higher", or "lower"
-      gatedOnAllowBuffFood       — step runs only when the caller allows buff
-                                   food (the Food macro path)
+      buffFood                   — step runs only when the caller's buff food
+                                   rank matches: "first" (Buff Duty's buff food
+                                   pick wants the Well Fed buff) or "last" (plain food wins,
+                                   buff food only when nothing else is left)
+      falsyWins                  — a "bool" step where the falsy side wins
       gatedOnAllowConjuredFirst  — step runs only when the caller allows
                                    conjured-first (Food and Water, while Use
                                    Conjured Food & Water First holds)
@@ -105,8 +108,15 @@ end
 ]]
 
 local RANKING_PRIORITY = {
-	-- Buff food first when the Food macro wants one.
-	{ field = "isBuffFood", kind = "bool", gatedOnAllowBuffFood = true },
+	--[[
+	    Buff food last while Eat Buff Food When Already Well Fed is off
+	    (ns.buffFoodRank "last"): plain food then wins, and buff food is
+	    eaten only when it's all the bags hold, rather than the macro coming
+	    up empty. While it's on, buff food competes on what it restores.
+	    Buff Duty ranks with "first" for its own buff food pick.
+	]]
+	{ field = "isBuffFood", kind = "bool", buffFood = "first" },
+	{ field = "isBuffFood", kind = "bool", buffFood = "last", falsyWins = true },
 
 	--[[
 	    Conjured food and water next, when the player asked for it (Use
@@ -236,11 +246,11 @@ local RANKING_PRIORITY = {
     take the first value alone so the extra return can never leak into a
     boolean or a table constructor.
 ]]
-local function CompareRecords(a, b, allowBuffFood, preferHybrid, allowConjuredFirst, allowRestockLast)
+local function CompareRecords(a, b, buffFood, preferHybrid, allowConjuredFirst, allowRestockLast)
 	for i = 1, #RANKING_PRIORITY do
 		local step = RANKING_PRIORITY[i]
 		if
-			not (step.gatedOnAllowBuffFood and not allowBuffFood)
+			not (step.buffFood and step.buffFood ~= buffFood)
 			and not (step.gatedOnAllowConjuredFirst and not allowConjuredFirst)
 			and not (step.gatedOnAllowRestockLast and not allowRestockLast)
 		then
@@ -250,6 +260,8 @@ local function CompareRecords(a, b, allowBuffFood, preferHybrid, allowConjuredFi
 					return valueA > valueB, step.field
 				elseif step.kind == "lower" then
 					return valueA < valueB, step.field
+				elseif step.falsyWins then
+					return not valueA, step.field
 				elseif step.truthyWinsWhenPreferHybrid and not preferHybrid then
 					return not valueA, step.field
 				else
@@ -306,7 +318,7 @@ local function IsBetter(
 	candidatePrice,
 	currentBest,
 	score,
-	allowBuffFood,
+	buffFood,
 	preferHybrid,
 	allowConjuredFirst,
 	allowRestockLast
@@ -319,7 +331,7 @@ local function IsBetter(
 	local better = CompareRecords(
 		FillRecord(candidateRecord, candidate, candidateCount, candidatePrice, score),
 		currentBest,
-		allowBuffFood,
+		buffFood,
 		preferHybrid,
 		allowConjuredFirst,
 		allowRestockLast
@@ -365,7 +377,7 @@ end
 
 --[[
     Pairwise sort form for the ranked categories — the same RANKING_PRIORITY
-    chain with allowBuffFood, preferHybrid, allowConjuredFirst and
+    chain with buffFood, preferHybrid, allowConjuredFirst and
     allowRestockLast always false: percent heals first, then higher value,
     the burn-first steps, price, non-hybrid, fewer copies, itemID. Ranked
     records come from FillRecord like every other record, so the isBuffFood,

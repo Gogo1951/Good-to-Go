@@ -3,7 +3,6 @@ local L = ns.L
 
 -- Keeps the WoW macros the page creates in step with it, found through Features/Enhanced-Spellbook/Macro-Lookup.lua.
 
-local MaxAccountMacros, MaxCharacterMacros = ns.MaxAccountMacros, ns.MaxCharacterMacros
 local OwnedList, OwnerRecord = ns.OwnedMacroList, ns.MacroOwnerRecord
 local ReadMacroIndexes = ns.ReadMacroIndexes
 -- MIGRATION (remove after 2026-11-23)
@@ -42,15 +41,14 @@ function ns.MacroBlockReason(macro)
 end
 
 --[[
-	Whether name is one the add-on gave the same kind of WoW macro (the spell's own, its focus copy or a
-	Duplicate) of a spell this macro replaced in its group, which it took over (see ns.HandOverMacro in
+	Whether name is one the add-on gave the same kind of WoW macro (the spell's own or a Duplicate) of a spell this macro replaced in its group, which it took over (see ns.HandOverMacro in
 	Features/Enhanced-Spellbook/Group-Handover.lua).
 ]]
 local function IsReplacedSpellsName(macro, name)
 	if macro.rank then
 		return false
 	end
-	local suffix = macro.copy and " " .. macro.copy or macro.focus and ns.FOCUS_SUFFIX or ""
+	local suffix = macro.copy and " " .. macro.copy or ""
 	for _, replaced in ipairs(macro.replaces or NO_INDEXES) do
 		local trimmed = ns.TrimMacroName(replaced, ns.MACRO_NAME_MAX_LENGTH - #suffix) .. suffix
 		-- MIGRATION (remove after 2026-11-26): OLD_PREFIX
@@ -160,7 +158,8 @@ function ns.SyncMacro(macro, indexes)
 end
 
 --[[
-	Creates the macro on first use (character specific, or general once those slots are full), then puts
+	Creates the macro on first use, in the list its Macro Storage names (ns.MacroTab: character specific by default),
+	or the other once that one is full, then puts
 	it on the cursor so it can be dropped on an action bar. A macro of the same name the add-on didn't make is
 	left alone, and the new one sits beside it under the same name.
 ]]
@@ -187,9 +186,8 @@ function ns.PickupMacro(macro)
 			ns.ShowUIError(L["ADDON_SHORT_NAME"] .. " // " .. L["ERROR_MACRO_WINDOW_OPEN"])
 			return
 		end
-		local numAccount, numCharacter = GetNumMacros()
-		local perCharacter = numCharacter < MaxCharacterMacros()
-		if not perCharacter and numAccount >= MaxAccountMacros() then
+		local perCharacter = ns.MacroCreatePerCharacter(macro)
+		if perCharacter == nil then
 			ns.ShowUIError(L["ADDON_SHORT_NAME"] .. " // " .. L["ERROR_MACRO_SLOTS_FULL"])
 			return
 		end

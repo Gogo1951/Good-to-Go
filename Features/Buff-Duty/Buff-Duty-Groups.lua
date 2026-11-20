@@ -37,6 +37,124 @@ local function PickGroupTarget(units, spellName)
 	return units[1]
 end
 
+--------------------------------------------------------------------------------
+-- Folding
+--------------------------------------------------------------------------------
+
+--[[
+    In a raid every group starts folded to its header: only the group-level
+    buffs it still needs, each with a count of who needs it. Clicking the
+    header (Buff-Duty-Layout.lua's fold buttons) unfolds it to its members.
+    Kept for the session until you leave the raid (BuffDuty.ResetGroupFolds,
+    from Buff-Duty.lua's roster handler), so a raid's roster churn or the
+    window hiding doesn't fold a group you opened.
+]]
+local unfolded = {}
+
+function BuffDuty.ToggleGroupFold(subgroup)
+	if InCombatLockdown() then
+		return
+	end
+	unfolded[subgroup] = not unfolded[subgroup] or nil
+	ns.RequestBuffDutyRefresh()
+end
+
+function BuffDuty.ResetGroupFolds()
+	wipe(unfolded)
+end
+
+-- A dead member's resurrection row, which stays on a folded group: bringing them back comes first.
+local function ResurrectionRows(rows)
+	local kept = {}
+	for _, row in ipairs(rows) do
+		local first = row.icons[1]
+		if not row.pet and first and first.isResurrection then
+			kept[#kept + 1] = row
+		end
+	end
+	return kept
+end
+
+--[[
+    A folded group's header: its group icons, then one icon for each buff
+    with no group version that a member still needs (Thorns), counted like
+    them. That icon is one member's own single cast, in range if any is, so
+    each click buffs the next one and the count drops. Sorted by column, so
+    the Buff Key weighs them in the window's order.
+]]
+local function FoldedIcons(icons, rows)
+	local grouped, singles, order = {}, {}, {}
+	for _, spec in ipairs(icons) do
+		grouped[spec.column] = true
+	end
+	for _, row in ipairs(rows) do
+		if not row.pet then
+			for _, spec in ipairs(row.icons) do
+				if not grouped[spec.column] and not spec.isResurrection then
+					local list = singles[spec.column]
+					if not list then
+						list = {}
+						singles[spec.column] = list
+						order[#order + 1] = spec.column
+					end
+					list[#list + 1] = spec
+				end
+			end
+		end
+	end
+	local folded = { unpack(icons) }
+	for _, column in ipairs(order) do
+		local list = singles[column]
+		local pick = list[1]
+		for _, spec in ipairs(list) do
+			if ns.IsBuffSpecInRange(spec) then
+				pick = spec
+				break
+			end
+		end
+		local needs = {}
+		for _, spec in ipairs(list) do
+			needs[#needs + 1] = spec.targetName
+		end
+		local header = {}
+		for key, value in pairs(pick) do
+			header[key] = value
+		end
+		header.count, header.needs = #list, needs
+		folded[#folded + 1] = header
+	end
+	table.sort(folded, function(a, b)
+		return a.column < b.column
+	end)
+	return folded
+end
+
+--[[
+    An unfolded raid group's rows less the single icons the group casts it
+    shows cover (BuffDuty.GroupChoices). A member left with nothing drops off,
+    unless their pet's row follows: it keeps them listed, as it always has.
+]]
+local function UncoveredRows(rows, covered)
+	local kept = {}
+	for index, row in ipairs(rows) do
+		if row.pet then
+			kept[#kept + 1] = row
+		else
+			local icons = {}
+			for _, spec in ipairs(row.icons) do
+				if not covered[spec.column] then
+					icons[#icons + 1] = spec
+				end
+			end
+			local nextRow = rows[index + 1]
+			if #icons > 0 or (nextRow and nextRow.pet) then
+				kept[#kept + 1] = { label = row.label, icons = icons }
+			end
+		end
+	end
+	return kept
+end
+
 --[[
     One section per party with something missing: the party's group-buff icons
     on its header, then a row per member with their single-target icons. Every
@@ -55,6 +173,12 @@ end
     is waiting on them to accept).
 
     You are left out: your own buffs show under Self Buffs (Buff-Duty-Self.lua).
+
+    A raid is drawn smaller: each group icon carries a count of the members
+    who need it, a folded group (Folding, above) shows only those and one
+    counted icon per buff with no group version (FoldedIcons), and an
+    unfolded one shows only the group casts the Buff Key would choose, with
+    the singles they cover taken off its rows.
 ]]
 function BuffDuty.AddGroupSections(sections)
 	local grouped = IsInGroup()
@@ -136,7 +260,7 @@ function BuffDuty.AddGroupSections(sections)
 			local icons = {}
 			for _, buff in ipairs(buffs) do
 				local missing = party.missing[buff]
-				if buff.groupName and missing and grouped then
+				if buff.groupName and missing and grouped and not BuffDuty.ShutOut(buff) then
 					local target = PickGroupTarget(missing, buff.groupName)
 					local low = party.low[buff]
 					local partial = low.count == #missing
@@ -160,7 +284,7 @@ function BuffDuty.AddGroupSections(sections)
 				end
 			end
 			if #icons > 0 or #party.rows > 0 then
-				sections[#sections + 1] = {
+				local section = {
 					kind = "party",
 					subgroup = subgroup,
 					label = raid and GROUP_NUMBER:format(subgroup) or GROUP,
@@ -169,6 +293,26 @@ function BuffDuty.AddGroupSections(sections)
 					-- The frame lays parties out two to a row.
 					party = true,
 				}
+				if raid then
+					for _, spec in ipairs(icons) do
+						spec.count = #spec.members
+						spec.needs = {}
+						for _, unit in ipairs(spec.members) do
+							spec.needs[#spec.needs + 1] = GetUnitName(unit, false) or ""
+						end
+					end
+					section.foldable = true
+					if unfolded[subgroup] then
+						local chosen, covered = BuffDuty.GroupChoices(section)
+						section.icons = chosen
+						section.rows = UncoveredRows(party.rows, covered)
+					else
+						section.folded = true
+						section.icons = FoldedIcons(icons, party.rows)
+						section.rows = ResurrectionRows(party.rows)
+					end
+				end
+				sections[#sections + 1] = section
 			end
 		end
 	end

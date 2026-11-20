@@ -49,12 +49,11 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-	Every spell macro offers a Cast Sequence but a focus copy, which shares its spell's settings key and casts
-	only on the focus; a consumable's, which is Consumable Macros'; and the Shoot macro's, whose attack follows the
+	Every spell macro offers a Cast Sequence but a consumable's, which is Consumable Macros', and the Shoot macro's, whose attack follows the
 	weapon worn by a clause per weapon, which a sequence can't take.
 ]]
 function ns.OffersCastSequence(macro)
-	return ns.HasOptions(macro) and not macro.focus and not macro.rangedAttacks
+	return ns.HasOptions(macro) and not macro.rangedAttacks
 end
 
 --[[

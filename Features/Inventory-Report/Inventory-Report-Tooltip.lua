@@ -142,9 +142,11 @@ end
     bottom against the total; the others follow under a spacer, and only those
     holding some.
 
-    Published for the tooltip hooks below.
+    Published for the tooltip hooks below, and for the panel's Example, which
+    passes `always` so an item nobody holds still draws: the Example shows
+    while the report is on, and has to show something then.
 ]]
-function ns.GetInventoryReportLines(itemID)
+function ns.GetInventoryReportLines(itemID, always)
 	local record = ns.GetInventoryRecord()
 	if not (record and ns.db and ns.db.global.inventoryReport) then
 		return nil
@@ -166,7 +168,7 @@ function ns.GetInventoryReportLines(itemID)
 	end
 
 	local keep = KeepAmount(itemID)
-	if total == 0 and not keep then
+	if total == 0 and not keep and not always then
 		return nil
 	end
 
@@ -182,6 +184,52 @@ function ns.GetInventoryReportLines(itemID)
 	end
 
 	return lines
+end
+
+--------------------------------------------------------------------------------
+-- Example Item
+--------------------------------------------------------------------------------
+
+local CONSUMABLE_CLASS_ID = Enum.ItemClass and Enum.ItemClass.Consumable or 0
+
+--[[
+    The item the panel's Example reports on: a consumable in this character's
+    bags, the one the most characters on the realm hold (then the most of it,
+    then the lowest id, so it holds still between draws), so the Example shows
+    off the block's other rows where it can. A Hearthstone when the bags hold
+    no consumable.
+]]
+function ns.GetInventoryReportExampleItem()
+	local carried = {}
+	for _, bagID in ipairs(ns.CARRIED_BAG_IDS) do
+		for slot = 1, C_Container.GetContainerNumSlots(bagID) do
+			local itemID = C_Container.GetContainerItemID(bagID, slot)
+			if itemID and not carried[itemID] then
+				local classID = select(6, C_Item.GetItemInfoInstant(itemID))
+				if classID == CONSUMABLE_CLASS_ID then
+					carried[itemID] = true
+				end
+			end
+		end
+	end
+
+	local bestID, bestHolders, bestCount
+	for itemID in pairs(carried) do
+		local holders, count = 1, C_Item.GetItemCount(itemID, false) or 0
+		for _, other in ipairs(OtherCharacters()) do
+			local held = (other.bags[itemID] or 0) + (other.bank and other.bank[itemID] or 0)
+			if held > 0 then
+				holders, count = holders + 1, count + held
+			end
+		end
+		local better = not bestID
+			or holders > bestHolders
+			or (holders == bestHolders and (count > bestCount or (count == bestCount and itemID < bestID)))
+		if better then
+			bestID, bestHolders, bestCount = itemID, holders, count
+		end
+	end
+	return bestID or ns.HEARTHSTONE_ITEM_ID
 end
 
 --------------------------------------------------------------------------------

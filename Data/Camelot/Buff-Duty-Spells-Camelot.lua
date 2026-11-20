@@ -11,7 +11,10 @@ local MAIN, OFF_HAND = "MAIN", "OFF"
 -- On this client a pet takes no stat buffs: Buff Duty offers a pet only the rows marked pets = true.
 ns.BUFF_DUTY_PETS_FLAGGED_ONLY = true
 
--- { class, single = { { spell id, level learned } }, group = { spell ids }, greater = { spell ids }, exclusive, manaOnly, noCasters, pets, talent, default, selfDefault }, -- Name
+-- Whether Well Fed and Scrolls show on the Self-Buffs list When Missing by default (else Off).
+ns.BUFF_DUTY_ITEM_BUFFS_SHOWN = true
+
+-- { class, single = { { spell id, level learned } }, group = { spell ids }, greater = { spell ids }, exclusive, manaOnly, noCasters, pets, talent, noAsk, noShadowform, default, selfDefault }, -- Name
 ns.BUFF_DUTY_SPELLS = {
 	-- Druid ---------------------------------------------------------------------
 	{
@@ -83,6 +86,7 @@ ns.BUFF_DUTY_SPELLS = {
 		single = { { 1243, 1 }, { 1244, 12 }, { 1245, 24 }, { 2791, 36 }, { 10937, 48 }, { 10938, 60 } },
 		group = { 21562, 21564 },
 		default = ALL,
+		noShadowform = true,
 	}, -- Power Word: Fortitude
 	{
 		class = "PRIEST",
@@ -91,6 +95,7 @@ ns.BUFF_DUTY_SPELLS = {
 		manaOnly = true,
 		talent = true,
 		default = ALL,
+		noShadowform = true,
 	}, -- Divine Spirit
 	{
 		class = "PRIEST",
@@ -101,7 +106,9 @@ ns.BUFF_DUTY_SPELLS = {
 	{
 		class = "PRIEST",
 		single = { { 6346, 20 } },
+		noAsk = true,
 		default = TANK,
+		noShadowform = true,
 	}, -- Fear Ward
 	-- Shaman --------------------------------------------------------------------
 	{
@@ -138,7 +145,7 @@ ns.BUFF_DUTY_PET_ICONS = {
 	},
 }
 
--- { class, ranks = { { spell id, level learned } }, auras, exclusive, needsPet, default (minutes left, MISSING or OFF) }, -- Name
+-- { class, ranks = { { spell id, level learned } }, auras, exclusive, needsPet, castLast, noShadowform, default (minutes left, MISSING or OFF) }, -- Name
 ns.BUFF_DUTY_SELF_SPELLS = {
 	-- Hunter --------------------------------------------------------------------
 	{
@@ -256,6 +263,7 @@ ns.BUFF_DUTY_SELF_SPELLS = {
 		class = "PRIEST",
 		ranks = { { 588, 12 }, { 7128, 20 }, { 602, 30 }, { 1006, 40 }, { 10951, 50 }, { 10952, 60 } },
 		default = 3,
+		noShadowform = true,
 	}, -- Inner Fire
 	{
 		class = "PRIEST",
@@ -271,6 +279,7 @@ ns.BUFF_DUTY_SELF_SPELLS = {
 		class = "PRIEST",
 		ranks = { { 15473, 40 } },
 		default = MISSING,
+		castLast = true,
 	}, -- Shadowform
 	-- Shaman --------------------------------------------------------------------
 	{
@@ -470,19 +479,19 @@ ns.BUFF_DUTY_SELF_ITEMS = {
 	{ 12820, auras = { 17038 }, default = MISSING }, -- Winterfall Firewater
 }
 
--- { class, create = { { spell id, level learned } }, auras, items (lowest rank first), default }
+-- { class, create = { { spell id, level learned } }, auras, items = { { item id, level its create rank is learned } }, default }
 ns.BUFF_DUTY_SOULSTONE = {
 	class = "WARLOCK",
 	create = { { 693, 18 }, { 20752, 30 }, { 20755, 40 }, { 20756, 50 }, { 20757, 60 } },
 	auras = { 20707, 20762, 20763, 20764, 20765 },
-	items = { 5232, 16892, 16893, 16895, 16896 },
+	items = { { 5232, 18 }, { 16892, 30 }, { 16893, 40 }, { 16895, 50 }, { 16896, 60 } },
 	default = 3,
 }
 
--- { class, ranks = { spell ids } }, -- Name
+-- { class, ranks = { spell ids }, noShadowform }, -- Name
 ns.BUFF_DUTY_RESURRECTIONS = {
 	{ class = "PALADIN", ranks = { 7328, 10322, 10324, 20772, 20773 } }, -- Redemption
-	{ class = "PRIEST", ranks = { 2006, 2010, 10880, 10881, 20770 } }, -- Resurrection
+	{ class = "PRIEST", ranks = { 2006, 2010, 10880, 10881, 20770 }, noShadowform = true }, -- Resurrection
 	{ class = "SHAMAN", ranks = { 2008, 20609, 20610, 20776, 20777 } }, -- Ancestral Spirit
 }
 
@@ -490,7 +499,7 @@ ns.BUFF_DUTY_RESURRECTIONS = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, WoW Forever 1.60.1.70938
+	2026-11-19, wago.tools, WoW Forever 1.60.1.70959
 
 Notes
 	- Every buff one player can put on another that lasts more than two minutes: the ones worth keeping up on a group, and the ones a player may want to hand out on request. Only the rows for the player's own class are read, and only the ranks the player knows are cast.
@@ -513,6 +522,8 @@ Notes
 	- Talent buffs (Trueshot Aura, Shadowform, Demonic Sacrifice, Soul Link) carry the level their talent tier opens at, and a row only shows for a player who took the talent.
 	- auras names the buffs a cast leaves when they aren't the cast's own ID: Demonic Sacrifice leaves one of four, by the demon sacrificed (Burning Wish, Fel Stamina, Touch of Shadow, Fel Energy), and Soul Link's cast is a dummy that puts up 25228.
 	- Demonic Sacrifice and Soul Link share exclusive = WARLOCK_DEMON: a Soul Link warlock keeps a demon out, so with Soul Link up the sacrifice stops asking, and the other way round. Soul Link starts OFF, and needsPet keeps it from asking while there is no demon to link to.
+	- castLast puts a self buff after every other cast of yours on the Buff Key: Shadowform shuts out Holy spells, so it waits until Fortitude, Divine Spirit and the rest are out.
+	- noShadowform marks a Holy spell, which Shadowform shuts out: its icons stay hidden while you are in the form, and so does Resurrection.
 	- ranks is every rank, with the level it is learned at; the row casts the highest one known. Where ranks change name (Frost Armor into Ice Armor, Demon Skin into Demon Armor) they share a row, since they are one line of the same buff.
 	- exclusive groups the self buffs only one of which can be up at a time (an armor, a paladin aura, an aspect, a shaman shield): with any one of yours up, the rest of its family stop asking. Turn on every one you might use, and the window offers them all only when none is up.
 	- default is when the self buff shows until the player picks: minutes left (3) to recast before it drops, MISSING for one with no timer (an aura or aspect is either up or not), or OFF. Battle Shout starts on MISSING too: it lasts three minutes on this client (Wowhead's WoW Forever page, spell 25289), so a three-minute or longer choice would ask the moment it's shouted. Every aspect but Hawk starts off: Cheetah and the rest are swapped in for a moment, and Hawk is the one to come back to. A player's own choice is never overwritten.
@@ -570,6 +581,15 @@ wago.tools
 	https://wago.tools/db2/SpellDuration?build=1.60.1.70862
 	https://wago.tools/db2/SpellEquippedItems?build=1.60.1.70862
 	https://wago.tools/db2/SkillLineAbility?build=1.60.1.70862
+	https://wago.tools/db2/Item?build=1.60.1.70959
+	https://wago.tools/db2/SpellName?build=1.60.1.70959
+	https://wago.tools/db2/ItemSparse?build=1.60.1.70959
+	https://wago.tools/db2/ItemXItemEffect?build=1.60.1.70959
+	https://wago.tools/db2/Spell?build=1.60.1.70959
+	https://wago.tools/db2/SpellMisc?build=1.60.1.70959
+	https://wago.tools/db2/SpellEffect?build=1.60.1.70959
+	https://wago.tools/db2/SpellLevels?build=1.60.1.70959
+	https://wago.tools/db2/ItemEffect?build=1.60.1.70959
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Forever/foreverItemDB.lua

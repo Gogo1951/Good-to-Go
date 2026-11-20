@@ -1921,7 +1921,7 @@ ns.RANK_WATCH_ABILITIES = {
 		}, -- Stormstrike
 		{
 			{ id = 437009, rank = 1, level = 22, off = true },
-		}, -- Totemic Projection
+		}, -- Totemic Call
 		{
 			{ id = 36936, rank = 1, level = 20, off = true },
 		}, -- Totemic Recall
@@ -2414,7 +2414,7 @@ ns.RANK_WATCH_ABILITIES = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, WoW Forever 1.60.1.70938
+	2026-11-19, wago.tools, WoW Forever 1.60.1.70959
 
 Notes
 	- Built by Tools/Build-Rank-Watch-Abilities.py from Rank Sentinel's AbilityData/Classic.lua (MIT, Copyright (c) 2021 Gogo1951), the abilities its "Include" column keeps: heals and other spells players lower on purpose are left out there, not here.
@@ -2437,6 +2437,11 @@ wago.tools
 	https://wago.tools/db2/SpellMisc?build=1.60.1.70862
 	https://wago.tools/db2/SpellEffect?build=1.60.1.70862
 	https://wago.tools/db2/SkillLineAbility?build=1.60.1.70862
+	https://wago.tools/db2/SpellName?build=1.60.1.70959
+	https://wago.tools/db2/Spell?build=1.60.1.70959
+	https://wago.tools/db2/SpellMisc?build=1.60.1.70959
+	https://wago.tools/db2/SpellEffect?build=1.60.1.70959
+	https://wago.tools/db2/SpellLevels?build=1.60.1.70959
 
 QuestieDB
 	None.

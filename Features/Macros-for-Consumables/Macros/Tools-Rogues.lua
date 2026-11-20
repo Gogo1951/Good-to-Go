@@ -9,7 +9,7 @@ local MACRO_CONFIG = ns.MACRO_CONFIG
     Rogue-only, and like Feed Pet it owns its whole update cycle: the body
     doesn't fit the engine's standard tooltip+conjure+/use shape.
 
-    Click layout (the Poisons Macro rows of the mini-map tooltip's class notes):
+    Click layout (the Poisons Macro rows of the mini-map menu's class notes):
       Left-Click   → apply the Off Hand poison group's best rank to slot 17
       Right-Click  → apply the Main Hand poison group's best rank to slot 16
       Middle-Click → open the Poisons crafting window (if known)
@@ -23,7 +23,7 @@ local MACRO_CONFIG = ns.MACRO_CONFIG
     UIErrorsFrame:Clear() swallows the noise from clicking with no off-hand
     weapon equipped or a poison already pending.
 
-    The player picks a poison GROUP per hand (the Class & Race panel →
+    The player picks a poison GROUP per hand (the Class Macros page →
     Rogues); the scan resolves each group to the best rank the rogue can use
     and actually has in bags. Poisons aren't soulbound, so a twink can carry
     ranks above their level — the required-level column in ns.POISON_DATA
@@ -120,8 +120,8 @@ local function BestPoisonForHand(hand)
 end
 
 --[[
-    Resolved poison for one hand as (itemID, itemLink), for the minimap
-    tooltip. Resolved on demand rather than published the way ns.bestPetFoodID
+    Resolved poison for one hand as (itemID, itemLink), for the mini-map
+    menu. Resolved on demand rather than published the way ns.bestPetFoodID
     is: the answer tracks bag contents, which change without a macro rebuild,
     and there is no rebuild at all while the Poisons macro is disabled.
 ]]

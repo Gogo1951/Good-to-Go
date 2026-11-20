@@ -84,7 +84,7 @@ end
 local function FoldRangedAttacks()
 	local own = {}
 	for _, macro in ipairs(ns.macros) do
-		if not macro.copy and not macro.focus and not macro.rank and not macro.unlearned then
+		if not macro.copy and not macro.rank and not macro.unlearned then
 			own[macro.name] = macro
 		end
 	end

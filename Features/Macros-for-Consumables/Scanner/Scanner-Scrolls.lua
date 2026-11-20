@@ -2,8 +2,7 @@ local _, ns = ...
 
 --[[
     Scanner-Scrolls -- picks the best scroll in the bags for each enabled
-    scroll type and resolves the scroll override list: the scrolls whose buff
-    the player still lacks. Whether a scroll buff is already covered is
+    scroll type and lists the scrolls whose buff the player still lacks. Whether a scroll buff is already covered is
     ns.HasScrollBuff in Scanner-Auras.lua.
 ]]
 
@@ -16,7 +15,7 @@ local _, ns = ...
     Scroll entries: {[1] itemID, [2] buffID, [3] requiredLevel, [4] amount,
     [5] class token or nil}. The required level only orders the list
     (Scanner-Auras.lua sorts it highest first); it never gates a scroll, so
-    a scroll in the bags is a scroll the macro uses, at any level. A scroll
+    a scroll in the bags is a scroll Buff Duty offers, at any level. A scroll
     with a class token is skipped for every other class, since anyone can
     carry one but only that class can read it. Returns itemID, amount (or
     nil, nil if nothing usable is found). Diagnostics reads the same pick.
@@ -30,8 +29,8 @@ function ns.FindBestScroll(scrollType, bagItemCounts)
 	local _, playerClass = UnitClass("player")
 	for _, entry in ipairs(data.items or {}) do
 		--[[
-		    The scroll override path never passes the scanner's ignore filter
-		    (it reads the raw bag counts), so it honors the Ignore List itself.
+		    Scrolls never pass the scanner's ignore filter (callers hand raw
+		    bag counts), so this honors the Ignore List itself.
 		]]
 		if (entry[5] == nil or entry[5] == playerClass) and not ns.IsIgnored(entry[1]) then
 			if bagItemCounts[entry[1]] and bagItemCounts[entry[1]] > 0 then
@@ -44,40 +43,22 @@ function ns.FindBestScroll(scrollType, bagItemCounts)
 end
 
 --[[
-    Written by ScanBags on every rescan (forced nil in a PvP Arena); the Food
-    macro's scroll-only mode, the Readiness Report and Diagnostics read it.
+    The scrolls you could read now: for each type Buff Duty's Self-Buffs page
+    ticks (scrollTypes), the best one in the bags whose buff you still lack, in
+    ns.SCROLL_CHECK_ORDER. nil when there are none. currentSnapshot is a
+    player snapshot the caller already took, when it has one. The Readiness
+    Report and Diagnostics ask; Buff Duty's window reads the same pieces per
+    type (Buff-Duty-Self.lua).
 ]]
-ns.scrollOverrideIDs = nil
-
---[[
-    Returns an ordered list of scroll item IDs the player should use, or nil
-    if none apply. Order follows ns.SCROLL_CHECK_ORDER, which is the order the
-    scroll-only body fires them in. currentSnapshot is the player snapshot the
-    caller already took this pass, when it has one. No bag counts yet (a scan
-    before the bags load) means no override, never an error.
-]]
-function ns.FindScrollOverrides(bagItemCounts, currentSnapshot)
+function ns.FindMissingScrolls(bagItemCounts, currentSnapshot)
 	local settings = ns.db and ns.db.profile
-	if not settings or not settings.useScrolls or not bagItemCounts then
-		return nil
-	end
-	if not ns.IsUseWhenActive(settings, "scrolls") then
-		return nil
-	end
-
-	local scrollTypes = settings.scrollTypes
-	if not scrollTypes then
+	local scrollTypes = settings and settings.scrollTypes
+	if not scrollTypes or not bagItemCounts then
 		return nil
 	end
 
 	local results
-
-	--[[
-	    One aura walk for the whole set, and none at all when the bag scan
-	    already took one. Letting each ns.HasScrollBuff call take its own
-	    snapshot re-reads the player's 40 aura slots once per enabled scroll
-	    type, on a path that re-runs with every bag scan.
-	]]
+	-- One aura walk for the whole set, rather than one per scroll type.
 	currentSnapshot = currentSnapshot or ns.GetPlayerBuffSnapshot()
 
 	for _, scrollType in ipairs(ns.SCROLL_CHECK_ORDER or {}) do

@@ -3,7 +3,8 @@ local L = ns.L
 
 --[[
     The controls that fill the Restock List grid: the Keep box, the remove
-    button and its undo, and the pooled rows holding them. The toggle cells
+    button and the Undo that takes its place on a removed row, and the pooled
+    rows holding them. The toggle cells
     and the reputation cell are Restocker-Window-Cells.lua, which loads first.
 
     The grid itself -- column definitions, widths and shared colors -- is
@@ -36,6 +37,9 @@ local CreateReputationCell = ns.CreateRestockReputationCell
     its line.
 ]]
 local ROW_STRIPE_ALPHA = 0.045
+local UNDO_HEIGHT = 16
+local KEEP_BOX_HEIGHT = 16 -- on the Spacing Scale, shorter than the row so it centers in it
+local MUTED = ns.COLORS_RGB.MUTED
 
 --[[
     An item carried onto a row is being dropped on the list, not aimed at the
@@ -74,7 +78,7 @@ ns.PaintRestockKeep = PaintKeep
 local function CreateAmountEditBox(frame)
 	local editBox = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
 
-	editBox:SetHeight(ns.restockButtonHeight - 2)
+	editBox:SetHeight(KEEP_BOX_HEIGHT)
 	editBox:SetAutoFocus(false)
 	--[[
 	    Digits only, and every read still falls back to 0: item.amount is compared
@@ -212,6 +216,28 @@ local function CreateDeleteButton(frame)
 	return button
 end
 
+--[[
+    Undo, on a removed row where its remove button was (ns.UndoRestockRemove in
+    Restocker-List.lua). A panel button, as everything a click acts on in this
+    window is.
+]]
+local function CreateUndoButton(frame)
+	local undo = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+	undo:SetPoint("RIGHT", frame, "RIGHT", -ROW_INSET, 0)
+	undo:SetHeight(UNDO_HEIGHT)
+	undo:SetText(L["RESTOCKER_UNDO"])
+	ns.SetRestockControlClick(undo, function()
+		-- The click hides the button under the mouse, which would leave its tooltip up.
+		GameTooltip:Hide()
+		ns.UndoRestockRemove()
+	end)
+	ns.SetupRestockerTooltip(undo, L["RESTOCKER_UNDO_TOOLTIP"])
+	-- Dressed by ElvUI as the window's other buttons are, each as its row is made.
+	ns.ApplyRestockerElvUISkin(nil, { undo })
+	undo:Hide()
+	return undo
+end
+
 function ns.CreateRestockListRow(item)
 	--[[
 	    Born parented to the hidden frame and positioned by ns.UpdateRestockList, which
@@ -240,6 +266,7 @@ function ns.CreateRestockListRow(item)
 
 	-- RIGHT EDGE: the remove control, then the columns walking left from it.
 	frame.removeButton = CreateDeleteButton(frame)
+	frame.undoButton = CreateUndoButton(frame)
 	frame.cells, frame.firstCell = LayoutColumns(frame.removeButton, function(column)
 		if column.isText then
 			return CreateReputationCell(frame, column)
@@ -261,7 +288,6 @@ function ns.CreateRestockListRow(item)
 	text:SetJustifyH("LEFT")
 	text:SetWordWrap(false)
 	text:SetPoint("LEFT", icon, "RIGHT", ICON_TEXT_GAP, 0)
-	text:SetPoint("RIGHT", frame.amountBox, "LEFT", -NAME_COLUMN_GAP, 0)
 	frame.text = text
 
 	--[[
@@ -339,6 +365,30 @@ function ns.UpdateRestockListRow(row, item)
 	end
 	SetReputationCell(row.cells.reputation, item)
 
+	--[[
+	    A removed row (ns.restockLastRemoved): grayed, its cells, Keep box and
+	    remove button replaced by "Removed [Item]." and an Undo where the remove
+	    button was. Any other row puts them back.
+	]]
+	local removed = ns.restockLastRemoved
+	local isRemoved = removed ~= nil and removed.item == item
+	for _, cell in pairs(row.cells) do
+		cell:SetShown(not isRemoved)
+	end
+	row.amountBox:SetShown(not isRemoved)
+	row.removeButton:SetShown(not isRemoved)
+	row.undoButton:SetShown(isRemoved)
+	row.icon:SetDesaturated(isRemoved)
+	row.text:ClearAllPoints()
+	row.text:SetPoint("LEFT", row.icon, "RIGHT", ICON_TEXT_GAP, 0)
+	if isRemoved then
+		-- Sized here: a font not yet resolved at login measures as nothing when built.
+		ns.FitRestockButton(row.undoButton)
+		row.text:SetPoint("RIGHT", row.undoButton, "LEFT", -NAME_COLUMN_GAP, 0)
+	else
+		row.text:SetPoint("RIGHT", row.amountBox, "LEFT", -NAME_COLUMN_GAP, 0)
+	end
+
 	-- Icon + quality-colored name from the item cache, or the loading placeholder until it is known
 	local info = RefreshItemName(item)
 	if info then
@@ -354,7 +404,13 @@ function ns.UpdateRestockListRow(row, item)
 		row.text:SetTextColor(WHITE.r, WHITE.g, WHITE.b)
 	end
 
-	row.text:SetText(info and item.itemName or string.format(L["LOADING_ITEM"], item.itemID))
+	local name = info and item.itemName or string.format(L["LOADING_ITEM"], item.itemID)
+	if isRemoved then
+		row.text:SetTextColor(MUTED.r, MUTED.g, MUTED.b)
+		row.text:SetText(string.format(L["RESTOCKER_REMOVED_ITEM"], name))
+		return
+	end
+	row.text:SetText(name)
 	row.amountBox:SetText(tostring(item.amount or 0))
 	PaintKeep(row.amountBox, item)
 end

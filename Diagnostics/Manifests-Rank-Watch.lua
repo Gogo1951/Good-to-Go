@@ -69,7 +69,11 @@ local function GroupUnits()
 	return units
 end
 
--- One group member: name, class, the level Rank Watch reads (a cast is dropped without one), and whether ignored.
+--[[
+    One group member, with each thing ns.CheckRankWatchCast and the detection files drop a cast over: the level
+    Rank Watch reads, whether ignored, charmed or hostile, whether their GUID finds them again (ns.GetUnitByGUID,
+    which every detection path resolves a caster through), and whether in combat, which holds a whisper to them.
+]]
 local function MemberLine(settings, unit)
 	local guid = UnitGUID(unit)
 	local _, class = UnitClass(unit)
@@ -77,15 +81,38 @@ local function MemberLine(settings, unit)
 	local pet = unit == "player" and "pet" or unit:gsub("^party(%d)$", "partypet%1"):gsub("^raid(%d+)$", "raidpet%1")
 	local petLevel = UnitExists(pet) and ns.RankWatchUnitLevel(pet)
 	return string.format(
-		"%s: %s, %s, level %s%s // ignored: %s // name hidden: %s",
+		"%s: %s, %s, level %s%s // ignored: %s // charmed or hostile (casts dropped): %s // found by GUID: %s // in combat (whispers to them wait): %s // name hidden: %s",
 		unit,
 		PlainText(GetUnitName(unit, true)),
 		PlainText(class),
 		level and tostring(level) or "UNREADABLE (casts dropped)",
 		UnitExists(pet) and string.format(" // pet level %s", petLevel and tostring(petLevel) or "UNREADABLE") or "",
 		YesNo(ns.IsPlain(guid) and settings.ignoredPlayers[guid]),
+		YesNo(ns.IsPlainTrue(UnitIsCharmed(unit)) or ns.IsPlainTrue(UnitIsEnemy("player", unit))),
+		tostring(ns.GetUnitByGUID(guid) or "no (casts dropped)"),
+		YesNo(ns.IsPlainTrue(UnitAffectingCombat(unit))),
 		YesNo(ns.IsUnitIdentitySecret(unit))
 	)
+end
+
+-- How many players the damage meter lists for one of its types right now, read as the Forever detection reads it.
+local function MeterSourceCount(meterType)
+	if not (C_DamageMeter and C_DamageMeter.GetCombatSessionFromType and Enum.DamageMeterSessionType) then
+		return "no meter"
+	end
+	if not meterType then
+		return "type missing"
+	end
+	local ok, combatSession =
+		pcall(C_DamageMeter.GetCombatSessionFromType, Enum.DamageMeterSessionType.Current, meterType)
+	if not ok then
+		return "read failed"
+	end
+	local sources = ns.IsPlain(combatSession) and type(combatSession) == "table" and combatSession.combatSources
+	if not ns.IsPlain(sources) or type(sources) ~= "table" then
+		return "nothing returned"
+	end
+	return tostring(#sources)
 end
 
 -- One of your class's abilities: its ranks on this client, the best one your level allows, and how many are tracked.
@@ -151,7 +178,8 @@ end
     Answers "Rank Watch never says anything": every switch and gate that keeps it quiet (Rank-Watch-Core.lua,
     Rank-Watch-Check.lua), who whispers for the group (Rank-Watch-Cluster.lua), how this flavor sees casts
     (Rank-Watch-Detection-Combat-Log.lua, or Rank-Watch-Detection-Forever.lua on WoW Forever), what it watches,
-    each group member's readable level, and your own class's abilities with the rank your level allows.
+    who /gtg ignore would add, each group member's level and the other things a cast of theirs is dropped over,
+    and your own class's abilities with the rank your level allows.
 ]]
 function ns:BuildRankWatchContextReport()
 	local lines = { GetClientHeader(), "" }
@@ -228,9 +256,10 @@ function ns:BuildRankWatchContextReport()
 		tostring(ns.RankWatchLeadName())
 	)
 	lines[#lines + 1] = string.format(
-		"Add-on message prefix %s registered: %s",
+		"Add-on message prefix %s registered: %s // sent to: %s (nothing is sent outside a group, or in a battleground or arena)",
 		RANK_WATCH.COMM_PREFIX,
-		YesNo(C_ChatInfo.IsAddonMessagePrefixRegistered(RANK_WATCH.COMM_PREFIX))
+		YesNo(C_ChatInfo.IsAddonMessagePrefixRegistered(RANK_WATCH.COMM_PREFIX)),
+		tostring(ns:GetGroupChatChannel() or "nobody")
 	)
 
 	lines[#lines + 1] = ""
@@ -238,11 +267,22 @@ function ns:BuildRankWatchContextReport()
 	if ns.FLAVOR == "Camelot" then
 		lines[#lines + 1] =
 			"WoW Forever: your own and your pet's casts, group members' buffs, and their damage and healing from the damage meter."
+		local sessionTypes, meterTypes = Enum.DamageMeterSessionType, Enum.DamageMeterType
 		lines[#lines + 1] = string.format(
 			"Auras secret now (group members' buffs go unread): %s // damage meter present: %s (read every %d seconds in a group, never in combat; the first read after joining or turning on only takes the totals)",
 			YesNo(ns.AreAurasSecret()),
-			YesNo(C_DamageMeter and Enum.DamageMeterSessionType and Enum.DamageMeterType),
+			YesNo(C_DamageMeter and sessionTypes and meterTypes),
 			RANK_WATCH.METER_POLL
+		)
+		lines[#lines + 1] = string.format(
+			"Damage meter now: current session type %s // players listed for damage: %s // for healing: %s",
+			tostring(sessionTypes and sessionTypes.Current),
+			MeterSourceCount(meterTypes and meterTypes.DamageDone),
+			MeterSourceCount(meterTypes and meterTypes.HealingDone)
+		)
+		lines[#lines + 1] = string.format(
+			"C_Spell.IsSpellHelpful present (without it your pet's helpful casts in a group go uncapped by the group's levels): %s",
+			YesNo(C_Spell and C_Spell.IsSpellHelpful)
 		)
 		-- The cap Rank-Watch-Detection-Forever.lua's LowestGroupLevel puts on meter heals and your pet's helpful casts.
 		local lowest
@@ -323,6 +363,13 @@ function ns:BuildRankWatchContextReport()
 	table.sort(ignored)
 	lines[#lines + 1] =
 		string.format("Ignored Players: %d%s", #ignored, #ignored > 0 and (" // " .. table.concat(ignored, ", ")) or "")
+	-- What /gtg ignore with no name would add: the target, only when it's another player the client can name.
+	local targetGUID, targetName = ns.RankWatchIgnorableUnit("target")
+	lines[#lines + 1] = string.format(
+		"/gtg ignore alone would add: %s",
+		targetGUID and string.format("%s (already ignored: %s)", targetName, YesNo(settings.ignoredPlayers[targetGUID]))
+			or "nobody (no target, or it isn't another player whose name can be read)"
+	)
 
 	lines[#lines + 1] = ""
 	lines[#lines + 1] = "-- Your Group --"
@@ -449,7 +496,10 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, not ns.RankWatchSettings and {
 				and type(C_DamageMeter.GetCombatSessionFromType) == "function"
 				and type(C_DamageMeter.GetCombatSessionSourceFromType) == "function"
 				and type(Enum.DamageMeterSessionType) == "table"
+				and Enum.DamageMeterSessionType.Current ~= nil
 				and type(Enum.DamageMeterType) == "table"
+				and Enum.DamageMeterType.DamageDone ~= nil
+				and Enum.DamageMeterType.HealingDone ~= nil
 		end,
 	},
 	{ "C_Spell.IsSpellHelpful (guarded)", HasFunction("C_Spell", "IsSpellHelpful") },
@@ -494,11 +544,13 @@ local function RankWatchNameRows()
 		end
 	end
 	rows[#rows + 1] = {
-		constant = "SAMPLE_DEMON_FAMILY_ID",
+		constant = "IMP_CREATURE_FAMILY_ID",
 		kind = "creatureFamily",
-		id = ns.SAMPLE_DEMON_FAMILY_ID,
+		id = ns.IMP_CREATURE_FAMILY_ID,
 		lookup = function()
-			local info = C_CreatureInfo.GetCreatureFamilyInfo(ns.SAMPLE_DEMON_FAMILY_ID)
+			local info = C_CreatureInfo
+				and C_CreatureInfo.GetCreatureFamilyInfo
+				and C_CreatureInfo.GetCreatureFamilyInfo(ns.IMP_CREATURE_FAMILY_ID)
 			return info and info.name
 		end,
 	}

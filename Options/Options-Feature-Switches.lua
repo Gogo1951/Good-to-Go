@@ -1,4 +1,4 @@
-local _, ns = ...
+local ADDON_NAME, ns = ...
 
 --------------------------------------------------------------------------------
 -- Features
@@ -89,9 +89,20 @@ ns.FEATURES = {
 	},
 }
 
--- Rank Watch, after Consumable Macros, wherever its TOC loads it: Mists has no ranks and leaves it out.
+--[[
+    Wherever Rank Watch's TOC loads it (Mists has no ranks and leaves it out): Ability Alerts While Leveling
+    after Enhanced Spellbook, whose panel it sits under, then Rank Watch after Consumable Macros. The level-up
+    prints run whether Rank Watch is on or not, so their switch only writes its setting.
+]]
 if ns.SetRankWatchEnabled then
-	table.insert(ns.FEATURES, 5, {
+	table.insert(ns.FEATURES, 4, {
+		store = "global",
+		setting = "rankWatch.levelUpAlerts",
+		name = "RANK_WATCH_LEVEL_UP_HEADER",
+		caption = "SWITCH_ABILITY_ALERTS",
+		desc = "SWITCH_ABILITY_ALERTS_DESCRIPTION",
+	})
+	table.insert(ns.FEATURES, 6, {
 		store = "global",
 		setting = "rankWatch.enabled",
 		name = "TAB_RANK_WATCH",
@@ -114,5 +125,5 @@ function ns.FindFeature(setting)
 			return feature
 		end
 	end
-	error("Good to Go: no ns.FEATURES entry for " .. tostring(setting), 2)
+	error(ADDON_NAME .. ": no ns.FEATURES entry for " .. tostring(setting), 2)
 end

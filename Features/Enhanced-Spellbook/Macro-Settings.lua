@@ -9,8 +9,7 @@ local _, ns = ...
 --[[
 	Per-spell settings, on the character's profile, each a table keyed by the macro's settings key
 	(SettingsKey, built from the spell's Rank 1 ID, so the same in every language): "cursor" (macro casts a ground-targeted
-	spell where the cursor points), "focus" (the page also lists a copy of the macro that casts on the focus
-	target), "pet" (a summon macro casts the pet's ability while that pet is out), "stance" (the macro switches to a stance the spell can be cast in first), "petAttack"
+	spell where the cursor points), "pet" (a summon macro casts the pet's ability while that pet is out), "stance" (the macro switches to a stance the spell can be cast in first), "petAttack"
 	(the macro also sends the pet to attack), "stopCast" (the macro stops the current cast first),
 	"startAttack" (the macro starts melee auto-attack after the cast), "noToggle" (a form or aspect's macro
 	casts "!Name", which never cancels it when it is already on), "targetRank" (a ranked friendly spell's macro
@@ -32,6 +31,8 @@ local _, ns = ...
 	of rows, each a spell cast in the macro's place when its conditions match (see ns.Conditionals).
 	"castSequence" holds the Cast Sequence's steps after the macro's own, "castSequenceEnd" "stop" where it
 	stops on NULL, and "castSequenceReset" its resets (see Features/Enhanced-Spellbook/Macro-Builder/Cast-Sequence.lua).
+	"macroTab" holds "general" where the macro's WoW macro is kept in the General list, and nil for the
+	character's own, the default (see Features/Enhanced-Spellbook/Macro-Tab.lua).
 ]]
 local function SpellSettings(key)
 	return ns.db.profile[key]

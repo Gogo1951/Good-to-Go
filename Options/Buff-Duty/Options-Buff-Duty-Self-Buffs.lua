@@ -18,7 +18,8 @@ local GetColor = ns.GetColor
     Laid out as a tree: the classes down the left, opened on your own (the
     settings are account-wide, so every class is listed), and the chosen
     class's buffs on the right. The consumables any class can use (Winterfall
-    Firewater) come last, as a page of their own.
+    Firewater) come last, as a page of their own, closing with the scroll
+    types the window's Scrolls row and the Readiness Report check.
 
     The switch for the window's Self-Buffs row lives on the Buff Duty panel with
     the window's other rows. Like the Group Buffs panel, nothing here hides behind it:
@@ -45,8 +46,9 @@ local function CategoryName(category)
 	end
 	table.sort(families)
 
-	local name = category.name
-	-- The consumables' box says they only show while you carry one.
+	-- the class's plain name, gold like every header, and its notes gray beside it
+	local name = LOCALIZED_CLASS_NAMES_MALE[category.id] or category.name
+	-- The consumables' page says they only show while you carry one.
 	if category.id == "ITEMS" then
 		name = name .. " " .. GetColor("MUTED") .. "· " .. L["BUFF_DUTY_SELF_ITEMS_NOTE"] .. "|r"
 	end
@@ -57,6 +59,53 @@ local function CategoryName(category)
 		end
 	end
 	return name
+end
+
+--[[
+    The scroll types on the Consumables page, one checkbox each, named as
+    Buff Duty's Scrolls flyout names them (ns.SCROLL_TYPE_LABELS). A flavor
+    with no consumable buffs still gets the page, for the scrolls alone.
+    scrollTypes is on the AceDB profile: which scrolls are worth offering
+    differs from character to character (a README-Notes exception).
+]]
+local function AddScrollTypes(args, order)
+	local page = args.ITEMS
+	if not page then
+		page = {
+			type = "group",
+			name = L["BUFF_DUTY_SELF_ITEMS_HEADER"],
+			order = order,
+			args = { header = Kit.Header(L["BUFF_DUTY_SELF_ITEMS_HEADER"], 1), spaceHeader = Kit.Spacer(2) },
+		}
+		args.ITEMS = page
+	end
+
+	local toggles = {}
+	for index, scroll in ipairs(ns.SCROLL_TYPE_LABELS or {}) do
+		local key, label = scroll[1], scroll[2] or scroll[1]
+		toggles[key] = {
+			type = "toggle",
+			name = label,
+			desc = L["OPTIONS_BUFF_TYPE_DESCRIPTION"]:format(label),
+			order = index,
+			get = function()
+				local types = ns.db.profile.scrollTypes
+				return types and types[key]
+			end,
+			set = function(_, value)
+				ns.db.profile.scrollTypes[key] = value
+				ns.RefreshBuffDuty()
+			end,
+		}
+	end
+	page.args.spaceScrolls = Kit.Spacer(900)
+	page.args.scrollTypes = {
+		type = "group",
+		name = L["OPTIONS_SCROLL_TYPES"],
+		order = 901,
+		inline = true,
+		args = toggles,
+	}
 end
 
 function ns.BuildBuffDutySelfBuffsOptions()
@@ -72,17 +121,14 @@ function ns.BuildBuffDutySelfBuffsOptions()
 			descIntro = Kit.Desc(L["BUFF_DUTY_SELF_DESCRIPTION"], 1),
 		},
 	}
-	ns.AddFeatureOffLine(options.args, "buffWindow.enabled")
-
-	--[[
-	    Two blank, disabled entries at the top of the class list push the first
-	    class down past the page's header and the spacer under it, so it lines
-	    up with the first buff's row. Each is one tree line (18 points); a
-	    disabled entry takes no clicks, and the tree never opens on one.
-	]]
-	for gap = 1, 2 do
-		options.args["gap" .. gap] = { type = "group", name = " ", order = gap, disabled = true, args = {} }
-	end
+	-- With Buff Duty on, the line names this page's own switch, on the Buff Duty page, while that is off.
+	ns.AddFeatureOffLine(options.args, "buffWindow.enabled", {
+		isOn = function()
+			return Settings().selfEnabled
+		end,
+		name = "BUFF_DUTY_SELF_ENABLE",
+		page = "TAB_BUFF_DUTY",
+	})
 
 	local refreshValues = ns.BuffDutyRefreshValues(Data.SELF_REFRESH_CHOICES)
 	local selfOrder = 10
@@ -109,7 +155,7 @@ function ns.BuildBuffDutySelfBuffsOptions()
 				page.args,
 				entry,
 				entryOrder,
-				L["BUFF_DUTY_SELF_REFRESH_DESCRIPTION"]:format(entry.spellName),
+				entry.desc or L["BUFF_DUTY_SELF_REFRESH_DESCRIPTION"]:format(entry.spellName),
 				{
 					values = refreshValues,
 					sorting = Data.SELF_REFRESH_CHOICES,
@@ -131,5 +177,6 @@ function ns.BuildBuffDutySelfBuffsOptions()
 		selfOrder = selfOrder + 1
 	end
 
+	AddScrollTypes(options.args, selfOrder)
 	return options
 end

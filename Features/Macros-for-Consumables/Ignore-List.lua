@@ -61,7 +61,7 @@ end
 --[[
     The mini-map button's Right-Click (ignore the food it is currently offering)
     and Middle-Click (clear) act on the current character's list only, which is
-    exactly what the mini-map tooltip's Ignore List section shows -- so both
+    exactly what the mini-map menu's Ignore List section shows -- so both
     keep meaning what the player just read. The Global list is edited from the
     Ignore List panel instead, through ns.SetIgnoredInScope below.
 
@@ -69,11 +69,11 @@ end
     rebuilds its rows straight off the live lists, and the menu redraws.
 
     Right-Click only ever adds: in combat or with the Macro UI open the rebuild
-    waits, so the tooltip still offers the same food, and a second click must not
+    waits, so the menu still offers the same food, and a second click must not
     take it back off the list.
 
-    Each returns what it changed, true for an item added and the number of
-    items cleared, so the mini-map can say so in chat.
+    Each returns what it changed, true for an item added or removed and the
+    number of items cleared, so the mini-map can say so in chat.
 ]]
 function ns.IgnoreItem(itemID)
 	if not itemID then
@@ -84,6 +84,18 @@ function ns.IgnoreItem(itemID)
 		return false
 	end
 	ignoreList[itemID] = true
+	RefreshMacros()
+	ns.RefreshSettings()
+	return true
+end
+
+-- Takes one item off this character's list, from the mini-map menu's Ignore List rows.
+function ns.UnignoreItem(itemID)
+	local ignoreList = ns.GetIgnoreList()
+	if not (itemID and ignoreList and ignoreList[itemID]) then
+		return false
+	end
+	ignoreList[itemID] = nil
 	RefreshMacros()
 	ns.RefreshSettings()
 	return true

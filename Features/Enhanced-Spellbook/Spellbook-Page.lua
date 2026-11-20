@@ -28,7 +28,7 @@ local PAGER_HEIGHT = 32
 	at 1056 wide that leaves about 52 beside each 464-wide column, split so the column has room at the fold as
 	well as at the page's outer edge (with the spine shift: about 15 at the fold, 37 at the edge).
 ]]
-local COLUMN_TOP, COLUMN_SIDE = 12, 32
+local COLUMN_TOP, COLUMN_SIDE = 16, 32
 
 -- The flow inside a column (see PackRows and Paginate, in Features/Enhanced-Spellbook/Spellbook-Page-Layout.lua).
 local SLOTS, GAP_X = 2, 16
@@ -40,9 +40,10 @@ local TILE_WIDTH, TILE_HEIGHT = ns.TILE_WIDTH, ns.TILE_HEIGHT
 	space falls above the label.
 ]]
 local ROW_STRIP_HEIGHT = 32
-local LABEL_HEIGHT, LABEL_GAP = 13, 3
+local LABEL_HEIGHT, LABEL_GAP = 16, 4
 local LABEL_TOP_GAP = ROW_STRIP_HEIGHT - LABEL_HEIGHT - LABEL_GAP
-local HEADER_HEIGHT = 20
+local HEADER_HEIGHT = 16
+local CONTINUED_GAP = 8 -- a header's name to its "(Continued)"
 local COLUMN_WIDTH = SLOTS * TILE_WIDTH + (SLOTS - 1) * GAP_X
 
 --[[
@@ -84,14 +85,7 @@ local function CreateHeader(page)
 	rule:SetPoint("RIGHT", gear, "LEFT", -8, 0)
 	gear:SetScript("OnEnter", function(self)
 		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-		GameTooltip:SetText(
-			L["PAGE_CATEGORY_SETTINGS"]:format(#header.macros, header.name),
-			TITLE.r,
-			TITLE.g,
-			TITLE.b,
-			1,
-			true
-		)
+		GameTooltip:SetText(ns.CategoryMenuTitle(header.name, #header.macros), TITLE.r, TITLE.g, TITLE.b, 1, true)
 		GameTooltip:AddLine(L["PAGE_CATEGORY_SETTINGS_DESCRIPTION"], BODY.r, BODY.g, BODY.b, true)
 		GameTooltip:Show()
 	end)
@@ -113,7 +107,7 @@ local function CreateSubLabel(page)
 	label.Text:SetShadowOffset(0, 0)
 	label.Text:SetPoint("LEFT")
 	local rule = ns.SpellbookPixelLine(label, "ARTWORK", RULE_COLOR)
-	rule:SetPoint("LEFT", label.Text, "RIGHT", 6, 0)
+	rule:SetPoint("LEFT", label.Text, "RIGHT", 8, 0)
 	rule:SetPoint("RIGHT")
 	local tick = ns.SpellbookPixelLine(label, "ARTWORK", RULE_COLOR, "VERTICAL")
 	tick:SetHeight(4)
@@ -138,7 +132,7 @@ local function DrawColumn(page, column, x, y, bars)
 		header.gear:SetShown(settable)
 		-- an empty "(Continued)" sits flush against the name, so the rule starts where it always does
 		header.Continued:SetText(block.continued and L["PAGE_CONTINUED"] or "")
-		header.Continued:SetPoint("LEFT", header.Text, "RIGHT", block.continued and 6 or 0, 0)
+		header.Continued:SetPoint("LEFT", header.Text, "RIGHT", block.continued and CONTINUED_GAP or 0, 0)
 		top = top + HEADER_HEIGHT
 		for r = block.first, block.last do
 			local row = category.rows[r]
@@ -302,6 +296,54 @@ local function BuildPage(page)
 			controls:OnMouseWheel(delta)
 		end
 	end)
+end
+
+--[[
+	Which page of the book each spell's tile is on, by the spell's name (a What's Next row may name another rank),
+	as the book now stands: its filter and settings, so a spell the filter hides has no page. Paginated as Layout
+	does, once for every spell, so a What's Next page reads it once per draw. The macro list is collected first when
+	the book has not been opened yet this session.
+]]
+function ns.SpellbookPagesBySpellName()
+	local found = {}
+	local page = pages[1]
+	if not (page and page.parchment) then
+		return found
+	end
+	if #ns.macros == 0 then
+		ns.CollectMacros()
+	end
+	local categories = SpellbookPageCategories(page)
+	for _, category in ipairs(categories) do
+		category.rows = ns.PackSpellbookRows(category.groups)
+	end
+	local columns = ns.PaginateSpellbook(categories, page.parchment.paper:GetHeight() - COLUMN_TOP - PAGER_HEIGHT)
+	for index, column in ipairs(columns) do
+		for _, block in ipairs(column) do
+			for r = block.first, block.last do
+				for _, segment in ipairs(block.category.rows[r].segments) do
+					for _, macro in ipairs(segment.macros) do
+						local name = macro.spellID and ns.SpellName(macro.spellID) or macro.name
+						if name and not found[name] then
+							found[name] = math.ceil(index / 2)
+						end
+					end
+				end
+			end
+		end
+	end
+	return found
+end
+
+-- Opens the book's tab, then turns it to pageNumber, so the tab's own draw cannot turn it back.
+function ns.ShowSpellbookPageNumber(pageNumber)
+	local page = pages[1]
+	if not page then
+		return
+	end
+	ns.ShowSpellbookTab(ns.SPELLBOOK_TAB_BOOK)
+	page.pagingControls:SetCurrentPage(pageNumber)
+	Layout(page)
 end
 
 ns.BuildSpellbookPage = BuildPage

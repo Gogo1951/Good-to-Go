@@ -20,9 +20,9 @@ local OfferedSections = ns.StarterOfferedSections
     Which sections and stack counts it offers is Restocker-Starter-Sections.lua.
 
     It wears the Restock List's frame (Restocker-Window-Frame.lua): the bag
-    portrait and the title, the header band left clear (the title bar's X
-    closes it), the staples in the inset, and in the footer a Done button and,
-    on the login route, the way back to the list. There is no don't-show-again: the window only adds what is
+    portrait and the title (the title bar's X closes it), the staples in the
+    inset straight under it, with no controls row, and in the footer a Done
+    button and, on the login route, the way back to the list. There is no don't-show-again: the window only adds what is
     ticked, and a player who wants none of it turns the Restocker off.
     Nothing here is protected.
 ]]
@@ -42,7 +42,7 @@ local WINDOW_MAX_HEIGHT = 640
 local WINDOW_MIN_HEIGHT = 256
 
 local CONTENT_PADDING = 16 -- inside the inset, around everything it holds
-local SCROLL_BAR_SPACE = 26
+local SCROLL_BAR_SPACE = 32
 local PARAGRAPH_GAP = 8
 local SECTION_GAP = 16
 local HEADER_HEIGHT = 16
@@ -146,7 +146,8 @@ end
 --[[
     The game's own dropdown where the client has WowStyle1DropdownTemplate, as
     the Spell Book's sort and filter dropdowns are, else a plain button that
-    opens the same menu and names the current choice. Live either way round: picked first, it decides what a later tick adds; changed after,
+    opens the same menu and names the current choice; either way the menu is
+    on the kit's plate (ns.SetupKitDropdown, Kit.OpenContextMenu). Live either way round: picked first, it decides what a later tick adds; changed after,
     it rewrites the listed entry's amount on the spot.
 ]]
 local function SetupStacksMenu(dropdown)
@@ -174,12 +175,12 @@ local function CreateStacksDropdown(parent)
 	if ns.HasTemplate("WowStyle1DropdownTemplate") then
 		dropdown = CreateFrame("DropdownButton", nil, parent, "WowStyle1DropdownTemplate")
 		dropdown:SetWidth(DROPDOWN_WIDTH)
-		dropdown:SetupMenu(SetupStacksMenu(dropdown))
+		ns.SetupKitDropdown(dropdown, SetupStacksMenu(dropdown))
 	else
 		dropdown = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
 		dropdown:SetSize(DROPDOWN_WIDTH, 22)
 		dropdown:SetScript("OnClick", function(self)
-			MenuUtil.CreateContextMenu(self, SetupStacksMenu(self))
+			ns.MenuKit.OpenContextMenu(self, SetupStacksMenu(self))
 		end)
 	end
 	-- hooked, so the template's own hover highlight survives
@@ -266,12 +267,15 @@ local function CreateStapleCell(content)
 	label:SetScript("OnClick", function()
 		checkbox:Click()
 	end)
+	-- the item's name as the gold title, and what a tick adds in white under it
 	label:SetScript("OnEnter", function(self)
 		local category = cell.category
-		ns.ShowRestockerTooltip(
-			self,
-			ns.DescribeStarterCategory(category) or LoadingText(ns.GetStarterCategoryItemID(category))
-		)
+		local title, body = ns.DescribeStarterCategory(category)
+		if title then
+			ns.ShowRestockerTooltip(self, title, body)
+		else
+			ns.ShowRestockerTooltip(self, LoadingText(ns.GetStarterCategoryItemID(category)))
+		end
 	end)
 	label:SetScript("OnLeave", function()
 		GameTooltip:Hide()
@@ -378,7 +382,14 @@ local function Layout(frame)
 
 	Paragraph(IntroText())
 
-	for _, section in ipairs(OfferedSections()) do
+	-- A section exists only with staples in it, so none means nothing to offer yet: say so, rather than an empty box.
+	local sections = OfferedSections()
+	if #sections == 0 then
+		y = y + SECTION_GAP - PARAGRAPH_GAP
+		Paragraph(GetColor("MUTED") .. L["STARTER_NOTHING_TO_OFFER"] .. "|r")
+	end
+
+	for _, section in ipairs(sections) do
 		y = y + SECTION_GAP - PARAGRAPH_GAP
 		local header = frame.headers.Acquire()
 		header:ClearAllPoints()
@@ -406,7 +417,7 @@ local function Layout(frame)
 	y = y + CONTENT_PADDING
 	content:SetHeight(y)
 
-	local chrome = BANDS.TITLE_HEIGHT + BANDS.CONTROLS_HEIGHT + BANDS.FOOTER_HEIGHT + BANDS.FRAME_BORDER + 8
+	local chrome = BANDS.TITLE_HEIGHT + BANDS.FOOTER_HEIGHT + BANDS.FRAME_BORDER + 8
 	frame:SetHeight(math.max(WINDOW_MIN_HEIGHT, math.min(WINDOW_MAX_HEIGHT, y + chrome)))
 end
 
@@ -417,10 +428,9 @@ end
 --[[
     The footer. On every route, a Done button at its right end closes the
     window as its X does, so a player who has picked knows how to finish. On
-    the login route only, a hint fills the room to its left: the list opened
-    for the player there, and the command is how they get it back once both
-    windows are closed. From the Pick Staples button they already found their
-    own way to it.
+    the login route only, Done then opens the Restock List, and a hint fills
+    the room to its left: the command is how they get the list back once it is
+    closed. From the Pick Staples button they already found their own way to it.
 ]]
 local FOOTER_GAP = 16 -- between the hint's end and the Done button
 
@@ -429,7 +439,11 @@ local function CreateFooter(frame)
 	local done = ns.CreateRestockerHeaderButton(frame, L["STARTER_POPUP_DONE"])
 	done:SetPoint("RIGHT", frame, "BOTTOMRIGHT", -ns.RESTOCK_FOOTER_X, centerY)
 	done:SetScript("OnClick", function()
+		local fromLogin = openedFromLogin
 		frame:Hide()
+		if fromLogin then
+			ns.ShowRestockWindow()
+		end
 	end)
 	ns.ApplyRestockerElvUISkin(nil, { done })
 	frame.doneButton = done
@@ -446,7 +460,7 @@ local function CreateWindow()
 	local frame = ns.CreateRestockerPortraitFrame("GoodToGoStaplesFrame", L["STARTER_POPUP_TITLE"])
 	frame:SetSize(WINDOW_WIDTH, WINDOW_MAX_HEIGHT)
 	frame:SetPoint("CENTER")
-	-- Over the Restock List, which stays open behind it.
+	-- Over the Restock List, when it is open behind it.
 	frame:SetFrameStrata("DIALOG")
 	frame:SetToplevel(true)
 	frame:SetClampedToScreen(true)
@@ -458,7 +472,7 @@ local function CreateWindow()
 	table.insert(UISpecialFrames, frame:GetName())
 	frame:Hide()
 
-	local inset = ns.CreateRestockerBodyInset(frame)
+	local inset = ns.CreateRestockerBodyInset(frame, true)
 	local scrollFrame = CreateFrame("ScrollFrame", nil, frame, "UIPanelScrollFrameTemplate")
 	scrollFrame:SetPoint("TOPLEFT", inset, "TOPLEFT", 4, -4)
 	scrollFrame:SetPoint("BOTTOMRIGHT", inset, "BOTTOMRIGHT", -SCROLL_BAR_SPACE, 4)
@@ -485,8 +499,7 @@ local function CreateWindow()
 	    items just added here, and once the window is gone the note is stale --
 	    the same rule as the Restock List's own OnHide, and as true with that
 	    window still open behind this one, where the repaint below files the new
-	    rows under their own types; that repaint also clears the Restock List's
-	    Undo offer, by design. It also hands Escape back to the list, a
+	    rows under their own types. It also hands Escape back to the list, a
 	    frame later: Escape hides this window from inside CloseSpecialWindows,
 	    which is still walking UISpecialFrames and would close the list too.
 	]]
@@ -518,6 +531,8 @@ function ns.ShowStarterListPopup(fromLogin)
 	)
 	-- Measured again here: a font not yet loaded when the button was made measures as nothing.
 	ns.FitRestockerHeaderButton(window.doneButton)
+	-- A removed row's Undo would sit behind this window, so it goes now.
+	ns.ForgetRestockRemoval()
 	-- So Escape closes this window alone; OnHide hands Escape back to the list.
 	ns.SetRestockWindowClosesOnEscape(false)
 	window:Show()

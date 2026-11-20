@@ -15,11 +15,14 @@ local PixelInset = ns.PixelInset
 	they load.
 ]]
 
-local SLOT_ICON = 22
-local DROPDOWN_HEIGHT = 24
-local DROPDOWN_TEXT_LEFT, CARET_SIZE, CARET_RIGHT = 8, 12, 5
-local REMOVE_SIZE = 20
+local SLOT_ICON = 16
+local DROPDOWN_HEIGHT = 32
+local DROPDOWN_TEXT_LEFT, CARET_SIZE, CARET_RIGHT = 8, 12, 4
+local ROW_EDGE = 8 -- a row's edge to the grip at its left and the remove button at its right
+local SLOT_TEXT_GAP = 8 -- a slot's icon to its text, and its text to the slot's right edge
+local REMOVE_SIZE = 16
 local HIGHLIGHT_ALPHA = 0.08
+local GRIP_WIDTH, GRIP_HEIGHT = 8, 16
 local DROP_ALPHA = 0.18 -- the wash on the row a dragged row will land on
 
 local TEXTURE_CARET = "Interface\\Buttons\\Arrow-Down-Up"
@@ -41,6 +44,7 @@ local ARROW_INK = COLORS.ARROW_INK
 local Widgets = {}
 ns.PanelWidgets = Widgets
 Widgets.SLOT_ICON, Widgets.COLORS = SLOT_ICON, COLORS
+Widgets.ROW_EDGE, Widgets.GRIP_WIDTH = ROW_EDGE, GRIP_WIDTH
 
 --------------------------------------------------------------------------------
 -- Drawing
@@ -133,14 +137,14 @@ end
 ]]
 local function CreateGrip(row, panel, descKey, move, update)
 	local grip = CreateFrame("Button", nil, row)
-	grip:SetSize(12, 18)
-	grip:SetPoint("LEFT", 6, 0)
+	grip:SetSize(GRIP_WIDTH, GRIP_HEIGHT)
+	grip:SetPoint("LEFT", ROW_EDGE, 0)
 	for column = 0, 1 do
 		for line = 0, 2 do
 			local dot = grip:CreateTexture(nil, "ARTWORK")
 			dot:SetColorTexture(unpack(ARROW_INK))
 			dot:SetSize(2, 2)
-			dot:SetPoint("TOPLEFT", 3 + column * 4, -(3 + line * 5))
+			dot:SetPoint("TOPLEFT", 1 + column * 4, -(3 + line * 5))
 		end
 	end
 	-- the row under the cursor, other than the one dragged, or nil
@@ -200,8 +204,8 @@ local function CreateSlot(row, height, iconSize, iconLeft, ownerOf)
 	slot.icon:SetSize(iconSize, iconSize)
 	slot.icon:SetPoint("LEFT", iconLeft, 0)
 	slot.text = SizedFontString(slot, "GameFontNormal", 13)
-	slot.text:SetPoint("LEFT", slot.icon, "RIGHT", 6, 0)
-	slot.text:SetPoint("RIGHT", -6, 0)
+	slot.text:SetPoint("LEFT", slot.icon, "RIGHT", SLOT_TEXT_GAP, 0)
+	slot.text:SetPoint("RIGHT", -SLOT_TEXT_GAP, 0)
 	slot.text:SetJustifyH("LEFT")
 	slot.text:SetWordWrap(false)
 	slot:RegisterForClicks("LeftButtonUp", "RightButtonUp")
@@ -267,7 +271,7 @@ end
 local function CreateRemove(row, descKey, remove)
 	local button = CreateFrame("Button", nil, row)
 	button:SetSize(REMOVE_SIZE, REMOVE_SIZE)
-	button:SetPoint("RIGHT", -6, 0)
+	button:SetPoint("RIGHT", -ROW_EDGE, 0)
 	button:SetNormalTexture(TEXTURE_REMOVE)
 	button:SetPushedTexture(TEXTURE_REMOVE_DOWN)
 	button:SetHighlightTexture(TEXTURE_REMOVE_HIGHLIGHT, "ADD")

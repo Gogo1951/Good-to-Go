@@ -37,8 +37,8 @@ function ns.GetMaxPlayerLevel()
 end
 
 --[[
-    The When to Use test behind Buff Food, Scroll Buffs, Pet Food Buffs, and
-    Use Conjured Food & Water First, named by its settings' prefix: the
+    The When to Use test behind Pet Food Buffs and Use Conjured Food & Water
+    First, named by its settings' prefix (petBuffFood, conjuredFirst): the
     profile's <prefix>In checkboxes, one per group context
     (ns.IsGroupContextOn), then its <prefix>Level filter. Every group read
     here must stay inside the group signature (ns.GroupSignatureChanged), or
@@ -48,7 +48,7 @@ end
     (ns.GetMaxPlayerLevel), never a hard-coded one. An unknown level counts as
     any.
 ]]
--- Each prefix's two setting keys, built once: this runs on every player aura change.
+-- Each prefix's two setting keys, built once: this runs on every pet aura change and bag scan.
 local useWhenKeys = {}
 
 function ns.IsUseWhenActive(settings, prefix)
@@ -102,8 +102,8 @@ local function RebuildWhenReady(spellID, readyAt)
 end
 
 --[[
-    True when a racial a macro casts in place of eating or drinking
-    (Cannibalize, Rapid Regeneration) is off cooldown. While it is on one, a
+    True when a racial a macro casts in place of eating, drinking or
+    bandaging (Cannibalize, Rapid Regeneration) is off cooldown. While it is on one, a
     rebuild is timed for the moment it comes off, which is when the body
     should gain the cast again. A hidden reading, asked of C_Secrets before
     the read, counts as on cooldown: the usual body is always safe.

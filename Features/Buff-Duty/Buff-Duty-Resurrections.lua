@@ -75,7 +75,7 @@ end
 ]]
 function BuffDuty.ResurrectionIcon(unit, castUnit, targetName)
 	local resurrection = BuffDuty.resurrection
-	if not resurrection or not CanResurrect(unit) then
+	if not resurrection or BuffDuty.ShutOut(resurrection) or not CanResurrect(unit) then
 		return nil
 	end
 	return {
@@ -91,7 +91,8 @@ function BuffDuty.ResurrectionIcon(unit, castUnit, targetName)
 end
 
 --[[
-    The highest rank of a resurrection you know, its ranks listed lowest first.
+    The highest rank of a resurrection you know, its ranks sorted lowest first
+    (BuffDuty.BuildLookup).
     Every rank shares one name, and on Classic Era a cast by that bare name can
     pick Rank 1, so the key names the rank it casts.
 ]]
@@ -110,13 +111,18 @@ end
 ]]
 function BuffDuty.PickResurrection(playerClass)
 	BuffDuty.resurrection = nil
-	for _, row in ipairs(ns.BUFF_DUTY_RESURRECTIONS) do
+	for _, row in ipairs(BuffDuty.resurrections) do
 		if row.class == playerClass then
 			local id = HighestKnown(row.ranks)
 			local name = id and C_Spell.GetSpellName(id)
 			if name then
-				BuffDuty.resurrection =
-					{ id = id, name = name, castText = BuffDuty.CastText(id, name), ids = row.ranks }
+				BuffDuty.resurrection = {
+					id = id,
+					name = name,
+					castText = BuffDuty.CastText(id, name),
+					ids = row.ranks,
+					noShadowform = row.noShadowform,
+				}
 			end
 		end
 	end

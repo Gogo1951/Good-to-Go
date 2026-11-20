@@ -58,10 +58,10 @@ ns.ELIXIR_BUFF_IDS = {
 	[16329] = true, -- Juju Might
 	[16323] = true, -- Juju Power
 	[10668] = true, -- Lung Juice Cocktail
-	[24363] = true, -- Mageblood Elixir
+	[24363] = true, -- Mageblood Potion
 	[11364] = true, -- Magic Resistance Potion
-	[3223] = true, -- Major Troll's Blood Elixir
-	[24361] = true, -- Mighty Troll's Blood Elixir
+	[3223] = true, -- Mighty Troll's Blood Potion
+	[24361] = true, -- Major Troll's Blood Potion
 	[2380] = true, -- Minor Magic Resistance Potion
 	[30331] = true, -- Permanent Sheen of Zanza
 	[30336] = true, -- Permanent Spirit of Zanza
@@ -69,9 +69,9 @@ ns.ELIXIR_BUFF_IDS = {
 	[10667] = true, -- R.O.I.D.S.
 	[24417] = true, -- Sheen of Zanza
 	[24382] = true, -- Spirit of Zanza
-	[3222] = true, -- Strong Troll's Blood Elixir
+	[3222] = true, -- Strong Troll's Blood Potion
 	[24383] = true, -- Swiftness of Zanza
-	[3219] = true, -- Weak Troll's Blood Elixir
+	[3219] = true, -- Weak Troll's Blood Potion
 	[17038] = true, -- Winterfall Firewater
 }
 
@@ -79,7 +79,7 @@ ns.ELIXIR_BUFF_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, Classic Era 1.15.9.70576
+	2026-11-19, wago.tools, Classic Era 1.15.9.70576
 
 Notes
 	- What counts as being flasked, for the Readiness Report's Flask or 2x Elixirs check (Features/Readiness-Report/Readiness-Report-Probes.lua): a flask, OR two different elixirs. Two different elixirs is the whole test, and it is enough because the client enforces the rest: from TBC on, a character may carry one battle and one guardian elixir at a time, so any two elixir auras up together are already one of each. Nothing here needs to know which kind an elixir is, which is why neither table carries that column; it can't be read off an aura at runtime.

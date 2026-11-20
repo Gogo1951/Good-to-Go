@@ -80,16 +80,26 @@ ns.ENGINEERING_SKILL_LINE_ID = 202
 -- The Engineering specialization Diagnostics checks the player for.
 ns.GOBLIN_ENGINEER_SPELL_ID = 20222
 
+-- The creature family the Rank Watch Example names a warlock's demon by.
+ns.IMP_CREATURE_FAMILY_ID = 23 -- Imp
+
+-- The Inventory Report Example's item when the bags hold no consumable: every character carries one.
+ns.HEARTHSTONE_ITEM_ID = 6948 -- Hearthstone
+
 -- Buff Duty
 -- [constant] = spell id, -- Spell Name
 -- No PHASE_SHIFT_SPELL_ID: this client's imp has no Phase Shift.
 ns.GAME_IDS = {}
 
+-- Buff Duty: the generic eating and drinking auras
+ns.FOOD_SPELL_ID = 433
+ns.DRINK_SPELL_ID = 430
+
 --[[
 How We Got the Data
 
 Last Validated
-	2026-11-15, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-19, wago.tools, Mists of Pandaria Classic 5.5.4.71060
 
 Notes
 	- Single spell, item, race and skill-line IDs the feature code reads by name, grouped by use. The client supplies every name the player sees from these IDs.
@@ -104,6 +114,7 @@ Notes
 	- ns.PET_BUFF_FOODS is empty: Kibler's Bits (33874) now only makes a pet bigger (65247), and Sporeling Snack (27656) has no use.
 	- The profession skill lines are the ones the usability gates read ranks from; each is found in the skill list by the name the client gives its ID. All three are on this client. The Goblin Engineer specialization is what Diagnostics checks the player for.
 	- Buff Duty: PHASE_SHIFT_SPELL_ID is left out: the imp's abilities on this client (skill line 188) have no Phase Shift, and the Buff Window reads a missing ID as never shifted.
+	- Buff Duty: BLOODRAGE_SPELL_ID is left out: Bloodrage (2687) isn't in this client's spell tables (SpellName, build 5.5.4.71060), and Buff Duty reads a missing ID as never known, so a warrior's Battle Shout never casts it first.
 
 SQL (CMaNGOS)
 	None.
@@ -122,6 +133,18 @@ wago.tools
 	https://wago.tools/db2/ItemSparse?build=5.5.4.70631
 	https://wago.tools/db2/ItemEffect?build=5.5.4.70631
 	https://wago.tools/db2/ManifestInterfaceData?build=5.5.4.70631
+	https://wago.tools/db2/Item?build=5.5.4.70960
+	https://wago.tools/db2/SpellName?build=5.5.4.70960
+	https://wago.tools/db2/ItemSparse?build=5.5.4.70960
+	https://wago.tools/db2/ItemEffect?build=5.5.4.70960
+	https://wago.tools/db2/Spell?build=5.5.4.70960
+	https://wago.tools/db2/SpellMisc?build=5.5.4.70960
+	https://wago.tools/db2/SpellEffect?build=5.5.4.70960
+	https://wago.tools/db2/SpellLevels?build=5.5.4.70960
+	https://wago.tools/db2/CreatureFamily?build=5.5.4.70960
+	https://wago.tools/db2/Item?build=5.5.4.71060
+	https://wago.tools/db2/ItemSparse?build=5.5.4.71060
+	https://wago.tools/db2/SpellName?build=5.5.4.71060
 
 QuestieDB
 	None.

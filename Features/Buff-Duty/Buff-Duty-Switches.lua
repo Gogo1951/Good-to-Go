@@ -5,19 +5,42 @@ local L = ns.L
     Buff-Duty-Switches -- Buff Duty's on and off: the feature switch, the
     per-class switch the mini-map button uses, whether it tracks the class
     you're playing, and the window's close button, which hides it for the
-    rest of the session.
+    rest of the session or until you join a group.
 ]]
 
 --[[
     Whether the window's close button hid Buff Duty for the rest of this
     session. Never saved: a login or reload brings the window back, and so does
-    turning Buff Duty on by any switch (the mini-map button, the feature switch,
-    or ticking your class).
+    joining a group (from none: a raid forming out of your party, or one
+    member swapping for another, leaves it closed) and turning Buff Duty on by
+    any switch (the mini-map button, the feature switch, or ticking your class).
 ]]
 local hiddenThisSession = false
 
+-- Whether you were in a group at the last roster change Buff Duty heard.
+local wasInGroup = false
+
 function ns.ShowBuffDutyAgain()
 	hiddenThisSession = false
+end
+
+--[[
+    Buff Duty's roster handler calls this on every GROUP_ROSTER_UPDATE, which
+    a closed window still hears (the Buff Key needs it). Returns true when you
+    just joined a group and that brought a closed window back. The window's
+    events are off while Buff Duty isn't tracking your class, so turning them
+    on (ns.UpdateBuffDutyEvents) passes resync to catch up on the group you're
+    in without counting it as a join.
+]]
+function ns.NoteBuffDutyGroup(resync)
+	local inGroup = IsInGroup()
+	local joined = inGroup and not wasInGroup and not resync
+	wasInGroup = inGroup
+	if joined and hiddenThisSession then
+		hiddenThisSession = false
+		return true
+	end
+	return false
 end
 
 --[[
@@ -66,10 +89,10 @@ function ns.SetBuffDutyForClass(on)
 end
 
 --[[
-    The window's close button. Hides Buff Duty until the next login or reload,
-    saving nothing, and says how to bring it back now or keep it off for your
-    class. In combat the window stays up until combat ends, like any other
-    change to it.
+    The window's close button. Hides Buff Duty until you join a group or the
+    next login or reload, saving nothing, and says how to bring it back now or
+    keep it off for your class. In combat the window stays up until combat
+    ends, like any other change to it.
 ]]
 function ns.CloseBuffDuty()
 	hiddenThisSession = true

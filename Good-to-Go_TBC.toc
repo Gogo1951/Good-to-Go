@@ -225,6 +225,7 @@ Features/Buff-Duty/Buff-Duty-NPCs.lua
 Features/Buff-Duty/Buff-Duty-Weapons.lua
 Features/Buff-Duty/Buff-Duty-Self.lua
 Features/Buff-Duty/Buff-Duty-Favors.lua
+Features/Buff-Duty/Buff-Duty-Asks.lua
 Features/Buff-Duty/Buff-Duty-Outsiders.lua
 Features/Buff-Duty/Buff-Duty-Other-Classes.lua
 Features/Buff-Duty/Buff-Duty-Groups.lua
@@ -233,6 +234,7 @@ Features/Buff-Duty/Buff-Duty-Switches.lua
 Features/Buff-Duty/Buff-Duty-Cast-Results.lua
 Features/Buff-Duty/Buff-Duty-Key-Picker.lua
 Features/Buff-Duty/Buff-Duty-Keys.lua
+Features/Buff-Duty/Buff-Duty-Options-Menu.lua
 
 # Enhanced Spellbook
 Features/Enhanced-Spellbook/Spellbook-Core.lua
@@ -265,9 +267,11 @@ Features/Enhanced-Spellbook/Macro-Lookup.lua
 Features/Enhanced-Spellbook/Macro-Sync.lua
 Features/Enhanced-Spellbook/Action-Bars.lua
 Features/Enhanced-Spellbook/Macro-Delete.lua
+Features/Enhanced-Spellbook/Macro-Tab.lua
 Features/Enhanced-Spellbook/Consumable-Macros.lua
 Features/Enhanced-Spellbook/Dynamic-Rank.lua
 Features/Enhanced-Spellbook/Menu-Utilities.lua
+Features/Enhanced-Spellbook/Macro-Menu-Panels.lua
 Features/Enhanced-Spellbook/Macro-Menu.lua
 Features/Enhanced-Spellbook/Macro-Menu-Utilities.lua
 Features/Enhanced-Spellbook/Macro-Menu-Sections.lua
@@ -331,8 +335,14 @@ Options/Options-Widgets.lua
 Options/Options-Message-Composer.lua
 Options/Options-Feature-Switches.lua
 Options/Options-General.lua
+Options/Macros-for-Consumables/Options-Macros-Utilities.lua
 Options/Macros-for-Consumables/Options-Macros.lua
-Options/Macros-for-Consumables/Options-Class-Race.lua
+Options/Macros-for-Consumables/Options-Food-Drinks.lua
+Options/Macros-for-Consumables/Options-Potions-Mana-Gems.lua
+Options/Macros-for-Consumables/Options-Bandages.lua
+Options/Macros-for-Consumables/Options-Healthstone.lua
+Options/Macros-for-Consumables/Options-Explosives.lua
+Options/Macros-for-Consumables/Options-Class-Macros.lua
 Options/Macros-for-Consumables/Options-Ignore-List.lua
 Options/Readiness-Report/Options-Readiness-Report.lua
 Options/Rank-Watch/Options-Rank-Watch.lua
@@ -346,6 +356,7 @@ Options/Buff-Duty/Options-Buff-Duty-Buffs.lua
 Options/Buff-Duty/Options-Buff-Duty-Self-Buffs.lua
 Options/Buff-Duty/Options-Buff-Duty-Weapon-Buffs.lua
 Options/Enhanced-Spellbook/Options-Enhanced-Spellbook.lua
+Options/Enhanced-Spellbook/Options-Ability-Alerts.lua
 Options/Options-Profiles.lua
 Options/Options-Feedback-Support.lua
 Diagnostics/Options-Diagnostics.lua

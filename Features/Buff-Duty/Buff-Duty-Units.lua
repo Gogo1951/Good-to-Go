@@ -100,7 +100,7 @@ function BuffDuty.RoleOf(unit, class)
 		if ns.IsPlain(role) and ((role == "TANK" and not inRaid) or role == "HEALER" or role == "DAMAGER") then
 			return role
 		end
-		if UnitIsUnit(unit, "player") then
+		if ns.IsPlainTrue(UnitIsUnit(unit, "player")) then
 			local _, tank, healer = ns.GetLFGRoles()
 			if tank and not inRaid then
 				return "TANK"
@@ -222,6 +222,7 @@ end
 --------------------------------------------------------------------------------
 -- Labels
 --------------------------------------------------------------------------------
+
 --[[
     The group finder's round role icons, cut from its 64-pixel sheet (as pixels,
     the way the |T escape wants them): left, right, top, bottom.
@@ -236,8 +237,8 @@ local ROLE_ICON_COORDS = {
 local function RoleIcon(role)
 	return ("|T%s:%d:%d:0:0:64:64:%s|t "):format(
 		ROLE_ICON_SHEET,
-		Data.BUFF_DUTY_ICON_SIZE,
-		Data.BUFF_DUTY_ICON_SIZE,
+		Data.BUFF_DUTY_LABEL_ICON_SIZE,
+		Data.BUFF_DUTY_LABEL_ICON_SIZE,
 		ROLE_ICON_COORDS[role]
 	)
 end
@@ -273,9 +274,12 @@ end
     the chosen rank by its rank text, "Power Word: Fortitude(Rank 2)": a bare
     name casts your highest rank and fails on anyone too low for it, and a
     spell ID did nothing at all on Classic Era. Nil when the target is too low
-    for any rank.
+    for any rank, or Shadowform shuts the spell out (BuffDuty.ShutOut).
 ]]
 local function SingleIcon(buff, unit, castUnit, targetName, fullName, favorGUID)
+	if BuffDuty.ShutOut(buff) then
+		return nil
+	end
 	local rank = RankFor(buff, unit and UnitLevel(unit))
 	if not rank then
 		return nil

@@ -18,9 +18,15 @@ local Box = Widgets.Box
 local PANEL_WIDTH = 464
 local DOCK_INSET = 2 -- tucked under the window's border, top and bottom
 local PADDING = 16
-local HEADER_ICON = 24
-local HINT_TOP = 46
-local METER_WIDTH, METER_HEIGHT = 120, 6
+local HEADER_ICON = 32
+local HEADER_TOP = 16 -- the panel's top edge to the heading's icon
+local HEADER_GAP = 8 -- the icon to the heading beside it
+local CLOSE_ROOM = 32 -- what the heading leaves clear for the close button
+local HINT_TOP = 56 -- one gap under the icon
+local FOOTER_PAD = 8 -- the footer box's edge to its text
+local FOOTER_BODY_TOP = 32 -- the footer's top edge to the macro text, under its title line
+local FOOTER_GAP = 8 -- between the footer's lines, and the meter to its count
+local METER_WIDTH, METER_HEIGHT = 128, 8
 local METER_WARNING = 0.9 -- the share of what a macro holds past which the meter turns gold
 local INNER_WIDTH = PANEL_WIDTH - 2 * PADDING
 
@@ -48,7 +54,7 @@ local function CurrentMacro(panel, offers)
 		return nil
 	end
 	for _, macro in ipairs(ns.macros) do
-		if not macro.focus and not macro.hidden and SettingsKey(macro) == panel.key and offers(macro) then
+		if not macro.hidden and SettingsKey(macro) == panel.key and offers(macro) then
 			return macro
 		end
 	end
@@ -105,25 +111,25 @@ local function CreateFooter(parent)
 	footer:SetPoint("BOTTOMRIGHT", -PADDING, PADDING)
 	Box(footer, FIELD_FILL, FOOTER_EDGE)
 	local title = SizedFontString(footer, "GameFontNormal", 13)
-	title:SetPoint("TOPLEFT", 10, -9)
+	title:SetPoint("TOPLEFT", FOOTER_PAD, -FOOTER_PAD)
 	title:SetText(GetColor("TITLE") .. L["MACRO_TEXT"] .. "|r")
 	footer.count = SizedFontString(footer, "GameFontHighlightSmall", 12)
-	footer.count:SetPoint("TOPRIGHT", -10, -10)
+	footer.count:SetPoint("TOPRIGHT", -FOOTER_PAD, -FOOTER_PAD)
 	local track = footer:CreateTexture(nil, "ARTWORK")
 	track:SetColorTexture(unpack(METER_TRACK))
 	track:SetSize(METER_WIDTH, METER_HEIGHT)
-	track:SetPoint("RIGHT", footer.count, "LEFT", -10, 0)
+	track:SetPoint("RIGHT", footer.count, "LEFT", -FOOTER_GAP, 0)
 	footer.meter = footer:CreateTexture(nil, "OVERLAY")
 	footer.meter:SetPoint("TOPLEFT", track)
 	footer.meter:SetHeight(METER_HEIGHT)
 	footer.body = SizedFontString(footer, "GameFontHighlightSmall", 12)
-	footer.body:SetPoint("TOPLEFT", 10, -30)
-	footer.body:SetWidth(INNER_WIDTH - 20)
+	footer.body:SetPoint("TOPLEFT", FOOTER_PAD, -FOOTER_BODY_TOP)
+	footer.body:SetWidth(INNER_WIDTH - 2 * FOOTER_PAD)
 	footer.body:SetJustifyH("LEFT")
 	footer.body:SetWordWrap(true)
 	footer.tooLong = SizedFontString(footer, "GameFontHighlightSmall", 12)
-	footer.tooLong:SetPoint("TOPLEFT", footer.body, "BOTTOMLEFT", 0, -6)
-	footer.tooLong:SetWidth(INNER_WIDTH - 20)
+	footer.tooLong:SetPoint("TOPLEFT", footer.body, "BOTTOMLEFT", 0, -FOOTER_GAP)
+	footer.tooLong:SetWidth(INNER_WIDTH - 2 * FOOTER_PAD)
 	footer.tooLong:SetJustifyH("LEFT")
 	return footer
 end
@@ -144,9 +150,9 @@ local function UpdateFooter(footer, macro)
 	footer.body:SetText((ns.UntaggedBody(macro.body):gsub("|", "||")))
 	footer.tooLong:SetShown(over)
 	footer.tooLong:SetText(GetColor("OFF") .. L["TOOLTIP_TOO_LONG"]:format(length, max) .. "|r")
-	local height = 30 + math.ceil(footer.body:GetStringHeight()) + 10
+	local height = FOOTER_BODY_TOP + math.ceil(footer.body:GetStringHeight()) + FOOTER_PAD
 	if over then
-		height = height + 6 + math.ceil(footer.tooLong:GetStringHeight())
+		height = height + FOOTER_GAP + math.ceil(footer.tooLong:GetStringHeight())
 	end
 	footer:SetHeight(height)
 end
@@ -183,10 +189,10 @@ local function Create(page, name, hintKey)
 
 	panel.icon = panel:CreateTexture(nil, "ARTWORK")
 	panel.icon:SetSize(HEADER_ICON, HEADER_ICON)
-	panel.icon:SetPoint("TOPLEFT", PADDING, -14)
+	panel.icon:SetPoint("TOPLEFT", PADDING, -HEADER_TOP)
 	panel.title = SizedFontString(panel, "GameFontNormalLarge", 16)
-	panel.title:SetPoint("LEFT", panel.icon, "RIGHT", 10, 0)
-	panel.title:SetWidth(INNER_WIDTH - HEADER_ICON - 10 - 24) -- clear of the close button
+	panel.title:SetPoint("LEFT", panel.icon, "RIGHT", HEADER_GAP, 0)
+	panel.title:SetWidth(INNER_WIDTH - HEADER_ICON - HEADER_GAP - CLOSE_ROOM)
 	panel.title:SetJustifyH("LEFT")
 	panel.title:SetWordWrap(false)
 	local close = CreateFrame("Button", nil, panel, "UIPanelCloseButton")

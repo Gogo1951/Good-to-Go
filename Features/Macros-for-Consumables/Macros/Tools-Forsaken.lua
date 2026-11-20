@@ -17,14 +17,14 @@ local _, ns = ...
 
     So a press on the corpse just killed cannibalizes, and a press that cannot,
     on a corpse out of reach or one Cannibalize does not work on, falls through
-    and eats or drinks as every other press does. Scrolls come first (scroll-only mode replaces the
-    body), and so does buff food: a buff food or drink pick keeps the usual
-    body, since only eating it gives Well Fed.
+    and eats or drinks as every other press does. Buff food comes first: a
+    buff food or drink pick keeps the usual body, since only eating it gives
+    Well Fed.
 
     What keeps the body current: the target's creature type is part of the
     target signature (Signatures.lua), the cast itself rebuilds through
     UNIT_SPELLCAST_SUCCEEDED (Macros-for-Consumables-Core.lua), and the end of the cooldown rebuilds
-    through the timer set here. The target dying needs no rewrite, because
+    through ns.RacialSpellReady (Macros-for-Consumables-Utilities.lua). The target dying needs no rewrite, because
     [dead] reads it as the press happens.
 ]]
 

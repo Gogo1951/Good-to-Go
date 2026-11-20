@@ -237,7 +237,7 @@ ns.RANK_WATCH_PET_ABILITIES = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, TBC Anniversary 2.5.6.70577
+	2026-11-19, wago.tools, TBC Anniversary 2.5.6.70577
 
 Notes
 	- Built by Tools/Build-Rank-Watch-Pet-Abilities.py from Pet-Abilities-TBC.lua: PET_ABILITIES under HUNTER, DEMON_ABILITIES under WARLOCK, grouped by each row's comment.
@@ -251,7 +251,7 @@ Wowhead
 	None.
 
 wago.tools
-	None.
+	https://wago.tools/db2/SpellName?build=2.5.6.70577
 
 QuestieDB
 	None.

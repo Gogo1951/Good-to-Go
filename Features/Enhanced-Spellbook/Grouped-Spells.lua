@@ -7,8 +7,7 @@ local SettingsKey = ns.SettingsKey
 local NO_SLOTS = ns.NO_SLOTS
 
 --[[
-	A spell in a SPELL_GROUPS group (Demon Skin, Demon Armor) offers the group's spells, a focus copy sharing its
-	spell's. Ticked, a spell is one the macro may cast; the macro casts the last one learned of those ticked, so
+	A spell in a SPELL_GROUPS group (Demon Skin, Demon Armor) offers the group's spells. Ticked, a spell is one the macro may cast; the macro casts the last one learned of those ticked, so
 	it moves up as the player trains. Every spell of the group is ticked to start with.
 ]]
 function ns.OffersGroupedSpells(macro)

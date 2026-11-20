@@ -18,13 +18,14 @@ ns.HEALTHSTONES = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, WoW Forever 1.60.1.70938
+	2026-11-19, wago.tools, WoW Forever 1.60.1.70959
 
 Notes
 	- Every item that heals instantly on the healthstone cooldown, keyed by the cooldown category Charged Crystal Focus (32578) uses, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Healthstone and Health Potion macros. Healthstone Amount is the low end of the heal; Required Level is the level the tooltip requires (0 for none).
 	- Alexander's Test Healthstone (30347) and Royal Guide of Escape Routes (43657) are left out, as the query below shows.
 	- Mana gems and runes share the category but restore mana; they live in Mana-Gems-Camelot.lua. The Minor and Major Recombobulators restore health as a side effect of dispelling Polymorph and are reusable devices, so they are left out.
 	- Night Dragon's Breath (11952) is left out on purpose, an oddball that shares the cooldown.
+	- Crystal Flake Throat Lozenge (23683), a Vanilla row, is left out: this client has an Item row for it but no ItemSparse row, and QuestieDB's Forever item base doesn't list it, so it looks unreleased here. Ankh of Life (1713), which shares the cooldown and heals, is left out the same way: no ItemSparse row on this client, and an armor piece on Classic Era.
 	- WoW Forever has no Improved Healthstone talent, so the talent stones (19004-19013) are left out; their deliberately-absent line in the table says so.
 	- Lily Root (14894) is left out: its heal rose to 700 to 900, but its tooltip now says it needs Lei of Lillies equipped to be eaten, and the table has no column for that requirement. Lei of Lilies (1315) isn't in this client's item table on wago.tools (build 1.60.1.70425), so players almost certainly can't get it, and a macro offering Lily Root would do nothing. Every other folder keeps its Lily Root row; their clients state no such requirement.
 	- Sprouted Frond's heal scales with the player's level; its row holds the heal at the spell's base level, which on this client is the base points times one minus half the variance (wago.tools, build 1.60.1.70425).
@@ -85,7 +86,11 @@ wago.tools
 	https://wago.tools/db2/ItemEffect?build=1.60.1.70938
 	https://wago.tools/db2/SpellEffect?build=1.60.1.70938
 	https://wago.tools/db2/ItemXItemEffect?build=1.60.1.70938
+	https://wago.tools/db2/Item?build=1.60.1.70959
+	https://wago.tools/db2/ItemSparse?build=1.60.1.70959
+	https://wago.tools/db2/ItemXItemEffect?build=1.60.1.70959
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Forever/foreverItemDB.lua
+	https://raw.githubusercontent.com/Questie/QuestieDB/master/src/corrections/Forever/generated/foreverBaseItem.lua
 ]]

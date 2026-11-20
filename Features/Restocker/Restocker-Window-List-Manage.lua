@@ -1,7 +1,6 @@
 local _, ns = ...
 local L = ns.L
 local GetColor = ns.GetColor
-local AceGUI = LibStub("AceGUI-3.0")
 
 local JoinUsers = ns.JoinRestockListUsers
 
@@ -15,16 +14,13 @@ local JoinUsers = ns.JoinRestockListUsers
 local LIST_SELECTOR_WIDTH = ns.RESTOCK_LIST_SELECTOR_WIDTH
 local BAR_ITEM_GAP = ns.RESTOCK_LIST_BAR_ITEM_GAP
 local BUTTON_GAP = 4
-local MANAGE_MENU_WIDTH = 288 -- holds "Copy This List into a New One" whole
 
--- Built on first use and reused, as the list menu's pullout is (Restocker-Window-List-Bar.lua).
-local managePullout
-local managePulloutOpen = false
+-- Opens the window's kit menu, as the list menu does (Restocker-Window-List-Bar.lua).
+local manageAnchor
 
 local function CloseManageMenu()
-	if managePullout and managePulloutOpen then
-		managePulloutOpen = false
-		managePullout:Close()
+	if manageAnchor and ns.RestockMenu:IsOpenFor(manageAnchor) then
+		ns.RestockMenu:Close()
 	end
 end
 
@@ -96,12 +92,61 @@ local function DeleteConfirmText(listName)
 	}, "|n|n")
 end
 
-local function ConfirmDeleteCurrentList()
-	local listName = ns.restockSettings.currentList
+-- Also asked by /restock profile delete (Restocker-Slash-Command.lua), so both ways in ask the same question.
+function ns.ConfirmDeleteRestockList(listName)
 	if not listName then
 		return
 	end
 	StaticPopup_Show("GOODTOGO_RESTOCKER_DELETE_LIST", DeleteConfirmText(listName), nil, listName)
+end
+
+--[[
+    /restock profile copy's confirm (Restocker-Slash-Command.lua): the copy
+    replaces everything on the list in use, and a Restock List has no undo,
+    so it asks first, naming both lists in gold and any other character who
+    uses the list being replaced. The list asked about rides in the data, so
+    a switch while the confirm is open copies onto nothing it wasn't asked
+    about.
+]]
+StaticPopupDialogs["GOODTOGO_RESTOCKER_COPY_LIST"] = {
+	text = "%s",
+	button1 = L["RESTOCKER_REPLACE"],
+	button2 = CANCEL,
+	OnAccept = function(_self, data)
+		if data and ns.restockSettings.currentList == data.target then
+			ns.CopyIntoCurrentRestockList(data.source)
+		end
+	end,
+	timeout = 0,
+	whileDead = true,
+	hideOnEscape = true,
+	preferredIndex = 3,
+}
+
+function ns.ConfirmCopyIntoCurrentRestockList(listToCopy)
+	local target = ns.restockSettings.currentList
+	-- Copying the list in use onto itself changes nothing, so there is nothing to ask.
+	if listToCopy == target then
+		ns.CopyIntoCurrentRestockList(listToCopy)
+		return
+	end
+	local gold = GetColor("TITLE")
+	local text = string.format(L["RESTOCKER_PROFILE_COPY_CONFIRM"], gold .. target .. "|r", gold .. listToCopy .. "|r")
+	local others = ns.GetRestockListUsers(target, true)
+	if #others > 0 then
+		text = text
+			.. " "
+			.. string.format(
+				L["RESTOCKER_PROFILE_COPY_CONFIRM_ALSO_USED_BY"],
+				gold .. target .. "|r",
+				JoinUsers(others, GetColor("TEXT"))
+			)
+	end
+	StaticPopup_Show("GOODTOGO_RESTOCKER_COPY_LIST", text, nil, { source = listToCopy, target = target })
+end
+
+local function ConfirmDeleteCurrentList()
+	ns.ConfirmDeleteRestockList(ns.restockSettings.currentList)
 end
 
 --------------------------------------------------------------------------------
@@ -109,8 +154,8 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Every entry is an Execute: each performs an action and closes the menu.
-    Delete sits under a rule of its own, the way a destructive entry does in
+    Every entry is an action: each performs it and closes the menu.
+    Delete sits under a gap and a rule of its own, the way a destructive entry does in
     the game's own menus.
 ]]
 local MANAGE_ENTRIES = {
@@ -137,36 +182,34 @@ local MANAGE_ENTRIES = {
 }
 
 local function OpenManagePullout(anchor)
-	if not managePullout then
-		managePullout = AceGUI:Create("Dropdown-Pullout")
-		managePullout:SetCallback("OnClose", function()
-			managePulloutOpen = false
-		end)
-	end
-	managePullout:Clear()
-
+	local entries = {
+		{ kind = "header", left = L["RESTOCKER_MANAGE"], right = L["ADDON_SHORT_NAME"] },
+	}
 	for _, entry in ipairs(MANAGE_ENTRIES) do
 		if entry.isRule then
-			managePullout:AddItem(AceGUI:Create("Dropdown-Item-Separator"))
+			entries[#entries + 1] = { kind = "spacer" }
+			entries[#entries + 1] = { kind = "separator" }
 		else
-			local item = AceGUI:Create("Dropdown-Item-Execute")
-			item:SetText(L[entry.label])
-			item:SetCallback("OnClick", entry.run)
-			managePullout:AddItem(item)
+			local row = { kind = "action", left = L[entry.label], onClick = entry.run }
+			-- Delete names how many characters use the list, the count the bar's Used By line names
+			if entry.run == ConfirmDeleteCurrentList then
+				local users = ns.GetRestockListUsers(ns.restockSettings.currentList)
+				row.right = string.format(L["RESTOCKER_LIST_USED_BY_COUNT"], #users)
+			end
+			entries[#entries + 1] = row
 		end
 	end
 
-	managePulloutOpen = true
-	managePullout:SetWidth(MANAGE_MENU_WIDTH)
+	manageAnchor = anchor
 	-- The control's own tooltip would sit over the menu it opened.
 	GameTooltip:Hide()
 	-- Opening upward, as the list menu does from the footer.
-	managePullout:Open("BOTTOMLEFT", anchor, "TOPLEFT", 0, 0)
+	ns.RestockMenu:Open(anchor, entries, nil, true)
 end
 
 local function ToggleManagePullout(anchor)
-	if managePulloutOpen then
-		CloseManageMenu()
+	if ns.RestockMenu:IsOpenFor(anchor) then
+		ns.RestockMenu:Close()
 		return
 	end
 	ns.CloseRestockMenus()
@@ -269,7 +312,7 @@ local function CreateRenameControls(bar)
 	local box = CreateFrame("EditBox", nil, bar, "InputBoxTemplate")
 	box:SetPoint("LEFT", bar.label, "RIGHT", BAR_ITEM_GAP, 0)
 	box:SetWidth(LIST_SELECTOR_WIDTH)
-	box:SetHeight(20)
+	box:SetHeight(ns.RESTOCK_BAR_FIELD_HEIGHT)
 	box:SetAutoFocus(false)
 	box:SetScript("OnEnterPressed", CommitRename)
 	box:SetScript("OnEscapePressed", CancelRename)

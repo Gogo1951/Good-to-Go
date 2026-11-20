@@ -1319,7 +1319,7 @@ ns.TRAINER_SPELLS = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, Season of Discovery 1.15.9.70576
+	2026-11-19, wago.tools, Season of Discovery 1.15.9.70576
 
 Notes
 	- Every class spell this client's class trainers teach, and the ranks only a book teaches, one row per rank, so the spellbook page can list the spells a character hasn't learned yet. Features/Enhanced-Spellbook/Unlearned-Spells.lua shows only each spell's rank 1; the higher ranks keep the list in level order and let it tell rank 1 apart.
@@ -1363,6 +1363,7 @@ wago.tools
 	https://wago.tools/db2/ItemEffect?build=1.15.9.70003
 	https://wago.tools/db2/Talent?build=1.15.9.70003
 	https://wago.tools/db2/ItemSparse?build=1.15.9.70003
+	https://wago.tools/db2/SpellName?build=1.15.9.70576
 
 QuestieDB
 	None.

@@ -22,18 +22,6 @@ local selfLookup = BuffDuty.selfLookup
 local function PopulateBuffDutyAudience()
 	local tankWhen = ns.db.global.buffWindow.tankWhen
 
-	-- MIGRATION (remove after 2026-11-18): the 2026.10.19.A pets toggle and its "when" became tankWhen.PET.
-	local legacy = ns.db.global.buffWindow
-	if legacy.petsAsTanks ~= nil or legacy.petsAsTanksWhen ~= nil then
-		if legacy.petsAsTanks == false then
-			tankWhen[Data.TANK_WHEN_PET] = Data.TANK_WHEN.NEVER
-		elseif legacy.petsAsTanksWhen == Data.TANK_WHEN.ALWAYS then
-			tankWhen[Data.TANK_WHEN_PET] = Data.TANK_WHEN.ALWAYS
-		end
-		legacy.petsAsTanks = nil
-		legacy.petsAsTanksWhen = nil
-	end
-
 	-- A value the Count as Tanks dropdowns don't offer reads as its default again.
 	for key, value in pairs(tankWhen) do
 		if not Data.TANK_WHEN[value] then

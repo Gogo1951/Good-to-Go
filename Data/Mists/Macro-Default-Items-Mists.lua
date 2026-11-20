@@ -19,7 +19,7 @@ ns.MACRO_DEFAULT_ITEM_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-19, wago.tools, Mists of Pandaria Classic 5.5.4.71060
 
 Notes
 	- The item each macro shows (#showtooltip) while the bags hold nothing it can use, keyed by ns.MACRO_CONFIG's macro type (Data/Data.lua). Read by the macro body builder, the mini-map tooltip, the rogue tools and the Macros options panel. Each only has to exist on this client for its icon and tooltip; none has to be obtainable.
@@ -38,6 +38,11 @@ wago.tools
 	https://wago.tools/db2/ItemSparse?build=5.5.4.70631
 	https://wago.tools/db2/ItemEffect?build=5.5.4.70631
 	https://wago.tools/db2/SpellEffect?build=5.5.4.70631
+	https://wago.tools/db2/Item?build=5.5.4.70960
+	https://wago.tools/db2/ItemSparse?build=5.5.4.70960
+	https://wago.tools/db2/ItemEffect?build=5.5.4.70960
+	https://wago.tools/db2/Item?build=5.5.4.71060
+	https://wago.tools/db2/ItemSparse?build=5.5.4.71060
 
 QuestieDB
 	None.

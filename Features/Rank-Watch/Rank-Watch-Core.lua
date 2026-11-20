@@ -19,7 +19,7 @@ local RANK_WATCH = Data.RANK_WATCH
       Rank-Watch-Check.lua       Whether a cast was low, and the whisper or print that says so
       Rank-Watch-Cluster.lua     The RANKSENTINEL add-on messages that pick one whisperer per group
       Rank-Watch-Level-Up.lua    Ability Alerts While Leveling: on a ding, the trainer spells it opened
-      Rank-Watch-Detection-Combat-Log.lua   Casts from the combat log, in every TOC but WoW Forever's
+      Rank-Watch-Detection-Combat-Log.lua   Casts from the combat log, in the Vanilla and TBC TOCs
       Rank-Watch-Detection-Forever.lua      Casts on WoW Forever: the player's own, auras and the damage meter
 
     Each file hands its event handlers to this one through ns.SetRankWatchHandler, the pattern Buff Duty uses,
@@ -256,7 +256,9 @@ function ns.IgnoreRankWatchPlayer(typed)
 	end
 	if not guid then
 		if typed == "" then
-			ns:PrintMessage(L["RANK_WATCH_IGNORE_NO_TARGET"])
+			ns:PrintMessage(
+				L["RANK_WATCH_IGNORE_NO_TARGET"]:format(ns.GetColor("INFO") .. L["RANK_WATCH_IGNORE_COMMAND"] .. "|r")
+			)
 		else
 			ns:PrintMessage(L["RANK_WATCH_IGNORE_NOT_FOUND"]:format(typed))
 		end

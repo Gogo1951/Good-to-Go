@@ -40,6 +40,7 @@ local WINDOW_EVENTS = {
 	"UI_ERROR_MESSAGE",
 	"UNIT_AURA",
 	"UNIT_SPELLCAST_SUCCEEDED",
+	"UNIT_POWER_UPDATE",
 }
 
 -- Forever has a combat log, but registering COMBAT_LOG_EVENT_UNFILTERED there raises ADDON_ACTION_FORBIDDEN.
@@ -48,6 +49,7 @@ local READS_COMBAT_LOG = ns.FLAVOR ~= "Camelot"
 local EVENT_UNITS = {
 	UNIT_INVENTORY_CHANGED = { "player" },
 	UNIT_SPELLCAST_SUCCEEDED = { "player" },
+	UNIT_POWER_UPDATE = { "player" },
 }
 
 --[[
@@ -89,11 +91,6 @@ function ns.IsBuffDutyReady()
 end
 
 --[[
-    Subscribes the window's events while Buff Duty tracks your class and
-    releases them while it doesn't. A closed window keeps them, so the Buff
-    Key still reads fresh auras.
-]]
---[[
     The combat log runs a line for every hit in a raid, so it is heard only while Buff Duty tracks your class
     and either Return the Favor is on or you have a resurrection to hold back (BuffDuty.resurrection).
     Re-checked whenever the window's events are, and when your spells change (a resurrection learned).
@@ -112,16 +109,33 @@ function ns.SyncBuffDutyCombatLog()
 	end
 end
 
+-- Whether the window's events were on at the last check, so turning them on can catch up on the group you're in.
+local windowEventsOn = false
+
+--[[
+    Subscribes the window's events while Buff Duty tracks your class and
+    releases them while it doesn't. A closed window keeps them, so the Buff
+    Key still reads fresh auras.
+]]
 function ns.UpdateBuffDutyEvents()
 	if not (ns.db and ns.db.global) then
 		return
 	end
 	local on = ns.IsBuffDutyTrackingForClass()
 	for _, event in ipairs(WINDOW_EVENTS) do
-		ns.SetModuleEvent(MODULE, event, on, unpack(EVENT_UNITS[event] or {}))
+		local wanted = on
+		-- Rage is only read for a warrior's Bloodrage (Buff-Duty-Self.lua); anyone else's mana ticks are left unheard.
+		if event == "UNIT_POWER_UPDATE" then
+			wanted = on and select(2, UnitClass("player")) == "WARRIOR"
+		end
+		ns.SetModuleEvent(MODULE, event, wanted, unpack(EVENT_UNITS[event] or {}))
 	end
 	SyncCombatLog(on)
 	ns.SetBuffDutyWatching(on)
+	if on and not windowEventsOn then
+		ns.NoteBuffDutyGroup(true)
+	end
+	windowEventsOn = on
 end
 
 -- The player's own casts: the Buff Key hears its casts go off, and the resurrect waits hear theirs.
@@ -131,6 +145,14 @@ local function OnUnitSpellcastSucceeded(unitTarget, _, spellID)
 	ns.OnBuffCastSucceeded(unitTarget, spellID)
 end
 ns.SetBuffDutyEventHandler("UNIT_SPELLCAST_SUCCEEDED", OnUnitSpellcastSucceeded)
+
+-- Your rage: Battle Shout's icon swaps Bloodrage in or out as it crosses the cost (Buff-Duty-Self.lua).
+local function OnUnitPowerUpdate(_, powerType)
+	if powerType == "RAGE" then
+		ns.BuffDuty.CheckRageFirst()
+	end
+end
+ns.SetBuffDutyEventHandler("UNIT_POWER_UPDATE", OnUnitPowerUpdate)
 
 local function OnUnitAura(unit, updateInfo)
 	ns.OnBuffDutyUnitAura(unit)

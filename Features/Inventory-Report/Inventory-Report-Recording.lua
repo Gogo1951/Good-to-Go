@@ -85,7 +85,7 @@ local function PlayerBagIDs()
 	return ns.CARRIED_BAG_IDS
 end
 
--- The bank's containers, the same list the Restocker reads (ns.BankBagIDs in Restocker-Bags.lua).
+-- The bank's containers, the same list the Restocker reads (ns.BankBagIDs in Features/Utilities.lua).
 local BankBagIDs = ns.BankBagIDs
 
 local function CountItems(bagIDs)
@@ -146,6 +146,29 @@ local function ScanBank()
 end
 
 --[[
+    Writes down what was last read: nothing is asked of the client here (see
+    bagCounts). Run from AceDB's OnDatabaseShutdown rather than PLAYER_LOGOUT:
+    AceDB's own logout handler runs first (its frame is older than Core's) and
+    strips every value equal to its default, inventoryReport = true among them,
+    so a PLAYER_LOGOUT handler reads the switch as off and saves nothing. This
+    callback fires inside that handler, before the strip.
+]]
+local function SaveSnapshot()
+	if not (record and ns.db.global.inventoryReport) then
+		return
+	end
+	if bagCounts then
+		record.bags = Pack(bagCounts)
+	end
+	if bankCounts then
+		record.bank = Pack(bankCounts)
+	end
+end
+
+-- The callback's owner; RegisterCallback replaces an earlier one under the same owner, so a second login adds none.
+local shutdownListener = {}
+
+--[[
     Called by the Restocker's PLAYER_LOGIN branch (Restocker-Events.lua), after
     ns.InitializeRestocker.
     Name, realm and class are refreshed every login. A renamed or transferred
@@ -189,6 +212,7 @@ function ns.InitializeInventoryReport()
 	bagsChangedInCombat = false
 	bankCounts = record.bank and Unpack(record.bank) or nil
 
+	ns.db.RegisterCallback(shutdownListener, "OnDatabaseShutdown", SaveSnapshot)
 	ns.HookInventoryReportTooltipsLater()
 end
 
@@ -227,7 +251,7 @@ end
 --[[
     Handlers keyed by event name, read by the Restocker's dispatcher (Features/Restocker/Restocker-Events.lua),
     which has no combat guard: every one only reads containers or writes saved
-    variables, and a logout mid-combat must still save this character's bags.
+    variables. The logout save is SaveSnapshot, on AceDB's shutdown callback.
 ]]
 ns.inventoryEventHandlers = {
 	-- Login and every loading screen after it: the first read, for a session in which the bags never change.
@@ -274,18 +298,6 @@ ns.inventoryEventHandlers = {
 		if bagsChangedInCombat then
 			bagsChangedInCombat = false
 			ScanBags()
-		end
-	end,
-	-- Writes down what was last read: nothing is asked of the client here (see bagCounts).
-	PLAYER_LOGOUT = function()
-		if not record then
-			return
-		end
-		if bagCounts then
-			record.bags = Pack(bagCounts)
-		end
-		if bankCounts then
-			record.bank = Pack(bankCounts)
 		end
 	end,
 }

@@ -12,195 +12,17 @@ local Spacer = Kit.Spacer
 --------------------------------------------------------------------------------
 
 --[[
-    Every sub-option hides until its toggle is on. A toggle's one dropdown
-    then appears on its toggle's line (Kit.ToggleRow). Scroll Buffs and Pet
-    Food Buffs, which also carry a block of type checkboxes, put their
-    dropdown on a captioned sub-option row under the toggle (ModeSubRow), with
-    the checkboxes beneath it. Every When to Use
-    dropdown has the group context checkboxes on a row under it
-    (UseWhenGroups). These read the profile's settings
-    table that InitializeDatabase in Features/Core.lua guarantees.
-
     Settings live on the AceDB profile, which is the character's own unless
     the player put it on another. The exceptions on this panel are
     account-wide and read ns.db.global directly: the Macros master switch,
-    Macro Names on Buttons and the Which Macros to Create toggles (see Data/Default-Settings.lua for why each one
-    stays there).
+    Macro Names on Buttons and the Which Macros to Create toggles (see
+    Data/Default-Settings.lua for why each one stays there). Each macro's own
+    settings are on a page of its own under this one.
 ]]
 
-local GetSettings = ns.OptionsProfileSettings
-
-local function ConjuredFirstActive()
-	local settings = GetSettings()
-	return settings and settings.useConjuredFirst
-end
-
-local function BuffFoodActive()
-	local settings = GetSettings()
-	return settings and settings.useBuffFood
-end
-
-local function ScrollsActive()
-	local settings = GetSettings()
-	return settings and settings.useScrolls
-end
-
--- A flavor whose data folder has no pet buff food shows no Pet Food Buffs section.
-local function NoPetBuffFoods()
-	return next(ns.PET_BUFF_FOODS) == nil
-end
-
-local function PetBuffActive()
-	local settings = GetSettings()
-	return not NoPetBuffFoods() and settings and settings.usePetBuffFood
-end
-
-local function ReapplyActive()
-	local settings = GetSettings()
-	return settings and settings.earlyReapply
-end
-
---------------------------------------------------------------------------------
--- Shared Widget Factories
---------------------------------------------------------------------------------
-
---[[
-    Every consumable's When to Use -- Buff Food, Scroll Buffs, Pet Food Buffs,
-    and conjured food and water first -- is the same pair, named by its
-    settings' prefix (ns.IsUseWhenActive): the level filter dropdown,
-    ns.LEVEL_FILTER_VALUES in ns.LEVEL_FILTER_ORDER, on its toggle's line or
-    on a sub-option row through ModeSubRow below, then the shared group
-    context checkboxes on a sub-option row of their own (UseWhenGroups), with
-    a red line under them while none is ticked. All of it hides until the
-    toggle is on. Pet Food Buffs' section hides whole on a flavor with no pet
-    buff food. Any change rewrites the macros under the throttle.
-]]
-local function UseWhenChanged()
-	ns.ResetMacroState()
-	ns.RequestUpdate()
-	ns.RefreshSettings()
-end
-
-local function FeatureModeSelect(prefix, description)
-	local settingKey = prefix .. "Level"
-	return {
-		type = "select",
-		desc = description,
-		values = ns.LEVEL_FILTER_VALUES,
-		sorting = ns.LEVEL_FILTER_ORDER,
-		get = function()
-			return ns.db.profile[settingKey]
-		end,
-		set = function(_, value)
-			ns.db.profile[settingKey] = value
-			UseWhenChanged()
-		end,
-	}
-end
-
--- The group context checkboxes and their none-ticked warning, at `order` and just after it.
-local function UseWhenGroups(args, prefix, isActive, order)
-	local function GetTable()
-		return ns.db.profile[prefix .. "In"]
-	end
-	local function Inactive()
-		return not isActive()
-	end
-	args[prefix .. "In"] = ns.OptionsGroupContextRow(order, Inactive, GetTable, UseWhenChanged)
-	args[prefix .. "InNone"] = ns.OptionsGroupContextNone(L["OPTIONS_GROUPS_NONE"], order + 0.01, GetTable, Inactive)
-end
-
---[[
-    The same dropdown for a toggle with more than one setting: on a sub-option
-    row of its own, under a silver caption (Kit.SubLabelRow), since it no
-    longer shares the toggle's line. The dropdown keeps the control column.
-]]
-local function ModeSubRow(prefix, description, isActive, order)
-	return Kit.SubLabelRow(order, function()
-		return not isActive()
-	end, L["OPTIONS_MODE_CAPTION"], FeatureModeSelect(prefix, description))
-end
-
--- Hover text for a level filter dropdown choosing when the Food macro offers a feature.
-local function ModeDescription(featureName)
-	return string.format(L["OPTIONS_MODE_DESCRIPTION"], featureName)
-end
-
---[[
-    A Mana Gem text naming the two runes, each as its icon and the client's
-    name, built when it shows; a rune still loading shows its loading text and
-    is warmed so the panel repaints.
-]]
-local function ManaRuneText(formatKey)
-	return function()
-		local runeIDs = { ns.DEMONIC_RUNE_ITEM_ID, ns.DARK_RUNE_ITEM_ID }
-		local coldItemIDs = {}
-		for _, itemID in ipairs(runeIDs) do
-			if not C_Item.GetItemInfo(itemID) then
-				coldItemIDs[#coldItemIDs + 1] = itemID
-			end
-		end
-		Kit.WarmItems(coldItemIDs, ns.OPTIONS_REGISTRY.Macros)
-		return string.format(L[formatKey], Kit.ItemName(runeIDs[1]), Kit.ItemName(runeIDs[2]))
-	end
-end
-
-local SpellDescription = ns.OptionsSpellDescription
-
--- Toggle for one entry inside a profile settings subtable (scroll/pet types).
-local function SubsetToggle(subtableKey, key, label, order)
-	return {
-		type = "toggle",
-		name = label,
-		desc = string.format(L["OPTIONS_BUFF_TYPE_DESCRIPTION"], label),
-		order = order,
-		get = function()
-			local subtable = ns.db.profile[subtableKey]
-			return subtable and subtable[key]
-		end,
-		set = function(_, value)
-			ns.db.profile[subtableKey][key] = value
-			ns.ResetMacroState()
-			ns.RequestUpdate()
-			ns.RefreshSettings()
-		end,
-	}
-end
-
---[[
-    One pet food toggle per row of the flavor folder's ns.PET_BUFF_FOODS, best
-    rank first. Each stands for an item, so it wears the item's icon on the
-    icon checkbox (Options-Widgets.lua) and names it in its quality color,
-    as the Which Macros to Create rows do. A name still uncached shows as loading text
-    and is warmed so the panel repaints.
-]]
-local function PetBuffTypeToggles()
-	local foods = {}
-	for itemID, row in pairs(ns.PET_BUFF_FOODS) do
-		foods[#foods + 1] = { itemID = itemID, rank = row[2], settingKey = row[3] }
-	end
-	table.sort(foods, function(a, b)
-		return a.rank > b.rank
-	end)
-
-	local toggles = {}
-	local coldItemIDs = {}
-	for order, food in ipairs(foods) do
-		local label
-		if C_Item.GetItemInfo(food.itemID) then
-			label = ns.GetItemLabel(food.itemID)
-		else
-			coldItemIDs[#coldItemIDs + 1] = food.itemID
-			label = Kit.ItemName(food.itemID)
-		end
-		local toggle = SubsetToggle("petBuffTypes", food.settingKey, label, order)
-		toggle.image = C_Item.GetItemIconByID(food.itemID)
-		toggle.imageCoords = ns.OPTIONS_ICON_TEXCOORDS
-		toggle.dialogControl = ns.ICON_CHECKBOX_WIDGET_TYPE
-		toggles["pet" .. food.settingKey] = toggle
-	end
-	Kit.WarmItems(coldItemIDs, ns.OPTIONS_REGISTRY.Macros)
-	return toggles
+-- Everything under the switch hides while Consumable Macros is off.
+local function MacrosOff()
+	return not (ns.db and ns.db.global.macrosEnabled)
 end
 
 --[[
@@ -245,7 +67,7 @@ local function MacroToggle(macroName, key, order)
 end
 
 --[[
-    The Open Macros Window button. The Settings window closes first, since the
+    The Macros Window row's Open button. The Settings window closes first, since the
     Macros window would otherwise open behind it. MacroFrame_LoadUI is the
     loader every client ships (Classic's UIParent and Forever's MacroUI
     bootstrap; Classic has no ShowMacroFrame), and the window always opens on
@@ -272,14 +94,17 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Everything that shapes the macros Consumable Macros builds, in one page: which
-    macros exist, then how each behaves. Page order is the Macros master
-    switch, Macro Names on Buttons, Which Macros to Create (with the Open Macros Window button),
-    Food & Water (Buff Food, Scroll Buffs, and conjured food
-    and water first), Potions & Healthstones, Mana Gems & Runes, Buff
-    Re-Application, Pet Food Buffs, then Explosives. The class and race
-    sections (Options-Class-Race.lua) and the Ignore List
-    (Options-Ignore-List.lua) have their own panels, nested under this one.
+    Which macros Consumable Macros builds: the Macros master switch, then
+    Which Macros to Create with the Macros Window row and an example (hidden
+    while the Food macro is off, since it shows that macro's line), and
+    Action Bars at the foot with Macro Names on Buttons. How each macro picks its item is on a page of its
+    own nested under this one: Food & Drinks (Options-Food-Drinks.lua);
+    Potions & Mana Gems, Bandages, Healthstone and Explosives (a file each,
+    as Options-Bandages.lua); Class Macros (Options-Class-Macros.lua); and
+    the Ignore List (Options-Ignore-List.lua). While the switch is off, only
+    the description, the switch and Action Bars stay (Kit.HideAllExcept):
+    the names switch hides every button's name, not only this feature's, and
+    applies at once and at each login whether the feature is on or off.
 
     Order values are spaced blocks so a section can be reordered or extended
     without renumbering its neighbors. The switch atop the panel is also in the
@@ -295,23 +120,6 @@ function ns.BuildMacrosOptions()
 		descIntro = Desc(L["OPTIONS_MACROS_DESCRIPTION"], 1),
 		spaceIntro = Spacer(2),
 		toggleMacrosEnabled = Kit.FeatureSwitch("macrosEnabled", 2.5),
-
-		-- Macro Names on Buttons
-		toggleMacroNames = {
-			type = "toggle",
-			name = L["OPTIONS_MACRO_NAMES"],
-			desc = L["OPTIONS_MACRO_NAMES_DESCRIPTION"],
-			order = 3,
-			width = "full",
-			get = function()
-				return ns.db and ns.db.global.showMacroNames
-			end,
-			set = function(_, value)
-				ns.ToggleMacroNames(value)
-				ns.RefreshSettings()
-			end,
-		},
-
 		-- Which Macros to Create
 		spaceEnable0 = Spacer(10),
 		headerEnableMacros = Header(L["OPTIONS_MACROS_TO_CREATE_HEADER"], 11),
@@ -338,317 +146,47 @@ function ns.BuildMacrosOptions()
 			},
 		},
 		spaceEnable3 = Spacer(16),
-		openMacroWindow = {
+		-- In the control column, as every button on a page sits, not a lone button at the left edge.
+		openMacroWindow = Kit.LabelRow(17, nil, L["OPTIONS_MACROS_WINDOW"], {
 			type = "execute",
-			name = L["OPTIONS_OPEN_MACRO_WINDOW"],
+			name = L["OPTIONS_OPEN"],
 			desc = L["OPTIONS_OPEN_MACRO_WINDOW_DESCRIPTION"],
-			order = 17,
-			width = ns.OPTIONS_CONTROL_WIDTH,
 			func = OpenMacroWindow,
-		},
-		-- What a macro prints when your bags hold nothing it can use, as the Food macro prints it.
-		exampleNoItem = Kit.Example(19, nil, function()
+		}),
+		-- What a macro prints when your bags hold nothing it can use, as the Food macro prints it; gone while the Food macro is off.
+		exampleNoItem = Kit.Example(19, function()
+			return not ns.IsMacroEnabled("Food")
+		end, function()
 			return ns.PrintedExampleLines(ns.BuildNoItemLine("Food"))
 		end),
 
-		--[[
-		    Food & Water -- what the Food and Water macros put ahead of your
-		    best food and drink: buff food, scrolls, then conjured food and
-		    water, and what they save for last: Restock List food and water.
-		    One description serves the section, so each option's own
-		    hover text says what it does. A toggle with one dropdown shows it on
-		    its own line while the toggle is on; Scroll Buffs, with its
-		    scroll-type checks as well, puts the dropdown on a sub-option row
-		    under it. A break follows every row, the house rhythm the Rogue,
-		    Restocker and Readiness rows keep, and the scroll-type checks sit
-		    beneath, with a break of their own below them.
-		]]
-		spaceFoodWater0 = Spacer(20),
-		headerFoodWater = Header(L["OPTIONS_FOOD_WATER_HEADER"], 21),
-		spaceFoodWater1 = Spacer(22),
-		descFoodWater = Desc(GetColor("BODY") .. L["OPTIONS_FOOD_WATER_DESCRIPTION"] .. "|r", 23),
-		spaceFoodWater2 = Spacer(24),
-		toggleBuffFood = Kit.ToggleRow(25, {
+		-- Action Bars: shown even while Consumable Macros is off, since the names it hides aren't only this feature's.
+		toggleMacroNames = {
 			type = "toggle",
-			name = L["OPTIONS_BUFF_FOOD"],
-			desc = SpellDescription("OPTIONS_BUFF_FOOD_DESCRIPTION_FORMAT", ns.WELL_FED_SPELL_ID),
-			get = function()
-				return BuffFoodActive()
-			end,
-			set = function(_, value)
-				ns.ToggleMacroSetting("useBuffFood", value)
-			end,
-		}, { control = FeatureModeSelect("buffFood", ModeDescription(L["FEATURE_BUFF_FOOD"])) }),
-		spaceBuffFood = Spacer(27),
-		toggleScrolls = {
-			type = "toggle",
-			name = L["OPTIONS_USE_SCROLLS"],
-			desc = L["OPTIONS_USE_SCROLLS_DESCRIPTION"],
-			order = 28,
-			width = "full",
-			get = function()
-				return ScrollsActive()
-			end,
-			set = function(_, value)
-				ns.ToggleMacroSetting("useScrolls", value)
-			end,
-		},
-		scrollsLevel = ModeSubRow("scrolls", ModeDescription(L["FEATURE_SCROLL_BUFFS"]), ScrollsActive, 29),
-		spaceScrolls = Spacer(30),
-		scrollTypesGroup = {
-			type = "group",
-			name = L["OPTIONS_SCROLL_TYPES"],
+			name = L["OPTIONS_MACRO_NAMES"],
+			desc = L["OPTIONS_MACRO_NAMES_DESCRIPTION"],
 			order = 31,
-			inline = true,
-			hidden = function()
-				return not ScrollsActive()
-			end,
-			args = {
-				scrollAgility = SubsetToggle("scrollTypes", "Agility", SPELL_STAT2_NAME, 1),
-				scrollIntellect = SubsetToggle("scrollTypes", "Intellect", SPELL_STAT4_NAME, 2),
-				scrollProtection = SubsetToggle("scrollTypes", "Protection", L["OPTIONS_SCROLL_PROTECTION"], 3),
-				scrollSpirit = SubsetToggle("scrollTypes", "Spirit", SPELL_STAT5_NAME, 4),
-				scrollStamina = SubsetToggle("scrollTypes", "Stamina", SPELL_STAT3_NAME, 5),
-				scrollStrength = SubsetToggle("scrollTypes", "Strength", SPELL_STAT1_NAME, 6),
-			},
-		},
-		spaceScrollTypes = Spacer(32, function()
-			return not ScrollsActive()
-		end),
-		toggleConjuredFirst = Kit.ToggleRow(33, {
-			type = "toggle",
-			name = L["OPTIONS_CONJURED_FIRST"],
-			desc = L["OPTIONS_CONJURED_FIRST_DESCRIPTION"],
-			get = function()
-				return ConjuredFirstActive()
-			end,
-			set = function(_, value)
-				ns.ToggleMacroSetting("useConjuredFirst", value)
-			end,
-		}, { control = FeatureModeSelect("conjuredFirst", L["OPTIONS_CONJURED_FIRST_MODE_DESCRIPTION"]) }),
-		spaceConjuredFirst = Spacer(35),
-		toggleRestockLast = {
-			type = "toggle",
-			name = L["OPTIONS_RESTOCK_LAST"],
-			desc = L["OPTIONS_RESTOCK_LAST_DESCRIPTION"],
-			order = 36,
 			width = "full",
 			get = function()
-				local settings = GetSettings()
-				return settings and settings.useRestockLast
+				return ns.db and ns.db.global.showMacroNames
 			end,
 			set = function(_, value)
-				ns.ToggleMacroSetting("useRestockLast", value)
-			end,
-		},
-
-		-- Potions & Healthstones
-		spacePotions0 = Spacer(40),
-		headerPotions = Header(L["OPTIONS_POTIONS_HEADER"], 41),
-		spacePotions1 = Spacer(42),
-		descPotions = Desc(GetColor("BODY") .. L["OPTIONS_POTIONS_DESCRIPTION"] .. "|r", 43),
-		spacePotions2 = Spacer(44),
-		togglePotionsUseFoodAndWater = {
-			type = "toggle",
-			name = L["OPTIONS_POTIONS_USE_FOOD_AND_WATER"],
-			desc = L["OPTIONS_POTIONS_USE_FOOD_AND_WATER_DESCRIPTION"],
-			order = 45,
-			width = "full",
-			get = function()
-				local settings = GetSettings()
-				return settings and settings.potionsUseFoodAndWater
-			end,
-			set = function(_, value)
-				ns.db.profile.potionsUseFoodAndWater = value
-				ns.ResetMacroState()
-				ns.RequestUpdate()
-				ns.RefreshSettings()
-			end,
-		},
-		spacePotions3 = Spacer(46),
-		toggleCombineHealthstones = {
-			type = "toggle",
-			name = L["OPTIONS_COMBINE_HEALTHSTONES"],
-			desc = L["OPTIONS_COMBINE_HEALTHSTONES_DESCRIPTION"],
-			order = 47,
-			width = "full",
-			get = function()
-				local settings = GetSettings()
-				return settings and settings.combineHealthstones
-			end,
-			set = function(_, value)
-				ns.db.profile.combineHealthstones = value
-				ns.ResetMacroState()
-				ns.RequestUpdate()
-				ns.RefreshSettings()
-			end,
-		},
-
-		-- Mana Gems & Runes
-		spaceManaGems0 = Spacer(50),
-		headerManaGems = Header(L["OPTIONS_MANA_GEMS_HEADER"], 51),
-		spaceManaGems1 = Spacer(52),
-		descManaGems = Desc(function()
-			return GetColor("BODY") .. ManaRuneText("OPTIONS_MANA_GEMS_DESCRIPTION_FORMAT")() .. "|r"
-		end, 53),
-		spaceManaGems2 = Spacer(54),
-		toggleIncludeManaRunes = {
-			type = "toggle",
-			name = L["OPTIONS_INCLUDE_MANA_RUNES"],
-			desc = ManaRuneText("OPTIONS_INCLUDE_MANA_RUNES_DESCRIPTION_FORMAT"),
-			order = 55,
-			width = "full",
-			get = function()
-				local settings = GetSettings()
-				return settings and settings.includeManaRunes
-			end,
-			set = function(_, value)
-				ns.db.profile.includeManaRunes = value
-				ns.ResetMacroState()
-				ns.RequestUpdate()
-				ns.RefreshSettings()
-			end,
-		},
-
-		--[[
-		    Buff Re-Application -- one threshold governing Buff Food
-		    and Scroll Buffs (under Food & Water) and Pet Food Buffs below.
-		    Dropdown keys are the threshold in seconds, stored directly in
-		    earlyReapplyThreshold.
-		]]
-		spaceReapply0 = Spacer(90),
-		headerReapply = Header(L["OPTIONS_REAPPLY_HEADER"], 91),
-		spaceReapply1 = Spacer(92),
-		descReapply = Desc(GetColor("BODY") .. L["OPTIONS_REAPPLY_SECTION_DESCRIPTION"] .. "|r", 93),
-		spaceReapply2 = Spacer(94),
-		toggleReapply = {
-			type = "toggle",
-			name = L["OPTIONS_REAPPLY"],
-			desc = L["OPTIONS_REAPPLY_DESCRIPTION"],
-			order = 95,
-			width = ns.OPTIONS_LABEL_WIDTH,
-			get = function()
-				return ReapplyActive()
-			end,
-			set = function(_, value)
-				ns.db.profile.earlyReapply = value
-				ns.ResetMacroState()
-				ns.RequestUpdate()
-				ns.RefreshSettings()
-			end,
-		},
-		reapplyThreshold = {
-			type = "select",
-			name = "",
-			desc = L["OPTIONS_REAPPLY_THRESHOLD_DESCRIPTION"],
-			order = 96,
-			width = ns.OPTIONS_CONTROL_WIDTH,
-			hidden = function()
-				return not ReapplyActive()
-			end,
-			values = {
-				[60] = L["REAPPLY_THRESHOLD_ONE"],
-				[120] = string.format(L["REAPPLY_THRESHOLD_MANY"], 2),
-				[180] = string.format(L["REAPPLY_THRESHOLD_MANY"], 3),
-				[240] = string.format(L["REAPPLY_THRESHOLD_MANY"], 4),
-				[300] = string.format(L["REAPPLY_THRESHOLD_MANY"], 5),
-			},
-			sorting = { 60, 120, 180, 240, 300 },
-			get = function()
-				return ns.db.profile.earlyReapplyThreshold
-			end,
-			set = function(_, value)
-				ns.db.profile.earlyReapplyThreshold = value
-				ns.ResetMacroState()
-				ns.RequestUpdate()
-				ns.RefreshSettings()
-			end,
-		},
-
-		-- Pet Food Buffs
-		spacePet0 = Spacer(300, NoPetBuffFoods),
-		headerPet = Header(L["OPTIONS_PET_HEADER"], 301, NoPetBuffFoods),
-		spacePet1 = Spacer(302, NoPetBuffFoods),
-		descPet = {
-			type = "description",
-			name = function()
-				return GetColor("BODY")
-					.. string.format(L["OPTIONS_PET_SECTION_DESCRIPTION_FORMAT"], ns.GetWellFedName())
-					.. "|r"
-			end,
-			fontSize = "medium",
-			order = 303,
-			hidden = NoPetBuffFoods,
-		},
-		spacePet2 = Spacer(304, NoPetBuffFoods),
-		togglePetBuffs = {
-			type = "toggle",
-			name = L["OPTIONS_USE_PET_BUFFS"],
-			desc = SpellDescription("OPTIONS_USE_PET_BUFFS_DESCRIPTION_FORMAT", ns.WELL_FED_SPELL_ID),
-			order = 305,
-			width = "full",
-			hidden = NoPetBuffFoods,
-			get = function()
-				return PetBuffActive()
-			end,
-			set = function(_, value)
-				ns.db.profile.usePetBuffFood = value
-				ns.UpdateAuraTracking()
-				ns.ResetMacroState()
-				ns.RequestUpdate()
-				ns.RefreshSettings()
-			end,
-		},
-		petBuffFoodLevel = ModeSubRow("petBuffFood", ModeDescription(L["OPTIONS_PET_HEADER"]), PetBuffActive, 306),
-		spacePetTypes0 = Spacer(307, function()
-			return not PetBuffActive()
-		end),
-		petTypesGroup = {
-			type = "group",
-			name = L["OPTIONS_PET_BUFF_TYPES"],
-			order = 308,
-			inline = true,
-			hidden = function()
-				return not PetBuffActive()
-			end,
-			args = PetBuffTypeToggles(),
-		},
-
-		-- Explosives
-		spaceExplosives0 = Spacer(350),
-		headerExplosives = Header(L["OPTIONS_EXPLOSIVES_HEADER"], 351),
-		spaceExplosives1 = Spacer(352),
-		descExplosives = Desc(GetColor("BODY") .. L["OPTIONS_EXPLOSIVES_DESCRIPTION"] .. "|r", 353),
-		spaceExplosives2 = Spacer(354),
-		labelExplosivesClickMode = Kit.Label(GetColor("BODY") .. L["OPTIONS_EXPLOSIVES_CLICK_LAYOUT"] .. "|r", 355),
-		explosivesClickMode = {
-			type = "select",
-			name = "",
-			desc = L["OPTIONS_EXPLOSIVES_CLICK_LAYOUT_DESCRIPTION"],
-			order = 356,
-			width = ns.OPTIONS_CONTROL_WIDTH,
-			values = {
-				atplayer = L["EXPLOSIVES_MODE_ATPLAYER"],
-				toss = L["EXPLOSIVES_MODE_TOSS"],
-			},
-			sorting = { "atplayer", "toss" },
-			get = function()
-				return ns.db.profile.explosivesClickMode
-			end,
-			set = function(_, value)
-				ns.db.profile.explosivesClickMode = value
-				ns.ResetMacroState()
-				ns.RequestUpdate()
+				ns.ToggleMacroNames(value)
 				ns.RefreshSettings()
 			end,
 		},
 	}
+	Kit.Section(args, "actionBars", 30, L["OPTIONS_ACTION_BARS_HEADER"])
 
-	-- Each When to Use's group context checkboxes, under its level filter.
-	UseWhenGroups(args, "buffFood", BuffFoodActive, 26.5)
-	UseWhenGroups(args, "scrolls", ScrollsActive, 29.5)
-	UseWhenGroups(args, "conjuredFirst", ConjuredFirstActive, 34.5)
-	UseWhenGroups(args, "petBuffFood", PetBuffActive, 306.5)
+	Kit.HideAllExcept(args, MacrosOff, {
+		"descIntro",
+		"spaceIntro",
+		"toggleMacrosEnabled",
+		"actionBarsSpace0",
+		"actionBarsHeader",
+		"actionBarsSpace1",
+		"toggleMacroNames",
+	})
 
 	return {
 		type = "group",

@@ -16,7 +16,8 @@ local NO_SLOTS = ns.NO_SLOTS
 	Who a macro casts on, in turn: a list of up to TARGET_PRIORITY_SLOTS units ("targetPriority"), each tried
 	only when it can take the spell, then a plain cast. Each unit is { unit, menu label key }, in the order the
 	Target submenu lists them. A macro follows its kind's list (kindDefaults[kind].targetPriority) until it is
-	given its own. A list nobody set is the target alone.
+	given its own. A list nobody set is the target alone, or for a helpful spell (a heal, a buff, a
+	resurrection) the mouseover, then the target, then the player.
 ]]
 ns.TARGET_UNITS = {
 	{ "target", "MENU_UNIT_TARGET" },
@@ -29,6 +30,13 @@ ns.TARGET_UNITS = {
 ns.TARGET_PRIORITY_SLOTS = 3
 
 local DEFAULT_PRIORITY = { "target" }
+--[[
+	A helpful kind's list until one is set: "[@mouseover,help,nodead][help,nodead][@player]", so a heal lands on
+	whoever is under the cursor, else the friendly target, else the player. A resurrection leaves the player
+	out (LEFT_OUT_UNITS), so it tries the mouseover, then the target.
+]]
+local HELPFUL_PRIORITY = { "mouseover", "target", "player" }
+local HELPFUL_KINDS = { friendly = true, buff = true, resurrect = true }
 --[[
 	The units a kind can't pick: an enemy spell can't go on the player or the pet, nor a resurrection, which
 	can't raise the player casting it or a pet, nor reach the target's target of a dead target
@@ -56,9 +64,9 @@ function ns.KindOffersUnit(kind, unit)
 	return not (LEFT_OUT_UNITS[kind] and LEFT_OUT_UNITS[kind][unit])
 end
 
--- A macro's own list, a focus copy keeping its own focus-then-target cast.
+-- A macro's own list.
 function ns.OffersTargetPriority(macro)
-	return not macro.focus and ns.KindOffersTargetPriority(macro.kind)
+	return ns.KindOffersTargetPriority(macro.kind)
 end
 
 -- A list with the units a kind can't pick, and any unit a second time, left out; the target alone when that leaves none.
@@ -73,11 +81,11 @@ local function Usable(list, kind)
 	return #usable > 0 and usable or DEFAULT_PRIORITY
 end
 
--- A kind's list: the one set as its default from a macro's menu, or the target alone.
+-- A kind's list: the one set as its default from a macro's menu, else the helpful list or the target alone.
 function ns.KindTargetPriority(kind)
 	local list = ns.db.profile.kindDefaults[kind].targetPriority
 	if type(list) ~= "table" then
-		return DEFAULT_PRIORITY
+		return HELPFUL_KINDS[kind] and Usable(HELPFUL_PRIORITY, kind) or DEFAULT_PRIORITY
 	end
 	return Usable(list, kind)
 end
@@ -157,14 +165,4 @@ end
 function ns.SetTargetPriorityUnit(macro, place, unit)
 	local list = PlaceUnit(ns.TargetPriority(macro), place, unit)
 	StoreSetting(macro, "targetPriority", not SameList(list, ns.KindTargetPriority(macro.kind)) and list or nil)
-end
-
--- Makes the macro's list its kind's, and has the macro follow it.
-function ns.MakeTargetPriorityDefault(macro)
-	local list = {}
-	for i, unit in ipairs(ns.TargetPriority(macro)) do
-		list[i] = unit
-	end
-	ns.SetKindTargetPriority(macro.kind, list)
-	StoreSetting(macro, "targetPriority", nil)
 end

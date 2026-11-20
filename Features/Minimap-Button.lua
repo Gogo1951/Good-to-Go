@@ -4,7 +4,7 @@ local L = ns.L
 local LibDataBroker = LibStub("LibDataBroker-1.1")
 local LibDBIcon = LibStub("LibDBIcon-1.0")
 
--- The button's icon until the Food macro's scan has picked a food, and whenever that food has no icon.
+-- The button's icon before the first ns.UpdateMinimapIcon, and whenever no food icon resolves.
 local DEFAULT_ICON = "Interface\\Icons\\INV_Misc_Food_02"
 
 --------------------------------------------------------------------------------
@@ -13,12 +13,11 @@ local DEFAULT_ICON = "Interface\\Icons\\INV_Misc_Food_02"
 
 --[[
     Hovering opens the menu (Features/Minimap-Menu.lua), and a click runs its
-    job from the menu's click table: Left-Click Buff Food & Scrolls, Right-Click
-    Ignore, Middle-Click Clear Ignore List, Shift + Left-Click Buff Duty, Shift
-    + Right-Click the Restock List window, Shift + Middle-Click Options. Every
-    click has a job, so only hover opens the menu; a Left-Click the table
-    doesn't name would open and hold it, as on a button whose Left-Click is
-    free.
+    job from the menu's click table: Left-Click Buff Duty, Right-Click Ignore,
+    Middle-Click Clear Ignore List, Shift + Left-Click the Enhanced Spellbook,
+    Shift + Right-Click the Restock List window, Shift + Middle-Click Options.
+    A Left-Click the table has no job for (Shift + Left-Click while the
+    Enhanced Spellbook is off) opens and holds the menu instead.
 ]]
 function ns.HandleLauncherClick(self, button)
 	if not ns.RunButtonClick(button) and button == "LeftButton" then

@@ -20,8 +20,10 @@ local Spacer = Kit.Spacer
     repaints this panel
     when the player changes a key.
 
-    The descKey line says what the key does. Cast Next Buff's names the macro
-    that presses the same key, passed in as its %s.
+    The descKey line says what the key does. Cast Next Buff's then has the
+    macro line that presses the same key in a box of its own, a spacer
+    above and below, to click and copy. It is passed in as the line's %s too,
+    for a translation still written around it.
 ]]
 local function KeyBindings()
 	return {
@@ -91,6 +93,24 @@ local function AddKeyBindingRows(args, startOrder)
 
 		args["descKeyBinding" .. index] = Desc(KeyBindingDescription(descKey, descArgument), order)
 		order = order + 0.01
+
+		if descArgument then
+			args["spaceKeyMacro" .. index] = Spacer(order)
+			order = order + 0.01
+			args["inputKeyMacro" .. index] = {
+				type = "input",
+				name = "",
+				order = order,
+				width = ns.OPTIONS_ROW_WIDTH,
+				get = function()
+					return descArgument
+				end,
+				set = function() end,
+			}
+			order = order + 0.01
+			args["spaceKeyMacroAfter" .. index] = Spacer(order)
+			order = order + 0.01
+		end
 	end
 end
 

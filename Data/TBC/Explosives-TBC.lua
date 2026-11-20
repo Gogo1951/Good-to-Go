@@ -32,12 +32,13 @@ ns.EXPLOSIVES = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, TBC Anniversary 2.5.6.70577
+	2026-11-19, wago.tools, TBC Anniversary 2.5.6.70577
 
 Notes
 	- Every Engineering explosive this client knows that deals damage, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Explosive macro. The family is the items sharing Coarse Dynamite's (4365) use category and its class and subclass (Trade Goods, Explosives).
 	- Min Damage and Max Damage are the use spell's damage range. Engineering Skill is the rank the tooltip requires (0 for none). Required Spell ID, where present, is the Goblin or Gnomish specialization the item needs; no row on this client carries one.
 	- Items that share the explosive cooldown but aren't crafted explosives are left out: the Portable Bronze Mortar (a reusable device), Goblin Fishing Pole, Flash Bundle, Explosive Rocket, Magic Candle, Brimstone, Fertile Bulb, M73 Frag Grenade, and the quest items (Crystal Charge, the Holy Waters, Boom's Doom). Test Sapper Charge (23418) and Ninja Grenade [PH] (35499) fit the family but are test items nothing drops, sells or makes.
+	- Unique Equippable Test Item (24420) shares the explosive cooldown and deals damage, but it is a test armor record with no source in QuestieDB's TBC item table, so it is left out.
 	- Season of Discovery items are left out; this client doesn't know them. They live only in Data/Discovery/.
 
 SQL (CMaNGOS)

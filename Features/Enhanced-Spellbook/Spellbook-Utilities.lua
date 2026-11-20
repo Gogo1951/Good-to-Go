@@ -46,8 +46,7 @@ end
 function ns.SpellSubtext(id)
 	local subtext = C_Spell.GetSpellSubtext(id)
 	if (subtext == nil or subtext == "") and not requested[id] then
-		local cached = C_Spell.IsSpellDataCached
-		if not (cached and cached(id)) then
+		if not C_Spell.IsSpellDataCached(id) then
 			requested[id] = true
 			C_Spell.RequestLoadSpellData(id)
 		end
@@ -172,7 +171,7 @@ function ns.CreateSpellbookGearButton(parent, size)
 	gear:SetTexture(ns.TEXTURE_GEAR)
 	local gold = ns.COLORS_RGB.TITLE
 	gear:SetVertexColor(gold.r, gold.g, gold.b)
-	local glyphSize = math.floor(size * 0.62 + 0.5)
+	local glyphSize = size / 2 -- 8 in the 16-point button, on the Spacing Scale
 	gear:SetSize(glyphSize, glyphSize)
 	gear:SetPoint("CENTER")
 	local highlight = button:CreateTexture(nil, "HIGHLIGHT")

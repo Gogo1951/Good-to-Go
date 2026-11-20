@@ -23,7 +23,7 @@ local Data = ns.Data
     that class in the group (Features/Announcements.lua builds and sends
     both). One of your own class's, with nobody else of it in the group, has
     no one to whisper.
-    The whole row is the panel's Ask Other Classes for Buffs switch. The
+    The whole row is the panel's Ask for Buffs switch. The
     frame draws the icons; this file counts and asks.
 ]]
 
@@ -71,7 +71,7 @@ local function Candidates()
 					manaOnly = row.manaOnly,
 					noCasters = row.noCasters,
 				},
-				-- The data lists ranks lowest first; the whisper links the top one.
+				-- BuffDuty.BuildLookup sorts the ranks lowest first; the whisper links the top one.
 				linkId = entry.ids[#entry.ids],
 				class = row.class,
 				talent = row.talent,
@@ -114,7 +114,7 @@ function BuffDuty.BuildOtherClassBuffs()
 		local _, class = UnitClass(unit)
 		if class and BuffDuty.CanBuff(unit) then
 			local name = GetUnitName(unit, false) or ""
-			if not UnitIsUnit(unit, "player") then
+			if not member.isPlayer then
 				-- The whisper needs the realm of a player from another one.
 				buffers[class] = buffers[class] or {}
 				table.insert(buffers[class], GetUnitName(unit, true) or name)
@@ -212,7 +212,7 @@ end
 -- A Party-Buffs icon's click: the ask, said to the party or raid.
 function ns.AskGroupForBuff(spec)
 	if ReadyToAsk("group", spec.key) then
-		ns:SayBuffRequest(ns:BuildBuffRequestMessage(spec.missing, spec.count, spec.link))
+		ns:SayBuffRequest(spec.missing, spec.count, spec.link)
 	end
 end
 

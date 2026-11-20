@@ -52,7 +52,7 @@ local BUFF_DUTY_SHOW = {
 	raid = { "showRaid", "showRaidWhere" },
 }
 
-local USE_WHEN_PREFIXES = { "buffFood", "scrolls", "petBuffFood", "conjuredFirst" }
+local USE_WHEN_PREFIXES = { "petBuffFood", "conjuredFirst" }
 
 -- The boxes each old mode leaves unticked.
 local UNTICKED_BY_MODE = {

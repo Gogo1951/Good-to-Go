@@ -9,7 +9,7 @@ ns.DEMON_ABILITIES = {}
 How We Got the Data
 
 Last Validated
-	2026-11-15, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-19, wago.tools, Mists of Pandaria Classic 5.5.4.71060
 
 Notes
 	- The hunter pet ability ranks and the warlock's demon ability ranks for the Pet What's Next? tab (Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Pet.lua), which shows only where this table has rows.

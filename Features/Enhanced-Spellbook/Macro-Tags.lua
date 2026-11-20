@@ -33,10 +33,7 @@ function ns.MacroOwnerKey()
 end
 
 local function MacroIdentity(macro)
-	local kind = macro.focus and "focus"
-		or macro.copy and "copy" .. macro.copy
-		or macro.rankID and "rank " .. macro.rankID
-		or "spell"
+	local kind = macro.copy and "copy" .. macro.copy or macro.rankID and "rank " .. macro.rankID or "spell"
 	return ns.MacroOwnerKey() .. ":" .. kind .. ":" .. ns.MacroSpellKey(macro)
 end
 
@@ -60,14 +57,13 @@ end
 --[[
 	Moves the tag of one spell's macro to another spell's, when that spell has no tag of its own yet, so the
 	WoW macro written for the first is found, rewritten and renamed as the second's (see ns.HandOverMacro).
-	Its focus copy's tag and each Duplicate's (copies, the first spell's copy numbers) move with it. Returns
+	Each Duplicate's tag (copies, the first spell's copy numbers) moves with it. Returns
 	whether the spell's own tag moved. from and to are the spells' Rank 1 IDs.
 ]]
 function ns.HandOverMacroTag(from, to, copies)
 	if not MoveTag({ baseID = from }, { baseID = to }) then
 		return false
 	end
-	MoveTag({ baseID = from, focus = true }, { baseID = to, focus = true })
 	for _, number in ipairs(copies) do
 		MoveTag({ baseID = from, copy = number }, { baseID = to, copy = number })
 	end

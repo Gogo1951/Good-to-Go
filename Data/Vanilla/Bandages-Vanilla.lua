@@ -38,7 +38,7 @@ ns.BANDAGES = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, Classic Era 1.15.9.70576
+	2026-11-19, wago.tools, Classic Era 1.15.9.70576
 
 Notes
 	- Every First Aid bandage on this client, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) to rank the Bandage macro's picks.

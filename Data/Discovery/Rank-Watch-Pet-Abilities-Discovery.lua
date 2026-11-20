@@ -189,7 +189,7 @@ ns.RANK_WATCH_PET_ABILITIES = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, Season of Discovery 1.15.9.70576
+	2026-11-19, wago.tools, Season of Discovery 1.15.9.70576
 
 Notes
 	- Built by Tools/Build-Rank-Watch-Pet-Abilities.py from Pet-Abilities-Discovery.lua: PET_ABILITIES under HUNTER, DEMON_ABILITIES under WARLOCK, grouped by each row's comment.
@@ -203,7 +203,7 @@ Wowhead
 	None.
 
 wago.tools
-	None.
+	https://wago.tools/db2/SpellName?build=1.15.9.70576
 
 QuestieDB
 	None.

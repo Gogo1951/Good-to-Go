@@ -114,7 +114,7 @@ end
 
 local function CreateSearchFilterBox(bar)
 	local box = CreateFrame("EditBox", nil, bar, "SearchBoxTemplate")
-	box:SetSize(FILTER_BOX_WIDTH, EDIT_BOX_HEIGHT + 2)
+	box:SetSize(FILTER_BOX_WIDTH, EDIT_BOX_HEIGHT)
 	box:SetPoint("LEFT", bar, "LEFT", 0, 0)
 	box:SetAutoFocus(false)
 	local hint = box.Instructions

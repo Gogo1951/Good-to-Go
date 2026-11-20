@@ -304,7 +304,7 @@ local function CreateEmptyState(addonFrame, listInset)
 	body:SetText(L["RESTOCKER_EMPTY_BODY"])
 
 	local button = ns.CreateRestockerHeaderButton(panel, L["RESTOCKER_PICK_STAPLES_BUTTON"])
-	button:SetPoint("TOP", body, "BOTTOM", 0, -EMPTY_GAP - 4)
+	button:SetPoint("TOP", body, "BOTTOM", 0, -EMPTY_GAP * 2)
 	-- The screen's one action, so it stays larger than the header's buttons.
 	button:SetSize(math.max(EMPTY_BUTTON_WIDTH, button:GetWidth()), EMPTY_BUTTON_HEIGHT)
 	panel.button = button
@@ -415,7 +415,7 @@ function ns.CreateRestockWindow()
 	-- The footer's list controls (Restocker-Window-List-Bar.lua).
 	local bar = ns.CreateRestockListBar(addonFrame)
 	--[[
-	    Settings live in the add-on's options panel (the mini-map tooltip, /gtg);
+	    Settings live in the add-on's options panel (the mini-map menu, /gtg);
 	    the frame deliberately has no Settings button.
 	]]
 	ns.CreateRestockWindowFooter(addonFrame)
@@ -432,7 +432,6 @@ function ns.CreateRestockWindow()
 		bar.renameButton,
 		bar.cancelButton,
 		addonFrame.addButton,
-		addonFrame.undo,
 		addonFrame.emptyState.button,
 	})
 

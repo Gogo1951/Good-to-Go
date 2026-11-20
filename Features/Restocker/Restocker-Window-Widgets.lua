@@ -5,9 +5,9 @@ local _, ns = ...
 --------------------------------------------------------------------------------
 
 --[[
-    Every menu in the window is an AceGUI pullout we opened by hand, and none of
-    them closes on a click elsewhere, so each closes the others as it opens and
-    the window closes them all as it hides.
+    The window's menus are its one kit menu (ns.RestockMenu) and the bag
+    menu's AceGUI pullout, which scrolls. Each closes the others as it opens,
+    and the window closes them all as it hides.
 ]]
 function ns.CloseRestockMenus()
 	ns.CloseReputationMenu()

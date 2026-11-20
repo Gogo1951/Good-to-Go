@@ -5,10 +5,8 @@ local _, ns = ...
 --------------------------------------------------------------------------------
 
 --[[
-    Single source of truth for "is the current target a friendly player." Used
-    by both GetSmartSpell (for conjure rank downranking) and the scroll-mode
-    gate (which drops scrolls so a Mage can right-click to conjure food
-    for a friend without firing scrolls on themselves).
+    Single source of truth for "is the current target a friendly player",
+    which GetSmartSpell reads to downrank a conjure for that player.
 ]]
 local function HasFriendlyPlayerTarget()
 	return UnitExists("target") and UnitIsFriend("player", "target") and UnitIsPlayer("target")
@@ -24,7 +22,7 @@ ns.HasFriendlyPlayerTarget = HasFriendlyPlayerTarget
     rescan, so an unconditional request there costs one of those per mob
     targeted. Only four things about a target reach a macro body:
 
-      is it a friendly player  -- scroll suppression (ns.HasFriendlyPlayerTarget)
+      is it a friendly player  -- the conjure downrank (ns.HasFriendlyPlayerTarget)
       is it the player         -- plain-food mode (targetingSelf in ns.ScanBags)
       its level, when it is a  -- the conjure downrank cap (ns.GetSmartSpell),
       friendly player             which reads no other target's level

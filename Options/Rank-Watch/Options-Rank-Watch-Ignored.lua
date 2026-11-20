@@ -97,11 +97,11 @@ function ns.BuildRankWatchIgnoredOptions()
 		args = {
 			description = Desc(L["RANK_WATCH_IGNORED_DESCRIPTION"], 1),
 			space0 = Spacer(2),
-			ignoreTarget = {
+			-- In the control column, not a lone button at the left edge.
+			ignoreTarget = ns.OptionsButtonRow(3, nil, {
 				type = "execute",
 				name = L["RANK_WATCH_IGNORE_TARGET"],
 				desc = L["RANK_WATCH_IGNORE_TARGET_DESCRIPTION"],
-				order = 3,
 				disabled = function()
 					return IgnorableTarget() == nil
 				end,
@@ -113,7 +113,7 @@ function ns.BuildRankWatchIgnoredOptions()
 						ns.RefreshSettings()
 					end
 				end,
-			},
+			}),
 			space1 = Spacer(4),
 		},
 	}

@@ -75,3 +75,21 @@
 - **Departs from:** TONE AND COPY → English, Title Case's lowercase word list.
 - **Instead:** Titles capitalize "on", "off" and "yet" wherever the word is not acting as a preposition or conjunction, as in "Turn On", "Options On" and "Not Yet Available".
 - **Why:** Lowercased, a word that belongs to the verb reads as a typo in game.
+
+### Buff Duty scroll choices kept per character
+
+- **Departs from:** SAVED VARIABLES → The Two Models, a feature's settings live in one scope.
+- **Instead:** Buff Duty's Scrolls choices, which scroll types it offers, live on the character's profile while its other settings are account-wide.
+- **Why:** Which scrolls are worth offering differs from character to character, so each keeps its own choices.
+
+### Buff Duty's window builds inside one error guard
+
+- **Departs from:** COMPATIBILITY, wrap the risky call, never a block.
+- **Instead:** Buff Duty builds its whole window inside one `xpcall`, so an error in any row reports itself and leaves the window empty until a redraw succeeds.
+- **Why:** A half-built window of secure buttons could cast the wrong spell, and an empty one can't.
+
+### Buff Duty icons are 20 points
+
+- **Departs from:** SPACING SCALE, every size on 2, 4, 8, 16, 32, 64, 128.
+- **Instead:** Buff Duty's icons are 20 points, its rows 24, and its icon grids step by 24.
+- **Why:** The maintainer chose 20 by eye: 16 was too small, and 20 looked better than 24.

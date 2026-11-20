@@ -115,6 +115,19 @@ local function SelectTab(index)
 end
 
 --[[
+	Opens the tab at index (TABS above) when the window has it, and says whether it did: What's Next's rows open
+	the page a spell or a pet ability is on (Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Page.lua).
+]]
+function ns.ShowSpellbookTab(index)
+	if not tabPages[index] then
+		return false
+	end
+	SelectTab(index)
+	return true
+end
+ns.SPELLBOOK_TAB_BOOK, ns.SPELLBOOK_TAB_PET_BOOK = 1, 3
+
+--[[
 	The Classic engine's own windows (Collections, Friends) hang their tabs from CharacterFrameTabButtonTemplate,
 	whose unselected tabs tuck under the window's border. Its PanelTabButtonTemplate is newer art that raises
 	itself over the border, so it's only the fallback, for the Retail engine, which lacks the older one.

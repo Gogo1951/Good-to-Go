@@ -55,6 +55,10 @@ L["LIST_SEPARATOR"] = ", "
 L["LIST_PAIR_FORMAT"] = "%s and %s"
 -- Joins the last one to the ones before it, already joined with LIST_SEPARATOR ("Katz, Aero, and Spek").
 L["LIST_LAST_FORMAT"] = "%s, and %s"
+-- Joins two choices in a sentence, such as the buffs an ask to your target names ("[Fortitude] or [Shadow Protection]").
+L["LIST_OR_PAIR_FORMAT"] = "%s or %s"
+-- Joins the last choice to the ones before it, already joined with LIST_SEPARATOR ("[Fortitude], [Shadow Protection], or [Divine Spirit]").
+L["LIST_OR_LAST_FORMAT"] = "%s, or %s"
 -- A name with a detail after it: a Spellbook note and its settings ("Target (Mouseover, Self)"), or a pet and its owner.
 L["NAME_WITH_DETAIL_FORMAT"] = "%s (%s)"
 -- The decimal mark in a number the code prints, such as the Readiness Report's 2.5-minute choice.
@@ -105,9 +109,11 @@ L["MESSAGE_MACRO_SLOTS_ARE_FULL"] =
 ]]
 L["MESSAGE_MACROS_READY_TAB"] =
 	"Your macros are ready. Type %s, open the %s tab, and drag - Food, - Water, and the rest onto your action bars."
--- The mini-map button's Right-Click and Middle-Click. %s is the item's link.
+-- The mini-map button's Right-Click, or the menu's Ignore row. %s is the item's link.
 L["MESSAGE_IGNORE_ADDED"] = "%s is now on this character's Ignore List."
--- %d is how many items the Middle-Click took off the list: exactly one, or two or more.
+-- A click on an item in the mini-map menu's Ignore List. %s is the item's link.
+L["MESSAGE_IGNORE_REMOVED"] = "%s is no longer on this character's Ignore List."
+-- The mini-map button's Middle-Click: %d is how many items it took off the list, exactly one, or two or more.
 L["MESSAGE_IGNORE_CLEARED_ONE"] = "Cleared 1 item from this character's Ignore List."
 L["MESSAGE_IGNORE_CLEARED_MANY"] = "Cleared %d items from this character's Ignore List."
 
@@ -119,7 +125,7 @@ L["CHAT_OPTIONS_IN_COMBAT"] = "As a safety precaution, the Options Interface can
 
 --[[
     Printed when a ready check starts, as a header plus up to three lines. Each
-    line is a set of "Label : a, b, c" clauses joined by ". ", and every part of
+    line is a set of "Label: a, b, c" clauses joined by ". ", and every part of
     it is dropped when it has nothing to say -- a clean character prints nothing
     at all, so there is no all-clear string here and must not be one.
 
@@ -135,19 +141,18 @@ L["READINESS_CLAUSE_FORMAT"] = "%s %s"
 L["READINESS_CLAUSE_SEPARATOR"] = ". "
 
 -- Clause labels, in the order the lines print them.
-L["READINESS_MISSING_BUFFS"] = "Missing Buffs :"
-L["READINESS_EXPIRING"] = "Expiring Soon :"
-L["READINESS_MISSING_ITEMS"] = "Missing Items :"
-L["READINESS_DAMAGED_GEAR"] = "Damaged Gear :"
-L["READINESS_CHARACTER"] = "Character :"
-L["READINESS_QUESTIONABLE_GEAR"] = "Non-Combat Gear Equipped :"
+L["READINESS_MISSING_BUFFS"] = "Missing Buffs:"
+L["READINESS_EXPIRING"] = "Expiring Soon:"
+L["READINESS_MISSING_ITEMS"] = "Missing Items:"
+L["READINESS_DAMAGED_GEAR"] = "Damaged Gear:"
+L["READINESS_CHARACTER"] = "Character:"
+L["READINESS_QUESTIONABLE_GEAR"] = "Non-Combat Gear Equipped:"
 
 --[[
     What the report calls each thing. The Readiness Report panel labels its
     switches with these same keys, so a switch names exactly the line it
     controls; a switch that needs other words than its line (Main Hand Weapon
-    Buff, PvP Flag On) keeps an OPTIONS_READINESS_* label of its own, and
-    Scroll Buffs borrows FEATURE_SCROLL_BUFFS, the Macros feature it needs.
+    Buff, PvP Flag On, Scroll Buffs) keeps a label of its own.
     Well Fed, Main Hand and Off Hand are the client's own names (the buff,
     MAINHANDSLOT and SECONDARYHANDSLOT), so they have no keys here, and
     READINESS_PET_FORMAT puts Well Fed in the pet's line (%s is that name).
@@ -160,6 +165,8 @@ L["READINESS_QUESTIONABLE_GEAR"] = "Non-Combat Gear Equipped :"
 L["READINESS_FLASK"] = "Flask or 2x Elixirs"
 L["READINESS_PET_FORMAT"] = "%s (Pet)"
 L["READINESS_SCROLLS"] = "Scrolls"
+-- The switch for the Scrolls line.
+L["FEATURE_SCROLL_BUFFS"] = "Scroll Buffs"
 L["READINESS_SOULSTONE"] = "Soulstone Inactive"
 L["READINESS_HEALTHSTONE"] = "Healthstone"
 L["READINESS_MANA_GEM"] = "Mana Gem"
@@ -207,21 +214,10 @@ L["TIP_EMPTY_CREATE"] = "No %s in your bags. Right-Click %s to create one."
 --------------------------------------------------------------------------------
 
 --[[
-    The two Food macro features. Both names fill OPTIONS_MODE_DESCRIPTION's %s,
-    and Scroll Buffs labels the Readiness Report's switch. In every *_FORMAT key
-    that names the buff, here and below, %s is the client's name for "Well Fed".
-]]
-L["FEATURE_BUFF_FOOD"] = "Buff Food"
-L["FEATURE_SCROLL_BUFFS"] = "Scroll Buffs"
-
---[[
-    The mini-map menu's Buff Food & Scrolls block: its title and description
-    line. Buff Food and Scroll Buffs share one block and one click, which turns
-    both on or off together. Buff Duty's block takes its title and description
+    In every *_FORMAT key below that names the buff, %s is the client's name
+    for "Well Fed". Buff Duty's mini-map block takes its title and description
     from TAB_BUFF_DUTY and BUFF_DUTY_DESCRIPTION.
 ]]
-L["MINIMAP_BUFF_FOOD_SCROLLS"] = "Buff Food & Scrolls"
-L["MINIMAP_BUFF_FOOD_SCROLLS_DESCRIPTION_FORMAT"] = "Uses %s food and applies missing scroll buffs before you eat."
 
 --[[
     The heading over the food the Food macro eats, at the top of the mini-map
@@ -256,15 +252,15 @@ L["MINIMAP_RESTOCKER_EMPTY"] = "Your list is empty."
 L["MINIMAP_RESTOCKER_NOTHING_LOW"] = "Nothing is low or out."
 
 --[[
-    The Restock List window's name, and the mini-map menu's Restocker block:
-    a line saying what the list is for, and the click its Open row names.
+    The mini-map menu's Restocker block: a line saying what the list is
+    for, and the click its Open row names.
     "Your list" in the description and in MINIMAP_RESTOCKER_EMPTY is this
     list. The Options row is always the menu's last, its click on its right.
 ]]
-L["MENU_RESTOCKER"] = "Restock List"
 L["MENU_RESTOCKER_DESCRIPTION"] = "Buys and banks the items on your list."
 L["MENU_CLICK_SHIFT_RIGHT"] = "Shift + Right-Click"
 L["MENU_OPTIONS"] = "GtG Options"
+L["MENU_CLICK_SHIFT_LEFT"] = "Shift + Left-Click"
 L["MENU_CLICK_SHIFT_MIDDLE"] = "Shift + Middle-Click"
 
 --------------------------------------------------------------------------------
@@ -358,18 +354,10 @@ L["MENU_OPEN"] = "Open"
 L["MENU_CLICK_LEFT"] = "Left-Click"
 L["MENU_CLICK_RIGHT"] = "Right-Click"
 L["MENU_CLICK_MIDDLE"] = "Middle-Click"
-L["MENU_CLICK_SHIFT_LEFT"] = "Shift + Left-Click"
 
---[[
-    The words on the right of a block's title: On, Off, or Paused for Buff
-    Food & Scrolls while it waits on its When to Use, and WAITING_FOR, the
-    note under it saying what it waits for (a level label, or the ticked
-    group contexts joined with LIST_SEPARATOR).
-]]
+-- The words on the right of a block's title.
 L["MENU_ON"] = "On"
 L["MENU_OFF"] = "Off"
-L["MENU_PAUSED"] = "Paused"
-L["MENU_WAITING_FOR"] = "Waiting for: %s"
 
 -- The note after a list cut short at eight rows: %d is how many more there are, so it is never one.
 L["MENU_MORE"] = "%d more"
@@ -383,6 +371,15 @@ L["MENU_MORE_FEATURES"] = "More Features"
 L["MENU_FEATURE_COUNT_ON"] = "%d On"
 L["MENU_FEATURE_COUNT_OFF"] = "%d Off"
 
+-- The mini-map menu's Enhanced Spellbook block, above the class macros: a line saying what it's for, then Open (MENU_OPEN),
+-- as Shift + Left-Click on the button does. MENU_OPEN_SPELLBOOK is the click line on the spellbook tab's tooltip.
+L["MENU_SPELLBOOK_DESCRIPTION"] = "Mouseover macros for every spell, built in one click."
+L["MENU_OPEN_SPELLBOOK"] = "Open Enhanced Spellbook"
+
+-- The body of Buff Duty's Toggle tooltip in the mini-map menu, under the Enable option's name. %s is the client's name for the player's class.
+L["MENU_BUFF_DUTY_TOGGLE_CLASS_DESCRIPTION"] =
+	"Turns Buff Duty on or off while you play a %s. Your other classes keep their own setting."
+
 -- The row opening the class's macro notes, in the class color. %s is the client's name for the player's class.
 L["MENU_CLASS_MACROS"] = "%s Macros"
 
@@ -394,8 +391,7 @@ L["MENU_CLASS_MACROS"] = "%s Macros"
     The checkboxes for when a feature acts by group, on every panel that has
     them, always in this order. Each description is the checkbox's hover text,
     saying when that context holds: a battleground or arena is always
-    Battleground, even though its group is a raid. GROUP_CONTEXT_NEVER is the
-    mini-map menu's label for a feature on with none of them ticked.
+    Battleground, even though its group is a raid.
 ]]
 L["GROUP_CONTEXT_SOLO"] = "Solo"
 L["GROUP_CONTEXT_SOLO_DESCRIPTION"] = "While you're not in a party or raid."
@@ -405,28 +401,20 @@ L["GROUP_CONTEXT_RAID"] = "Raid"
 L["GROUP_CONTEXT_RAID_DESCRIPTION"] = "While you're in a raid. A battleground's raid counts as Battleground."
 L["GROUP_CONTEXT_BATTLEGROUND"] = "Battleground"
 L["GROUP_CONTEXT_BATTLEGROUND_DESCRIPTION"] = "While you're inside a battleground or an arena, whatever your group."
-L["GROUP_CONTEXT_NEVER"] = "Never"
 
 --------------------------------------------------------------------------------
 -- When to Use
 --------------------------------------------------------------------------------
 
 --[[
-    Every consumable's When to Use (Prioritize Buff Food, Enable Scroll
-    Buffs, Use Pet Food Buffs, and Use Conjured Food & Water First): the level
-    filter dropdown, then the group context checkboxes (GROUP_CONTEXT_*) under
-    it. %s in OPTIONS_MODE_DESCRIPTION is the feature's name,
-    FEATURE_BUFF_FOOD, FEATURE_SCROLL_BUFFS or OPTIONS_PET_HEADER; the
-    conjured dropdown has hover text of its own. Each level value carries its
-    own "when", since most dropdowns sit beside their toggle with no caption.
-    Leveling means below the client's max level. OPTIONS_GROUPS_NONE shows in
-    red under the checkboxes while none is ticked.
-
-    In the mini-map menu, the Buff Food & Scrolls block, while a switch is on
-    but its When to Use doesn't hold, reads Paused with a note naming the level
-    label holding it back (MENU_WAITING_FOR), so every level label has to read
-    after "Waiting for:" too. When the checkboxes hold it back, the note lists
-    the ticked contexts' labels instead, or GROUP_CONTEXT_NEVER with none.
+    Every consumable's When to Use (Use Pet Food Buffs and Use Conjured Food
+    & Water First): the level filter dropdown, then the group context
+    checkboxes (GROUP_CONTEXT_*) under it. %s in OPTIONS_MODE_DESCRIPTION is
+    the feature's name, OPTIONS_PET_HEADER; the conjured dropdown has hover
+    text of its own. Each level value carries its own "when", since most
+    dropdowns sit beside their toggle with no caption. Leveling means below
+    the client's max level. OPTIONS_GROUPS_NONE shows in red under the
+    checkboxes while none is ticked.
 ]]
 L["OPTIONS_MODE_DESCRIPTION"] =
 	"Chooses the levels at which your Food macro offers %s: any level, only while leveling, or only at max level. The checkboxes below choose which groups."
@@ -478,7 +466,7 @@ L["SPELLBOOK_IS_OFF"] =
 L["OPTIONS_WELCOME_MESSAGE"] = "Enable Welcome Message"
 L["OPTIONS_WELCOME_MESSAGE_DESCRIPTION"] = "Prints a welcome message in chat on login."
 
--- Minimap Button
+-- Mini-map Button
 L["OPTIONS_MINIMAP_BUTTON"] = "Enable Mini-map Button"
 L["OPTIONS_MINIMAP_BUTTON_DESCRIPTION"] = "Shows the mini-map button."
 
@@ -502,12 +490,12 @@ L["SWITCH_RESTOCKER_DESCRIPTION"] =
 	"Keeps your bags stocked from your Restock List, buying from merchants and moving items to and from the bank, and reminds you when you run low. Off stops all of it, the Restock List window included. Your lists stay saved."
 L["SWITCH_SPELLBOOK"] = "Enable Enhanced Spellbook"
 L["SWITCH_SPELLBOOK_DESCRIPTION"] =
-	"Adds a tab to your spellbook that builds mouseover, cursor, and self-cast macros for your spells, and keeps them current as you level and train. Off hides the tab and stops the updates. It never deletes a macro; the Delete Macros buttons on the Enhanced Spellbook panel do that."
+	"Adds a tab to your spellbook that builds mouseover, cursor, and self-cast macros for your spells, and keeps them current as you level and train. Off hides the tab and stops the updates. It never deletes a macro; the Delete Macros buttons on the Enhanced Spellbook page do that."
 L["SWITCH_SPELLBOOK_CONFIRM_OFF"] =
 	"Turn off Enhanced Spellbook? Its tab leaves your spellbook, and the macros it made stop updating as you level and train. This doesn't delete them: they stay on your action bars as they are now."
 L["SWITCH_MACROS"] = "Enable Consumable Macros"
 L["SWITCH_MACROS_DESCRIPTION"] =
-	"Keeps your Food, Water, Potion, and other consumable macros pointed at the best item in your bags as your bags change. Off stops the updates and leaves every macro as it last was. It never deletes a macro; unchecking one under Which Macros to Create on the Consumable Macros panel does that."
+	"Keeps your Food, Water, Potion, and other consumable macros pointed at the best item in your bags as your bags change. Off stops the updates and leaves every macro as it last was. It never deletes a macro; unchecking one under Which Macros to Create on the Consumable Macros page does that."
 L["SWITCH_MACROS_CONFIRM_OFF"] =
 	"Turn off Consumable Macros? Your macros stop updating as your bags change, so a button may keep reaching for an item you've used up. This doesn't delete them: they stay on your action bars as they are now."
 L["SWITCH_INVENTORY_REPORT"] = "Enable Inventory Report"
@@ -521,23 +509,23 @@ L["SWITCH_READINESS_REPORT_DESCRIPTION"] =
 L["OPTIONS_RESTOCKER_ENABLE"] = "Enable Restocker"
 
 -- The label before a panel's Example line, which shows a chat print as it will arrive.
-L["SAMPLE_EXAMPLE"] = "Example: %s"
+L["SAMPLE_EXAMPLE"] = "Example"
 
--- A Reset row's button, which puts the settings it sits under back to their defaults.
+-- A Reset button, which puts the settings it sits under, or the whisper box beside it, back to their defaults.
 L["OPTIONS_RESET"] = "Reset"
 L["OPTIONS_FEATURE_OFF_STATUS"] = "%s is off, so these settings aren't being used. Its switch is on the %s page."
 
 --[[
     The whisper composer around every whisper a player words themselves, on the Buff Duty and Rank Watch
-    panels: the language they go out in, the caption and Reset button beside each box, the tooltip on the
-    marker and the "// GtG" either side of it, the line shown when a whisper is too long, and the test button.
+    panels: the language they go out in, the caption and Reset button (OPTIONS_RESET) beside each box, the
+    tooltip on the marker and the "// GtG" either side of it, the line shown when a whisper is too long, and the
+    test button.
     The whispers' default text lives in Data/Message-Languages.lua, not here.
 ]]
 L["SEND_MESSAGES_IN"] = "Send Messages In"
 L["SEND_MESSAGES_IN_DESCRIPTION"] =
 	"Sets the language Good to Go writes in when it whispers other players. Picking another language swaps in its default text, unless you've written your own."
 L["WHISPER_TEXT"] = "Whisper Message"
-L["WHISPER_TEXT_RESET"] = "Reset"
 L["WHISPER_TEXT_RESET_DESCRIPTION"] = "Puts this whisper back to the default text in the language you send in."
 L["WHISPER_SIGN_OFF_DESCRIPTION"] =
 	"Added to every whisper Good to Go sends, so other players can tell it came from an add-on."
@@ -587,9 +575,10 @@ L["OPTIONS_VERSION"] = "Version %s"
 ]]
 L["TAB_CONSUMABLE_MACROS"] = "Consumable Macros"
 L["OPTIONS_MACROS_DESCRIPTION"] =
-	"Good to Go builds one macro per consumable and keeps it current as your bags change, so the button on your bar always reaches for the best item you're carrying. Choose which macros to create below, then set how each one picks its item."
+	"Good to Go builds one macro per consumable and keeps it current as your bags change, so the button on your bar always reaches for the best item you're carrying. Choose which macros to create below; each one's settings are on its own page under this one."
 
--- Macro Names on Buttons
+-- Action Bars, at the foot of the Consumable Macros page: Macro Names on Buttons
+L["OPTIONS_ACTION_BARS_HEADER"] = "Action Bars"
 L["OPTIONS_MACRO_NAMES"] = "Enable Macro Names on Buttons"
 L["OPTIONS_MACRO_NAMES_DESCRIPTION"] =
 	"Shows the macro name text on your action bar buttons, which Good to Go hides by default."
@@ -602,7 +591,8 @@ L["OPTIONS_MACRO_NAMES_DESCRIPTION"] =
 L["OPTIONS_MACROS_TO_CREATE_HEADER"] = "Which Macros to Create"
 L["OPTIONS_ENABLE_MACROS_DESCRIPTION"] =
 	"Choose which macros Good to Go creates and maintains. Turning one off also removes it. They're in the General tab of the Macros window, ready to drag onto your action bars."
-L["OPTIONS_OPEN_MACRO_WINDOW"] = "Open Macros Window"
+L["OPTIONS_MACROS_WINDOW"] = "Macros Window"
+L["OPTIONS_OPEN"] = "Open"
 L["OPTIONS_OPEN_MACRO_WINDOW_DESCRIPTION"] =
 	"Opens the game's Macros window on its General tab, where these macros live."
 --[[
@@ -613,53 +603,72 @@ L["OPTIONS_OPEN_MACRO_WINDOW_DESCRIPTION"] =
 L["OPTIONS_MACRO_TOGGLE_DESCRIPTION"] = "Creates and maintains this macro, and removes it when unchecked."
 
 --[[
-    Food & Water: Prioritize Buff Food, Enable Scroll Buffs, Use Conjured
-    Food & Water First, and Use Restock List Food & Water Last, in page
-    order. One description serves all four, so each option's hover text says
-    what it does.
+    Food & Drinks, the page under Consumable Macros (Options-Food-Drinks.lua).
+    OPTIONS_FOOD_WATER_HEADER is its label in the settings tree and the end of
+    its title. Its sections: Which Food Comes First (Use Conjured Food & Water
+    First, Use Restock List Food & Water Last, Eat Buff Food When Already Well
+    Fed), then the class and race options that change how you eat and drink.
 ]]
-L["OPTIONS_FOOD_WATER_HEADER"] = "Food & Water"
-L["OPTIONS_FOOD_WATER_DESCRIPTION"] =
-	"Your Food and Water macros use the best food and drink in your bags. These options can put buff food, scrolls, or conjured food and water first, and Restock List food and water last."
+L["OPTIONS_FOOD_WATER_HEADER"] = "Food & Drinks"
+L["OPTIONS_FOOD_DRINKS_DESCRIPTION"] =
+	"Your Food and Water macros eat and drink the best you're carrying. These options change which counts as best, and how you eat and drink. Buff food and scrolls, used for their buffs, are on Buff Duty's Self-Buffs page. On a Mage, Right-Click conjures more; target a lower-level player to conjure for their level."
+L["OPTIONS_FOOD_ORDER_HEADER"] = "Which Food Comes First"
+L["OPTIONS_FOOD_ORDER_DESCRIPTION"] =
+	"Between two foods or drinks, your macros use the one that restores the most. These change that order."
 
 --[[
-    Buff Food, the first option under Food & Water. Its hover text carries the
-    arena exception, which the mini-map menu's shared Buff Food & Scrolls
-    line has no room for.
+    Eat Buff Food When Already Well Fed, last under Which Food Comes First,
+    and in Buff Duty's Buff Food flyout. %s in its hover text is the client's
+    name for the Well Fed buff.
 ]]
-L["OPTIONS_BUFF_FOOD"] = "Prioritize Buff Food"
-L["OPTIONS_BUFF_FOOD_DESCRIPTION_FORMAT"] =
-	'Prioritizes food that grants "%s" whenever the buff is missing, except in arenas.'
+L["OPTIONS_BUFF_FOOD_WHEN_FED"] = "Eat Buff Food When Already Well Fed"
+L["OPTIONS_BUFF_FOOD_AS_FOOD_DESCRIPTION_FORMAT"] =
+	'Your Food and Water macros treat buff food like any other food and eat whatever restores the most. Off saves it for Buff Duty to offer when you need "%s", unless it\'s all you carry.'
 
--- Scroll Buffs, the second option under Food & Water.
-L["OPTIONS_USE_SCROLLS"] = "Enable Scroll Buffs"
-L["OPTIONS_USE_SCROLLS_DESCRIPTION"] =
-	"Your Food macro applies missing scrolls on the first press and eats on the next, skipping scrolls when you target a friendly player or are in an arena."
+-- The scroll types on Buff Duty's Self-Buffs page. The other five are labeled with the client's stat names (SPELL_STAT1_NAME to SPELL_STAT5_NAME); Protection has none.
 L["OPTIONS_SCROLL_TYPES"] = "Include Scroll Types in Check"
--- The other five scroll types are labeled with the client's stat names (SPELL_STAT1_NAME to SPELL_STAT5_NAME); Protection has none.
 L["OPTIONS_SCROLL_PROTECTION"] = "Protection"
 -- Hover text on each scroll type and pet food type; %s is the scroll type's label or the pet food's item name.
 L["OPTIONS_BUFF_TYPE_DESCRIPTION"] = "Includes %s when checking for missing buffs."
 
--- Use Conjured Food & Water First, the third option under Food & Water.
+-- Use Conjured Food & Water First, the first option under Which Food Comes First.
 L["OPTIONS_CONJURED_FIRST"] = "Use Conjured Food & Water First"
 L["OPTIONS_CONJURED_FIRST_DESCRIPTION"] =
-	"Your Food and Water macros use conjured food and water before anything else, even when something in your bags restores more, since it costs nothing and vanishes soon after you log out. Buff food still comes first while Prioritize Buff Food is on."
+	"Your Food and Water macros use conjured food and water before anything else, even when something in your bags restores more, since it costs nothing and vanishes soon after you log out."
 L["OPTIONS_CONJURED_FIRST_MODE_DESCRIPTION"] =
 	"Chooses the levels at which conjured food and water come first: any level, only while leveling, or only at max level. The checkboxes below choose which groups."
 
--- Use Restock List Food & Water Last, the fourth option under Food & Water.
+-- Use Restock List Food & Water Last, the second option under Which Food Comes First.
 L["OPTIONS_RESTOCK_LAST"] = "Use Restock List Food & Water Last"
 L["OPTIONS_RESTOCK_LAST_DESCRIPTION"] =
 	"Between two foods or drinks that restore the same amount, your Food and Water macros use the one that isn't on your Restock List, saving what the Restocker buys for later."
 
--- Potions & Healthstones
+--[[
+    The pages under Consumable Macros for the smaller macro families
+    (Options-Potions-Mana-Gems.lua and its neighbors): each TAB_* is its label in the settings tree
+    and the end of its title, and each *_DESCRIPTION the intro under it.
+    Explosives takes OPTIONS_EXPLOSIVES_HEADER.
+]]
+L["TAB_POTIONS_MANA_GEMS"] = "Potions & Mana Gems"
+L["OPTIONS_POTIONS_MANA_GEMS_DESCRIPTION"] =
+	"Your Health Potion, Mana Potion, and Mana Gem macros use the best you're carrying, with fallbacks for when it runs out."
+L["TAB_BANDAGES"] = "Bandages"
+L["OPTIONS_BANDAGES_DESCRIPTION"] =
+	"Your Bandage macro uses the bandage that heals the most among those your First Aid skill allows."
+-- The Bandages page's line under its description, pointing at the settings that change the Bandage macro.
+L["OPTIONS_BANDAGES_SUMMARY"] =
+	"To keep a bandage out of the macro, add it to the Ignore List. A Troll's Rapid Regeneration choice is on the Food & Drinks page."
+L["TAB_HEALTHSTONE"] = "Healthstone"
+L["OPTIONS_HEALTHSTONE_DESCRIPTION"] =
+	"Your Healthstone macro uses your best Healthstone, with fallbacks. On a Warlock, Right-Click creates one and Middle-Click makes a Soulwell, where you know it. Target a lower-level player to create one for their level."
+
+-- Potions & Healthstones, the first section on Potions & Mana Gems.
 L["OPTIONS_POTIONS_HEADER"] = "Potions & Healthstones"
 L["OPTIONS_POTIONS_DESCRIPTION"] =
 	"Macros cannot change during combat (this is a Blizzard restriction), so each Potion and Healthstone macro is pre-built with your best item plus up to two fallbacks. In longer fights the icon and tooltip can go stale and show the wrong item, but clicking the macro will always use the best item you actually have in your bags."
 L["OPTIONS_POTIONS_USE_FOOD_AND_WATER"] = "Use Food & Water in Potion Macros Out of Combat"
 L["OPTIONS_POTIONS_USE_FOOD_AND_WATER_DESCRIPTION"] =
-	"Out of combat, your Health Potion macro eats your best food and your Mana Potion macro drinks your best water. In combat, they use your potions as before. Scrolls, pet food, and conjuring stay on the Food and Water macros."
+	"Out of combat, your Health Potion macro eats your best food and your Mana Potion macro drinks your best water. In combat, they use your potions as before. Pet food and conjuring stay on the Food and Water macros."
 L["OPTIONS_COMBINE_HEALTHSTONES"] = "Combine Healthstones Into Health Potion Macro"
 L["OPTIONS_COMBINE_HEALTHSTONES_DESCRIPTION"] =
 	"Adds your best Healthstone to the bottom of the Health Potion macro, so one press uses a potion and a Healthstone."
@@ -673,25 +682,23 @@ L["OPTIONS_INCLUDE_MANA_RUNES"] = "Add Runes & Other Mana Items to Mana Gem Macr
 L["OPTIONS_INCLUDE_MANA_RUNES_DESCRIPTION_FORMAT"] =
 	"Ranks your %s, your %s, and any other mana item that shares the Mana Gem cooldown, alongside your Mana Gems, so the Mana Gem macro uses one when it's your best option or when you're out of gems."
 
--- Buff Reapplication
-L["OPTIONS_REAPPLY_HEADER"] = "Buff Reapplication"
-L["OPTIONS_REAPPLY_SECTION_DESCRIPTION"] =
-	"Macros can't change during combat, so a buff that runs out mid-fight stays gone until the fight ends."
-L["OPTIONS_REAPPLY"] = "Reapply Expiring Buffs"
+-- Refresh Pet Food Under, closing the Hunter section on Class Macros: "Refresh Under", as Buff Duty names its timing.
+L["OPTIONS_REAPPLY"] = "Refresh Pet Food Under"
 L["OPTIONS_REAPPLY_DESCRIPTION"] =
-	"Treats Buff Food, Scroll Buffs, and Pet Food Buffs with less time left than your threshold as expired, so your macros offer a fresh one before the pull."
+	"Treats your pet's food buff as expired with less time left than your threshold, so your Food macro offers a fresh one before the pull."
 --[[
-    Threshold dropdown, beside the Reapply toggle. It has no caption, so the
-    values carry the "when" themselves.
+    Threshold dropdown, beside the Refresh Pet Food Under toggle, whose label
+    carries the "under", so the values are plain durations.
 ]]
 L["OPTIONS_REAPPLY_THRESHOLD_DESCRIPTION"] =
 	"Sets how close to expiring a buff can get before your macros offer a fresh one."
-L["REAPPLY_THRESHOLD_ONE"] = "When < 1 Minute Left"
-L["REAPPLY_THRESHOLD_MANY"] = "When < %d Minutes Left"
+L["REAPPLY_THRESHOLD_ONE"] = "1 Minute"
+L["REAPPLY_THRESHOLD_MANY"] = "%d Minutes"
 
--- Pet Food Buffs
+-- Pet Food Buffs, in the Hunter section on Class Macros. OPTIONS_PET_HEADER names the feature in its When to Use hover text.
 L["OPTIONS_PET_HEADER"] = "Pet Food Buffs"
-L["OPTIONS_PET_SECTION_DESCRIPTION_FORMAT"] = 'A few foods give your pet a "%s" buff of its own.'
+-- The summary line under Class Macros' Hunter header.
+L["OPTIONS_CLASS_MACROS_HUNTER_SUMMARY"] = "Keep your pet Well Fed through your Food macro."
 L["OPTIONS_USE_PET_BUFFS"] = "Use Pet Food Buffs"
 L["OPTIONS_USE_PET_BUFFS_DESCRIPTION_FORMAT"] =
 	'Adds pet food to your Food macro when your pet is missing "%s", except in arenas.'
@@ -710,13 +717,13 @@ L["EXPLOSIVES_MODE_ATPLAYER"] = "Left-Click @player"
 L["EXPLOSIVES_MODE_TOSS"] = "Left-Click Toss"
 
 --[[
-    Class & Race panel (Options-Class-Race.lua), nested under Consumable Macros. TAB_CLASS_RACE
-    is its label in the settings tree and the title on the page;
-    OPTIONS_CLASS_RACE_DESCRIPTION is the intro beneath it.
+    Class Macros panel (Options-Class-Macros.lua), nested under Consumable Macros. TAB_CLASS_MACROS
+    is its label in the settings tree and the end of its title; OPTIONS_CLASS_MACROS_DESCRIPTION is the
+    intro beneath it. The class and race headers below also head Food & Drinks' racial sections.
 ]]
-L["TAB_CLASS_RACE"] = "Class & Race"
-L["OPTIONS_CLASS_RACE_DESCRIPTION"] =
-	"These options shape your macros for one class or race. Every section shows on every character."
+L["TAB_CLASS_MACROS"] = "Class Macros"
+L["OPTIONS_CLASS_MACROS_DESCRIPTION"] =
+	"Options for macros only some classes use. Turn on Feed Pet, Soulstone, and Poisons under Consumable Macros. Every class's section shows on every character."
 
 -- The class and race sections' headers; %s is the client's name for the class or race.
 L["OPTIONS_CLASS_HEADER_FORMAT"] = "Class Options: %s"
@@ -725,7 +732,7 @@ L["OPTIONS_RACE_HEADER_FORMAT"] = "Racial Options: %s"
 -- Druids
 L["OPTIONS_DRUID_DESCRIPTION"] =
 	"Needs the DruidMacroHelper add-on. Turned on, your Health Potion, Mana Potion, and Healthstone macros powershift you out of form, use the item, and put you back in Bear or Cat Form, whichever you pick beside the checkbox."
-L["OPTIONS_DRUID_MACRO_HELPER"] = "Enable DruidMacroHelper Integration"
+L["OPTIONS_DRUID_MACRO_HELPER"] = "Use DruidMacroHelper"
 L["OPTIONS_DRUID_MACRO_HELPER_DESCRIPTION"] =
 	"Builds powershifting macros for Health Potions, Mana Potions, and Healthstones using DruidMacroHelper (/dmh)."
 --[[
@@ -747,10 +754,12 @@ L["OPTIONS_POISON_MAIN_HAND_DESCRIPTION"] =
 	"Chooses the poison your Poisons macro applies to your Main Hand on Right-Click."
 L["OPTIONS_POISON_OFF_HAND_DESCRIPTION"] =
 	"Chooses the poison your Poisons macro applies to your Off Hand on Left-Click."
+-- The summary line under Food & Drinks' Rogue header.
+L["OPTIONS_FOOD_DRINKS_ROGUE_SUMMARY"] = "Stealth as you sit down to eat, so you rest unseen."
 --[[
-    Shared by the Rogue (Stealth) and Night Elf (Shadowmeld) eating toggles.
-    In both hover texts %s is the client's name for the spell the macro
-    appends.
+    Shared by the Rogue (Stealth) and Night Elf (Shadowmeld) eating and
+    drinking toggles. In both hover texts %s is the client's name for the
+    spell the macro appends.
 ]]
 L["OPTIONS_STEALTH_EATING"] = "Enable Stealth Eating"
 L["OPTIONS_STEALTH_EATING_SPELL_DESCRIPTION"] = "Appends %s to your Food macro so you stealth while eating."
@@ -759,7 +768,7 @@ L["OPTIONS_STEALTH_EATING_SPELL_DESCRIPTION"] = "Appends %s to your Food macro s
 L["OPTIONS_STEALTH_DRINKING"] = "Enable Stealth Drinking"
 L["OPTIONS_STEALTH_DRINKING_SPELL_DESCRIPTION"] = "Appends %s to your Water macro so you stealth while drinking."
 L["OPTIONS_STEALTH_PICK_ONE"] =
-	"Pro Tip: Pick one. You can eat and drink at the same time, but eating or drinking after you stealth will break your stealth."
+	"Pick one. You can eat and drink at the same time, but eating or drinking after you stealth will break your stealth."
 
 --[[
     Forsaken, headed with the client's name for the race (Undead). In the
@@ -770,20 +779,23 @@ L["OPTIONS_CANNIBALIZE_DESCRIPTION"] =
 	"Target a Humanoid or Undead you've killed and your macro casts %s while it's off cooldown, saving your food and drink. If it can't (the corpse is out of reach, or the spell is on cooldown), it eats or drinks as usual."
 L["OPTIONS_CANNIBALIZE_EATING"] = "Use %s Instead of Eating"
 L["OPTIONS_CANNIBALIZE_EATING_DESCRIPTION"] =
-	"While your target is a corpse %s works on and the spell is off cooldown, your Food macro casts it instead of eating. Otherwise it eats as usual. Scrolls and buff food still come first."
+	"While your target is a corpse %s works on and the spell is off cooldown, your Food macro casts it instead of eating. Otherwise it eats as usual."
 L["OPTIONS_CANNIBALIZE_DRINKING"] = "Use %s Instead of Drinking"
 L["OPTIONS_CANNIBALIZE_DRINKING_DESCRIPTION"] =
 	"While your target is a corpse %s works on and the spell is off cooldown, your Water macro casts it instead of drinking. Otherwise it drinks as usual. Buff drinks still come first."
 
 --[[
-    Trolls, headed with the client's name for the race. In the three texts
+    Trolls, headed with the client's name for the race. In the five texts
     below, %s is the client's name for Rapid Regeneration. WoW Forever only.
 ]]
 L["OPTIONS_RAPID_REGENERATION_DESCRIPTION"] =
-	"While %s is off cooldown, your Food macro casts it instead of eating, saving your food. Once it's on cooldown, the macro eats as usual."
-L["OPTIONS_RAPID_REGENERATION_EATING"] = "Use %s Instead of Eating"
+	"%s heals you even in combat, where you can't eat. Your Food macro can cast it in a fight, and your Bandage macro can cast it outside one, saving your bandages."
+L["OPTIONS_RAPID_REGENERATION_EATING"] = "Use %s Instead of Eating When in Combat"
 L["OPTIONS_RAPID_REGENERATION_EATING_DESCRIPTION"] =
-	"While %s is off cooldown, your Food macro casts it instead of eating. Otherwise it eats as usual. Scrolls and buff food still come first. In combat, where nobody eats, every press casts it."
+	"In combat, where you can't eat, your Food macro casts %s instead. Out of combat it eats as usual."
+L["OPTIONS_RAPID_REGENERATION_BANDAGE"] = "Use %s Instead of Bandaging When Out of Combat"
+L["OPTIONS_RAPID_REGENERATION_BANDAGE_DESCRIPTION"] =
+	"Out of combat, while %s is off cooldown, your Bandage macro casts it instead, saving your bandages. On cooldown, or in combat, it bandages as usual."
 
 --[[
     Ignore List panel (Options-Ignore-List.lua). One tree scope per list: the
@@ -801,7 +813,7 @@ L["OPTIONS_IGNORE_LIST_DESCRIPTION"] =
 	"Ignored items are never picked by any macro. Food, water, potions, anything. The Global list covers every character; a character's list covers only that one. Right-Click the mini-map button to ignore your current best food."
 L["OPTIONS_IGNORE_GLOBAL"] = "Global"
 L["OPTIONS_IGNORE_PROMOTE_DESCRIPTION"] = "Moves this item to the Global list, so it is ignored on every character."
-L["OPTIONS_IGNORE_ADD_FROM_BAGS"] = "Add From Bags"
+L["OPTIONS_IGNORE_ADD_FROM_BAGS"] = "Add from Bags"
 L["OPTIONS_IGNORE_ADD_FROM_BAGS_DESCRIPTION"] =
 	"Pick anything you're carrying. The bags close when the Options Interface opens, so this stands in for dragging an item here."
 L["OPTIONS_IGNORE_ADD_ID"] = "Add by Item ID"
@@ -816,6 +828,8 @@ L["OPTIONS_IGNORE_CLEAR_DESCRIPTION"] =
 L["OPTIONS_IGNORE_CLEAR_CONFIRM"] = "Remove every item from this list? This can't be undone."
 -- %d is the item ID, shown while the client is still resolving the item.
 L["LOADING_ITEM"] = "Loading ID: %d"
+-- %d is how many of an item you carry, after its name in a menu ("x12").
+L["ITEM_QUANTITY"] = "x%d"
 
 --[[
     Restocker options panel. The tree label stays "Restocker" in every locale:
@@ -871,7 +885,7 @@ L["OPTIONS_RESTOCKER_MODE_VERBOSE"] = "Verbose"
 
 L["OPTIONS_RESTOCKER_REMIND_SOUND"] = "Play Sound"
 L["OPTIONS_RESTOCKER_REMIND_SOUND_DESCRIPTION"] = "Plays an alert alongside the reminder, for when chat is busy."
-L["OPTIONS_SOUND_PREVIEW_DESCRIPTION"] = "Click to hear the alert."
+L["OPTIONS_SOUND_PREVIEW_DESCRIPTION"] = "Play this sound now, whether or not the sound is turned on."
 
 L["OPTIONS_RESTOCKER_WINDOW_HEADER"] = "Restock List Window"
 L["OPTIONS_RESTOCKER_WINDOW_DESCRIPTION"] = "Choose when your Restock List opens on its own."
@@ -883,6 +897,9 @@ L["OPTIONS_RESTOCKER_WINDOW_DESCRIPTION"] = "Choose when your Restock List opens
 ]]
 L["OPTIONS_INVENTORY_REPORT_SECTION_DESCRIPTION"] =
 	"Shows how many of an item you own, across your characters on this realm, in its tooltip."
+-- The Inventory Report page's line under its switch, while the report is on: the characters it holds on this realm.
+L["INVENTORY_REPORT_STATUS"] = "Recording %d characters on this realm."
+L["INVENTORY_REPORT_STATUS_ONE"] = "Recording 1 character on this realm."
 -- The other characters the Inventory Report remembers, each with a remove icon. In the confirm, %s is the character's name.
 L["INVENTORY_REPORT_RECORDED_CHARACTERS_HEADER"] = "Recorded Characters"
 L["INVENTORY_REPORT_FORGET_CHARACTER"] = "Forget"
@@ -921,16 +938,19 @@ L["OPTIONS_READINESS_RESET_CONFIRM"] = "Reset every Readiness Report setting to 
 L["OPTIONS_READINESS_BUFFS_HEADER"] = "Missing Buffs"
 L["OPTIONS_READINESS_ITEMS_HEADER"] = "Missing Items"
 L["OPTIONS_READINESS_CHARACTER_HEADER"] = "Character"
+-- The summary line under each of the Readiness Report's three headers.
+L["OPTIONS_READINESS_BUFFS_SUMMARY"] = "Buffs you should have on before the pull."
+L["OPTIONS_READINESS_ITEMS_SUMMARY"] = "Consumables you should be carrying, and gear worth repairing."
+L["OPTIONS_READINESS_CHARACTER_SUMMARY"] = "Settings on your character that are easy to forget."
 
 -- Missing Buffs
 L["OPTIONS_READINESS_FLASK_DESCRIPTION"] =
 	"Reports a missing flask. A flask, or one battle elixir and one guardian elixir, counts as covered."
-L["OPTIONS_READINESS_BUFF_FOOD_DESCRIPTION_FORMAT"] =
-	'Reports a missing "%s" buff. Needs Buff Food turned on under Consumable Macros.'
+L["OPTIONS_READINESS_WELL_FED_DESCRIPTION_FORMAT"] = 'Reports a missing "%s" buff.'
 L["OPTIONS_READINESS_PET_FOOD_BUFF_DESCRIPTION_FORMAT"] =
-	'Reports your pet\'s missing "%s" buff. Needs Pet Food Buffs turned on under Consumable Macros, and a pet out.'
-L["OPTIONS_READINESS_SCROLL_BUFFS_DESCRIPTION"] =
-	"Reports missing scroll buffs. Needs Scroll Buffs turned on under Consumable Macros, and checks only the scroll types selected there."
+	'Reports your pet\'s missing "%s" buff. Needs Use Pet Food Buffs turned on, on the Class Macros page, and a pet out.'
+L["OPTIONS_READINESS_SCROLLS_DESCRIPTION"] =
+	"Reports missing scroll buffs, for the scroll types checked on Buff Duty's Self-Buffs page."
 --[[
     The one entry that asks about the GROUP rather than the player's own bags,
     which the helper text has to say outright: a raid carrying seven unused
@@ -960,7 +980,7 @@ L["OPTIONS_READINESS_OFF_HAND_DESCRIPTION_STACKED"] =
 ]]
 L["OPTIONS_READINESS_EXPIRING"] = "Buffs Expiring Within"
 L["OPTIONS_READINESS_EXPIRING_BUFFS_DESCRIPTION"] =
-	"Names every buff on you that is about to expire, not just the ones Good to Go applies, and is separate from Buff Reapplication under Consumable Macros."
+	"Names every buff on you that is about to expire, not just the ones Good to Go applies, and is separate from Refresh Pet Food Under on the Class Macros page."
 -- %s is a whole or half number of minutes.
 L["OPTIONS_READINESS_EXPIRING_MINUTES"] = "%s Minutes"
 -- The one-minute entry alone; one plural template cannot render it grammatically.
@@ -1014,7 +1034,7 @@ L["OPTIONS_RANK_WATCH_DESCRIPTION"] =
     panel. %s is the standalone add-on's title.
 ]]
 L["RANK_WATCH_STANDALONE"] =
-	"%s is still running, so Rank Watch stays quiet to keep your group from hearing about every low rank twice. Good to Go has turned it off and Rank Watch on; reload to let Rank Watch take over."
+	"%s is still running, so Good to Go's Rank Watch stays quiet to keep your group from hearing about every low rank twice. Good to Go has turned that add-on off and its own Rank Watch on; reload to let Good to Go's Rank Watch take over."
 
 -- A spell and its rank in every message: "[Arcane Intellect] (Rank 3)". The first %s is the spell, the second its rank.
 L["RANK_WATCH_SPELL_RANK"] = "%s (%s)"
@@ -1059,11 +1079,11 @@ L["RANK_WATCH_TIP_MESSAGE_DESCRIPTION"] =
 L["RANK_WATCH_TIP_TOKENS"] = "Tokens: %s the spell and rank they cast, %s the level of the newer rank"
 L["RANK_WATCH_TIP_PET_MESSAGE"] = "Pet Whisper"
 L["RANK_WATCH_TIP_PET_MESSAGE_DESCRIPTION"] =
-	"Sets what Good to Go whispers a hunter whose pet cast a low rank. {pet} becomes the pet's name, {spell} the spell and rank it cast, and {level} the pet level a newer rank comes at. Leave it empty to send no whisper."
+	"Sets what Good to Go whispers a Hunter whose pet cast a low rank. {pet} becomes the pet's name, {spell} the spell and rank it cast, and {level} the pet level a newer rank comes at. Leave it empty to send no whisper."
 L["RANK_WATCH_TIP_PET_TOKENS"] = "Tokens: %s the pet's name, %s the spell and rank, %s the pet level of the newer rank"
 L["RANK_WATCH_TIP_DEMON_MESSAGE"] = "Demon Whisper"
 L["RANK_WATCH_TIP_DEMON_MESSAGE_DESCRIPTION"] =
-	"Sets what Good to Go whispers a warlock whose demon cast a low rank. {pet} becomes the kind of demon, like Imp, {spell} the spell and rank it cast, and {level} the level a newer rank comes at. Leave it empty to send no whisper."
+	"Sets what Good to Go whispers a Warlock whose demon cast a low rank. {pet} becomes the kind of demon, like Imp, {spell} the spell and rank it cast, and {level} the level a newer rank comes at. Leave it empty to send no whisper."
 L["RANK_WATCH_TIP_DEMON_TOKENS"] = "Tokens: %s the kind of demon, %s the spell and rank, %s the level of the newer rank"
 L["RANK_WATCH_PRINT"] = "Print Group Members' Low Ranks"
 L["RANK_WATCH_PRINT_DESCRIPTION"] = "Prints a group member's low rank in your chat. Your own low ranks always print."
@@ -1080,10 +1100,9 @@ L["RANK_WATCH_GRACE_LEVELING_DESCRIPTION"] =
 L["RANK_WATCH_GRACE_LEVEL"] = "1 Level"
 L["RANK_WATCH_GRACE_LEVELS"] = "%d Levels"
 
-L["RANK_WATCH_OPT_OUT_HEADER"] = "Opt-Out"
 --[[
-    The opt-out whispers' composer, in the Opt Out section: the offer sent with a player's second tip in a
-    session, and the reply to a group member who whispers "Opt Out" back.
+    The opt-out whispers' composer, under the tip's, while Whisper Group Members is on: the offer sent with a
+    player's second tip in a session, and the reply to a group member who whispers "Opt Out" back.
     TRANSLATORS: keep "Opt Out" in English; it is the words a player whispers back, and Good to Go listens for
     exactly those.
 ]]
@@ -1095,25 +1114,31 @@ L["RANK_WATCH_OPT_OUT_DONE_MESSAGE_DESCRIPTION"] =
 	'Sets what Good to Go whispers back to a group member who whispers "Opt Out". Leave it empty to send no reply.'
 L["RANK_WATCH_OPT_OUT_DESCRIPTION"] =
 	'The second time Rank Watch whispers someone in a session, it follows up with how to opt out. If they whisper you "Opt Out" while in your group, they go on Ignored Players, you reply to confirm, and they never hear from you about ranks again. To leave someone alone yourself, target them and type /gtg ignore.'
-L["RANK_WATCH_WHISPERER_HEADER"] = "Who Reports for Your Group"
-L["RANK_WATCH_WHISPERER_DESCRIPTION"] =
-	"When several people in your group run Rank Watch or Rank Sentinel, only one of them sends the whispers, so a player who casts a low rank hears about it once instead of from everyone. The others only print it in their own chat. This is who sends them right now."
+--[[
+    Who whispers for your group: a silver line under Whisper Group Members. %s is one of the three answers
+    below, RANK_WATCH_WHISPERER_SELF, _OTHER or _NONE.
+]]
+L["RANK_WATCH_WHO_WHISPERS_FORMAT"] = "Who whispers for your group right now: %s"
 L["RANK_WATCH_WHISPERER_SELF"] = "You do."
 -- %s is the player whose Rank Watch or Rank Sentinel whispers for the group.
 L["RANK_WATCH_WHISPERER_OTHER"] = "%s does, so you only see the print."
 L["RANK_WATCH_WHISPERER_NONE"] = "Nobody: Whisper Group Members is off."
 
--- Ability Alerts While Leveling: the Rank Watch panel's section for the level-up prints (LEVEL_UP_SPELLS and the rest)
+--[[
+    Ability Alerts While Leveling: the panel for the level-up prints (LEVEL_UP_SPELLS and the rest), under
+    Enhanced Spellbook. RANK_WATCH_LEVEL_UP_HEADER is its name in the settings tree, the page title and the
+    mini-map menu; its switch is SWITCH_ABILITY_ALERTS, also in the root panel's Features section.
+]]
 L["RANK_WATCH_LEVEL_UP_HEADER"] = "Ability Alerts While Leveling"
-L["RANK_WATCH_LEVEL_UP_DESCRIPTION"] =
-	"When you level, chat lists the abilities your class trainer has for you, each with its icon and a link you can hover. This runs on its own switch, whether Rank Watch is on or not."
-L["RANK_WATCH_LEVEL_UP"] = "Announce New Abilities When You Level"
-L["RANK_WATCH_LEVEL_UP_TOGGLE_DESCRIPTION"] = "Lists the abilities that open at the level you just reached."
+L["ABILITY_ALERTS_DESCRIPTION"] =
+	"When you level, chat lists the abilities your class trainer has for you, each with its icon and a link you can hover."
+L["SWITCH_ABILITY_ALERTS"] = "Enable Ability Alerts While Leveling"
+L["SWITCH_ABILITY_ALERTS_DESCRIPTION"] = "When you level, lists in chat the abilities your class trainer has for you."
 L["RANK_WATCH_LEVEL_UP_PAST"] = "Include Abilities You Skipped"
 L["RANK_WATCH_LEVEL_UP_PAST_DESCRIPTION"] = "Adds a line for abilities from earlier levels you haven't learned yet."
 L["RANK_WATCH_LEVEL_UP_PET"] = "Include Pet Abilities"
 L["RANK_WATCH_LEVEL_UP_PET_DESCRIPTION"] =
-	"Adds the pet trainer's abilities for hunters, or the demon trainer's grimoires for warlocks, that open at your new level."
+	"Adds the pet trainer's abilities for Hunters, or the demon trainer's grimoires for Warlocks, that open at your new level."
 L["RANK_WATCH_LEVEL_UP_PET_PAST"] = "Include Pet Abilities You Skipped"
 L["RANK_WATCH_LEVEL_UP_PET_PAST_DESCRIPTION"] =
 	"Hunters only: adds a line for pet trainer abilities from earlier levels you haven't learned yet. Warlocks don't get this line, because the game doesn't say which grimoires a demon has learned while it's away."
@@ -1127,7 +1152,8 @@ L["RANK_WATCH_IGNORE_TARGET"] = "Ignore Target"
 L["RANK_WATCH_IGNORE_TARGET_DESCRIPTION"] = "Adds the player you have targeted to the list."
 L["RANK_WATCH_IGNORE_ADDED"] = "Rank Watch now ignores %s."
 L["RANK_WATCH_IGNORE_NOT_FOUND"] = "Can't find %s. Group with them or target them, then try again."
-L["RANK_WATCH_IGNORE_NO_TARGET"] = "Target a player, or type /gtg ignore Name."
+-- %s is the command, /gtg ignore Name (RANK_WATCH_IGNORE_COMMAND), drawn in blue.
+L["RANK_WATCH_IGNORE_NO_TARGET"] = "Target a player, or type %s."
 L["RANK_WATCH_IGNORE_COMMAND"] = "/gtg ignore Name"
 L["RANK_WATCH_IGNORE_COMMAND_DESCRIPTION"] =
 	"Rank Watch stops reporting that player. With no name, ignores your target."
@@ -1143,6 +1169,9 @@ L["RANK_WATCH_TOP_RANK_DESCRIPTION"] = "The highest rank. Nothing is above it, s
 L["RANK_WATCH_PETS"] = "%s Pets"
 L["RANK_WATCH_TRACK_ALL"] = "Check All"
 L["RANK_WATCH_TRACK_ALL_DESCRIPTION"] = "Reports every rank below the top on this page."
+-- Asked before Check All or Uncheck All goes through; %s is the page's class, or its pets ("Hunter Pets").
+L["RANK_WATCH_TRACK_ALL_CONFIRM"] = "Report every rank below the top on the %s page?"
+L["RANK_WATCH_UNTRACK_ALL_CONFIRM"] = "Stop reporting every rank on the %s page?"
 L["RANK_WATCH_TRACK_NONE"] = "Uncheck All"
 L["RANK_WATCH_TRACK_NONE_DESCRIPTION"] = "Stops reporting every rank on this page."
 
@@ -1161,7 +1190,7 @@ L["RESTOCKER_PROFILE_EXISTS"] = 'A list named "%s" already exists.'
 L["RESTOCKER_UNKNOWN_ITEM"] = "No item has ID %d."
 L["RESTOCKER_DISABLED"] = "The Restocker is off. Turn it on under Options > AddOns > Good to Go > Restocker."
 -- %s is the list name the player typed after /restock profile use, delete or copy.
-L["RESTOCKER_LIST_NOT_FOUND"] = "No Restock List named %s."
+L["RESTOCKER_LIST_NOT_FOUND"] = 'No Restock List named "%s".'
 --[[
     %s is the /restock slash command, colored at the call site. Only the bank flow
     prints this, so the Shift hint names the bank; Shift is read as the window
@@ -1190,25 +1219,22 @@ L["RESTOCKER_TOWN_REMINDER"] = "Remember to restock while you're in town! %s"
 
 --[[
     The Restock window's status line (Restocker-Window-Footer.lua): every row
-    still short, whatever the reminders' Low Means Under threshold. The window
+    still short in your bags, Buy on or off, whatever the reminders' Low Means
+    Under threshold, then how many of those a merchant would buy. The window
     is the full picture; the reminders say only what is low or out, in the
     counts sentence below.
 
-    The count is of restocking orders -- Restock List rows with Buy switched on
-    that are still short in your bags -- so it never says "items", and never
-    puts a bare count after "short": "short 9 apples" reads as nine apples
-    missing, while the number here is nine ROWS, each short by anything from one
-    juice to a full stack. "Order" can only mean a line on a list, and it is the
-    word the code uses (BuildPurchaseOrder, purchaseOrders).
-
-    "Outstanding" is load-bearing, not decoration. "Restocking order" alone can
-    be read as the sequence restocking happens in, and the list UI is sortable,
-    so the word forcing the purchase-order sense has to stay beside the noun.
-    Same job as "filled" on RESTOCKER_RESTOCKED_ONE -- never print the bare
-    noun without one of them.
+    TRANSLATORS: the counts are of Restock List rows ("items"), each short by
+    anything from one to a full stack. In SHORT_BUY the first %d is the short
+    rows and the second the ones with Buy on. With none to buy, the rest come
+    from the bank. SHORT_ITEMS_TITLE titles the line's hover, which lists
+    every short item with have/keep.
 ]]
-L["RESTOCKER_STILL_SHORT_ONE"] = "1 restocking order outstanding."
-L["RESTOCKER_STILL_SHORT_MANY"] = "%d restocking orders outstanding."
+L["RESTOCKER_SHORT_BUY"] = "Short on %d items, %d to buy."
+L["RESTOCKER_SHORT_ONE_BUY"] = "Short on 1 item, 1 to buy."
+L["RESTOCKER_SHORT_NONE_TO_BUY"] = "Short on %d items. Take them from your bank."
+L["RESTOCKER_SHORT_ONE_NONE_TO_BUY"] = "Short on 1 item. Take it from your bank."
+L["RESTOCKER_SHORT_ITEMS_TITLE"] = "Short Items"
 
 --[[
     The counts sentence every reminder's headline is built on
@@ -1293,10 +1319,11 @@ L["RESTOCKER_OUT_OF_GOLD"] = "Not enough gold to finish restocking."
 --[[
     RESTOCKER_OUT_OF_GOLD's line while the Gold Reserve is on, whole so each
     locale joins its sentences its own way. %s is the reserve with the gold
-    coin. Nothing waits at this merchant: the next merchant visit buys whatever
-    fits above the reserve, which is what the second sentence says.
+    coin. Nothing was bought at this merchant; the second sentence says where
+    the reserve is changed, by the options panel's own path.
 ]]
-L["RESTOCKER_OUT_OF_GOLD_RESERVE"] = "You have less than %s. Restocking will resume when you have more."
+L["RESTOCKER_OUT_OF_GOLD_RESERVE"] =
+	"You have less than %s, the Gold Reserve you set aside, so nothing was bought. Change it under Options > AddOns > Good to Go > Restocker."
 
 -- /restock help lines. The command literals stay in code; these are the descriptions, and the show line reuses RESTOCKER_COMMAND_DESCRIPTION.
 
@@ -1304,8 +1331,20 @@ L["RESTOCKER_OUT_OF_GOLD_RESERVE"] = "You have less than %s. Restocking will res
 L["RESTOCKER_HELP_NAME_PLACEHOLDER"] = "[name]"
 L["RESTOCKER_HELP_PROFILE_ADD"] = "Adds a list with that name."
 L["RESTOCKER_HELP_PROFILE_DELETE"] = "Deletes the list with that name."
+-- Printed for a /restock word the command doesn't know, before the command list. The first %s is the word typed, the second /restock help, drawn in blue.
+L["RESTOCKER_SLASH_UNKNOWN"] = 'Unknown Restocker command "%s". Type %s for the list.'
 L["RESTOCKER_HELP_PROFILE_RENAME"] = "Renames the current list to that name."
-L["RESTOCKER_HELP_PROFILE_COPY"] = "Replaces the current list with a copy of that list."
+L["RESTOCKER_HELP_PROFILE_COPY"] = "Replaces the current list with a copy of that list, after asking."
+--[[
+    TRANSLATORS: /restock profile copy's confirm. The first %s is the list in
+    use, which is replaced, the second the list copied, both in gold.
+    ALSO_USED_BY follows it when another character uses the list in use: the
+    first %s is the list, the second their names, joined like the window's
+    Used By line. REPLACE is the confirm's button.
+]]
+L["RESTOCKER_PROFILE_COPY_CONFIRM"] = "Replace everything on %s with a copy of %s? This can't be undone."
+L["RESTOCKER_PROFILE_COPY_CONFIRM_ALSO_USED_BY"] = "%s is also used by %s."
+L["RESTOCKER_REPLACE"] = "Replace"
 L["RESTOCKER_HELP_PROFILE_USE"] = "Switches this character to the list with that name."
 
 --[[
@@ -1335,6 +1374,8 @@ L["RESTOCKER_HELP_PROFILE_USE"] = "Switches this character to the list with that
 L["STARTER_POPUP_TITLE"] = "Staples"
 -- The button at the Staples window's footer end that closes it once you've picked.
 L["STARTER_POPUP_DONE"] = "Done"
+-- Gray, in the Staples window's body when no staple fits this character yet.
+L["STARTER_NOTHING_TO_OFFER"] = "Nothing to add for your class and level yet."
 L["STARTER_POPUP_INTRO_LOGIN"] =
 	"We've added a few staples for your class to your Restock List. Uncheck any you don't want."
 L["STARTER_POPUP_INTRO_EMPTY"] = "Your Restock List is empty, so let's add some items to get you started."
@@ -1364,9 +1405,9 @@ L["STARTER_POPUP_ARROWS"] = "Arrows"
 ]]
 L["STARTER_POPUP_REAGENTS_HEADER"] = "Reagents & Tools"
 L["STARTER_POPUP_POISONS_HEADER"] = "Poisons"
--- %s is the client's name for the Rogue class, rogue-colored; the spaced colon is deliberate.
+-- %s is the client's name for the Rogue class, rogue-colored, and the colon follows it directly.
 L["STARTER_POPUP_POISONS_NOTE"] =
-	"%s : Add the finished poison to your list, and Good to Go buys the ingredients automatically at any merchant that stocks them all."
+	"%s: Add the finished poison to your list, and Good to Go buys the ingredients automatically at any merchant that stocks them all."
 --[[
     Checkbox tooltips: { item name, amount }. The first is for ladder items;
     the second for single-tier reagents, which never upgrade.
@@ -1430,7 +1471,7 @@ L["RESTOCKER_ADD_DUPLICATE"] = "Already on this list."
     line the open menu holds when the bags have nothing the list lacks. Title
     case and no terminal punctuation for both, like every menu entry.
 ]]
-L["RESTOCKER_ADD_FROM_BAGS"] = "Add Item From Bags"
+L["RESTOCKER_ADD_FROM_BAGS"] = "Add Item from Bags"
 L["RESTOCKER_ADD_FROM_BAGS_TOOLTIP"] = "Every item in your bags that isn't on this list yet, ready to add."
 L["RESTOCKER_ADD_FROM_BAGS_NONE"] = "Nothing in Your Bags to Add"
 
@@ -1459,6 +1500,8 @@ L["RESTOCKER_NEW_PROFILE"] = "New List"
 L["RESTOCKER_MANAGE_COPY"] = "Copy This List Into a New One"
 L["RESTOCKER_RENAME_PROFILE"] = "Rename This List"
 L["RESTOCKER_MANAGE_DELETE"] = "Delete This List"
+-- TRANSLATORS: gray on Delete This List's right, how many characters use the list ("Used by 2").
+L["RESTOCKER_LIST_USED_BY_COUNT"] = "Used by %d"
 -- %s becomes "<list name> Copy"; numbered if that name is taken.
 L["RESTOCKER_PROFILE_COPY_NAME"] = "%s Copy"
 -- A list name already taken, numbered: a new list's class name ("Warrior (2)"), and a copy's name ("Fishing Copy 2").
@@ -1535,12 +1578,13 @@ L["RESTOCKER_COLUMN_AMOUNT"] = "Keep"
 --[[
     A toggle column's heading sets the column for every item shown. HINT closes
     the heading's tooltip; ON and OFF are the two entries of the menu a click on
-    the heading opens, where %d is how many of the items shown the column can be
-    set on. Menu entries: title case, no terminal punctuation.
+    the heading opens; SHOWN, gray on their right, is how many of the items shown
+    the column can be set on. Menu entries: title case, no terminal punctuation.
 ]]
 L["RESTOCKER_COLUMN_BULK_HINT"] = "The heading sets this for every item shown."
-L["RESTOCKER_BULK_ON"] = "Turn On for %d Shown"
-L["RESTOCKER_BULK_OFF"] = "Turn Off for %d Shown"
+L["RESTOCKER_BULK_ON"] = "Turn On"
+L["RESTOCKER_BULK_OFF"] = "Turn Off"
+L["RESTOCKER_BULK_SHOWN"] = "%d Shown"
 
 L["RESTOCKER_GROUP_OTHER"] = "Other"
 --[[
@@ -1570,30 +1614,24 @@ L["RESTOCKER_NO_MATCH_FILTER"] = "Nothing on this list matches your filter."
 L["RESTOCKER_NO_MATCH_GROUP"] = "Nothing left in this category."
 
 --[[
-    The status line under the list. The orders count itself is
-    RESTOCKER_STILL_SHORT_ONE / _MANY above, and the all-stocked line is
-    MINIMAP_RESTOCKER_STOCKED, so the window and the mini-map menu say the
-    same thing in the same words.
+    The status line under the list. Its counts are RESTOCKER_SHORT_BUY and the
+    rest above, and the all-stocked line is MINIMAP_RESTOCKER_STOCKED, so the
+    window and the mini-map menu say the same thing in the same words.
 
-    NO_ORDERS is the in-between: nothing for a merchant to fill, but a row with
-    Buy off is still short in the bags (its Keep number is yellow), so the
-    congratulation would be untrue. "Outstanding" stays beside the noun, as in
-    the counts.
-
-    REPORT_MORE closes the orders tooltip when the list is longer than it shows:
-    %d is how many were left out. REMOVED_ITEM's %s is the item's icon and name,
-    and UNDO is the button beside it that puts the item back; UNDO_TOOLTIP
-    renders in the title slot.
+    REPORT_MORE closes the Short Items tooltip when the list is longer than it shows:
+    %d is how many were left out. REMOVED_ITEM is a removed row's text, gray
+    in its place on the list: %s is the item's name. UNDO is the button where
+    its remove button was, which puts the item back; UNDO_TOOLTIP renders in
+    the title slot.
 ]]
-L["RESTOCKER_NO_ORDERS"] = "No restocking orders outstanding."
 L["RESTOCKER_REPORT_MORE"] = "And %d more."
 L["RESTOCKER_REMOVED_ITEM"] = "Removed %s."
 L["RESTOCKER_UNDO"] = "Undo"
 L["RESTOCKER_UNDO_TOOLTIP"] = "Put This Item Back on the List"
 
 -- Title slot: title case, no terminal period. The line under it is body text.
-L["RESTOCKER_REMOVE_TOOLTIP"] = "Remove This Item From the Restock List"
-L["RESTOCKER_REMOVE_TOOLTIP_UNDO"] = "You can undo this from the top of the list."
+L["RESTOCKER_REMOVE_TOOLTIP"] = "Remove This Item from the Restock List"
+L["RESTOCKER_REMOVE_TOOLTIP_UNDO"] = "You can undo this on its row until the list changes."
 --[[
     The Keep box and its heading, which share one tooltip: the title, and KEEP
     under it, which explains the number. There is no editing hint: the box
@@ -1603,7 +1641,7 @@ L["RESTOCKER_AMOUNT_TOOLTIP_TITLE"] = "Keep in Your Bags"
 L["RESTOCKER_AMOUNT_TOOLTIP_KEEP"] =
 	"How many to keep in your bags. The number turns yellow while your bags hold fewer, and 0 with Store on sends all of it to the bank."
 L["RESTOCKER_BUY_LABEL"] = "Buy"
-L["RESTOCKER_BUY_TOOLTIP_TITLE"] = "Buy From Merchant"
+L["RESTOCKER_BUY_TOOLTIP_TITLE"] = "Buy from Merchant"
 L["RESTOCKER_BUY_TOOLTIP_BODY"] = "Buys the needed amount from the merchant when the merchant window is open."
 
 --[[
@@ -1625,19 +1663,19 @@ L["RESTOCKER_DEPOSIT_TOOLTIP_TITLE"] = "Store in Bank"
 ]]
 L["RESTOCKER_DEPOSIT_TOOLTIP_BODY"] =
 	"Stores extra items in the bank when the bank is open, or all of them with 0 in the Keep column."
-L["RESTOCKER_WITHDRAW_TOOLTIP_TITLE"] = "Take From Bank"
+L["RESTOCKER_WITHDRAW_TOOLTIP_TITLE"] = "Take from Bank"
 L["RESTOCKER_WITHDRAW_TOOLTIP_BODY"] = "Takes needed items from the bank when the bank is open."
 
 -- Required-reputation control (per-item vendor gate).
-L["RESTOCKER_REPUTATION_MENU_TITLE"] = "Required Reputation"
 --[[
-    { standing label, discount percent }. The standings are the client's own
-    labels (FACTION_STANDING_LABEL5 to 8), so only "Any" has a key here.
+    A standing's discount, gray on its row's right in the standings menu. The
+    standings are the client's own labels (FACTION_STANDING_LABEL5 to 8), so
+    only "Any" has a key here.
 
     Run through string.format, so its literal percent sign is escaped as %%,
     as is RESTOCKER_REPUTATION_TOOLTIP_DISCOUNTS' below.
 ]]
-L["RESTOCKER_REPUTATION_DISCOUNT_FORMAT"] = "%s (%d%% off)"
+L["RESTOCKER_REPUTATION_DISCOUNT"] = "%d%% Off"
 L["RESTOCKER_REPUTATION_ANY"] = "Any"
 L["RESTOCKER_REPUTATION_TOOLTIP_TITLE"] = "Required Merchant Reputation"
 --[[
@@ -1719,6 +1757,7 @@ L["BUFF_DUTY_HIDE_IN_COMBAT_DESCRIPTION"] =
 	"Hides the window during combat. The list can't update in combat, so a window left showing keeps its last state until combat ends."
 L["BUFF_DUTY_SHOW_HEADER"] = "Show in Window"
 L["BUFF_DUTY_SHOW_DESCRIPTION"] = "Add your own buffs, the strangers who buffed you, and your target to the window."
+-- Return the Favor, Your Target and Ask for Buffs each name both their switch and the window row it adds.
 L["BUFF_DUTY_FAVOR_ENABLE"] = "Return the Favor"
 L["BUFF_DUTY_FAVOR_ENABLE_DESCRIPTION"] =
 	"Lists the strangers who recently buffed you, with the buffs you can give them back. Right-Click an icon to take someone off the list."
@@ -1729,17 +1768,32 @@ L["BUFF_DUTY_TARGET_ENABLE_DESCRIPTION"] =
 L["BUFF_DUTY_TARGET_NPCS"] = "Include NPCs"
 L["BUFF_DUTY_TARGET_NPCS_DESCRIPTION"] =
 	"Also lists a friendly NPC you target, like a quest's wounded soldier, with the buffs you can give it."
-L["BUFF_DUTY_ASK_OTHERS"] = "Ask Other Classes for Buffs"
-L["BUFF_DUTY_ASK_OTHERS_DESCRIPTION"] =
-	"Under Missing Party Buffs, shows the raid buffs your group needs and how many players need each. Left-Click one to ask your group for it, or Right-Click to whisper the players who can cast it."
+-- Under Your Target: an Ask row of the buffs of theirs you're missing, whispered for on a click or Cast Next Buff.
+L["BUFF_DUTY_ASK_TARGET"] = "Ask Your Target for Buffs"
+L["BUFF_DUTY_ASK_TARGET_DESCRIPTION"] =
+	"When your target can give a buff you're missing, lists it on an Ask row under them. Click it, or press Cast Next Buff, to whisper them a polite ask. Nobody is asked for the same buff more than once every 5 minutes."
 --[[
-    The whispered ask's composer, under Ask Other Classes for Buffs.
+    The ask to your target's composer, under Ask Your Target for Buffs.
+    TRANSLATORS: keep {name} and {spells} exactly as written; they are the tokens players type into the whisper.
+    In the TOKENS line each %s is a token, {name} then {spells}, drawn in blue.
+]]
+L["BUFF_DUTY_ASK_TARGET_MESSAGE_DESCRIPTION"] =
+	"Sets what Good to Go whispers your target when you ask them for a buff from the Ask row. {name} becomes their name and {spells} the buffs you're asking for. Leave it empty to send no whisper."
+L["BUFF_DUTY_ASK_TARGET_TOKENS"] = "Tokens: %s their name, %s the buffs"
+L["BUFF_DUTY_ASK_OTHERS"] = "Ask for Buffs"
+L["BUFF_DUTY_ASK_OTHERS_DESCRIPTION"] =
+	"Adds an Ask for Buffs row to the window: the raid buffs your group needs and how many players need each. Left-Click one to ask your group for it, or Right-Click to whisper the players who can cast it."
+--[[
+    The whispered ask's composer, under Ask for Buffs.
     TRANSLATORS: keep {names} and {spell} exactly as written; they are the tokens players type into the whisper.
     In the TOKENS line each %s is a token, {names} then {spell}, drawn in blue.
 ]]
 L["BUFF_DUTY_ASK_MESSAGE_DESCRIPTION"] =
-	"Sets what Good to Go whispers the players who can cast a missing buff when you Right-Click it under Missing Party Buffs. {names} becomes the players missing it, or how many, and {spell} the buff. Leave it empty to send no whisper."
+	"Sets what Good to Go whispers the players who can cast a missing buff when you Right-Click it under Ask for Buffs. {names} becomes the players missing it, or how many, and {spell} the buff. Leave it empty to send no whisper."
 L["BUFF_DUTY_ASK_TOKENS"] = "Tokens: %s the players missing it, or how many, %s the buff"
+-- Group Buffs page: the Refresh section around Refresh Under.
+L["BUFF_DUTY_REFRESH_HEADER"] = "Refresh"
+L["BUFF_DUTY_REFRESH_SUMMARY"] = "Offer a buff again before it drops."
 L["BUFF_DUTY_REFRESH"] = "Refresh Under"
 L["BUFF_DUTY_REFRESH_DESCRIPTION"] =
 	"Sets how little time a buff can have left before it counts as missing, so you can top it up before it drops. A buff that lasts no longer than this only counts once it's gone."
@@ -1789,12 +1843,21 @@ L["BUFF_DUTY_SELF_REFRESH_DESCRIPTION"] =
 -- The Self-Buffs panel's last box: consumables any class keeps up on itself (Winterfall Firewater), with a muted note after its name.
 L["BUFF_DUTY_SELF_ITEMS_HEADER"] = "Consumables"
 L["BUFF_DUTY_SELF_ITEMS_NOTE"] = "when one is in your bags"
+--[[
+    Hover text on the Consumables box's Well Fed row, whose buff food is
+    whichever the Food macro would eat. %s is the client's name for Well Fed.
+]]
+L["BUFF_DUTY_WELL_FED_DESCRIPTION_FORMAT"] =
+	"Shows while you're missing %s and carry buff food. Click it in the window to eat your best one."
+-- The Consumables box's Scrolls row: one icon per scroll buff you're missing, for the types checked under it.
+L["BUFF_DUTY_SCROLLS"] = "Scrolls"
+L["BUFF_DUTY_SCROLLS_DESCRIPTION"] =
+	"Shows a scroll for each scroll buff you're missing while you carry that scroll. Click one in the window to read it. The scroll types it watches are the ones checked below."
 -- The Weapon Buffs panel, under Buff Duty after Self-Buffs.
 L["BUFF_DUTY_WEAPON_PANEL_HEADER"] = "Weapon Buffs"
 L["BUFF_DUTY_WEAPON_DESCRIPTION"] =
 	"Check what each weapon should carry. The window offers it when it's missing or running low, if it's in your bags and fits the weapon."
--- The one timing for every weapon buff, at the top of the panel.
-L["BUFF_DUTY_WEAPON_REFRESH"] = "Reapply"
+-- The one timing for every weapon buff, at the top of the panel, captioned Refresh Under (BUFF_DUTY_REFRESH).
 L["BUFF_DUTY_WEAPON_REFRESH_DESCRIPTION"] =
 	"Sets when a weapon buff is offered again: once it's gone, or once it has less than this left."
 -- The boxes for the weapon items any class can use, after the rogue and shaman boxes.
@@ -1815,11 +1878,6 @@ L["BUFF_DUTY_WEAPON_ENABLE_DESCRIPTION"] =
 	"Shows the poisons, imbues, oils, stones, and lures your weapons are missing or running low on, with your self-buffs at the top of the window. Click one to put it on. Pick which ones under Weapon Buffs."
 
 -- The window itself
--- The window's header over your own buffs and weapon rows (BUFF_DUTY_SELF_HEADER names the options panel).
-L["BUFF_DUTY_MISSING_SELF_HEADER"] = "Missing Self-Buffs"
-L["BUFF_DUTY_PARTY_BUFFS_HEADER"] = "Missing Party Buffs"
-L["BUFF_DUTY_FAVOR_HEADER"] = "Return the Favor"
-L["BUFF_DUTY_TARGET_HEADER"] = "Target"
 -- A buff icon's tooltip ends with who the click lands on.
 L["BUFF_DUTY_TOOLTIP_CAST"] = "Casts on %s."
 -- %s is the client's "Main Hand" or "Off Hand".
@@ -1830,12 +1888,36 @@ L["BUFF_DUTY_TOOLTIP_CREATE"] = "Nobody in your group has a Soulstone. Creates o
 L["BUFF_DUTY_TOOLTIP_CREATE_WEAPON"] = "None in your bags. Creates one."
 -- A Self-Buffs consumable's icon (Winterfall Firewater).
 L["BUFF_DUTY_TOOLTIP_USE_ITEM"] = "Uses one from your bags."
+L["BUFF_DUTY_TOOLTIP_READ"] = "Reads one from your bags."
+--[[
+    The Options line at the foot of the Buff Duty window, and the menu it opens: the window's switches, its
+    consumables and weapon buffs. %s in the weapon row's hover is the poison, imbue, oil, stone or lure.
+]]
+L["BUFF_DUTY_MENU_OPTIONS"] = "Options"
+L["BUFF_DUTY_MENU_WEAPON_DESCRIPTION_FORMAT"] = "Offers %s in the window when a weapon is missing its buff."
+L["BUFF_DUTY_MENU_ALL_SETTINGS"] = "All Buff Duty Settings"
+L["BUFF_DUTY_MENU_ALL_SETTINGS_DESCRIPTION"] =
+	"Opens the Buff Duty settings, with every timing, class, and buff the window can show."
+-- The Options menu's Buff Food row, and its flyout of the buff food in your bags. In the food row's hover, the first %s is the food, the second the Well Fed buff's name.
+L["BUFF_DUTY_MENU_BUFF_FOOD"] = "Buff Food"
+L["BUFF_DUTY_MENU_FOOD_DESCRIPTION_FORMAT"] =
+	'Offers %s when you need "%s". Off skips it for the next best buff food in your bags.'
+L["BUFF_DUTY_MENU_NO_BUFF_FOOD"] = "No buff food in your bags."
+-- The Self-Buffs buff food icon, while you aren't Well Fed.
+L["BUFF_DUTY_TOOLTIP_EAT"] = "Eats one from your bags. Stay seated until you're Well Fed."
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "Casts on %s and their party."
-L["BUFF_DUTY_TOOLTIP_FAVOR"] = "Targets %s and casts."
--- A Party Buffs icon's menu, its ask rows: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it: %s is one or two names (LIST_PAIR_FORMAT), or BUFF_DUTY_OTHERS_ASK_PEOPLE past two.
+-- A raid group icon's tooltip, its last line: the members who need it (%s, joined with LIST_PAIR_FORMAT or LIST_LAST_FORMAT).
+L["BUFF_DUTY_TOOLTIP_NEEDS"] = "Needs it: %s."
+-- A Return the Favor icon: the click targets them and casts; a right-click drops them from the list.
+L["BUFF_DUTY_TOOLTIP_FAVOR"] = "Targets %s and casts. Right-Click to take them off this list."
+-- The Ask row under Target: its label (%s is the target's name in their class color), and its icons' tooltip: who the whisper goes to, or, once asked, who and the whole minutes until they can be asked again.
+L["BUFF_DUTY_ASK_TARGET_ROW"] = "Ask %s"
+L["BUFF_DUTY_TOOLTIP_ASK_TARGET"] = "Whispers %s to ask for it."
+L["BUFF_DUTY_TOOLTIP_ASKED"] = "Asked %s. You can ask again in %d min."
+-- An Ask for Buffs icon's menu, its ask rows: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it: %s is one or two names (LIST_PAIR_FORMAT), or BUFF_DUTY_OTHERS_ASK_PEOPLE past two.
 L["BUFF_DUTY_OTHERS_HINT_ASK"] = "Ask for Buff in %s"
 L["BUFF_DUTY_OTHERS_HINT_WHISPER"] = "Whisper %s"
--- A Party Buffs menu's name row, on the right: the whole minutes left on that player's buff, or Missing once there is none.
+-- An Ask for Buffs menu's name row, on the right: the whole minutes left on that player's buff, or Missing once there is none.
 L["BUFF_DUTY_OTHERS_MINUTES"] = "%d min"
 L["BUFF_DUTY_OTHERS_MISSING"] = "Missing"
 --[[
@@ -1847,14 +1929,14 @@ L["BUFF_DUTY_OTHERS_MISSING"] = "Missing"
 L["BUFF_DUTY_OTHERS_ASK_ONE"] = "%s is missing %s."
 L["BUFF_DUTY_OTHERS_ASK_NAMES"] = "%s are missing %s."
 L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "%d people are missing the %s buff."
--- The whispered ask's {names} past five missing players, when the player has written their own whisper, and the Party Buffs menu's whisper row past two players. %d is how many.
+-- The whispered ask's {names} past five missing players, when the player has written their own whisper, and the Ask for Buffs menu's whisper row past two players. %d is how many.
 L["BUFF_DUTY_OTHERS_ASK_PEOPLE"] = "%d people"
 --[[
     The window's close button: the class name, the class name again for its
     checkbox, the When to Show header, then the options command.
 ]]
 L["BUFF_DUTY_CLOSED"] =
-	"Buff Duty is hidden until you log in again or reload. To bring it back now, Shift + Left-Click the mini-map button. To keep it off for the %s class, uncheck %s under %s in %s."
+	"Buff Duty is hidden until you join a group, log in again, or reload. To bring it back now, Left-Click the mini-map button. To keep it off for the %s class, uncheck %s under %s in %s."
 
 -- The Cast Next Buff key: its name in the game's Key Bindings list and the root panel's Key Bindings section, then the notices a press shows.
 L["BUFF_KEY"] = "Cast Next Buff"
@@ -1863,12 +1945,11 @@ L["BUFF_KEY_WAITING"] = "Waiting on %s to get in range."
 L["BUFF_KEY_DONE"] = "Nothing left to buff."
 L["BUFF_KEY_OFF"] = "Buff Duty is off."
 --[[
-    The Buff Duty window's last line while the Cast Next Buff key has none: its
-    name (BUFF_KEY), the root panel's Key Bindings header
-    (OPTIONS_KEY_BINDINGS_HEADER), then the options command.
+    The Buff Duty window's last line, under Options, while the Cast Next Buff key has none: the options
+    command (OPTIONS_COMMAND), then the key's name (BUFF_KEY). Kept to about three lines at the window's
+    narrowest, with the command near the start so a line never breaks inside it.
 ]]
-L["BUFF_DUTY_KEY_HINT"] =
-	"Did you know? Bind a key to %s and each press casts the next buff here. Set it under %s in %s."
+L["BUFF_DUTY_KEY_TIP"] = "In %s, bind %s to cast these buffs with one key."
 
 --------------------------------------------------------------------------------
 -- Spellbook
@@ -1878,16 +1959,22 @@ L["BUFF_DUTY_KEY_HINT"] =
 
 -- Page: Sections
 L["SECTION_UNLEARNED"] = "Unlearned"
-L["SECTION_CONSUMABLES"] = "GtG Consumables"
+L["SECTION_CONSUMABLES"] = "Consumable Macros"
 
 -- Page: WoW Macro Names. Each ends a macro's name, which WoW caps at 16 bytes in all; the spell name is cut to make room.
--- a focus copy's ("Heal @F")
-L["MACRO_NAME_FOCUS_SUFFIX"] = " @F"
 -- a lower rank's own macro ("Fireball R3"); %s is the rank's number
 L["MACRO_NAME_RANK_SUFFIX"] = " R%s"
 
 -- Page: Macro Menu
 L["MACRO_TEXT"] = "Macro Text"
+L["MENU_GROUP_MACRO_STORAGE"] = "Macro Storage"
+L["MENU_MACRO_TAB_CHARACTER"] = "Character"
+L["MENU_MACRO_TAB_CHARACTER_DESCRIPTION"] =
+	"Keeps this macro in your character's own macros, which only this character sees. Uses General while those slots are full."
+L["MENU_MACRO_TAB_GENERAL"] = "General"
+L["MENU_MACRO_TAB_GENERAL_DESCRIPTION"] =
+	"Keeps this macro in the General macros your whole account shares, saving your character slots. Uses your character's while General is full."
+L["MENU_MACRO_TAB_NOTE"] = "Moves the macro now and keeps it on your action bars."
 L["MENU_MACRO_LENGTH"] = "%d / %d"
 L["MENU_DYNAMIC_RANK"] = "Dynamic Rank"
 L["MENU_DYNAMIC_RANK_NOTE"] = "Dynamic Rank, based on a friendly player's level, only updates out of combat."
@@ -1900,8 +1987,8 @@ L["MENU_LEAVE_FORM_BEFORE"] = "Leave Form Before Casting"
 L["MENU_RIGHT_CLICK_FOR"] = "Right-Click for %s"
 -- the category menu's version of it, for spells with different group versions
 L["MENU_RIGHT_CLICK_GROUP"] = "Right-Click for Group Version"
--- TRANSLATORS: the category menu's title; %s is the category's name ("Apply to All Heals").
-L["MENU_CATEGORY_TITLE"] = "Apply to All %s"
+-- TRANSLATORS: the category menu's title and its gear's tooltip; %d is how many spells it lists, %s its name ("All 6 Heals").
+L["MENU_CATEGORY_TITLE"] = "All %d %s"
 L["MENU_ONCE_PER_COMBAT"] = "Cast Once per Combat"
 L["MENU_ONCE_PER_TARGET"] = "Cast Once per Target"
 L["MENU_HIDE_ERRORS"] = "Hide Errors"
@@ -1918,8 +2005,8 @@ L["MENU_STOP_IF_CHANNELING"] = "Not While Channeling"
 L["MENU_STOP_IF_STEALTHED"] = "Not While Stealthed"
 L["MENU_DUPLICATE"] = "Duplicate"
 L["MENU_DELETE"] = "Delete"
-L["MENU_DELETE_USED_ONE"] = "Delete (Used on 1 Bar)"
-L["MENU_DELETE_USED"] = "Delete (Used on %d Bars)"
+L["MENU_DELETE_USED_ONE"] = "Used on 1 Bar"
+L["MENU_DELETE_USED"] = "Used on %d Bars"
 L["MENU_DELETE_DESCRIPTION"] =
 	"Deletes this macro, which takes it off your action bars, and resets all its options. Click or drag it on the page to make it again."
 L["MENU_DELETE_COPY_DESCRIPTION"] =
@@ -1956,7 +2043,6 @@ L["MENU_UNIT_MOUSEOVER"] = "Mouseover"
 L["MENU_UNIT_MOUSEOVER_DESCRIPTION"] =
 	"Casts on whoever is under your cursor, in the world or on a unit frame, when they can take the spell."
 L["MENU_OPTIONS_COUNT"] = "%d Options"
-L["MENU_ENABLED"] = "Enabled"
 L["MENU_HIGHEST"] = "Max Rank"
 L["MENU_HIGHEST_DESCRIPTION"] = "Casts the highest rank you know."
 L["MENU_FIXED_RANK_DESCRIPTION"] = "Always casts %s, at any level."
@@ -1977,16 +2063,8 @@ L["MENU_USE_ITEM_DESCRIPTION"] =
 	"Uses it before the cast. Items go in the order you check them, and the number after each shows its place."
 -- an equipped item with a Use effect, in the First menu and the tooltip ("Use Trinket 1: Burst of Knowledge")
 L["MENU_USE_SLOT"] = "Use %s"
-L["MENU_ADD_FOCUS"] = "Add Focus Copy"
-L["MENU_REMOVE_FOCUS"] = "Remove Focus Copy"
-L["MENU_FOCUS_DESCRIPTION"] = "Adds a second macro to the page that casts on your focus, then your target."
-L["MENU_REMOVE_FOCUS_DESCRIPTION"] = "Takes the focus copy off the page and deletes its macro."
 L["MENU_DUPLICATE_DESCRIPTION"] =
 	"Adds another copy of this macro to the page, starting with these options, so you can set it up differently."
-L["MENU_MAKE_DEFAULT"] = "Make Default for %s"
-L["MENU_MAKE_DEFAULT_DESCRIPTION"] =
-	"Every macro under %s that you haven't set yourself starts with this macro's options."
-L["MENU_DEFAULT_SET"] = "%s now start with these options."
 
 -- Page: Conditionals
 L["MENU_GROUP_CONDITIONALS"] = "Conditionals"
@@ -2016,7 +2094,7 @@ L["CONDITIONALS_EMPTY"] = "No conditions yet. Add one to cast another spell whil
 L["CONDITIONALS_SHADOWED"] = "Never casts: row %d above matches whenever this one does, and casts first."
 L["CONDITIONALS_KEY_DRAG"] = "Drag a Spell Here"
 L["CONDITIONALS_ACTION_DROP"] = "Cast It in This Row"
-L["CONDITIONALS_ACTION_PICK"] = "Pick From the Page"
+L["CONDITIONALS_ACTION_PICK"] = "Pick from the Page"
 L["CONDITIONALS_ACTION_USE"] = "Use in Conditional"
 L["CONDITIONALS_ACTION_CANCEL"] = "Cancel Picking"
 L["CONDITIONALS_REMOVE"] = "Remove"
@@ -2101,6 +2179,8 @@ L["CAST_SEQUENCE_RESET_SECONDS_MENU_DESCRIPTION"] =
 L["CAST_SEQUENCE_RESET_SECONDS_OFF"] = "Off"
 -- TRANSLATORS: a Cast Sequence reset after this many seconds without a press ("5 Seconds Idle").
 L["CAST_SEQUENCE_RESET_SECONDS"] = "%d Seconds Idle"
+-- TRANSLATORS: the Seconds Idle row's value, the seconds it waits ("5 Seconds").
+L["CAST_SEQUENCE_RESET_SECONDS_VALUE"] = "%d Seconds"
 L["CAST_SEQUENCE_STOP_NO_RESET"] =
 	"Stops for good: with nothing to start it over, the sequence stays on NULL until the macro changes or you reload your UI. Pick a reset under Start Over When."
 L["CAST_SEQUENCE_PET_BLOCKED"] =
@@ -2154,7 +2234,6 @@ L["CATEGORY_PROFESSIONS"] = "Professions"
 
 -- Page: Macro Buttons
 -- TRANSLATORS: each note fills the small slot under a macro button, so keep it short.
-L["SUBTEXT_FOCUS"] = "Focus"
 L["SUBTEXT_PET"] = "Pet"
 L["SUBTEXT_CURSOR"] = "Cursor"
 L["SUBTEXT_STANCE"] = "Stance"
@@ -2203,7 +2282,8 @@ L["TOOLTIP_KEY_RIGHT_CLICK"] = "Right-Click"
 L["TOOLTIP_ACTION_MACRO_OPTIONS"] = "Macro Options"
 L["TOOLTIP_KEY_MIDDLE_CLICK"] = "Middle-Click"
 L["TOOLTIP_ACTION_RESET_OPTIONS"] = "Reset Macro Options"
-L["TOOLTIP_ACTION_RESET_CATEGORY"] = "Reset All Macros in %s"
+-- TRANSLATORS: the category menu's last action; %d and %s as in MENU_CATEGORY_TITLE ("Reset All 6 Heals").
+L["TOOLTIP_ACTION_RESET_CATEGORY"] = "Reset All %d %s"
 L["CHAT_MACRO_OPTIONS_RESET"] = "%s is back to its default options."
 L["CHAT_CATEGORY_OPTIONS_RESET"] = "Every macro in %s is back to its default options."
 L["MENU_RESET_CATEGORY_DESCRIPTION"] =
@@ -2218,12 +2298,15 @@ L["TOOLTIP_MACRO_HEADING"] = "%s Macro"
 
 -- Spellbook Tab Tooltip
 L["SPELLBOOK_TAB_DESCRIPTION"] = "Your class's spells as one-click macros."
+-- The click line beneath it reuses MENU_OPEN_SPELLBOOK.
 L["TOOLTIP_KEY_CLICK"] = "Click"
-L["TOOLTIP_ACTION_OPEN_PAGE"] = "Open Enhanced Spellbook"
+-- What's Next rows' click lines: a spell row turns the Enhanced Spellbook to its tile, a pet ability row opens the Pet Spellbook tab.
+L["WHATS_NEXT_CLICK_SPELL"] = "Show in Enhanced Spellbook"
+L["WHATS_NEXT_CLICK_PET"] = "Show in Pet Spellbook"
 
 -- Page: Layout
 L["PAGE_EMPTY"] = "No macros yet. Visit your class trainer to learn your first spells."
-L["PAGE_NO_MATCHES"] = "No macros match the filter."
+L["PAGE_NO_MATCHES"] = "No macros match the filter. Clear the filter box to see them all."
 L["PAGE_FILTER"] = "Filter Spells"
 L["FILTER_ALL_SCHOOLS"] = "All Schools"
 L["FILTER_ALL_CATEGORIES"] = "All Categories"
@@ -2233,8 +2316,10 @@ L["TOOLTIP_MACRO_SLOTS"] =
 L["PAGE_MACRO_GENERAL"] = "General"
 L["PAGE_MACRO_CHARACTER"] = "Character"
 L["PAGE_NO_MATCHES_FOR"] = 'No spells match "%s".'
--- TRANSLATORS: %d is how many spells the category lists, %s its name ("Options for All 6 Heals").
-L["PAGE_CATEGORY_SETTINGS"] = "Options for All %d %s"
+-- A category gear's tooltip and menu title for a category of one spell; more take MENU_CATEGORY_TITLE.
+L["PAGE_CATEGORY_SETTINGS_ONE"] = "Options for This Spell"
+-- The body of the page's Settings gear tooltip, under its title SETTINGS.
+L["TOOLTIP_PAGE_SETTINGS_DESCRIPTION"] = "Choose which spells the page shows."
 L["PAGE_CATEGORY_SETTINGS_DESCRIPTION"] =
 	"Turns an option on or off for every spell in this category at once. Spells not on your bars yet keep the setting for when you place them."
 -- after a category's count, where it carries on from the column before
@@ -2265,7 +2350,7 @@ L["LEVEL_UP_DEMON_SPELLS"] = "Your demons can now learn %s."
 L["WHATS_NEXT_STATUS_AVAILABLE"] = "Available Now"
 L["WHATS_NEXT_STATUS_SOON"] = "Coming Soon"
 L["WHATS_NEXT_STATUS_LATER"] = "Not Yet Available"
-L["WHATS_NEXT_STATUS_MISSING"] = "Missing Requirements"
+L["WHATS_NEXT_STATUS_MISSING"] = "Needs Another Spell"
 L["WHATS_NEXT_STATUS_TALENT"] = "Talents Not Taken"
 L["WHATS_NEXT_STATUS_TALENT_RUNE"] = "Talents and Runes Not Taken"
 L["WHATS_NEXT_STATUS_KNOWN"] = "Known"
@@ -2354,7 +2439,7 @@ L["WHATS_NEXT_PET_TOOLTIP_LEVEL"] = "Required Pet Level"
 L["WHATS_NEXT_PET_TOOLTIP_TRAINING_POINTS"] = "Training Points"
 L["WHATS_NEXT_PET_TOOLTIP_HOW_TRAINER"] =
 	"A pet trainer teaches it to you. Then teach it to your pet with Beast Training."
-L["WHATS_NEXT_PET_TOOLTIP_HOW_HUNTER_TRAINER"] = "Your hunter trainer teaches it to the pet you have out."
+L["WHATS_NEXT_PET_TOOLTIP_HOW_HUNTER_TRAINER"] = "Your Hunter trainer teaches it to the pet you have out."
 L["WHATS_NEXT_PET_TOOLTIP_HOW_TAMING"] =
 	"Tame a beast that knows it and fight alongside it until you learn it. Then teach it to any pet that can learn it with Beast Training."
 L["WHATS_NEXT_PET_TOOLTIP_HOW_TAMING_NEW_PET"] =
@@ -2387,9 +2472,9 @@ L["OPTIONS_KEY_SET"] = "Set Key"
 L["OPTIONS_KEY_SET_DESCRIPTION"] = "Opens the game's key binding list, where Good to Go has its own section."
 L["OPTIONS_KEY_BINDING_TOGGLE_DESCRIPTION"] =
 	"Opens and closes Enhanced Spellbook. It also has its own tab in your spellbook."
--- %s is the macro line that presses the same key, /click GtGBuffKey.
+-- The macro line, /click GtGBuffKey, sits in a box under this to copy (a translation may still place it with %s).
 L["OPTIONS_KEY_BINDING_BUFF_DESCRIPTION"] =
-	"Casts the next buff your Buff Duty window offers, one per press, out of combat. Weapon buffs stay a click on the window. To press it from a macro, use %s."
+	"Casts the next buff your Buff Duty window offers, one per press, out of combat. To press it from a macro, copy the line below into one: click it, then press Ctrl+A and Ctrl+C."
 L["OPTIONS_ABILITY_TOOLTIPS_HEADER"] = "Spell Rank Tooltips"
 L["OPTIONS_ABILITY_TOOLTIPS_DESCRIPTION"] =
 	"Every ability's tooltip lists its ranks and the level each one needs: white for ranks you know, green for ranks you could train now, and gray for ranks still to come. It's a quick self-check that you're using your best rank, so you can always play at your best. The ranks don't show during combat, so your tooltips stay short when it counts."
@@ -2399,12 +2484,14 @@ L["OPTIONS_ABILITY_TOOLTIPS_ENABLE_DESCRIPTION"] =
 L["OPTIONS_DELETE_MACROS_HEADER"] = "Delete Macros"
 L["OPTIONS_DELETE_MACROS_DESCRIPTION"] =
 	"Deletes the macros Enhanced Spellbook made, which also takes them off your action bars. Your own macros are never touched, and the page makes any of them again when you click or drag it."
-L["OPTIONS_DELETE_CHARACTER_MACROS"] = "Delete Character Macros"
+-- The two rows' captions, each beside a Delete button (OPTIONS_DELETE).
+L["OPTIONS_DELETE_CHARACTER_MACROS_CAPTION"] = "This Character's Macros"
+L["OPTIONS_DELETE_GENERAL_MACROS_CAPTION"] = "General Macros"
+L["OPTIONS_DELETE"] = "Delete"
 L["OPTIONS_DELETE_CHARACTER_MACROS_DESCRIPTION"] =
 	"Deletes Enhanced Spellbook's macros from this character's macro tab. Your other characters keep theirs until you do the same on them."
 L["OPTIONS_DELETE_CHARACTER_MACROS_CONFIRM"] =
 	"Delete all of Enhanced Spellbook's macros on this character? They come off your action bars too."
-L["OPTIONS_DELETE_GENERAL_MACROS"] = "Delete General Macros"
 L["OPTIONS_DELETE_GENERAL_MACROS_DESCRIPTION"] =
 	"Deletes Enhanced Spellbook's macros from the General macro tab, which every character on your account shares, so your other characters lose theirs there too."
 L["OPTIONS_DELETE_GENERAL_MACROS_CONFIRM"] =
@@ -2442,22 +2529,7 @@ L["OPTIONS_DEFAULT_NEVER_TURN_OFF_DESCRIPTION"] =
 	"Keeps the form or aspect on when you press the macro again, instead of turning it off."
 L["OPTIONS_DEFAULT_HIDE_ERRORS_DESCRIPTION"] = "Clears the red error text the macro leaves on screen."
 L["OPTIONS_DEFAULT_MUTE_ERRORS_DESCRIPTION"] = "Mutes the error sound while the macro runs."
-L["KIND_ENEMY"] = "Enemy Spells"
-L["KIND_ENEMY_DESCRIPTION"] = "Spells you cast on an enemy, like your attacks and debuffs."
-L["KIND_FRIENDLY"] = "Friendly Spells"
-L["KIND_FRIENDLY_DESCRIPTION"] = "Spells you cast on a friend, like your heals."
-L["KIND_BUFF"] = "Buffs"
-L["KIND_BUFF_DESCRIPTION"] = "Spells that give a friend a lasting buff."
 L["KIND_RESURRECT"] = "Resurrections"
-L["KIND_RESURRECT_DESCRIPTION"] = "Spells you cast on a dead friend to bring them back."
-L["KIND_ANYONE"] = "Friend or Foe Spells"
-L["KIND_ANYONE_DESCRIPTION"] = "Spells you can cast on a friend or an enemy."
-L["KIND_GROUND"] = "Ground-Targeted Spells"
-L["KIND_GROUND_DESCRIPTION"] = "Spells you place on the ground."
-L["KIND_FORM"] = "Forms, Stances, and Aspects"
-L["KIND_FORM_DESCRIPTION"] = "Spells that stay on until you turn them off or switch to another."
-L["KIND_SELF"] = "Self and Area Spells"
-L["KIND_SELF_DESCRIPTION"] = "Spells with no target, cast on yourself or around you."
 
 -- Key Bindings
 L["BINDING_TOGGLE_PAGE"] = "Toggle Enhanced Spellbook"
@@ -2466,7 +2538,8 @@ L["CHAT_KEY_BINDINGS_IN_COMBAT"] = "As a safety precaution, the key binding list
 L["KEY_BINDINGS_LOCATION"] = "Open the game menu, then %s, then %s, and find the Good to Go section."
 L["ERROR_MACRO_SLOTS_FULL"] = "No free macro slots. Delete a few of your macros in /m to make room."
 L["ERROR_MACRO_WINDOW_OPEN"] = "Close the Macros window first."
-L["CHAT_MACROS_DELETED"] = "Macros deleted: %d"
+L["CHAT_MACROS_DELETED"] = "Deleted %d macros."
+L["CHAT_MACROS_DELETED_ONE"] = "Deleted 1 macro."
 L["CHAT_MACRO_TOO_LONG"] =
 	'The "%s" macro is %d bytes with its options on, over the %d a macro holds. Turn an option off to shorten it.'
 L["CHAT_CONSUMABLE_MACRO_TOO_LONG"] =

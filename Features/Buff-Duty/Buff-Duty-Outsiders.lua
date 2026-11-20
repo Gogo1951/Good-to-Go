@@ -12,7 +12,8 @@ local L = ns.L
     for as long as they are targeted -- so its buttons cast at it. A favor is
     only reachable now and then (as your mouseover or focus), so its buttons
     find the player by name instead. The favors themselves are kept by
-    Buff-Duty-Favors.lua.
+    Buff-Duty-Favors.lua. Under a targeted player, a row of the buffs of
+    theirs you could ask them for (Buff-Duty-Asks.lua).
 
     There is no Players in Range list on purpose: the game reveals players
     around you to add-ons only through friendly nameplates, which are off for
@@ -191,7 +192,7 @@ local function TargetSection(listed)
 		listed[guid] = true
 		local _, class = UnitClass("target")
 		local row = { label = PlayerLabel(short, class, "target"), icons = { icon } }
-		return { kind = "target", label = L["BUFF_DUTY_TARGET_HEADER"], icons = {}, rows = { row } }
+		return { kind = "target", label = L["BUFF_DUTY_TARGET_ENABLE"], icons = {}, rows = { row } }
 	end
 
 	local isPet = IsOutsiderPet("target")
@@ -212,7 +213,7 @@ local function TargetSection(listed)
 		if not npcRow then
 			return nil
 		end
-		return { kind = "target", label = L["BUFF_DUTY_TARGET_HEADER"], icons = {}, rows = { npcRow } }
+		return { kind = "target", label = L["BUFF_DUTY_TARGET_ENABLE"], icons = {}, rows = { npcRow } }
 	end
 
 	--[[
@@ -230,7 +231,7 @@ local function TargetSection(listed)
 		end
 		-- It stands on its own even when the tooltip named no owner.
 		petRow.pet = nil
-		return { kind = "target", label = L["BUFF_DUTY_TARGET_HEADER"], icons = {}, rows = { petRow } }
+		return { kind = "target", label = L["BUFF_DUTY_TARGET_ENABLE"], icons = {}, rows = { petRow } }
 	end
 
 	local _, class = UnitClass("target")
@@ -239,17 +240,20 @@ local function TargetSection(listed)
 	local favor = BuffDuty.FavorOf(guid)
 	local icons = OutsiderIcons("target", class, short, nil, "target", favor and favor.given)
 	local petRow = PetRow("targetpet", "targetpet", class)
+	-- The buffs of theirs you could ask them for (Buff-Duty-Asks.lua), on a row of their own.
+	local askRow = BuffDuty.TargetAskRow(class, short)
 
-	-- The player is listed while they or their pet need something.
+	-- The player is listed while they or their pet need something; the ask row needs no row above it.
 	local rows = {}
 	if #icons > 0 or petRow then
 		rows[#rows + 1] = { label = PlayerLabel(short, class, "target"), icons = icons }
 	end
+	rows[#rows + 1] = askRow
 	rows[#rows + 1] = petRow
 	if #rows == 0 then
 		return nil
 	end
-	return { kind = "target", label = L["BUFF_DUTY_TARGET_HEADER"], icons = {}, rows = rows }
+	return { kind = "target", label = L["BUFF_DUTY_TARGET_ENABLE"], icons = {}, rows = rows }
 end
 
 local function FavorSection(listed)
@@ -264,7 +268,7 @@ local function FavorSection(listed)
 		local unit = ns.GetUnitByGUID(guid)
 		if now - favor.at > keep then
 			BuffDuty.ForgetFavor(guid)
-		elseif unit and (UnitInParty(unit) or UnitInRaid(unit)) then
+		elseif unit and (Yes(UnitInParty(unit)) or Yes(UnitInRaid(unit))) then
 			-- They joined your group, and their party lists them now.
 			BuffDuty.ForgetFavor(guid)
 		elseif not listed[guid] then
@@ -288,7 +292,7 @@ local function FavorSection(listed)
 	table.sort(rows, function(a, b)
 		return a.at > b.at
 	end)
-	return { kind = "favor", label = L["BUFF_DUTY_FAVOR_HEADER"], icons = {}, rows = rows }
+	return { kind = "favor", label = L["BUFF_DUTY_FAVOR_ENABLE"], icons = {}, rows = rows }
 end
 
 function BuffDuty.AddOutsiderSections(sections)

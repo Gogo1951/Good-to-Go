@@ -138,7 +138,11 @@ local function FavorCaster(aura)
 	end
 
 	if unit then
-		if UnitIsUnit(unit, "player") or UnitInParty(unit) or UnitInRaid(unit) then
+		if
+			ns.IsPlainYes(UnitIsUnit(unit, "player"))
+			or ns.IsPlainYes(UnitInParty(unit))
+			or ns.IsPlainYes(UnitInRaid(unit))
+		then
 			return nil
 		end
 		local isFriend = UnitIsFriend("player", unit)

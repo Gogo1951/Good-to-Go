@@ -86,6 +86,8 @@ BuffDuty.soulstoneEntry = nil
 BuffDuty.soulstoneBuff = nil
 -- The resurrection the Buff Key casts on a dead target, { id, name, ids }, or nil.
 BuffDuty.resurrection = nil
+-- Each class's resurrection ranks, { class, ranks }, lowest first; filled by BuffDuty.BuildLookup.
+BuffDuty.resurrections = {}
 --[[
     Seconds left under which a buff counts as missing; set from the
     account-wide Buff Duty settings each time BuffDuty.BuildSections runs.
@@ -98,8 +100,9 @@ BuffDuty.isSetUp = false
 --------------------------------------------------------------------------------
 
 --[[
-    The highest group version you know. The data lists them lowest first, so
-    the last known one; the tooltip shows it and the button casts it by rank.
+    The highest group version you know. BuffDuty.BuildLookup sorts them lowest
+    level first, so the last known one; the tooltip shows it and the button
+    casts it by rank.
 ]]
 local function HighestKnown(ids)
 	for index = #ids, 1, -1 do
@@ -174,6 +177,7 @@ function BuffDuty.BuildBuffs()
 					manaOnly = entry.row.manaOnly,
 					noCasters = entry.row.noCasters,
 					pets = entry.row.pets,
+					noShadowform = entry.row.noShadowform,
 					exclusive = entry.row.exclusive,
 					ranks = ranks,
 					-- Set when you know any single-target rank at all.
@@ -208,6 +212,9 @@ function BuffDuty.BuildBuffs()
 					refreshSeconds = when * 60,
 					-- Soul Link only means anything with a demon out.
 					needsPet = entry.row.needsPet,
+					-- Shadowform: the Buff Key casts it after everything else.
+					castLast = entry.row.castLast,
+					noShadowform = entry.row.noShadowform,
 				}
 			end
 		end
@@ -240,6 +247,7 @@ function BuffDuty.BuildBuffs()
 					auraIds = entry.auraIds,
 					rankLevels = entry.rankLevels,
 					exclusive = row.exclusive,
+					noShadowform = row.noShadowform,
 					ranks = ranks,
 					singleName = ranks[1].name,
 					groupId = HighestKnown(entry.groupIds),
@@ -291,6 +299,8 @@ function BuffDuty.BuildBuffs()
 				column = #selfBuffs + 2 + #selfItemBuffs,
 				key = entry.key,
 				itemId = entry.itemId,
+				wellFed = entry.wellFed,
+				scrolls = entry.scrolls,
 				auraIds = entry.auraIds,
 				rankLevels = {},
 				ranks = {},

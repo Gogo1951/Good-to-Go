@@ -86,17 +86,28 @@ ns.ENGINEERING_SKILL_LINE_ID = 202
 -- The Engineering specialization Diagnostics checks the player for.
 ns.GOBLIN_ENGINEER_SPELL_ID = 20222
 
+-- The creature family the Rank Watch Example names a warlock's demon by.
+ns.IMP_CREATURE_FAMILY_ID = 23 -- Imp
+
+-- The Inventory Report Example's item when the bags hold no consumable: every character carries one.
+ns.HEARTHSTONE_ITEM_ID = 6948 -- Hearthstone
+
 -- Buff Duty
 -- [constant] = spell id, -- Spell Name
 ns.GAME_IDS = {
 	PHASE_SHIFT_SPELL_ID = 4511, -- Phase Shift
 }
 
+-- Buff Duty: the generic eating and drinking auras, and Bloodrage
+ns.FOOD_SPELL_ID = 433
+ns.DRINK_SPELL_ID = 430
+ns.BLOODRAGE_SPELL_ID = 2687
+
 --[[
 How We Got the Data
 
 Last Validated
-	2026-11-15, Classic Era 1.15.9.70576
+	2026-11-19, wago.tools, Classic Era 1.15.9.70576
 
 Notes
 	- Single spell, item, race and skill-line IDs the feature code reads by name, grouped by use. The client supplies every name the player sees from these IDs.
@@ -119,6 +130,8 @@ wago.tools
 	https://wago.tools/db2/ItemSparse?build=1.15.9.70576
 	https://wago.tools/db2/ManifestInterfaceData?build=1.15.9.70003
 	https://wago.tools/db2/SkillLine?build=1.15.9.70576
+	https://wago.tools/db2/Item?build=1.15.9.70576
+	https://wago.tools/db2/CreatureFamily?build=1.15.9.70576
 
 QuestieDB
 	None.

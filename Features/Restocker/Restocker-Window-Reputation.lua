@@ -38,11 +38,11 @@ local function ReputationStandingByValue(value)
 	return REPUTATION_STANDINGS[1] -- default to "Any"
 end
 
--- Menu label, e.g. "Honored  (10% off)"
+-- Menu label: the standing, and its discount for the row's right side ("10% Off"), or nil.
 local function ReputationMenuText(standing)
 	local label = ns.GetStandingLabel(standing.value)
 	if standing.discount and standing.discount > 0 then
-		return string.format(L["RESTOCKER_REPUTATION_DISCOUNT_FORMAT"], label, standing.discount)
+		return label, string.format(L["RESTOCKER_REPUTATION_DISCOUNT"], standing.discount)
 	end
 	return label
 end

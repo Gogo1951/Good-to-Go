@@ -17,8 +17,9 @@ local GetColor = ns.GetColor
     (Options-Buff-Duty-Buffs.lua), Self-Buffs
     (Options-Buff-Duty-Self-Buffs.lua) and Weapon Buffs
     (Options-Buff-Duty-Weapon-Buffs.lua). The ask whispered to other classes
-    is the player's to word, in the whisper composer under Ask Other Classes
-    for Buffs (Options/Options-Message-Composer.lua).
+    is the player's to word, in the whisper composer under Ask for Buffs
+    (Options/Options-Message-Composer.lua), and so is the ask to
+    your target, in the one under Ask Your Target for Buffs.
 
     Every window setting's setter ends in ns.RefreshBuffDuty, which rebuilds
     the castable list and redraws the window.
@@ -86,6 +87,26 @@ function ns.BuildBuffDutyOptions()
 
 	local function AskHidden()
 		return Hidden() or not Settings().askOtherClasses
+	end
+
+	-- Ask Your Target for Buffs sits under Your Target, and its composer with it.
+	local function AskTargetHidden()
+		return Hidden() or not Settings().targetEnabled or not Settings().askTarget
+	end
+
+	-- The sample ask to a target: a priest's two buffs, where this client has them; else the asks' sample buff.
+	local function SampleTargetSpells()
+		local spells = {}
+		for _, entry in ipairs(ns.BuffDuty.entries) do
+			if entry.row.class == "PRIEST" and not entry.row.talent and #spells < 2 then
+				local id = entry.ids[#entry.ids]
+				spells[#spells + 1] = ns.GetSpellLink(id) or C_Spell.GetSpellName(id) or ""
+			end
+		end
+		if not spells[1] then
+			spells[1] = SampleAskLink() or ""
+		end
+		return spells
 	end
 
 	-- No Example where the client has no raid buff to ask for.
@@ -206,7 +227,8 @@ function ns.BuildBuffDutyOptions()
 
 			--[[
 			    The window's optional rows, in the order it shows them: your self
-			    buffs above the group, the players outside it below.
+			    buffs and weapons, Ask for Buffs, then the players outside your
+			    group (Your Target, Return the Favor).
 			]]
 			headerShow = Kit.Header(L["BUFF_DUTY_SHOW_HEADER"], 6, Hidden),
 			space2 = Kit.Spacer(7, Hidden),
@@ -221,17 +243,15 @@ function ns.BuildBuffDutyOptions()
 				8.6
 			),
 			space3 = Kit.Spacer(9, Hidden),
-			--[[
-			    The toggle and how long a stranger stays listed, on one row
-			    (Kit.ToggleRow); the dropdown appears only while the toggle is on.
-			    Labeled with the client's own duration strings, so "1 Minute" reads
-			    right in every locale without a string of ours.
-			]]
-			favorEnabled = Kit.ToggleRow(
-				10,
-				Toggle("favorEnabled", L["BUFF_DUTY_FAVOR_ENABLE"], L["BUFF_DUTY_FAVOR_ENABLE_DESCRIPTION"]),
-				{ control = FavorSeconds(), hidden = Hidden }
+			askOtherClasses = Toggle(
+				"askOtherClasses",
+				L["BUFF_DUTY_ASK_OTHERS"],
+				L["BUFF_DUTY_ASK_OTHERS_DESCRIPTION"],
+				10
 			),
+			-- 10.3 through 10.49 belong to the whisper composer, added below; the Example closes the field set.
+			askComposerSpace = Kit.Spacer(10.25, AskHidden),
+			askExample = Kit.Example(10.495, AskExampleHidden, AskExample),
 			space4 = Kit.Spacer(11, Hidden),
 			targetEnabled = Toggle(
 				"targetEnabled",
@@ -243,16 +263,23 @@ function ns.BuildBuffDutyOptions()
 			targetNPCs = Kit.SubToggleRow(12.1, function()
 				return Hidden() or not Settings().targetEnabled
 			end, Toggle("targetNPCs", L["BUFF_DUTY_TARGET_NPCS"], L["BUFF_DUTY_TARGET_NPCS_DESCRIPTION"])),
-			spaceAsk = Kit.Spacer(12.3, Hidden),
-			askOtherClasses = Toggle(
-				"askOtherClasses",
-				L["BUFF_DUTY_ASK_OTHERS"],
-				L["BUFF_DUTY_ASK_OTHERS_DESCRIPTION"],
-				12.5
+			askTarget = Kit.SubToggleRow(12.12, function()
+				return Hidden() or not Settings().targetEnabled
+			end, Toggle("askTarget", L["BUFF_DUTY_ASK_TARGET"], L["BUFF_DUTY_ASK_TARGET_DESCRIPTION"])),
+			-- 12.2 through 12.39 belong to the ask-your-target whisper composer, added below.
+			askTargetComposerSpace = Kit.Spacer(12.15, AskTargetHidden),
+			spaceFavor = Kit.Spacer(12.4, Hidden),
+			--[[
+			    The toggle and how long a stranger stays listed, on one row
+			    (Kit.ToggleRow); the dropdown appears only while the toggle is on.
+			    Labeled with the client's own duration strings, so "1 Minute" reads
+			    right in every locale without a string of ours.
+			]]
+			favorEnabled = Kit.ToggleRow(
+				12.5,
+				Toggle("favorEnabled", L["BUFF_DUTY_FAVOR_ENABLE"], L["BUFF_DUTY_FAVOR_ENABLE_DESCRIPTION"]),
+				{ control = FavorSeconds(), hidden = Hidden }
 			),
-			askExample = Kit.Example(12.7, AskExampleHidden, AskExample),
-			-- 12.8 through 12.99 belong to the whisper composer, added below.
-			askComposerSpace = Kit.Spacer(12.75, AskHidden),
 			space5 = Kit.Spacer(13, Hidden),
 
 			headerWindow = Kit.Header(L["BUFF_DUTY_HEADER"], 14, Hidden),
@@ -270,6 +297,38 @@ function ns.BuildBuffDutyOptions()
 			space8 = Kit.Spacer(19, Hidden),
 		},
 	}
+
+	--[[
+	    The ask to your target's composer, under Ask Your Target for Buffs: the
+	    whisper an ask icon's click or the Buff Key sends, with the panel's
+	    sample name and buffs. Send Messages In shows on whichever of the two
+	    composers comes first: the one under Ask for Buffs while it's showing,
+	    else this one.
+	]]
+	ns.DefineWhisperComposer(options.args, {
+		prefix = "askTargetWhisper",
+		hidden = AskTargetHidden,
+		languageHidden = function()
+			return AskTargetHidden() or not AskHidden()
+		end,
+		messages = {
+			{
+				field = "buffAskTarget",
+				label = L["WHISPER_TEXT"],
+				description = L["BUFF_DUTY_ASK_TARGET_MESSAGE_DESCRIPTION"],
+				tokens = function()
+					local info, help = GetColor("INFO"), GetColor("HELP")
+					return L["BUFF_DUTY_ASK_TARGET_TOKENS"]:format(info .. "{name}" .. help, info .. "{spells}" .. help)
+				end,
+				fill = function(text)
+					return ns.FillBuffAskTargetWhisper(text, ns.SAMPLE_NAMES.PRIEST, SampleTargetSpells())
+				end,
+				build = function(text)
+					return ns:BuildBuffAskTargetWhisper(text, ns.SAMPLE_NAMES.PRIEST, SampleTargetSpells())
+				end,
+			},
+		},
+	}, 12.2)
 
 	--[[
 	    The whispered ask's composer, following the ask toggle: the ask a
@@ -298,7 +357,7 @@ function ns.BuildBuffDutyOptions()
 				end,
 			},
 		},
-	}, 12.8)
+	}, 10.3)
 
 	--[[
 	    One toggle per class this client has, each with the game's class icon

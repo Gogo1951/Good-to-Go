@@ -333,7 +333,7 @@ ns.CONSUMABLE_UPGRADE_CHAINS = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, Mists of Pandaria Classic 5.5.4.70631
+	2026-11-19, wago.tools, Mists of Pandaria Classic 5.5.4.71060
 
 Notes
 	- The staple ladders, read by Features/Restocker/Restocker-Upgrade.lua and the Starter List (Restocker-Starter-List.lua). Same chains, keys and row format as the other clients; see Consumable-Upgrade-Paths-TBC.lua for why this is a table of its own.
@@ -358,6 +358,11 @@ wago.tools
 	https://wago.tools/db2/SpellReagents?build=5.5.4.70631
 	https://wago.tools/db2/SpellTotems?build=5.5.4.70631
 	https://wago.tools/db2/SkillLineAbility?build=5.5.4.70631
+	https://wago.tools/db2/Item?build=5.5.4.70960
+	https://wago.tools/db2/ItemSparse?build=5.5.4.70960
+	https://wago.tools/db2/ItemEffect?build=5.5.4.70960
+	https://wago.tools/db2/Item?build=5.5.4.71060
+	https://wago.tools/db2/ItemSparse?build=5.5.4.71060
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/MoP/mopItemDB.lua

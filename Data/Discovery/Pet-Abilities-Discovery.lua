@@ -631,7 +631,7 @@ ns.DEMON_ABILITIES = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, Season of Discovery 1.15.9.70576
+	2026-11-19, wago.tools, Season of Discovery 1.15.9.70576
 
 Notes
 	- Every hunter pet ability rank this client's pets can learn (a copy of Data/Vanilla/), for the Pet What's Next? tab (Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Pet.lua): one row per rank, with the beasts that teach the ranks learned by taming.
@@ -661,6 +661,8 @@ wago.tools
 	https://wago.tools/db2/ItemEffect?build=1.15.9.70576
 	https://wago.tools/db2/ItemSparse?build=1.15.9.70576
 	https://wago.tools/db2/CreatureFamily?build=1.15.9.70576
+	https://wago.tools/db2/Item?build=1.15.9.70576
+	https://wago.tools/db2/AreaTable?build=1.15.9.70576
 
 QuestieDB
 	None.

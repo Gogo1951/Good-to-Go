@@ -35,6 +35,45 @@ local function LiveIds(ids)
 	return live
 end
 
+--[[
+    Row order in the data never says which rank is higher, so every list a
+    reader takes a rank from by position is sorted here, once, lowest level
+    first; rows on one level keep the data's order. levelOf reads an item's
+    level.
+]]
+local function SortByLevel(list, levelOf)
+	local order = {}
+	for index, item in ipairs(list) do
+		order[item] = index
+	end
+	table.sort(list, function(a, b)
+		local left, right = levelOf(a), levelOf(b)
+		if left ~= right then
+			return left < right
+		end
+		return order[a] < order[b]
+	end)
+	return list
+end
+
+local function RankLevel(rank)
+	return rank.level
+end
+
+-- A spell id with no level in the data, by the level the client says it is learned at.
+local function LearnedLevel(id)
+	return C_Spell.GetSpellLevelLearned(id) or 0
+end
+
+-- A rank list's ids, in the ranks' (sorted) order.
+local function RankIds(ranks)
+	local ids = {}
+	for index, rank in ipairs(ranks) do
+		ids[index] = rank.id
+	end
+	return ids
+end
+
 function BuffDuty.BuildLookup()
 	wipe(entries)
 	wipe(lookup)
@@ -49,7 +88,11 @@ function BuffDuty.BuildLookup()
 			end
 		end
 		if ids[1] then
-			local groupIds = LiveIds(row.group)
+			-- The key stays the data's first live rank, so saved settings keep finding it.
+			local key = ids[1]
+			SortByLevel(ranks, RankLevel)
+			ids = RankIds(ranks)
+			local groupIds = SortByLevel(LiveIds(row.group), LearnedLevel)
 			--[[
 			    Any version counts as buffed: each rank's aura carries its own id.
 			    Has drops a single-target rank below the one you'd cast. A Greater
@@ -68,7 +111,7 @@ function BuffDuty.BuildLookup()
 				end
 			end
 			local entry = {
-				key = ids[1],
+				key = key,
 				row = row,
 				ids = ids,
 				ranks = ranks,
@@ -94,6 +137,9 @@ function BuffDuty.BuildLookup()
 			end
 		end
 		if ids[1] then
+			local key = ids[1]
+			SortByLevel(ranks, RankLevel)
+			ids = RankIds(ranks)
 			-- A buff whose aura isn't its cast (Demonic Sacrifice's four) names its auras.
 			for _, id in ipairs(LiveIds(row.auras)) do
 				auraIds[id] = true
@@ -104,8 +150,7 @@ function BuffDuty.BuildLookup()
 					exclusiveIds[row.exclusive][id] = true
 				end
 			end
-			local entry =
-				{ key = ids[1], row = row, ids = ids, ranks = ranks, rankLevels = rankLevels, auraIds = auraIds }
+			local entry = { key = key, row = row, ids = ids, ranks = ranks, rankLevels = rankLevels, auraIds = auraIds }
 			selfEntries[#selfEntries + 1] = entry
 			selfLookup[entry.key] = entry
 		end
@@ -246,8 +291,57 @@ function BuffDuty.BuildLookup()
 	end
 
 	--[[
+	    Well Fed, for any class, wherever the flavor knows the buff: offered
+	    with whatever buff food the Food macro would eat (ns.bestBuffFoodID),
+	    so it has no item of its own, and counted by every Well Fed aura, which
+	    the window reads itself (Buff-Duty-Self.lua). Named on the panel by
+	    the Well Fed spell. Shows When Missing by default where the flavor's
+	    data sets ns.BUFF_DUTY_ITEM_BUFFS_SHOWN (WoW Forever, where buff food is
+	    nearly all anyone carries), and is off elsewhere.
+	]]
+	if ns.WELL_FED_SPELL_ID and (next(ns.WELL_FED_BUFF_IDS or {}) or next(ns.WELL_FED_ICON_IDS or {})) then
+		local default = ns.BUFF_DUTY_ITEM_BUFFS_SHOWN and Data.SELF_REFRESH_MISSING or Data.SELF_REFRESH_OFF
+		selfItemEntries[#selfItemEntries + 1] = {
+			key = "wellFed",
+			row = { default = default },
+			wellFed = true,
+			ids = { ns.WELL_FED_SPELL_ID },
+			auraIds = {},
+			desc = L["BUFF_DUTY_WELL_FED_DESCRIPTION_FORMAT"]:format(ns.GetWellFedName()),
+		}
+	end
+
+	--[[
+	    Scrolls, for any class, wherever the flavor has them: one entry for
+	    every scroll type, offered as an icon per type (Buff-Duty-Self.lua).
+	    Named on the panel as Scrolls, with the buff of the first type's scroll
+	    needing the lowest level for its icon. Shows When Missing by default where Well
+	    Fed does (ns.BUFF_DUTY_ITEM_BUFFS_SHOWN), and is off elsewhere.
+	]]
+	local firstScroll = ns.SCROLL_DATA and ns.SCROLL_DATA[ns.SCROLL_CHECK_ORDER[1]]
+	local lowestScroll
+	for _, item in ipairs(firstScroll and firstScroll.items or {}) do
+		if not lowestScroll or item[3] < lowestScroll[3] then
+			lowestScroll = item
+		end
+	end
+	local scrollIds = lowestScroll and LiveIds({ lowestScroll[2] }) or {}
+	if scrollIds[1] then
+		selfItemEntries[#selfItemEntries + 1] = {
+			key = "scrolls",
+			row = { default = ns.BUFF_DUTY_ITEM_BUFFS_SHOWN and Data.SELF_REFRESH_MISSING or Data.SELF_REFRESH_OFF },
+			scrolls = true,
+			name = L["BUFF_DUTY_SCROLLS"],
+			ids = scrollIds,
+			auraIds = {},
+			desc = L["BUFF_DUTY_SCROLLS_DESCRIPTION"],
+		}
+	end
+
+	--[[
 	    The Soulstone is offered by its Create Soulstone ranks, counted by its
-	    Soulstone Resurrection auras, and named on the panel by the aura.
+	    Soulstone Resurrection auras, and named on the panel by the aura. Its
+	    stones are kept as item ids, lowest level first.
 	]]
 	BuffDuty.soulstoneEntry = nil
 	local stone = ns.BUFF_DUTY_SOULSTONE
@@ -262,14 +356,32 @@ function BuffDuty.BuildLookup()
 		auraIds[id] = true
 	end
 	if ranks[1] and auras[1] then
+		local key = ranks[1].id
+		local stones = {}
+		for _, item in ipairs(stone.items) do
+			stones[#stones + 1] = { id = item[1], level = item[2] }
+		end
 		BuffDuty.soulstoneEntry = {
-			key = ranks[1].id,
+			key = key,
 			row = stone,
 			ids = auras,
-			ranks = ranks,
+			ranks = SortByLevel(ranks, RankLevel),
 			auraIds = auraIds,
-			items = stone.items,
+			items = RankIds(SortByLevel(stones, RankLevel)),
 		}
+	end
+
+	--[[
+	    Each class's resurrection, its live ranks lowest first by the level the
+	    client says each is learned at (the data carries none), for the Buff Key
+	    (BuffDuty.PickResurrection).
+	]]
+	BuffDuty.resurrections = {}
+	for _, row in ipairs(ns.BUFF_DUTY_RESURRECTIONS) do
+		local live = SortByLevel(LiveIds(row.ranks), LearnedLevel)
+		if live[1] then
+			BuffDuty.resurrections[#BuffDuty.resurrections + 1] = { class = row.class, ranks = live }
+		end
 	end
 end
 

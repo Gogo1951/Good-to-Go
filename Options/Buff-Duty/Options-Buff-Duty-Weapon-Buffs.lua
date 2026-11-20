@@ -4,9 +4,9 @@ local L = ns.L
 local Kit = ns.OptionsKit
 
 --[[
-    "Weapon Buffs" panel, under Buff Duty after Self-Buffs: one Reapply
-    timing for everything at the top, then a grid of checkboxes -- a row per
-    choice, a Main Hand and an Off Hand column. A rogue's poisons, a
+    "Weapon Buffs" panel, under Buff Duty after Self-Buffs: one Refresh Under
+    timing for everything at the top, then, under a gold header each, a grid
+    of checkboxes -- a row per choice, a Main Hand and an Off Hand column. A rogue's poisons, a
     shaman's imbues and, on WoW Forever, a warlock's Firestone and
     Spellstone come first, then the oils, stones and lures any class can
     use, strongest first. Everything is listed, whatever is in your bags (these settings
@@ -18,8 +18,8 @@ local Kit = ns.OptionsKit
     the window's other rows.
 ]]
 
--- Each column's share of a boxed row's control width, so the two sit where a dropdown would.
-local COLUMN_WIDTH = ns.OPTIONS_CONTROL_WIDTH / 2
+-- Each column's share of the control column, so the two sit where a dropdown would.
+local COLUMN_WIDTH = Kit.CONTROL_WIDTH / 2
 
 --[[
     A poison or weapon item is named by its line's first item, an imbue by
@@ -47,10 +47,11 @@ local function WeaponChoiceIcon(entry)
 end
 
 --[[
-    A box of choices: the column captions, then a row per choice -- its name,
+    A group of choices: the column captions, then a row per choice -- its name,
     whose hover shows the game tooltip (a poison line's best item, an oil's
-    own, or the imbue's spell), and a checkbox per hand. `hands` is which
-    columns this box has; `handKey(hand)` names the hand's table in `list()`.
+    own, or the imbue's spell), and a checkbox per hand -- each a row of its
+    own (Kit.Row) on the page's label and control columns. `hands` is which
+    columns this group has; `handKey(hand)` names the hand's table in `list()`.
 ]]
 local function DefineGrid(args, choices, hands, list, handKey)
 	local has = {}
@@ -58,33 +59,34 @@ local function DefineGrid(args, choices, hands, list, handKey)
 		has[hand] = true
 	end
 
-	args.columnsSpace = Kit.Label("", 1, ns.OPTIONS_INLINE_LABEL_WIDTH)
-	for index, hand in ipairs(Data.WEAPON_HAND_ORDER) do
+	local captions = { Kit.Label("", nil, Kit.LABEL_WIDTH) }
+	for _, hand in ipairs(Data.WEAPON_HAND_ORDER) do
 		if has[hand] then
-			args["column_" .. hand] = Kit.Label(ns.WEAPON_HAND_LABELS[hand], 1 + index / 10, COLUMN_WIDTH)
+			captions[#captions + 1] = Kit.Label(ns.WEAPON_HAND_LABELS[hand], nil, COLUMN_WIDTH)
 		end
 	end
+	args.columns = Kit.Row(1, nil, captions)
 
 	for index, entry in ipairs(choices) do
-		local order = 10 + index
 		local link = entry.items and ("item:" .. entry.items[1].id) or ns.SpellTooltipLink(entry.ids)
-		args["label_" .. entry.key] = ns.OptionsAbilityLabel(function()
-			local icon = WeaponChoiceIcon(entry)
-			local name = WeaponChoiceName(entry)
-			return icon and ("|T" .. icon .. ":16|t " .. name) or name
-		end, order, ns.OPTIONS_INLINE_LABEL_WIDTH, link)
+		local cells = {
+			ns.OptionsAbilityLabel(function()
+				local icon = WeaponChoiceIcon(entry)
+				local name = WeaponChoiceName(entry)
+				return icon and ("|T" .. icon .. ":16|t " .. name) or name
+			end, nil, Kit.LABEL_WIDTH, link),
+		}
 
-		for handIndex, hand in ipairs(Data.WEAPON_HAND_ORDER) do
+		for _, hand in ipairs(Data.WEAPON_HAND_ORDER) do
 			if has[hand] then
 				local handName = ns.WEAPON_HAND_LABELS[hand]
-				args["toggle_" .. entry.key .. "_" .. hand] = {
+				cells[#cells + 1] = {
 					type = "toggle",
 					name = "",
 					desc = function()
 						return L["BUFF_DUTY_WEAPON_PICK_DESCRIPTION"]:format(WeaponChoiceName(entry), handName)
 					end,
 					width = COLUMN_WIDTH,
-					order = order + handIndex / 10,
 					get = function()
 						return ns.BuffDuty.WeaponChoiceOn(list(), handKey(hand), entry.key)
 					end,
@@ -98,11 +100,20 @@ local function DefineGrid(args, choices, hands, list, handKey)
 				}
 			end
 		end
+		args["choice_" .. entry.key] = Kit.Row(10 + index, nil, cells)
 	end
 end
 
-local function Box(name, order)
-	return { type = "group", name = name, order = order, inline = true, args = {} }
+--[[
+    A gold header and a spacer, as on Group Buffs, then its rows in a group
+    with no title, which AceConfig draws with no box. Returns the group's args.
+]]
+local function AddSection(args, key, title, order)
+	args[key .. "Header"] = Kit.Header(title, order - 0.3)
+	args[key .. "Space"] = Kit.Spacer(order - 0.2)
+	args[key] = { type = "group", name = "", order = order, inline = true, args = {} }
+	args[key .. "After"] = Kit.Spacer(order + 0.5)
+	return args[key].args
 end
 
 function ns.BuildBuffDutyWeaponBuffsOptions()
@@ -116,20 +127,12 @@ function ns.BuildBuffDutyWeaponBuffsOptions()
 		args = {
 			descIntro = Kit.Desc(L["BUFF_DUTY_WEAPON_DESCRIPTION"], 1),
 			spaceIntro = Kit.Spacer(2),
-			-- One timing for every choice below, lined up with the boxes' columns.
-			refreshLabel = Kit.Label(
-				ns.GetColor("TITLE") .. L["BUFF_DUTY_WEAPON_REFRESH"] .. "|r",
-				3,
-				ns.OPTIONS_ALIGNED_LABEL_WIDTH
-			),
-			refresh = {
+			-- One timing for every choice below, on the same columns as their checkboxes.
+			refresh = Kit.LabelRow(3, nil, L["BUFF_DUTY_REFRESH"], {
 				type = "select",
-				name = "",
 				desc = L["BUFF_DUTY_WEAPON_REFRESH_DESCRIPTION"],
 				values = ns.BuffDutyRefreshValues(Data.WEAPON_REFRESH_CHOICES),
 				sorting = Data.WEAPON_REFRESH_CHOICES,
-				width = ns.OPTIONS_CONTROL_WIDTH,
-				order = 3.1,
 				get = function()
 					return Settings().weaponRefresh
 				end,
@@ -137,7 +140,7 @@ function ns.BuildBuffDutyWeaponBuffsOptions()
 					Settings().weaponRefresh = value
 					ns.RefreshBuffDuty()
 				end,
-			},
+			}),
 			spaceRefresh = Kit.Spacer(4),
 		},
 	}
@@ -167,11 +170,10 @@ function ns.BuildBuffDutyWeaponBuffsOptions()
 		table.sort(choices, function(a, b)
 			return WeaponChoiceName(a) < WeaponChoiceName(b)
 		end)
-		local box = Box(ns.ClassName(class), boxOrder)
-		DefineGrid(box.args, choices, ns.BUFF_DUTY_WEAPON_HANDS[class] or {}, Picks, function(hand)
+		local rows = AddSection(options.args, "class_" .. class, LOCALIZED_CLASS_NAMES_MALE[class] or class, boxOrder)
+		DefineGrid(rows, choices, ns.BUFF_DUTY_WEAPON_HANDS[class] or {}, Picks, function(hand)
 			return class .. "_" .. hand
 		end)
-		options.args["class_" .. class] = box
 		boxOrder = boxOrder + 1
 	end
 
@@ -192,16 +194,22 @@ function ns.BuildBuffDutyWeaponBuffsOptions()
 				end
 				return WeaponChoiceName(a) < WeaponChoiceName(b)
 			end)
-			local box = Box(L["BUFF_DUTY_WEAPON_KIND_" .. kind], boxOrder)
+			local rows = AddSection(options.args, "kind_" .. kind, L["BUFF_DUTY_WEAPON_KIND_" .. kind], boxOrder)
 			local hands = Data.WEAPON_ITEM_KIND_HANDS[kind] or Data.WEAPON_HAND_ORDER
-			DefineGrid(box.args, byKind[kind], hands, Items, function(hand)
+			DefineGrid(rows, byKind[kind], hands, Items, function(hand)
 				return hand
 			end)
-			options.args["kind_" .. kind] = box
 			boxOrder = boxOrder + 1
 		end
 	end
 
-	ns.AddFeatureOffLine(options.args, "buffWindow.enabled")
+	-- With Buff Duty on, the line names this page's own switch, on the Buff Duty page, while that is off.
+	ns.AddFeatureOffLine(options.args, "buffWindow.enabled", {
+		isOn = function()
+			return Settings().weaponEnabled
+		end,
+		name = "BUFF_DUTY_WEAPON_ENABLE",
+		page = "TAB_BUFF_DUTY",
+	})
 	return options
 end

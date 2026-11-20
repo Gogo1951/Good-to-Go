@@ -65,7 +65,7 @@ ns.ELIXIR_BUFF_IDS = {
 	[28503] = true, -- Elixir of Major Shadow Power
 	[28490] = true, -- Elixir of Major Strength
 	[33726] = true, -- Elixir of Mastery
-	[28497] = true, -- Elixir of Mighty Agility
+	[28497] = true, -- Elixir of Major Agility
 	[2374] = true, -- Elixir of Minor Agility
 	[673] = true, -- Elixir of Minor Defense
 	[2378] = true, -- Elixir of Minor Fortitude
@@ -90,10 +90,10 @@ ns.ELIXIR_BUFF_IDS = {
 	[16329] = true, -- Juju Might
 	[16323] = true, -- Juju Power
 	[10668] = true, -- Lung Juice Cocktail
-	[24363] = true, -- Mageblood Elixir
+	[24363] = true, -- Mageblood Potion
 	[11364] = true, -- Magic Resistance Potion
-	[3223] = true, -- Major Troll's Blood Elixir
-	[24361] = true, -- Mighty Troll's Blood Elixir
+	[3223] = true, -- Mighty Troll's Blood Potion
+	[24361] = true, -- Major Troll's Blood Potion
 	[2380] = true, -- Minor Magic Resistance Potion
 	[33720] = true, -- Onslaught Elixir
 	[10667] = true, -- R.O.I.D.S.
@@ -102,9 +102,9 @@ ns.ELIXIR_BUFF_IDS = {
 	[24417] = true, -- Sheen of Zanza
 	[33721] = true, -- Adept's Elixir
 	[24382] = true, -- Spirit of Zanza
-	[3222] = true, -- Strong Troll's Blood Elixir
+	[3222] = true, -- Strong Troll's Blood Potion
 	[24383] = true, -- Swiftness of Zanza
-	[3219] = true, -- Weak Troll's Blood Elixir
+	[3219] = true, -- Weak Troll's Blood Potion
 	[17038] = true, -- Winterfall Firewater
 }
 
@@ -112,7 +112,7 @@ ns.ELIXIR_BUFF_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, TBC Anniversary 2.5.6.70577
+	2026-11-19, wago.tools, TBC Anniversary 2.5.6.70577
 
 Notes
 	- What counts as being flasked, for the Readiness Report's Flask or 2x Elixirs check (Features/Readiness-Report/Readiness-Report-Probes.lua): a flask, OR two different elixirs. Two different elixirs is the whole test, and it is enough because the client enforces the rest: from TBC on, a character may carry one battle and one guardian elixir at a time, so any two elixir auras up together are already one of each. Nothing here needs to know which kind an elixir is, which is why neither table carries that column; it can't be read off an aura at runtime.
@@ -146,6 +146,7 @@ wago.tools
 	https://wago.tools/db2/ItemEffect?build=2.5.6.70577
 	https://wago.tools/db2/SpellEffect?build=2.5.6.70577
 	https://wago.tools/db2/Spell?build=2.5.6.70577
+	https://wago.tools/db2/SpellName?build=2.5.6.70577
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/TBC/tbcItemDB.lua

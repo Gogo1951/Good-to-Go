@@ -74,7 +74,7 @@ ns.EXTRA_SPELL_SOURCES = {
 How We Got the Data
 
 Last Validated
-	2026-11-15, WoW Forever 1.60.1.70938
+	2026-11-19, wago.tools, WoW Forever 1.60.1.70959
 
 Notes
 	- Where each class list's extraSpells entry (Data/Camelot/Class-Spell-Lists-Camelot.lua) is learned, and at what level, for the What's Next? tab (Features/Enhanced-Spellbook/Whats-Next/Whats-Next.lua). The trainer rows (Data/Camelot/Trainer-Spells-Camelot.lua) say their own source: a plain row is the trainer, book marks a book and talent a talent. extraSpells entries carry no source, so this table gives one.
@@ -83,7 +83,7 @@ Notes
 	- level is the level the quest, trainer or book asks for. A TALENT row has none: the tab reads the talent's tier from the client's talent tree.
 	- Checked against CMaNGOS classic-db: a QUEST row is a quest's reward (quest_template RewSpell and RewSpellCast, through the teaching spell's Learn Spell effect), a TRAINER row is on its trainer lists (npc_trainer, npc_trainer_template), and a BOOK row an item's learn spell (item_template). level is the quest's MinLevel, the trainer's reqlevel or the item's RequiredLevel. Warrior's Taunt and Sunder Armor come with the Defensive Stance quest (Path of Defense), and Intercept with Berserker Stance's (The Affray). Polymorph (Pig) is the reward of Fragmented Magic.
 	- Teleport: Moonglade has no trainer, quest or item in CMaNGOS; it stays TRAINER, where Wowhead's comments put it, until a client check confirms it.
-	- An extraSpells entry missing here shows with no source: WoW Forever's own spells (Templar's Bulwark, Swift Judgement, Light's Vigil, Mutilate, Venom, Wrack, Bane of Havoc, Spearing Strike), whose source isn't known yet.
+	- An extraSpells entry missing here shows with no source: WoW Forever's own spells (Templar's Bulwark, Swift Judgement, Light's Vigil, Venom, Wrack, Bane of Havoc, Spearing Strike), whose source isn't known yet.
 	- Copied from Data/Vanilla/, less Summon Dreadsteed, which this client's class lists don't have.
 
 SQL (CMaNGOS)
@@ -94,6 +94,11 @@ Wowhead
 
 wago.tools
 	https://wago.tools/db2/SpellName?build=1.60.1.70862
+	https://wago.tools/db2/SpellName?build=1.60.1.70959
+	https://wago.tools/db2/Spell?build=1.60.1.70959
+	https://wago.tools/db2/SpellMisc?build=1.60.1.70959
+	https://wago.tools/db2/SpellEffect?build=1.60.1.70959
+	https://wago.tools/db2/SpellLevels?build=1.60.1.70959
 
 QuestieDB
 	None.

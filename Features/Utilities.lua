@@ -1,5 +1,4 @@
 local _, ns = ...
-local L = ns.L
 
 --[[
     Utilities -- stateless, cross-cutting helpers used by multiple files: the
@@ -137,6 +136,9 @@ end
       ns.FetchPurchasedBankTabIDs()  Forever's character bank is the C_Bank
                                      tabs the player bought; nil on Era and
                                      TBC, which have BANK_CONTAINER and bags.
+      ns.BankBagIDs()                The character bank's container IDs, the
+                                     main bank first: those tabs on Forever,
+                                     BANK_CONTAINER and seven bags elsewhere.
       ns.GetReagentBagID()           Forever's equipped reagent bag; nil on
                                      Era, TBC and Mists, which have none.
       ns.GetNumTalentTabs()          The classic talent trees; nil from MoP on,
@@ -179,13 +181,36 @@ end
     Era and TBC have only the legacy globals. Spell names need no shim: every
     call site reads C_Spell.GetSpellName, which all three clients ship.
 ]]
+-- Bank bag ids follow the player's own, offset by NUM_BAG_SLOTS: 5..10 on Classic Era (six slots), 5..11 on TBC.
+local BANK_BAG_COUNT = 7
+
+--[[
+    The character bank's layout is chosen once, by whether the client has bank
+    tabs at all, never by what the tab list answers: Forever's is the C_Bank
+    tabs the player has bought, which can change at any visit, and none (an
+    empty list) while that answer isn't in yet; Era and TBC have BANK_CONTAINER
+    and seven bank bag IDs, TBC's count, whose seventh holds no slots on Era and
+    so reads as empty.
+]]
 if C_Bank and C_Bank.FetchPurchasedBankTabIDs then
 	function ns.FetchPurchasedBankTabIDs()
 		return C_Bank.FetchPurchasedBankTabIDs(Enum.BankType.Character)
 	end
+
+	function ns.BankBagIDs()
+		return ns.FetchPurchasedBankTabIDs() or {}
+	end
 else
 	function ns.FetchPurchasedBankTabIDs()
 		return nil
+	end
+
+	function ns.BankBagIDs()
+		local bagIDs = { BANK_CONTAINER }
+		for index = 1, BANK_BAG_COUNT do
+			bagIDs[#bagIDs + 1] = NUM_BAG_SLOTS + index
+		end
+		return bagIDs
 	end
 end
 
@@ -320,6 +345,62 @@ if C_SkillInfo and C_SkillInfo.GetSkillLineInfo then
 else
 	ns.GetNumSkillLines = GetNumSkillLines
 	ns.GetSkillLineInfo = GetSkillLineInfo
+end
+
+--[[
+    Each hand's temporary and imbue enchants, as { main = list, off = list },
+    each entry { timeLeft (milliseconds), enchantID (nil where the client
+    names none), enchantType (nil on the older call) }. WoW Forever's
+    C_Item.GetWeaponEnchantInfo(weaponSlot) lists every enchant per hand,
+    permanent ones included, so only temporary and imbue ones are kept. The
+    older GetWeaponEnchantInfo holds one per hand and has returned three
+    values per hand on some clients and four (with the enchant id) on others,
+    so the off hand is found by counting. A secret field skips its entry, as
+    if bare.
+]]
+if C_Item.GetWeaponEnchantInfo and Enum.ItemEnchantType and Enum.WeaponSlot then
+	function ns.GetWeaponEnchants()
+		local types, slots = Enum.ItemEnchantType, Enum.WeaponSlot
+		local worn = { main = {}, off = {} }
+		for hand, weaponSlot in pairs({ main = slots.MainHand, off = slots.OffHand }) do
+			local list = C_Item.GetWeaponEnchantInfo(weaponSlot)
+			if ns.IsPlain(list) and type(list) == "table" then
+				for _, info in ipairs(list) do
+					local has = ns.IsPlain(info) and info.hasEnchant
+					local kind, left, enchant = has and info.enchantType, has and info.timeLeft, has and info.enchantID
+					if
+						ns.IsPlain(has)
+						and has
+						and ns.IsPlain(kind)
+						and (kind == types.Temporary or kind == types.Imbue)
+						and ns.IsPlain(left)
+						and left
+					then
+						local entries = worn[hand]
+						entries[#entries + 1] =
+							{ timeLeft = left, enchantID = ns.IsPlain(enchant) and enchant or nil, enchantType = kind }
+					end
+				end
+			end
+		end
+		return worn
+	end
+else
+	function ns.GetWeaponEnchants()
+		local worn = { main = {}, off = {} }
+		local count = select("#", GetWeaponEnchantInfo())
+		local stride = count >= 8 and 4 or 3
+		local values = { GetWeaponEnchantInfo() }
+		for index, hand in ipairs({ "main", "off" }) do
+			local base = (index - 1) * stride
+			local has, expiration = values[base + 1], values[base + 2]
+			if ns.IsPlain(has) and has and ns.IsPlain(expiration) and expiration then
+				local enchant = stride == 4 and values[base + 4]
+				worn[hand][1] = { timeLeft = expiration, enchantID = ns.IsPlain(enchant) and enchant or nil }
+			end
+		end
+		return worn
+	end
 end
 
 -- Opening and closing a skill list header by its index; nil where the client has neither call.
@@ -1007,18 +1088,50 @@ end
 ns.FormatDuration = FormatDuration
 
 --------------------------------------------------------------------------------
--- Level Filter
+-- Game Dropdowns in the Kit's Dress
 --------------------------------------------------------------------------------
 
 --[[
-    The level filter's labels, shared by every consumable's When to Use
-    (Buff Food, Scroll Buffs, Pet Food Buffs, and Use Conjured Food & Water
-    First), offered in ns.LEVEL_FILTER_ORDER. Each reads as a state on its own,
-    since the mini-map menu's Waiting For note shows one while it is what holds
-    a switch back.
+    The game's own DropdownButton (WowStyle1DropdownTemplate) with its list on
+    Menu-Kit's plate, as the kit dresses the game's right-click menus
+    (Kit.OpenContextMenu): each time the list opens, whatever background it
+    carries (the game's, or a skin's backdrop) goes clear and the plate goes
+    under it; both come back when the game pools the frame again. setup is the
+    dropdown's own menu generator.
 ]]
-ns.LEVEL_FILTER_VALUES = {
-	any = L["LEVEL_FILTER_ANY"],
-	leveling = L["LEVEL_FILTER_LEVELING"],
-	maxlevel = L["LEVEL_FILTER_MAX_LEVEL"],
-}
+local function UndressDropdownList(frame)
+	if frame.menuKitPlate then
+		frame.menuKitPlate:Hide()
+	end
+	for region, alpha in pairs(frame.goodToGoHidden or {}) do
+		region:SetAlpha(alpha)
+	end
+	frame.goodToGoHidden = nil
+end
+
+local function DressDropdownList(frame)
+	frame.goodToGoHidden = frame.goodToGoHidden or {}
+	local function Clear(region)
+		if region and region.GetAlpha and not frame.goodToGoHidden[region] then
+			frame.goodToGoHidden[region] = region:GetAlpha()
+			region:SetAlpha(0)
+		end
+	end
+	for _, region in ipairs({ frame:GetRegions() }) do
+		if region.GetDrawLayer and region:GetDrawLayer() == "BACKGROUND" then
+			Clear(region)
+		end
+	end
+	Clear(frame.NineSlice)
+	Clear(frame.backdrop)
+	Clear(frame.Background)
+	ns.MenuKit.AddPlate(frame)
+end
+
+function ns.SetupKitDropdown(dropdown, setup)
+	dropdown:SetupMenu(function(owner, rootDescription, ...)
+		setup(owner, rootDescription, ...)
+		rootDescription:AddMenuAcquiredCallback(DressDropdownList)
+		rootDescription:AddMenuReleasedCallback(UndressDropdownList)
+	end)
+end

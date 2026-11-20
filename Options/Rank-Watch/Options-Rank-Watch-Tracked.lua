@@ -82,6 +82,19 @@ local function LadderWatched(ladder)
 	return false
 end
 
+-- Whether any rank below a page's tops reads as `tracked`: true means Check All (or Uncheck All) has something to change.
+local function AnyRankIs(sorted, tracked)
+	for _, entry in ipairs(sorted) do
+		local rows = entry.ladder.rows
+		for i = 1, #rows - 1 do
+			if (ns.IsRankWatchRankTracked(rows[i]) and true or false) == tracked then
+				return true
+			end
+		end
+	end
+	return false
+end
+
 local function AbilityGroup(ladder, order)
 	local args = {}
 	for i, row in ipairs(ladder.rows) do
@@ -102,6 +115,7 @@ local function AbilityGroup(ladder, order)
 			end,
 			set = function(_, value)
 				ns.SetRankWatchRankTracked(row, value)
+				ns.RefreshSettings()
 			end,
 		}
 	end
@@ -112,14 +126,15 @@ end
     One page of the tree: Check All and Uncheck All, then one box per ability, alphabetical. A class's page, and
     right after Hunter and Warlock a Hunter Pets or Warlock Pets page for their pets' and demons', the owner's to
     fix and so listed beside the owner's class, where the flavor's pets have ranks at all. Check All on either page
-    sets that page's abilities only.
+    sets that page's abilities only, asks first with the page's plain name (plainName) filled in, and grays out
+    while every box it would tick is ticked already; Uncheck All likewise.
 ]]
 -- The title as read, for sorting: no icon, no color codes, case folded.
 local function SortKey(title)
 	return (title:gsub("|T.-|t", ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("^%s+", ""):lower())
 end
 
-local function AbilityPage(name, list, order)
+local function AbilityPage(name, plainName, list, order)
 	local sorted = {}
 	for _, ladder in ipairs(list or {}) do
 		local title = LadderTitle(ladder)
@@ -131,31 +146,46 @@ local function AbilityPage(name, list, order)
 		end
 		return a.ladder.id < b.ladder.id
 	end)
+	-- Check All in the pane's label column and Uncheck All in its control column, one row, not two lone buttons.
 	local args = {
-		all = {
-			type = "execute",
-			name = L["RANK_WATCH_TRACK_ALL"],
-			desc = L["RANK_WATCH_TRACK_ALL_DESCRIPTION"],
-			order = 1,
-			func = function()
-				for _, entry in ipairs(sorted) do
-					SetLadder(entry.ladder, true)
-				end
-				ns.RefreshSettings()
-			end,
-		},
-		none = {
-			type = "execute",
-			name = L["RANK_WATCH_TRACK_NONE"],
-			desc = L["RANK_WATCH_TRACK_NONE_DESCRIPTION"],
-			order = 2,
-			func = function()
-				for _, entry in ipairs(sorted) do
-					SetLadder(entry.ladder, false)
-				end
-				ns.RefreshSettings()
-			end,
-		},
+		buttons = Kit.Row(1, nil, {
+			{
+				type = "execute",
+				name = L["RANK_WATCH_TRACK_ALL"],
+				desc = L["RANK_WATCH_TRACK_ALL_DESCRIPTION"],
+				width = Kit.TREE_LABEL_WIDTH,
+				confirm = function()
+					return L["RANK_WATCH_TRACK_ALL_CONFIRM"]:format(plainName)
+				end,
+				disabled = function()
+					return not AnyRankIs(sorted, false)
+				end,
+				func = function()
+					for _, entry in ipairs(sorted) do
+						SetLadder(entry.ladder, true)
+					end
+					ns.RefreshSettings()
+				end,
+			},
+			{
+				type = "execute",
+				name = L["RANK_WATCH_TRACK_NONE"],
+				desc = L["RANK_WATCH_TRACK_NONE_DESCRIPTION"],
+				width = Kit.TREE_CONTROL_WIDTH,
+				confirm = function()
+					return L["RANK_WATCH_UNTRACK_ALL_CONFIRM"]:format(plainName)
+				end,
+				disabled = function()
+					return not AnyRankIs(sorted, true)
+				end,
+				func = function()
+					for _, entry in ipairs(sorted) do
+						SetLadder(entry.ladder, false)
+					end
+					ns.RefreshSettings()
+				end,
+			},
+		}),
 	}
 	for index, entry in ipairs(sorted) do
 		args["ability" .. entry.ladder.id] = AbilityGroup(entry.ladder, 10 + index)
@@ -163,10 +193,14 @@ local function AbilityPage(name, list, order)
 	return { type = "group", name = name, order = order, args = args }
 end
 
--- "Hunter Pets", all in the class color, like the class's own entry above it.
+-- "Hunter Pets", plain for the Check All question, and in the class color for the tree, like the class's own entry above it.
+local function PlainPetsName(class)
+	return L["RANK_WATCH_PETS"]:format(LOCALIZED_CLASS_NAMES_MALE[class] or class)
+end
+
 local function PetsName(class)
 	local color = ns.GetClassColor(class) or ns.GetColor("TEXT")
-	return color .. L["RANK_WATCH_PETS"]:format(LOCALIZED_CLASS_NAMES_MALE[class] or class) .. "|r"
+	return color .. PlainPetsName(class) .. "|r"
 end
 
 function ns.BuildRankWatchTrackedOptions()
@@ -193,9 +227,11 @@ function ns.BuildRankWatchTrackedOptions()
 	end)
 	local pets = ns.RankWatchPetLadders()
 	for index, class in ipairs(classes) do
-		options.args[class] = AbilityPage(ns.ClassName(class), ns.RankWatchLadders()[class], index * 2)
+		local plainName = LOCALIZED_CLASS_NAMES_MALE[class] or class
+		options.args[class] = AbilityPage(ns.ClassName(class), plainName, ns.RankWatchLadders()[class], index * 2)
 		if pets[class] then
-			options.args[class .. "_PETS"] = AbilityPage(PetsName(class), pets[class], index * 2 + 1)
+			options.args[class .. "_PETS"] =
+				AbilityPage(PetsName(class), PlainPetsName(class), pets[class], index * 2 + 1)
 		end
 	end
 	return options

@@ -76,6 +76,30 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(Enum) == "table" and type(Enum.BankType) == "table" and Enum.BankType.Character ~= nil
 		end,
 	},
+	--[[
+	    Only WoW Forever has a reagent bag; where it does, the Restocker counts
+	    and stashes from it and the Inventory Report records it
+	    (ns.GetReagentBagID in Features/Utilities.lua).
+	]]
+	{
+		"NUM_REAGENTBAG_SLOTS (WoW Forever)",
+		function()
+			return type(NUM_REAGENTBAG_SLOTS) == "number" and NUM_REAGENTBAG_SLOTS > 0
+		end,
+	},
+	-- The Inventory Report's Example picks a consumable from the bags (Inventory-Report-Tooltip.lua).
+	{
+		"C_Container.GetContainerItemID",
+		function()
+			return type(C_Container) == "table" and type(C_Container.GetContainerItemID) == "function"
+		end,
+	},
+	{
+		"Enum.ItemClass.Consumable (guarded)",
+		function()
+			return type(Enum) == "table" and type(Enum.ItemClass) == "table" and Enum.ItemClass.Consumable ~= nil
+		end,
+	},
 	-- The buy loop splits a purchase into stacks the vendor allows (Restocker-Merchant.lua).
 	{
 		"GetMerchantItemMaxStack",
@@ -125,6 +149,31 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 })
 
 --------------------------------------------------------------------------------
+-- Name Lookups
+--------------------------------------------------------------------------------
+
+--[[
+    The Inventory Report panel's Example names its item through ns.GetItemLabel,
+    a Hearthstone when the bags hold no consumable. That label always has text,
+    so the lookup reads the name it is built from (ns.GetItemData), which is
+    nil until the client has the item.
+]]
+ns.AppendDiagnosticRows(ns.DIAGNOSTIC_NAME_LOOKUPS, {
+	{
+		constant = "HEARTHSTONE_ITEM_ID",
+		kind = "item",
+		id = ns.HEARTHSTONE_ITEM_ID,
+		lookup = function()
+			local info = ns.GetItemData(ns.HEARTHSTONE_ITEM_ID)
+			return info and info.itemName
+		end,
+		request = function()
+			C_Item.RequestLoadItemDataByID(ns.HEARTHSTONE_ITEM_ID)
+		end,
+	},
+})
+
+--------------------------------------------------------------------------------
 -- Restocker Context
 --------------------------------------------------------------------------------
 
@@ -156,9 +205,12 @@ local function FreeBagSlots()
 end
 
 --[[
-    Slots holding a list item whose link the client has not resolved yet: the
-    bank run's scans skip them (GetRestockContainerItemInfo in
-    Restocker-Bags.lua), so it counts those items as 0.
+    Slots holding a list item whose link the client has not resolved yet. The
+    counts read them by item ID, but the bank run's moves pick their slots
+    through ns.GetRestockContainerItemInfo (Restocker-Bags.lua), which skips a
+    slot without a link, so the run can't move those stacks yet, and a
+    merchant run counts no room in their partial stacks
+    (Restocker-Purchase-Space.lua).
 ]]
 local function UnlinkedListSlots(bagIDs, list)
 	local count = 0
@@ -178,6 +230,61 @@ local function FrameShown(name)
 	return type(frame) == "table" and type(frame.IsShown) == "function" and frame:IsShown() and true or false
 end
 
+--[[
+    Every row short of its Keep, by the feature's own test
+    (ns.IsRestockItemShort), with what the bags hold. Built here rather than
+    through ns.BuildRestockShortfallList, which writes the client's item name
+    onto each row as it goes.
+]]
+local function ShortRows(list)
+	local rows = {}
+	for _, row in pairs(list or {}) do
+		if type(row) == "table" and ns.IsRestockItemShort(row) then
+			rows[#rows + 1] = {
+				itemID = row.itemID,
+				have = C_Item.GetItemCount(row.itemID, false, false) or 0,
+				wanted = row.amount,
+				buys = row.buyFromMerchant ~= false,
+			}
+		end
+	end
+	table.sort(rows, function(a, b)
+		return a.itemID < b.itemID
+	end)
+	return rows
+end
+
+--[[
+    The rows a catch-up would move now (ns.UpgradeRestockList): Upgrade on, on
+    a ladder, and with a higher-ranked tier at or below the level. A tier's
+    fields are { level, itemID, rank }.
+]]
+local function RowsDueUpgrade(list, level)
+	local index = {}
+	for _, chain in ipairs(ns.CONSUMABLE_UPGRADE_CHAINS or {}) do
+		for _, tier in ipairs(chain.tiers) do
+			index[tier[2]] = { chain = chain, rank = tier[3] }
+		end
+	end
+	local due = {}
+	for itemID, row in pairs(list or {}) do
+		local entry = index[itemID]
+		if type(row) == "table" and row.upgrade ~= false and entry then
+			local best
+			for _, tier in ipairs(entry.chain.tiers) do
+				if tier[1] <= level and (best == nil or tier[3] > best[3]) then
+					best = tier
+				end
+			end
+			if best and best[3] > entry.rank then
+				due[#due + 1] = string.format("%s to %s", ItemText(itemID), ItemText(best[2]))
+			end
+		end
+	end
+	table.sort(due)
+	return due
+end
+
 function ns:BuildRestockerContextReport()
 	local lines = { GetClientHeader(), "" }
 	local global = ns.db and ns.db.global
@@ -195,6 +302,12 @@ function ns:BuildRestockerContextReport()
 		"Restocker switch: %s (off stops the window, /restock, the reminders and every purchase) // started: %s",
 		OnOff(global.restockerEnabled),
 		YesNo(ns.restockerLoaded)
+	)
+	-- The feature reads its settings through ns.restockSettings, an empty table until login binds it (Restocker-Core.lua).
+	lines[#lines + 1] = string.format(
+		"Settings bound to the saved table: %s // window built: %s",
+		YesNo(ns.restockSettings == settings),
+		YesNo(ns.restockWindow)
 	)
 	lines[#lines + 1] = string.format(
 		"List in use: %s // this character picks: %s // exists: %s // rows: %d // lists saved: %d",
@@ -281,6 +394,13 @@ function ns:BuildRestockerContextReport()
 		upgradeOff,
 		#needsStanding > 0 and table.concat(needsStanding, ", ") or "(none)"
 	)
+	-- A row still listed here after a level-up, a login or the switch going on is waiting on its target's item data.
+	local due = RowsDueUpgrade(list, UnitLevel("player") or 1)
+	lines[#lines + 1] = string.format(
+		"Rows due an upgrade at level %d: %s",
+		UnitLevel("player") or 0,
+		#due > 0 and table.concat(due, ", ") or "(none)"
+	)
 	lines[#lines + 1] = string.format(
 		"Waiting on item data: adds %d, rows %d, an upgrade %s, staples %s // rows not in the item cache: %s",
 		CountKeys(ns.restockItemWait),
@@ -290,16 +410,18 @@ function ns:BuildRestockerContextReport()
 		IsCached and tostring(notCached) or "(no API)"
 	)
 
-	-- Plain bags take anything; a specialty bag takes only its own kind (Restocker-Purchase-Space.lua).
-	local carriedBags = {}
-	for bag = BACKPACK_CONTAINER, NUM_BAG_SLOTS do
-		carriedBags[#carriedBags + 1] = bag
-	end
+	--[[
+	    Plain bags take anything; a specialty bag takes only its own kind
+	    (Restocker-Purchase-Space.lua). The reagent bag is counted but never
+	    bought into (Restocker-Bags.lua).
+	]]
 	lines[#lines + 1] = string.format(
-		"Free bag slots: %d // bags the buy loop reads: %d // list items in the bags without a link yet: %d",
+		"Free bag slots: %d // bags the buy loop reads: %d // bags counted: %d // reagent bag: %s // list items in the bags without a link yet: %d",
 		FreeBagSlots(),
 		#(ns.restockPlayerBags or {}),
-		list and UnlinkedListSlots(carriedBags, list) or 0
+		#(ns.restockCountedBags or {}),
+		tostring(ns.GetReagentBagID() or "(none)"),
+		list and UnlinkedListSlots(ns.CARRIED_BAG_IDS, list) or 0
 	)
 	local bagLines = {}
 	for bag = BACKPACK_CONTAINER, NUM_BAG_SLOTS do
@@ -445,7 +567,15 @@ function ns:BuildRestockerContextReport()
 			CursorHasItem() and string.format("%s %s", tostring(cursorType), tostring(cursorID)) or "(nothing)"
 		)
 	end
-	lines[#lines + 1] = "Bank trace in the Event Log: " .. OnOff(ns.diagnostics and ns.diagnostics.logging)
+	-- A bank run makes one move per step, every three round trips of the slower connection and never under 0.14s (Restocker-Bank-Visit.lua).
+	local _, _, latencyHome, latencyWorld = GetNetStats()
+	lines[#lines + 1] = string.format(
+		"Bank trace in the Event Log: %s // latency home %s ms, world %s ms // a bank step every %.2fs",
+		OnOff(ns.diagnostics and ns.diagnostics.logging),
+		tostring(latencyHome),
+		tostring(latencyWorld),
+		math.max(0.140, math.max(latencyHome or 0, latencyWorld or 0) * 3 / 1000)
+	)
 
 	lines[#lines + 1] = string.format(
 		"Town reminder: chat %s, sound %s, %s // resting: %s, on a flight: %s",
@@ -493,13 +623,17 @@ function ns:BuildRestockerContextReport()
 		tostring(settings.restockLowThreshold),
 		YesNo(settings.remindersMovedOntoSimple)
 	)
-	-- What a reminder would report now (ns.BuildRestockReminderLists); with both counts 0 none prints.
-	local out, low = ns.BuildRestockReminderLists()
+	--[[
+	    What a reminder would report now, split as ns.BuildRestockReminderLists
+	    splits it; with both counts 0 none prints.
+	]]
+	local shortRows = ShortRows(list)
+	local out, low = ns.SplitRestockShortfall(shortRows, settings.restockLowThreshold)
 	lines[#lines + 1] = string.format(
 		"A reminder now would name: %d out, %d low // short but at or above the low line, never named: %d",
 		#out,
 		#low,
-		#ns.BuildRestockShortfallList() - #out - #low
+		#shortRows - #out - #low
 	)
 	lines[#lines + 1] = string.format(
 		"Window open: %s // opened by a visit: %s // level: %d",
@@ -542,11 +676,16 @@ function ns:BuildRestockerContextReport()
 	    list that exists and is empty, a staple offered for the class, and out
 	    of combat.
 	]]
-	local offered = 0
+	local classToken = select(2, UnitClass("player"))
+	local offered, preTicked = 0, 0
 	if ns.restockerLoaded then
 		for _, category in ipairs(ns.GetStarterCategories()) do
 			if ns.IsStarterCategoryForClass(category) and ns.IsStarterCategoryAvailable(category) then
 				offered = offered + 1
+				local defaultFor = category.defaultFor
+				if defaultFor == "all" or (type(defaultFor) == "table" and defaultFor[classToken]) then
+					preTicked = preTicked + 1
+				end
 			end
 		end
 	end
@@ -556,9 +695,16 @@ function ns:BuildRestockerContextReport()
 		UnitLevel("player") or 0,
 		YesNo(list),
 		YesNo(ns.restockerLoaded and ns.IsRestockListEmpty()),
-		tostring(select(2, UnitClass("player"))),
+		tostring(classToken),
 		offered,
 		YesNo(InCombatLockdown())
+	)
+	-- A staple whose ladder this client's folder lacks is dropped at load (Restocker-Starter-List.lua).
+	lines[#lines + 1] = string.format(
+		"Staples on this client: %d of %d // pre-ticked for this class: %d",
+		#ns.GetStarterCategories(),
+		#(ns.STARTER_LIST_CATEGORIES or {}),
+		preTicked
 	)
 	lines[#lines + 1] = string.format(
 		"Staples window: built this session %s // open now %s",
@@ -587,17 +733,28 @@ function ns:BuildRestockerContextReport()
 		end
 	end
 	table.sort(claimants)
+	--[[
+	    The chat box runs whichever handler its command cache holds for
+	    /RESTOCK, filled the first time a slash command is typed.
+	]]
+	local slashCache = _G.hash_SlashCmdList
+	local cached = type(slashCache) == "table" and slashCache["/RESTOCK"] or nil
 	lines[#lines + 1] = string.format(
-		"/restock registered: %s // other add-ons claiming /restock: %s",
+		"/restock registered: %s // other add-ons claiming /restock: %s // the chat box runs ours: %s",
 		YesNo(_G.SLASH_GOODTOGORESTOCK1 == "/restock" and type(SlashCmdList.GOODTOGORESTOCK) == "function"),
-		#claimants > 0 and table.concat(claimants, ", ") or "(none)"
+		#claimants > 0 and table.concat(claimants, ", ") or "(none)",
+		cached == nil and "(not cached yet)" or YesNo(cached == SlashCmdList.GOODTOGORESTOCK)
 	)
 
-	-- What a merchant visit would buy now (the rows short of their Keep amount with Buy on), with what the bags hold.
+	--[[
+	    What a merchant visit would buy now (ns.BuildGroceryList: the rows short
+	    of their Keep amount with Buy on), with what the bags hold.
+	]]
 	local short = {}
-	for _, entry in ipairs(ns.BuildGroceryList()) do
-		short[#short + 1] =
-			string.format("%s %d/%d", tostring(entry.itemName or entry.itemID), entry.have, entry.wanted)
+	for _, entry in ipairs(shortRows) do
+		if entry.buys then
+			short[#short + 1] = string.format("%s %d/%d", ItemText(entry.itemID), entry.have, entry.wanted)
+		end
 	end
 	lines[#lines + 1] =
 		string.format("Short now (a merchant would buy): %s", #short > 0 and table.concat(short, ", ") or "(nothing)")
@@ -672,6 +829,27 @@ function ns:BuildRestockerContextReport()
 		YesNo(own and own.bank)
 	)
 	lines[#lines + 1] = string.format("Characters recorded: %d // on this realm: %d", CountKeys(inventory), onRealm)
+	--[[
+	    Login drops another record holding this GUID (a rename) and clears this
+	    record's bags and bank when it held another GUID (a deleted namesake);
+	    a secret GUID skips both (Inventory-Report-Recording.lua).
+	]]
+	local guid = UnitGUID("player")
+	local guidReadable = guid ~= nil and ns.IsPlain(guid)
+	local sharing = 0
+	if guidReadable then
+		for key, entry in pairs(inventory) do
+			if key ~= characterKey and type(entry) == "table" and entry.guid == guid then
+				sharing = sharing + 1
+			end
+		end
+	end
+	lines[#lines + 1] = string.format(
+		"GUID readable: %s // this record's GUID matches: %s // other records with this GUID: %d",
+		YesNo(guidReadable),
+		(not guidReadable or not (own and own.guid)) and "(not compared)" or YesNo(own.guid == guid),
+		sharing
+	)
 
 	lines[#lines + 1] = ""
 	lines[#lines + 1] = "-- Account --"

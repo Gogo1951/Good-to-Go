@@ -39,8 +39,8 @@ local CONSUMABLES_RANK = 1000000
 	The macros in page order as { macro, header, sub } entries. Sorted by school, that is ns.macros under its
 	spellbook tabs. Sorted by category, the spell macros go under their page category (ns.PageCategory), in
 	ns.PAGE_CATEGORIES' order and alphabetically within each, any macro without a page category after them
-	under its own section, then GtG Consumables (Consumable Macros' macros, see ns.ConsumablePageMacros), and the
-	Unlearned section last, those keeping ns.macros' order; a focus, Duplicate or
+	under its own section, then Consumable Macros (Consumable Macros' macros, see ns.ConsumablePageMacros), and the
+	Unlearned section last, those keeping ns.macros' order; a Duplicate or
 	rank copy still follows its spell. Within a page category, the spells needing a form (sub, from
 	ns.PageSubCategory) follow its own, a run for each form, the forms alphabetically, then the basic attacks. A macro the page hides (a
 	grouped spell a later one replaced, see ns.ShowsGroupedSpells) or that the page's filters leave out
@@ -52,7 +52,7 @@ local function PageOrder(page)
 	local filter = text and text ~= "" and ns.FilterLower(text) or nil
 	local consumables = ns.ConsumablePageMacros()
 	if ns.PageSort() ~= "category" then
-		-- GtG Consumables goes in ahead of the Unlearned section, which ns.macros ends with
+		-- Consumable Macros goes in ahead of the Unlearned section, which ns.macros ends with
 		local function addConsumables()
 			for _, macro in ipairs(consumables) do
 				if PassesFilters(page, filter, macro) then

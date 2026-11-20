@@ -3,9 +3,9 @@ local TITLE, BODY, HELP = ns.COLORS_RGB.TITLE, ns.COLORS_RGB.BODY, ns.COLORS_RGB
 local L = ns.L
 
 --[[
-	What a macro's menu (Features/Enhanced-Spellbook/Macro-Menu.lua, with Macro-Menu-Sections.lua and Macro-Menu-Utilities.lua)
-	and a category's menu (Features/Enhanced-Spellbook/Category-Menu.lua) share: the options' explanations and tooltips, the submenu buttons' label-and-value layout, and the option
-	tables of the When, First and Error Messages groups.
+	What a macro's menu (Features/Enhanced-Spellbook/Macro-Menu.lua, with Macro-Menu-Sections.lua and
+	Macro-Menu-Utilities.lua) and a category's menu (Features/Enhanced-Spellbook/Category-Menu.lua) share: the
+	options' explanations and tooltips, and the option tables of the When, First and Error Messages groups.
 ]]
 
 -- Each option's explanation, and a note for the two that need one.
@@ -53,71 +53,6 @@ local function OptionTip(element, key, title)
 end
 
 ns.MenuSetTip, ns.MenuOptionTip = SetTip, OptionTip
-
-local VALUE_GAP = 24 -- the least space between a submenu button's label and its value
-local ARROW_WIDTH = 16 -- the submenu arrow's, which the game draws at the button's right edge
-local ARROW_GAP = 16 -- the least space between a submenu button's label, or its value, and the arrow
-
---[[
-	Lays a submenu button out as its label on the left and its value (already colored, or nil) on the right,
-	against the submenu arrow, so every value in the menu lines up; returns the width the button needs for
-	both, for the menu to take. Set each time the menu redraws, which releases the value's font string.
-]]
-local function LabelAndValue(frame, label, value)
-	local fontString = frame.fontString
-	fontString:SetTextToFit(label)
-	local width = fontString:GetUnboundedStringWidth() + ARROW_GAP + ARROW_WIDTH
-	if value then
-		local valueString = frame:AttachFontString()
-		local fontObject = fontString:GetFontObject()
-		if fontObject then
-			valueString:SetFontObject(fontObject)
-		else
-			valueString:SetFont(fontString:GetFont())
-		end
-		valueString:SetHeight(20)
-		valueString:SetJustifyH("RIGHT")
-		if frame.arrow then
-			valueString:SetPoint("RIGHT", frame.arrow, "LEFT")
-		else
-			valueString:SetPoint("RIGHT", -ARROW_WIDTH, 0)
-		end
-		valueString:SetText(value)
-		width = width + VALUE_GAP + valueString:GetUnboundedStringWidth()
-	end
-	return math.ceil(width), 20
-end
-
-ns.MenuLabelAndValue = LabelAndValue
-
-local CHECK_WIDTH = 20 -- a checkbox's or radio's box and the gap before its label, which the game draws at the left
-
---[[
-	Puts a note (already colored, or nil) at the right of a checkbox or radio, as LabelAndValue puts a submenu
-	button's value, so the ranks' notes line up in a column (a rank's level, or where to learn it); returns the
-	width the row needs for its box, label and note. Set each time the menu redraws.
-]]
-local function ChoiceNote(frame, note)
-	local fontString = frame.fontString
-	local width = CHECK_WIDTH + fontString:GetUnboundedStringWidth()
-	if note then
-		local noteString = frame:AttachFontString()
-		local fontObject = fontString:GetFontObject()
-		if fontObject then
-			noteString:SetFontObject(fontObject)
-		else
-			noteString:SetFont(fontString:GetFont())
-		end
-		noteString:SetHeight(20)
-		noteString:SetJustifyH("RIGHT")
-		noteString:SetPoint("RIGHT")
-		noteString:SetText(note)
-		width = width + VALUE_GAP + noteString:GetUnboundedStringWidth()
-	end
-	return math.ceil(width), 20
-end
-
-ns.MenuChoiceNote = ChoiceNote
 
 -- The ranged attack's label for the player's class: Start Wand, or Start Auto Shot.
 local function AutoShotLabel()

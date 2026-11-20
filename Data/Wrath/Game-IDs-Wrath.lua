@@ -10,8 +10,19 @@ ns.RANGED_ATTACKS = {}
 -- [itemID] = { buffSpellID, rank, settingKey, requiredLevel }, -- Item Name
 ns.PET_BUFF_FOODS = {}
 
+-- The creature family the Rank Watch Example names a warlock's demon by.
+ns.IMP_CREATURE_FAMILY_ID = 23 -- Imp
+
+-- The Inventory Report Example's item when the bags hold no consumable: every character carries one.
+ns.HEARTHSTONE_ITEM_ID = 6948 -- Hearthstone
+
 -- [constant] = spell id, -- Spell Name
 ns.GAME_IDS = {}
+
+-- Buff Duty: the generic eating and drinking auras, and Bloodrage
+ns.FOOD_SPELL_ID = 433
+ns.DRINK_SPELL_ID = 430
+ns.BLOODRAGE_SPELL_ID = 2687
 
 --[[
 How We Got the Data

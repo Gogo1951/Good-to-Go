@@ -72,8 +72,8 @@ local function GlobalCooldownSpell()
 	return nil
 end
 
--- When the running global cooldown ends, or 0 when none is running or the client won't say.
-local function GlobalCooldownEnd()
+-- When the running global cooldown ends, or 0 when none is running or the client won't say. Buff-Duty-Self.lua reads it too.
+function BuffDuty.GlobalCooldownEnd()
 	local spellId = GlobalCooldownSpell()
 	local info = spellId and C_Spell.GetSpellCooldown(spellId)
 	local start, duration = info and info.startTime, info and info.duration
@@ -93,7 +93,7 @@ local function OnCooldown(start, duration)
 		return false
 	end
 	local ends = start + duration
-	return ends > GetTime() and ends > GlobalCooldownEnd()
+	return ends > GetTime() and ends > BuffDuty.GlobalCooldownEnd()
 end
 
 --[[
@@ -196,71 +196,86 @@ end
     column until the aura shows, so its members aren't given singles over
     it. Pets take singles all the same: the group versions are cast to be
     sure of the players.
+
+    The window asks too, with no `now` (BuffDuty.AddGroupSections): in a
+    raid it shows only the casts chosen here, so it skips the press memory
+    and weighs only mana and reagents.
 ]]
 local function GroupChoices(section, now)
 	local chosen, covered = {}, {}
 	for _, group in ipairs(section.icons) do
-		local singles = {}
-		for _, row in ipairs(section.rows) do
-			if not row.pet then
-				for _, spec in ipairs(row.icons) do
-					if spec.column == group.column and spec.unit then
-						singles[spec.unit] = spec
+		-- A folded raid group's header also holds single casts (Buff-Duty-Groups.lua's FoldedIcons): nothing to weigh.
+		if group.isGroup then
+			local singles = {}
+			for _, row in ipairs(section.rows) do
+				if not row.pet then
+					for _, spec in ipairs(row.icons) do
+						if spec.column == group.column and spec.unit then
+							singles[spec.unit] = spec
+						end
 					end
 				end
 			end
-		end
-		if Skipped(group, now) then
-			covered[group.column] = true
-		else
-			local reach, singleCost, groupOnly = 0, 0, false
-			for _, unit in ipairs(group.members) do
-				local single = singles[unit]
-				if not (single and Skipped(single, now)) then
-					reach = reach + 1
-					if single then
-						local cost = ManaCost(single.spellId)
-						singleCost = singleCost and cost and singleCost + cost or nil
-					else
-						groupOnly = true
-					end
-				end
-			end
-			local groupCost = ManaCost(group.spellId)
-			local cheaper
-			if groupOnly then
-				cheaper = true
-			elseif singleCost and groupCost then
-				cheaper = groupCost < singleCost
-			else
-				cheaper = reach >= 2
-			end
-			if not next(singles) or (reach > 0 and cheaper and Readiness(group) ~= "unusable") then
-				chosen[#chosen + 1] = group
+			if now and Skipped(group, now) then
 				covered[group.column] = true
+			else
+				local reach, singleCost, groupOnly = 0, 0, false
+				for _, unit in ipairs(group.members) do
+					local single = singles[unit]
+					if not (single and now and Skipped(single, now)) then
+						reach = reach + 1
+						if single then
+							local cost = ManaCost(single.spellId)
+							singleCost = singleCost and cost and singleCost + cost or nil
+						else
+							groupOnly = true
+						end
+					end
+				end
+				local groupCost = ManaCost(group.spellId)
+				local cheaper
+				if groupOnly then
+					cheaper = true
+				elseif singleCost and groupCost then
+					cheaper = groupCost < singleCost
+				else
+					cheaper = reach >= 2
+				end
+				if not next(singles) or (reach > 0 and cheaper and Readiness(group) ~= "unusable") then
+					chosen[#chosen + 1] = group
+					covered[group.column] = true
+				end
 			end
 		end
 	end
 	return chosen, covered
 end
 
+BuffDuty.GroupChoices = GroupChoices
+
 --[[
-    Every icon the key could cast, in the order it should: resurrections,
-    Return the Favor, your target, self-buffs, then each party -- your
-    target's first -- with its group buffs (GroupChoices) and then its
-    members' single ones, less those a group buff covers, and last a
-    targeted friendly NPC.
+    Every icon the key could cast, in the order it should:
+      1. Resurrections: your dead target, then your group's dead.
+      2. Asking your target for their buffs (a whisper, so it costs no cast).
+      3. Your own casts: Return the Favor, the buffs you can give your
+         target, your self-buffs, then each party -- your target's first --
+         with its group buffs (GroupChoices) and then its members' single
+         ones, less those a group buff covers. Shadowform comes last of
+         all (castLast).
+      4. Scrolls.
+      5. Weapon buffs: main hand's row, then off hand's, best first.
+      6. Buff food for Well Fed.
+      7. A targeted friendly NPC.
 ]]
 local function Candidates(sections, now)
 	local list, added = {}, {}
 	--[[
-	    Weapon icons and Self Buffs consumables (Winterfall Firewater) are
-	    never candidates: putting a poison or oil on, answering the game's
-	    "replace your enchant?" question, or spending a consumable is a click
-	    on the window, not a key run through a list.
+	    Of the Self Buffs consumables, only scrolls and buff food are
+	    candidates, each added in its own place below; the rest (Winterfall
+	    Firewater) stay a click on the window.
 	]]
-	local function Add(spec)
-		if spec and not spec.weapon and not spec.selfItem and not added[spec] then
+	local function Add(spec, allowItem)
+		if spec and (allowItem or not (spec.weapon or spec.selfItem)) and not added[spec] then
 			added[spec] = true
 			list[#list + 1] = spec
 		end
@@ -279,8 +294,17 @@ local function Candidates(sections, now)
 			end
 		end
 	end
+	local function EachSelfIcon(test)
+		Each("self", function(section)
+			for _, spec in ipairs(section.icons) do
+				if test(spec) then
+					Add(spec, true)
+				end
+			end
+		end)
+	end
 
-	-- Resurrections before anything else: your dead target, then your group's dead.
+	-- 1. Resurrections before anything else: your dead target, then your group's dead.
 	Add(ResurrectionSpec())
 	Each("party", function(section)
 		for _, row in ipairs(section.rows) do
@@ -292,11 +316,19 @@ local function Candidates(sections, now)
 		end
 	end)
 
+	-- 2. Asking your target for their buffs (Buff-Duty-Asks.lua): a whisper, before you start casting.
+	Each("target", function(section)
+		for _, row in ipairs(section.rows) do
+			for _, spec in ipairs(row.icons) do
+				if spec.ask then
+					Add(spec)
+				end
+			end
+		end
+	end)
+
+	-- 3. Your own casts.
 	Each("favor", AddRows)
-	--[[
-	    A targeted NPC's row cycles forever (BuffDuty.NPCRow), so it waits
-	    until the end: first, it would keep the key from ever reaching the group.
-	]]
 	Each("target", function(section)
 		for _, row in ipairs(section.rows) do
 			if not row.npc then
@@ -308,7 +340,9 @@ local function Candidates(sections, now)
 	end)
 	Each("self", function(section)
 		for _, spec in ipairs(section.icons) do
-			Add(spec)
+			if not spec.castLast then
+				Add(spec)
+			end
 		end
 	end)
 
@@ -316,6 +350,12 @@ local function Candidates(sections, now)
 		local chosen, covered = GroupChoices(section, now)
 		for _, spec in ipairs(chosen) do
 			Add(spec)
+		end
+		-- A folded raid group's counted single casts (Thorns) sit on its header.
+		for _, spec in ipairs(section.icons) do
+			if not spec.isGroup then
+				Add(spec)
+			end
 		end
 		for _, row in ipairs(section.rows) do
 			for _, spec in ipairs(row.icons) do
@@ -336,6 +376,46 @@ local function Candidates(sections, now)
 			AddParty(section)
 		end
 	end)
+
+	-- Shadowform shuts out Holy spells, so it goes up once the rest are out.
+	EachSelfIcon(function(spec)
+		return spec.castLast
+	end)
+
+	-- 4. Scrolls, in the window's order.
+	EachSelfIcon(function(spec)
+		return spec.scroll
+	end)
+
+	--[[
+	    5. Weapon buffs: each hand's row, its best icon first. The game's
+	    "replace your enchant?" question is answered for the key as for a
+	    click (Buff-Duty-Keys.lua).
+	]]
+	Each("self", function(section)
+		for _, row in ipairs(section.rows) do
+			for _, spec in ipairs(row.icons) do
+				if spec.weapon then
+					Add(spec, true)
+				end
+			end
+		end
+	end)
+
+	--[[
+	    6. Well Fed after the casts: eating sits you down, and the next cast
+	    would stand you back up. Its icon leaves while you eat
+	    (Buff-Duty-Self.lua), so another press doesn't take a second bite.
+	]]
+	EachSelfIcon(function(spec)
+		return spec.wellFed
+	end)
+
+	--[[
+	    7. A targeted NPC's row cycles forever (BuffDuty.NPCRow), so it waits
+	    until the very end: any sooner, it would keep the key from ever
+	    reaching what comes after it.
+	]]
 	Each("target", function(section)
 		for _, row in ipairs(section.rows) do
 			if row.npc then
@@ -414,7 +494,16 @@ local function PickNext()
 	local candidates = Candidates(BuffDuty.BuildSections(), now)
 	local refused, waitingOn
 	for _, spec in ipairs(candidates) do
-		if not Skipped(spec, now) and not HasCooldown(spec) then
+		--[[
+		    An ask (Buff-Duty-Asks.lua) is a whisper, not a cast: no range,
+		    mana or cooldown of yours to wait on, only that player's own wait
+		    since they were last asked for it.
+		]]
+		if spec.ask then
+			if BuffDuty.CanAskTarget(spec) then
+				return spec
+			end
+		elseif not Skipped(spec, now) and not HasCooldown(spec) then
 			local readiness = Readiness(spec)
 			if readiness ~= "cooldown" then
 				local inReach, waiting = Reachable(spec)

@@ -90,12 +90,21 @@ local Line = ns.ReadinessLine
     player's buffs or bags. Shared with the panel's Example, so the Example
     never shows a line the real report would keep quiet about.
 ]]
-function ns.ReadinessAsksWellFed(settings, reports)
-	return reports.readinessWellFed and settings.useBuffFood and ns.IsUseWhenActive(settings, "buffFood") or false
+function ns.ReadinessAsksWellFed(_, reports)
+	return reports.readinessWellFed and true or false
 end
 
+-- Only while some scroll type is ticked (scrollTypes), since those are the scrolls you'd read.
 function ns.ReadinessAsksScrolls(settings, reports)
-	return reports.readinessScrolls and settings.useScrolls and ns.IsUseWhenActive(settings, "scrolls") or false
+	if not reports.readinessScrolls then
+		return false
+	end
+	for _, enabled in pairs(settings.scrollTypes or {}) do
+		if enabled then
+			return true
+		end
+	end
+	return false
 end
 
 function ns.ReadinessAsksSoulstone(reports)
@@ -112,12 +121,14 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Every buff answers to TWO switches: the profile's macro switch saying
-    the character uses the thing at all, and the account-wide report switch
-    saying to mention it. Both must be on, because reporting a buff the
-    character never applies would be noise whatever the report is set to.
-    Flask, weapon buffs and the group soulstone have no macro behind them, so
-    they answer to their report switch alone.
+    A buff with a macro behind it answers to TWO switches: the profile's
+    macro switch saying the character uses the thing at all, and the
+    account-wide report switch saying to mention it. Both must be on, because
+    reporting a buff the character never applies would be noise whatever the
+    report is set to. Flask, Well Fed, scrolls, weapon buffs and the group
+    soulstone have no macro behind them (Buff Duty offers the food and the
+    scrolls), so they answer to their report switch alone; scrolls keep to
+    the scroll types ticked.
 ]]
 local function BuildMissingBuffs(settings, reports)
 	local missing = {}
@@ -150,11 +161,11 @@ local function BuildMissingBuffs(settings, reports)
 	end
 
 	--[[
-	    Coverage is settled from the aura snapshot, never from
-	    ns.scrollOverrideIDs alone: that list holds only scrolls the player has
-	    in bags, so someone missing the buffs with no scrolls to fire would read
-	    as covered. A type counts as covered by its own scroll buff or by a
-	    conflicting class buff or elixir.
+	    Coverage is settled from the aura snapshot, never from the scrolls in
+	    the bags alone (ns.FindMissingScrolls): someone missing the buffs with
+	    no scrolls to read would read as covered. A type counts as covered by
+	    its own scroll buff or by a conflicting class buff or elixir; a weaker
+	    one with a stronger scroll in the bags still asks.
 	]]
 	if ns.ReadinessAsksScrolls(settings, reports) then
 		local uncovered = false
@@ -166,7 +177,7 @@ local function BuildMissingBuffs(settings, reports)
 				end
 			end
 		end
-		if uncovered or (ns.scrollOverrideIDs and #ns.scrollOverrideIDs > 0) then
+		if uncovered or ns.FindMissingScrolls(ns.scannedItemCounts, snapshot) then
 			missing[#missing + 1] = L["READINESS_SCROLLS"]
 		end
 	end

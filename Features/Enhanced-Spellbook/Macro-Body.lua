@@ -169,8 +169,9 @@ local function CastBody(macro)
 		stopIfStealthed's [stealth] and the combat check's [nocombat] or [combat], so a press can't break a
 		channel or stealth, and on the wrong side of the combat check does nothing at all, not even its item
 		or attack lines, ahead of the mute so a stopped press never leaves the sounds muted; muteErrors' mute; stopAttack's /stopattack; stopCast's
-		/stopcasting; cancelForm's /cancelform; targetEnemy's /targetenemy, for when there is no living hostile
-		target, and targetFriend's /targetfriend, for when there is no living friendly one; the useItems slots, in the order ticked; the stance switch; then the cast, its Conditionals rows first. oncePerCombat makes the
+		/stopcasting; cancelForm's /cancelform; targetEnemy's /cleartarget of a dead or friendly target then
+		/targetenemy when nothing is targeted, and targetFriend's the same for a friend (/cleartarget of a dead or
+		hostile target, then /targetfriend); the useItems slots, in the order ticked; the stance switch; then the cast, its Conditionals rows first. oncePerCombat makes the
 		cast a /castsequence that casts once until combat ends or the target changes, oncePerTarget one that
 		casts once until the target changes. With items, a stance switch or one of those two /castsequence
 		lines, #showtooltip names the spell so the button shows the spell; a Cast Sequence macro's button
@@ -211,8 +212,8 @@ local function CastBody(macro)
 		.. (ns.IsOptionOn(macro, "stopAttack") and "/stopattack\n" or "")
 		.. (stopCast or "")
 		.. (ns.IsOptionOn(macro, "cancelForm") and "/cancelform\n" or "")
-		.. (ns.IsOptionOn(macro, "targetEnemy") and "/targetenemy [noexists][dead][help]\n" or "")
-		.. (ns.IsOptionOn(macro, "targetFriend") and "/targetfriend [noexists][dead][harm]\n" or "")
+		.. (ns.IsOptionOn(macro, "targetEnemy") and "/cleartarget [dead][help]\n/targetenemy [noexists]\n" or "")
+		.. (ns.IsOptionOn(macro, "targetFriend") and "/cleartarget [dead][harm]\n/targetfriend [noexists]\n" or "")
 		.. use
 		.. stance
 	--[[
@@ -232,16 +233,11 @@ local function CastBody(macro)
 	end
 	local spell = spellFor(nil)
 	--[[
-		who the cast tries, in turn: the focus copy its focus then the target; else its target priority. A
-		resurrection looks for a dead unit, every other spell a living one
+		who the cast tries, in turn: its target priority. A resurrection looks for a dead unit, every other
+		spell a living one
 	]]
 	local life = macro.kind == "resurrect" and "dead" or "nodead"
-	local clauses
-	if macro.focus then
-		clauses = { { "@focus," .. target .. "," .. life, "focus" }, { "", "target" } }
-	else
-		clauses = TargetClauses(ns.TargetPriority(macro), target, life)
-	end
+	local clauses = TargetClauses(ns.TargetPriority(macro), target, life)
 	if ns.IsOptionOn(macro, "cursor") then
 		clauses = { { "@cursor" } }
 	end

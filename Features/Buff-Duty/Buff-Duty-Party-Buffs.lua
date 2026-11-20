@@ -67,11 +67,11 @@ local function WhisperTargets(recipients)
 	return L["BUFF_DUTY_OTHERS_ASK_PEOPLE"]:format(#recipients)
 end
 
--- What a name's row says on the right: the whole minutes left, silver, or Missing in gray once it has run out.
+-- What a name's row says on the right: the whole minutes left, or Missing once it has run out, both gray.
 local function TimeLeft(expires)
 	local now = GetTime()
 	if expires and expires > now then
-		return L["BUFF_DUTY_OTHERS_MINUTES"]:format(math.ceil((expires - now) / 60)), "HELP"
+		return L["BUFF_DUTY_OTHERS_MINUTES"]:format(math.ceil((expires - now) / 60)), "MUTED"
 	end
 	return L["BUFF_DUTY_OTHERS_MISSING"], "MUTED"
 end
@@ -79,8 +79,9 @@ end
 local Render
 
 --[[
-    An ask as a row, both sides in the interaction blue, muted while that ask
-    is still cooling down; clicking it does what the icon's click does.
+    An ask as a row: blue, muted while that ask is still cooling down, with
+    the icon's click that does the same on the right in gray; clicking the row
+    does what that click does, and the menu closes, its job done.
 ]]
 local function AskRow(text, keybind, ready, run)
 	local color = ready and "INFO" or "MUTED"
@@ -89,10 +90,10 @@ local function AskRow(text, keybind, ready, run)
 		left = text,
 		right = keybind,
 		leftColor = color,
-		rightColor = color,
+		rightColor = "MUTED",
 		onClick = function()
 			run()
-			Render()
+			menu:Hide()
 		end,
 	}
 end
@@ -100,15 +101,20 @@ end
 local function BuildEntries(spec)
 	local texture = C_Spell.GetSpellTexture(spec.spellId)
 	local entries = {
-		{ kind = "header", left = (texture and "|T" .. texture .. ":0|t " or "") .. spec.spellName },
+		{
+			kind = "header",
+			left = (texture and "|T" .. texture .. ":0|t " or "") .. spec.spellName,
+			right = L["ADDON_SHORT_NAME"],
+		},
 	}
 	for _, group in ipairs(spec.groups) do
 		entries[#entries + 1] = { kind = "section", left = group.label }
 		for row, name in ipairs(group.names) do
 			local color = ns.GetClassColor(group.classes[row]) or ns.GetColor("TEXT")
 			local right, rightColor = TimeLeft(group.expires[row])
+			-- a value row, in from its heading like every option, its time left gray on the right
 			entries[#entries + 1] = {
-				kind = "action",
+				kind = "value",
 				left = color .. name .. "|r",
 				right = right,
 				rightColor = rightColor,
@@ -120,7 +126,7 @@ local function BuildEntries(spec)
 	entries[#entries + 1] = { kind = "separator" }
 	entries[#entries + 1] = AskRow(
 		L["BUFF_DUTY_OTHERS_HINT_ASK"]:format(GroupChatName()),
-		L["TOOLTIP_KEY_CLICK"],
+		L["MENU_CLICK_LEFT"],
 		ns.CanAskForBuff("group", spec.key),
 		function()
 			ns.AskGroupForBuff(spec)
@@ -205,9 +211,18 @@ local function OnOtherIconEnter(self)
 	state.idle = 0
 	if state.owner ~= self or not menu:IsShown() then
 		state.owner = self
-		-- Up and to the right of the icon, where GameTooltip's ANCHOR_RIGHT would put a tooltip.
+		-- Off the icon's corner, away from the screen's nearest edges, as the mini-map menu opens off its button.
+		local x, y = self:GetCenter()
+		local scale = self:GetEffectiveScale() / UIParent:GetEffectiveScale()
+		local openLeft = (x or 0) * scale > UIParent:GetWidth() / 2
+		local openDown = (y or 0) * scale > UIParent:GetHeight() / 2
 		menu:ClearAllPoints()
-		menu:SetPoint("BOTTOMLEFT", self, "TOPRIGHT")
+		menu:SetPoint(
+			(openDown and "TOP" or "BOTTOM") .. (openLeft and "RIGHT" or "LEFT"),
+			self,
+			(openDown and "BOTTOM" or "TOP") .. (openLeft and "LEFT" or "RIGHT")
+		)
+		menu.tooltipAnchor = openLeft and "ANCHOR_LEFT" or "ANCHOR_RIGHT"
 	end
 	menu:Show()
 	Render()
@@ -241,7 +256,7 @@ function ns.AcquireBuffDutyOtherIcon(parent)
 		button.icon:SetAllPoints()
 		button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 		-- The count sits in the middle, in the palette's red: it's a gap, not a stack.
-		button.count = button:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
+		button.count = button:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
 		button.count:SetPoint("CENTER", button, "CENTER", 0, 0)
 		local red = ns.COLORS_RGB.OFF
 		button.count:SetTextColor(red.r, red.g, red.b)

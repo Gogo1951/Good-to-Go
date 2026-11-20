@@ -7,8 +7,6 @@ local Header = Kit.Header
 local Desc = Kit.Desc
 local Spacer = Kit.Spacer
 
-local SubLabel = Kit.SubLabel
-
 --------------------------------------------------------------------------------
 -- Restocker Panel
 --------------------------------------------------------------------------------
@@ -24,11 +22,23 @@ local function GetRestockerSettings()
 	return ns.restockSettings
 end
 
--- The mode and sound rows only mean anything while the in-town reminder itself is on.
-local function RemindHidden()
-	local settings = GetRestockerSettings()
-	return not (settings and settings.restockReminderChat)
+-- Everything under the switch hides while the Restocker is off.
+local function RestockerOff()
+	return not (ns.db and ns.db.global.restockerEnabled)
 end
+
+--[[
+    Hides a reminder's own rows (its How Much to Say row, its Example) while
+    its switch is off.
+]]
+local function ReminderOff(enabledKey)
+	return function()
+		local settings = GetRestockerSettings()
+		return not (settings and settings[enabledKey])
+	end
+end
+
+local RemindHidden = ReminderOff("restockReminderChat")
 
 local function PlayAlert()
 	if ns.RESTOCK_ALERT_SOUND then
@@ -49,14 +59,6 @@ local function ReminderModes()
 end
 
 local REMINDER_MODE_ORDER = { ns.REMINDER_SIMPLE, ns.REMINDER_VERBOSE }
-
--- Hides a reminder's Example while that reminder is off.
-local function ReminderOff(enabledKey)
-	return function()
-		local settings = GetRestockerSettings()
-		return not (settings and settings[enabledKey])
-	end
-end
 
 --[[
     The staples a reminder's Example counts: one out, one low. 5 of 20 is low
@@ -125,8 +127,11 @@ local function GoldReserveAmounts()
 	return values
 end
 
--- A reminder's on/off toggle, and the Gold Reserve's; width defaults to the label cell its dropdown sits beside.
--- It ends in ns.RefreshSettings, which also reveals or hides the rows that hang off it.
+--[[
+    A reminder's on/off toggle, and the Gold Reserve's; width defaults to the
+    label cell its dropdown sits beside. It ends in ns.RefreshSettings, which
+    also reveals or hides the rows that hang off it.
+]]
 local function ReminderToggle(labelKey, descKey, settingKey, order, width)
 	return {
 		type = "toggle",
@@ -149,21 +154,15 @@ local function ReminderToggle(labelKey, descKey, settingKey, order, width)
 end
 
 --[[
-    The Simple/Verbose dropdown beside a reminder toggle. Hidden with the
-    reminder off -- how loudly a silent reminder speaks is not a question.
-    A change redraws the reminder's Example.
+    A reminder's How Much to Say row: the Simple/Verbose dropdown on an
+    indented sub-row under its switch, hidden with the reminder off -- how
+    loudly a silent reminder speaks is not a question. A change redraws the
+    reminder's Example.
 ]]
-local function ReminderModeSelect(settingKey, enabledKey, order, onSubRow)
-	local dropdown = {
+local function ReminderModeRow(settingKey, enabledKey, order)
+	return Kit.SubLabelRow(order, ReminderOff(enabledKey), L["OPTIONS_RESTOCKER_REMIND_MODE_CAPTION"], {
 		type = "select",
-		name = "",
 		desc = L["OPTIONS_RESTOCKER_REMIND_MODE_DESCRIPTION"],
-		order = order,
-		width = ns.OPTIONS_CONTROL_WIDTH,
-		hidden = function()
-			local settings = GetRestockerSettings()
-			return not (settings and settings[enabledKey])
-		end,
 		values = ReminderModes,
 		sorting = REMINDER_MODE_ORDER,
 		get = function()
@@ -177,24 +176,18 @@ local function ReminderModeSelect(settingKey, enabledKey, order, onSubRow)
 			end
 			ns.RefreshSettings()
 		end,
-	}
-	-- On a sub-row the row itself hides, so the dropdown carries no hidden of its own.
-	if onSubRow then
-		dropdown.hidden = nil
-	end
-	return dropdown
+	})
 end
 
 --[[
     Page order: the description, the Restocker's master switch, then the Gold Reserve, Reminders and window
-    sections, each laid out spacer, header, spacer, description, spacer, controls. The Inventory Report has its own page in the tree
-    (Options/Inventory-Report/Options-Inventory-Report.lua).
+    sections, each laid out spacer, header, spacer, description, spacer, controls, all hidden while the switch is
+    off. The Inventory Report has its own page under this one in the tree (Options/Inventory-Report/Options-Inventory-Report.lua).
 
     The three reminders are peers under their header. The merchant and bank
-    reminders are a toggle with the dropdown choosing how much it reports on
-    the same line; the in-town reminder, with a sound as well, puts its mode
-    on an indented sub-row under its toggle and its sound on a switch row of
-    its own.
+    reminders each take a full-width switch with its How Much to Say row
+    indented under it; the in-town reminder adds its sound on a switch row of
+    its own under that.
 ]]
 function ns.BuildRestockerOptions()
 	local options = {
@@ -301,26 +294,21 @@ function ns.BuildRestockerOptions()
 				10,
 				"full"
 			),
-			-- Two settings of its own, so its mode takes an indented sub-row under the toggle rather than its line.
-			modeRestockerRemind = Kit.SubLabelRow(
-				11,
-				RemindHidden,
-				L["OPTIONS_RESTOCKER_REMIND_MODE_CAPTION"],
-				ReminderModeSelect("restockReminderMode", "restockReminderChat", nil, true)
-			),
+			modeRestockerRemind = ReminderModeRow("restockReminderMode", "restockReminderChat", 11),
 
 			--[[
-			    The sound's switch, with its speaker past the row's end
-			    (Kit.ToggleRow, Kit.SoundPreview).
+			    The sound's switch, indented under the reminder it rides with,
+			    with its speaker past the row's end (ns.OptionsSubToggleRow,
+			    Kit.SoundPreview).
 
 			    Only the in-town reminder gets a sound: it arrives while you are
 			    running around, where a chat line is easy to miss. The merchant
 			    and bank reminders fire on a window you just closed, so you are
 			    already looking at the screen.
 			]]
-			soundRow = Kit.ToggleRow(12, {
+			soundRow = ns.OptionsSubToggleRow(12, RemindHidden, {
 				type = "toggle",
-				name = SubLabel(L["OPTIONS_RESTOCKER_REMIND_SOUND"]),
+				name = L["OPTIONS_RESTOCKER_REMIND_SOUND"],
 				desc = L["OPTIONS_RESTOCKER_REMIND_SOUND_DESCRIPTION"],
 				get = function()
 					local settings = GetRestockerSettings()
@@ -333,7 +321,7 @@ function ns.BuildRestockerOptions()
 					end
 					ns.RefreshSettings()
 				end,
-			}, { preview = Kit.SoundPreview(PlayAlert), hidden = RemindHidden }),
+			}, Kit.SoundPreview(PlayAlert)),
 			exampleRestockerRemind = ReminderExample(12.5, "restockReminderChat", "restockReminderMode", TownHeadline),
 
 			--[[
@@ -348,9 +336,10 @@ function ns.BuildRestockerOptions()
 				"OPTIONS_RESTOCKER_MERCHANT_REMIND",
 				"OPTIONS_RESTOCKER_MERCHANT_REMIND_DESCRIPTION",
 				"merchantReminder",
-				14
+				14,
+				"full"
 			),
-			modeRestockerMerchantRemind = ReminderModeSelect("merchantReminderMode", "merchantReminder", 15),
+			modeRestockerMerchantRemind = ReminderModeRow("merchantReminderMode", "merchantReminder", 15),
 			exampleRestockerMerchantRemind = ReminderExample(
 				15.5,
 				"merchantReminder",
@@ -363,9 +352,10 @@ function ns.BuildRestockerOptions()
 				"OPTIONS_RESTOCKER_BANK_REMIND",
 				"OPTIONS_RESTOCKER_BANK_REMIND_DESCRIPTION",
 				"bankReminder",
-				17
+				17,
+				"full"
 			),
-			modeRestockerBankRemind = ReminderModeSelect("bankReminderMode", "bankReminder", 18),
+			modeRestockerBankRemind = ReminderModeRow("bankReminderMode", "bankReminder", 18),
 			exampleRestockerBankRemind = ReminderExample(18.5, "bankReminder", "bankReminderMode", ClosingHeadline),
 
 			-- Restocker Window
@@ -413,5 +403,6 @@ function ns.BuildRestockerOptions()
 			},
 		},
 	}
+	Kit.HideAllExcept(options.args, RestockerOff, { "descRestocker", "spaceEnabled", "toggleRestockerEnabled" })
 	return options
 end

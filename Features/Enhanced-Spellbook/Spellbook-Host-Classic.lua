@@ -30,7 +30,7 @@ end
 --[[
 	The skill line tab the page's tab lines up under: the class's last spell tab, so it sits right under the
 	class's own tabs. Other add-ons show tabs of their own in the book's spare slots (WhatsTraining takes the
-	second to last), and lining up under the last shown tab put ours below theirs, off the bottom of the book.
+	second to last), and lining up under the last shown tab would put ours below theirs, off the bottom of the book.
 	Falls back to the last shown tab when the spell tab count doesn't name a shown tab.
 ]]
 local function AnchorSkillLineTab()
@@ -89,7 +89,7 @@ local function CreateTab()
 		GameTooltip:AddLine(L["SPELLBOOK_TAB_DESCRIPTION"], BODY.r, BODY.g, BODY.b, true)
 		GameTooltip:AddDoubleLine(
 			GetColor("INFO") .. L["TOOLTIP_KEY_CLICK"] .. "|r",
-			GetColor("INFO") .. L["TOOLTIP_ACTION_OPEN_PAGE"] .. "|r"
+			GetColor("INFO") .. L["MENU_OPEN_SPELLBOOK"] .. "|r"
 		)
 		GameTooltip:Show()
 	end)

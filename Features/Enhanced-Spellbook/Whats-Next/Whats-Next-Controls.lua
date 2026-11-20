@@ -31,7 +31,7 @@ function ns.BuildWhatsNextControls(page, model, Layout, SourceLabel)
 		-- the settings gear at the row's right end: which rows besides the ones to learn it lists
 		options = ns.CreateSpellbookGearButton(page, 16)
 		page.options = options
-		options:SetPoint("RIGHT", page, "TOPRIGHT", -10, rowY)
+		options:SetPoint("RIGHT", page, "TOPRIGHT", -8, rowY)
 		options:SetScript("OnEnter", function(self)
 			GameTooltip:SetOwner(self, "ANCHOR_LEFT")
 			GameTooltip:SetText(SETTINGS, TITLE.r, TITLE.g, TITLE.b, 1, true)
@@ -39,8 +39,8 @@ function ns.BuildWhatsNextControls(page, model, Layout, SourceLabel)
 		end)
 		options:SetScript("OnClick", function(self)
 			HideTooltip(self)
-			MenuUtil.CreateContextMenu(self, function(_, rootDescription)
-				rootDescription:CreateTitle(SETTINGS)
+			ns.OpenMacroMenuPanels(self, function(_, rootDescription)
+				rootDescription:CreateHeader(SETTINGS, L["ADDON_SHORT_NAME"])
 				local toggles = type(model.toggles) == "function" and model.toggles() or model.toggles
 				for _, toggle in ipairs(toggles) do
 					local labelKey, descKey, getter, setter = unpack(toggle)
@@ -53,7 +53,7 @@ function ns.BuildWhatsNextControls(page, model, Layout, SourceLabel)
 						descKey
 					)
 				end
-			end)
+			end, true)
 		end)
 	end
 
@@ -171,7 +171,7 @@ function ns.BuildWhatsNextControls(page, model, Layout, SourceLabel)
 		if options then
 			sortButton:SetPoint("RIGHT", options, "LEFT", -8, 0)
 		else
-			sortButton:SetPoint("RIGHT", page, "TOPRIGHT", -10, rowY)
+			sortButton:SetPoint("RIGHT", page, "TOPRIGHT", -8, rowY)
 		end
 		page.sortButton = sortButton
 	else
@@ -182,7 +182,7 @@ function ns.BuildWhatsNextControls(page, model, Layout, SourceLabel)
 
 	-- the footer: the counts at its left, the model's own text at its right
 	page.counts = page:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-	page.counts:SetPoint("LEFT", page, "BOTTOMLEFT", 12, FRAME_BORDER + FOOTER_HEIGHT / 2)
+	page.counts:SetPoint("LEFT", page, "BOTTOMLEFT", 16, FRAME_BORDER + FOOTER_HEIGHT / 2)
 	page.footerText = page:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-	page.footerText:SetPoint("RIGHT", page, "BOTTOMRIGHT", -12, FRAME_BORDER + FOOTER_HEIGHT / 2)
+	page.footerText:SetPoint("RIGHT", page, "BOTTOMRIGHT", -16, FRAME_BORDER + FOOTER_HEIGHT / 2)
 end

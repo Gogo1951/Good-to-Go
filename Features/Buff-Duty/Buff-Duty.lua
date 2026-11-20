@@ -59,8 +59,34 @@ local BACKSTOP_INTERVAL = 3
     Key reads the same list, so it casts only what the window offers, but for
     a dead friendly target, whom it resurrects even with the Target list off.
 ]]
+--[[
+    Shadowform shuts out Holy spells. It is read once per build, so the icons
+    below can leave out anything marked noShadowform (Fortitude, Divine
+    Spirit, Fear Ward, Inner Fire, Resurrection) while you are in it.
+]]
+local SHADOWFORM_SPELL_ID = 15473
+
+local function InShadowform()
+	for i = 1, 40 do
+		local data = C_UnitAuras.GetBuffDataByIndex("player", i, "HELPFUL")
+		if not data then
+			return false
+		end
+		if ns.IsPlain(data.spellId) and data.spellId == SHADOWFORM_SPELL_ID then
+			return true
+		end
+	end
+	return false
+end
+
+-- Whether `buff` (or the resurrection) can't be cast in the form you are in.
+function BuffDuty.ShutOut(buff)
+	return BuffDuty.inShadowform and buff.noShadowform or false
+end
+
 function BuffDuty.BuildSections()
 	BuffDuty.refreshSeconds = ns.db.global.buffWindow.refreshMinutes * 60
+	BuffDuty.inShadowform = InShadowform()
 	local sections = {}
 	BuffDuty.AddSelfSection(sections)
 	BuffDuty.AddOutsiderSections(sections)
@@ -90,11 +116,27 @@ end
 
 --[[
     Whether the Party-Buffs row could have anything to count: in a group, with
-    Ask Other Classes for Buffs on. It needs nothing castable of yours, so a
+    Ask for Buffs on. It needs nothing castable of yours, so a
     class with no buffs to give still sees what the group is missing.
 ]]
 local function WatchesPartyBuffs()
 	return IsInGroup() and ns.db.global.buffWindow.askOtherClasses
+end
+
+--[[
+    Whether the Target row could ask your target for a buff of theirs
+    (Buff-Duty-Asks.lua): Your Target and Ask Your Target for Buffs both on. Like
+    Party-Buffs, it needs nothing castable of yours, so a warrior can still
+    ask a priest for Fortitude.
+]]
+local function WatchesTargetAsks()
+	local db = ns.db.global.buffWindow
+	return db.targetEnabled and db.askTarget
+end
+
+-- Whether the window could have anything to show: something of yours to cast, or something to ask for.
+local function HasAnythingToShow()
+	return HasAnythingToOffer() or WatchesPartyBuffs() or WatchesTargetAsks()
 end
 
 local function Refresh()
@@ -107,11 +149,7 @@ local function Refresh()
 	end
 
 	-- The close button hides the window for the session (ns.IsBuffDutyOnForClass) while its data keeps up.
-	if
-		not ns.IsBuffDutyOnForClass()
-		or not (HasAnythingToOffer() or WatchesPartyBuffs())
-		or not BuffDuty.ShowsHere()
-	then
+	if not ns.IsBuffDutyOnForClass() or not HasAnythingToShow() or not BuffDuty.ShowsHere() then
 		ns.HideBuffDuty()
 		return
 	end
@@ -187,9 +225,10 @@ function ns.RefreshBuffDuty()
 end
 
 --[[
-    Buff Duty's settings are account-wide, so a profile switch, copy or reset
-    leaves them as they were; Features/Core.lua calls this anyway so a Reset
-    never leaves the window reading a stale table.
+    Buff Duty's settings are account-wide except its Scrolls choices, which
+    ride the profile, so a profile switch, copy or reset can change what it
+    offers; Features/Core.lua calls this so the window never reads a stale
+    table.
 ]]
 function ns.ApplyBuffDutyProfile()
 	if not BuffDuty.isSetUp then
@@ -232,7 +271,7 @@ function ns.OnBuffDutyUnitAura(unit)
 	if not WATCHED_UNITS[unit] then
 		return
 	end
-	if ns.IsBuffDutyTrackingForClass() and (HasAnythingToOffer() or WatchesPartyBuffs()) then
+	if ns.IsBuffDutyTrackingForClass() and HasAnythingToShow() then
 		MarkAurasDirty(unit)
 		ns.RequestBuffDutyRefresh()
 	end
@@ -256,6 +295,14 @@ end
     since the secure buttons still point at the old roster until then.
 ]]
 local function OnGroupRosterUpdate()
+	-- Leaving the raid (or it turning into a party) folds every group again for the next one.
+	if not IsInRaid() then
+		BuffDuty.ResetGroupFolds()
+	end
+	-- Joining a group brings back a window the close button hid.
+	if ns.NoteBuffDutyGroup() then
+		ns.RefreshBuffDuty()
+	end
 	if not IsWatching() then
 		return
 	end
@@ -399,8 +446,9 @@ function ns.SetupBuffDuty()
 	-- Then the consumables any class can use, in a box of their own.
 	local items = {}
 	for _, entry in ipairs(BuffDuty.selfItemEntries) do
-		local spellName = C_Spell.GetSpellName(entry.ids[1])
-		items[#items + 1] = { key = entry.key, ids = entry.ids, spellName = spellName or tostring(entry.itemId) }
+		local spellName = entry.name or C_Spell.GetSpellName(entry.ids[1])
+		items[#items + 1] =
+			{ key = entry.key, ids = entry.ids, spellName = spellName or tostring(entry.itemId), desc = entry.desc }
 	end
 	if items[1] then
 		ns.buffDutySelfCategories[#ns.buffDutySelfCategories + 1] =

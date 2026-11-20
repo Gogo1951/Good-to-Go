@@ -122,6 +122,10 @@ function ns.ScanPetFood()
 	ns.bestPetFoodID = nil
 	ns.bestPetFoodLink = nil
 
+	-- An arena blocks ordinary food, so the macro drops its food line there.
+	if select(2, IsInInstance()) == "arena" then
+		return
+	end
 	if not UnitExists("pet") or UnitIsDead("pet") or UnitIsGhost("pet") then
 		return
 	end
@@ -307,7 +311,7 @@ end)
     Called by ScanBags with its per-scan bag item counts. The aura probe it
     consults, ns.HasPetFoodBuff, stays in Scanner-Auras.lua: it shares
     that file's private early-reapply helper (BuffCountsAsActive) with the
-    Well Fed and scroll probes.
+    scroll probe.
 ]]
 function ns.FindPetBuffOverride(bagItemCounts)
 	--[[

@@ -66,11 +66,10 @@ end
 	first (a rank whose learn level isn't known is left out), and every learned spell's name, as name -> true.
 	Classic's book lists only each spell's highest rank unless Show All Spell Ranks is ticked, so the known
 	trainer ranks are added from their ids as well, then the trainer ranks not learned yet. A spellbook entry
-	with no level from LearnLevels takes the client's own answer (C_Spell.GetSpellLevelLearned, where it has one).
+	with no level from LearnLevels takes the client's own answer (C_Spell.GetSpellLevelLearned).
 ]]
 local function ReadSpellbook()
 	local levels, byName, learned, listed = LearnLevels(), {}, {}, {}
-	local levelLearned = C_Spell.GetSpellLevelLearned
 	local function addRank(name, subName, level, id, unknown)
 		if name and subName and subName ~= "" and level and level > 0 and not listed[name .. subName] then
 			listed[name .. subName] = true
@@ -82,7 +81,7 @@ local function ReadSpellbook()
 		if name then
 			learned[name] = true
 		end
-		addRank(name, subName, id and (levels[id] or (levelLearned and levelLearned(id))), id)
+		addRank(name, subName, id and (levels[id] or C_Spell.GetSpellLevelLearned(id)), id)
 	end)
 	for id, level in pairs(levels) do
 		if ns.IsPlayerSpell(id) then

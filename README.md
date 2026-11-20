@@ -9,7 +9,7 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 <img width="800" src="https://github.com/user-attachments/assets/01cbb0ae-c1f1-4fa3-8b6d-5d3c993a6c79" />
 
 * **Every Buff You Owe** // One click-to-cast window, or one key, covers your group, yourself, your weapons, and the stranger who just buffed you.
-* **Never Let a Buff Drop** // Missing or fading buffs show up right away, and one click puts them back.
+* **Never Let a Buff Drop** // Missing or fading buffs, Well Fed and scrolls included, show up right away, and one click puts them back.
 * **Gentle Reminders for the Group** // See which buffs your group is missing, then ask the group, or whisper the class that can cast them.
 * **Your Rules** // Choose which characters and which kinds of group it shows for, or switch it off entirely.
 
@@ -43,7 +43,7 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 
 | Macro | Uses |
 | --- | --- |
-| `- Food` | Best food, with buff food, scrolls, and pet treats if you want them |
+| `- Food` | Best food, with pet treats if you want them |
 | `- Water` | Best drink |
 | `- Health Potion` | Best healing potion, with a Healthstone backup if you like |
 | `- Mana Potion` | Best mana potion |
@@ -61,12 +61,9 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 
 * **Catch Outdated Action Bars** // Find out when you or a group member casts a spell at a lower rank than you could, with a friendly whisper pointing them to the trainer.
 * **No Nagging** // Buffs the game lowers for a low-level player never count, and only one player per group whispers, even alongside RankSentinel.
-* **Ability Alerts While Leveling** // Each time you level, chat lists the new abilities your trainer has for you, plus any you skipped, with your pet's included.
-* **Off Until You Want It** // Rank Watch starts off, and you pick which ranks are worth a mention. Ability alerts are on from the start.
+* **Off Until You Want It** // Starts off. Turn it on whenever you're ready, and pick which ranks are worth a mention.
 
 > Sample Messages
-
-> **Level Up, Self:** Good to Go // You can now learn [Corruption] (Rank 3), [Drain Mana], and [Drain Soul] (Rank 2).
 
 > **Low Rank Cast, Message To Portalrico:** FYI, no biggie, but you used [Fireball] (Rank 5). There's a newer rank at level 30. Update your action bars or visit your trainer and you'll be Good to Go // GtG
 
@@ -76,8 +73,12 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 
 * **Pro Macros, Zero Typing** // Every class spell becomes a smart button in one click, and it stays up to date as you level and train.
 * **One Button, Many Jobs** // Heal whoever your mouse is over, cast the rank that fits a lower-level friend, or pop a trinket and send in your pet, all from one button.
-* **What's Next?** // See the spells you can learn now and the ones coming soon, so you know when to visit your trainer.
+* **What's Next?** // Each time you level, chat lists the new abilities your trainer has for you, and the tab shows what's coming soon.
 * **Your Rules** // Choose what each button does, or hide the tab entirely.
+
+> Sample Messages
+
+> **Level Up, Self:** Good to Go // You can now learn [Corruption] (Rank 3), [Drain Mana], and [Drain Soul] (Rank 2).
 
 ## Setup
 
@@ -95,14 +96,9 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 | Action | Effect |
 | --- | --- |
 | Hover | Opens the mini-map menu |
-| Left-Click | Toggle Buff Food & Scrolls |
-| Shift + Left-Click | Toggle Buff Duty |
-| Right-Click | Ignore your current food |
-| Shift + Right-Click | Open or close your Restock List |
-| Middle-Click | Clear this character's Ignore List |
-| Shift + Middle-Click | Open the Options Interface |
+| Left-Click | Toggles Buff Duty |
 
-The menu shows the food your Food macro will eat, quick switches for Buff Food & Scrolls and Buff Duty, and what your Restock List is still short.
+The menu shows the food your Food macro will eat, what your Restock List is still short, a switch for every feature, and the button's other shortcut clicks.
 
 ### Good to Know
 
@@ -156,19 +152,3 @@ The menu shows the food your Food macro will eat, quick switches for Buff Food &
 * Gogo1951's [Pretty Wide Quest Log](https://www.curseforge.com/wow/addons/pretty-wide-quest-log)
 * Gogo1951's [Thanks for the Buff](https://www.curseforge.com/wow/addons/thanks-for-the-buff-revisited)
 * Gogo1951's [Tracking Eye](https://www.curseforge.com/wow/addons/tracking-eye-revisited)
-
-### 🟡 Overlaps
-
-* tekkub's [Buffet](https://www.curseforge.com/wow/addons/buffet)
-* Pupp3h's [Buffwatch Classic](https://www.curseforge.com/wow/addons/buffwatch-classic)
-* jnwhiteh's [Clique](https://www.curseforge.com/wow/addons/clique)
-* Venomisto's [Nova Spell Rank Checker](https://www.curseforge.com/wow/addons/nova-spell-rank-checker)
-* humfras's [Poisoner](https://www.curseforge.com/wow/addons/poisoner)
-
-### 🔴 Alternatives
-
-* ollidiemaus's [Auto Potion](https://www.curseforge.com/wow/addons/auto-potion)
-* kvakvs's [Buffomat Classic](https://www.curseforge.com/wow/addons/buffomat-classic)
-* funki's [Clickable Raid Buffs](https://www.curseforge.com/wow/addons/clickable-raid-buffs)
-* fpsacha's [Manners](https://www.curseforge.com/wow/addons/manners)
-* Codermik's [SmartBuff](https://www.curseforge.com/wow/addons/smartbuff-retail-burning-crusade-classic)

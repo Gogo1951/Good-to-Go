@@ -136,11 +136,10 @@ function ns.BuffDutyRefreshValues(choices)
 end
 
 --[[
-    One spell's row inside a class's inline group: its icon and name as the
-    caption, and a dropdown beside it. The Buff Duty panels build their lists
-    from these, so every dropdown on them shares one x and one width -- the
-    caption takes ns.OPTIONS_INLINE_LABEL_WIDTH, and a row outside a box that
-    should line up with these takes ns.OPTIONS_ALIGNED_LABEL_WIDTH.
+    One spell's row: its icon and name as the caption, and a dropdown beside
+    it. The Buff Duty panels build their lists from these, so every dropdown on
+    a page shares one x and one width -- the page's label and control columns
+    (Kit.LABEL_WIDTH, Kit.CONTROL_WIDTH), or a tree pane's narrower ones.
 
     Hovering the caption shows the spell's own game tooltip (ns.SpellTooltipLink),
     and hovering the dropdown says what it sets (`desc`).
@@ -153,12 +152,8 @@ function ns.DefineSpellSelectRow(args, entry, order, desc, select)
 	local texture = GetSpellTexture(primary)
 	local caption = texture and ("|T" .. texture .. ":16|t " .. entry.spellName) or entry.spellName
 
-	args["label_" .. primary] = ns.OptionsAbilityLabel(
-		caption,
-		order,
-		select.labelWidth or ns.OPTIONS_INLINE_LABEL_WIDTH,
-		ns.SpellTooltipLink(entry.ids)
-	)
+	args["label_" .. primary] =
+		ns.OptionsAbilityLabel(caption, order, select.labelWidth or Kit.LABEL_WIDTH, ns.SpellTooltipLink(entry.ids))
 	args["select_" .. primary] = {
 		type = "select",
 		name = "",

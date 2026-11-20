@@ -189,7 +189,7 @@ function ns:OnSpellbookUnitTarget()
 	QueueRankRewrite("targettarget")
 end
 
--- A new pet or pet level (Spellbook-Events.lua's PetChanged).
+-- A new pet or pet level (Spellbook-Events.lua's ns:OnSpellbookUnitPet and ns:OnSpellbookUnitLevel).
 function ns.QueueRankRewriteFor(unit)
 	QueueRankRewrite(unit)
 end

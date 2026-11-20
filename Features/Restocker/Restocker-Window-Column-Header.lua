@@ -127,7 +127,7 @@ function ns.CreateRestockColumnHeader(parent, scrollFrame)
 	captionRow:SetPoint("BOTTOMRIGHT", header, "BOTTOMRIGHT", 0, 2)
 	captionRow:SetHeight(ns.restockButtonHeight)
 
-	-- The upper tier, the rest of the height: the group bands' line, and the undo offer's (Restocker-Window-Footer.lua).
+	-- The upper tier, the rest of the height: the group bands' line.
 	local bandRow = CreateFrame("Frame", nil, header)
 	bandRow:SetPoint("TOPLEFT", header, "TOPLEFT", 0, 0)
 	bandRow:SetPoint("BOTTOMRIGHT", captionRow, "TOPRIGHT", 0, 0)

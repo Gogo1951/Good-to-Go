@@ -1,7 +1,6 @@
 local _, ns = ...
 local L = ns.L
 
-local AceConfigDialog = LibStub("AceConfigDialog-3.0")
 local Kit = ns.OptionsKit
 
 --------------------------------------------------------------------------------
@@ -19,8 +18,9 @@ local Kit = ns.OptionsKit
       Good to Go    (welcome, mini-map, Features, Key Bindings, /Commands)
         Buff Duty               Group Buffs, Self-Buffs, Weapon Buffs
         Restocker
-        Enhanced Spellbook
-        Consumable Macros       Class & Race, Ignore List
+        Enhanced Spellbook      Ability Alerts While Leveling (where Rank Watch loads)
+        Consumable Macros       Food & Drinks, Potions & Mana Gems, Bandages,
+                                Healthstone, Explosives, Class Macros, Ignore List
         Rank Watch              Reported Ranks, Ignored Players (where the flavor has ranks)
         Inventory Report
         Readiness Report
@@ -49,14 +49,20 @@ local function RegisterBuffDutyPanels()
 end
 
 --[[
-    Consumable Macros -- every macro setting, led by its on/off switch, with
-    Class & Race and the Ignore List nested under it: the list only says what
-    the macros may offer. The Ignore List's tree takes the kit's 176-point
+    Consumable Macros -- its on/off switch and which macros to create, with a
+    page per macro family nested under it (Food & Drinks, Potions & Mana Gems,
+    Bandages, Healthstone, Explosives, Class Macros), then the Ignore List,
+    which only says what the macros may offer. The Ignore List's tree takes the kit's 176-point
     sidebar (Kit.PrepareTree) and reopens on the character being played.
 ]]
 local function RegisterMacrosPanels()
 	Kit.RegisterPanel("Macros", ns.BuildMacrosOptions, L["TAB_CONSUMABLE_MACROS"])
-	Kit.RegisterPanel("ClassRace", ns.BuildClassRaceOptions, L["TAB_CLASS_RACE"], "Macros")
+	Kit.RegisterPanel("FoodDrinks", ns.BuildFoodDrinksOptions, L["OPTIONS_FOOD_WATER_HEADER"], "Macros")
+	Kit.RegisterPanel("PotionsManaGems", ns.BuildPotionsManaGemsOptions, L["TAB_POTIONS_MANA_GEMS"], "Macros")
+	Kit.RegisterPanel("Bandages", ns.BuildBandagesOptions, L["TAB_BANDAGES"], "Macros")
+	Kit.RegisterPanel("Healthstone", ns.BuildHealthstoneOptions, L["TAB_HEALTHSTONE"], "Macros")
+	Kit.RegisterPanel("Explosives", ns.BuildExplosivesOptions, L["OPTIONS_EXPLOSIVES_HEADER"], "Macros")
+	Kit.RegisterPanel("ClassMacros", ns.BuildClassMacrosOptions, L["TAB_CLASS_MACROS"], "Macros")
 	Kit.RegisterPanel("IgnoreList", ns.BuildIgnoreListOptions, L["TAB_IGNORE_LIST"], "Macros")
 	Kit.PrepareTree("IgnoreList", function()
 		return ns.db:GetCurrentProfile()
@@ -65,8 +71,8 @@ end
 
 --[[
     Rank Watch, where its TOC loads it (every flavor with ranks to compare), with its Reported Ranks and
-    Ignored Players under it. Reported Ranks is a tree of classes, opened on the player's own and seeded with
-    the shared tree width; a player dragging the splitter or picking a class overwrites either from then on.
+    Ignored Players under it. Reported Ranks is a tree of classes on the shared tree width, reopening on the
+    player's own class every time the panel opens (Kit.PrepareTree).
 ]]
 local function RegisterRankWatchPanels()
 	if not ns.BuildRankWatchOptions then
@@ -75,32 +81,41 @@ local function RegisterRankWatchPanels()
 	Kit.RegisterPanel("RankWatch", ns.BuildRankWatchOptions, L["TAB_RANK_WATCH"])
 	Kit.RegisterPanel("RankWatchTracked", ns.BuildRankWatchTrackedOptions, L["RANK_WATCH_TRACKED_HEADER"], "RankWatch")
 	Kit.RegisterPanel("RankWatchIgnored", ns.BuildRankWatchIgnoredOptions, L["RANK_WATCH_IGNORED_HEADER"], "RankWatch")
+	Kit.PrepareTree("RankWatchTracked", function()
+		return select(2, UnitClass("player"))
+	end)
+end
 
-	local trackedStatus = AceConfigDialog:GetStatusTable(ns.OPTIONS_REGISTRY.RankWatchTracked)
-	trackedStatus.groups = trackedStatus.groups or {}
-	trackedStatus.groups.treewidth = trackedStatus.groups.treewidth or ns.OPTIONS_TREE_WIDTH
-	trackedStatus.groups.selected = trackedStatus.groups.selected or select(2, UnitClass("player"))
+--[[
+    Enhanced Spellbook, with Ability Alerts While Leveling under it: the level-up prints read the Spellbook's
+    What's Next? rows. Its files load with Rank Watch's (every flavor but Mists), so it registers only there.
+]]
+local function RegisterSpellbookPanels()
+	Kit.RegisterPanel("Spellbook", ns.BuildSpellbookOptions, L["TAB_ENHANCED_SPELLBOOK"])
+	if ns.BuildAbilityAlertsOptions then
+		Kit.RegisterPanel("AbilityAlerts", ns.BuildAbilityAlertsOptions, L["RANK_WATCH_LEVEL_UP_HEADER"], "Spellbook")
+	end
 end
 
 function ns.RegisterOptionsPanels()
 	Kit.RegisterPanel("General", ns.BuildGeneralOptions, L["ADDON_TITLE"])
 
+	-- The features in ns.FEATURES order (Options/Options-Feature-Switches.lua), as the Features switches and the menu list them.
 	RegisterBuffDutyPanels()
 	Kit.RegisterPanel("Restocker", ns.BuildRestockerOptions, L["TAB_RESTOCKER"])
-	Kit.RegisterPanel("Spellbook", ns.BuildSpellbookOptions, L["TAB_ENHANCED_SPELLBOOK"])
+	RegisterSpellbookPanels()
 	RegisterMacrosPanels()
 	RegisterRankWatchPanels()
-	-- Named by the tooltip block's own title, so the panel and the tooltip cannot name it two ways.
+	-- A feature with its own switch, so a page of its own. Named by the tooltip block's own title, so the panel and the tooltip cannot name it two ways.
 	Kit.RegisterPanel("InventoryReport", ns.BuildInventoryReportOptions, L["INVENTORY_REPORT_TITLE"])
 	Kit.RegisterPanel("ReadinessReport", ns.BuildReadinessReportOptions, L["TAB_READINESS_REPORT"])
 
 	--[[
 	    Profiles panel: the stock AceDBOptions-3.0 table, unmodified. Its display
-	    name comes already-localized from AceDBOptions, read off the built table
+	    name comes already-localized from AceDBOptions, read off one built table
 	    so we neither hardcode it nor add a locale key for a stock widget.
 	]]
-	local profilesOptions = ns.BuildProfilesOptions()
-	Kit.RegisterPanel("Profiles", profilesOptions, profilesOptions.name)
+	Kit.RegisterPanel("Profiles", ns.BuildProfilesOptions, ns.BuildProfilesOptions().name)
 
 	Kit.RegisterPanel("FeedbackSupport", ns.BuildFeedbackSupportOptions, L["OPTIONS_FEEDBACK"])
 
