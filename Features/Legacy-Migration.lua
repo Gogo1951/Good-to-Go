@@ -107,6 +107,13 @@ local LEGACY_IMPORTERS = {
 			saved.global.restocker.lists = saved.global.restocker.lists or {}
 			CopyOver(saved.global.restocker.lists, restocker.lists)
 		end
+		-- Connoisseur's Poisons macro was on by default, so an unset entry meant on.
+		if type(saved.global.enabledMacros) ~= "table" then
+			saved.global.enabledMacros = {}
+		end
+		if saved.global.enabledMacros["Poisons"] == nil then
+			saved.global.enabledMacros["Poisons"] = true
+		end
 	end,
 }
 

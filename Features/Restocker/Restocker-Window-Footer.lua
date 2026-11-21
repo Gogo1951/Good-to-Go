@@ -37,8 +37,8 @@ local GetColor = ns.GetColor
 local FOOTER_X = ns.RESTOCK_FOOTER_X
 local FOOTER_RIGHT_INSET = 32 -- clear of the resize grip
 local FOOTER_ROW_HEIGHT = 22
--- Centered in the window's footer band (ns.RESTOCK_WINDOW_BANDS), as the Spell Book's legend is.
-local FOOTER_Y = ns.RESTOCK_WINDOW_BANDS.FRAME_BORDER + (ns.RESTOCK_WINDOW_BANDS.FOOTER_HEIGHT - FOOTER_ROW_HEIGHT) / 2
+-- 8 up from the window's bottom edge, the Spacing Scale's step nearest the centered 9, level with the List row.
+local FOOTER_Y = 8
 
 -- The most short items the hover lists one per row; past it, one closing line counts the rest.
 local ORDERS_TOOLTIP_MAX_ROWS = 20
@@ -88,7 +88,7 @@ local function ShowOrdersTooltip(owner)
 	end
 	if #groceries > ORDERS_TOOLTIP_MAX_ROWS then
 		GameTooltip:AddLine(
-			GetColor("MUTED") .. string.format(L["RESTOCKER_REPORT_MORE"], #groceries - ORDERS_TOOLTIP_MAX_ROWS) .. "|r"
+			GetColor("MUTED") .. string.format(L["LIST_MORE_SENTENCE"], #groceries - ORDERS_TOOLTIP_MAX_ROWS) .. "|r"
 		)
 	end
 	GameTooltip:Show()

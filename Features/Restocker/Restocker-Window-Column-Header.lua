@@ -15,6 +15,8 @@ local LayoutColumns = ns.LayoutRestockColumns
 local ApplyColumnWidths = ns.ApplyRestockColumnWidths
 local TooltipBody = ns.RestockColumnTooltipBody
 local ResolveColumns = ns.ResolveRestockColumns
+-- The caption tier's height: the header's 32 is this under the group bands' line.
+local CAPTION_HEIGHT = 16
 
 --[[
     The header above the Restock List grid: the column captions, the Keep
@@ -125,7 +127,7 @@ function ns.CreateRestockColumnHeader(parent, scrollFrame)
 	local captionRow = CreateFrame("Frame", nil, header)
 	captionRow:SetPoint("BOTTOMLEFT", header, "BOTTOMLEFT", 0, 2)
 	captionRow:SetPoint("BOTTOMRIGHT", header, "BOTTOMRIGHT", 0, 2)
-	captionRow:SetHeight(ns.restockButtonHeight)
+	captionRow:SetHeight(CAPTION_HEIGHT)
 
 	-- The upper tier, the rest of the height: the group bands' line.
 	local bandRow = CreateFrame("Frame", nil, header)
@@ -169,7 +171,7 @@ function ns.CreateRestockColumnHeader(parent, scrollFrame)
 	local firstCell
 	header.cells, firstCell = LayoutColumns(removeSpacer, function(column)
 		local button = CreateFrame("Button", nil, captionRow)
-		button:SetSize(ns.restockColumnWidths[column.key] or COLUMN_MIN_WIDTH, ns.restockButtonHeight)
+		button:SetSize(ns.restockColumnWidths[column.key] or COLUMN_MIN_WIDTH, CAPTION_HEIGHT)
 		local fontString = button:CreateFontString(nil, "OVERLAY")
 		fontString:SetFontObject(BUTTON_FONT)
 		local tone = COLUMN_TONE[column.key]
@@ -203,7 +205,7 @@ function ns.CreateRestockColumnHeader(parent, scrollFrame)
 	    reason the column headings are: it carries the box's own tooltip.
 	]]
 	local amount = CreateFrame("Button", nil, captionRow)
-	amount:SetSize(ns.restockAmountWidth, ns.restockButtonHeight)
+	amount:SetSize(ns.restockAmountWidth, CAPTION_HEIGHT)
 	amount:SetPoint("RIGHT", firstCell, "LEFT", -KEEP_GAP, 0)
 	Caption(amount, L["RESTOCKER_COLUMN_AMOUNT"], HEADER_CAPTION_UNGROUPED):SetPoint("CENTER")
 	ns.SetupRestockerTooltip(amount, L["RESTOCKER_AMOUNT_TOOLTIP_TITLE"], L["RESTOCKER_AMOUNT_TOOLTIP_KEEP"])

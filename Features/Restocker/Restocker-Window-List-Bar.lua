@@ -261,10 +261,8 @@ end
     anchored to the window lands at its middle and disappears behind the list.
 ]]
 function ns.CreateRestockListBar(addonFrame)
-	local bands = ns.RESTOCK_WINDOW_BANDS
-
-	-- The footer's left run, centered in its band as the Spell Book's legend is.
-	local bottom = bands.FRAME_BORDER + (bands.FOOTER_HEIGHT - BAR_HEIGHT) / 2
+	-- The footer's left run, 8 up from the window's bottom edge, level with the Short on line (Restocker-Window-Footer.lua).
+	local bottom = 8
 	local bar = CreateFrame("Frame", nil, addonFrame)
 	bar:SetPoint("BOTTOMLEFT", addonFrame, "BOTTOMLEFT", FOOTER_X, bottom)
 	bar:SetPoint("BOTTOMRIGHT", addonFrame, "BOTTOMRIGHT", -BAR_INSET_RIGHT, bottom)

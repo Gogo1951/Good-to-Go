@@ -214,15 +214,12 @@ local function GraceValues()
 	return values, sorting
 end
 
+-- A caption row, so hovering the caption shows the dropdown's tooltip too.
 local function GraceRow(args, key, name, desc, order)
 	local values, sorting = GraceValues()
-	args[key .. "Label"] = Kit.Label(L[name], order)
-	args[key] = {
+	args[key] = Kit.LabelRow(order, nil, L[name], {
 		type = "select",
-		name = "",
 		desc = L[desc],
-		order = order + 0.01,
-		width = ns.OPTIONS_CONTROL_WIDTH,
 		values = values,
 		sorting = sorting,
 		get = function()
@@ -232,7 +229,7 @@ local function GraceRow(args, key, name, desc, order)
 			Settings()[key] = value
 			ns.RefreshSettings()
 		end,
-	}
+	})
 end
 
 -- The standalone add-on's notice and the space above it, shown only while that add-on runs.

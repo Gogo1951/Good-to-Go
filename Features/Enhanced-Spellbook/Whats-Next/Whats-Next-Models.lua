@@ -165,10 +165,10 @@ local function AddBeasts(beasts)
 		-- a beast still above your level in the palette's gray, so it reads as not yet
 		local ink = beast[2] <= level and BODY or MUTED
 		local r, g, b = ink.r, ink.g, ink.b
-		GameTooltip:AddDoubleLine(L["WHATS_NEXT_PET_TOOLTIP_BEAST"]:format(beast[1], levels), zone, r, g, b, r, g, b)
+		GameTooltip:AddDoubleLine(L["NAME_WITH_DETAIL_FORMAT"]:format(beast[1], levels), zone, r, g, b, r, g, b)
 	end
 	if #list > MAX_BEASTS then
-		AddBody(L["WHATS_NEXT_PET_TOOLTIP_MORE"]:format(#list - MAX_BEASTS))
+		AddBody(L["LIST_MORE_SENTENCE"]:format(#list - MAX_BEASTS))
 	end
 end
 

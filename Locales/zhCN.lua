@@ -59,7 +59,14 @@ L["LIST_LAST_FORMAT"] = "%s和%s"
 L["LIST_OR_PAIR_FORMAT"] = "%s或%s"
 -- Joins the last choice to the ones before it, already joined with LIST_SEPARATOR ("[Fortitude], [Shadow Protection], or [Divine Spirit]").
 L["LIST_OR_LAST_FORMAT"] = "%s或%s"
--- A name with a detail after it: a Spellbook note and its settings ("Target (Mouseover, Self)"), or a pet and its owner.
+-- Closes a hover list cut short: %d is how many more it holds, such as the Restock List's Short Items or the beasts that know a pet ability.
+L["LIST_MORE_SENTENCE"] = "还有 %d 个。"
+--[[
+    A name with a detail after it: a Spellbook note and its settings ("Target (Mouseover, Self)"), a pet and
+    its owner, a spell and its rank in Rank Watch ("[Arcane Intellect] (Rank 3)"), a beast and its level or
+    level range in Pet What's Next? ("Forest Spider (5-6)"), or the Readiness Report's main talent tree and
+    its point spread ("Frost (0/11/40)").
+]]
 L["NAME_WITH_DETAIL_FORMAT"] = "%s（%s）"
 -- The decimal mark in a number the code prints, such as the Readiness Report's 2.5-minute choice.
 L["DECIMAL_SEPARATOR"] = "."
@@ -179,8 +186,6 @@ L["READINESS_PVP_ON"] = "PvP 已开启"
 L["READINESS_TIME_MINUTES"] = "%s %d 分钟"
 -- %s is the buff name; used when under a minute is left.
 L["READINESS_TIME_EXPIRING"] = "%s 不足 1 分钟"
--- { dominant talent tree, slash-joined point spread }
-L["READINESS_SPECIALIZATION_FORMAT"] = "%s（%s）"
 -- Talent points the character has not spent: exactly one, or %d for two or more.
 L["READINESS_UNSPENT_TALENTS_ONE"] = "1 个未使用的天赋点"
 L["READINESS_UNSPENT_TALENTS_MANY"] = "%d 个未使用的天赋点"
@@ -262,6 +267,12 @@ L["MENU_CLICK_SHIFT_RIGHT"] = "Shift + 右键点击"
 L["MENU_OPTIONS"] = "GtG 选项"
 L["MENU_CLICK_SHIFT_LEFT"] = "Shift + 左键点击"
 L["MENU_CLICK_SHIFT_MIDDLE"] = "Shift + 中键点击"
+-- The Restocker block's Open row hover while the Restocker is off.
+L["MENU_RESTOCKER_OPEN_OFF_DESCRIPTION"] = "打开你的补货清单。开启 Restocker 后才能使用。"
+
+-- Buff Duty's block in the menu while its close button has hidden it: the word on its right, and the note under it.
+L["MENU_BUFF_DUTY_PAUSED"] = "已暂停"
+L["MENU_BUFF_DUTY_PAUSED_NOTE"] = "隐藏中，直到你加入队伍、重新登录或重载界面。"
 
 --------------------------------------------------------------------------------
 -- Class Notes
@@ -569,8 +580,8 @@ L["OPTIONS_VERSION"] = "版本 %s"
     title on the page; OPTIONS_MACROS_DESCRIPTION is the intro beneath it, which
     orients the player to the page's two halves -- which macros exist, then how
     each one behaves. The Which Macros to Create header below titles the first
-    section, after the page's two headerless toggles, Enable Consumable Macros and
-    Enable Macro Names on Buttons.
+    section, after the page's headerless Enable Consumable Macros toggle; Enable
+    Macro Names on Buttons sits under Action Bars at the foot of the page.
 ]]
 L["TAB_CONSUMABLE_MACROS"] = "消耗品宏"
 L["OPTIONS_MACROS_DESCRIPTION"] =
@@ -870,8 +881,8 @@ L["OPTIONS_RESTOCKER_GOLD_RESERVE_AMOUNT_DESCRIPTION"] = "设置补货始终为�
     How much each reminder says. Simple is the headline alone; Verbose adds a
     line per item it counted (out, then low), showing how many you have against how many you want.
 
-    One word each, deliberately: they sit in the dropdown beside each reminder,
-    which has no caption, and read there as how much it says.
+    One word each, deliberately: they sit in the dropdown under each reminder,
+    beside its How Much to Say caption, and read there as how much it says.
 ]]
 L["OPTIONS_RESTOCKER_REMIND_MODE_DESCRIPTION"] =
 	"选择提醒只有一行，还是为每件快用完或已用完的物品各加一行。"
@@ -889,13 +900,10 @@ L["OPTIONS_RESTOCKER_WINDOW_DESCRIPTION"] = "选择你的补货清单何时自�
 --[[
     The Inventory Report's page, named by the report's own title
     (INVENTORY_REPORT_TITLE, in the Inventory Report section above): its
-    description and its switch.
+    description. Its switch is SWITCH_INVENTORY_REPORT, under Features.
 ]]
 L["OPTIONS_INVENTORY_REPORT_SECTION_DESCRIPTION"] =
 	"在物品提示中显示你在本服务器所有角色上共有多少件该物品。"
--- The Inventory Report page's line under its switch, while the report is on: the characters it holds on this realm.
-L["INVENTORY_REPORT_STATUS"] = "正在记录此服务器上的 %d 个角色。"
-L["INVENTORY_REPORT_STATUS_ONE"] = "正在记录此服务器上的 1 个角色。"
 -- The other characters the Inventory Report remembers, each with a remove icon. In the confirm, %s is the character's name.
 L["INVENTORY_REPORT_RECORDED_CHARACTERS_HEADER"] = "已记录的角色"
 L["INVENTORY_REPORT_FORGET_CHARACTER"] = "忘记"
@@ -971,7 +979,7 @@ L["OPTIONS_READINESS_OFF_HAND_DESCRIPTION_STACKED"] =
 	"副手武器缺少临时附魔时提醒。潜行者需要两项：毒药，加上油剂或磨刀石；其他职业有任意一项即可。"
 --[[
     Names the OTHER threshold so the two cannot be mistaken for each other: the
-    Consumable Macros panel has one that decides when a macro treats a buff as spent, and
+    Class Macros page has one that decides when a macro treats a buff as spent, and
     this one only decides when the report mentions it.
 ]]
 L["OPTIONS_READINESS_EXPIRING"] = "增益到期时间少于"
@@ -1032,8 +1040,6 @@ L["OPTIONS_RANK_WATCH_DESCRIPTION"] =
 L["RANK_WATCH_STANDALONE"] =
 	"%s 仍在运行，因此 Good to Go 的等级守望暂时保持沉默，以免你的队伍对每个低等级法术都听到两次提醒。Good to Go 已关闭那个插件并开启了自己的等级守望；重载界面后即由 Good to Go 的等级守望接手。"
 
--- A spell and its rank in every message: "[Arcane Intellect] (Rank 3)". The first %s is the spell, the second its rank.
-L["RANK_WATCH_SPELL_RANK"] = "%s（%s）"
 -- A rank's number, where the client hasn't loaded the spell's own rank text yet.
 L["RANK_WATCH_RANK"] = "等级 %d"
 
@@ -1338,10 +1344,10 @@ L["RESTOCKER_HELP_PROFILE_RENAME"] = "将当前清单重命名为该名称。"
 L["RESTOCKER_HELP_PROFILE_COPY"] = "确认后，用该名称的清单副本替换当前清单。"
 --[[
     TRANSLATORS: /restock profile copy's confirm. The first %s is the list in
-    use, which is replaced, the second the list copied, both in gold. SHARED
-    follows it when another character uses the list in use: the first %s is
-    their names, joined like the window's Used By line, the second the list.
-    REPLACE is the confirm's button.
+    use, which is replaced, the second the list copied, both in gold.
+    ALSO_USED_BY follows it when another character uses the list in use: the
+    first %s is the list, the second their names, joined like the window's
+    Used By line. REPLACE is the confirm's button.
 ]]
 L["RESTOCKER_PROFILE_COPY_CONFIRM"] = "将 %s 的全部内容替换为 %s 的副本？此操作无法撤销。"
 L["RESTOCKER_PROFILE_COPY_CONFIRM_ALSO_USED_BY"] = "%2$s 也在使用 %1$s。"
@@ -1621,13 +1627,12 @@ L["RESTOCKER_NO_MATCH_GROUP"] = "此分类中已没有物品。"
     rest above, and the all-stocked line is MINIMAP_RESTOCKER_STOCKED, so the
     window and the mini-map menu say the same thing in the same words.
 
-    REPORT_MORE closes the Short Items tooltip when the list is longer than it shows:
-    %d is how many were left out. REMOVED_ITEM is a removed row's text, gray
+    LIST_MORE_SENTENCE closes the Short Items tooltip when the list is longer than
+    it shows. REMOVED_ITEM is a removed row's text, gray
     in its place on the list: %s is the item's name. UNDO is the button where
     its remove button was, which puts the item back; UNDO_TOOLTIP renders in
     the title slot.
 ]]
-L["RESTOCKER_REPORT_MORE"] = "还有 %d 项。"
 L["RESTOCKER_REMOVED_ITEM"] = "已移除 %s。"
 L["RESTOCKER_UNDO"] = "撤销"
 L["RESTOCKER_UNDO_TOOLTIP"] = "将此物品放回清单"
@@ -1855,7 +1860,7 @@ L["BUFF_DUTY_SELF_ITEMS_NOTE"] = "背包中有时"
     whichever the Food macro would eat. %s is the client's name for Well Fed.
 ]]
 L["BUFF_DUTY_WELL_FED_DESCRIPTION_FORMAT"] =
-	"当你缺少%s且身上有增益食物时显示。在窗口中点击它即可食用最好的一种。"
+	'当你缺少"%s"且身上有增益食物时显示。在窗口中点击它即可食用最好的一种。'
 -- The Consumables box's Scrolls row: one icon per scroll buff you're missing, for the types checked under it.
 L["BUFF_DUTY_SCROLLS"] = "卷轴"
 L["BUFF_DUTY_SCROLLS_DESCRIPTION"] =
@@ -1905,6 +1910,11 @@ L["BUFF_DUTY_MENU_WEAPON_DESCRIPTION_FORMAT"] = "当武器缺少其增益时，�
 L["BUFF_DUTY_MENU_ALL_SETTINGS"] = "所有增益值班设置"
 L["BUFF_DUTY_MENU_ALL_SETTINGS_DESCRIPTION"] =
 	"打开增益值班设置，其中包含窗口可显示的每个时机、职业和增益。"
+-- The Options menu's Window Opacity row, and its flyout of 0% to 100%. %d is the percent.
+L["BUFF_DUTY_MENU_OPACITY"] = "窗口不透明度"
+L["BUFF_DUTY_MENU_OPACITY_DESCRIPTION"] =
+	"设置增益值班窗口背景的不透明度。文字和图标保持不变。"
+L["BUFF_DUTY_MENU_OPACITY_PERCENT"] = "%d%%"
 -- The Options menu's Buff Food row, and its flyout of the buff food in your bags. In the food row's hover, the first %s is the food, the second the Well Fed buff's name.
 L["BUFF_DUTY_MENU_BUFF_FOOD"] = "增益食物"
 L["BUFF_DUTY_MENU_FOOD_DESCRIPTION_FORMAT"] =
@@ -2230,6 +2240,7 @@ L["CATEGORY_SEALS"] = "圣印"
 L["CATEGORY_BLESSINGS"] = "祝福"
 L["CATEGORY_CURSES"] = "诅咒"
 L["CATEGORY_PETS"] = "宠物"
+L["KIND_RESURRECT"] = "复活法术"
 L["CATEGORY_TELEPORTS"] = "传送与传送门"
 L["CATEGORY_UTILITY"] = "辅助"
 L["CATEGORY_THREAT"] = "嘲讽与仇恨"
@@ -2461,10 +2472,6 @@ L["WHATS_NEXT_PET_TOOLTIP_GRIMOIRE"] = "魔典"
 L["WHATS_NEXT_PET_TOOLTIP_GRIMOIRE_IN_BAGS"] = "它的魔典在你的背包里。在召唤此恶魔时使用。"
 L["WHATS_NEXT_PET_TOOLTIP_OTHER"] = "你的宠物无法学会它。"
 L["WHATS_NEXT_PET_TOOLTIP_BEASTS"] = "掌握它的野兽"
--- TRANSLATORS: the first %s is a beast's name, the second its level or level range ("Forest Spider (5-6)").
-L["WHATS_NEXT_PET_TOOLTIP_BEAST"] = "%s（%s）"
--- TRANSLATORS: %d is how many more beasts know the ability than the tooltip names.
-L["WHATS_NEXT_PET_TOOLTIP_MORE"] = "还有 %d 个。"
 
 -- Pet What's Next? Tab: the sort's tooltip and the settings menu
 L["WHATS_NEXT_PET_SORT_DESCRIPTION"] =
@@ -2536,13 +2543,14 @@ L["OPTIONS_DEFAULT_NEVER_TURN_OFF_DESCRIPTION"] =
 	"再次按下宏时保持形态或守护开启，而不是将其关闭。"
 L["OPTIONS_DEFAULT_HIDE_ERRORS_DESCRIPTION"] = "清除宏在屏幕上留下的红色错误文字。"
 L["OPTIONS_DEFAULT_MUTE_ERRORS_DESCRIPTION"] = "宏运行期间关闭错误音效。"
-L["KIND_RESURRECT"] = "复活法术"
 
 -- Key Bindings
 L["BINDING_TOGGLE_PAGE"] = "打开/关闭增强法术书"
 
 L["CHAT_KEY_BINDINGS_IN_COMBAT"] = "出于安全考虑，战斗中无法打开按键设置列表。"
 L["KEY_BINDINGS_LOCATION"] = "打开游戏菜单，依次进入 %s 和 %s，找到 Good to Go 分类。"
+
+-- Macro errors and prints: the Enhanced Spellbook's, then the Consumable Macros' too-long notice.
 L["ERROR_MACRO_SLOTS_FULL"] = "没有空余的宏栏位。请在 /m 中删除几个宏来腾出位置。"
 L["ERROR_MACRO_WINDOW_OPEN"] = "请先关闭宏界面。"
 L["CHAT_MACROS_DELETED"] = "已删除 %d 个宏。"

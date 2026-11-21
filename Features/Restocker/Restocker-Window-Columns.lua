@@ -285,11 +285,12 @@ function ns.RefreshRestockRowMetrics()
 	local line = FontLineHeight()
 	ns.restockButtonHeight = math.max(22, math.ceil(line + BUTTON_PAD_Y))
 	ns.restockRowHeight = math.max(ROW_MIN_HEIGHT, ns.restockButtonHeight + ROW_PAD_Y)
-	ns.restockColumnHeaderHeight = ns.restockButtonHeight + math.ceil(line) + 2
+	-- The group bands' line over the 16 caption tier (Restocker-Window-Column-Header.lua).
+	ns.restockColumnHeaderHeight = 32
 	ResolveColumns()
 end
 
-ns.restockColumnHeaderHeight = 38
+ns.restockColumnHeaderHeight = 32
 
 --[[
     Size a button to the caption it is currently showing. The button keeps its

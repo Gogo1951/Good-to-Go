@@ -148,11 +148,15 @@ local function AppendBuffDutyLines(lines)
 	else
 		lines[#lines + 1] = "Buff Duty window now: (not built yet)"
 	end
+	-- Window Opacity fades the background plate alone (ns.ApplyBuffDutyOpacity); a hovered choice previews unsaved.
+	local plate = content and content.menuKitPlate
 	lines[#lines + 1] = string.format(
-		"Buff Duty window: enabled=%s locked=%s hideInCombat=%s",
+		"Buff Duty window: enabled=%s locked=%s hideInCombat=%s windowOpacity=%s%% background alpha now=%s",
 		tostring(db.enabled),
 		tostring(db.locked),
-		tostring(db.hideInCombat)
+		tostring(db.hideInCombat),
+		tostring(db.windowOpacity),
+		plate and string.format("%.2f", plate:GetAlpha()) or "(no background)"
 	)
 end
 

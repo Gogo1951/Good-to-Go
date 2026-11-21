@@ -76,9 +76,9 @@ local function ResurrectionRows(rows)
 end
 
 --[[
-    A folded group's header: its group icons, then one icon for each buff
-    with no group version that a member still needs (Thorns), counted like
-    them. That icon is one member's own single cast, in range if any is, so
+    A folded group's header: the group icons the Buff Key would choose, then
+    one icon for each other buff a member still needs (Thorns, or a group
+    buff not worth casting), counted like them. That icon is one member's own single cast, in range if any is, so
     each click buffs the next one and the count drops. Sorted by column, so
     the Buff Key weighs them in the window's order.
 ]]
@@ -175,10 +175,10 @@ end
     You are left out: your own buffs show under Self Buffs (Buff-Duty-Self.lua).
 
     A raid is drawn smaller: each group icon carries a count of the members
-    who need it, a folded group (Folding, above) shows only those and one
-    counted icon per buff with no group version (FoldedIcons), and an
-    unfolded one shows only the group casts the Buff Key would choose, with
-    the singles they cover taken off its rows.
+    who need it. Both kinds show only the group casts the Buff Key would
+    choose: a folded group (Folding, above) adds one counted icon per other
+    buff (FoldedIcons), and an unfolded one takes the singles they cover off
+    its rows.
 ]]
 function BuffDuty.AddGroupSections(sections)
 	local grouped = IsInGroup()
@@ -308,7 +308,9 @@ function BuffDuty.AddGroupSections(sections)
 						section.rows = UncoveredRows(party.rows, covered)
 					else
 						section.folded = true
-						section.icons = FoldedIcons(icons, party.rows)
+						-- Weighed against the members' singles before folding drops their rows.
+						local chosen = BuffDuty.GroupChoices({ icons = icons, rows = party.rows })
+						section.icons = FoldedIcons(chosen, party.rows)
 						section.rows = ResurrectionRows(party.rows)
 					end
 				end

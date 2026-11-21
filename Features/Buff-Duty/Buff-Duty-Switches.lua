@@ -82,6 +82,11 @@ function ns.IsBuffDutyOnForClass()
 	return not hiddenThisSession and ns.IsBuffDutyTrackingForClass()
 end
 
+-- Whether the close button has hidden a window that's otherwise on for your class: the menu calls it Paused.
+function ns.IsBuffDutyHiddenThisSession()
+	return hiddenThisSession and ns.IsBuffDutyTrackingForClass()
+end
+
 function ns.SetBuffDutyForClass(on)
 	local _, class = UnitClass("player")
 	ns.db.global.buffWindow.showClasses[class] = on

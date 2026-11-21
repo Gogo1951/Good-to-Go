@@ -58,12 +58,12 @@ local function PickOverlay(who)
 	end
 	local banner = CreateFrame("Frame", nil, overlay)
 	banner:SetPoint("TOP", 0, -8)
-	banner:SetHeight(26)
+	banner:SetHeight(32)
 	Box(banner, FIELD_FILL, { INFO.r, INFO.g, INFO.b })
 	local text = SizedFontString(banner, "GameFontHighlight", 13, "OVERLAY")
 	text:SetPoint("CENTER")
 	text:SetText(L["CONDITIONALS_PICK_BANNER"])
-	banner:SetWidth(math.ceil(text:GetStringWidth()) + 28)
+	banner:SetWidth(math.ceil(text:GetStringWidth()) + 32)
 	overlay:Hide()
 	panel.overlay = overlay
 	return overlay

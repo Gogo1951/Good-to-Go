@@ -17,7 +17,7 @@ local PixelInset = ns.PixelInset
 
 local SLOT_ICON = 16
 local DROPDOWN_HEIGHT = 32
-local DROPDOWN_TEXT_LEFT, CARET_SIZE, CARET_RIGHT = 8, 12, 4
+local DROPDOWN_TEXT_LEFT, CARET_SIZE, CARET_RIGHT = 8, 16, 4
 local ROW_EDGE = 8 -- a row's edge to the grip at its left and the remove button at its right
 local SLOT_TEXT_GAP = 8 -- a slot's icon to its text, and its text to the slot's right edge
 local REMOVE_SIZE = 16
@@ -144,7 +144,7 @@ local function CreateGrip(row, panel, descKey, move, update)
 			local dot = grip:CreateTexture(nil, "ARTWORK")
 			dot:SetColorTexture(unpack(ARROW_INK))
 			dot:SetSize(2, 2)
-			dot:SetPoint("TOPLEFT", 1 + column * 4, -(3 + line * 5))
+			dot:SetPoint("TOPLEFT", 1 + column * 4, -(3 + line * 4))
 		end
 	end
 	-- the row under the cursor, other than the one dragged, or nil

@@ -565,16 +565,16 @@ function ns:BuildBuffDutyContextReport()
 	--[[
 	    On for your class: the switch, your class not turned off (Classes, or
 	    Shift+Click on the mini-map button), and the window not closed this
-	    session. The close button saves nothing, so a switch on and your class
-	    ticked yet off for your class is that close, until a login or reload.
+	    session. The close button saves nothing and lasts until a login, a
+	    reload or joining a group; the mini-map menu shows that close as
+	    Paused, from the same read (ns.IsBuffDutyHiddenThisSession).
 	]]
 	local onForClass = ns.IsBuffDutyOnForClass and ns.IsBuffDutyOnForClass()
-	local classTicked = (db.showClasses or {})[class] ~= false
 	lines[#lines + 1] = string.format(
-		"Switches: enabled=%s onForYourClass=%s closedThisSession=%s hideInCombat=%s locked=%s selfBuffs=%s returnTheFavor=%s target=%s targetNPCs=%s askTarget=%s askOtherClasses=%s",
+		"Switches: enabled=%s onForYourClass=%s closedThisSession (menu: Paused)=%s hideInCombat=%s locked=%s selfBuffs=%s returnTheFavor=%s target=%s targetNPCs=%s askTarget=%s askOtherClasses=%s",
 		tostring(db.enabled),
 		tostring(onForClass),
-		tostring((db.enabled and classTicked and not onForClass) and true or false),
+		tostring(ns.IsBuffDutyHiddenThisSession and ns.IsBuffDutyHiddenThisSession() and true or false),
 		tostring(db.hideInCombat),
 		tostring(db.locked),
 		tostring(db.selfEnabled),
@@ -1141,6 +1141,23 @@ function ns:BuildBuffDutyContextReport()
 			if action and action ~= command then
 				lines[#lines + 1] = string.format("  %s now runs %s instead", key, action ~= "" and action or "nothing")
 			end
+		end
+		--[[
+		    What the last press set the button to cast. A cast on someone else
+		    is a macro that targets them first (TargetWhoItsFor in
+		    Buff-Duty-Keys.lua), so a changed target after a press shows here.
+		]]
+		local keyButton = buttonName and _G[buttonName]
+		if keyButton then
+			local macrotext = keyButton:GetAttribute("macrotext")
+			lines[#lines + 1] = string.format(
+				"  last press set: type=%s spell=%s item=%s unit=%s macro=%s",
+				tostring(keyButton:GetAttribute("type1")),
+				tostring(keyButton:GetAttribute("spell")),
+				tostring(keyButton:GetAttribute("item")),
+				tostring(keyButton:GetAttribute("unit")),
+				type(macrotext) == "string" and ns.DiagnosticShownText(macrotext) or "nil"
+			)
 		end
 	else
 		lines[#lines + 1] = "  not loaded"

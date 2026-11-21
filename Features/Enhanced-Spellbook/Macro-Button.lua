@@ -160,8 +160,8 @@ local function CreateMacroButton(parent)
 	button.editing = {}
 	local wash = button:CreateTexture(nil, "BACKGROUND", nil, -8)
 	wash:SetColorTexture(INFO.r, INFO.g, INFO.b, EDITING_FILL_ALPHA)
-	wash:SetPoint("TOPLEFT", -3, 3)
-	wash:SetPoint("BOTTOMRIGHT", 3, -3)
+	wash:SetPoint("TOPLEFT", -4, 4)
+	wash:SetPoint("BOTTOMRIGHT", 4, -4)
 	button.editing[1] = wash
 	for _, edge in ipairs({
 		{ "TOPLEFT", "TOPRIGHT", "SetHeight" },

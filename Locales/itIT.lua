@@ -59,7 +59,14 @@ L["LIST_LAST_FORMAT"] = "%s e %s"
 L["LIST_OR_PAIR_FORMAT"] = "%s o %s"
 -- Joins the last choice to the ones before it, already joined with LIST_SEPARATOR ("[Fortitude], [Shadow Protection], or [Divine Spirit]").
 L["LIST_OR_LAST_FORMAT"] = "%s o %s"
--- A name with a detail after it: a Spellbook note and its settings ("Target (Mouseover, Self)"), or a pet and its owner.
+-- Closes a hover list cut short: %d is how many more it holds, such as the Restock List's Short Items or the beasts that know a pet ability.
+L["LIST_MORE_SENTENCE"] = "E altri %d."
+--[[
+    A name with a detail after it: a Spellbook note and its settings ("Target (Mouseover, Self)"), a pet and
+    its owner, a spell and its rank in Rank Watch ("[Arcane Intellect] (Rank 3)"), a beast and its level or
+    level range in Pet What's Next? ("Forest Spider (5-6)"), or the Readiness Report's main talent tree and
+    its point spread ("Frost (0/11/40)").
+]]
 L["NAME_WITH_DETAIL_FORMAT"] = "%s (%s)"
 -- The decimal mark in a number the code prints, such as the Readiness Report's 2.5-minute choice.
 L["DECIMAL_SEPARATOR"] = ","
@@ -180,8 +187,6 @@ L["READINESS_PVP_ON"] = "PvP attivo"
 L["READINESS_TIME_MINUTES"] = "%s %d min"
 -- %s is the buff name; used when under a minute is left.
 L["READINESS_TIME_EXPIRING"] = "%s meno di 1 min"
--- { dominant talent tree, slash-joined point spread }
-L["READINESS_SPECIALIZATION_FORMAT"] = "%s (%s)"
 -- Talent points the character has not spent: exactly one, or %d for two or more.
 L["READINESS_UNSPENT_TALENTS_ONE"] = "1 punto talento non speso"
 L["READINESS_UNSPENT_TALENTS_MANY"] = "%d punti talento non spesi"
@@ -263,6 +268,13 @@ L["MENU_CLICK_SHIFT_RIGHT"] = "Maiusc + clic destro"
 L["MENU_OPTIONS"] = "Opzioni di GtG"
 L["MENU_CLICK_SHIFT_LEFT"] = "Maiusc + clic sinistro"
 L["MENU_CLICK_SHIFT_MIDDLE"] = "Maiusc + clic centrale"
+-- The Restocker block's Open row hover while the Restocker is off.
+L["MENU_RESTOCKER_OPEN_OFF_DESCRIPTION"] = "Apre la tua Lista di rifornimento. Attiva il Restocker per usarla."
+
+-- Buff Duty's block in the menu while its close button has hidden it: the word on its right, and the note under it.
+L["MENU_BUFF_DUTY_PAUSED"] = "In pausa"
+L["MENU_BUFF_DUTY_PAUSED_NOTE"] =
+	"Nascosto finché non entri in un gruppo, rientri nel gioco o ricarichi l'interfaccia."
 
 --------------------------------------------------------------------------------
 -- Class Notes
@@ -575,8 +587,8 @@ L["OPTIONS_VERSION"] = "Versione %s"
     title on the page; OPTIONS_MACROS_DESCRIPTION is the intro beneath it, which
     orients the player to the page's two halves -- which macros exist, then how
     each one behaves. The Which Macros to Create header below titles the first
-    section, after the page's two headerless toggles, Enable Consumable Macros and
-    Enable Macro Names on Buttons.
+    section, after the page's headerless Enable Consumable Macros toggle; Enable
+    Macro Names on Buttons sits under Action Bars at the foot of the page.
 ]]
 L["TAB_CONSUMABLE_MACROS"] = "Macro dei consumabili"
 L["OPTIONS_MACROS_DESCRIPTION"] =
@@ -886,8 +898,8 @@ L["OPTIONS_RESTOCKER_GOLD_RESERVE_AMOUNT_DESCRIPTION"] = "Imposta quanto oro il 
     How much each reminder says. Simple is the headline alone; Verbose adds a
     line per item it counted (out, then low), showing how many you have against how many you want.
 
-    One word each, deliberately: they sit in the dropdown beside each reminder,
-    which has no caption, and read there as how much it says.
+    One word each, deliberately: they sit in the dropdown under each reminder,
+    beside its How Much to Say caption, and read there as how much it says.
 ]]
 L["OPTIONS_RESTOCKER_REMIND_MODE_DESCRIPTION"] =
 	"Determina se il promemoria sia una sola riga o ne aggiunga una per ogni oggetto di cui ti resta poco o che hai finito."
@@ -906,13 +918,10 @@ L["OPTIONS_RESTOCKER_WINDOW_DESCRIPTION"] = "Scegli quando la tua lista di rifor
 --[[
     The Inventory Report's page, named by the report's own title
     (INVENTORY_REPORT_TITLE, in the Inventory Report section above): its
-    description and its switch.
+    description. Its switch is SWITCH_INVENTORY_REPORT, under Features.
 ]]
 L["OPTIONS_INVENTORY_REPORT_SECTION_DESCRIPTION"] =
 	"Mostra nel tooltip di un oggetto quanti ne possiedi, contando tutti i tuoi personaggi di questo reame."
--- The Inventory Report page's line under its switch, while the report is on: the characters it holds on this realm.
-L["INVENTORY_REPORT_STATUS"] = "Registra %d personaggi in questo reame."
-L["INVENTORY_REPORT_STATUS_ONE"] = "Registra 1 personaggio in questo reame."
 -- The other characters the Inventory Report remembers, each with a remove icon. In the confirm, %s is the character's name.
 L["INVENTORY_REPORT_RECORDED_CHARACTERS_HEADER"] = "Personaggi registrati"
 L["INVENTORY_REPORT_FORGET_CHARACTER"] = "Dimentica"
@@ -991,7 +1000,7 @@ L["OPTIONS_READINESS_OFF_HAND_DESCRIPTION_STACKED"] =
 	"Segnala un'arma nella mano secondaria a cui manca un incantamento temporaneo. Ai Ladri ne servono due, un veleno accanto a un olio o una pietra; agli altri, uno qualsiasi."
 --[[
     Names the OTHER threshold so the two cannot be mistaken for each other: the
-    Consumable Macros panel has one that decides when a macro treats a buff as spent, and
+    Class Macros page has one that decides when a macro treats a buff as spent, and
     this one only decides when the report mentions it.
 ]]
 L["OPTIONS_READINESS_EXPIRING"] = "Potenziamenti in scadenza entro"
@@ -1054,8 +1063,6 @@ L["OPTIONS_RANK_WATCH_DESCRIPTION"] =
 L["RANK_WATCH_STANDALONE"] =
 	"%s è ancora attivo, quindi il Controllo dei gradi di Good to Go resta in silenzio per evitare che il tuo gruppo venga avvisato due volte di ogni grado basso. Good to Go ha disattivato quell'add-on e attivato il proprio Controllo dei gradi; ricarica l'interfaccia per lasciare il posto al Controllo dei gradi di Good to Go."
 
--- A spell and its rank in every message: "[Arcane Intellect] (Rank 3)". The first %s is the spell, the second its rank.
-L["RANK_WATCH_SPELL_RANK"] = "%s (%s)"
 -- A rank's number, where the client hasn't loaded the spell's own rank text yet.
 L["RANK_WATCH_RANK"] = "Grado %d"
 
@@ -1365,10 +1372,10 @@ L["RESTOCKER_HELP_PROFILE_COPY"] =
 	"Sostituisce la lista attuale con una copia della lista con quel nome, dopo averti chiesto conferma."
 --[[
     TRANSLATORS: /restock profile copy's confirm. The first %s is the list in
-    use, which is replaced, the second the list copied, both in gold. SHARED
-    follows it when another character uses the list in use: the first %s is
-    their names, joined like the window's Used By line, the second the list.
-    REPLACE is the confirm's button.
+    use, which is replaced, the second the list copied, both in gold.
+    ALSO_USED_BY follows it when another character uses the list in use: the
+    first %s is the list, the second their names, joined like the window's
+    Used By line. REPLACE is the confirm's button.
 ]]
 L["RESTOCKER_PROFILE_COPY_CONFIRM"] =
 	"Sostituire tutto il contenuto di %s con una copia di %s? L'operazione non può essere annullata."
@@ -1652,13 +1659,12 @@ L["RESTOCKER_NO_MATCH_GROUP"] = "Non è rimasto nulla in questa categoria."
     rest above, and the all-stocked line is MINIMAP_RESTOCKER_STOCKED, so the
     window and the mini-map menu say the same thing in the same words.
 
-    REPORT_MORE closes the Short Items tooltip when the list is longer than it shows:
-    %d is how many were left out. REMOVED_ITEM is a removed row's text, gray
+    LIST_MORE_SENTENCE closes the Short Items tooltip when the list is longer than
+    it shows. REMOVED_ITEM is a removed row's text, gray
     in its place on the list: %s is the item's name. UNDO is the button where
     its remove button was, which puts the item back; UNDO_TOOLTIP renders in
     the title slot.
 ]]
-L["RESTOCKER_REPORT_MORE"] = "E altri %d."
 L["RESTOCKER_REMOVED_ITEM"] = "Hai rimosso %s."
 L["RESTOCKER_UNDO"] = "Annulla"
 L["RESTOCKER_UNDO_TOOLTIP"] = "Rimetti questo oggetto nella lista"
@@ -1891,7 +1897,7 @@ L["BUFF_DUTY_SELF_ITEMS_NOTE"] = "se ne hai uno nelle borse"
     whichever the Food macro would eat. %s is the client's name for Well Fed.
 ]]
 L["BUFF_DUTY_WELL_FED_DESCRIPTION_FORMAT"] =
-	"Compare mentre ti manca %s e hai con te cibo potenziante. Cliccalo nella finestra per mangiare il migliore."
+	'Compare mentre ti manca "%s" e hai con te cibo potenziante. Cliccalo nella finestra per mangiare il migliore.'
 -- The Consumables box's Scrolls row: one icon per scroll buff you're missing, for the types checked under it.
 L["BUFF_DUTY_SCROLLS"] = "Pergamene"
 L["BUFF_DUTY_SCROLLS_DESCRIPTION"] =
@@ -1941,6 +1947,11 @@ L["BUFF_DUTY_MENU_WEAPON_DESCRIPTION_FORMAT"] = "Offre %s nella finestra quando 
 L["BUFF_DUTY_MENU_ALL_SETTINGS"] = "Tutte le impostazioni del Turno dei potenziamenti"
 L["BUFF_DUTY_MENU_ALL_SETTINGS_DESCRIPTION"] =
 	"Apre le impostazioni del Turno dei potenziamenti, con ogni tempistica, classe e potenziamento che la finestra può mostrare."
+-- The Options menu's Window Opacity row, and its flyout of 0% to 100%. %d is the percent.
+L["BUFF_DUTY_MENU_OPACITY"] = "Opacità della finestra"
+L["BUFF_DUTY_MENU_OPACITY_DESCRIPTION"] =
+	"Imposta quanto è opaco lo sfondo della finestra del Turno dei potenziamenti. Testo e icone restano invariati."
+L["BUFF_DUTY_MENU_OPACITY_PERCENT"] = "%d%%"
 -- The Options menu's Buff Food row, and its flyout of the buff food in your bags. In the food row's hover, the first %s is the food, the second the Well Fed buff's name.
 L["BUFF_DUTY_MENU_BUFF_FOOD"] = "Cibo potenziante"
 L["BUFF_DUTY_MENU_FOOD_DESCRIPTION_FORMAT"] =
@@ -2276,6 +2287,7 @@ L["CATEGORY_SEALS"] = "Sigilli"
 L["CATEGORY_BLESSINGS"] = "Benedizioni"
 L["CATEGORY_CURSES"] = "Maledizioni"
 L["CATEGORY_PETS"] = "Famigli"
+L["KIND_RESURRECT"] = "Resurrezioni"
 L["CATEGORY_TELEPORTS"] = "Teletrasporti e portali"
 L["CATEGORY_UTILITY"] = "Utilità"
 L["CATEGORY_THREAT"] = "Provocazioni e minaccia"
@@ -2511,10 +2523,6 @@ L["WHATS_NEXT_PET_TOOLTIP_GRIMOIRE_IN_BAGS"] =
 	"Il suo grimorio è nelle tue borse. Usalo mentre questo demone è evocato."
 L["WHATS_NEXT_PET_TOOLTIP_OTHER"] = "Il tuo famiglio non può impararla."
 L["WHATS_NEXT_PET_TOOLTIP_BEASTS"] = "Bestie che la conoscono"
--- TRANSLATORS: the first %s is a beast's name, the second its level or level range ("Forest Spider (5-6)").
-L["WHATS_NEXT_PET_TOOLTIP_BEAST"] = "%s (%s)"
--- TRANSLATORS: %d is how many more beasts know the ability than the tooltip names.
-L["WHATS_NEXT_PET_TOOLTIP_MORE"] = "E altre %d."
 
 -- Pet What's Next? Tab: the sort's tooltip and the settings menu
 L["WHATS_NEXT_PET_SORT_DESCRIPTION"] =
@@ -2591,7 +2599,6 @@ L["OPTIONS_DEFAULT_NEVER_TURN_OFF_DESCRIPTION"] =
 	"Mantiene attivi la forma o l'aspetto quando premi di nuovo la macro, invece di disattivarli."
 L["OPTIONS_DEFAULT_HIDE_ERRORS_DESCRIPTION"] = "Cancella il testo di errore rosso che la macro lascia sullo schermo."
 L["OPTIONS_DEFAULT_MUTE_ERRORS_DESCRIPTION"] = "Silenzia il suono di errore mentre la macro è in esecuzione."
-L["KIND_RESURRECT"] = "Resurrezioni"
 
 -- Key Bindings
 L["BINDING_TOGGLE_PAGE"] = "Mostra/nascondi il Libro degli incantesimi avanzato"
@@ -2599,6 +2606,8 @@ L["BINDING_TOGGLE_PAGE"] = "Mostra/nascondi il Libro degli incantesimi avanzato"
 L["CHAT_KEY_BINDINGS_IN_COMBAT"] =
 	"Per sicurezza, l'elenco di assegnazione tasti non può essere aperto durante il combattimento."
 L["KEY_BINDINGS_LOCATION"] = "Apri il menu di gioco, poi %s, poi %s, e cerca la sezione Good to Go."
+
+-- Macro errors and prints: the Enhanced Spellbook's, then the Consumable Macros' too-long notice.
 L["ERROR_MACRO_SLOTS_FULL"] =
 	"Nessuno spazio libero per le macro. Elimina qualcuna delle tue macro in /m per fare spazio."
 L["ERROR_MACRO_WINDOW_OPEN"] = "Chiudi prima la finestra delle macro."
