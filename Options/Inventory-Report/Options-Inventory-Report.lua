@@ -136,27 +136,7 @@ local function AddExample(args, order)
 	args.exampleInventory = example
 end
 
---[[
-    The line under the switch: how many characters on this realm the report
-    holds, this one among them, while it is on; nothing while it is off.
-]]
-local function StatusText()
-	if ReportOff() then
-		return nil
-	end
-	local realm, count = GetRealmName(), 0
-	for _, record in pairs(ns.db.global.inventory) do
-		if type(record) == "table" and record.name and record.realm == realm then
-			count = count + 1
-		end
-	end
-	if count == 1 then
-		return L["INVENTORY_REPORT_STATUS_ONE"]
-	end
-	return L["INVENTORY_REPORT_STATUS"]:format(count)
-end
-
--- Page order: the description, the switch and its status, its Example, then the characters the report has recorded.
+-- Page order: the description, the switch, its Example, then the characters the report has recorded.
 function ns.BuildInventoryReportOptions()
 	local options = {
 		type = "group",
@@ -165,7 +145,6 @@ function ns.BuildInventoryReportOptions()
 			descInventory = Desc(GetColor("BODY") .. L["OPTIONS_INVENTORY_REPORT_SECTION_DESCRIPTION"] .. "|r", 1),
 			spaceInventory = Spacer(2),
 			toggleInventoryReport = Kit.FeatureSwitch("inventoryReport", 3),
-			statusInventoryReport = Kit.StatusLine(StatusText, 3.5),
 		},
 	}
 	AddExample(options.args, 4)

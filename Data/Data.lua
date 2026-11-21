@@ -762,6 +762,9 @@ Data.WEAPON_LAYERS = { IMBUE = "IMBUE", TEMPORARY = "TEMPORARY" }
 ]]
 Data.BUFF_DUTY_REFRESH_CHOICES = { 3, 5, 10 }
 
+-- The Buff Duty window's Window Opacity choices, in percent of a solid background.
+Data.BUFF_DUTY_OPACITY_CHOICES = { 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 }
+
 --[[
     How long a stranger who buffed you can stay on the Buff Duty window's Return the
     Favor list, in seconds (the player picks one), and how many of them it

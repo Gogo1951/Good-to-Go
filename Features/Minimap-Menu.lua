@@ -399,7 +399,11 @@ end
 local function AddBuffDuty(entries)
 	local feature = ns.FindFeature("buffWindow.enabled")
 	local enabled = ns.IsBuffDutyOnForClass() and true or false
+	local paused = ns.IsBuffDutyHiddenThisSession()
 	local right, rightColor = OnOff(enabled)
+	if paused then
+		right = L["MENU_BUFF_DUTY_PAUSED"]
+	end
 	entries[#entries + 1] = {
 		kind = enabled and "submenu" or "status",
 		left = L["TAB_BUFF_DUTY"],
@@ -411,6 +415,9 @@ local function AddBuffDuty(entries)
 		end or nil,
 	}
 	entries[#entries + 1] = { kind = "description", left = L["BUFF_DUTY_DESCRIPTION"] }
+	if paused then
+		entries[#entries + 1] = { kind = "note", left = L["MENU_BUFF_DUTY_PAUSED_NOTE"] }
+	end
 	local className = UnitClass("player")
 	local tooltip = feature
 		and OptionTooltip(L[feature.caption], format(L["MENU_BUFF_DUTY_TOGGLE_CLASS_DESCRIPTION"], className))
@@ -470,6 +477,15 @@ local function AddRestocker(entries)
 	end, OptionTooltip(L[feature.caption], L[feature.desc]))
 	if enabled then
 		entries[#entries + 1] = ClickRow(L["MENU_OPEN"], "restockList")
+	else
+		-- Gray with nothing to click while the Restocker is off, so the list still has a way in that says why it's shut.
+		local open = ClickRow(
+			L["MENU_OPEN"],
+			"restockList",
+			OptionTooltip(L["MENU_OPEN"], L["MENU_RESTOCKER_OPEN_OFF_DESCRIPTION"])
+		)
+		open.leftColor, open.onClick = "MUTED", nil
+		entries[#entries + 1] = open
 	end
 	return isLoading
 end

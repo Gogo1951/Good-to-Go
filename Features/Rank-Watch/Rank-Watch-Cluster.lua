@@ -101,7 +101,11 @@ end
 --------------------------------------------------------------------------------
 
 local function OnChatMsgAddon(prefix, text, _, sender)
-	if prefix ~= PREFIX or not (ns.IsPlain(text) and ns.IsPlain(sender)) or type(text) ~= "string" then
+	if
+		not (ns.IsPlain(prefix) and ns.IsPlain(text) and ns.IsPlain(sender))
+		or prefix ~= PREFIX
+		or type(text) ~= "string"
+	then
 		return
 	end
 	if text == "" or text:byte(1) < 32 or Ambiguate(sender or "", "short") == MyName() then

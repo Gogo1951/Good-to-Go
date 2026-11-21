@@ -257,8 +257,8 @@ BuffDuty.GroupChoices = GroupChoices
     Every icon the key could cast, in the order it should:
       1. Resurrections: your dead target, then your group's dead.
       2. Asking your target for their buffs (a whisper, so it costs no cast).
-      3. Your own casts: Return the Favor, the buffs you can give your
-         target, your self-buffs, then each party -- your target's first --
+      3. Your own casts: the buffs you can give your target, Return the
+         Favor, your self-buffs, then each party -- your target's first --
          with its group buffs (GroupChoices) and then its members' single
          ones, less those a group buff covers. Shadowform comes last of
          all (castLast).
@@ -327,8 +327,11 @@ local function Candidates(sections, now)
 		end
 	end)
 
-	-- 3. Your own casts.
-	Each("favor", AddRows)
+	--[[
+	    3. Your own casts, your target first. A targeted player's icons leave
+	    once their buffs land, so the key then moves on. Return the Favor comes
+	    after them: its macro clears your target to find the stranger by name.
+	]]
 	Each("target", function(section)
 		for _, row in ipairs(section.rows) do
 			if not row.npc then
@@ -338,6 +341,7 @@ local function Candidates(sections, now)
 			end
 		end
 	end)
+	Each("favor", AddRows)
 	Each("self", function(section)
 		for _, spec in ipairs(section.icons) do
 			if not spec.castLast then

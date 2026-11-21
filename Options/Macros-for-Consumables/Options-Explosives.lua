@@ -23,13 +23,10 @@ function ns.BuildExplosivesOptions()
 	local args = {
 		descIntro = Desc(L["OPTIONS_EXPLOSIVES_DESCRIPTION"], 1),
 		spaceIntro = Spacer(2),
-		labelExplosivesClickMode = Kit.Label(Body("OPTIONS_EXPLOSIVES_CLICK_LAYOUT"), 3),
-		explosivesClickMode = {
+		-- A caption row, so hovering the caption shows the dropdown's tooltip too.
+		explosivesClickMode = Kit.LabelRow(3, nil, Body("OPTIONS_EXPLOSIVES_CLICK_LAYOUT"), {
 			type = "select",
-			name = "",
 			desc = L["OPTIONS_EXPLOSIVES_CLICK_LAYOUT_DESCRIPTION"],
-			order = 4,
-			width = ns.OPTIONS_CONTROL_WIDTH,
 			values = {
 				atplayer = L["EXPLOSIVES_MODE_ATPLAYER"],
 				toss = L["EXPLOSIVES_MODE_TOSS"],
@@ -42,7 +39,7 @@ function ns.BuildExplosivesOptions()
 				ns.db.profile.explosivesClickMode = value
 				MacroOptions.Changed()
 			end,
-		},
+		}),
 	}
 	return MacroOptions.Page(L["OPTIONS_EXPLOSIVES_HEADER"], args)
 end

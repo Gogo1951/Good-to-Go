@@ -17,6 +17,8 @@ local L = ns.L
                        types you carry
       Weapon Buffs     your class's poisons or imbues, and the oils, stones
                        and lures in your bags
+      Window Opacity   opens 0% to 100%: how solid the window's background
+                       is, the text left as it is
       All Buff Duty Settings
 
     A row here is the same setting as on the panels, so each side shows what
@@ -36,7 +38,7 @@ local HOVER_CLOSE_DELAY = 0.4
 local flyout = Kit.CreatePanel(ADDON_NAME .. "BuffDutyOptions", UIParent)
 local subFlyout = Kit.CreatePanel(nil, UIParent)
 table.insert(UISpecialFrames, flyout:GetName())
-local state = { owner = nil, idle = 0, openLeft = false, subKey = nil }
+local state = { owner = nil, idle = 0, openLeft = false, subKey = nil, preview = nil }
 
 local function Settings()
 	return ns.db.global.buffWindow
@@ -394,6 +396,50 @@ local function AddWeaponRows(entries)
 end
 
 --------------------------------------------------------------------------------
+-- Window Opacity
+--------------------------------------------------------------------------------
+
+local function OpacityText(percent)
+	return L["BUFF_DUTY_MENU_OPACITY_PERCENT"]:format(percent)
+end
+
+-- A gold heading with the opacity picked on its right; its hover opens the choices.
+local function AddOpacityRows(entries)
+	entries[#entries + 1] = {
+		kind = "submenu",
+		left = L["BUFF_DUTY_MENU_OPACITY"],
+		right = OpacityText(Settings().windowOpacity),
+		submenu = "opacity",
+		tooltip = Tooltip(L["BUFF_DUTY_MENU_OPACITY"], L["BUFF_DUTY_MENU_OPACITY_DESCRIPTION"]),
+	}
+end
+
+--[[
+    Window Opacity's flyout: 0% to 100%, the one picked checked. Only the
+    window's background changes. Hovering a choice shows it on the window
+    (preview) until the cursor leaves the flyout, which puts the saved one
+    back; a click keeps it.
+]]
+local function OpacityEntries()
+	local entries = {}
+	local current = Settings().windowOpacity
+	for _, percent in ipairs(Data.BUFF_DUTY_OPACITY_CHOICES) do
+		entries[#entries + 1] = {
+			kind = "choice",
+			left = OpacityText(percent),
+			selected = percent == current,
+			preview = percent,
+			onClick = function()
+				Settings().windowOpacity = percent
+				ns.ApplyBuffDutyOpacity()
+				Render()
+			end,
+		}
+	end
+	return entries
+end
+
+--------------------------------------------------------------------------------
 -- Flyout
 --------------------------------------------------------------------------------
 
@@ -402,6 +448,7 @@ local SUBMENUS = {
 	target = TargetEntries,
 	buffFood = BuffFoodEntries,
 	scrolls = ScrollEntries,
+	opacity = OpacityEntries,
 }
 
 -- Which rows the kit draws the arrow on: a switch whose hover opens its own submenu.
@@ -416,6 +463,7 @@ local function BuildEntries()
 	AddWindowRows(entries)
 	AddConsumableRows(entries)
 	AddWeaponRows(entries)
+	AddOpacityRows(entries)
 	entries[#entries + 1] = { kind = "spacer" }
 	entries[#entries + 1] = { kind = "separator" }
 	entries[#entries + 1] = {
@@ -494,6 +542,23 @@ flyout.onEnterRow = function(_, entry)
 	end
 end
 
+-- A hovered opacity choice shows on the window; EndPreview puts the saved one back.
+subFlyout.onEnterRow = function(_, entry)
+	if entry and entry.preview then
+		state.preview = entry.preview
+		ns.ApplyBuffDutyOpacity(entry.preview)
+	end
+end
+
+local function EndPreview()
+	if state.preview then
+		state.preview = nil
+		ns.ApplyBuffDutyOpacity()
+	end
+end
+
+subFlyout:SetScript("OnHide", EndPreview)
+
 --[[
     Opens the flyout beside owner, the Options line, keeping its highlight lit
     while open. gap is how far past the line it starts.
@@ -532,6 +597,9 @@ flyout:SetScript("OnUpdate", function(self, elapsed)
 	if not owner or not owner:IsVisible() then
 		self:Hide()
 		return
+	end
+	if state.preview and not Kit.IsCursorOver(subFlyout) then
+		EndPreview()
 	end
 	if Kit.IsCursorOver(owner) or Kit.IsCursorOver(self) or Kit.IsCursorOver(subFlyout) then
 		state.idle = 0

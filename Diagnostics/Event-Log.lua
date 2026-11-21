@@ -11,16 +11,12 @@ local EVENT_LOG_MAX_ARGS = 8
 local EVENT_LOG_MAX_ARG_LENGTH = 255
 
 --[[
-    Events ns:LogEvent drops before recording. The dispatcher only ever hands
-    LogEvent the events the add-on registers (Core's ns.EVENT_NAMES).
-    SPELL_UPDATE_COOLDOWN is dropped outright: it fires on every global
-    cooldown and carries no id to classify by, and all it drives is the Buff
-    Duty window's cooldown swipes, which show on the window itself. The other
-    firehoses are classified per firing below, never dropped.
+    Events ns:LogEvent drops before recording -- deliberately empty. The
+    dispatcher only ever hands LogEvent the events the add-on registers
+    (Core's ns.EVENT_NAMES), and every firehose among them is sometimes
+    signal, so each is classified per firing below, never dropped.
 ]]
-ns.DIAGNOSTIC_EVENT_EXCLUDE = {
-	SPELL_UPDATE_COOLDOWN = true,
-}
+ns.DIAGNOSTIC_EVENT_EXCLUDE = {}
 
 --[[
     Events that carry an id worth classifying, and the argument position it
@@ -153,6 +149,39 @@ local function DecodeRankWatchAuras(unit, updateInfo)
 	return { n = 3, "Rank Watch", unit, table.concat(found, "; ") }
 end
 
+-- Whether Bloodrage was on its own cooldown at the last SPELL_UPDATE_COOLDOWN read, so a change stands out.
+local bloodrageCooling
+
+-- A cooldown longer than any global cooldown is the spell's own.
+local GLOBAL_COOLDOWN_MAX = 1.5
+
+--[[
+    The SPELL_UPDATE_COOLDOWN firings Buff Duty acts on beyond a cooldown
+    swipe: Bloodrage starting or ending its own cooldown, which can put it in
+    front of a warrior's rage-costing self buff on the window and the Buff
+    Key (BuffDuty.CheckRageFirst, Buff-Duty-Self.lua).
+]]
+local function DecodeBloodrageCooldown()
+	if ns.db == nil or not ns.IsBuffDutyTrackingForClass() then
+		return nil
+	end
+	local spellID = ns.BLOODRAGE_SPELL_ID
+	if not spellID or not ns.IsPlayerSpell(spellID) or ns.AreCooldownsSecret() then
+		return nil
+	end
+	local info = C_Spell.GetSpellCooldown(spellID)
+	local duration = info and info.duration
+	if not IsPlain(duration) then
+		return nil
+	end
+	local cooling = type(duration) == "number" and duration > GLOBAL_COOLDOWN_MAX
+	if cooling == bloodrageCooling then
+		return nil
+	end
+	bloodrageCooling = cooling
+	return { n = 2, "Buff Duty", cooling and "Bloodrage on cooldown" or "Bloodrage off cooldown" }
+end
+
 --[[
     Firehoses that carry no id, each with the test its handler makes before
     acting on a firing. A firing the handler would ignore folds into the
@@ -184,6 +213,9 @@ end
       the Buff Duty window's reads show on the Buff Duty Context report.
     - CHAT_MSG_ADDON fires for every add-on message any add-on in the group
       sends; Rank Watch reads only its own prefix (Rank-Watch-Cluster.lua).
+    - SPELL_UPDATE_COOLDOWN fires on every global cooldown while Buff Duty is
+      on for your class. Most firings only move the window's cooldown swipes;
+      Bloodrage starting or ending its own cooldown is written decoded.
 ]]
 local GATED_EVENTS = {
 	UPDATE_MOUSEOVER_UNIT = {
@@ -205,6 +237,10 @@ local GATED_EVENTS = {
 		acts = function(prefix)
 			return RankWatchListening() and IsPlain(prefix) and prefix == ns.Data.RANK_WATCH.COMM_PREFIX
 		end,
+	},
+	SPELL_UPDATE_COOLDOWN = {
+		reason = "a cooldown swipe only; Bloodrage's own cooldown didn't change",
+		decode = DecodeBloodrageCooldown,
 	},
 }
 

@@ -152,7 +152,7 @@ local function AcquireLabel()
 	usedLabels = usedLabels + 1
 	local label = labels[usedLabels]
 	if not label then
-		label = content:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+		label = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 		label:SetJustifyH("LEFT")
 		label:SetWordWrap(false)
 		labels[usedLabels] = label
@@ -478,6 +478,20 @@ function ns.ApplyBuffDutySettings()
 	return true
 end
 
+--[[
+    The background alone takes Window Opacity: the plate fades, the text and
+    icons on it don't. The plate is no secure frame, so this works in combat.
+    preview, a percent, shows that one without saving it (a hovered choice);
+    without it, the saved one.
+]]
+function ns.ApplyBuffDutyOpacity(preview)
+	local plate = content and content.menuKitPlate
+	if plate then
+		local percent = preview or ns.db.global.buffWindow.windowOpacity or 80
+		plate:SetAlpha(math.max(0, math.min(100, percent)) / 100)
+	end
+end
+
 --------------------------------------------------------------------------------
 -- Setup
 --------------------------------------------------------------------------------
@@ -494,6 +508,7 @@ function ns.CreateBuffDutyFrame()
 	content:SetAllPoints(anchor)
 	-- The menus' dark plate with angled corners, so the window reads as one of them.
 	Kit.AddPlate(content)
+	ns.ApplyBuffDutyOpacity()
 	content:EnableMouse(true)
 	content:RegisterForDrag("LeftButton")
 	-- Set only while a drag really moves the window, so a drag of a locked one saves no position.
@@ -553,7 +568,7 @@ function ns.CreateBuffDutyFrame()
 	close:SetScript("OnClick", ns.CloseBuffDuty)
 
 	-- The Cast Next Buff tip under the list (KeyHintText); placed and shown by RenderBuffDuty.
-	keyHint = content:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	keyHint = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	keyHint:SetJustifyH("LEFT")
 	keyHint:SetJustifyV("TOP")
 	keyHint:SetWordWrap(true)
@@ -573,10 +588,10 @@ function ns.CreateBuffDutyFrame()
 	footerDivider:SetHeight(1)
 	footer = CreateFrame("Button", nil, content)
 	footer:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-	local footerText = footer:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	local footerText = footer:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	footerText:SetPoint("LEFT")
 	footerText:SetText(GetColor("INFO") .. L["BUFF_DUTY_MENU_OPTIONS"] .. "|r")
-	local footerArrow = footer:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	local footerArrow = footer:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	footerArrow:SetPoint("RIGHT")
 	footerArrow:SetText(ns.MenuKit.SUBMENU_ARROW)
 	local highlight = footer:CreateTexture(nil, "HIGHLIGHT")

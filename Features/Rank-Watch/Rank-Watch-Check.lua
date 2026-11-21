@@ -55,7 +55,7 @@ end
 -- "[Arcane Intellect] (Rank 3)", or the name alone where the client can't build a link or `withLink` is false.
 function ns.RankWatchSpellText(row, withLink)
 	local name = withLink and ns.GetSpellLink(row.id) or C_Spell.GetSpellName(row.id) or tostring(row.id)
-	return L["RANK_WATCH_SPELL_RANK"]:format(name, ns.RankWatchRankText(row))
+	return L["NAME_WITH_DETAIL_FORMAT"]:format(name, ns.RankWatchRankText(row))
 end
 
 local RankLink = ns.RankWatchSpellText

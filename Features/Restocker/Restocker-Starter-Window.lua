@@ -51,7 +51,7 @@ local ROW_HEIGHT = 32
 local COLUMN_GAP = 32
 
 -- One staple's cell, left to right: the box, the item's icon, its name, and the stacks dropdown at the cell's end.
-local CHECKBOX_SIZE = 24
+local CHECKBOX_SIZE = 16
 local ICON_SIZE = 16
 local ICON_GAP = 4
 local NAME_GAP = 8

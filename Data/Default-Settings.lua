@@ -552,6 +552,12 @@ AddDefaults("global", {
 		locked = false,
 		hideInCombat = true,
 		--[[
+			    How solid the window's background is, in percent: one of
+			    Data.BUFF_DUTY_OPACITY_CHOICES. The text stays as it is. 80
+			    is the menus' own plate.
+			]]
+		windowOpacity = 80,
+		--[[
 			    Minutes left under which a buff counts as missing; one of
 			    Data.BUFF_DUTY_REFRESH_CHOICES.
 			]]

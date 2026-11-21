@@ -433,7 +433,7 @@ function ns.GetCurrentSpecializationLabel()
 		return nil
 	end
 
-	return string.format(ns.L["READINESS_SPECIALIZATION_FORMAT"], best, table.concat(spread, "/"))
+	return string.format(ns.L["NAME_WITH_DETAIL_FORMAT"], best, table.concat(spread, "/"))
 end
 
 --[[

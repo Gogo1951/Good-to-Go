@@ -400,9 +400,10 @@ end
     Duty offers poisons too. An account that already had Good to Go keeps the
     macro it had: left at the old default (absent from the saved table), it
     gets an explicit true, so the new default doesn't remove a macro sitting
-    on someone's bar. Runs after the legacy import, so an account carried
-    over from Connoisseur keeps its macro too, and reads the raw saved table
-    before AceDB fills in defaults. A table holding only the import's own
+    on someone's bar. An account carried over from Connoisseur keeps its
+    macro through the Connoisseur importer itself (Legacy-Migration.lua),
+    whichever login the import lands on. Reads the raw saved table before
+    AceDB fills in defaults. A table holding only the import's own
     record (legacyImported) is a fresh install, which gets the new default.
     Runs once per account, stamped (poisonsDefaultMigrated, right after AceDB
     opens), fresh installs included, so a later uncheck stays.
