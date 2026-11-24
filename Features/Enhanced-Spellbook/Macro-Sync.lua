@@ -5,8 +5,6 @@ local L = ns.L
 
 local OwnedList, OwnerRecord = ns.OwnedMacroList, ns.MacroOwnerRecord
 local ReadMacroIndexes = ns.ReadMacroIndexes
--- MIGRATION (remove after 2026-11-23)
-local LegacyMacroName = ns.LegacyMacroName
 -- MIGRATION (remove after 2026-11-26)
 local OldPrefixName, OLD_PREFIX = ns.OldPrefixName, ns.OLD_MACRO_PREFIX
 
@@ -60,9 +58,8 @@ local function IsReplacedSpellsName(macro, name)
 end
 
 --[[
-	Rewrites the WoW macro at index if its body differs from the page's and fits. One still under its name
-	from before the prefix (MIGRATION (remove after 2026-11-23)), under the old "~" prefix
-	(MIGRATION (remove after 2026-11-26)), or under the name of a replaced spell whose macro it took
+	Rewrites the WoW macro at index if its body differs from the page's and fits. One still under the old
+	"~" prefix (MIGRATION (remove after 2026-11-26)), or under the name of a replaced spell whose macro it took
 	over ("-Bear Form", now Dire Bear Form's), is renamed, its ownership record moving with it; a name the
 	player gave it is kept, and recorded as the add-on's while the body carries this macro's tag, so Delete
 	Macros still finds it. A new name sorts the macro elsewhere in its list, so this returns the index it
@@ -79,8 +76,6 @@ local function SyncAt(macro, index, shared)
 	local wantIcon = ns.WowMacroIcon(macro)
 	local newIcon = wantIcon ~= macro.macroIcon and icon ~= wantIcon and wantIcon or nil
 	local renamed = IsReplacedSpellsName(macro, name)
-	-- MIGRATION (remove after 2026-11-23)
-	renamed = renamed or name == LegacyMacroName(macro)
 	-- MIGRATION (remove after 2026-11-26)
 	renamed = renamed or name == OldPrefixName(macro)
 	if not renamed then

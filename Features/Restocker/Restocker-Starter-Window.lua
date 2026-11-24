@@ -144,11 +144,12 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The game's own dropdown where the client has WowStyle1DropdownTemplate, as
-    the Spell Book's sort and filter dropdowns are, else a plain button that
-    opens the same menu and names the current choice; either way the menu is
-    on the kit's plate (ns.SetupKitDropdown, Kit.OpenContextMenu). Live either way round: picked first, it decides what a later tick adds; changed after,
-    it rewrites the listed entry's amount on the spot.
+    A plain button that names the current choice and opens the kit's menu
+    (Kit.OpenContextMenu) on every client, never the game's
+    WowStyle1DropdownTemplate: the maintainer has chosen the kit's menu for
+    every menu the add-on opens. Live either way round: picked first, it
+    decides what a later tick adds; changed after, it rewrites the listed
+    entry's amount on the spot.
 ]]
 local function SetupStacksMenu(dropdown)
 	return function(_, rootDescription)
@@ -171,18 +172,11 @@ local function SetupStacksMenu(dropdown)
 end
 
 local function CreateStacksDropdown(parent)
-	local dropdown
-	if ns.HasTemplate("WowStyle1DropdownTemplate") then
-		dropdown = CreateFrame("DropdownButton", nil, parent, "WowStyle1DropdownTemplate")
-		dropdown:SetWidth(DROPDOWN_WIDTH)
-		ns.SetupKitDropdown(dropdown, SetupStacksMenu(dropdown))
-	else
-		dropdown = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
-		dropdown:SetSize(DROPDOWN_WIDTH, 22)
-		dropdown:SetScript("OnClick", function(self)
-			ns.MenuKit.OpenContextMenu(self, SetupStacksMenu(self))
-		end)
-	end
+	local dropdown = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
+	dropdown:SetSize(DROPDOWN_WIDTH, 22)
+	dropdown:SetScript("OnClick", function(self)
+		ns.MenuKit.OpenContextMenu(self, SetupStacksMenu(self))
+	end)
 	-- hooked, so the template's own hover highlight survives
 	dropdown:HookScript("OnEnter", function(self)
 		local category = self.category
@@ -204,11 +198,7 @@ end
 
 local function RefreshStacksDropdown(dropdown, category)
 	dropdown.category = category
-	if dropdown.GenerateMenu then
-		dropdown:GenerateMenu()
-	else
-		dropdown:SetText(StackLabel(category, ns.GetStarterCategoryStacks(category)))
-	end
+	dropdown:SetText(StackLabel(category, ns.GetStarterCategoryStacks(category)))
 end
 
 --------------------------------------------------------------------------------
@@ -456,10 +446,44 @@ local function CreateFooter(frame)
 	frame.footerHint = hint
 end
 
+--[[
+    Where the window stands: the spot it was last dragged to, saved account-wide
+    as the Restock List's is, or the middle of the screen until then.
+]]
+local function PlaceWindow(frame)
+	local position = ns.restockSettings.staplesPosition
+	frame:ClearAllPoints()
+	if position and position.point then
+		frame:SetPoint(position.point, UIParent, position.relativePoint, position.xOffset, position.yOffset)
+	else
+		frame:SetPoint("CENTER")
+	end
+end
+
+-- Written whole: AceDB can clear an empty staplesPosition at logout.
+local function SavePosition(frame)
+	local point, _, relativePoint, xOffset, yOffset = frame:GetPoint(frame:GetNumPoints())
+	ns.restockSettings.staplesPosition =
+		{ point = point, relativePoint = relativePoint, xOffset = xOffset, yOffset = yOffset }
+end
+
+function ns.HasSavedStaplesPosition()
+	local position = ns.restockSettings and ns.restockSettings.staplesPosition
+	return position ~= nil and position.point ~= nil
+end
+
+-- Reset Position (Options-Restocker.lua): forgets the spot and moves an open window back to the middle.
+function ns.ResetStaplesPosition()
+	ns.restockSettings.staplesPosition = {}
+	if window then
+		PlaceWindow(window)
+	end
+end
+
 local function CreateWindow()
 	local frame = ns.CreateRestockerPortraitFrame("GoodToGoStaplesFrame", L["STARTER_POPUP_TITLE"])
 	frame:SetSize(WINDOW_WIDTH, WINDOW_MAX_HEIGHT)
-	frame:SetPoint("CENTER")
+	PlaceWindow(frame)
 	-- Over the Restock List, when it is open behind it.
 	frame:SetFrameStrata("DIALOG")
 	frame:SetToplevel(true)
@@ -468,7 +492,10 @@ local function CreateWindow()
 	frame:EnableMouse(true)
 	frame:RegisterForDrag("LeftButton")
 	frame:SetScript("OnDragStart", frame.StartMoving)
-	frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
+	frame:SetScript("OnDragStop", function(self)
+		self:StopMovingOrSizing()
+		SavePosition(self)
+	end)
 	table.insert(UISpecialFrames, frame:GetName())
 	frame:Hide()
 

@@ -117,8 +117,8 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The Off / When Missing / Under labels for a list of choices the Self-Buffs
-    and Weapon Buffs panels share, "Under 5 Minutes" built from the client's
+    The Off / When Missing / Under labels for a list of choices, as each
+    category's Show offers them, "Under 5 Minutes" built from the client's
     own duration string.
 ]]
 function ns.BuffDutyRefreshValues(choices)
@@ -165,4 +165,128 @@ function ns.DefineSpellSelectRow(args, entry, order, desc, select)
 		get = select.get,
 		set = select.set,
 	}
+end
+
+--[[
+    One spell's or consumable's On and Off, laid out as DefineSpellSelectRow
+    lays out a dropdown: its icon and name as the caption, whose hover shows
+    the game's own tooltip, and a checkbox in the control column. `toggle`
+    carries get and set, and optionally labelWidth, for a row in a tree's
+    narrower pane. The category's Show has the timing.
+]]
+function ns.DefineSpellToggleRow(args, entry, order, desc, toggle)
+	local primary = entry.ids[1]
+	local texture = GetSpellTexture(primary)
+	local caption = texture and ("|T" .. texture .. ":16|t " .. entry.spellName) or entry.spellName
+
+	args["label_" .. primary] =
+		ns.OptionsAbilityLabel(caption, order, toggle.labelWidth or Kit.LABEL_WIDTH, ns.SpellTooltipLink(entry.ids))
+	args["toggle_" .. primary] = {
+		type = "toggle",
+		name = "",
+		desc = desc,
+		width = toggle.width or ns.OPTIONS_CONTROL_WIDTH,
+		order = order + 0.5,
+		get = toggle.get,
+		set = toggle.set,
+	}
+end
+
+--------------------------------------------------------------------------------
+-- Row Controls
+--------------------------------------------------------------------------------
+
+--[[
+    The settings at the top of every category's page (Self-Buffs, Well
+    Fed, Weapon Buffs, Scrolls, Flasks or Elixirs, Other Buffs), as its
+    menu in the window has them: Show in Buff Duty; When to Use (Always, In
+    Party or Raid, In Raid) and Show (When Missing, or Under 10, 5 or 3
+    Minutes), the category's one timing; Use with Cast Next Buff, whether
+    the key uses the category's icons; and Show Missing Inventory, but not
+    on Self-Buffs, whose spells need no bags. `row` is one of
+    Data.BUFF_DUTY_ROWS. Takes the orders `order` to `order` + 0.4.
+]]
+function ns.AddBuffDutyRowControls(args, row, order)
+	local BuffDuty = ns.BuffDuty
+	local function Settings()
+		return ns.db.global.buffWindow
+	end
+	args.rowOn = {
+		type = "toggle",
+		name = L["BUFF_DUTY_MENU_SHOW_IN_BUFF_DUTY"],
+		desc = L["BUFF_DUTY_MENU_SHOW_IN_BUFF_DUTY_DESCRIPTION"],
+		width = "full",
+		order = order,
+		get = function()
+			return BuffDuty.RowOn(row)
+		end,
+		set = function(_, value)
+			BuffDuty.SetRowOn(row, value)
+			ns.RefreshBuffDuty()
+		end,
+	}
+	args.spaceRowOn = Kit.Spacer(order + 0.05)
+	local values = {}
+	for _, value in ipairs(Data.BUFF_DUTY_ROW_WHEN_ORDER) do
+		values[value] = L["BUFF_DUTY_ROW_WHEN_" .. value]
+	end
+	args.rowWhen = Kit.LabelRow(order + 0.1, nil, L["BUFF_DUTY_ROW_WHEN"], {
+		type = "select",
+		desc = L["BUFF_DUTY_ROW_WHEN_DESCRIPTION"],
+		values = values,
+		sorting = Data.BUFF_DUTY_ROW_WHEN_ORDER,
+		get = function()
+			return Settings().rowWhen[row]
+		end,
+		set = function(_, value)
+			Settings().rowWhen[row] = value
+			ns.RefreshBuffDuty()
+		end,
+	})
+	args.spaceRowWhen = Kit.Spacer(order + 0.12)
+	args.rowShow = Kit.LabelRow(order + 0.15, nil, L["BUFF_DUTY_MENU_SHOW"], {
+		type = "select",
+		desc = L["BUFF_DUTY_ROW_SHOW_DESCRIPTION"],
+		values = ns.BuffDutyRefreshValues(Data.BUFF_DUTY_ROW_SHOW_CHOICES),
+		sorting = Data.BUFF_DUTY_ROW_SHOW_CHOICES,
+		get = function()
+			return Settings().rowShow[row]
+		end,
+		set = function(_, value)
+			Settings().rowShow[row] = value
+			ns.RefreshBuffDuty()
+		end,
+	})
+	args.spaceRowShow = Kit.Spacer(order + 0.2)
+	args.rowKey = {
+		type = "toggle",
+		name = L["BUFF_DUTY_ROW_KEY"]:format(L["BUFF_KEY"]),
+		desc = L["BUFF_DUTY_ROW_KEY_DESCRIPTION"]:format(L["BUFF_KEY"]),
+		width = "full",
+		order = order + 0.25,
+		get = function()
+			return Settings().rowKey[row] ~= false
+		end,
+		set = function(_, value)
+			Settings().rowKey[row] = value
+			ns.RefreshBuffDuty()
+		end,
+	}
+	if row ~= "self" then
+		args.rowOut = {
+			type = "toggle",
+			name = L["BUFF_DUTY_MENU_SHOW_MISSING_INVENTORY"],
+			desc = L["BUFF_DUTY_ROW_OUT_DESCRIPTION"],
+			width = "full",
+			order = order + 0.3,
+			get = function()
+				return Settings().rowOut[row] == true
+			end,
+			set = function(_, value)
+				Settings().rowOut[row] = value
+				ns.RefreshBuffDuty()
+			end,
+		}
+	end
+	args.spaceRowKey = Kit.Spacer(order + 0.35)
 end

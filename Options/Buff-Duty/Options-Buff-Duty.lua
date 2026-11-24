@@ -13,10 +13,11 @@ local GetColor = ns.GetColor
     below it hides while it is off. Each optional row of the window has its
     switch here, Self Buffs and Weapon Buffs included. The Cast Next Buff key's
     binding is on the root panel, with every other key binding. What each buff
-    is offered to lives in three sub-panels of this one: Group Buffs
+    is offered to lives in sub-panels of this one: Group Buffs
     (Options-Buff-Duty-Buffs.lua), Self-Buffs
-    (Options-Buff-Duty-Self-Buffs.lua) and Weapon Buffs
-    (Options-Buff-Duty-Weapon-Buffs.lua). The ask whispered to other classes
+    (Options-Buff-Duty-Self-Buffs.lua), Weapon Buffs
+    (Options-Buff-Duty-Weapon-Buffs.lua), and Well Fed, Scrolls, Flasks or
+    Elixirs and Other Buffs (Options-Buff-Duty-Consumables.lua). The ask whispered to other classes
     is the player's to word, in the whisper composer under Ask for Buffs
     (Options/Options-Message-Composer.lua), and so is the ask to
     your target, in the one under Ask Your Target for Buffs.
@@ -170,6 +171,31 @@ function ns.BuildBuffDutyOptions()
 		}
 	end
 
+	--[[
+	    Well Fed, Scrolls, Flasks or Elixirs and Other Buffs: each category's
+	    Show in Buff Duty, as its page and its menu in the window have it,
+	    named as its page is. Hidden where this client has nothing for it.
+	]]
+	local function CategoryToggle(row, name, order)
+		return {
+			type = "toggle",
+			name = name,
+			desc = L["BUFF_DUTY_MENU_SHOW_IN_BUFF_DUTY_DESCRIPTION"],
+			width = "full",
+			order = order,
+			hidden = function()
+				return Hidden() or not ns.BuffDuty.RowExists(row)
+			end,
+			get = function()
+				return ns.BuffDuty.RowOn(row)
+			end,
+			set = function(_, value)
+				ns.BuffDuty.SetRowOn(row, value)
+				ns.RefreshBuffDuty()
+			end,
+		}
+	end
+
 	local options = {
 		name = L["TAB_BUFF_DUTY"],
 		type = "group",
@@ -226,15 +252,19 @@ function ns.BuildBuffDutyOptions()
 			spaceClasses1 = Kit.Spacer(5.4, Hidden),
 
 			--[[
-			    The window's optional rows, in the order it shows them: your self
-			    buffs and weapons, Ask for Buffs, then the players outside your
-			    group (Your Target, Return the Favor).
+			    The window's optional rows, in the order it shows them and under
+			    the window's Options' own headers: your categories (Self-Buffs,
+			    Well Fed, Weapon Buffs, Scrolls, Flasks or Elixirs, Other Buffs),
+			    then, under Other Players, Ask for Buffs, Your Target, Return the
+			    Favor and Buff PvP-Flagged Players.
 			]]
 			headerShow = Kit.Header(L["BUFF_DUTY_SHOW_HEADER"], 6, Hidden),
 			space2 = Kit.Spacer(7, Hidden),
 			descShow = Kit.Desc(L["BUFF_DUTY_SHOW_DESCRIPTION"], 7.3, Hidden),
 			spaceShow = Kit.Spacer(7.6, Hidden),
 			selfEnabled = Toggle("selfEnabled", L["BUFF_DUTY_SELF_ENABLE"], L["BUFF_DUTY_SELF_ENABLE_DESCRIPTION"], 8),
+			spaceFood = Kit.Spacer(8.1, Hidden),
+			rowOnFood = CategoryToggle("food", ns.BuffDuty.WellFedLabel(), 8.2),
 			spaceWeapon = Kit.Spacer(8.3, Hidden),
 			weaponEnabled = Toggle(
 				"weaponEnabled",
@@ -242,7 +272,17 @@ function ns.BuildBuffDutyOptions()
 				L["BUFF_DUTY_WEAPON_ENABLE_DESCRIPTION"],
 				8.6
 			),
+			spaceScrolls = Kit.Spacer(8.65, Hidden),
+			rowOnScrolls = CategoryToggle("scrolls", L["BUFF_DUTY_SCROLLS"], 8.7),
+			spaceElixirs = Kit.Spacer(8.75, Hidden),
+			rowOnElixirs = CategoryToggle("elixirs", L["BUFF_DUTY_ROW_ELIXIRS"], 8.8),
+			spaceOther = Kit.Spacer(8.85, Hidden),
+			rowOnOther = CategoryToggle("other", L["BUFF_DUTY_ROW_OTHER"], 8.9),
 			space3 = Kit.Spacer(9, Hidden),
+			headerOthers = Kit.Header(L["BUFF_DUTY_MENU_OTHER_PLAYERS"], 9.1, Hidden),
+			spaceOthers0 = Kit.Spacer(9.2, Hidden),
+			descOthers = Kit.Desc(L["BUFF_DUTY_OTHERS_DESCRIPTION"], 9.3, Hidden),
+			spaceOthers1 = Kit.Spacer(9.4, Hidden),
 			askOtherClasses = Toggle(
 				"askOtherClasses",
 				L["BUFF_DUTY_ASK_OTHERS"],
@@ -280,6 +320,13 @@ function ns.BuildBuffDutyOptions()
 				Toggle("favorEnabled", L["BUFF_DUTY_FAVOR_ENABLE"], L["BUFF_DUTY_FAVOR_ENABLE_DESCRIPTION"]),
 				{ control = FavorSeconds(), hidden = Hidden }
 			),
+			spacePvP = Kit.Spacer(12.6, Hidden),
+			buffPvPFlagged = Toggle(
+				"buffPvPFlagged",
+				L["BUFF_DUTY_BUFF_PVP_FLAGGED"],
+				L["BUFF_DUTY_BUFF_PVP_FLAGGED_DESCRIPTION"],
+				12.7
+			),
 			space5 = Kit.Spacer(13, Hidden),
 
 			headerWindow = Kit.Header(L["BUFF_DUTY_HEADER"], 14, Hidden),
@@ -293,6 +340,18 @@ function ns.BuildBuffDutyOptions()
 				L["BUFF_DUTY_HIDE_IN_COMBAT"],
 				L["BUFF_DUTY_HIDE_IN_COMBAT_DESCRIPTION"],
 				18
+			),
+			-- Grayed while the window has never been dragged, and in combat, when the window can't move.
+			spaceResetPosition = Kit.Spacer(18.3, Hidden),
+			resetPosition = Kit.ResetRow(
+				18.6,
+				Hidden,
+				L["OPTIONS_RESET_POSITION"],
+				L["OPTIONS_RESET_POSITION_DESCRIPTION"],
+				function()
+					return InCombatLockdown() or not ns.HasSavedBuffDutyPosition()
+				end,
+				ns.ResetBuffDutyPosition
 			),
 			space8 = Kit.Spacer(19, Hidden),
 		},

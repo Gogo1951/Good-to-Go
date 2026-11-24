@@ -79,8 +79,8 @@ end
 --------------------------------------------------------------------------------
 
 function ns.OnRestockerLogout()
-	-- Position and size together, the same call the drag and resize handlers use.
-	ns.SaveRestockWindowGeometry()
+	-- The size only: the spot is saved when the window is dragged, so one never dragged keeps none.
+	ns.SaveRestockWindowGeometry(true)
 
 	--[[
 	    Pack items into the compact one-line-per-item form for the SavedVariables

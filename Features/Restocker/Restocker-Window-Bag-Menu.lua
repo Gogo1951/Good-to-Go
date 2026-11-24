@@ -99,11 +99,30 @@ local function OpenBagMenu(anchor)
 	local items = ItemsToAdd()
 	for _, item in ipairs(items) do
 		local entry = AceGUI:Create("Dropdown-Item-Execute")
-		-- The item's icon and its name in its quality color, without the link's brackets, as the orders tooltip shows one.
+		--[[
+		    The kit's item row: the icon, the name in its quality color without
+		    the link's brackets, and how many the bags hold in white; hovering it
+		    shows the item's own tooltip. The pullout stays AceGUI's, which
+		    scrolls past MENU_MAX_HEIGHT where the kit's menu does not.
+		]]
 		local name = ns.UnbracketItemLink(item.link)
-		entry:SetText(string.format("|T%s:0|t %s", item.icon or UNKNOWN_ICON, name)) -- the icon at line height
+		local carried = C_Item.GetItemCount(item.itemID, false, false) or 0
+		local count = ns.MenuKit.Color("TEXT", string.format(L["ITEM_QUANTITY"], carried))
+		entry:SetText(string.format("|T%s:0|t %s %s", item.icon or UNKNOWN_ICON, name, count)) -- the icon at line height
 		entry:SetCallback("OnClick", function()
 			ns.AddRestockItem(item.itemID)
+		end)
+		entry:SetCallback("OnEnter", function(widget)
+			GameTooltip:SetOwner(widget.frame, "ANCHOR_RIGHT")
+			if item.link then
+				GameTooltip:SetHyperlink(item.link)
+			else
+				GameTooltip:SetItemByID(item.itemID)
+			end
+			GameTooltip:Show()
+		end)
+		entry:SetCallback("OnLeave", function()
+			GameTooltip:Hide()
 		end)
 		bagPullout:AddItem(entry)
 	end

@@ -126,11 +126,12 @@ ns.DATABASE_DEFAULTS = {
 		combineHealthstones = false,
 		includeManaRunes = false,
 		--[[
-		    Early re-application: with earlyReapply on, a pet food buff (and,
-		    for the Readiness Report, a scroll buff) whose remaining time is
-		    under earlyReapplyThreshold (seconds) counts as already expired, so
-		    the Feed Pet macro offers a fresh one before a pull. See BuffCountsAsActive in Scanner-Auras.lua. On by
-		    default at three minutes, so a buff can't lapse mid-fight unseen.
+		    Early re-application (Refresh Food Buffs Under, on Food & Drinks):
+		    with earlyReapply on, Well Fed, a pet food buff or a scroll buff
+		    whose remaining time is under earlyReapplyThreshold (seconds) counts
+		    as already expired, so the macros offer a fresh one before a pull.
+		    See BuffCountsAsActive in Scanner-Auras.lua. On by default at three
+		    minutes, so a buff can't lapse mid-fight unseen.
 		]]
 		earlyReapply = true,
 		earlyReapplyThreshold = 180,
@@ -245,6 +246,7 @@ ns.DATABASE_DEFAULTS = {
 			lists = {},
 			listChoices = {},
 			framePosition = {},
+			staplesPosition = {}, -- where the Staples window was dragged to, account-wide like the Restock List's
 			restockReminderChat = true,
 			restockReminderSound = true,
 			restockReminderMode = "simple",
@@ -441,6 +443,7 @@ local SPELLBOOK_DEFAULTS = {
 			ranks either way.
 		]]
 		abilityTooltipRanks = true,
+		windowPosition = {}, -- where the Spellbook window was dragged to, one spot for every character
 	},
 	profile = {
 		showAllRanks = false,
@@ -579,15 +582,13 @@ AddDefaults("global", {
 			PET = "SOLO",
 		},
 		--[[
-			    The Self Buffs row's master switch, and when each self buff shows
-			    (one of Data.SELF_REFRESH_CHOICES), keyed by the row's first rank
+			    The Self Buffs row's master switch, and whether each self buff,
+			    the Soulstone and each Other Buffs consumable is on (any of
+			    Data.SELF_REFRESH_CHOICES but OFF), keyed by the row's first rank
 			    id and seeded from this client's BUFF_DUTY_SELF_SPELLS defaults.
 			]]
 		selfEnabled = true,
 		selfRefresh = {},
-		menuSelfRefresh = {},
-		-- MIGRATION (remove after 2026-11-21): the selfRefresh keys already moved from 5 minutes to 3.
-		selfRefreshMigrated = {},
 		--[[
 			    Whether each poison or imbue is ticked for each hand, keyed
 			    "ROGUE_MAIN" and so on, then by the BUFF_DUTY_WEAPON_ENCHANTS
@@ -595,14 +596,48 @@ AddDefaults("global", {
 			]]
 		weaponPicks = {},
 		--[[
-			    The Weapon Buffs switch, its one Reapply timing (one of
-			    Data.WEAPON_REFRESH_CHOICES), and whether each oil, stone or
+			    The Weapon Buffs switch, and whether each oil, stone or
 			    lure is ticked for each hand ("MAIN" or "OFF", then the item
 			    id; unset reads as ticked).
 			]]
 		weaponEnabled = true,
-		weaponRefresh = 3,
 		weaponItems = {},
+		--[[
+			    Each category's When to Use (one of Data.BUFF_DUTY_ROW_WHEN),
+			    Always for every one, and whether the Cast Next Buff key uses
+			    its icons, keyed by Data.BUFF_DUTY_ROWS. Elixirs and Other
+			    Buffs are a click only until turned on.
+			]]
+		rowWhen = {
+			self = "ALWAYS",
+			food = "ALWAYS",
+			weapons = "ALWAYS",
+			scrolls = "ALWAYS",
+			elixirs = "ALWAYS",
+			other = "ALWAYS",
+		},
+		rowKey = { self = true, food = true, weapons = true, scrolls = true, elixirs = false, other = false },
+		--[[
+			    Each category's Show in Buff Duty switch, keyed by
+			    Data.BUFF_DUTY_ROWS. Self-Buffs and Weapon Buffs keep theirs
+			    in selfEnabled and weaponEnabled above. Well Fed, Scrolls and
+			    Flasks or Elixirs have no default here: each is seeded once
+			    from the switch it had before it became a category's
+			    (selfRefresh's wellFed, scrolls and elixirs keys), so each
+			    flavor's own default carries over.
+			]]
+		rowOn = { other = true },
+		--[[
+			    Each category's Show timing, for everything in it: one of
+			    Data.BUFF_DUTY_ROW_SHOW_CHOICES (0 for When Missing).
+			]]
+		rowShow = { self = 3, food = 3, weapons = 3, scrolls = 3, elixirs = 3, other = 3 },
+		--[[
+			    Each category's Show Missing Inventory: a red line once the
+			    buff is gone and nothing in your bags gives it. Self-Buffs
+			    has none: spells need no bags.
+			]]
+		rowOut = { food = false, weapons = false, scrolls = false, elixirs = false, other = false },
 		favorEnabled = true,
 		-- One of Data.BUFF_DUTY_FAVOR_CHOICES.
 		favorSeconds = 40,
@@ -617,11 +652,23 @@ AddDefaults("global", {
 			]]
 		askTarget = true,
 		--[[
+			    Whether buffs still go out to PvP-flagged players while you aren't
+			    flagged; off holds them back, since buffing them flags you
+			    (BuffDuty.PvPFlaggedTarget).
+			]]
+		buffPvPFlagged = false,
+		--[[
 			    Buff food the Options flyout turned off, by item id: Well Fed's
 			    icon passes over them for the next best in your bags. Unset
 			    reads as on, so food you pick up later is offered.
 			]]
 		buffFoodOff = {},
+		--[[
+			    Elixirs and flasks, and scrolls, a category menu turned off, by
+			    item id: the window passes over them. Unset reads as on.
+			]]
+		elixirOff = {},
+		scrollOff = {},
 		--[[
 			    The Party-Buffs raid buffs, and the asks its clicks send. The
 			    whispered ask's own text, askMessage, has no default here: unset,

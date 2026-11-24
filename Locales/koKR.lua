@@ -8,12 +8,12 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The add-on has two names. ADDON_TITLE, the full name, is for window
-    titles, the front of every chat print ("Good to Go // ..."),
-    and anywhere the add-on is talked about; ADDON_SHORT_NAME is for tooltip
-    lines and the end of every sent message ("... // GtG"). Both are proper nouns and
-    stay as written in every locale, as does the full name inside any
-    sentence below.
+    The add-on has two names. ADDON_TITLE, the full name, is for the front
+    of every chat print ("Good to Go // ...") and anywhere the add-on is
+    talked about; ADDON_SHORT_NAME is for window titles ("Restock List //
+    GtG"), tooltip and menu lines, and the end of every sent message
+    ("... // GtG"). Both are proper nouns and stay as written in every
+    locale, as does the full name inside any sentence below.
 ]]
 L["ADDON_TITLE"] = "Good to Go"
 L["ADDON_SHORT_NAME"] = "GtG"
@@ -120,7 +120,7 @@ L["MESSAGE_MACROS_READY_TAB"] =
 L["MESSAGE_IGNORE_ADDED"] = "%s 아이템이 이 캐릭터의 차단 목록에 추가되었습니다."
 -- A click on an item in the mini-map menu's Ignore List. %s is the item's link.
 L["MESSAGE_IGNORE_REMOVED"] = "%s 아이템이 이 캐릭터의 차단 목록에서 제거되었습니다."
--- The mini-map button's Middle-Click: %d is how many items it took off the list, exactly one, or two or more.
+-- The mini-map menu's Clear Ignore List row: %d is how many items it took off the list, exactly one, or two or more.
 L["MESSAGE_IGNORE_CLEARED_ONE"] = "이 캐릭터의 차단 목록에서 아이템 1개를 제거했습니다."
 L["MESSAGE_IGNORE_CLEARED_MANY"] = "이 캐릭터의 차단 목록에서 아이템 %d개를 제거했습니다."
 
@@ -258,15 +258,12 @@ L["MINIMAP_RESTOCKER_NOTHING_LOW"] = "부족하거나 다 떨어진 것이 없�
 
 --[[
     The mini-map menu's Restocker block: a line saying what the list is
-    for, and the click its Open row names.
+    for, then its Open row.
     "Your list" in the description and in MINIMAP_RESTOCKER_EMPTY is this
-    list. The Options row is always the menu's last, its click on its right.
+    list. The Options row is always the menu's last.
 ]]
 L["MENU_RESTOCKER_DESCRIPTION"] = "목록에 있는 아이템을 구매하고 은행에 보관합니다."
-L["MENU_CLICK_SHIFT_RIGHT"] = "Shift + 우클릭"
 L["MENU_OPTIONS"] = "GtG 설정"
-L["MENU_CLICK_SHIFT_LEFT"] = "Shift + 좌클릭"
-L["MENU_CLICK_SHIFT_MIDDLE"] = "Shift + 휠클릭"
 -- The Restocker block's Open row hover while the Restocker is off.
 L["MENU_RESTOCKER_OPEN_OFF_DESCRIPTION"] = "보충 목록을 엽니다. 사용하려면 Restocker를 켜세요."
 
@@ -302,6 +299,7 @@ L["NOTE_MACRO_MANA_GEM"] = "마나 보석 매크로"
 L["NOTE_MACRO_HEALTHSTONE"] = "생명석 매크로"
 L["NOTE_MACRO_SOULSTONE"] = "영혼석 매크로"
 L["NOTE_MACRO_POISONS"] = "독 매크로"
+L["NOTE_MACRO_EXPLOSIVES"] = "폭발물 매크로"
 
 -- Hunter. NOTE_PET_MEND_CLICK is the click that casts Mend Pet: a Right-Click, or any click during combat.
 L["NOTE_PET_CALL_FEED_REVIVE"] = "부르기, 먹이 주기 또는 되살리기"
@@ -331,8 +329,10 @@ L["NOTE_MAGE_TARGET_LEVEL"] =
 L["NOTE_WARLOCK_TARGET_LEVEL"] =
 	"레벨이 낮은 플레이어를 대상으로 지정하면 그 레벨에 맞는 생명석을 창조합니다."
 
--- Rogue. A Left-Click and a Right-Click on the Poisons macro show the client's slot names, MAINHANDSLOT and SECONDARYHANDSLOT.
-L["NOTE_POISONS_WINDOW"] = "독 조제 창"
+-- Rogue. The Poisons macro's click rows: Left-Click applies to the off hand, Right-Click to the main hand, Middle-Click opens the Poisons window.
+L["NOTE_APPLY_OFF_HAND"] = "보조장비에 바르기"
+L["NOTE_APPLY_MAIN_HAND"] = "주장비에 바르기"
+L["NOTE_OPEN_POISONS_WINDOW"] = "독 조제 창 열기"
 L["NOTE_POISONS_REPLACED"] = "기존 독을 자동으로 교체합니다."
 
 --------------------------------------------------------------------------------
@@ -368,6 +368,8 @@ L["MENU_OPEN"] = "열기"
 L["MENU_CLICK_LEFT"] = "좌클릭"
 L["MENU_CLICK_RIGHT"] = "우클릭"
 L["MENU_CLICK_MIDDLE"] = "휠클릭"
+-- The last line of a menu row's tooltip when the mini-map button's Right-Click does the same job.
+L["MENU_SHORTCUT"] = "단축키: 미니맵 버튼을 우클릭하세요."
 
 -- The words on the right of a block's title.
 L["MENU_ON"] = "켜짐"
@@ -385,8 +387,8 @@ L["MENU_MORE_FEATURES"] = "추가 기능"
 L["MENU_FEATURE_COUNT_ON"] = "%d개 켜짐"
 L["MENU_FEATURE_COUNT_OFF"] = "%d개 꺼짐"
 
--- The mini-map menu's Enhanced Spellbook block, above the class macros: a line saying what it's for, then Open (MENU_OPEN),
--- as Shift + Left-Click on the button does. MENU_OPEN_SPELLBOOK is the click line on the spellbook tab's tooltip.
+-- The mini-map menu's Enhanced Spellbook block, above the class macros: a line saying what it's for, a Toggle row, then
+-- Open (MENU_OPEN) while it's on. MENU_OPEN_SPELLBOOK is the click line on the spellbook tab's tooltip.
 L["MENU_SPELLBOOK_DESCRIPTION"] = "모든 주문의 마우스오버 매크로를 클릭 한 번으로 만듭니다."
 L["MENU_OPEN_SPELLBOOK"] = "향상된 마법책 열기"
 
@@ -528,8 +530,12 @@ L["SAMPLE_EXAMPLE"] = "예시"
 
 -- A Reset button, which puts the settings it sits under, or the whisper box beside it, back to their defaults.
 L["OPTIONS_RESET"] = "초기화"
+-- Reset Position: a window's row on its own panel; the button puts the window back where it first appears.
+L["OPTIONS_RESET_POSITION"] = "위치 초기화"
+L["OPTIONS_RESET_POSITION_DESCRIPTION"] = "창을 처음 나타나는 위치로 되돌립니다."
 L["OPTIONS_FEATURE_OFF_STATUS"] =
 	"%s 기능이 꺼져 있어 이 설정은 사용되지 않습니다. 켜고 끄는 스위치는 %s 페이지에 있습니다."
+L["OPTIONS_SWITCH_OFF_HERE"] = "%s이(가) 꺼져 있어 이 설정은 사용되지 않습니다."
 
 --[[
     The whisper composer around every whisper a player words themselves, on the Buff Duty and Rank Watch
@@ -630,7 +636,7 @@ L["OPTIONS_MACRO_TOGGLE_DESCRIPTION"] =
 ]]
 L["OPTIONS_FOOD_WATER_HEADER"] = "음식 및 음료"
 L["OPTIONS_FOOD_DRINKS_DESCRIPTION"] =
-	"음식 및 물 매크로는 가진 것 중 가장 좋은 것을 먹고 마십니다. 이 설정은 무엇을 가장 좋은 것으로 칠지, 그리고 어떻게 먹고 마실지를 바꿉니다. 버프를 위해 쓰는 버프 음식과 두루마리는 버프 당번의 자기 버프 페이지에 있습니다."
+	"음식 및 물 매크로는 가진 것 중 가장 좋은 것을 먹고 마십니다. 이 설정은 무엇을 가장 좋은 것으로 칠지, 그리고 어떻게 먹고 마실지를 바꿉니다. 버프를 위해 쓰는 버프 음식과 두루마리는 버프 당번 아래에 각자의 페이지가 있습니다. 마법사는 우클릭으로 더 창조할 수 있으며, 레벨이 낮은 플레이어를 대상으로 지정하면 그 레벨에 맞게 창조합니다."
 L["OPTIONS_FOOD_ORDER_HEADER"] = "먼저 먹을 음식"
 L["OPTIONS_FOOD_ORDER_DESCRIPTION"] =
 	"음식이나 음료 두 가지 중에서는 매크로가 더 많이 회복하는 쪽을 사용합니다. 아래 설정은 그 순서를 바꿉니다."
@@ -644,7 +650,7 @@ L["OPTIONS_BUFF_FOOD_WHEN_FED"] = "포만감 상태에서도 버프 음식 먹�
 L["OPTIONS_BUFF_FOOD_AS_FOOD_DESCRIPTION_FORMAT"] =
 	'음식 및 물 매크로가 버프 음식을 다른 음식과 똑같이 취급하여 가장 많이 회복하는 것을 먹습니다. 끄면 버프 음식을 아껴 두었다가 "%s"이(가) 필요할 때 버프 당번이 제안합니다. 가진 음식이 버프 음식뿐이면 예외입니다.'
 
--- The scroll types on Buff Duty's Self-Buffs page. The other five are labeled with the client's stat names (SPELL_STAT1_NAME to SPELL_STAT5_NAME); Protection has none.
+-- The scroll types on Buff Duty's Scrolls page. The other five are labeled with the client's stat names (SPELL_STAT1_NAME to SPELL_STAT5_NAME); Protection has none.
 L["OPTIONS_SCROLL_TYPES"] = "확인할 두루마리 유형 포함"
 L["OPTIONS_SCROLL_PROTECTION"] = "보호"
 -- Hover text on each scroll type and pet food type; %s is the scroll type's label or the pet food's item name.
@@ -652,8 +658,8 @@ L["OPTIONS_BUFF_TYPE_DESCRIPTION"] = "빠진 버프를 확인할 때 %s 유형�
 
 -- Use Conjured Food & Water First, the first option under Which Food Comes First.
 L["OPTIONS_CONJURED_FIRST"] = "창조된 음식 및 물 먼저 사용"
-L["OPTIONS_CONJURED_FIRST_DESCRIPTION"] =
-	"창조된 음식과 물은 비용이 들지 않고 접속을 종료하면 곧 사라지므로, 가방에 더 많이 회복하는 아이템이 있더라도 음식 및 물 매크로가 이를 가장 먼저 사용합니다."
+L["OPTIONS_CONJURED_FIRST_DESCRIPTION_FORMAT"] =
+	'창조된 음식과 물은 비용이 들지 않고 접속을 종료하면 곧 사라지므로, 가방에 더 많이 회복하는 아이템이 있더라도 음식 및 물 매크로가 이를 가장 먼저 사용합니다. "%s"이(가) 없는 동안에는 음식 매크로가 버프 음식을 먼저 먹습니다.'
 L["OPTIONS_CONJURED_FIRST_MODE_DESCRIPTION"] =
 	"창조된 음식과 물을 먼저 사용할 레벨을 선택합니다: 모든 레벨, 레벨업 중일 때만, 또는 최고 레벨일 때만. 아래 체크박스로 그룹을 선택합니다."
 
@@ -701,12 +707,12 @@ L["OPTIONS_INCLUDE_MANA_RUNES"] = "룬 및 기타 마나 회복 아이템을 마
 L["OPTIONS_INCLUDE_MANA_RUNES_DESCRIPTION_FORMAT"] =
 	"%s, %s, 그리고 마나 보석과 재사용 대기시간을 공유하는 다른 마나 회복 아이템도 마나 보석과 함께 우선순위를 매겨, 그중 하나가 가장 좋은 선택이거나 보석이 다 떨어졌을 때 마나 보석 매크로가 이를 사용합니다."
 
--- Refresh Pet Food Under, closing the Hunter section on Class Macros: "Refresh Under", as Buff Duty names its timing.
-L["OPTIONS_REAPPLY"] = "소환수 음식 갱신 기준 시간"
-L["OPTIONS_REAPPLY_DESCRIPTION"] =
-	"소환수의 음식 버프 남은 시간이 설정한 기준값보다 적으면 만료된 것으로 간주하여, 전투 전에 음식 매크로가 새 버프를 제안합니다."
+-- Refresh Food Buffs Under, after the buff food rows on Food & Drinks: "Refresh Under", as Buff Duty names its timing.
+L["OPTIONS_REAPPLY"] = "음식 버프 갱신 기준 시간"
+L["OPTIONS_REAPPLY_DESCRIPTION_FORMAT"] =
+	"%s, 소환수의 음식 버프, 두루마리 버프의 남은 시간이 설정한 기준값보다 적으면 만료된 것으로 간주하여, 전투 전에 매크로가 새 버프를 제안합니다."
 --[[
-    Threshold dropdown, beside the Refresh Pet Food Under toggle, whose label
+    Threshold dropdown, beside the Refresh Food Buffs Under toggle, whose label
     carries the "under", so the values are plain durations.
 ]]
 L["OPTIONS_REAPPLY_THRESHOLD_DESCRIPTION"] =
@@ -978,7 +984,7 @@ L["OPTIONS_READINESS_WELL_FED_DESCRIPTION_FORMAT"] = '"%s" 버프가 없으면 �
 L["OPTIONS_READINESS_PET_FOOD_BUFF_DESCRIPTION_FORMAT"] =
 	'소환수에게 "%s" 버프가 없으면 알려 줍니다. 직업 매크로 페이지에서 소환수 음식 버프 사용을 켜야 하며, 소환수를 불러낸 상태여야 합니다.'
 L["OPTIONS_READINESS_SCROLLS_DESCRIPTION"] =
-	"버프 당번의 자기 버프 페이지에서 체크한 두루마리 유형 중 없는 두루마리 버프를 알려 줍니다."
+	"버프 당번의 두루마리 페이지에서 체크한 두루마리 유형 중 없는 두루마리 버프를 알려 줍니다."
 --[[
     The one entry that asks about the GROUP rather than the player's own bags,
     which the helper text has to say outright: a raid carrying seven unused
@@ -1003,12 +1009,12 @@ L["OPTIONS_READINESS_OFF_HAND_DESCRIPTION_STACKED"] =
 	"보조장비 무기에 일시적인 강화 효과가 부족하면 알려 줍니다. 도적은 독 하나와 오일이나 숫돌 하나, 총 두 가지가 필요하고, 다른 직업은 아무것이나 하나면 됩니다."
 --[[
     Names the OTHER threshold so the two cannot be mistaken for each other: the
-    Class Macros page has one that decides when a macro treats a buff as spent, and
+    Food & Drinks page has one that decides when a macro treats a buff as spent, and
     this one only decides when the report mentions it.
 ]]
 L["OPTIONS_READINESS_EXPIRING"] = "버프 만료 기준 시간"
 L["OPTIONS_READINESS_EXPIRING_BUFFS_DESCRIPTION"] =
-	"Good to Go가 거는 버프뿐 아니라 곧 만료될 내 모든 버프를 알려 주며, 직업 매크로 페이지의 만료 임박 버프 재적용과는 별개입니다."
+	"Good to Go가 거는 버프뿐 아니라 곧 만료될 내 모든 버프를 알려 주며, 음식 및 음료 페이지의 음식 버프 갱신 기준 시간과는 별개입니다."
 -- %s is a whole or half number of minutes.
 L["OPTIONS_READINESS_EXPIRING_MINUTES"] = "%s분"
 -- The one-minute entry alone; one plural template cannot render it grammatically.
@@ -1190,7 +1196,9 @@ L["RANK_WATCH_IGNORED_NONE"] = "아직 없습니다."
 L["RANK_WATCH_IGNORED_REMOVE"] = "제외 해제"
 L["RANK_WATCH_IGNORE_TARGET"] = "대상 제외"
 L["RANK_WATCH_IGNORE_TARGET_DESCRIPTION"] = "대상으로 지정한 플레이어를 목록에 추가합니다."
+L["RANK_WATCH_IGNORE_TARGET_CAPTION"] = "내 대상"
 L["RANK_WATCH_IGNORE_ADDED"] = "이제 주문 레벨 감시가 %s 님을 제외합니다."
+L["RANK_WATCH_IGNORE_REMOVED"] = "이제 주문 레벨 감시가 %s 님을 다시 알립니다."
 L["RANK_WATCH_IGNORE_NOT_FOUND"] =
 	"%s 님을 찾을 수 없습니다. 그룹을 맺거나 대상으로 지정한 다음 다시 시도하세요."
 -- %s is the command, /gtg ignore Name (RANK_WATCH_IGNORE_COMMAND), drawn in blue.
@@ -1372,6 +1380,7 @@ L["RESTOCKER_OUT_OF_GOLD_RESERVE"] =
 
 -- /restock help lines. The command literals stay in code; these are the descriptions, and the show line reuses RESTOCKER_COMMAND_DESCRIPTION.
 
+L["RESTOCKER_HELP_TITLE"] = "보충 목록 명령어"
 -- Stands for the list name the player types after a /restock profile subcommand.
 L["RESTOCKER_HELP_NAME_PLACEHOLDER"] = "[이름]"
 L["RESTOCKER_HELP_PROFILE_ADD"] = "해당 이름의 목록을 추가합니다."
@@ -1404,8 +1413,8 @@ L["RESTOCKER_HELP_PROFILE_USE"] = "이 캐릭터가 해당 이름의 목록을 �
     food staples reuse the DIET_ keys above, so each food row carries the
     client's own pet diet name.
 
-    The title is its own, and the call site puts the add-on's full name
-    after it (STARTER_POPUP_TITLE // ADDON_TITLE): at login this window
+    The title is its own, and the call site puts the add-on's short name
+    after it (STARTER_POPUP_TITLE // ADDON_SHORT_NAME): at login this window
     opens with nothing else of the add-on's on screen, so its title bar is
     all that says whose it is.
 
@@ -1483,7 +1492,7 @@ L["STARTER_POPUP_COUNT_DESCRIPTION"] =
 
 --[[
     Restock List window UI. The title names what the window holds, before the
-    add-on's full name (RESTOCKER_WINDOW_TITLE // ADDON_TITLE); the feature
+    add-on's short name (RESTOCKER_WINDOW_TITLE // ADDON_SHORT_NAME); the feature
     that acts on it stays "Restocker".
 ]]
 L["RESTOCKER_WINDOW_TITLE"] = "보충 목록"
@@ -1821,11 +1830,15 @@ L["BUFF_DUTY_HIDE_IN_COMBAT"] = "전투 중 숨기기"
 L["BUFF_DUTY_HIDE_IN_COMBAT_DESCRIPTION"] =
 	"전투 중에는 창을 숨깁니다. 전투 중에는 목록을 갱신할 수 없으므로, 창을 표시해 두면 전투가 끝날 때까지 마지막 상태가 유지됩니다."
 L["BUFF_DUTY_SHOW_HEADER"] = "창에 표시"
-L["BUFF_DUTY_SHOW_DESCRIPTION"] = "자신의 버프, 버프를 준 낯선 사람, 대상을 창에 추가합니다."
+L["BUFF_DUTY_SHOW_DESCRIPTION"] = "자신의 버프를 창에 추가합니다."
+L["BUFF_DUTY_OTHERS_DESCRIPTION"] = "버프를 준 낯선 사람과 대상을 창에 추가합니다."
 -- Return the Favor, Your Target and Ask for Buffs each name both their switch and the window row it adds.
 L["BUFF_DUTY_FAVOR_ENABLE"] = "보답하기"
 L["BUFF_DUTY_FAVOR_ENABLE_DESCRIPTION"] =
 	"최근 당신에게 버프를 준 낯선 사람과 그들에게 돌려줄 수 있는 버프를 보여 줍니다. 아이콘을 우클릭하면 해당 플레이어를 목록에서 제외합니다."
+L["BUFF_DUTY_BUFF_PVP_FLAGGED"] = "PvP 활성 플레이어 버프"
+L["BUFF_DUTY_BUFF_PVP_FLAGGED_DESCRIPTION"] =
+	"PvP가 활성화된 플레이어에게 버프를 걸면 당신도 PvP가 활성화됩니다. 이 옵션이 꺼져 있고 당신의 PvP가 꺼져 있는 동안 버프 당번은 그들에게 버프를 걸거나 그들에게 닿는 파티 버프를 시전하지 않고, 대신 대화창으로 알려 줍니다."
 L["BUFF_DUTY_FAVOR_SECONDS_DESCRIPTION"] =
 	"낯선 사람이 마지막 버프 후 목록에 남아 있는 시간을 설정합니다."
 L["BUFF_DUTY_TARGET_ENABLE"] = "내 대상"
@@ -1905,28 +1918,52 @@ L["BUFF_DUTY_SELF_REFRESH_OFF"] = "끄기"
 L["BUFF_DUTY_SELF_REFRESH_MISSING"] = "없을 때"
 -- %s is a duration from the client, like "5 Minutes".
 L["BUFF_DUTY_SELF_REFRESH_UNDER"] = "%s 미만"
-L["BUFF_DUTY_SELF_REFRESH_DESCRIPTION"] =
-	"%s을(를) 언제 표시할지 설정합니다. 표시 안 함, 사라졌을 때, 남은 시간이 이 값보다 적을 때 중에서 선택합니다."
--- The Self-Buffs panel's last box: consumables any class keeps up on itself (Winterfall Firewater), with a muted note after its name.
-L["BUFF_DUTY_SELF_ITEMS_HEADER"] = "소모품"
-L["BUFF_DUTY_SELF_ITEMS_NOTE"] = "가방에 있을 때"
 --[[
-    Hover text on the Consumables box's Well Fed row, whose buff food is
+    Categories of buffs you keep up on yourself, each a section of the Buff
+    Duty window and a page under Buff Duty, after Self-Buffs, Well Fed (the
+    client's name), Weapon Buffs and Scrolls: elixirs, then consumables with
+    a setting of their own.
+]]
+L["BUFF_DUTY_ROW_ELIXIRS"] = "영약 또는 비약"
+L["BUFF_DUTY_ROW_OTHER"] = "기타 버프"
+-- Each category's page opens with When to Use, a dropdown of when the window shows that category.
+L["BUFF_DUTY_ROW_WHEN"] = "사용 시기"
+L["BUFF_DUTY_ROW_WHEN_DESCRIPTION"] =
+	"창에 이 버프들을 표시할 때를 정합니다: 항상, 파티나 공격대에 있을 때, 또는 공격대에 있을 때만."
+L["BUFF_DUTY_ROW_WHEN_ALWAYS"] = "항상"
+L["BUFF_DUTY_ROW_WHEN_GROUP"] = "파티 또는 공격대"
+L["BUFF_DUTY_ROW_WHEN_RAID"] = "공격대"
+-- Then a checkbox for whether the key uses the category's icons. %s is the key's name, BUFF_KEY.
+L["BUFF_DUTY_ROW_KEY"] = "%s에 사용"
+L["BUFF_DUTY_ROW_KEY_DESCRIPTION"] =
+	"%s 키도 이 아이콘들을 사용합니다. 끄면 창에서 클릭할 때만 사용합니다."
+-- The Well Fed page's description.
+L["BUFF_DUTY_FOOD_PAGE_DESCRIPTION"] = "가지고 있는 버프 음식을 버프가 없을 때 창에 표시합니다."
+--[[
+    Hover text on the Well Fed page's Well Fed row, whose buff food is
     whichever the Food macro would eat. %s is the client's name for Well Fed.
 ]]
 L["BUFF_DUTY_WELL_FED_DESCRIPTION_FORMAT"] =
 	'"%s" 효과가 없고 버프 음식을 가지고 있는 동안 표시됩니다. 창에서 클릭하면 가장 좋은 버프 음식을 먹습니다.'
--- The Consumables box's Scrolls row: one icon per scroll buff you're missing, for the types checked under it.
+-- The Scrolls page and its row: one icon per scroll buff you're missing, for the types checked under it.
 L["BUFF_DUTY_SCROLLS"] = "두루마리"
+L["BUFF_DUTY_SCROLLS_PAGE_DESCRIPTION"] =
+	"가지고 있는 두루마리를 버프가 없을 때 창에 표시합니다."
 L["BUFF_DUTY_SCROLLS_DESCRIPTION"] =
 	"없는 두루마리 버프마다, 해당 두루마리를 가지고 있는 동안 두루마리를 하나씩 표시합니다. 창에서 클릭하면 읽습니다. 감시하는 두루마리 유형은 아래에서 체크한 것입니다."
+-- The Flasks or Elixirs page's description, and its Elixirs row: one icon per elixir in your bags whose buff you're missing.
+L["BUFF_DUTY_ELIXIRS_PAGE_DESCRIPTION"] =
+	"가지고 있는 비약을 버프가 없을 때 창에 표시합니다. 빼고 싶은 비약은 창의 설정에서 영약 또는 비약 아래에서 끄세요."
+L["BUFF_DUTY_ELIXIRS"] = "비약"
+L["BUFF_DUTY_ELIXIRS_DESCRIPTION"] =
+	"가방에 있는 비약 중 버프가 없는 것을 하나씩 표시합니다. 이미 걸린 버프가 그 자리를 차지하면 표시하지 않습니다. 창에서 클릭하면 마십니다."
+-- The Other Buffs page's description: consumables with a dropdown of their own, like Winterfall Firewater.
+L["BUFF_DUTY_OTHER_PAGE_DESCRIPTION"] =
+	"가지고 있는 그 밖의 소모품을 버프가 없을 때 창에 표시합니다. 소모품마다 설정이 따로 있습니다."
 -- The Weapon Buffs panel, under Buff Duty after Self-Buffs.
 L["BUFF_DUTY_WEAPON_PANEL_HEADER"] = "무기 버프"
 L["BUFF_DUTY_WEAPON_DESCRIPTION"] =
 	"각 무기에 무엇을 유지할지 선택하세요. 가방에 있고 무기에 맞으면, 없거나 곧 끝날 때 창에 표시됩니다."
--- The one timing for every weapon buff, at the top of the panel, captioned Refresh Under (BUFF_DUTY_REFRESH).
-L["BUFF_DUTY_WEAPON_REFRESH_DESCRIPTION"] =
-	"무기 버프를 다시 제공할 때를 설정합니다. 사라졌을 때, 남은 시간이 이 값보다 적을 때 중에서 선택합니다."
 -- The boxes for the weapon items any class can use, after the rogue and shaman boxes.
 L["BUFF_DUTY_WEAPON_KIND_OIL"] = "오일"
 L["BUFF_DUTY_WEAPON_KIND_STONE"] = "숫돌"
@@ -1937,10 +1974,10 @@ L["BUFF_DUTY_WEAPON_KIND_LURE"] = "미끼"
 ]]
 L["BUFF_DUTY_WEAPON_PICK_DESCRIPTION"] =
 	"%s을(를) %s 무기용으로 제공합니다. 선택한 항목이 무기에 하나도 없으면, 가지고 있는 항목을 각각 제공합니다."
-L["BUFF_DUTY_SELF_ENABLE"] = "내 자기 버프"
+L["BUFF_DUTY_SELF_ENABLE"] = "자기 버프"
 L["BUFF_DUTY_SELF_ENABLE_DESCRIPTION"] =
 	"자신의 버프가 없거나 곧 끝날 때 창 맨 위에 표시합니다. 갑옷 주문이나 내면의 열정처럼 자신에게만 걸 수 있는 버프와, 자신에게 건 그룹 버프입니다. 어떤 버프를 표시할지는 자기 버프에서 고르세요."
-L["BUFF_DUTY_WEAPON_ENABLE"] = "내 무기 버프"
+L["BUFF_DUTY_WEAPON_ENABLE"] = "무기 버프"
 L["BUFF_DUTY_WEAPON_ENABLE_DESCRIPTION"] =
 	"무기에 없거나 곧 끝나는 독, 무기 강화, 오일, 숫돌, 미끼를 창 맨 위에 자기 버프와 함께 표시합니다. 클릭하면 적용합니다. 표시할 항목은 무기 버프에서 고르세요."
 
@@ -1971,11 +2008,31 @@ L["BUFF_DUTY_MENU_OPACITY"] = "창 불투명도"
 L["BUFF_DUTY_MENU_OPACITY_DESCRIPTION"] =
 	"버프 당번 창 배경의 불투명도를 설정합니다. 글자와 아이콘은 그대로 유지됩니다."
 L["BUFF_DUTY_MENU_OPACITY_PERCENT"] = "%d%%"
--- The Options menu's Buff Food row, and its flyout of the buff food in your bags. In the food row's hover, the first %s is the food, the second the Well Fed buff's name.
+--[[
+    The window's category menus: each category line's arrow opens one, and the
+    Options line's Show in Window opens each. Show in Buff Duty, Use (when),
+    Show (how soon), Use with Keybind, Show Missing Inventory, then what the
+    category uses, each On or Off. Missing Inventory! is the red line in the
+    window. %s in the item hover is the spell, food, scroll or elixir.
+]]
+L["BUFF_DUTY_MISSING_INVENTORY"] = "소지품 없음!"
+L["BUFF_DUTY_MENU_SHOW_IN_BUFF_DUTY"] = "버프 당번에 표시"
+L["BUFF_DUTY_MENU_SHOW_IN_BUFF_DUTY_DESCRIPTION"] = "이 분류를 버프 당번 창에 표시합니다."
+L["BUFF_DUTY_MENU_SHOW"] = "표시"
+L["BUFF_DUTY_ROW_SHOW_DESCRIPTION"] =
+	"이 버프들이 표시될 때를 정합니다: 사라진 뒤, 또는 남은 시간이 이보다 적을 때."
+L["BUFF_DUTY_MENU_SHOW_MISSING_INVENTORY"] = "소지품 없음 표시"
+L["BUFF_DUTY_ROW_OUT_DESCRIPTION"] =
+	'버프가 없고 가방에 그 버프를 주는 것이 없을 때 창에 "소지품 없음!"을 표시합니다.'
+L["BUFF_DUTY_MENU_IN_YOUR_BAGS"] = "가방 안"
+L["BUFF_DUTY_MENU_YOUR_SPELLS"] = "내 주문"
+L["BUFF_DUTY_MENU_NONE_IN_BAGS"] = "가방에 없습니다."
+L["BUFF_DUTY_MENU_NO_SPELLS"] = "직업에 맞는 버프가 없습니다."
+L["BUFF_DUTY_MENU_OTHER_PLAYERS"] = "다른 플레이어"
+L["BUFF_DUTY_MENU_ITEM_DESCRIPTION_FORMAT"] =
+	"버프가 없을 때 창에서 %s을(를) 제안합니다. 끄면 건너뜁니다."
+-- The Well Fed category's name while the client hasn't named the Well Fed buff yet.
 L["BUFF_DUTY_MENU_BUFF_FOOD"] = "버프 음식"
-L["BUFF_DUTY_MENU_FOOD_DESCRIPTION_FORMAT"] =
-	'"%2$s"이(가) 필요할 때 %1$s을(를) 제안합니다. 끄면 건너뛰고 가방에 있는 그다음으로 좋은 버프 음식을 제안합니다.'
-L["BUFF_DUTY_MENU_NO_BUFF_FOOD"] = "가방에 버프 음식이 없습니다."
 -- The Self-Buffs buff food icon, while you aren't Well Fed.
 L["BUFF_DUTY_TOOLTIP_EAT"] =
 	"가방에서 하나를 먹습니다. 포만감 상태가 될 때까지 앉아 있으세요."
@@ -1992,6 +2049,8 @@ L["BUFF_DUTY_TOOLTIP_ASKED"] = "%s 님에게 요청함. %d분 후 다시 요청�
 -- An Ask for Buffs icon's menu, its ask rows: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it: %s is one or two names (LIST_PAIR_FORMAT), or BUFF_DUTY_OTHERS_ASK_PEOPLE past two.
 L["BUFF_DUTY_OTHERS_HINT_ASK"] = "%s에 버프 요청"
 L["BUFF_DUTY_OTHERS_HINT_WHISPER"] = "%s에게 귓속말"
+L["BUFF_DUTY_OTHERS_SHORTCUT_LEFT"] = "단축키: 버프 아이콘을 좌클릭하세요."
+L["BUFF_DUTY_OTHERS_SHORTCUT_RIGHT"] = "단축키: 버프 아이콘을 우클릭하세요."
 -- An Ask for Buffs menu's name row, on the right: the whole minutes left on that player's buff, or Missing once there is none.
 L["BUFF_DUTY_OTHERS_MINUTES"] = "%d분"
 L["BUFF_DUTY_OTHERS_MISSING"] = "없음"
@@ -2011,13 +2070,15 @@ L["BUFF_DUTY_OTHERS_ASK_PEOPLE"] = "%d명"
     checkbox, the When to Show header, then the options command.
 ]]
 L["BUFF_DUTY_CLOSED"] =
-	"버프 당번이 파티에 참여하거나 다음 접속 또는 재시작 전까지 숨겨졌습니다. 지금 다시 보려면 미니맵 버튼을 좌클릭하세요. %1$s 직업에서 계속 꺼 두려면 %4$s 설정의 %3$s에서 %2$s의 체크를 해제하세요."
+	"버프 당번이 파티에 참여하거나 다음 접속 또는 재시작 전까지 숨겨졌습니다. 지금 다시 보려면 미니맵 메뉴의 버프 당번 아래에서 켜기/끄기를 클릭하세요. %1$s 직업에서 계속 꺼 두려면 %4$s 설정의 %3$s에서 %2$s의 체크를 해제하세요."
 
 -- The Cast Next Buff key: its name in the game's Key Bindings list and the root panel's Key Bindings section, then the notices a press shows.
 L["BUFF_KEY"] = "다음 버프 시전"
 -- %s is a player's name.
 L["BUFF_KEY_WAITING"] = "%s님이 사거리 안에 들어오기를 기다리는 중입니다."
 L["BUFF_KEY_DONE"] = "더 걸 버프가 없습니다."
+-- Printed when Buff Duty or the key skips a PvP-flagged player. %s is the player's name.
+L["BUFF_DUTY_PVP_FLAGGED"] = "%s님은 PvP가 활성화되어 있습니다. 직접 버프를 걸어야 합니다."
 L["BUFF_KEY_OFF"] = "버프 당번이 꺼져 있습니다."
 --[[
     The Buff Duty window's last line, under Options, while the Cast Next Buff key has none: the options
@@ -2030,7 +2091,7 @@ L["BUFF_DUTY_KEY_TIP"] = "%s에서 %s 키를 지정하면 이 버프들을 키 �
 -- Spellbook
 --------------------------------------------------------------------------------
 
--- The window's first tab, and its title before "// Good to Go", is TAB_ENHANCED_SPELLBOOK (Options Panel above).
+-- The window's first tab, and its title before "// GtG", is TAB_ENHANCED_SPELLBOOK (Options Panel above).
 
 -- Page: Sections
 L["SECTION_UNLEARNED"] = "배우지 않음"
@@ -2424,7 +2485,7 @@ L["PAGE_CATEGORY_SETTINGS_DESCRIPTION"] =
 -- after a category's count, where it carries on from the column before
 L["PAGE_CONTINUED"] = "(계속)"
 
--- What's Next? Tab: the window's second tab and its title before "// Good to Go"
+-- What's Next? Tab: the window's second tab and its title before "// GtG"
 L["WHATS_NEXT_TITLE"] = "다음 배울 주문"
 L["WHATS_NEXT_EMPTY"] = "표시할 주문이 없습니다."
 -- The same page while Show Known Spells is off: %s is that toggle's name (WHATS_NEXT_SHOW_KNOWN).
@@ -2499,7 +2560,7 @@ L["WHATS_NEXT_SHOW_TALENTS_RUNES"] = "선택하지 않은 특성 및 룬 표시"
 L["WHATS_NEXT_SHOW_TALENTS_DESCRIPTION"] =
 	"선택하지 않은 특성 주문도 표시합니다. 이 주문은 상급자가 아니라 특성 포인트를 투자해서 배웁니다."
 
--- Pet Spellbook Tab: a pet class's third tab and its title before "// Good to Go"
+-- Pet Spellbook Tab: a pet class's third tab and its title before "// GtG"
 L["PET_SPELLBOOK_TITLE"] = "소환수 마법책"
 L["PET_SPELLBOOK_EMPTY"] = "소환수에게 표시할 주문이 없습니다."
 L["PET_SPELLBOOK_NO_PET"] = "소환수가 없습니다. 소환수를 불러내면 주문을 볼 수 있습니다."
@@ -2510,7 +2571,7 @@ L["PET_SPELLBOOK_STATUS_PASSIVE"] = "지속 효과"
 L["PET_SPELLBOOK_AUTOCAST_ON"] = "자동 시전 켜짐"
 L["PET_SPELLBOOK_AUTOCAST_OFF"] = "자동 시전 꺼짐"
 
--- Pet What's Next? Tab: a hunter's or warlock's fourth tab and its title before "// Good to Go"
+-- Pet What's Next? Tab: a hunter's or warlock's fourth tab and its title before "// GtG"
 L["WHATS_NEXT_PET_TITLE"] = "소환수 다음 배울 기술"
 L["WHATS_NEXT_PET_EMPTY"] = "표시할 소환수 기술이 없습니다."
 -- the footer's right: the pet out, or that there's none

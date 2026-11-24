@@ -167,7 +167,11 @@ ns.OPTIONS_REGISTRY = {
 	BuffDuty = ADDON_NAME .. "_BuffDuty",
 	BuffDutyBuffs = ADDON_NAME .. "_BuffDutyBuffs",
 	BuffDutySelfBuffs = ADDON_NAME .. "_BuffDutySelfBuffs",
+	BuffDutyFood = ADDON_NAME .. "_BuffDutyFood",
 	BuffDutyWeaponBuffs = ADDON_NAME .. "_BuffDutyWeaponBuffs",
+	BuffDutyScrolls = ADDON_NAME .. "_BuffDutyScrolls",
+	BuffDutyElixirs = ADDON_NAME .. "_BuffDutyElixirs",
+	BuffDutyOther = ADDON_NAME .. "_BuffDutyOther",
 	Restocker = ADDON_NAME .. "_Restocker",
 	Spellbook = ADDON_NAME .. "_Spellbook",
 	AbilityAlerts = ADDON_NAME .. "_AbilityAlerts",
@@ -718,14 +722,31 @@ Data.BUFF_DUTY_WHERE = {
 Data.BUFF_DUTY_WHERE_ORDER = { "ALWAYS", "INSTANCE" }
 
 --[[
-    When a self buff or the Soulstone shows on the Buff Duty window: OFF, MISSING
-    (only once it's gone), or a number of minutes left. Doubles as the
-    dropdown's order. The Weapon Buffs dropdown reuses MISSING for When
-    Missing.
+    Whether a self buff, the Soulstone or a consumable with a switch of its
+    own shows on the Buff Duty window: OFF, or anything else for on. The
+    stored values once picked a timing each (MISSING, or minutes left);
+    the category's Show timing (BUFF_DUTY_ROW_SHOW_CHOICES) has that job now,
+    and any value but OFF reads as on.
 ]]
 Data.SELF_REFRESH_OFF = "OFF"
 Data.SELF_REFRESH_MISSING = 0
 Data.SELF_REFRESH_CHOICES = { "OFF", 0, 10, 5, 3 }
+
+--[[
+    The Buff Duty window's categories for you, each a section of its own and a
+    page under Buff Duty, in the order the window draws them: Self-Buffs, Well
+    Fed, Weapon Buffs, Scrolls, Flasks or Elixirs, and Other Buffs. Each has its own When to Use (one of
+    BUFF_DUTY_ROW_WHEN_ORDER: always, while you're in a party or raid, or only
+    in a raid) and its own say in whether the Cast Next Buff key uses its
+    icons. The labels come from the locale (BUFF_DUTY_ROW_WHEN_*).
+]]
+Data.BUFF_DUTY_ROWS = { "self", "food", "weapons", "scrolls", "elixirs", "other" }
+Data.BUFF_DUTY_ROW_WHEN = {
+	ALWAYS = "ALWAYS",
+	GROUP = "GROUP",
+	RAID = "RAID",
+}
+Data.BUFF_DUTY_ROW_WHEN_ORDER = { "ALWAYS", "GROUP", "RAID" }
 
 --[[
     The weapon hands a poison or imbue can go on, by the inventory slot each
@@ -736,12 +757,13 @@ Data.WEAPON_HAND_SLOTS = { MAIN = 16, OFF = 17 }
 Data.WEAPON_HAND_ORDER = { "MAIN", "OFF" }
 
 --[[
-    The Weapon Buffs panel's one Reapply timing, for every poison, imbue,
-    oil, stone and lure: When Missing, or minutes left. No Off: each choice
-    has its own checkboxes for that.
+    Each Buff Duty category's one Show timing, for everything in it: When
+    Missing (0), or minutes left. No Off: the category has its own Show in
+    Buff Duty switch, and each item its own On and Off. 3 minutes is about
+    the length of a boss fight.
 ]]
-Data.WEAPON_REFRESH_CHOICES = { 0, 10, 5, 3 }
-Data.WEAPON_REFRESH_DEFAULT = 3
+Data.BUFF_DUTY_ROW_SHOW_CHOICES = { 0, 10, 5, 3 }
+Data.BUFF_DUTY_ROW_SHOW_DEFAULT = 3
 
 -- The Weapon Buffs panel's boxes for the items any class can use, in order (BUFF_DUTY_WEAPON_ITEMS' kind).
 Data.WEAPON_ITEM_KINDS = { "OIL", "STONE", "LURE" }

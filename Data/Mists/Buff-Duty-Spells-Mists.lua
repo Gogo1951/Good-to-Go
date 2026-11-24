@@ -344,6 +344,9 @@ ns.BUFF_DUTY_WEAPON_ITEMS = {
 	{ 20750, 40, 2627, 0, OIL, 50 }, -- Wizard Oil
 }
 
+-- The weapon items whose enchant goes in the imbue layer. None here: a weapon holds one temporary enchant on this client.
+ns.BUFF_DUTY_WEAPON_IMBUE_ITEMS = {}
+
 -- { item id, auras = { spell ids }, default (minutes left, MISSING or OFF) }, -- Name
 ns.BUFF_DUTY_SELF_ITEMS = {
 	{ 12820, auras = { 17038 }, default = MISSING }, -- Winterfall Firewater
@@ -371,7 +374,7 @@ ns.BUFF_DUTY_RESURRECTIONS = {
 How We Got the Data
 
 Last Validated
-	2026-11-19, wago.tools, Mists of Pandaria Classic 5.5.4.71060
+	2026-11-24, wago.tools, Mists of Pandaria Classic 5.5.4.71089
 
 Notes
 	- Built offline from this client's game tables, not yet checked against a Validate Data run from a Mists client. Every ID below is in this build's SpellName or ItemSparse, under the name its comment gives.
@@ -438,6 +441,9 @@ wago.tools
 	https://wago.tools/db2/SpellLevels?build=5.5.4.71060
 	https://wago.tools/db2/ItemEffect?build=5.5.4.71060
 	https://wago.tools/db2/Spell?build=5.5.4.71060
+	https://wago.tools/db2/Item?build=5.5.4.71089
+	https://wago.tools/db2/ItemSparse?build=5.5.4.71089
+	https://wago.tools/db2/SpellName?build=5.5.4.71089
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/MoP/mopItemDB.lua

@@ -2,8 +2,8 @@ local _, ns = ...
 local Data = ns.Data
 
 --[[
-    Buff Duty's settings: who each buff is offered to, when each self
-    buff shows, and the weapon choices and timing, seeded into the
+    Buff Duty's settings: who each buff is offered to, which self buffs
+    show, each category's switch and Show timing, and the weapon choices, seeded into the
     account-wide settings from each row's default and cleaned of values the dropdowns don't offer.
 ]]
 
@@ -87,35 +87,11 @@ local function PopulateBuffDutyAudience()
 	end
 
 	--[[
-	    MIGRATION (remove after 2026-11-21): self buffs whose default went from 5
-	    minutes to 3 move a stored 5 to 3, and the Soulstone moves When Missing
-	    to 3. Each key moves once, recorded in selfRefreshMigrated, so a player
-	    who picks 5 again keeps it. A key this client lacks waits for the client
-	    that has it: Classic Era and Season of Discovery share these settings.
-	]]
-	local migrated = ns.db.global.buffWindow.selfRefreshMigrated
-	for key, entry in pairs(selfLookup) do
-		if not migrated[key] then
-			if entry.row.default == 3 and selfRefresh[key] == 5 then
-				selfRefresh[key] = 3
-			end
-			migrated[key] = true
-		end
-	end
-	if stone and not migrated[stone.key] then
-		if selfRefresh[stone.key] == Data.SELF_REFRESH_MISSING then
-			selfRefresh[stone.key] = 3
-		end
-		migrated[stone.key] = true
-	end
-
-	--[[
 	    Weapon choices are ticked or not per hand (true or false; unset reads
 	    as ticked, WeaponChoiceOn), so anything else stored is dropped. A
 	    stored id this client has no row for is kept: Classic Era and Season
 	    of Discovery share these settings, and an Occult Poison ticked on one is
-	    the other's to keep. The one timing falls back to the default when it
-	    isn't a choice the dropdown offers.
+	    the other's to keep.
 	]]
 	local settings = ns.db.global.buffWindow
 	for _, list in ipairs({ settings.weaponPicks, settings.weaponItems }) do
@@ -127,9 +103,152 @@ local function PopulateBuffDutyAudience()
 			end
 		end
 	end
-	if not tContains(Data.WEAPON_REFRESH_CHOICES, settings.weaponRefresh) then
-		settings.weaponRefresh = Data.WEAPON_REFRESH_DEFAULT
+
+	-- A category's Show timing that isn't a choice falls back to the default; a switch that isn't true or false reads as its default.
+	for _, row in ipairs(Data.BUFF_DUTY_ROWS) do
+		if not tContains(Data.BUFF_DUTY_ROW_SHOW_CHOICES, settings.rowShow[row]) then
+			settings.rowShow[row] = Data.BUFF_DUTY_ROW_SHOW_DEFAULT
+		end
 	end
+	for _, list in ipairs({ settings.rowOn, settings.rowOut, settings.elixirOff, settings.scrollOff }) do
+		for key, value in pairs(list) do
+			if type(value) ~= "boolean" then
+				list[key] = nil
+			end
+		end
+	end
+	--[[
+	    Well Fed, Scrolls and Flasks or Elixirs each had a switch of their
+	    own on the Self-Buffs list before they were categories; a category
+	    never set takes that switch's answer, seeded above from the flavor's
+	    default.
+	]]
+	for _, entry in ipairs(BuffDuty.selfItemEntries) do
+		local row = entry.wellFed and "food" or entry.scrolls and "scrolls" or entry.elixirs and "elixirs"
+		if row and settings.rowOn[row] == nil then
+			settings.rowOn[row] = BuffDuty.SelfItemOn(entry.key)
+		end
+	end
+
+	-- A row's When to Use the dropdown doesn't offer, or a Buff Key answer that isn't one, reads as its default again.
+	for key, value in pairs(settings.rowWhen) do
+		if not Data.BUFF_DUTY_ROW_WHEN[value] then
+			settings.rowWhen[key] = nil
+		end
+	end
+	for key, value in pairs(settings.rowKey) do
+		if type(value) ~= "boolean" then
+			settings.rowKey[key] = nil
+		end
+	end
+end
+
+--------------------------------------------------------------------------------
+-- Rows
+--------------------------------------------------------------------------------
+
+--[[
+    Whether a category (one of Data.BUFF_DUTY_ROWS) shows here, by its
+    When to Use: always, in any party or raid, or only in a raid. A
+    battleground's group is a raid.
+]]
+function BuffDuty.RowShows(row)
+	if not BuffDuty.RowOn(row) then
+		return false
+	end
+	local when = ns.db.global.buffWindow.rowWhen[row]
+	if when == Data.BUFF_DUTY_ROW_WHEN.RAID then
+		return IsInRaid() and true or false
+	elseif when == Data.BUFF_DUTY_ROW_WHEN.GROUP then
+		return IsInGroup() and true or false
+	end
+	return true
+end
+
+-- Whether the Cast Next Buff key uses a category's icons.
+function BuffDuty.RowOnKey(row)
+	return ns.db.global.buffWindow.rowKey[row] ~= false
+end
+
+--[[
+    A category's Show in Buff Duty switch. Self-Buffs and Weapon Buffs keep
+    theirs where they always have, selfEnabled and weaponEnabled; the rest
+    in rowOn, where unset reads as on.
+]]
+function BuffDuty.RowOn(row)
+	local settings = ns.db.global.buffWindow
+	if row == "self" then
+		return settings.selfEnabled and true or false
+	elseif row == "weapons" then
+		return settings.weaponEnabled and true or false
+	end
+	return settings.rowOn[row] ~= false
+end
+
+function BuffDuty.SetRowOn(row, value)
+	local settings = ns.db.global.buffWindow
+	if row == "self" then
+		settings.selfEnabled = value
+	elseif row == "weapons" then
+		settings.weaponEnabled = value
+	else
+		settings.rowOn[row] = value
+	end
+end
+
+-- A category's Show timing in seconds: 0 for When Missing.
+function BuffDuty.RowShowSeconds(row)
+	return (ns.db.global.buffWindow.rowShow[row] or Data.BUFF_DUTY_ROW_SHOW_DEFAULT) * 60
+end
+
+-- Whether a category shows Missing Inventory! once its buff is gone and nothing in your bags gives it.
+function BuffDuty.RowOut(row)
+	return row ~= "self" and ns.db.global.buffWindow.rowOut[row] == true
+end
+
+--[[
+    Whether this client has anything for a category, so a menu leaves out
+    one that could never show: Scrolls where the client has no scroll types,
+    Flasks or Elixirs where it has no elixir buffs, Other Buffs where it has
+    no consumable of that kind, Weapon Buffs where your class has no
+    choices and the client no oils, stones or lures.
+]]
+function BuffDuty.RowExists(row)
+	if row == "scrolls" then
+		return ns.SCROLL_TYPE_LABELS ~= nil and #ns.SCROLL_TYPE_LABELS > 0
+	elseif row == "elixirs" then
+		return ns.ELIXIR_BUFF_IDS ~= nil and next(ns.ELIXIR_BUFF_IDS) ~= nil
+	elseif row == "other" then
+		for _, entry in ipairs(BuffDuty.selfItemEntries) do
+			if not (entry.wellFed or entry.scrolls or entry.elixirs) then
+				return true
+			end
+		end
+		return false
+	elseif row == "weapons" then
+		if BuffDuty.weaponItemEntries and #BuffDuty.weaponItemEntries > 0 then
+			return true
+		end
+		local _, class = UnitClass("player")
+		for _, entry in ipairs(BuffDuty.weaponEntries or {}) do
+			if entry.row.class == class then
+				return true
+			end
+		end
+		return false
+	end
+	return true
+end
+
+-- Whether a self buff, group buff on you, the Soulstone or a consumable with a switch of its own is on.
+function BuffDuty.SelfItemOn(key)
+	local when = ns.db.global.buffWindow.selfRefresh[key]
+	return when ~= nil and when ~= Data.SELF_REFRESH_OFF
+end
+
+-- Turn one on or off. On stores When Missing, a value that reads as on; the category's Show has the timing.
+function BuffDuty.SetSelfItemOn(key, value)
+	ns.db.global.buffWindow.selfRefresh[key] = value and Data.SELF_REFRESH_MISSING or Data.SELF_REFRESH_OFF
 end
 ns.PopulateBuffDutyAudience = PopulateBuffDutyAudience
 

@@ -39,6 +39,23 @@ function ns.SaveBuffDutyPosition(anchor)
 end
 
 --[[
+    Reset Position (Options-Buff-Duty.lua): forgets the saved corner and puts the
+    window back where it first appears. Out of combat only, since the anchor is
+    protected then; the panel grays the button in combat.
+]]
+function ns.HasSavedBuffDutyPosition()
+	return ns.db ~= nil and ns.db.global.buffWindow.point ~= nil
+end
+
+function ns.ResetBuffDutyPosition()
+	if InCombatLockdown() then
+		return
+	end
+	ns.db.global.buffWindow.point = nil
+	ns.ApplyBuffDutySettings()
+end
+
+--[[
     MIGRATION (remove after 2026-11-29): the window used to save its top-left
     corner. Once it has a size, that becomes the top-right corner the same
     window stands at, so the first redraw after the update leaves it where it

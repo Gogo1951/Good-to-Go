@@ -249,11 +249,40 @@ function ns:BuildRankWatchContextReport()
 		YesNo(UnitIsDeadOrGhost("player")),
 		RANK_WATCH.AFTER_COMBAT
 	)
-	local whisperer = ns.RankWatchWhisperer()
+	--[[
+	    Who whispers, worked out here as ns.RankWatchWhisperer answers it, since that call takes the lead back from a
+	    leader who has gone offline and tells the group (Rank-Watch-Cluster.lua): you, while you lead, aren't in a
+	    group, or the leader is offline, and then only with Whisper on; otherwise the leader.
+	]]
+	local leadName, myName = ns.RankWatchLeadName(), UnitName("player")
+	local leaderOnline = "n/a"
+	local takesLeadBack = false
+	if IsInGroup() and leadName ~= myName then
+		leaderOnline = "not in your group"
+		local prefix, count = "party", GetNumSubgroupMembers()
+		if IsInRaid() then
+			prefix, count = "raid", GetNumGroupMembers()
+		end
+		for index = 1, count do
+			local unit = prefix .. index
+			local unitName = UnitName(unit)
+			if ns.IsPlain(unitName) and unitName == leadName then
+				local connected = UnitIsConnected(unit)
+				leaderOnline = PlainText(connected)
+				takesLeadBack = ns.IsPlain(connected) and not connected
+			end
+		end
+	end
+	local whisperer = leadName
+	if leadName == myName or not IsInGroup() or takesLeadBack then
+		whisperer = settings.whisper and "self" or nil
+	end
 	lines[#lines + 1] = string.format(
-		"Who whispers for the group: %s // leader: %s",
+		"Who whispers for the group: %s // leader: %s (online: %s%s)",
 		whisperer == "self" and "you" or (whisperer or "nobody (you lead with Whisper off)"),
-		tostring(ns.RankWatchLeadName())
+		tostring(leadName),
+		leaderOnline,
+		takesLeadBack and "; you take the lead back at the next whisper" or ""
 	)
 	lines[#lines + 1] = string.format(
 		"Add-on message prefix %s registered: %s // sent to: %s (nothing is sent outside a group, or in a battleground or arena)",

@@ -41,6 +41,7 @@ local WINDOW_EVENTS = {
 	"UNIT_AURA",
 	"UNIT_SPELLCAST_SUCCEEDED",
 	"UNIT_POWER_UPDATE",
+	"UNIT_FLAGS",
 }
 
 -- Forever has a combat log, but registering COMBAT_LOG_EVENT_UNFILTERED there raises ADDON_ACTION_FORBIDDEN.
@@ -153,6 +154,34 @@ local function OnUnitPowerUpdate(_, powerType)
 	end
 end
 ns.SetBuffDutyEventHandler("UNIT_POWER_UPDATE", OnUnitPowerUpdate)
+
+--[[
+    A PvP flag going up or down, yours or anyone the window could buff:
+    their icons hold back or cast again (ns.BuffDuty.PvPFlaggedTarget).
+    UNIT_FLAGS fires for every flag, combat's included, and for nameplates,
+    so only a change to a watched unit's PvP flag redraws.
+]]
+local pvpFlags = {}
+
+local function WatchesFlagsOf(unit)
+	return unit == "player" or unit == "target" or unit:find("^party%d") or unit:find("^raid%d")
+end
+
+local function OnUnitFlags(unit)
+	if not ns.IsPlain(unit) or not unit or not WatchesFlagsOf(unit) then
+		return
+	end
+	local flagged = UnitIsPVP(unit)
+	if not ns.IsPlain(flagged) then
+		return
+	end
+	flagged = flagged and true or false
+	if pvpFlags[unit] ~= flagged then
+		pvpFlags[unit] = flagged
+		ns.RequestBuffDutyRefresh()
+	end
+end
+ns.SetBuffDutyEventHandler("UNIT_FLAGS", OnUnitFlags)
 
 local function OnUnitAura(unit, updateInfo)
 	ns.OnBuffDutyUnitAura(unit)

@@ -53,13 +53,6 @@ local BACKSTOP_INTERVAL = 3
 --------------------------------------------------------------------------------
 
 --[[
-    Every section the window would show, in display order: your own buffs,
-    then the players outside your group (Target, Return the Favor), then the
-    parties, which the frame lays out two to a row in a raid. The Buff
-    Key reads the same list, so it casts only what the window offers, but for
-    a dead friendly target, whom it resurrects even with the Target list off.
-]]
---[[
     Shadowform shuts out Holy spells. It is read once per build, so the icons
     below can leave out anything marked noShadowform (Fortitude, Divine
     Spirit, Fear Ward, Inner Fire, Resurrection) while you are in it.
@@ -84,6 +77,13 @@ function BuffDuty.ShutOut(buff)
 	return BuffDuty.inShadowform and buff.noShadowform or false
 end
 
+--[[
+    Every section the window would show, in display order: your own buffs,
+    then the players outside your group (Target, Return the Favor), then the
+    parties, which the frame lays out two to a row in a raid. The Buff
+    Key reads the same list, so it casts only what the window offers, but for
+    a dead friendly target, whom it resurrects even with the Target list off.
+]]
 function BuffDuty.BuildSections()
 	BuffDuty.refreshSeconds = ns.db.global.buffWindow.refreshMinutes * 60
 	BuffDuty.inShadowform = InShadowform()
@@ -443,17 +443,7 @@ function ns.SetupBuffDuty()
 	end
 	selfListed[#selfListed + 1] = BuffDuty.soulstoneEntry
 	ns.buffDutySelfCategories = BuffDuty.BuildCategories(selfListed)
-	-- Then the consumables any class can use, in a box of their own.
-	local items = {}
-	for _, entry in ipairs(BuffDuty.selfItemEntries) do
-		local spellName = entry.name or C_Spell.GetSpellName(entry.ids[1])
-		items[#items + 1] =
-			{ key = entry.key, ids = entry.ids, spellName = spellName or tostring(entry.itemId), desc = entry.desc }
-	end
-	if items[1] then
-		ns.buffDutySelfCategories[#ns.buffDutySelfCategories + 1] =
-			{ id = "ITEMS", name = L["BUFF_DUTY_SELF_ITEMS_HEADER"], entries = items }
-	end
+	-- The consumables any class can use have pages of their own (Options-Buff-Duty-Consumables.lua).
 	ns.PopulateBuffDutyAudience()
 	BuffDuty.BuildBuffs()
 	ns.CreateBuffDutyFrame()

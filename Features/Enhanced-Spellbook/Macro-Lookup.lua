@@ -55,12 +55,6 @@ function ns.WowMacroIcon(macro)
 end
 
 --[[
-	MIGRATION (remove after 2026-11-23): the name the add-on gave a WoW macro before the prefix, when names ran
-	to the full 16 bytes: a spell macro's name cut to 16, a Duplicate's cut to fit its suffix in 16.
-]]
-local LEGACY_NAME_MAX_LENGTH = 16
-
---[[
 	MIGRATION (remove after 2026-11-26): the prefix the Spellbook's macros had before Good to Go gave
 	every one of its macros a leading "-". A macro still under it is renamed on its next sync.
 ]]
@@ -69,15 +63,6 @@ local OLD_PREFIX = "~"
 -- MIGRATION (remove after 2026-11-26)
 local function OldPrefixName(macro)
 	return OLD_PREFIX .. macro.macroName
-end
-
--- MIGRATION (remove after 2026-11-23)
-local function LegacyMacroName(macro)
-	if macro.copy then
-		local suffix = " " .. macro.copy
-		return ns.TrimMacroName(macro.name, LEGACY_NAME_MAX_LENGTH - #suffix) .. suffix
-	end
-	return ns.TrimMacroName(macro.name, LEGACY_NAME_MAX_LENGTH)
 end
 
 local function IsGeneral(index)
@@ -101,17 +86,12 @@ end
 
 --[[
 	How the untagged WoW macro at index stands to the add-on: "owned" (recorded as the add-on's,
-	for this character), "claim" (MIGRATION (remove after 2026-11-23): a general macro recorded true
-	before owners were, which the first character to find it claims), or nil (unrecorded: the player's own,
-	whatever its text, or another character's). Reads only; ns.SyncMacro records a claim.
+	for this character) or nil (unrecorded: the player's own, whatever its text, or another character's).
+	Reads only.
 ]]
 function ns.LegacyOwnership(index)
 	local name = GetMacroInfo(index)
 	local record = OwnedList(index)[name]
-	-- MIGRATION (remove after 2026-11-23)
-	if record == true and IsGeneral(index) then
-		return "claim"
-	end
 	if record ~= nil then
 		return record == OwnerRecord(index) and "owned" or nil
 	end
@@ -184,8 +164,8 @@ end
 
 --[[
 	The WoW macro that is a page macro's: the one carrying its tag (see PickTagged when several do), else an
-	untagged one of its name the add-on created (see ns.LegacyOwnership), under its name or, from before the
-	prefix, its old one. Returns the index, 0 for none, how it was found ("tag", or the ownership answer), and
+	untagged one of its name the add-on created (see ns.LegacyOwnership), under its name or under the old "~"
+	prefix name. Returns the index, 0 for none, how it was found ("tag", or the ownership answer), and
 	for "tag" whether other macros carry the same tag. Reads only. indexes is a ReadMacroIndexes result, read
 	here when nil.
 ]]
@@ -200,15 +180,9 @@ function ns.FindMacroIndex(macro, indexes)
 		-- MIGRATION (remove after 2026-11-26)
 		index, ownership = FindByName(indexes, OldPrefixName(macro))
 	end
-	if not index then
-		-- MIGRATION (remove after 2026-11-23)
-		index, ownership = FindByName(indexes, LegacyMacroName(macro))
-	end
 	return index or 0, ownership
 end
 
 ns.MacroOwnerRecord = OwnerRecord
--- MIGRATION (remove after 2026-11-23)
-ns.LegacyMacroName = LegacyMacroName
 -- MIGRATION (remove after 2026-11-26)
 ns.OldPrefixName, ns.OLD_MACRO_PREFIX = OldPrefixName, OLD_PREFIX

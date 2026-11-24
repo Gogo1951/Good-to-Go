@@ -11,17 +11,20 @@ local format = string.format
 --[[
     The mini-map button's menu, drawn on the shared Menu Kit
     (Features/Menu-Kit.lua): the add-on's name, then Current Food, then a block
-    for each thing a player flips mid-session (Buff Duty, the Restocker), each a gold title with where it stands on the right, a line
+    for each thing a player flips mid-session (Buff Duty, the Restocker, the
+    Enhanced Spellbook), each a gold title with where it stands on the right, a line
     saying what it does and a blue Toggle row. Then the class's macro notes
     behind a [Class] Macros flyout with the class's live items under it, this
     character's Ignore List, the More Features flyout, and Options last.
 
     Hovering the button opens it; it closes a moment after the cursor leaves
-    the button, the menu and the flyout. Every row is a plain click, so a
-    controller's cursor reaches all of it, and the button keeps its clicks,
-    each named on the row that does the same job (Button Clicks, below). Every
-    click, row or button, ends in ns.RefreshSettings, which redraws the open
-    menu, every open options panel and the button's icon.
+    the button, the menu and the flyout. A Left-Click holds it open, and a
+    second Left-Click closes it. Every row is a plain click, so a controller's
+    cursor reaches all of it. The button keeps one click of its own,
+    Right-Click to ignore the current food, named in the Ignore row's tooltip
+    (Button Clicks, below). Every click, row or button, ends in
+    ns.RefreshSettings, which redraws the open menu, every open options panel
+    and the button's icon.
 
     The rules every add-on's menu follows (Style Guide → MINIMAP MENU):
       - Only what this character can use shows: a warrior gets no [Class]
@@ -32,8 +35,10 @@ local format = string.format
       - A list shows at most LIST_MAX rows, then a note saying how many more.
 ]]
 
-local HOVER_CLOSE_DELAY = 0.4
+-- The kit's own timing (Menu-Kit.lua): this menu keeps its own state on the kit's panels, so it keeps a copy.
+local HOVER_CLOSE_DELAY = 0.5
 local CLICK_CLOSE_DELAY = 1.0
+local SPELLBOOK_SETTING = "spellbookEnabled" -- A block of its own here, so it's left out of More Features
 local MENU_GAP = 2 -- From the button's corner to the menu's
 local LIST_MAX = 8
 local LOADING_RETRY = 0.5 -- Seconds before redrawing rows whose items weren't cached yet
@@ -57,14 +62,7 @@ Kit.SetText({
 	count = L["ITEM_QUANTITY"],
 	loading = L["LOADING_ITEM"],
 	shortName = L["ADDON_SHORT_NAME"],
-	clicks = {
-		LeftButton = L["MENU_CLICK_LEFT"],
-		RightButton = L["MENU_CLICK_RIGHT"],
-		MiddleButton = L["MENU_CLICK_MIDDLE"],
-		ShiftLeftButton = L["MENU_CLICK_SHIFT_LEFT"],
-		ShiftRightButton = L["MENU_CLICK_SHIFT_RIGHT"],
-		ShiftMiddleButton = L["MENU_CLICK_SHIFT_MIDDLE"],
-	},
+	shortcut = L["MENU_SHORTCUT"],
 })
 
 local state = {
@@ -94,10 +92,11 @@ end
 --[[
     An item row: the kit draws the icon and the name in its quality color, 4 in
     under its heading, with the count after the name when there is one, and
-    shows the item's own tooltip on hover. right is its value or slot, gray.
+    shows the item's own tooltip on hover. right is its value or slot, which
+    the kit draws light yellow unless rightColor says otherwise.
 ]]
-local function ItemRow(itemID, right, count)
-	return { kind = "item", itemID = itemID, count = count, right = right, rightColor = "MUTED" }
+local function ItemRow(itemID, right, count, rightColor)
+	return { kind = "item", itemID = itemID, count = count, right = right, rightColor = rightColor }
 end
 
 -- The right side of a feature's title: On in green, Off in gray.
@@ -142,6 +141,15 @@ StaticPopupDialogs.GOODTOGO_MENU_FEATURE_OFF = {
 	preferredIndex = 3,
 }
 
+-- A feature switch flipped from the menu, More Features' rows and the Enhanced Spellbook's Toggle alike; on is where it stands now.
+local function FlipFeature(feature, on)
+	if on and feature.confirm then
+		StaticPopup_Show("GOODTOGO_MENU_FEATURE_OFF", L[feature.confirm], nil, feature)
+		return
+	end
+	SetFeature(feature, not on)
+end
+
 --------------------------------------------------------------------------------
 -- Actions
 --------------------------------------------------------------------------------
@@ -177,103 +185,47 @@ local function ClearIgnoreList()
 	end
 end
 
+-- What the Enhanced Spellbook's key binding does; opening a window closes the menu.
+local function OpenSpellbook()
+	ns.HideMenu()
+	GoodToGo_ToggleSpellbook()
+end
+
+local function OpenOptions()
+	ns.HideMenu()
+	ns:OpenOptionsPanel()
+end
+
+-- The same as a bare /restock: while the Restocker is off it only says so in chat.
+local function OpenRestockList()
+	ns.ToggleRestockWindow()
+end
+
 --------------------------------------------------------------------------------
--- Button Clicks
+-- Rows
 --------------------------------------------------------------------------------
 
 --[[
-    One table, both ways: the button's OnClick looks the click up here, and the
-    row that does the same job names the click on its right, so a row never
-    names a click that does something else. A click whose `available` says
-    no (Shift + Left-Click while the Enhanced Spellbook is off) has no job, so
-    it opens the menu, as hover does (Minimap-Button.lua).
+    An action row: blue, with nothing on its right. click is the button's kept
+    click that does the same job ("RightButton"): the kit names it in the
+    row's tooltip, never on the row, and ns.RunButtonClick runs the row it's
+    on.
 ]]
-local CLICKS = {
-	ignore = {
-		button = "RightButton",
-		shift = false,
-		name = "MENU_CLICK_RIGHT",
-		run = IgnoreCurrentFood,
-	},
-	clearIgnore = {
-		button = "MiddleButton",
-		shift = false,
-		name = "MENU_CLICK_MIDDLE",
-		run = ClearIgnoreList,
-	},
-	buffDuty = {
-		button = "LeftButton",
-		shift = false,
-		name = "MENU_CLICK_LEFT",
-		run = ToggleBuffDuty,
-	},
-	restockList = {
-		button = "RightButton",
-		shift = true,
-		name = "MENU_CLICK_SHIFT_RIGHT",
-		-- The same as a bare /restock: while the Restocker is off it only says so in chat.
-		run = function()
-			ns.ToggleRestockWindow()
-		end,
-	},
-	spellbook = {
-		button = "LeftButton",
-		shift = true,
-		name = "MENU_CLICK_SHIFT_LEFT",
-		available = function()
-			return ns.IsSpellbookEnabled()
-		end,
-		-- What the Enhanced Spellbook's key binding does; opening a window closes the menu.
-		run = function()
-			ns.HideMenu()
-			GoodToGo_ToggleSpellbook()
-		end,
-	},
-	options = {
-		button = "MiddleButton",
-		shift = true,
-		name = "MENU_CLICK_SHIFT_MIDDLE",
-		run = function()
-			ns.HideMenu()
-			ns:OpenOptionsPanel()
-		end,
-	},
-}
-
--- Runs the click's job and redraws the menu and any open options page; false when the click has none.
-function ns.RunButtonClick(button)
-	local shift = IsShiftKeyDown() and true or false
-	for _, click in pairs(CLICKS) do
-		if click.button == button and click.shift == shift and (not click.available or click.available()) then
-			if not ns.db and click ~= CLICKS.options then
-				return true
-			end
-			click.run()
-			AfterChange()
-			return true
-		end
-	end
-	return false
-end
-
--- An action row: blue, naming its button click on the right in gray.
-local function ClickRow(label, clickKey, tooltip)
-	local click = CLICKS[clickKey]
+local function ActionRow(label, run, tooltip, click)
 	return {
 		kind = "action",
 		left = label,
 		leftColor = "INFO",
-		right = L[click.name],
-		rightColor = "MUTED",
+		click = click,
 		tooltip = tooltip,
 		onClick = function()
-			click.run()
+			run()
 			AfterChange()
 		end,
 	}
 end
 
--- A Toggle row with no button click of its own: every click is already taken.
+-- A Toggle row: the feature's switch, with no button click of its own.
 local function ToggleRow(flip, tooltip)
 	return {
 		kind = "action",
@@ -309,10 +261,10 @@ local BUFF_DUTY_WINDOW = "buffDutyWindow"
 
 --[[
     The class's macro notes, one section per macro: what each click does on
-    the left, as a verb, and the click on the right in gray, the same way round
-    as an action row and its button click. These are clicks on the macro, not
-    on this menu, so they sit here rather than in the main menu, as value rows
-    with nothing to click. A block's how-to note stays off the menu
+    the left, as a verb, and the click on the right in light yellow, as a
+    value row draws it. These are clicks on the macro, not on this menu, so
+    they sit here rather than in the main menu, as value rows with nothing to
+    click. A block's how-to note stays off the menu
     (MINIMAP MENU: no how-to notes); its options page and the macro's Spellbook
     tooltip say it.
 ]]
@@ -323,7 +275,7 @@ function FLYOUTS.macros()
 		if block.rows then
 			entries[#entries + 1] = { kind = "section", left = block.title }
 			for _, row in ipairs(block.rows) do
-				entries[#entries + 1] = { kind = "value", left = row[2], right = row[1], rightColor = "MUTED" }
+				entries[#entries + 1] = { kind = "value", left = row[2], right = row[1] }
 			end
 		end
 	end
@@ -334,13 +286,15 @@ end
     More Features: every feature on the options' main page that isn't a block
     in the main menu, one On/Off row each, in the main page's order, with its
     switch's caption and description as the tooltip (ns.FEATURES,
-    Options/Options-Feature-Switches.lua). A feature that gates on the
-    character shows only where it applies.
+    Options/Options-Feature-Switches.lua). The Enhanced Spellbook has a block
+    in the main menu too, though its record isn't marked as one. A feature
+    that gates on the character shows only where it applies.
 ]]
 local function MoreFeatures()
 	local features = {}
 	for _, feature in ipairs(ns.FEATURES or {}) do
-		if not feature.block and (not feature.gate or feature.gate()) then
+		local isBlock = feature.block or feature.setting == SPELLBOOK_SETTING
+		if not isBlock and (not feature.gate or feature.gate()) then
 			features[#features + 1] = feature
 		end
 	end
@@ -357,11 +311,7 @@ function FLYOUTS.features()
 			on = on,
 			tooltip = OptionTooltip(L[feature.caption], L[feature.desc]),
 			onClick = function()
-				if on and feature.confirm then
-					StaticPopup_Show("GOODTOGO_MENU_FEATURE_OFF", L[feature.confirm], nil, feature)
-					return
-				end
-				SetFeature(feature, not on)
+				FlipFeature(feature, on)
 			end,
 		}
 	end
@@ -385,12 +335,12 @@ local function AddCurrentFood(entries)
 		return
 	end
 	entries[#entries + 1] = ItemRow(foodID, nil, C_Item.GetItemCount(foodID))
-	entries[#entries + 1] = ClickRow(L["MENU_IGNORE"], "ignore")
+	entries[#entries + 1] = ActionRow(L["MENU_IGNORE"], IgnoreCurrentFood, nil, "RightButton")
 end
 
 --[[
     Buff Duty reads On or Off for the class you're playing, the same switch its
-    click flips. While it's on, its title opens the window's own Options
+    Toggle flips. While it's on, its title opens the window's own Options
     flyout, as every feature's title opens its flyout, so the window's
     switches are reachable even while it has hidden itself with nothing to
     show; while it's off the title is a plain heading. Its Toggle's tooltip is
@@ -421,7 +371,7 @@ local function AddBuffDuty(entries)
 	local className = UnitClass("player")
 	local tooltip = feature
 		and OptionTooltip(L[feature.caption], format(L["MENU_BUFF_DUTY_TOGGLE_CLASS_DESCRIPTION"], className))
-	entries[#entries + 1] = ClickRow(L["MENU_TOGGLE"], "buffDuty", tooltip)
+	entries[#entries + 1] = ToggleRow(ToggleBuffDuty, tooltip)
 end
 
 --[[
@@ -462,8 +412,7 @@ end
 --[[
     The Restocker, titled with the feature's name as the root panel's switch
     names it. Its Toggle row is the feature switch, with no click of its own;
-    Open, while it's on, opens the Restock List window, as Shift + Right-Click
-    does.
+    Open, while it's on, opens the Restock List window.
 ]]
 local function AddRestocker(entries)
 	local feature = ns.FindFeature("restockerEnabled")
@@ -476,12 +425,12 @@ local function AddRestocker(entries)
 		feature.apply(not enabled)
 	end, OptionTooltip(L[feature.caption], L[feature.desc]))
 	if enabled then
-		entries[#entries + 1] = ClickRow(L["MENU_OPEN"], "restockList")
+		entries[#entries + 1] = ActionRow(L["MENU_OPEN"], OpenRestockList)
 	else
 		-- Gray with nothing to click while the Restocker is off, so the list still has a way in that says why it's shut.
-		local open = ClickRow(
+		local open = ActionRow(
 			L["MENU_OPEN"],
-			"restockList",
+			OpenRestockList,
 			OptionTooltip(L["MENU_OPEN"], L["MENU_RESTOCKER_OPEN_OFF_DESCRIPTION"])
 		)
 		open.leftColor, open.onClick = "MUTED", nil
@@ -491,16 +440,24 @@ local function AddRestocker(entries)
 end
 
 --[[
-    The Enhanced Spellbook, while it's on: its name, a line saying what it's
-    for, and Open, which opens its window as Shift + Left-Click does.
+    The Enhanced Spellbook: its name with On or Off on the right, a line saying
+    what it's for, and its Toggle row, the feature switch, which asks before
+    turning off as More Features' rows and its options switch do. While it's
+    on, Open opens its window, as its key binding does.
 ]]
 local function AddSpellbook(entries)
-	if not ns.IsSpellbookEnabled() then
-		return
-	end
-	entries[#entries + 1] = { kind = "status", left = L["TAB_ENHANCED_SPELLBOOK"] }
+	local feature = ns.FindFeature(SPELLBOOK_SETTING)
+	local enabled = ns.IsSpellbookEnabled() and true or false
+	local right, rightColor = OnOff(enabled)
+	entries[#entries + 1] =
+		{ kind = "status", left = L["TAB_ENHANCED_SPELLBOOK"], right = right, rightColor = rightColor }
 	entries[#entries + 1] = { kind = "description", left = L["MENU_SPELLBOOK_DESCRIPTION"] }
-	entries[#entries + 1] = ClickRow(L["MENU_OPEN"], "spellbook")
+	entries[#entries + 1] = ToggleRow(function()
+		FlipFeature(feature, enabled)
+	end, OptionTooltip(L[feature.caption], L[feature.desc]))
+	if enabled then
+		entries[#entries + 1] = ActionRow(L["MENU_OPEN"], OpenSpellbook)
+	end
 end
 
 --[[
@@ -535,8 +492,8 @@ local function AddClassMacros(entries)
 end
 
 --[[
-    This character's own Ignore List, the one Right-Click adds to and
-    Middle-Click clears; the Global list lives in the Ignore List panel.
+    This character's own Ignore List, the one Right-Click adds to and Clear
+    Ignore List empties; the Global list lives in the Ignore List panel.
     Sorted by name, each item in its quality color, and only while it holds
     something. A click on an item takes it off the list (MINIMAP MENU →
     Editable list), the delete icon showing on the right while it's hovered.
@@ -567,7 +524,7 @@ local function AddIgnoreList(entries)
 
 	local rows = {}
 	for _, item in ipairs(items) do
-		local row = ItemRow(item.id, Kit.REMOVE_ICON)
+		local row = ItemRow(item.id, Kit.REMOVE_ICON, nil, "MUTED")
 		local itemID = item.id
 		row.rightOnHover = true
 		row.onClick = function()
@@ -579,7 +536,7 @@ local function AddIgnoreList(entries)
 
 	entries[#entries + 1] = { kind = "status", left = L["MINIMAP_IGNORE_LIST"] }
 	AddList(entries, rows)
-	entries[#entries + 1] = ClickRow(L["MENU_CLEAR_IGNORE"], "clearIgnore")
+	entries[#entries + 1] = ActionRow(L["MENU_CLEAR_IGNORE"], ClearIgnoreList)
 	return isLoading
 end
 
@@ -624,8 +581,35 @@ local function BuildMainEntries()
 
 	entries[#entries + 1] = { kind = "spacer" }
 	entries[#entries + 1] = { kind = "separator" }
-	entries[#entries + 1] = ClickRow(L["MENU_OPTIONS"], "options")
+	entries[#entries + 1] = ActionRow(L["MENU_OPTIONS"], OpenOptions)
 	return entries, restockLoading or ignoreLoading
+end
+
+--------------------------------------------------------------------------------
+-- Button Clicks
+--------------------------------------------------------------------------------
+
+--[[
+    The button's one kept click runs the main menu row whose `click` names it,
+    the way the kit's own menus route a click (Menu-Kit.lua → HandleClick), so
+    the click and its row can't disagree: Right-Click runs Ignore, while
+    there's a food to ignore. Left-Click has no row: it falls through to
+    ns.ShowMenu, which opens, holds or closes the menu (Minimap-Button.lua).
+    Middle-Click and the Shift clicks have no job. True when the click did
+    something.
+]]
+function ns.RunButtonClick(button)
+	if not ns.db then
+		return false
+	end
+	local key = (IsShiftKeyDown() and "Shift" or "") .. button
+	for _, entry in ipairs((BuildMainEntries())) do
+		if entry.click == key and entry.onClick and not entry.disabled then
+			entry.onClick()
+			return true
+		end
+	end
+	return false
 end
 
 --------------------------------------------------------------------------------
@@ -650,7 +634,7 @@ local function RenderFlyout()
 	local row = key and menu:SubmenuRow(key)
 	if key == BUFF_DUTY_WINDOW and row then
 		flyout:Hide()
-		ns.ShowBuffDutyOptions(row, Kit.FLYOUT_GAP)
+		ns.ShowBuffDutyOptions(row)
 		return
 	end
 	ns.HideBuffDutyOptions(menu)
@@ -763,14 +747,20 @@ end)
 --[[
     Opens the menu from a launcher: the mini-map button or any LDB display's
     frame. how is "hover" or "click"; a click keeps it open a little longer
-    once the cursor leaves. flyoutKey opens that title's flyout at once. A
-    launcher already showing the menu keeps its place and its open flyout.
+    once the cursor leaves, and a click on a launcher whose click already
+    holds the menu closes it, as the kit's own menus do (Menu-Kit.lua →
+    HandleClick). flyoutKey opens that title's flyout at once. A launcher
+    already showing the menu keeps its place and its open flyout.
 ]]
 function ns.ShowMenu(anchor, flyoutKey, how)
 	if not ns.db or not anchor then
 		return
 	end
 	local reopen = menu:IsShown() and state.anchor == anchor
+	if reopen and how == "click" and state.closeDelay == CLICK_CLOSE_DELAY then
+		menu:Hide()
+		return
+	end
 	if not reopen then
 		state.closeDelay = HOVER_CLOSE_DELAY
 		state.flyoutKey = nil

@@ -11,15 +11,19 @@ local _, ns = ...
 	right side, already colored), SetNote (an option's gray note), SetLabel (a label read each time the menu draws)
 	and, on a root or sub-menu, CreateText (a block of lines) and CreateHeader (the header row).
 
-	A button with children opens a sub-menu: its label gold, its value gray, the arrow, on hover or click. A button
-	without is an action, blue, and closes the menu unless its callback answers MenuResponse.Refresh. A checkbox is
-	a toggle and a radio a choice; either redraws in place unless its callback answers MenuResponse.CloseAll. Every
-	change builds the menu afresh and draws it again where it is, its open sub-menus kept open.
+	A button with children opens a sub-menu, the arrow, on hover or click: one that sets something (SetSetting) reads
+	as the kit's value row, its label white and its value light yellow; any other keeps a gold label. A button
+	without is an action, blue, its value light yellow, and closes the menu unless its callback answers
+	MenuResponse.Refresh. A checkbox is a toggle and a radio a choice; either redraws in place unless its callback
+	answers MenuResponse.CloseAll. A checkbox with a value shows the value on the right in place of On. A disabled
+	element is gray on both sides and can't be clicked, whatever colors its label carries. Every change builds the
+	menu afresh and draws it again where it is, its open sub-menus kept open.
 ]]
 
+local L = ns.L
 local Kit = ns.MenuKit
 local MAX_DEPTH = 4 -- The menu and three sub-menus deep: Target → Second → its units
-local CLOSE_DELAY = 0.4
+local CLOSE_DELAY = 0.5
 local FLYOUT_ROOM = 280 -- What a sub-menu is likely to need beside the menu, to pick its side once
 local MENU_GAP = 2 -- From a gear's or a field's corner to the menu's, as the kit's own menus open
 
@@ -105,6 +109,11 @@ function Element:SetLabel(label)
 	self.labelFunction = label
 end
 
+-- A sub-menu that sets something (Rank, When, Macro Storage): its row reads as a setting's, white with its value light yellow.
+function Element:SetSetting()
+	self.isSetting = true
+end
+
 local function Read(value)
 	if type(value) == "function" then
 		return value()
@@ -175,33 +184,60 @@ local function Entries(element, level)
 		elseif kind == "text" then
 			entry = { kind = "note", left = Read(child.text), leftColor = "TEXT" }
 		elseif kind == "checkbox" then
-			entry = { kind = "toggle", left = WithNote(label, Read(child.note)), on = child.isOn() and true or false }
+			local on = child.isOn() and true or false
+			local value = on and child.value and Read(child.value)
+			if value then
+				--[[
+					A switch whose right side says more than On (a use-item's place in the order): the value light
+					yellow in On's place, as a setting's value reads.
+				]]
+				entry = { kind = "value", left = WithNote(label, Read(child.note)), leftColor = "TEXT", right = value }
+			elseif child.value and not on then
+				-- The same switch off: Off gray on the right, its name gray, as the kit's switch reads
+				entry = {
+					kind = "value",
+					left = WithNote(label, Read(child.note)),
+					leftColor = "MUTED",
+					right = L["MENU_OFF"],
+				}
+			else
+				entry = { kind = "toggle", left = WithNote(label, Read(child.note)), on = on }
+			end
 		elseif kind == "radio" then
 			local note, selected = Read(child.note), child.isOn() and true or false
 			if note then
 				--[[
-					A choice with a note (a rank's level, the rank Max Rank casts) keeps the choice's look, with the
-					note gray in the right column and the check mark after it once picked.
+					A choice with a note (a rank's level, the rank Max Rank casts) keeps the kit's choice look, the
+					pick light yellow and the rest white, with the note gray in the right column and the check mark
+					after it once picked.
 				]]
 				entry = {
 					kind = "value",
 					left = label,
-					leftColor = selected and "TEXT" or "MUTED",
+					leftColor = selected and "VALUE" or "BODY",
 					right = Plain(note) .. (selected and " " .. Kit.CHECK_MARK or ""),
 					rightColor = "MUTED",
 				}
 			else
 				entry = { kind = "choice", left = label, selected = selected }
 			end
+		elseif #child.children > 0 and child.isSetting then
+			entry = { kind = "value", left = label, right = Read(child.value), submenu = child.label }
 		elseif #child.children > 0 then
 			entry =
 				{ kind = "action", left = label, leftColor = "TITLE", right = Read(child.value), submenu = child.label }
 		else
-			entry =
-				{ kind = "action", left = label, leftColor = "INFO", right = Read(child.value), rightColor = "MUTED" }
+			entry = { kind = "action", left = label, right = Read(child.value) }
 		end
 		if child.disabled then
-			entry.leftColor = "MUTED"
+			-- Gray on both sides, the label's own colors (a rank's) taken off
+			entry.disabled = true
+			if type(entry.left) == "string" then
+				entry.left = Plain(entry.left)
+			end
+			if type(entry.right) == "string" then
+				entry.right = Plain(entry.right)
+			end
 		elseif kind == "checkbox" or kind == "radio" or kind == "button" then
 			entry.onClick = function()
 				-- A click on a sub-menu's row opens it, as hovering does.

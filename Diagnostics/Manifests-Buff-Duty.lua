@@ -172,7 +172,7 @@ local function MemberLine(BW, member, rangeSpell)
 		)
 	end
 	return string.format(
-		"  %s (party %d): class=%s level=%s role=%s canBuff=%s connected=%s dead=%s%s inRange=%s visible=%s afk=%s pet=%s",
+		"  %s (party %d): class=%s level=%s role=%s canBuff=%s connected=%s dead=%s%s inRange=%s visible=%s afk=%s pvpFlagged=%s pet=%s",
 		unit,
 		member.subgroup,
 		tostring(class),
@@ -185,6 +185,7 @@ local function MemberLine(BW, member, rangeSpell)
 		rangeSpell and tostring(ns.IsBuffInRange(unit, rangeSpell)) or "n/a",
 		PlainText(UnitIsVisible(unit)),
 		PlainText(UnitIsAFK(unit)),
+		PlainText(UnitIsPVP(unit)),
 		petState
 	)
 end
@@ -362,7 +363,8 @@ end
     Scrolls' icons, one per type in the Food macro's order: whether this
     character ticks it (scrollTypes, on the profile), how many scrolls of it
     you carry and how many of those the window passes over (on the Ignore
-    List, or another class's), the strongest it would read and its amount,
+    List, another class's, or turned off in the Scrolls menu: scrollOff),
+    the strongest it would read and its amount,
     the type's scroll buff on you and the strongest elixir or class buff
     covering it, and whether the window offers it now. Nothing shows while
     auras are secret.
@@ -380,8 +382,13 @@ local function ScrollLines(lines, buff, aurasSecret)
 		lines[#lines + 1] = "    (auras secret: no scroll icon shows)"
 		return
 	end
+	-- Read as the window reads them (Buff-Duty-Self.lua): a scroll the Scrolls menu turned off counts as none.
+	local scrollOff = ns.db.global.buffWindow.scrollOff or {}
 	local counts = setmetatable({}, {
 		__index = function(_, itemId)
+			if scrollOff[itemId] then
+				return 0
+			end
 			return C_Item.GetItemCount(itemId)
 		end,
 	})
@@ -394,7 +401,7 @@ local function ScrollLines(lines, buff, aurasSecret)
 		for _, item in ipairs(data and data.items or {}) do
 			if C_Item.GetItemCount(item[1]) > 0 then
 				carried = carried + 1
-				if ns.IsIgnored(item[1]) or (item[5] ~= nil and item[5] ~= playerClass) then
+				if scrollOff[item[1]] or ns.IsIgnored(item[1]) or (item[5] ~= nil and item[5] ~= playerClass) then
 					passed = passed + 1
 				end
 			end
@@ -534,8 +541,9 @@ end
     the Soulstone and who already carries one, the consumables (Well Fed's
     buff food and each scroll type, what you carry and why each shows or
     doesn't), and the Buff Key's binding and any override taking its key;
-    then every group member and your target as the window reads them, each
-    with which of your buffs they have on or are missing and where the
+    then every group member and your target as the window reads them, their
+    PvP flags and yours, each with which of your buffs they have on or are
+    missing and where the
     window's own verdict differs, what a pet or a friendly NPC target is held
     off or takes, which of a stranger target's buffs you'd ask them for, the
     other classes' buffs Party-Buffs counts, and what feeds Return the Favor.
@@ -571,7 +579,7 @@ function ns:BuildBuffDutyContextReport()
 	]]
 	local onForClass = ns.IsBuffDutyOnForClass and ns.IsBuffDutyOnForClass()
 	lines[#lines + 1] = string.format(
-		"Switches: enabled=%s onForYourClass=%s closedThisSession (menu: Paused)=%s hideInCombat=%s locked=%s selfBuffs=%s returnTheFavor=%s target=%s targetNPCs=%s askTarget=%s askOtherClasses=%s",
+		"Switches: enabled=%s onForYourClass=%s closedThisSession (menu: Paused)=%s hideInCombat=%s locked=%s selfBuffs=%s returnTheFavor=%s target=%s targetNPCs=%s askTarget=%s askOtherClasses=%s buffPvPFlagged=%s",
 		tostring(db.enabled),
 		tostring(onForClass),
 		tostring(ns.IsBuffDutyHiddenThisSession and ns.IsBuffDutyHiddenThisSession() and true or false),
@@ -582,7 +590,8 @@ function ns:BuildBuffDutyContextReport()
 		tostring(db.targetEnabled),
 		tostring(db.targetNPCs),
 		tostring(db.askTarget),
-		tostring(db.askOtherClasses)
+		tostring(db.askOtherClasses),
+		tostring(db.buffPvPFlagged)
 	)
 	lines[#lines + 1] = string.format(
 		"Whispered ask: %s // Ask your target: %s // Send Messages In: %s",
@@ -638,12 +647,20 @@ function ns:BuildBuffDutyContextReport()
 		tostring(ns.BUFF_DUTY_ITEM_BUFFS_SHOWN),
 		tostring(ns.BUFF_DUTY_PETS_FLAGGED_ONLY)
 	)
+	--[[
+	    While you aren't PvP-flagged and Buff PvP-Flagged Players is off, a cast
+	    that would reach a flagged player (its target, anyone in a group buff's
+	    party, or your party for Battle Shout) is held back on the window and
+	    passed over by the Buff Key (BuffDuty.PvPFlaggedTarget). Each member's
+	    and your target's flag shows on their line below.
+	]]
 	lines[#lines + 1] = string.format(
-		"Gates now: inCombat=%s aurasSecret=%s cooldownsSecret=%s youDead=%s anythingToOffer=%s castableBuffs=%d castableSelfBuffs=%d castableConsumables=%d weaponHands=%d soulstone=%s resurrection=%s",
+		"Gates now: inCombat=%s aurasSecret=%s cooldownsSecret=%s youDead=%s youPvPFlagged=%s anythingToOffer=%s castableBuffs=%d castableSelfBuffs=%d castableConsumables=%d weaponHands=%d soulstone=%s resurrection=%s",
 		tostring(InCombatLockdown() and true or false),
 		tostring(ns.AreAurasSecret()),
 		tostring(ns.AreCooldownsSecret()),
 		PlainText(UnitIsDeadOrGhost("player")),
+		PlainText(UnitIsPVP("player")),
 		tostring(BW.HasAnythingToOffer()),
 		#BW.buffs,
 		#BW.selfBuffs,
@@ -681,19 +698,16 @@ function ns:BuildBuffDutyContextReport()
 			)
 		or "Window now: (not built yet)"
 	--[[
-	    The Options line at the window's foot opens its flyout on hover or
-	    click, only while the window is on screen. The flyout's Show in
-	    Window rows are the five switches above (selfBuffs, weapons,
-	    askOtherClasses, returnTheFavor, target); its Consumables and Weapon
-	    Buffs rows list only what you carry, read under Consumables and
-	    Weapons below.
+	    The Options line at the window's foot, and each category line's
+	    arrow, open the one menu on hover or click, only while the window is
+	    on screen. Its Show in Window rows are each category's switch, read
+	    under each Row below.
 	]]
 	local flyout = _G[ADDON_NAME .. "BuffDutyOptions"]
 	lines[#lines + 1] = string.format(
-		"Options flyout: built=%s shown=%s showInWindowRowsOn=%s",
+		"Options menu: built=%s shown=%s",
 		tostring(flyout ~= nil),
-		tostring(flyout ~= nil and flyout:IsShown()),
-		tostring(ns.CountBuffDutyWindowRowsOn and ns.CountBuffDutyWindowRowsOn())
+		tostring(flyout ~= nil and flyout:IsShown())
 	)
 	lines[#lines + 1] = string.format(
 		"Rows live on this client: %d of %d buffs, %d of %d self buffs, %d consumables",
@@ -834,9 +848,9 @@ function ns:BuildBuffDutyContextReport()
 	local classHands = ns.BUFF_DUTY_WEAPON_HANDS and ns.BUFF_DUTY_WEAPON_HANDS[class]
 	lines[#lines + 1] = ""
 	lines[#lines + 1] = string.format(
-		"Weapons (switch %s, reapply %s, your class's picks on %s):",
+		"Weapons (switch %s, show %s, your class's picks on %s):",
 		tostring(db.weaponEnabled),
-		tostring(db.weaponRefresh),
+		tostring(db.rowShow.weapons),
 		classHands and #classHands > 0 and table.concat(classHands, " ") or "no hand"
 	)
 	-- An imbue is offered only once you know a rank of it.
@@ -1047,10 +1061,10 @@ function ns:BuildBuffDutyContextReport()
 	end
 
 	--[[
-	    The consumables any class keeps up, on Self Buffs and gone with its
-	    switch: each one's timing (Off keeps it out of the window), the timing
-	    the Options flyout brings back when it turns one on again
-	    (menuSelfRefresh), and whether it made the castable list. An item
+	    The consumables any class keeps up, each in its own category: each
+	    one's stored switch (Off keeps an Other Buffs one out of the window;
+	    Well Fed, Scrolls and Flasks or Elixirs keep to their category's), and
+	    whether it made the castable list. An item
 	    shows while one is in your bags and its buff is missing or low; Well
 	    Fed and Scrolls read further below. Well Fed has no row without its
 	    spell and aura tables, and Scrolls none without the first type's
@@ -1061,17 +1075,16 @@ function ns:BuildBuffDutyContextReport()
 		castableItems[buff.key] = buff
 	end
 	lines[#lines + 1] = ""
-	lines[#lines + 1] = string.format("Consumables (Self Buffs switch %s):", tostring(db.selfEnabled))
+	lines[#lines + 1] = "Consumables:"
 	local hasWellFed, hasScrolls = false, false
 	for _, entry in ipairs(BW.selfItemEntries) do
 		local buff = castableItems[entry.key]
 		local name = entry.name or C_Spell.GetSpellName(entry.ids[1]) or tostring(entry.itemId or entry.key)
 		lines[#lines + 1] = string.format(
-			"  %s (%s): shows=%s flyoutRestores=%s inWindow=%s",
+			"  %s (%s): stored=%s inWindow=%s",
 			name,
 			tostring(entry.key),
 			tostring(db.selfRefresh[entry.key]),
-			tostring((db.menuSelfRefresh or {})[entry.key]),
 			buff and "yes" or "NO"
 		)
 		if entry.wellFed then
@@ -1095,6 +1108,29 @@ function ns:BuildBuffDutyContextReport()
 			end
 			lines[#lines + 1] =
 				string.format("    item %d: inBags=%d buff=%s", entry.itemId, C_Item.GetItemCount(entry.itemId), onFor)
+		elseif entry.elixirs then
+			--[[
+			    Each elixir in your bags (the Ignore List aside), the slot or group its buff takes, whether the
+			    category's menu turned it off (elixirOff), and whether that buff is on you.
+			]]
+			local left = aurasSecret and {} or ReadUnitBuffs("player")
+			local carried = BW.CarriedElixirs()
+			local elixirOff = db.elixirOff or {}
+			for _, elixir in ipairs(carried) do
+				lines[#lines + 1] = string.format(
+					"    item %d (%s): buff %d group=%s ignored=%s turnedOff=%s on=%s",
+					elixir.itemId,
+					elixir.name,
+					elixir.spellId,
+					tostring(ns.ELIXIR_BUFF_IDS[elixir.spellId]),
+					tostring(ns.IsIgnored(elixir.itemId)),
+					tostring(elixirOff[elixir.itemId] == true),
+					aurasSecret and "(auras secret)" or tostring(left[elixir.spellId] ~= nil)
+				)
+			end
+			if not carried[1] then
+				lines[#lines + 1] = "    no elixir in bags"
+			end
 		end
 	end
 	if not hasWellFed then
@@ -1102,6 +1138,19 @@ function ns:BuildBuffDutyContextReport()
 	end
 	if not hasScrolls then
 		lines[#lines + 1] = "  Scrolls: no row on this client"
+	end
+	-- Each category's switch, When to Use, Show, Missing Inventory, whether it shows here, and whether the Buff Key uses it.
+	for _, row in ipairs(ns.Data.BUFF_DUTY_ROWS) do
+		lines[#lines + 1] = string.format(
+			"  Row %s: on=%s when=%s show=%s missingInventory=%s showsHere=%s onKey=%s",
+			row,
+			tostring(BW.RowOn(row)),
+			tostring(db.rowWhen[row]),
+			tostring(db.rowShow[row]),
+			tostring(BW.RowOut(row)),
+			tostring(BW.RowShows(row)),
+			tostring(BW.RowOnKey(row))
+		)
 	end
 
 	--[[
@@ -1235,13 +1284,14 @@ function ns:BuildBuffDutyContextReport()
 		lines[#lines + 1] = "Target: identity secret"
 	else
 		lines[#lines + 1] = string.format(
-			"Target: player=%s inParty=%s inRaid=%s canAssist=%s canBuff=%s petControlledByPlayer=%s",
+			"Target: player=%s inParty=%s inRaid=%s canAssist=%s canBuff=%s petControlledByPlayer=%s pvpFlagged=%s",
 			PlainText(UnitIsPlayer("target")),
 			PlainText(UnitInParty("target")),
 			PlainText(UnitInRaid("target") ~= nil),
 			PlainText(UnitCanAssist("player", "target")),
 			tostring(BW.CanBuff("target") and true or false),
-			PlainText(not UnitIsPlayer("target") and UnitPlayerControlled("target"))
+			PlainText(not UnitIsPlayer("target") and UnitPlayerControlled("target")),
+			PlainText(UnitIsPVP("target"))
 		)
 		--[[
 		    Who the Target list takes: a player outside your group who isn't

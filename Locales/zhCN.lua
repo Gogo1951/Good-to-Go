@@ -8,12 +8,12 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The add-on has two names. ADDON_TITLE, the full name, is for window
-    titles, the front of every chat print ("Good to Go // ..."),
-    and anywhere the add-on is talked about; ADDON_SHORT_NAME is for tooltip
-    lines and the end of every sent message ("... // GtG"). Both are proper nouns and
-    stay as written in every locale, as does the full name inside any
-    sentence below.
+    The add-on has two names. ADDON_TITLE, the full name, is for the front
+    of every chat print ("Good to Go // ...") and anywhere the add-on is
+    talked about; ADDON_SHORT_NAME is for window titles ("Restock List //
+    GtG"), tooltip and menu lines, and the end of every sent message
+    ("... // GtG"). Both are proper nouns and stay as written in every
+    locale, as does the full name inside any sentence below.
 ]]
 L["ADDON_TITLE"] = "Good to Go"
 L["ADDON_SHORT_NAME"] = "GtG"
@@ -120,7 +120,7 @@ L["MESSAGE_MACROS_READY_TAB"] =
 L["MESSAGE_IGNORE_ADDED"] = "%s 已加入此角色的忽略列表。"
 -- A click on an item in the mini-map menu's Ignore List. %s is the item's link.
 L["MESSAGE_IGNORE_REMOVED"] = "%s 已从此角色的忽略列表中移除。"
--- The mini-map button's Middle-Click: %d is how many items it took off the list, exactly one, or two or more.
+-- The mini-map menu's Clear Ignore List row: %d is how many items it took off the list, exactly one, or two or more.
 L["MESSAGE_IGNORE_CLEARED_ONE"] = "已从此角色的忽略列表中清除 1 件物品。"
 L["MESSAGE_IGNORE_CLEARED_MANY"] = "已从此角色的忽略列表中清除 %d 件物品。"
 
@@ -258,15 +258,12 @@ L["MINIMAP_RESTOCKER_NOTHING_LOW"] = "没有快用完或已用完的物品。"
 
 --[[
     The mini-map menu's Restocker block: a line saying what the list is
-    for, and the click its Open row names.
+    for, then its Open row.
     "Your list" in the description and in MINIMAP_RESTOCKER_EMPTY is this
-    list. The Options row is always the menu's last, its click on its right.
+    list. The Options row is always the menu's last.
 ]]
 L["MENU_RESTOCKER_DESCRIPTION"] = "购买你清单上的物品，并在银行存取。"
-L["MENU_CLICK_SHIFT_RIGHT"] = "Shift + 右键点击"
 L["MENU_OPTIONS"] = "GtG 选项"
-L["MENU_CLICK_SHIFT_LEFT"] = "Shift + 左键点击"
-L["MENU_CLICK_SHIFT_MIDDLE"] = "Shift + 中键点击"
 -- The Restocker block's Open row hover while the Restocker is off.
 L["MENU_RESTOCKER_OPEN_OFF_DESCRIPTION"] = "打开你的补货清单。开启 Restocker 后才能使用。"
 
@@ -301,6 +298,7 @@ L["NOTE_MACRO_MANA_GEM"] = "法力宝石宏"
 L["NOTE_MACRO_HEALTHSTONE"] = "治疗石宏"
 L["NOTE_MACRO_SOULSTONE"] = "灵魂石宏"
 L["NOTE_MACRO_POISONS"] = "毒药宏"
+L["NOTE_MACRO_EXPLOSIVES"] = "爆炸物宏"
 
 -- Hunter. NOTE_PET_MEND_CLICK is the click that casts Mend Pet: a Right-Click, or any click during combat.
 L["NOTE_PET_CALL_FEED_REVIVE"] = "召唤、喂养或复活"
@@ -328,8 +326,10 @@ L["NOTE_CREATE_LOWER_RANK"] = "制造低等级"
 L["NOTE_MAGE_TARGET_LEVEL"] = "以等级较低的玩家为目标，即可按其等级制造。"
 L["NOTE_WARLOCK_TARGET_LEVEL"] = "以等级较低的玩家为目标，即可按其等级制造一颗治疗石。"
 
--- Rogue. A Left-Click and a Right-Click on the Poisons macro show the client's slot names, MAINHANDSLOT and SECONDARYHANDSLOT.
-L["NOTE_POISONS_WINDOW"] = "毒药窗口"
+-- Rogue. The Poisons macro's click rows: Left-Click applies to the off hand, Right-Click to the main hand, Middle-Click opens the Poisons window.
+L["NOTE_APPLY_OFF_HAND"] = "涂到副手"
+L["NOTE_APPLY_MAIN_HAND"] = "涂到主手"
+L["NOTE_OPEN_POISONS_WINDOW"] = "打开毒药窗口"
 L["NOTE_POISONS_REPLACED"] = "自动替换旧毒药。"
 
 --------------------------------------------------------------------------------
@@ -365,6 +365,8 @@ L["MENU_OPEN"] = "打开"
 L["MENU_CLICK_LEFT"] = "左键点击"
 L["MENU_CLICK_RIGHT"] = "右键点击"
 L["MENU_CLICK_MIDDLE"] = "中键点击"
+-- The last line of a menu row's tooltip when the mini-map button's Right-Click does the same job.
+L["MENU_SHORTCUT"] = "快捷方式：右键点击小地图按钮。"
 
 -- The words on the right of a block's title.
 L["MENU_ON"] = "开启"
@@ -382,8 +384,8 @@ L["MENU_MORE_FEATURES"] = "更多功能"
 L["MENU_FEATURE_COUNT_ON"] = "%d 项开启"
 L["MENU_FEATURE_COUNT_OFF"] = "%d 项关闭"
 
--- The mini-map menu's Enhanced Spellbook block, above the class macros: a line saying what it's for, then Open (MENU_OPEN),
--- as Shift + Left-Click on the button does. MENU_OPEN_SPELLBOOK is the click line on the spellbook tab's tooltip.
+-- The mini-map menu's Enhanced Spellbook block, above the class macros: a line saying what it's for, a Toggle row, then
+-- Open (MENU_OPEN) while it's on. MENU_OPEN_SPELLBOOK is the click line on the spellbook tab's tooltip.
 L["MENU_SPELLBOOK_DESCRIPTION"] = "一键为每个法术创建鼠标悬停宏。"
 L["MENU_OPEN_SPELLBOOK"] = "打开增强法术书"
 
@@ -523,7 +525,11 @@ L["SAMPLE_EXAMPLE"] = "示例"
 
 -- A Reset button, which puts the settings it sits under, or the whisper box beside it, back to their defaults.
 L["OPTIONS_RESET"] = "重置"
+-- Reset Position: a window's row on its own panel; the button puts the window back where it first appears.
+L["OPTIONS_RESET_POSITION"] = "重置位置"
+L["OPTIONS_RESET_POSITION_DESCRIPTION"] = "将窗口放回它最初出现的位置。"
 L["OPTIONS_FEATURE_OFF_STATUS"] = "%s已关闭，因此这些设置不会生效。它的开关在%s页面上。"
+L["OPTIONS_SWITCH_OFF_HERE"] = "%s已关闭，因此这些设置不会生效。"
 
 --[[
     The whisper composer around every whisper a player words themselves, on the Buff Duty and Rank Watch
@@ -621,7 +627,7 @@ L["OPTIONS_MACRO_TOGGLE_DESCRIPTION"] = "创建并维护此宏，取消勾选时
 ]]
 L["OPTIONS_FOOD_WATER_HEADER"] = "食物与饮料"
 L["OPTIONS_FOOD_DRINKS_DESCRIPTION"] =
-	"你的食物和水宏会吃喝你身上最好的东西。这些选项改变什么算是最好的，以及你如何进食和饮水。为了增益而使用的增益食物和卷轴位于增益值班的自身增益页面。"
+	"你的食物和水宏会吃喝你身上最好的东西。这些选项改变什么算是最好的，以及你如何进食和饮水。为了增益而使用的增益食物和卷轴在增益值班下有各自的页面。法师右键点击可制造更多；以等级较低的玩家为目标，即可按其等级制造。"
 L["OPTIONS_FOOD_ORDER_HEADER"] = "哪种食物优先"
 L["OPTIONS_FOOD_ORDER_DESCRIPTION"] =
 	"在两种食物或饮料之间，你的宏会使用恢复量更高的那种。这些选项会改变这个顺序。"
@@ -635,7 +641,7 @@ L["OPTIONS_BUFF_FOOD_WHEN_FED"] = "已进食充分时仍食用增益食物"
 L["OPTIONS_BUFF_FOOD_AS_FOOD_DESCRIPTION_FORMAT"] =
 	'你的食物和水宏会像对待其他食物一样对待增益食物，食用恢复量最高的那种。关闭后会把它留给增益值班，在你需要"%s"时提供，除非你身上只有它。'
 
--- The scroll types on Buff Duty's Self-Buffs page. The other five are labeled with the client's stat names (SPELL_STAT1_NAME to SPELL_STAT5_NAME); Protection has none.
+-- The scroll types on Buff Duty's Scrolls page. The other five are labeled with the client's stat names (SPELL_STAT1_NAME to SPELL_STAT5_NAME); Protection has none.
 L["OPTIONS_SCROLL_TYPES"] = "在检查中包含卷轴类型"
 L["OPTIONS_SCROLL_PROTECTION"] = "保护"
 -- Hover text on each scroll type and pet food type; %s is the scroll type's label or the pet food's item name.
@@ -643,8 +649,8 @@ L["OPTIONS_BUFF_TYPE_DESCRIPTION"] = '检查缺少的增益时包含"%s"。'
 
 -- Use Conjured Food & Water First, the first option under Which Food Comes First.
 L["OPTIONS_CONJURED_FIRST"] = "优先使用魔法制造的食物与水"
-L["OPTIONS_CONJURED_FIRST_DESCRIPTION"] =
-	"魔法制造的食物和水不花钱，并会在你下线后不久消失，因此你的食物和水宏会优先使用它们，即使背包里有恢复量更高的物品。"
+L["OPTIONS_CONJURED_FIRST_DESCRIPTION_FORMAT"] =
+	'魔法制造的食物和水不花钱，并会在你下线后不久消失，因此你的食物和水宏会优先使用它们，即使背包里有恢复量更高的物品。在你没有"%s"时，你的食物宏会先吃增益食物。'
 L["OPTIONS_CONJURED_FIRST_MODE_DESCRIPTION"] =
 	"选择魔法制造的食物和水在哪些等级优先：任何等级、仅练级时或仅满级时。下方的复选框选择在哪些队伍中。"
 
@@ -692,12 +698,12 @@ L["OPTIONS_INCLUDE_MANA_RUNES"] = "将符文与其他法力物品加入法力宝
 L["OPTIONS_INCLUDE_MANA_RUNES_DESCRIPTION_FORMAT"] =
 	"将你的%s、%s，以及任何其他与法力宝石共享冷却时间的法力物品，和你的法力宝石一同排序，这样当其中某件物品是你的最佳选择，或你的法力宝石用完时，法力宝石宏就会使用该物品。"
 
--- Refresh Pet Food Under, closing the Hunter section on Class Macros: "Refresh Under", as Buff Duty names its timing.
-L["OPTIONS_REAPPLY"] = "宠物食物增益剩余低于此值时补充"
-L["OPTIONS_REAPPLY_DESCRIPTION"] =
-	"当你宠物的食物增益剩余时间低于你所设阈值时，将其视为已到期，让你的食物宏在开怪前提供新的增益。"
+-- Refresh Food Buffs Under, after the buff food rows on Food & Drinks: "Refresh Under", as Buff Duty names its timing.
+L["OPTIONS_REAPPLY"] = "食物增益剩余低于此值时补充"
+L["OPTIONS_REAPPLY_DESCRIPTION_FORMAT"] =
+	"当%s、你宠物的食物增益和卷轴增益的剩余时间低于你所设阈值时，将其视为已到期，让你的宏在开怪前提供新的增益。"
 --[[
-    Threshold dropdown, beside the Refresh Pet Food Under toggle, whose label
+    Threshold dropdown, beside the Refresh Food Buffs Under toggle, whose label
     carries the "under", so the values are plain durations.
 ]]
 L["OPTIONS_REAPPLY_THRESHOLD_DESCRIPTION"] =
@@ -954,7 +960,7 @@ L["OPTIONS_READINESS_WELL_FED_DESCRIPTION_FORMAT"] = '缺少"%s"增益时提醒�
 L["OPTIONS_READINESS_PET_FOOD_BUFF_DESCRIPTION_FORMAT"] =
 	'你的宠物缺少"%s"增益时提醒。需要在职业宏页面开启使用宠物食物增益，并且宠物在场。'
 L["OPTIONS_READINESS_SCROLLS_DESCRIPTION"] =
-	"提醒缺少的卷轴增益，适用于增益值班的自身增益页面中勾选的卷轴类型。"
+	"提醒缺少的卷轴增益，适用于增益值班的卷轴页面中勾选的卷轴类型。"
 --[[
     The one entry that asks about the GROUP rather than the player's own bags,
     which the helper text has to say outright: a raid carrying seven unused
@@ -979,12 +985,12 @@ L["OPTIONS_READINESS_OFF_HAND_DESCRIPTION_STACKED"] =
 	"副手武器缺少临时附魔时提醒。潜行者需要两项：毒药，加上油剂或磨刀石；其他职业有任意一项即可。"
 --[[
     Names the OTHER threshold so the two cannot be mistaken for each other: the
-    Class Macros page has one that decides when a macro treats a buff as spent, and
+    Food & Drinks page has one that decides when a macro treats a buff as spent, and
     this one only decides when the report mentions it.
 ]]
 L["OPTIONS_READINESS_EXPIRING"] = "增益到期时间少于"
 L["OPTIONS_READINESS_EXPIRING_BUFFS_DESCRIPTION"] =
-	"列出你身上所有即将到期的增益，不只是 Good to Go 施加的那些；此项与职业宏页面的补充即将到期的增益互不相关。"
+	"列出你身上所有即将到期的增益，不只是 Good to Go 施加的那些；此项与食物与饮料页面的食物增益剩余低于此值时补充互不相关。"
 -- %s is a whole or half number of minutes.
 L["OPTIONS_READINESS_EXPIRING_MINUTES"] = "%s 分钟"
 -- The one-minute entry alone; one plural template cannot render it grammatically.
@@ -1156,7 +1162,9 @@ L["RANK_WATCH_IGNORED_NONE"] = "暂时没有。"
 L["RANK_WATCH_IGNORED_REMOVE"] = "取消忽略"
 L["RANK_WATCH_IGNORE_TARGET"] = "忽略目标"
 L["RANK_WATCH_IGNORE_TARGET_DESCRIPTION"] = "将你当前选中的玩家加入列表。"
+L["RANK_WATCH_IGNORE_TARGET_CAPTION"] = "你的目标"
 L["RANK_WATCH_IGNORE_ADDED"] = "等级守望现在会忽略 %s。"
+L["RANK_WATCH_IGNORE_REMOVED"] = "等级守望会再次提醒 %s。"
 L["RANK_WATCH_IGNORE_NOT_FOUND"] = "找不到 %s。请与对方组队或选中对方，然后再试一次。"
 -- %s is the command, /gtg ignore Name (RANK_WATCH_IGNORE_COMMAND), drawn in blue.
 L["RANK_WATCH_IGNORE_NO_TARGET"] = "请选中一名玩家，或输入 %s。"
@@ -1334,6 +1342,7 @@ L["RESTOCKER_OUT_OF_GOLD_RESERVE"] =
 
 -- /restock help lines. The command literals stay in code; these are the descriptions, and the show line reuses RESTOCKER_COMMAND_DESCRIPTION.
 
+L["RESTOCKER_HELP_TITLE"] = "补货清单命令"
 -- Stands for the list name the player types after a /restock profile subcommand.
 L["RESTOCKER_HELP_NAME_PLACEHOLDER"] = "[名称]"
 L["RESTOCKER_HELP_PROFILE_ADD"] = "添加一个以该名称命名的清单。"
@@ -1363,8 +1372,8 @@ L["RESTOCKER_HELP_PROFILE_USE"] = "将此角色切换到该名称的清单。"
     food staples reuse the DIET_ keys above, so each food row carries the
     client's own pet diet name.
 
-    The title is its own, and the call site puts the add-on's full name
-    after it (STARTER_POPUP_TITLE // ADDON_TITLE): at login this window
+    The title is its own, and the call site puts the add-on's short name
+    after it (STARTER_POPUP_TITLE // ADDON_SHORT_NAME): at login this window
     opens with nothing else of the add-on's on screen, so its title bar is
     all that says whose it is.
 
@@ -1439,7 +1448,7 @@ L["STARTER_POPUP_COUNT_DESCRIPTION"] =
 
 --[[
     Restock List window UI. The title names what the window holds, before the
-    add-on's full name (RESTOCKER_WINDOW_TITLE // ADDON_TITLE); the feature
+    add-on's short name (RESTOCKER_WINDOW_TITLE // ADDON_SHORT_NAME); the feature
     that acts on it stays "Restocker".
 ]]
 L["RESTOCKER_WINDOW_TITLE"] = "补货清单"
@@ -1766,12 +1775,15 @@ L["BUFF_DUTY_HIDE_IN_COMBAT"] = "战斗中隐藏"
 L["BUFF_DUTY_HIDE_IN_COMBAT_DESCRIPTION"] =
 	"在战斗中隐藏窗口。战斗中列表无法更新，因此保持显示的窗口会停留在最后的状态，直到战斗结束。"
 L["BUFF_DUTY_SHOW_HEADER"] = "在窗口中显示"
-L["BUFF_DUTY_SHOW_DESCRIPTION"] =
-	"将你自己的增益、为你施放增益的陌生人以及你的目标加入窗口。"
+L["BUFF_DUTY_SHOW_DESCRIPTION"] = "将你自己的增益加入窗口。"
+L["BUFF_DUTY_OTHERS_DESCRIPTION"] = "将为你施放增益的陌生人以及你的目标加入窗口。"
 -- Return the Favor, Your Target and Ask for Buffs each name both their switch and the window row it adds.
 L["BUFF_DUTY_FAVOR_ENABLE"] = "礼尚往来"
 L["BUFF_DUTY_FAVOR_ENABLE_DESCRIPTION"] =
 	"列出最近为你施放增益的陌生人，以及你可以回赠他们的增益。右键点击图标可将某人从列表中移除。"
+L["BUFF_DUTY_BUFF_PVP_FLAGGED"] = "为已开启 PvP 的玩家施放增益"
+L["BUFF_DUTY_BUFF_PVP_FLAGGED_DESCRIPTION"] =
+	"为已开启 PvP 的玩家施放增益也会让你开启 PvP。此项关闭且你未开启 PvP 时，增益值班不会为他们施放增益，也不会施放会波及他们的小队增益，而是在聊天中提示你。"
 L["BUFF_DUTY_FAVOR_SECONDS_DESCRIPTION"] = "设置陌生人在最后一次施放增益后保留在列表中的时间。"
 L["BUFF_DUTY_TARGET_ENABLE"] = "你的目标"
 L["BUFF_DUTY_TARGET_ENABLE_DESCRIPTION"] =
@@ -1850,28 +1862,51 @@ L["BUFF_DUTY_SELF_REFRESH_OFF"] = "关闭"
 L["BUFF_DUTY_SELF_REFRESH_MISSING"] = "缺失时"
 -- %s is a duration from the client, like "5 Minutes".
 L["BUFF_DUTY_SELF_REFRESH_UNDER"] = "剩余不足%s"
-L["BUFF_DUTY_SELF_REFRESH_DESCRIPTION"] =
-	"设置 %s 何时显示：从不、消失后，或剩余时间少于此值时。"
--- The Self-Buffs panel's last box: consumables any class keeps up on itself (Winterfall Firewater), with a muted note after its name.
-L["BUFF_DUTY_SELF_ITEMS_HEADER"] = "消耗品"
-L["BUFF_DUTY_SELF_ITEMS_NOTE"] = "背包中有时"
 --[[
-    Hover text on the Consumables box's Well Fed row, whose buff food is
+    Categories of buffs you keep up on yourself, each a section of the Buff
+    Duty window and a page under Buff Duty, after Self-Buffs, Well Fed (the
+    client's name), Weapon Buffs and Scrolls: elixirs, then consumables with
+    a setting of their own.
+]]
+L["BUFF_DUTY_ROW_ELIXIRS"] = "合剂或药剂"
+L["BUFF_DUTY_ROW_OTHER"] = "其他增益"
+-- Each category's page opens with When to Use, a dropdown of when the window shows that category.
+L["BUFF_DUTY_ROW_WHEN"] = "使用时机"
+L["BUFF_DUTY_ROW_WHEN_DESCRIPTION"] =
+	"设置窗口何时显示这些增益：总是、在任何小队或团队中，或仅在团队中。"
+L["BUFF_DUTY_ROW_WHEN_ALWAYS"] = "总是"
+L["BUFF_DUTY_ROW_WHEN_GROUP"] = "小队或团队中"
+L["BUFF_DUTY_ROW_WHEN_RAID"] = "团队中"
+-- Then a checkbox for whether the key uses the category's icons. %s is the key's name, BUFF_KEY.
+L["BUFF_DUTY_ROW_KEY"] = "用于%s"
+L["BUFF_DUTY_ROW_KEY_DESCRIPTION"] =
+	"你的%s按键也会使用这些图标。关闭时，只能在窗口中点击使用。"
+-- The Well Fed page's description.
+L["BUFF_DUTY_FOOD_PAGE_DESCRIPTION"] = "你携带的增益食物，在你缺少其增益时显示在窗口中。"
+--[[
+    Hover text on the Well Fed page's Well Fed row, whose buff food is
     whichever the Food macro would eat. %s is the client's name for Well Fed.
 ]]
 L["BUFF_DUTY_WELL_FED_DESCRIPTION_FORMAT"] =
 	'当你缺少"%s"且身上有增益食物时显示。在窗口中点击它即可食用最好的一种。'
--- The Consumables box's Scrolls row: one icon per scroll buff you're missing, for the types checked under it.
+-- The Scrolls page and its row: one icon per scroll buff you're missing, for the types checked under it.
 L["BUFF_DUTY_SCROLLS"] = "卷轴"
+L["BUFF_DUTY_SCROLLS_PAGE_DESCRIPTION"] = "你携带的卷轴，在你缺少其增益时显示在窗口中。"
 L["BUFF_DUTY_SCROLLS_DESCRIPTION"] =
 	"对于你缺少的每种卷轴增益，只要身上带有该卷轴，就显示一个卷轴。在窗口中点击即可阅读。监视的卷轴类型为下方勾选的那些。"
+-- The Flasks or Elixirs page's description, and its Elixirs row: one icon per elixir in your bags whose buff you're missing.
+L["BUFF_DUTY_ELIXIRS_PAGE_DESCRIPTION"] =
+	'你携带的药剂，在你缺少其增益时显示在窗口中。要排除某个药剂，请在窗口选项的"合剂或药剂"下将它关闭。'
+L["BUFF_DUTY_ELIXIRS"] = "药剂"
+L["BUFF_DUTY_ELIXIRS_DESCRIPTION"] =
+	"为背包中每个你缺少其增益的药剂显示一个图标，除非你身上已有的增益占据了它的位置。在窗口中点击即可饮用。"
+-- The Other Buffs page's description: consumables with a dropdown of their own, like Winterfall Firewater.
+L["BUFF_DUTY_OTHER_PAGE_DESCRIPTION"] =
+	"你携带的其他消耗品，各有各的设置，在你缺少其增益时显示在窗口中。"
 -- The Weapon Buffs panel, under Buff Duty after Self-Buffs.
 L["BUFF_DUTY_WEAPON_PANEL_HEADER"] = "武器增益"
 L["BUFF_DUTY_WEAPON_DESCRIPTION"] =
 	"勾选每把武器应保持的效果。当效果缺失或即将结束，且物品在你的背包中并适用于该武器时，窗口会提供它。"
--- The one timing for every weapon buff, at the top of the panel, captioned Refresh Under (BUFF_DUTY_REFRESH).
-L["BUFF_DUTY_WEAPON_REFRESH_DESCRIPTION"] =
-	"设置武器增益何时再次提供：消失后，或剩余时间少于此值时。"
 -- The boxes for the weapon items any class can use, after the rogue and shaman boxes.
 L["BUFF_DUTY_WEAPON_KIND_OIL"] = "油"
 L["BUFF_DUTY_WEAPON_KIND_STONE"] = "磨刀石"
@@ -1882,10 +1917,10 @@ L["BUFF_DUTY_WEAPON_KIND_LURE"] = "鱼饵"
 ]]
 L["BUFF_DUTY_WEAPON_PICK_DESCRIPTION"] =
 	"提供%s，用于你的%s武器。当武器上没有任何已勾选的选项时，会提供你拥有的每一种。"
-L["BUFF_DUTY_SELF_ENABLE"] = "你的自身增益"
+L["BUFF_DUTY_SELF_ENABLE"] = "自身增益"
 L["BUFF_DUTY_SELF_ENABLE_DESCRIPTION"] =
 	"当你自己的增益缺失或即将结束时，将其显示在窗口顶部：包括只能对自己施放的增益（例如护甲类法术或心灵之火），以及你身上的队伍增益。可在自身增益中选择要显示哪些。"
-L["BUFF_DUTY_WEAPON_ENABLE"] = "你的武器增益"
+L["BUFF_DUTY_WEAPON_ENABLE"] = "武器增益"
 L["BUFF_DUTY_WEAPON_ENABLE_DESCRIPTION"] =
 	"将武器上缺失或即将结束的毒药、武器强化、油、磨刀石和鱼饵，与你的自身增益一起显示在窗口顶部。点击即可施加。可在武器增益中选择要显示哪些。"
 
@@ -1915,11 +1950,29 @@ L["BUFF_DUTY_MENU_OPACITY"] = "窗口不透明度"
 L["BUFF_DUTY_MENU_OPACITY_DESCRIPTION"] =
 	"设置增益值班窗口背景的不透明度。文字和图标保持不变。"
 L["BUFF_DUTY_MENU_OPACITY_PERCENT"] = "%d%%"
--- The Options menu's Buff Food row, and its flyout of the buff food in your bags. In the food row's hover, the first %s is the food, the second the Well Fed buff's name.
+--[[
+    The window's category menus: each category line's arrow opens one, and the
+    Options line's Show in Window opens each. Show in Buff Duty, Use (when),
+    Show (how soon), Use with Keybind, Show Missing Inventory, then what the
+    category uses, each On or Off. Missing Inventory! is the red line in the
+    window. %s in the item hover is the spell, food, scroll or elixir.
+]]
+L["BUFF_DUTY_MISSING_INVENTORY"] = "缺少物品！"
+L["BUFF_DUTY_MENU_SHOW_IN_BUFF_DUTY"] = "在增益值班中显示"
+L["BUFF_DUTY_MENU_SHOW_IN_BUFF_DUTY_DESCRIPTION"] = "在增益值班窗口中显示此类别。"
+L["BUFF_DUTY_MENU_SHOW"] = "显示"
+L["BUFF_DUTY_ROW_SHOW_DESCRIPTION"] = "设置这些增益何时显示：消失后，或剩余时间少于此值时。"
+L["BUFF_DUTY_MENU_SHOW_MISSING_INVENTORY"] = "显示缺少物品"
+L["BUFF_DUTY_ROW_OUT_DESCRIPTION"] =
+	'当你没有该增益且背包中没有能提供它的物品时，在窗口中显示"缺少物品！"。'
+L["BUFF_DUTY_MENU_IN_YOUR_BAGS"] = "背包中"
+L["BUFF_DUTY_MENU_YOUR_SPELLS"] = "你的法术"
+L["BUFF_DUTY_MENU_NONE_IN_BAGS"] = "背包中没有。"
+L["BUFF_DUTY_MENU_NO_SPELLS"] = "你的职业没有增益。"
+L["BUFF_DUTY_MENU_OTHER_PLAYERS"] = "其他玩家"
+L["BUFF_DUTY_MENU_ITEM_DESCRIPTION_FORMAT"] = "缺少其增益时在窗口中提供%s。关闭则跳过。"
+-- The Well Fed category's name while the client hasn't named the Well Fed buff yet.
 L["BUFF_DUTY_MENU_BUFF_FOOD"] = "增益食物"
-L["BUFF_DUTY_MENU_FOOD_DESCRIPTION_FORMAT"] =
-	'在你需要"%2$s"时提供%1$s。关闭后会跳过它，改用背包中次好的增益食物。'
-L["BUFF_DUTY_MENU_NO_BUFF_FOOD"] = "背包中没有增益食物。"
 -- The Self-Buffs buff food icon, while you aren't Well Fed.
 L["BUFF_DUTY_TOOLTIP_EAT"] = "从背包中食用一个。请保持坐下，直到获得进食充分效果。"
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "对 %s 及其小队施放。"
@@ -1934,6 +1987,8 @@ L["BUFF_DUTY_TOOLTIP_ASKED"] = "已请求 %s。%d 分钟后可再次请求。"
 -- An Ask for Buffs icon's menu, its ask rows: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it: %s is one or two names (LIST_PAIR_FORMAT), or BUFF_DUTY_OTHERS_ASK_PEOPLE past two.
 L["BUFF_DUTY_OTHERS_HINT_ASK"] = "在%s中请求增益"
 L["BUFF_DUTY_OTHERS_HINT_WHISPER"] = "密语%s"
+L["BUFF_DUTY_OTHERS_SHORTCUT_LEFT"] = "快捷方式：左键点击该增益的图标。"
+L["BUFF_DUTY_OTHERS_SHORTCUT_RIGHT"] = "快捷方式：右键点击该增益的图标。"
 -- An Ask for Buffs menu's name row, on the right: the whole minutes left on that player's buff, or Missing once there is none.
 L["BUFF_DUTY_OTHERS_MINUTES"] = "%d 分钟"
 L["BUFF_DUTY_OTHERS_MISSING"] = "缺少"
@@ -1953,13 +2008,15 @@ L["BUFF_DUTY_OTHERS_ASK_PEOPLE"] = "%d 名玩家"
     checkbox, the When to Show header, then the options command.
 ]]
 L["BUFF_DUTY_CLOSED"] =
-	'增益值班已隐藏，直到你加入队伍、下次登录或重载界面。要立即恢复，请左键点击小地图按钮。要为%1$s职业保持关闭，请在 %4$s 的"%3$s"下取消勾选"%2$s"。'
+	'增益值班已隐藏，直到你加入队伍、下次登录或重载界面。要立即恢复，请在小地图菜单的"增益值班"下点击"切换"。要为%1$s职业保持关闭，请在 %4$s 的"%3$s"下取消勾选"%2$s"。'
 
 -- The Cast Next Buff key: its name in the game's Key Bindings list and the root panel's Key Bindings section, then the notices a press shows.
 L["BUFF_KEY"] = "施放下一个增益"
 -- %s is a player's name.
 L["BUFF_KEY_WAITING"] = "正在等待 %s 进入范围。"
 L["BUFF_KEY_DONE"] = "没有需要施放的增益了。"
+-- Printed when Buff Duty or the key skips a PvP-flagged player. %s is the player's name.
+L["BUFF_DUTY_PVP_FLAGGED"] = "%s 已开启 PvP，你需要手动为其施放增益。"
 L["BUFF_KEY_OFF"] = "增益值班已关闭。"
 --[[
     The Buff Duty window's last line, under Options, while the Cast Next Buff key has none: the options
@@ -1972,7 +2029,7 @@ L["BUFF_DUTY_KEY_TIP"] = "在 %s 中为 %s 绑定按键，即可一键施放这�
 -- Spellbook
 --------------------------------------------------------------------------------
 
--- The window's first tab, and its title before "// Good to Go", is TAB_ENHANCED_SPELLBOOK (Options Panel above).
+-- The window's first tab, and its title before "// GtG", is TAB_ENHANCED_SPELLBOOK (Options Panel above).
 
 -- Page: Sections
 L["SECTION_UNLEARNED"] = "未学会"
@@ -2346,7 +2403,7 @@ L["PAGE_CATEGORY_SETTINGS_DESCRIPTION"] =
 -- after a category's count, where it carries on from the column before
 L["PAGE_CONTINUED"] = "（续）"
 
--- What's Next? Tab: the window's second tab and its title before "// Good to Go"
+-- What's Next? Tab: the window's second tab and its title before "// GtG"
 L["WHATS_NEXT_TITLE"] = "接下来学什么？"
 L["WHATS_NEXT_EMPTY"] = "没有可列出的法术。"
 -- The same page while Show Known Spells is off: %s is that toggle's name (WHATS_NEXT_SHOW_KNOWN).
@@ -2420,7 +2477,7 @@ L["WHATS_NEXT_SHOW_TALENTS_RUNES"] = "显示未选的天赋和符文"
 L["WHATS_NEXT_SHOW_TALENTS_DESCRIPTION"] =
 	"同时列出你未选的天赋法术。这些需要花费天赋点学会，而不是向训练师学习。"
 
--- Pet Spellbook Tab: a pet class's third tab and its title before "// Good to Go"
+-- Pet Spellbook Tab: a pet class's third tab and its title before "// GtG"
 L["PET_SPELLBOOK_TITLE"] = "宠物法术书"
 L["PET_SPELLBOOK_EMPTY"] = "你的宠物没有可列出的法术。"
 L["PET_SPELLBOOK_NO_PET"] = "宠物不在场。召唤你的宠物来查看它的法术。"
@@ -2431,7 +2488,7 @@ L["PET_SPELLBOOK_STATUS_PASSIVE"] = "被动"
 L["PET_SPELLBOOK_AUTOCAST_ON"] = "自动施法开启"
 L["PET_SPELLBOOK_AUTOCAST_OFF"] = "自动施法关闭"
 
--- Pet What's Next? Tab: a hunter's or warlock's fourth tab and its title before "// Good to Go"
+-- Pet What's Next? Tab: a hunter's or warlock's fourth tab and its title before "// GtG"
 L["WHATS_NEXT_PET_TITLE"] = "宠物接下来学什么？"
 L["WHATS_NEXT_PET_EMPTY"] = "没有可列出的宠物技能。"
 -- the footer's right: the pet out, or that there's none

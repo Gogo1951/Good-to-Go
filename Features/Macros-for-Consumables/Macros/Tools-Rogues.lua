@@ -253,18 +253,20 @@ ns.RegisterMacroType({
 	typeName = "Poisons",
 
 	customUpdate = function(forced)
-		if not ns.isRogue then
-			return
-		end
-		-- A flavor with no Poisons skill (Mists) has nothing for the macro to apply, so it is never made there.
-		if ns.IsMacroEnabled("Poisons") and ns.POISONS_SPELL_ID then
-			UpdatePoisonsMacro(forced)
-		else
+		--[[
+		    A flavor with no Poisons skill (Mists) has nothing for the macro to apply, so it is never made there.
+		    Unticked or unmakeable, the macro goes on any class: it sits in the General macros every character shares.
+		]]
+		if not (ns.IsMacroEnabled("Poisons") and ns.POISONS_SPELL_ID) then
 			local config = MACRO_CONFIG["Poisons"]
 			if config then
 				ns.DeleteMacroByName(config.macro)
 				ns.ResetPoisonMacroState()
 			end
+			return
+		end
+		if ns.isRogue then
+			UpdatePoisonsMacro(forced)
 		end
 	end,
 })

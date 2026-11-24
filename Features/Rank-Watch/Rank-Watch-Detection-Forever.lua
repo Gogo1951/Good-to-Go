@@ -36,10 +36,10 @@ local pending = {} -- castGUID -> { target name, time }
 --[[
     UNIT_SPELLCAST_SENT names the recipient but gives neither unit nor GUID, so
     the name is mapped back to a unit we hold, in the order people cast: the
-    player themself, at the target, a mouseover or focus macro, then a group
-    member.
+    player themself, their own pet, at the target, a mouseover or focus macro,
+    then a group member.
 ]]
-local CAST_AT_UNITS = { "player", "target", "mouseover", "focus" }
+local CAST_AT_UNITS = { "player", "pet", "target", "mouseover", "focus" }
 
 local function ResolveCastTargetUnit(name)
 	local short = Ambiguate(name, "short")

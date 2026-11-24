@@ -131,7 +131,7 @@ local function CreateMacroButton(parent)
 	button:SetSize(TILE_WIDTH, TILE_HEIGHT)
 	button.icon = button:CreateTexture(nil, "ARTWORK", nil, -1)
 	button.icon:SetSize(ICON_SIZE, ICON_SIZE)
-	button.icon:SetPoint("LEFT", 1, 0)
+	button.icon:SetPoint("LEFT", 0, 0)
 	if HasAtlas(ATLAS_MASK) then
 		local mask = button:CreateMaskTexture()
 		mask:SetAtlas(ATLAS_MASK, false)

@@ -97,7 +97,7 @@ local function CreateOtherwise(parent)
 	Box(row, PANEL_FILL, ROW_EDGE)
 	local label = SizedFontString(row, "GameFontHighlightSmall", 13)
 	label:SetTextColor(unpack(MUTED_INK))
-	label:SetPoint("LEFT", 24, 0)
+	label:SetPoint("LEFT", 32, 0) -- under the rows' condition dropdowns
 	label:SetWidth(OTHERWISE_LABEL_WIDTH)
 	label:SetJustifyH("LEFT")
 	label:SetText(L["CONDITIONALS_OTHERWISE"])

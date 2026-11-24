@@ -145,7 +145,7 @@ ns.BUFF_DUTY_PET_ICONS = {
 	},
 }
 
--- { class, ranks = { { spell id, level learned } }, auras, exclusive, needsPet, castLast, noShadowform, default (minutes left, MISSING or OFF) }, -- Name
+-- { class, ranks = { { spell id, level learned } }, auras, exclusive, needsPet, castLast, noShadowform, party (it lands on your party too), default (minutes left, MISSING or OFF) }, -- Name
 ns.BUFF_DUTY_SELF_SPELLS = {
 	-- Hunter --------------------------------------------------------------------
 	{
@@ -320,6 +320,7 @@ ns.BUFF_DUTY_SELF_SPELLS = {
 	{
 		class = "WARRIOR",
 		ranks = { { 6673, 1 }, { 5242, 12 }, { 6192, 22 }, { 11549, 32 }, { 11550, 42 }, { 11551, 52 }, { 25289, 60 } },
+		party = true,
 		default = MISSING,
 	}, -- Battle Shout
 }
@@ -431,6 +432,7 @@ ns.BUFF_DUTY_WEAPON_ITEMS = {
 	{ 6532, 0, 265, 1048576, LURE, 30 }, -- Bright Baubles
 	{ 20748, 45, 2629, 0, OIL, 55 }, -- Brilliant Mana Oil
 	{ 20749, 45, 2628, 0, OIL, 55 }, -- Brilliant Wizard Oil
+	{ 291005, 0, 8773, 1048576, LURE, 20 }, -- Camper's Lure
 	{ 2863, 5, 13, 33219, STONE, 15 }, -- Coarse Sharpening Stone
 	{ 3240, 5, 20, 9264, STONE, 15 }, -- Coarse Weightstone
 	{ 23122, 50, 2684, 1097203, STONE, 55 }, -- Consecrated Sharpening Stone
@@ -499,7 +501,7 @@ ns.BUFF_DUTY_RESURRECTIONS = {
 How We Got the Data
 
 Last Validated
-	2026-11-19, wago.tools, WoW Forever 1.60.1.70959
+	2026-11-24, Validate Data, WoW Forever 1.60.1.71037
 
 Notes
 	- Every buff one player can put on another that lasts more than two minutes: the ones worth keeping up on a group, and the ones a player may want to hand out on request. Only the rows for the player's own class are read, and only the ranks the player knows are cast.
@@ -545,6 +547,7 @@ Notes
 	- BUFF_WINDOW_WEAPON_ITEMS is every other temporary weapon enchant, offered to any class: each item with the level it requires, the enchant id it puts on (SpellEffect's ENCHANT_ITEM_TEMPORARY misc value, through ItemXItemEffect), and the weapon types its spell takes (SpellEquippedItems' EquippedItemSubclass mask, 0 for any weapon). kind files it under Oils, Stones or Lures on the Weapon Buffs panel: LURE for a fishing pole's, STONE for a sharpening stone or weightstone, OIL for the rest (oils, coatings, Bloodboil Poison, Scourgebane, the Weapon Cleaning Cloth, and here the Scrolls of Imbue). item level (ItemSparse) ranks them, strongest first: it orders a line Rough to Dense where the required level can't (every lure needs level 0). Fishing lures take only a fishing pole, a sharpening stone only a bladed weapon, a weightstone only a blunt one. Picked from the IDs supplied on 2026-10-19, keeping only items whose spell enchants a hand weapon or fishing pole. Left out: rogue-only poisons (the rogue rows above), armor runes and other enchants that go on armor, shield coatings, and test or placeholder items. zones, on an item whose tooltip says it only works in certain places, names those places: instances by the map ID GetInstanceInfo reports and outdoor zones by the UiMap ID C_Map.GetBestMapForUnit reports, both from this client's Map and UiMap tables. The window offers such an item only there (Features/Buff-Duty/Buff-Duty-Self.lua); an item without zones, anywhere. Here the Blackfathom Sharpening Stone carries one: Blackfathom Deeps (Map 48).
 	- The weapon items were then checked against this client's tables: every item whose use spell puts a temporary enchant on a hand weapon or fishing pole (SpellEffect 54, or 360, which this client's rogue poisons use with the same enchant ids). That turned up the warlock's Firestones and Spellstones, which this client makes weapon enchants (Create Firestone and Create Spellstone make them) and which now sit in the warlock rows above, and added the two Scrolls of Imbue that QuestieDB has dropping from a Bundle of Scrolls (Lesser Flame, Chillknife).
 	- Left out from that check: the other fourteen Scrolls of Imbue, which neither QuestieDB nor any spell here gives a source for, so likely unobtainable for now; Creeping Anguish and Creeping Torment, poisons whose creating spells nobody can learn; Season of Discovery's poisons (Sebacious, Numbing, Atrophic, Occult) and its other weapon items, whose IDs this client's tables carry just as the Classic Era client's do; and the Wide-Brimmed Fishing Hat, whose lure only works while the hat is worn, and which using from the bags would put on instead.
+	- Camper's Lure (291005) is new in build 1.60.1.71037: its spell (1331725) enchants a fishing pole (enchant 8773, Fishing +60 for 5 minutes), and QuestieDB has it dropping from two objects (612090, 612092). Like Nightcrawlers it needs Fishing 50, which no lure row records. It binds when picked up.
 	- WEAPON_ENCHANTS_STACK and BUFF_DUTY_WEAPON_IMBUE_ITEMS: on this client a weapon carries an imbue and an oil or stone at once. Blizzard's Rogue and Warlock class deep dive says poisons "can now be applied to weapons at the same time as temporary enchantments like Weightstones and Sharpening Stones", and that Firestone and Spellstone now apply weapon imbues that stack with Wizard Oil. Shaman guides (Conquest Capped, LFCarry, 2026-11-07) say the four imbues stack with sharpening stones, weightstones and wizard oils. This client's C_Item.GetWeaponEnchantInfo(weaponSlot) returns a list per hand, each entry with an enchantType (Temporary or Imbue). The window files each enchant by the row that puts it on (imbue for the poisons, shaman imbues, warlock stones and the items listed, temporary for every other weapon item), and by enchantType for an enchant no row names. The two Scrolls of Imbue are filed with the imbues as ForeverAuras files them; not yet checked in game.
 
 SQL (CMaNGOS)
@@ -590,6 +593,15 @@ wago.tools
 	https://wago.tools/db2/SpellEffect?build=1.60.1.70959
 	https://wago.tools/db2/SpellLevels?build=1.60.1.70959
 	https://wago.tools/db2/ItemEffect?build=1.60.1.70959
+	https://wago.tools/db2/Item?build=1.60.1.71037
+	https://wago.tools/db2/ItemSparse?build=1.60.1.71037
+	https://wago.tools/db2/ItemEffect?build=1.60.1.71037
+	https://wago.tools/db2/ItemXItemEffect?build=1.60.1.71037
+	https://wago.tools/db2/Spell?build=1.60.1.71037
+	https://wago.tools/db2/SpellName?build=1.60.1.71037
+	https://wago.tools/db2/SpellEffect?build=1.60.1.71037
+	https://wago.tools/db2/SpellEquippedItems?build=1.60.1.71037
+	https://wago.tools/db2/SpellLevels?build=1.60.1.71037
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Forever/foreverItemDB.lua

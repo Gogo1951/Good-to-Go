@@ -22,6 +22,9 @@ local L = ns.L
     click closes the menu first, unless the entry sets keepOpen. onClose runs
     whenever it hides.
 ]]
+-- The kit's MENU_GAP (Features/Menu-Kit.lua), which the kit keeps to itself: a menu opens 2 points off its control.
+local MENU_GAP_POINTS = 2
+
 local function CreateDropdownMenu(name)
 	local shown = { entries = nil, onClose = nil }
 	local kitMenu = ns.MenuKit.CreateMenu({
@@ -71,12 +74,15 @@ local function CreateDropdownMenu(name)
 		end
 		shown.entries, shown.onClose = list, onClose
 		kitMenu:Show(anchor, "hover")
-		-- A dropdown's list hangs straight under its field, or over it, not off a corner.
+		--[[
+		    A dropdown's list hangs straight under its field, or over it, not off
+		    a corner, MENU_GAP_POINTS clear of it as every kit menu opens.
+		]]
 		frame:ClearAllPoints()
 		if upward then
-			frame:SetPoint("BOTTOMLEFT", anchor, "TOPLEFT", 0, 0)
+			frame:SetPoint("BOTTOMLEFT", anchor, "TOPLEFT", 0, MENU_GAP_POINTS)
 		else
-			frame:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, 0)
+			frame:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -MENU_GAP_POINTS)
 		end
 	end
 
@@ -86,10 +92,12 @@ end
 ns.RestockMenu = CreateDropdownMenu("GoodToGoRestockMenu")
 
 --[[
-    A dropdown's choice with something to say beside it (a reputation's
-    discount, a list's characters): the kit's choice look, white once picked
-    and gray otherwise, with that gray in the right column and the check mark
-    after it once picked. A plain choice row draws only the check mark there.
+    A dropdown's choice: the kit's choice row, the pick light yellow with a
+    check and the rest white. One with something to say beside it (a
+    reputation's discount, a list's characters) is a value row dressed the same
+    way, since a choice row's right side holds only the check: the pick's name
+    light yellow, the rest white, the words on the right light yellow with the
+    check after them once picked.
 ]]
 function ns.RestockChoiceRow(left, right, selected, onClick)
 	if not right then
@@ -98,9 +106,8 @@ function ns.RestockChoiceRow(left, right, selected, onClick)
 	return {
 		kind = "value",
 		left = left,
-		leftColor = selected and "TEXT" or "MUTED",
+		leftColor = selected and "VALUE" or nil,
 		right = right .. (selected and " " .. ns.MenuKit.CHECK_MARK or ""),
-		rightColor = "MUTED",
 		onClick = onClick,
 	}
 end
@@ -204,8 +211,8 @@ local COLUMN_SET = {
     or confirm: an item with no upgrade ladder has nothing to switch, and Extra
     rides on Buy.
 
-    Each row names its count on the right in gray; with nothing to set, both
-    rows are muted and do nothing.
+    Each row names its count on the right in light yellow; with nothing to set,
+    both rows are the kit's disabled rows, gray, and do nothing.
 ]]
 local function CloseColumnMenu()
 	RestockMenu:Close()
@@ -256,9 +263,8 @@ function ns.OpenRestockColumnMenu(column, anchor)
 		entries[#entries + 1] = {
 			kind = "action",
 			left = L[choice.label],
-			leftColor = count > 0 and "INFO" or "MUTED",
 			right = L["RESTOCKER_BULK_SHOWN"]:format(count),
-			rightColor = "MUTED",
+			disabled = count == 0,
 			onClick = count > 0 and function()
 				SetColumnOnShownRows(column.key, choice.isOn)
 			end or nil,

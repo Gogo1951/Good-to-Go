@@ -187,7 +187,7 @@ ns.PET_FOOD_DATA = {
 How We Got the Data
 
 Last Validated
-	2026-11-19, wago.tools, WoW Forever 1.60.1.70959
+	2026-11-24, Validate Data, WoW Forever 1.60.1.71037
 
 Notes
 	- The foods a hunter's pet eats, for Feed Pet support (Features/Macros-for-Consumables/Macros/Tools-Hunters-Pet-Food.lua). Diet IDs follow ns.PET_DIET_MAP in Data/Data.lua: 1 Meat, 2 Fish, 3 Bread, 4 Cheese, 5 Fruit, 6 Fungus.
@@ -231,6 +231,8 @@ wago.tools
 	https://wago.tools/db2/Item?build=1.60.1.70959
 	https://wago.tools/db2/ItemSparse?build=1.60.1.70959
 	https://wago.tools/db2/ItemXItemEffect?build=1.60.1.70959
+	https://wago.tools/db2/Item?build=1.60.1.71037
+	https://wago.tools/db2/ItemSparse?build=1.60.1.71037
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Forever/foreverQuestDB.lua

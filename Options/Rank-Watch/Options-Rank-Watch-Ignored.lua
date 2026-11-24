@@ -80,9 +80,12 @@ local function AddIgnoredRows(args, startOrder)
 				imageWidth = 16,
 				imageHeight = 16,
 				width = ns.OPTIONS_REMOVE_ICON_WIDTH,
+				-- Says so in chat, in the class color, as /gtg ignore says it added someone.
 				func = function()
+					local class = ClassOf(entry.guid)
 					ignored[entry.guid] = nil
 					IgnoredClasses()[entry.guid] = nil
+					ns:PrintMessage(L["RANK_WATCH_IGNORE_REMOVED"]:format(ns.ClassColoredName(entry.name, class)))
 					ns.RefreshSettings()
 				end,
 			},
@@ -97,23 +100,25 @@ function ns.BuildRankWatchIgnoredOptions()
 		args = {
 			description = Desc(L["RANK_WATCH_IGNORED_DESCRIPTION"], 1),
 			space0 = Spacer(2),
-			-- In the control column, not a lone button at the left edge.
-			ignoreTarget = ns.OptionsButtonRow(3, nil, {
+			-- In the control column under a Your Target caption, as Rank Watch's other rows are captioned.
+			ignoreTarget = Kit.ButtonRow(3, nil, {
 				type = "execute",
 				name = L["RANK_WATCH_IGNORE_TARGET"],
 				desc = L["RANK_WATCH_IGNORE_TARGET_DESCRIPTION"],
 				disabled = function()
 					return IgnorableTarget() == nil
 				end,
+				-- Says so in chat, as /gtg ignore does.
 				func = function()
 					local guid, name, class = IgnorableTarget()
 					if guid then
 						Ignored()[guid] = name
 						IgnoredClasses()[guid] = class
+						ns:PrintMessage(L["RANK_WATCH_IGNORE_ADDED"]:format(ns.ClassColoredName(name, class)))
 						ns.RefreshSettings()
 					end
 				end,
-			}),
+			}, L["RANK_WATCH_IGNORE_TARGET_CAPTION"]),
 			space1 = Spacer(4),
 		},
 	}

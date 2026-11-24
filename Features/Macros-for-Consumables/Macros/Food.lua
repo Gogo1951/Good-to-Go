@@ -44,12 +44,13 @@ ns.RegisterMacroType({
 	--[[
 	    Selection: any food competes, including the food half of a foodwater
 	    hybrid (which also feeds Water), by raw food value. Buff food always
-	    competes (except while targeting yourself, ns.excludeBuffFood) and
-	    ranks by ns.buffFoodRank: with the rest while Eat Buff Food When
-	    Already Well Fed is on, last otherwise, so a bag of only buff food
-	    still feeds you. While Use Conjured Food & Water First holds
-	    (ns.allowConjuredFirst), conjured food comes next, ahead of anything
-	    that restores more. While Use Restock List Food & Water Last holds
+	    competes (except while targeting yourself, ns.excludeBuffFood). While
+	    you're missing Well Fed it comes first (buffFoodFirstWhenUnfed,
+	    ns.buffFoodFirst); once you have it, it ranks by ns.buffFoodRank: with
+	    the rest while Eat Buff Food When Already Well Fed is on, last
+	    otherwise, so a bag of only buff food still feeds you. While Use
+	    Conjured Food & Water First holds (ns.allowConjuredFirst), conjured
+	    food comes next, ahead of anything that restores more. While Use Restock List Food & Water Last holds
 	    (ns.allowRestockLast), food off the Restock List beats an equal one
 	    on it. Hybrids beat dedicated food on ties — one bag
 	    slot covering both needs. The winner record carries the item link,
@@ -64,6 +65,7 @@ ns.RegisterMacroType({
 		return data.healthValue
 	end,
 	allowBuffFood = true,
+	buffFoodFirstWhenUnfed = true,
 	allowConjuredFirst = true,
 	allowRestockLast = true,
 	preferHybrid = true,

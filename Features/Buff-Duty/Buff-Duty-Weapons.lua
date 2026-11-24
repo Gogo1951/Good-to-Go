@@ -2,7 +2,7 @@ local _, ns = ...
 local Data = ns.Data
 local L = ns.L
 
--- Your weapons' row in the Buff Duty window's Self section: the poisons, imbues, oils and stones to put on each hand, and which picks each hand is offered.
+-- Your weapons' rows in the Buff Duty window's Weapon Buffs section: the poisons, imbues, oils and stones to put on each hand, and which picks each hand is offered.
 
 local BuffDuty = ns.BuffDuty
 local weaponBuffs = BuffDuty.weaponBuffs
@@ -332,9 +332,27 @@ end
 ns.SetBuffDutyEventHandler("REPLACE_ENCHANT", OnReplaceEnchant)
 
 --[[
+    A hand's Missing Inventory!: the weapon carries nothing at all, a pick
+    of an item kind would fit it, and none is in your bags (no icon came of
+    it). An imbue is a spell, never missing; a warlock stone with no stone
+    in the bags is conjured, so its icon shows instead.
+]]
+local function HandMissing(hand, worn, subclass)
+	if worn[hand.slot][1] then
+		return false
+	end
+	for _, pick in ipairs(hand.picks) do
+		if pick.items and PickFits(pick, subclass) then
+			return true
+		end
+	end
+	return false
+end
+
+--[[
     One row per hand holding a weapon, with the picks it can still take, for
-    the Self section (BuffDuty.AddSelfSection). Nothing while the weapons'
-    switch is off, which leaves weaponBuffs empty.
+    the Weapon Buffs section (BuffDuty.AddSelfSection). Nothing while the weapons' switch is off, which
+    leaves weaponBuffs empty.
 ]]
 function BuffDuty.AddWeaponRows(rows)
 	if #weaponBuffs == 0 then
@@ -351,10 +369,25 @@ function BuffDuty.AddWeaponRows(rows)
 					specs[#specs + 1] = WeaponIcon(hand, pick)
 				end
 			end
+			local menu = "weapons:" .. hand.hand
 			if specs[1] then
 				SortWeaponIcons(specs)
-				rows[#rows + 1] =
-					{ label = WeaponRowLabel(hand), icons = specs, grid = "weapon" .. hand.hand, indent = 0 }
+				rows[#rows + 1] = {
+					label = WeaponRowLabel(hand),
+					icons = specs,
+					grid = "weapon" .. hand.hand,
+					indent = 0,
+					menu = menu,
+				}
+			elseif BuffDuty.RowOut("weapons") and HandMissing(hand, worn, subclass) then
+				rows[#rows + 1] = {
+					label = WeaponRowLabel(hand),
+					icons = {},
+					grid = "weapon" .. hand.hand,
+					indent = 0,
+					menu = menu,
+					missing = true,
+				}
 			end
 		end
 	end
@@ -365,8 +398,8 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    One per hand with anything ticked, each its own row under Self Buffs:
-    the picks, all on the one Reapply timing -- your class's poisons or
+    One per hand with anything ticked, each its own row in the Weapon Buffs section:
+    the picks, all on Weapon Buffs' one Show timing -- your class's poisons or
     imbues (classPick), and the oils, stones and lures any class can use.
     The row orders its icons as it draws them, by the item or rank each
     one uses (SortWeaponIcons). An imbue needs a known rank; an item
@@ -382,7 +415,7 @@ function BuffDuty.BuildWeaponBuffs(playerClass)
 	end
 	for _, hand in ipairs(settings.weaponEnabled and Data.WEAPON_HAND_ORDER or {}) do
 		local chosen = {}
-		local when = settings.weaponRefresh
+		local show = BuffDuty.RowShowSeconds("weapons")
 		local function Choose(entry, ranks, classPick)
 			chosen[#chosen + 1] = {
 				key = entry.key,
@@ -394,7 +427,7 @@ function BuffDuty.BuildWeaponBuffs(playerClass)
 				types = entry.types,
 				zones = entry.zones,
 				layer = entry.layer,
-				refreshSeconds = when * 60,
+				refreshSeconds = show,
 				durationSeconds = entry.row.duration and entry.row.duration * 60,
 				classPick = classPick,
 			}

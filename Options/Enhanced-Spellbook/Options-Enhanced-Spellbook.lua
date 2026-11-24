@@ -16,7 +16,7 @@ local Spacer = Kit.Spacer
 	panel repaints after, so the button grays out at once.
 ]]
 local function DeleteMacrosButton(general, captionKey, descKey, confirmKey, order)
-	return ns.OptionsButtonRow(order, nil, {
+	return Kit.ButtonRow(order, nil, {
 		type = "execute",
 		name = L["OPTIONS_DELETE"],
 		desc = L[descKey],
@@ -42,7 +42,7 @@ end
 
 --[[
 	The Spellbook's page in the settings tree. Its settings live on the Spellbook itself, so this holds only
-	what can't: the on/off switch, what the ability tooltips' ranks are for and their own switch (shown only while it's on), and the buttons that delete the
+	what can't: the on/off switch, the window's Reset Position, what the ability tooltips' ranks are for and their own switch (shown only while it's on), and the buttons that delete the
 	macros it made. The key that opens it is on the root panel, with every other key binding.
 ]]
 function ns.BuildSpellbookOptions()
@@ -50,6 +50,18 @@ function ns.BuildSpellbookOptions()
 		descIntro = Desc(L["OPTIONS_SPELLBOOK_DESCRIPTION"], 1),
 		spaceEnable = Spacer(2),
 		toggleSpellbookEnabled = Kit.FeatureSwitch("spellbookEnabled", 3),
+		-- The window's Reset Position, under the switch; grayed while the window has never been dragged.
+		spaceResetPosition = Spacer(4, SpellbookOff),
+		resetPosition = Kit.ResetRow(
+			5,
+			SpellbookOff,
+			L["OPTIONS_RESET_POSITION"],
+			L["OPTIONS_RESET_POSITION_DESCRIPTION"],
+			function()
+				return not ns.HasSavedSpellbookWindowPosition()
+			end,
+			ns.ResetSpellbookWindowPosition
+		),
 
 		--[[
 		    What's Next ability tooltips: the ranks under every spell's tooltip

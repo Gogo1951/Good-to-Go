@@ -47,6 +47,8 @@ local pool = ns.buffDutyIconPool
 --[[
     Everything a redraw would write, as one string, so an unchanged list (the
     usual result of a raid's constant aura traffic) skips the redraw entirely.
+    That includes whether an icon is held back for a PvP-flagged target, so a
+    flag change alone redraws the icons it touches.
 ]]
 local function Signature(sections, otherBuffs)
 	local parts = {}
@@ -70,6 +72,8 @@ local function Signature(sections, otherBuffs)
 				.. (spec.buffExpires or "")
 				.. "x"
 				.. (spec.count or "")
+				.. "p"
+				.. tostring(ns.BuffDuty.PvPFlaggedTarget(spec) or "")
 		end
 	end
 	for _, section in ipairs(sections) do
@@ -77,9 +81,15 @@ local function Signature(sections, otherBuffs)
 			.. (section.grid or "")
 			.. section.label
 			.. (section.foldable and (section.folded and "+" or "-") or "")
+			.. (section.menu and ("^" .. section.menu) or "")
+			.. (section.missing and "!" or "")
 		AddIcons(section.icons)
 		for _, row in ipairs(section.rows) do
-			parts[#parts + 1] = (row.pet and ">>" or ">") .. (row.grid or "") .. row.label
+			parts[#parts + 1] = (row.pet and ">>" or ">")
+				.. (row.grid or "")
+				.. row.label
+				.. (row.menu and ("^" .. row.menu) or "")
+				.. (row.missing and "!" or "")
 			AddIcons(row.icons)
 		end
 	end
@@ -143,20 +153,115 @@ local function ReleaseFoldButtons()
 end
 
 --[[
+    A category's line ends in the menu kit's arrow, in a column of its own
+    at the window's right edge: hovering or clicking it opens that
+    category's menu beside the window (Buff-Duty-Options-Menu.lua), as the
+    Options line opens its own. A click on the line's name opens it too.
+    Plain buttons, so they work in combat. Kept by the menu they open
+    rather than pooled by place, so an open menu stays on its line across
+    a redraw; released with the icons (ReleaseMenuButtons).
+]]
+local ARROW_WIDTH = 12
+local ARROW_GAP = 4
+local ARROW_HIGHLIGHT_ALPHA = 0.16
+local arrowButtons, nameButtons = {}, {}
+
+local function OpenLineMenu(self)
+	local key = self.menuKey
+	ns.ShowBuffDutyMenu(arrowButtons[key] or self, key)
+end
+
+local function AcquireArrowButton(key)
+	local button = arrowButtons[key]
+	if not button then
+		button = CreateFrame("Button", nil, pool.content)
+		button:SetSize(ARROW_WIDTH, ICON_SIZE)
+		button:RegisterForClicks("LeftButtonUp")
+		button:RegisterForDrag("LeftButton")
+		local arrow = button:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+		arrow:SetPoint("RIGHT")
+		arrow:SetText(ns.MenuKit.SUBMENU_ARROW)
+		local highlight = button:CreateTexture(nil, "HIGHLIGHT")
+		local gold = ns.COLORS_RGB.TITLE
+		highlight:SetColorTexture(gold.r, gold.g, gold.b, ARROW_HIGHLIGHT_ALPHA)
+		highlight:SetPoint("TOPLEFT", -ARROW_GAP, 0)
+		highlight:SetPoint("BOTTOMRIGHT", ARROW_GAP, 0)
+		button:SetScript("OnEnter", OpenLineMenu)
+		button:SetScript("OnClick", OpenLineMenu)
+		button:SetScript("OnDragStart", OnFoldDragStart)
+		button:SetScript("OnDragStop", OnFoldDragStop)
+		-- The window it sits in, so the menu overlaps the window's edge rather than the arrow (Menu Kit's "line").
+		button.window = pool.content
+		button.menuKey = key
+		arrowButtons[key] = button
+	end
+	return button
+end
+
+local function AcquireNameButton(key)
+	local button = nameButtons[key]
+	if not button then
+		button = CreateFrame("Button", nil, pool.content)
+		button:SetHeight(ICON_SIZE)
+		button:RegisterForClicks("LeftButtonUp")
+		button:RegisterForDrag("LeftButton")
+		button:SetScript("OnClick", OpenLineMenu)
+		button:SetScript("OnDragStart", OnFoldDragStart)
+		button:SetScript("OnDragStop", OnFoldDragStop)
+		button.menuKey = key
+		nameButtons[key] = button
+	end
+	return button
+end
+
+local function ReleaseMenuButtons()
+	for _, button in pairs(arrowButtons) do
+		button:Hide()
+	end
+	for _, button in pairs(nameButtons) do
+		button:Hide()
+	end
+end
+
+--[[
     `offsets` maps a buff's column to how far its icon sits from the grid's
     first, in pixels, and `gridWidth` is the grid's whole width. `x` and
     `right` are the left and right edges of the window column the row sits
     in, `y` the row's middle. The icons sit against the right edge, under the
     close button, rather than floating wherever the names end; a grid keeps
-    its columns, so a buff still lines up down the window.
+    its columns, so a buff still lines up down the window. A packed line
+    (Self-Buffs, Target, Return the Favor) skips the columns: its icons stand
+    side by side in the order given, ending at the right edge, so a cast
+    leaves no gap.
 ]]
-local function PlaceRow(line, x, right, y, nameWidth, offsets, gridWidth)
+local function PlaceRow(line, x, right, y, nameWidth, offsets, gridWidth, arrowRight)
 	local content = pool.content
 	local label, indent = line.label, line.indent
 	label:ClearAllPoints()
 	label:SetPoint("LEFT", content, "TOPLEFT", x + indent, y)
 	label:SetWidth(nameWidth - indent)
 	label:Show()
+
+	if line.menu and arrowRight then
+		local arrow = AcquireArrowButton(line.menu)
+		arrow:ClearAllPoints()
+		arrow:SetPoint("RIGHT", content, "TOPLEFT", arrowRight, y)
+		arrow:Show()
+		local name = AcquireNameButton(line.menu)
+		name:ClearAllPoints()
+		name:SetPoint("LEFT", content, "TOPLEFT", x, y)
+		name:SetWidth(nameWidth)
+		name:Show()
+	end
+
+	-- Missing Inventory! sits at the line's right end, after any icons, which move left to make room.
+	if line.missingLabel then
+		local missing = line.missingLabel
+		missing:ClearAllPoints()
+		missing:SetPoint("RIGHT", content, "TOPLEFT", right, y)
+		missing:Show()
+		right = right - line.missingWidth - ICON_GAP
+	end
 
 	if line.fold then
 		local button = AcquireFoldButton()
@@ -168,11 +273,14 @@ local function PlaceRow(line, x, right, y, nameWidth, offsets, gridWidth)
 		button:Show()
 	end
 
+	local specs = line.specs
 	local left = right - (gridWidth or 0)
-	for _, spec in ipairs(line.specs) do
+	local packedLeft = right - (#specs * (ICON_SIZE + ICON_GAP) - ICON_GAP)
+	for index, spec in ipairs(specs) do
 		local button = AcquireIcon()
 		button:ClearAllPoints()
-		button:SetPoint("LEFT", content, "TOPLEFT", left + offsets[spec.column], y)
+		local iconX = line.packed and packedLeft + (index - 1) * (ICON_SIZE + ICON_GAP) or left + offsets[spec.column]
+		button:SetPoint("LEFT", content, "TOPLEFT", iconX, y)
 		SetIcon(button, spec)
 	end
 	-- The Ask for Buffs header's icons: plain buttons, side by side, ending at the right edge too.
@@ -242,11 +350,12 @@ end
 --[[
     Places a run of lines down from `y`, the first one's middle. Returns where
     the next run's first middle goes, and the lowest edge this run drew.
+    `arrowRight` is where a category line's arrow ends, nil for lines with none.
 ]]
-local function PlaceLines(lines, x, right, y, nameWidth, offsetsByGrid, widths)
+local function PlaceLines(lines, x, right, y, nameWidth, offsetsByGrid, widths, arrowRight)
 	local bottom = y
 	for _, line in ipairs(lines) do
-		PlaceRow(line, x, right, y, nameWidth, offsetsByGrid[line.grid], widths[line.grid])
+		PlaceRow(line, x, right, y, nameWidth, offsetsByGrid[line.grid], widths[line.grid], arrowRight)
 		bottom = y - ICON_SIZE / 2
 		y = y - ROW_HEIGHT
 		if line.sectionEnd then
@@ -268,3 +377,6 @@ Layout.Signature = Signature
 Layout.GridSlots = GridSlots
 Layout.PlaceLines = PlaceLines
 Layout.ReleaseFoldButtons = ReleaseFoldButtons
+Layout.ReleaseMenuButtons = ReleaseMenuButtons
+-- The arrow column a category's menu takes at the right edge, gap included, while any line has one.
+Layout.ARROW_SPACE = ARROW_WIDTH + ARROW_GAP

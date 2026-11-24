@@ -42,8 +42,8 @@ local function PetAndOwner(petGUID)
 end
 
 --[[
-    The friendly player a cast landed on, when that was someone other than the caster: their level, or false
-    when it can't be read (the cast is dropped), or nil for no such recipient.
+    The friendly player or group member's pet a cast landed on, when that was someone other than the caster:
+    their level, or false when it can't be read (the cast is dropped), or nil for no such recipient.
 ]]
 local function RecipientLevel(destGUID, destFlags, ...)
 	if not destGUID or destGUID == "" or band(destFlags or 0, FRIENDLY_REACTION) == 0 then
@@ -54,7 +54,8 @@ local function RecipientLevel(destGUID, destFlags, ...)
 			return nil
 		end
 	end
-	return ns.RankWatchUnitLevel(ns.GetUnitByGUID(destGUID)) or false
+	local unit = ns.GetUnitByGUID(destGUID) or PetAndOwner(destGUID)
+	return ns.RankWatchUnitLevel(unit) or false
 end
 
 ns.SetRankWatchHandler("COMBAT_LOG_EVENT_UNFILTERED", function()

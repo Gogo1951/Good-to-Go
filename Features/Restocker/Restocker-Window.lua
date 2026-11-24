@@ -14,8 +14,9 @@ local L = ns.L
     they are the sum of three things that each have their own floor:
 
       the category pane   its widest ALLOWED width (176) plus the gap (8)
-      the table           604, which holds the item name at its readable floor
-      window chrome       the inset (ns.RESTOCK_WINDOW_BANDS: 4 left, 6 right), its
+      the table           606, which holds the item name at its readable floor
+                          and brings the sum to 832, on the Spacing Scale
+      window chrome       the inset (ns.RESTOCK_WINDOW_BANDS: 4 left, 4 right), its
                           padding (8), the scroll bar (26)
 
     and MIN_WIDTH is that sum, built from the bands' own numbers so a change to
@@ -24,9 +25,9 @@ local L = ns.L
     number stays honest: MIN_WIDTH is set against the CAP rather than the usual
     width, so the item name keeps its floor even on a client whose type names run
     long. Raising that cap means raising this. The header's own floor (the
-    portrait's clearance, the filter, the selector and the two buttons, with the
-    "Used by" line between them free to truncate) sits under it by about 60
-    pixels in English, which is the room longer button captions have.
+    portrait's clearance, the filter, the bag menu, the add box, Add and Pick
+    Staples) sits under it by about 60 pixels in English, which is the room
+    longer button captions have.
 
     DEFAULT_WIDTH is a step above the floor so a fresh window opens with room for
     a long consumable name rather than at the edge of truncation. MAX_* is a
@@ -37,7 +38,7 @@ local L = ns.L
 local DEFAULT_WIDTH = 864
 local DEFAULT_HEIGHT = 448
 local BANDS = ns.RESTOCK_WINDOW_BANDS
-local MIN_WIDTH = 176 + 8 + 604 + BANDS.INSET_LEFT + BANDS.INSET_RIGHT + 8 + 26
+local MIN_WIDTH = 176 + 8 + 606 + BANDS.INSET_LEFT + BANDS.INSET_RIGHT + 8 + 26
 local MIN_HEIGHT = 304
 local MAX_WIDTH = 1600
 local MAX_HEIGHT = 1200
@@ -50,13 +51,20 @@ local function Clamp(value, minimum, maximum, fallback)
 	return math.max(minimum, math.min(maximum, value))
 end
 
--- Written whole: AceDB can clear an empty framePosition at logout before this runs.
-function ns.SaveRestockWindowGeometry()
+--[[
+	Written whole: AceDB can clear an empty framePosition at logout before this runs. sizeOnly keeps the
+	saved spot as it is, so a window that was never dragged still has none.
+]]
+function ns.SaveRestockWindowGeometry(sizeOnly)
 	local frame = ns.restockWindow
 	if not frame then
 		return
 	end
 	local point, _, relativePoint, xOffset, yOffset = frame:GetPoint(frame:GetNumPoints())
+	if sizeOnly then
+		local saved = ns.restockSettings.framePosition or {}
+		point, relativePoint, xOffset, yOffset = saved.point, saved.relativePoint, saved.xOffset, saved.yOffset
+	end
 	ns.restockSettings.framePosition = {
 		point = point,
 		relativePoint = relativePoint,
@@ -65,6 +73,33 @@ function ns.SaveRestockWindowGeometry()
 		width = math.floor(frame:GetWidth() + 0.5),
 		height = math.floor(frame:GetHeight() + 0.5),
 	}
+end
+
+-- The saved spot, or the right edge of the screen until the window is first dragged.
+local function PlaceFrame(frame)
+	local position = ns.restockSettings.framePosition
+	frame:ClearAllPoints()
+	frame:SetPoint(
+		position.point or "RIGHT",
+		UIParent,
+		position.relativePoint or "RIGHT",
+		position.xOffset or -4,
+		position.yOffset or 0
+	)
+end
+
+function ns.HasSavedRestockWindowPosition()
+	local settings = ns.restockSettings
+	return settings ~= nil and settings.framePosition.point ~= nil
+end
+
+-- Reset Position (Options-Restocker.lua): forgets the spot, keeps the size, and moves an open window back.
+function ns.ResetRestockWindowPosition()
+	local position = ns.restockSettings.framePosition
+	ns.restockSettings.framePosition = { width = position.width, height = position.height }
+	if ns.restockWindow then
+		PlaceFrame(ns.restockWindow)
+	end
 end
 
 --[[
@@ -81,13 +116,7 @@ local function CreateAddonFrame()
 		Clamp(settings.framePosition.width, MIN_WIDTH, MAX_WIDTH, DEFAULT_WIDTH),
 		Clamp(settings.framePosition.height, MIN_HEIGHT, MAX_HEIGHT, DEFAULT_HEIGHT)
 	)
-	addonFrame:SetPoint(
-		settings.framePosition.point or "RIGHT",
-		UIParent,
-		settings.framePosition.relativePoint or "RIGHT",
-		settings.framePosition.xOffset or -4,
-		settings.framePosition.yOffset or 0
-	)
+	PlaceFrame(addonFrame)
 	addonFrame:SetFrameStrata("HIGH")
 	-- A saved position from another resolution or UI scale must not open off-screen.
 	addonFrame:SetClampedToScreen(true)
@@ -255,7 +284,7 @@ end
 local function CreateScrollChild(scrollFrame, addonFrame)
 	local scrollChild = CreateFrame("Frame", nil, scrollFrame)
 	scrollChild:SetWidth(scrollFrame:GetWidth())
-	scrollChild:SetHeight(scrollFrame:GetHeight() - 10)
+	scrollChild:SetHeight(scrollFrame:GetHeight() - 8)
 	addonFrame.scrollChild = scrollChild
 
 	scrollFrame:SetScrollChild(scrollChild)

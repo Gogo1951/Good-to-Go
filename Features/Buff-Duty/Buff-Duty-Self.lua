@@ -2,15 +2,14 @@ local _, ns = ...
 local L = ns.L
 
 --[[
-    The Buff Duty window's Self Buffs section, as icons on the Self Buffs
-    header in a grid of its own: your self-only buffs; your class's group buffs
-    on you, timed by the Self-Buffs panel and left off your party row; a
-    Soulstone while nobody in your group carries one; and the consumables any
-    class keeps up (Winterfall Firewater, buff food, scrolls) while one is in
-    your bags. Then a row
-    per hand for the poison, imbue, oil, stone or lure each weapon needs, each
-    row in a grid of its own (Buff-Duty-Weapons.lua). Shared with the other
-    Buff Duty files through ns.BuffDuty.
+    The Buff Duty window's sections for you, one per category, each in a grid
+    of its own: Self-Buffs (your self-only buffs; your class's group buffs on
+    you, timed by the Self-Buffs panel and left off your party row; and a
+    Soulstone while nobody in your group carries one), Well Fed, Weapon Buffs
+    (a row per hand, Buff-Duty-Weapons.lua), Scrolls, Flasks or Elixirs
+    (Buff-Duty-Elixirs.lua) and Other Buffs (Winterfall Firewater), the
+    consumables each while one is in your bags. Shared with the other Buff
+    Duty files through ns.BuffDuty.
 ]]
 
 local BuffDuty = ns.BuffDuty
@@ -282,6 +281,9 @@ end
 ]]
 local liveItemCounts = setmetatable({}, {
 	__index = function(_, itemId)
+		if ns.db.global.buffWindow.scrollOff[itemId] then
+			return 0
+		end
 		return GetItemCount(itemId)
 	end,
 })
@@ -291,8 +293,8 @@ local liveItemCounts = setmetatable({}, {
     it running low by your own time for Scrolls, in the Food macro's order
     (ns.SCROLL_CHECK_ORDER). Only the types Buff Duty's Self-Buffs page ticks count,
     by default the ones your class gets use from. Each reads the strongest
-    scroll of its type in your bags (ns.FindBestScroll, which keeps to the
-    Ignore List), and a stronger elixir or class buff already on you covers
+    scroll of its type in your bags that the Scrolls menu leaves on
+    (scrollOff; ns.FindBestScroll keeps to the Ignore List), and a stronger elixir or class buff already on you covers
     its type, as it does for the macro. Nothing while auras can't be read
     (WoW Forever), as with Well Fed. The icons share Scrolls' column, a
     tenth apart, so the grid keeps them together and in order.
@@ -393,11 +395,15 @@ end
     self buff's icon with. The window isn't redrawn on rage alone, so rage
     decaying after a fight, or Bloodrage coming off its cooldown, asks for a
     redraw only when one of these answers would change
-    (BuffDuty.CheckRageFirst).
+    (BuffDuty.CheckRageFirst). The check is skipped in combat, when the
+    window can't be redrawn; leaving combat redraws it whole.
 ]]
 local rageFirstDrawn = {}
 
 function BuffDuty.CheckRageFirst()
+	if InCombatLockdown() then
+		return
+	end
 	for spellId, drawn in pairs(rageFirstDrawn) do
 		if NeedsRageFirst(spellId) ~= drawn then
 			ns.RequestBuffDutyRefresh()
@@ -425,23 +431,101 @@ local function WithRageFirst(spec)
 end
 
 --------------------------------------------------------------------------------
--- Section
+-- Missing Inventory
 --------------------------------------------------------------------------------
 
 --[[
+    Whether a category's buff is gone and nothing in your bags gives it, for
+    its Missing Inventory! line (BuffDuty.RowOut). Each says no while your
+    auras can't be read (secret on WoW Forever, in combat), so the line
+    never claims a buff is gone that may be there.
+]]
+
+-- Well Fed: not on you, not eating, and no buff food left on in your bags.
+local function FoodMissing()
+	local itemId = ns.bestBuffFoodID
+	if itemId and GetItemCount(itemId) > 0 then
+		return false
+	end
+	local had, _, _, eating = WellFedAura()
+	return had == false and not eating
+end
+
+--[[
+    Scrolls: a ticked kind whose buff is gone, with nothing stronger
+    covering it, and no scroll of that kind left on in your bags.
+]]
+local function ScrollsMissing()
+	local types = ns.db.profile.scrollTypes
+	if not types or ns.AreAurasSecret() then
+		return false
+	end
+	local snapshot = ns.GetPlayerBuffSnapshot()
+	for _, scrollType in ipairs(ns.SCROLL_CHECK_ORDER) do
+		local aura = types[scrollType] and snapshot.scrolls[scrollType]
+		if
+			aura
+			and aura.expiration == nil
+			and not aura.conflictAmount
+			and not ns.FindBestScroll(scrollType, liveItemCounts)
+		then
+			return true
+		end
+	end
+	return false
+end
+
+-- Other Buffs: one turned on whose buff is gone, with none left in your bags.
+local function OtherMissing(buff)
+	if ns.AreAurasSecret() or GetItemCount(buff.itemId) > 0 then
+		return false
+	end
+	return not Has(buff, "player")
+end
+
+--------------------------------------------------------------------------------
+-- Section
+--------------------------------------------------------------------------------
+
+-- Tags each icon with its category (Data.BUFF_DUTY_ROWS), which says whether the Buff Key uses it.
+local function TagRow(list, row)
+	for _, spec in ipairs(list) do
+		spec.dutyRow = row
+	end
+	return list
+end
+
+--[[
+    The categories, each a section of its own at the top of the window, named
+    as its page under Buff Duty and in the order of Data.BUFF_DUTY_ROWS:
+
+      Self-Buffs         your self buffs, your group buffs on you, the
+                         Soulstone
+      Well Fed           buff food
+      Weapon Buffs       a row per hand under its header (Buff-Duty-Weapons.lua)
+      Scrolls
+      Flasks or Elixirs  every elixir in your bags (Buff-Duty-Elixirs.lua)
+      Other Buffs        the consumables with a dropdown of their own
+                         (Winterfall Firewater)
+
+    Each keeps to its own switch and When to Use (BuffDuty.RowShows) and
+    shows only while it has an icon, or its Missing Inventory! line once the
+    buff is gone and nothing in your bags gives it (BuffDuty.RowOut). Every one is a "self" section, so the window packs
+    its icons in the Buff Key's order and the Buff Key reads them all; each
+    has a grid of its own. The Self-Buffs switch turns off the first only;
+    the weapons have their own switch (weaponBuffs is empty while it's off).
+
     Each self buff casts your highest rank on yourself. A family you keep one
     of (an armor, an aura, an aspect, a shield) asks for nothing while any one
     of yours is up -- Has handles that, as it does for blessings. Soul Link
-    waits for a demon to link to. The weapons have their own switch
-    (weaponBuffs is empty while it's off) and show as rows under the same
-    header, which stands even with no self buff of its own to offer.
+    waits for a demon to link to.
 ]]
 function BuffDuty.AddSelfSection(sections)
 	if UnitIsDeadOrGhost("player") then
 		return
 	end
-	local selfEnabled = ns.db.global.buffWindow.selfEnabled
-	local icons, rows = {}, {}
+	local selfEnabled = ns.db.global.buffWindow.selfEnabled and BuffDuty.RowShows("self")
+	local icons = {}
 
 	ReadAuras("player")
 	wipe(rageFirstDrawn)
@@ -454,31 +538,78 @@ function BuffDuty.AddSelfSection(sections)
 					BuffDuty.WithTimeLeft(WithRageFirst(SingleIcon(buff, "player", "player", name)), expires, duration)
 				if icon then
 					icon.castLast = buff.castLast
+					icon.party = buff.party
 				end
 				icons[#icons + 1] = icon
 			end
 		end
 	end
-
-	BuffDuty.AddWeaponRows(rows)
-
 	if selfEnabled then
 		icons[#icons + 1] = SoulstoneIcon()
 		-- SoulstoneIcon reads the group's auras: read yours again.
 		ReadAuras("player")
-		for _, buff in ipairs(BuffDuty.selfItemBuffs) do
-			if buff.wellFed then
-				icons[#icons + 1] = WellFedIcon(buff)
-			elseif buff.scrolls then
-				AddScrollIcons(buff, icons)
-			else
-				icons[#icons + 1] = SelfItemIcon(buff)
+	end
+
+	local food, scrolls, elixirs, other, weapons = {}, {}, {}, {}, {}
+	local missing = {}
+	if BuffDuty.RowShows("weapons") then
+		BuffDuty.AddWeaponRows(weapons)
+	end
+	for _, buff in ipairs(BuffDuty.selfItemBuffs) do
+		if buff.wellFed then
+			if BuffDuty.RowShows("food") then
+				food[#food + 1] = WellFedIcon(buff)
+				missing.food = BuffDuty.RowOut("food") and not food[1] and FoodMissing()
+			end
+		elseif buff.scrolls then
+			if BuffDuty.RowShows("scrolls") then
+				AddScrollIcons(buff, scrolls)
+				missing.scrolls = BuffDuty.RowOut("scrolls") and ScrollsMissing()
+			end
+		elseif buff.elixirs then
+			if BuffDuty.RowShows("elixirs") then
+				BuffDuty.AddElixirIcons(buff, elixirs)
+				missing.elixirs = BuffDuty.RowOut("elixirs") and not elixirs[1] and BuffDuty.ElixirsMissing()
+			end
+		elseif BuffDuty.RowShows("other") then
+			local icon = SelfItemIcon(buff)
+			other[#other + 1] = icon
+			if not icon and BuffDuty.RowOut("other") and OtherMissing(buff) then
+				missing.other = true
 			end
 		end
 	end
 
-	if #icons > 0 or #rows > 0 then
-		sections[#sections + 1] =
-			{ kind = "self", label = L["BUFF_DUTY_SELF_HEADER"], icons = icons, rows = rows, grid = "self" }
+	--[[
+	    A section shows while it has an icon, or its Missing Inventory! line.
+	    `menu` names the category menu its line's arrow opens.
+	]]
+	local function AddSection(label, list, row, rows)
+		if list[1] or (rows and rows[1]) or missing[row] then
+			sections[#sections + 1] = {
+				kind = "self",
+				label = label,
+				icons = TagRow(list, row),
+				rows = rows or {},
+				grid = "self_" .. row,
+				menu = not rows and row or nil,
+				missing = missing[row] or nil,
+			}
+		end
 	end
+	AddSection(L["BUFF_DUTY_SELF_HEADER"], icons, "self")
+	AddSection(BuffDuty.WellFedLabel(), food, "food")
+	for _, hand in ipairs(weapons) do
+		TagRow(hand.icons, "weapons")
+	end
+	AddSection(L["BUFF_DUTY_WEAPON_PANEL_HEADER"], {}, "weapons", weapons)
+	AddSection(L["BUFF_DUTY_SCROLLS"], scrolls, "scrolls")
+	AddSection(L["BUFF_DUTY_ROW_ELIXIRS"], elixirs, "elixirs")
+	AddSection(L["BUFF_DUTY_ROW_OTHER"], other, "other")
+end
+
+-- The Well Fed category's name: the client's own name for the buff, or Buff Food while the client hasn't said.
+function BuffDuty.WellFedLabel()
+	local wellFed = ns.GetWellFedName()
+	return wellFed ~= "" and wellFed or L["BUFF_DUTY_MENU_BUFF_FOOD"]
 end

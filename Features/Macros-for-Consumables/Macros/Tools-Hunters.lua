@@ -366,29 +366,32 @@ ns.RegisterMacroType({
 	typeName = "Feed Pet",
 
 	customUpdate = function(forced)
-		if not ns.isHunter then
-			return
+		--[[
+		    On a hunter, the scan runs ahead of the enabled check, because
+		    ns.bestPetFoodID and ns.bestPetFoodLink are published state with
+		    readers that stay live whether or not the macro is built -- the
+		    mini-map menu's pet-food row and two Diagnostics reports. Scanning
+		    only when the macro is on would freeze all three at whatever the last
+		    enabled pass left. It costs nothing extra: the scan reads
+		    ns.scannedItemCounts, which ns.ScanBags refilled earlier in this same
+		    update pass.
+		]]
+		if ns.isHunter then
+			ns.ScanPetFood()
 		end
 
-		--[[
-		    Ahead of the enabled check, because ns.bestPetFoodID and
-		    ns.bestPetFoodLink are published state with readers that stay live
-		    whether or not the macro is built -- the mini-map menu's pet-food
-		    row and two Diagnostics reports. Scanning only when the macro is on
-		    would freeze all three at whatever the last enabled pass left. It
-		    costs nothing extra: the scan reads ns.scannedItemCounts, which
-		    ns.ScanBags refilled earlier in this same update pass.
-		]]
-		ns.ScanPetFood()
-
-		if ns.IsMacroEnabled("Feed Pet") then
-			UpdateFeedPetMacro(forced)
-		else
+		-- Unticked, the macro goes on any class: it sits in the General macros every character shares.
+		if not ns.IsMacroEnabled("Feed Pet") then
 			local config = MACRO_CONFIG["Feed Pet"]
 			if config then
 				ns.DeleteMacroByName(config.macro)
 				ns.ResetHunterMacroState()
 			end
+			return
+		end
+
+		if ns.isHunter then
+			UpdateFeedPetMacro(forced)
 		end
 	end,
 })

@@ -95,10 +95,10 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 
 | Action | Effect |
 | --- | --- |
-| Hover | Opens the mini-map menu |
-| Left-Click | Toggles Buff Duty |
+| Hover or Left-Click | Opens the mini-map menu |
+| Right-Click | Ignores your current food |
 
-The menu shows the food your Food macro will eat, what your Restock List is still short, a switch for every feature, and the button's other shortcut clicks.
+The menu shows the food your Food macro will eat, what your Restock List is still short, and a switch for every feature.
 
 ### Good to Know
 

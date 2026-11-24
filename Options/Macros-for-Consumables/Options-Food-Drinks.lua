@@ -27,6 +27,11 @@ local function ConjuredFirstActive()
 	return settings and settings.useConjuredFirst
 end
 
+local function ReapplyActive()
+	local settings = GetSettings()
+	return settings and settings.earlyReapply
+end
+
 -- Cannibalize restores health only on Classic Era and TBC Anniversary, so drinking is offered where it restores mana.
 local function NoCannibalizeDrinking()
 	return not ns.CANNIBALIZE_RESTORES_MANA
@@ -35,6 +40,21 @@ end
 -- Rapid Regeneration exists only on WoW Forever, so the Troll section shows only there.
 local function NoRapidRegeneration()
 	return not ns.RAPID_REGENERATION_SPELL_ID
+end
+
+--------------------------------------------------------------------------------
+-- Shared Widget Factories
+--------------------------------------------------------------------------------
+
+local REAPPLY_SECONDS = { 60, 120, 180, 240, 300 }
+
+local function ReapplyThresholdValues()
+	local values = { [60] = L["REAPPLY_THRESHOLD_ONE"] }
+	for index = 2, #REAPPLY_SECONDS do
+		local seconds = REAPPLY_SECONDS[index]
+		values[seconds] = string.format(L["REAPPLY_THRESHOLD_MANY"], seconds / 60)
+	end
+	return values
 end
 
 --------------------------------------------------------------------------------
@@ -47,6 +67,8 @@ end
 
       Which Food Comes First -- conjured food and water first, Restock List
         food and water last, and buff food with the rest or kept for last.
+      Refresh Food Buffs Under -- when Well Fed, a pet's food buff and scroll
+        buffs count as worn off, on every flavor.
       Stealth and racial eating -- Rogue and Night Elf Stealth Eating,
         Night Elf Stealth Drinking, Forsaken Cannibalize, Troll Rapid
         Regeneration (in the Food and Bandage macros), each under its
@@ -73,7 +95,7 @@ function ns.BuildFoodDrinksOptions()
 		toggleConjuredFirst = Kit.ToggleRow(20, {
 			type = "toggle",
 			name = L["OPTIONS_CONJURED_FIRST"],
-			desc = L["OPTIONS_CONJURED_FIRST_DESCRIPTION"],
+			desc = SpellDescription("OPTIONS_CONJURED_FIRST_DESCRIPTION_FORMAT", ns.WELL_FED_SPELL_ID),
 			get = function()
 				return ConjuredFirstActive()
 			end,
@@ -102,6 +124,34 @@ function ns.BuildFoodDrinksOptions()
 			SpellDescription("OPTIONS_BUFF_FOOD_AS_FOOD_DESCRIPTION_FORMAT", ns.WELL_FED_SPELL_ID),
 			25
 		),
+		spaceReapply = Spacer(26),
+		-- Its dropdown keys are the threshold in seconds, stored directly in earlyReapplyThreshold.
+		toggleReapply = Kit.ToggleRow(27, {
+			type = "toggle",
+			name = L["OPTIONS_REAPPLY"],
+			desc = SpellDescription("OPTIONS_REAPPLY_DESCRIPTION_FORMAT", ns.WELL_FED_SPELL_ID),
+			get = function()
+				return ReapplyActive()
+			end,
+			set = function(_, value)
+				ns.db.profile.earlyReapply = value
+				MacroOptions.Changed()
+			end,
+		}, {
+			control = {
+				type = "select",
+				desc = L["OPTIONS_REAPPLY_THRESHOLD_DESCRIPTION"],
+				values = ReapplyThresholdValues(),
+				sorting = REAPPLY_SECONDS,
+				get = function()
+					return ns.db.profile.earlyReapplyThreshold
+				end,
+				set = function(_, value)
+					ns.db.profile.earlyReapplyThreshold = value
+					MacroOptions.Changed()
+				end,
+			},
+		}),
 
 		--[[
 		    Rogues: Stealth Eating. Its Night Elf twin below writes the same

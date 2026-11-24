@@ -18,7 +18,7 @@ ns.MANA_RUNES = {
 How We Got the Data
 
 Last Validated
-	2026-11-19, wago.tools, WoW Forever 1.60.1.70959
+	2026-11-24, Validate Data, WoW Forever 1.60.1.71037
 
 Notes
 	- ns.MANA_GEMS holds the mage's mana gems, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Mana Gem macro and by the Readiness Report. Mana Amount is the low end of the restore.
@@ -80,6 +80,8 @@ wago.tools
 	https://wago.tools/db2/Item?build=1.60.1.70959
 	https://wago.tools/db2/ItemSparse?build=1.60.1.70959
 	https://wago.tools/db2/ItemXItemEffect?build=1.60.1.70959
+	https://wago.tools/db2/Item?build=1.60.1.71037
+	https://wago.tools/db2/ItemSparse?build=1.60.1.71037
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Forever/foreverItemDB.lua

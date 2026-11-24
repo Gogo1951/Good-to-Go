@@ -457,13 +457,19 @@ function ns.SwitchRestockList(newListName)
 	end
 
 	--[[
-	    Buys for the new list straight away: not through ns.OnRestockerMerchantShow, whose
-	    doubled-MERCHANT_SHOW throttle and Shift check would swallow a switch made just
-	    after the merchant opened, or with Shift held while clicking.
+	    Buys for the new list once the previous run's buys have landed (or timed out), since
+	    a run counts only what is already in the bags and would buy the in-flight items again.
+	    Not through ns.OnRestockerMerchantShow, whose doubled-MERCHANT_SHOW throttle and Shift
+	    check would swallow a switch made just after the merchant opened, or with Shift held
+	    while clicking.
 	]]
 	if ns.merchantIsOpen and not ns.merchantBuyingSkipped then
-		ns.ResetMerchantRestockThrottle()
-		ns.RestockFromMerchant()
+		ns.AfterMerchantBuysLand(function()
+			if ns.merchantIsOpen and not ns.merchantBuyingSkipped then
+				ns.ResetMerchantRestockThrottle()
+				ns.RestockFromMerchant()
+			end
+		end)
 	end
 end
 

@@ -124,7 +124,7 @@ local function CaptureDiagnosticCandidates()
 			buffFood, preferHybrid, allowConjuredFirst, allowRestockLast = false, false, false, false
 		else
 			list = diagnosticCandidates[definition.typeName]
-			buffFood = definition.allowBuffFood and ns.buffFoodRank
+			buffFood = Ranking.BuffFoodRank(definition)
 			preferHybrid = definition.preferHybrid
 			allowConjuredFirst = definition.allowConjuredFirst and ns.allowConjuredFirst
 			allowRestockLast = definition.allowRestockLast and ns.allowRestockLast

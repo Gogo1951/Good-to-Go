@@ -182,6 +182,35 @@ local function DecodeBloodrageCooldown()
 	return { n = 2, "Buff Duty", cooling and "Bloodrage on cooldown" or "Bloodrage off cooldown" }
 end
 
+-- Each watched unit's PvP flag at its last UNIT_FLAGS firing, so a change stands out.
+local pvpFlags = {}
+
+--[[
+    The UNIT_FLAGS firings Buff Duty acts on: a PvP flag going up or down on
+    you, your target or a group member, which holds their icons back or lets
+    them cast again (OnUnitFlags in Buff-Duty-Events.lua, BuffDuty.PvPFlaggedTarget).
+    Its own record of each unit's flag is private to that file, so this keeps
+    one alongside it.
+]]
+local function DecodePvPFlag(unit)
+	if not IsPlain(unit) or type(unit) ~= "string" then
+		return nil
+	end
+	if not (unit == "player" or unit == "target" or unit:find("^party%d") or unit:find("^raid%d")) then
+		return nil
+	end
+	local flagged = UnitIsPVP(unit)
+	if not IsPlain(flagged) then
+		return nil
+	end
+	flagged = flagged and true or false
+	if pvpFlags[unit] == flagged then
+		return nil
+	end
+	pvpFlags[unit] = flagged
+	return { n = 3, "Buff Duty", unit, flagged and "PvP flag up" or "PvP flag down" }
+end
+
 --[[
     Firehoses that carry no id, each with the test its handler makes before
     acting on a firing. A firing the handler would ignore folds into the
@@ -216,6 +245,9 @@ end
     - SPELL_UPDATE_COOLDOWN fires on every global cooldown while Buff Duty is
       on for your class. Most firings only move the window's cooldown swipes;
       Bloodrage starting or ending its own cooldown is written decoded.
+    - UNIT_FLAGS fires for every flag change on every unit, combat's and
+      nameplates' included, while Buff Duty is on for your class. A PvP flag
+      changing on you, your target or a group member is written decoded.
 ]]
 local GATED_EVENTS = {
 	UPDATE_MOUSEOVER_UNIT = {
@@ -241,6 +273,10 @@ local GATED_EVENTS = {
 	SPELL_UPDATE_COOLDOWN = {
 		reason = "a cooldown swipe only; Bloodrage's own cooldown didn't change",
 		decode = DecodeBloodrageCooldown,
+	},
+	UNIT_FLAGS = {
+		reason = "not a PvP flag change on you, your target or your group",
+		decode = DecodePvPFlag,
 	},
 }
 
