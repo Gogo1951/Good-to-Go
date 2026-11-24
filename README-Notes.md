@@ -14,7 +14,7 @@
 
 - **Departs from:** ADD-ON NAMES, window titles shaped `Title // Full Name`.
 - **Instead:** The panels docked beside the Spellbook window are titled with the spell they edit, as `Fireball // Conditionals`.
-- **Why:** They are part of the Spellbook window, whose own title already carries the Full Name.
+- **Why:** They are part of the Spellbook window, whose own title already names the add-on.
 
 ### Per-character records kept off the profile
 
@@ -81,3 +81,15 @@
 - **Departs from:** SPACING SCALE, every size on 2, 4, 8, 16, 32, 64, 128.
 - **Instead:** Buff Duty's icons are 20 points, its rows 24, and its icon grids step by 24.
 - **Why:** The maintainer chose 20 by eye: 16 was too small, and 20 looked better than 24.
+
+### Windows move from anywhere
+
+- **Departs from:** WINDOWS, a window moves by its title bar only.
+- **Instead:** Every window moves when dragged from anywhere on it, its headers and names included.
+- **Why:** The maintainer prefers a window that moves wherever it is grabbed.
+
+### Buff Duty's window settings live in its flyout
+
+- **Departs from:** MINIMAP MENU → Two Homes for Every Setting, the options panel is complete.
+- **Instead:** Buff Duty's Window Opacity and its choices to skip a buff food, scroll or elixir are set only in the Options flyout on its window.
+- **Why:** They are about the window itself, so they are changed while looking at it.

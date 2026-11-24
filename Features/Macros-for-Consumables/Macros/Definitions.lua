@@ -30,6 +30,9 @@ local _, ns = ...
       allowBuffFood     -- true: rank buff food by the scanner's live
                            ns.buffFoodRank, last or with the rest (Food, Water);
                            absent: the ladder's buff-food steps stay gated off
+      buffFoodFirstWhenUnfed -- true: buff food ranks first while you're
+                           missing Well Fed (ns.buffFoodFirst), ahead of
+                           conjured-first too (Food)
       allowConjuredFirst -- true: compare with the scanner's live
                            ns.allowConjuredFirst preference (Food, Water);
                            absent: the ladder's conjured-first step stays

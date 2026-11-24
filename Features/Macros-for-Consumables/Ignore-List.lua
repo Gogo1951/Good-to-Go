@@ -60,7 +60,7 @@ end
 
 --[[
     The mini-map button's Right-Click (ignore the food it is currently offering)
-    and Middle-Click (clear) act on the current character's list only, which is
+    and the menu's Clear Ignore List row act on the current character's list only, which is
     exactly what the mini-map menu's Ignore List section shows -- so both
     keep meaning what the player just read. The Global list is edited from the
     Ignore List panel instead, through ns.SetIgnoredInScope below.
@@ -101,7 +101,7 @@ function ns.UnignoreItem(itemID)
 	return true
 end
 
--- At once and with no confirmation: the mini-map's Middle-Click is a deliberate quick-clear.
+-- At once and with no confirmation: the mini-map menu's Clear Ignore List row is a deliberate quick-clear.
 function ns.ClearIgnoreList()
 	local ignoreList = ns.GetIgnoreList()
 	local cleared = 0

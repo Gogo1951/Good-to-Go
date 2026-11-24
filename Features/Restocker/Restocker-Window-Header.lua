@@ -63,11 +63,11 @@ local FILTER_BOX_WIDTH = 160
 local BAG_MENU_WIDTH = 160
 local ADD_BOX_WIDTH = 160
 --[[
-    Between the bag menu and the add box. An InputBoxTemplate field draws its
-    border some 4px left of its own edge, which eats into the gap, so it is
-    4 wider than the 16 it draws as (measured in the Forever client).
+    Between the bag menu and the add box, on the Spacing Scale. An
+    InputBoxTemplate field draws its border some 4px left of its own edge
+    (measured in the Forever client), which eats into the gap it draws as.
 ]]
-local CONTROL_ITEM_GAP = 20
+local CONTROL_ITEM_GAP = 16
 local ADD_BUTTON_WIDTH = 64
 local STAPLES_GAP = 8 -- between the header's buttons, and between the add box and Add
 

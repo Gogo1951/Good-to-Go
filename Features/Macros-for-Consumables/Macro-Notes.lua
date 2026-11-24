@@ -168,9 +168,9 @@ local function RogueNotes()
 		{
 			title = L["NOTE_MACRO_POISONS"],
 			rows = {
-				{ L["MENU_CLICK_LEFT"], SECONDARYHANDSLOT },
-				{ L["MENU_CLICK_RIGHT"], MAINHANDSLOT },
-				{ L["MENU_CLICK_MIDDLE"], L["NOTE_POISONS_WINDOW"] },
+				{ L["MENU_CLICK_LEFT"], L["NOTE_APPLY_OFF_HAND"] },
+				{ L["MENU_CLICK_RIGHT"], L["NOTE_APPLY_MAIN_HAND"] },
+				{ L["MENU_CLICK_MIDDLE"], L["NOTE_OPEN_POISONS_WINDOW"] },
 			},
 			note = L["NOTE_POISONS_REPLACED"],
 			types = { "Poisons" },

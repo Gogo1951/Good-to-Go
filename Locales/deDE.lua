@@ -8,12 +8,12 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The add-on has two names. ADDON_TITLE, the full name, is for window
-    titles, the front of every chat print ("Good to Go // ..."),
-    and anywhere the add-on is talked about; ADDON_SHORT_NAME is for tooltip
-    lines and the end of every sent message ("... // GtG"). Both are proper nouns and
-    stay as written in every locale, as does the full name inside any
-    sentence below.
+    The add-on has two names. ADDON_TITLE, the full name, is for the front
+    of every chat print ("Good to Go // ...") and anywhere the add-on is
+    talked about; ADDON_SHORT_NAME is for window titles ("Restock List //
+    GtG"), tooltip and menu lines, and the end of every sent message
+    ("... // GtG"). Both are proper nouns and stay as written in every
+    locale, as does the full name inside any sentence below.
 ]]
 L["ADDON_TITLE"] = "Good to Go"
 L["ADDON_SHORT_NAME"] = "GtG"
@@ -120,7 +120,7 @@ L["MESSAGE_MACROS_READY_TAB"] =
 L["MESSAGE_IGNORE_ADDED"] = "%s steht jetzt auf der Ignorierliste dieses Charakters."
 -- A click on an item in the mini-map menu's Ignore List. %s is the item's link.
 L["MESSAGE_IGNORE_REMOVED"] = "%s steht nicht mehr auf der Ignorierliste dieses Charakters."
--- The mini-map button's Middle-Click: %d is how many items it took off the list, exactly one, or two or more.
+-- The mini-map menu's Clear Ignore List row: %d is how many items it took off the list, exactly one, or two or more.
 L["MESSAGE_IGNORE_CLEARED_ONE"] = "1 Gegenstand von der Ignorierliste dieses Charakters entfernt."
 L["MESSAGE_IGNORE_CLEARED_MANY"] = "%d Gegenstände von der Ignorierliste dieses Charakters entfernt."
 
@@ -258,15 +258,12 @@ L["MINIMAP_RESTOCKER_NOTHING_LOW"] = "Nichts ist knapp oder aufgebraucht."
 
 --[[
     The mini-map menu's Restocker block: a line saying what the list is
-    for, and the click its Open row names.
+    for, then its Open row.
     "Your list" in the description and in MINIMAP_RESTOCKER_EMPTY is this
-    list. The Options row is always the menu's last, its click on its right.
+    list. The Options row is always the menu's last.
 ]]
 L["MENU_RESTOCKER_DESCRIPTION"] = "Kauft die Gegenstände auf deiner Liste und lagert sie in der Bank."
-L["MENU_CLICK_SHIFT_RIGHT"] = "Shift + Rechtsklick"
 L["MENU_OPTIONS"] = "GtG-Optionen"
-L["MENU_CLICK_SHIFT_LEFT"] = "Shift + Linksklick"
-L["MENU_CLICK_SHIFT_MIDDLE"] = "Shift + Mittelklick"
 -- The Restocker block's Open row hover while the Restocker is off.
 L["MENU_RESTOCKER_OPEN_OFF_DESCRIPTION"] = "Öffnet deine Nachschubliste. Schalte den Restocker ein, um sie zu nutzen."
 
@@ -301,6 +298,7 @@ L["NOTE_MACRO_MANA_GEM"] = "Manastein-Makro"
 L["NOTE_MACRO_HEALTHSTONE"] = "Gesundheitsstein-Makro"
 L["NOTE_MACRO_SOULSTONE"] = "Seelenstein-Makro"
 L["NOTE_MACRO_POISONS"] = "Gifte-Makro"
+L["NOTE_MACRO_EXPLOSIVES"] = "Sprengstoff-Makro"
 
 -- Hunter. NOTE_PET_MEND_CLICK is the click that casts Mend Pet: a Right-Click, or any click during combat.
 L["NOTE_PET_CALL_FEED_REVIVE"] = "Rufen, füttern oder wiederbeleben"
@@ -330,8 +328,10 @@ L["NOTE_MAGE_TARGET_LEVEL"] =
 L["NOTE_WARLOCK_TARGET_LEVEL"] =
 	"Visiere einen Spieler niedrigerer Stufe an, um einen Gesundheitsstein für dessen Stufe herzustellen."
 
--- Rogue. A Left-Click and a Right-Click on the Poisons macro show the client's slot names, MAINHANDSLOT and SECONDARYHANDSLOT.
-L["NOTE_POISONS_WINDOW"] = "Gifte-Fenster"
+-- Rogue. The Poisons macro's click rows: Left-Click applies to the off hand, Right-Click to the main hand, Middle-Click opens the Poisons window.
+L["NOTE_APPLY_OFF_HAND"] = "Auf Schildhand auftragen"
+L["NOTE_APPLY_MAIN_HAND"] = "Auf Waffenhand auftragen"
+L["NOTE_OPEN_POISONS_WINDOW"] = "Gifte-Fenster öffnen"
 L["NOTE_POISONS_REPLACED"] = "Ersetzt alte Gifte automatisch."
 
 --------------------------------------------------------------------------------
@@ -367,6 +367,8 @@ L["MENU_OPEN"] = "Öffnen"
 L["MENU_CLICK_LEFT"] = "Linksklick"
 L["MENU_CLICK_RIGHT"] = "Rechtsklick"
 L["MENU_CLICK_MIDDLE"] = "Mittelklick"
+-- The last line of a menu row's tooltip when the mini-map button's Right-Click does the same job.
+L["MENU_SHORTCUT"] = "Kurzbefehl: Rechtsklick auf den Minikarten-Button."
 
 -- The words on the right of a block's title.
 L["MENU_ON"] = "An"
@@ -384,8 +386,8 @@ L["MENU_MORE_FEATURES"] = "Weitere Funktionen"
 L["MENU_FEATURE_COUNT_ON"] = "%d an"
 L["MENU_FEATURE_COUNT_OFF"] = "%d aus"
 
--- The mini-map menu's Enhanced Spellbook block, above the class macros: a line saying what it's for, then Open (MENU_OPEN),
--- as Shift + Left-Click on the button does. MENU_OPEN_SPELLBOOK is the click line on the spellbook tab's tooltip.
+-- The mini-map menu's Enhanced Spellbook block, above the class macros: a line saying what it's for, a Toggle row, then
+-- Open (MENU_OPEN) while it's on. MENU_OPEN_SPELLBOOK is the click line on the spellbook tab's tooltip.
 L["MENU_SPELLBOOK_DESCRIPTION"] = "Mouseover-Makros für jeden Zauber, mit einem Klick erstellt."
 L["MENU_OPEN_SPELLBOOK"] = "Erweitertes Zauberbuch öffnen"
 
@@ -528,8 +530,12 @@ L["SAMPLE_EXAMPLE"] = "Beispiel"
 
 -- A Reset button, which puts the settings it sits under, or the whisper box beside it, back to their defaults.
 L["OPTIONS_RESET"] = "Zurücksetzen"
+-- Reset Position: a window's row on its own panel; the button puts the window back where it first appears.
+L["OPTIONS_RESET_POSITION"] = "Position zurücksetzen"
+L["OPTIONS_RESET_POSITION_DESCRIPTION"] = "Setzt das Fenster dorthin zurück, wo es zuerst erscheint."
 L["OPTIONS_FEATURE_OFF_STATUS"] =
 	"Die Funktion %s ist aus, daher werden diese Einstellungen nicht verwendet. Ihr Schalter ist auf der Seite %s."
+L["OPTIONS_SWITCH_OFF_HERE"] = "%s ist aus, daher werden diese Einstellungen nicht verwendet."
 
 --[[
     The whisper composer around every whisper a player words themselves, on the Buff Duty and Rank Watch
@@ -629,7 +635,7 @@ L["OPTIONS_MACRO_TOGGLE_DESCRIPTION"] =
 ]]
 L["OPTIONS_FOOD_WATER_HEADER"] = "Essen und Trinken"
 L["OPTIONS_FOOD_DRINKS_DESCRIPTION"] =
-	"Deine Essen- und Wasser-Makros essen und trinken das Beste, was du dabeihast. Diese Optionen ändern, was als das Beste gilt und wie du isst und trinkst. Buff-Essen und Schriftrollen, die du für ihre Buffs nutzt, findest du auf der Seite Selbstbuffs des Buff-Dienstes."
+	"Deine Essen- und Wasser-Makros essen und trinken das Beste, was du dabeihast. Diese Optionen ändern, was als das Beste gilt und wie du isst und trinkst. Buff-Essen und Schriftrollen, die du für ihre Buffs nutzt, haben eigene Seiten unter Buff-Dienst. Als Magier zaubert ein Rechtsklick mehr herbei; visiere einen Spieler niedrigerer Stufe an, um für dessen Stufe herbeizuzaubern."
 L["OPTIONS_FOOD_ORDER_HEADER"] = "Welches Essen zuerst kommt"
 L["OPTIONS_FOOD_ORDER_DESCRIPTION"] =
 	"Von zwei Speisen oder Getränken verwenden deine Makros das, was am meisten wiederherstellt. Diese Optionen ändern diese Reihenfolge."
@@ -643,7 +649,7 @@ L["OPTIONS_BUFF_FOOD_WHEN_FED"] = "Buff-Essen auch essen, wenn schon satt"
 L["OPTIONS_BUFF_FOOD_AS_FOOD_DESCRIPTION_FORMAT"] =
 	'Deine Essen- und Wasser-Makros behandeln Buff-Essen wie jedes andere Essen und essen, was am meisten wiederherstellt. Aus hebt es für den Buff-Dienst auf, der es anbietet, wenn du "%s" brauchst, außer es ist alles, was du dabeihast.'
 
--- The scroll types on Buff Duty's Self-Buffs page. The other five are labeled with the client's stat names (SPELL_STAT1_NAME to SPELL_STAT5_NAME); Protection has none.
+-- The scroll types on Buff Duty's Scrolls page. The other five are labeled with the client's stat names (SPELL_STAT1_NAME to SPELL_STAT5_NAME); Protection has none.
 L["OPTIONS_SCROLL_TYPES"] = "Schriftrollentypen in Prüfung einschließen"
 L["OPTIONS_SCROLL_PROTECTION"] = "Schutz"
 -- Hover text on each scroll type and pet food type; %s is the scroll type's label or the pet food's item name.
@@ -651,8 +657,8 @@ L["OPTIONS_BUFF_TYPE_DESCRIPTION"] = 'Schließt "%s" in die Prüfung auf fehlend
 
 -- Use Conjured Food & Water First, the first option under Which Food Comes First.
 L["OPTIONS_CONJURED_FIRST"] = "Herbeigezaubertes Essen und Wasser zuerst verwenden"
-L["OPTIONS_CONJURED_FIRST_DESCRIPTION"] =
-	"Deine Essen- und Wasser-Makros verwenden herbeigezaubertes Essen und Wasser vor allem anderen, auch wenn etwas in deinen Taschen mehr wiederherstellt, denn es kostet nichts und verschwindet kurz nach dem Ausloggen."
+L["OPTIONS_CONJURED_FIRST_DESCRIPTION_FORMAT"] =
+	'Deine Essen- und Wasser-Makros verwenden herbeigezaubertes Essen und Wasser vor allem anderen, auch wenn etwas in deinen Taschen mehr wiederherstellt, denn es kostet nichts und verschwindet kurz nach dem Ausloggen. Solange dir "%s" fehlt, isst dein Essen-Makro zuerst Buff-Essen.'
 L["OPTIONS_CONJURED_FIRST_MODE_DESCRIPTION"] =
 	"Legt fest, auf welchen Stufen herbeigezaubertes Essen und Wasser Vorrang haben: auf jeder Stufe, nur beim Leveln oder nur auf Höchststufe. Die Kästchen darunter legen fest, in welchen Gruppen."
 
@@ -700,12 +706,12 @@ L["OPTIONS_INCLUDE_MANA_RUNES"] = "Runen und andere Mana-Gegenstände zum Manast
 L["OPTIONS_INCLUDE_MANA_RUNES_DESCRIPTION_FORMAT"] =
 	"Nimmt %s, %s sowie jeden anderen Mana-Gegenstand, der sich die Abklingzeit mit Manasteinen teilt, in die Rangfolge deiner Manasteine auf, sodass das Manastein-Makro einen davon verwendet, wenn das deine beste Wahl ist oder du keine Manasteine mehr hast."
 
--- Refresh Pet Food Under, closing the Hunter section on Class Macros: "Refresh Under", as Buff Duty names its timing.
-L["OPTIONS_REAPPLY"] = "Begleiterfutter auffrischen unter"
-L["OPTIONS_REAPPLY_DESCRIPTION"] =
-	"Behandelt den Futter-Buff deines Begleiters als abgelaufen, wenn er weniger Restzeit als deinen Schwellenwert hat, sodass dein Essen-Makro vor dem Pull einen frischen anbietet."
+-- Refresh Food Buffs Under, after the buff food rows on Food & Drinks: "Refresh Under", as Buff Duty names its timing.
+L["OPTIONS_REAPPLY"] = "Essens-Buffs auffrischen unter"
+L["OPTIONS_REAPPLY_DESCRIPTION_FORMAT"] =
+	"Behandelt %s, den Futter-Buff deines Begleiters und Rollen-Buffs als abgelaufen, wenn sie weniger Restzeit als deinen Schwellenwert haben, sodass deine Makros vor dem Pull einen frischen anbieten."
 --[[
-    Threshold dropdown, beside the Refresh Pet Food Under toggle, whose label
+    Threshold dropdown, beside the Refresh Food Buffs Under toggle, whose label
     carries the "under", so the values are plain durations.
 ]]
 L["OPTIONS_REAPPLY_THRESHOLD_DESCRIPTION"] =
@@ -978,7 +984,7 @@ L["OPTIONS_READINESS_WELL_FED_DESCRIPTION_FORMAT"] = 'Meldet einen fehlenden "%s
 L["OPTIONS_READINESS_PET_FOOD_BUFF_DESCRIPTION_FORMAT"] =
 	'Meldet einen fehlenden "%s"-Buff deines Begleiters. Dazu muss "Tierfutter-Buffs verwenden" auf der Seite Klassenmakros aktiviert sein, und dein Begleiter muss draußen sein.'
 L["OPTIONS_READINESS_SCROLLS_DESCRIPTION"] =
-	"Meldet fehlende Schriftrollen-Buffs, für die Schriftrollenarten, die auf der Seite Selbstbuffs des Buff-Dienstes angehakt sind."
+	"Meldet fehlende Schriftrollen-Buffs, für die Schriftrollenarten, die auf der Seite Schriftrollen des Buff-Dienstes angehakt sind."
 --[[
     The one entry that asks about the GROUP rather than the player's own bags,
     which the helper text has to say outright: a raid carrying seven unused
@@ -1003,12 +1009,12 @@ L["OPTIONS_READINESS_OFF_HAND_DESCRIPTION_STACKED"] =
 	"Meldet eine Waffe in der Schildhand, der eine temporäre Verzauberung fehlt. Schurken brauchen zwei, ein Gift neben einem Öl oder Stein; alle anderen eine beliebige."
 --[[
     Names the OTHER threshold so the two cannot be mistaken for each other: the
-    Class Macros page has one that decides when a macro treats a buff as spent, and
+    Food & Drinks page has one that decides when a macro treats a buff as spent, and
     this one only decides when the report mentions it.
 ]]
 L["OPTIONS_READINESS_EXPIRING"] = "Ablaufende Buffs innerhalb von"
 L["OPTIONS_READINESS_EXPIRING_BUFFS_DESCRIPTION"] =
-	'Nennt jeden Buff auf dir, der bald abläuft, nicht nur die, die Good to Go anwendet, und ist unabhängig von "Ablaufende Buffs erneuern" auf der Seite Klassenmakros.'
+	'Nennt jeden Buff auf dir, der bald abläuft, nicht nur die, die Good to Go anwendet, und ist unabhängig von "Essens-Buffs auffrischen unter" auf der Seite Essen und Trinken.'
 -- %s is a whole or half number of minutes.
 L["OPTIONS_READINESS_EXPIRING_MINUTES"] = "%s Minuten"
 -- The one-minute entry alone; one plural template cannot render it grammatically.
@@ -1186,7 +1192,9 @@ L["RANK_WATCH_IGNORED_NONE"] = "Noch niemand."
 L["RANK_WATCH_IGNORED_REMOVE"] = "Nicht mehr ignorieren"
 L["RANK_WATCH_IGNORE_TARGET"] = "Ziel ignorieren"
 L["RANK_WATCH_IGNORE_TARGET_DESCRIPTION"] = "Fügt den Spieler, den du im Ziel hast, der Liste hinzu."
+L["RANK_WATCH_IGNORE_TARGET_CAPTION"] = "Dein Ziel"
 L["RANK_WATCH_IGNORE_ADDED"] = "Rangwache ignoriert jetzt %s."
+L["RANK_WATCH_IGNORE_REMOVED"] = "Rangwache meldet %s wieder."
 L["RANK_WATCH_IGNORE_NOT_FOUND"] =
 	"%s nicht gefunden. Geh mit diesem Spieler in eine Gruppe oder nimm ihn ins Ziel und versuch es dann erneut."
 -- %s is the command, /gtg ignore Name (RANK_WATCH_IGNORE_COMMAND), drawn in blue.
@@ -1367,6 +1375,7 @@ L["RESTOCKER_OUT_OF_GOLD_RESERVE"] =
 
 -- /restock help lines. The command literals stay in code; these are the descriptions, and the show line reuses RESTOCKER_COMMAND_DESCRIPTION.
 
+L["RESTOCKER_HELP_TITLE"] = "Befehle der Nachschubliste"
 -- Stands for the list name the player types after a /restock profile subcommand.
 L["RESTOCKER_HELP_NAME_PLACEHOLDER"] = "[Name]"
 L["RESTOCKER_HELP_PROFILE_ADD"] = "Legt eine Liste mit diesem Namen an."
@@ -1398,8 +1407,8 @@ L["RESTOCKER_HELP_PROFILE_USE"] = "Weist diesem Charakter die Liste mit diesem N
     food staples reuse the DIET_ keys above, so each food row carries the
     client's own pet diet name.
 
-    The title is its own, and the call site puts the add-on's full name
-    after it (STARTER_POPUP_TITLE // ADDON_TITLE): at login this window
+    The title is its own, and the call site puts the add-on's short name
+    after it (STARTER_POPUP_TITLE // ADDON_SHORT_NAME): at login this window
     opens with nothing else of the add-on's on screen, so its title bar is
     all that says whose it is.
 
@@ -1477,7 +1486,7 @@ L["STARTER_POPUP_COUNT_DESCRIPTION"] =
 
 --[[
     Restock List window UI. The title names what the window holds, before the
-    add-on's full name (RESTOCKER_WINDOW_TITLE // ADDON_TITLE); the feature
+    add-on's short name (RESTOCKER_WINDOW_TITLE // ADDON_SHORT_NAME); the feature
     that acts on it stays "Restocker".
 ]]
 L["RESTOCKER_WINDOW_TITLE"] = "Nachschubliste"
@@ -1809,12 +1818,15 @@ L["BUFF_DUTY_HIDE_IN_COMBAT"] = "Im Kampf ausblenden"
 L["BUFF_DUTY_HIDE_IN_COMBAT_DESCRIPTION"] =
 	"Blendet das Fenster während des Kampfes aus. Im Kampf kann die Liste nicht aktualisiert werden, daher behält ein sichtbar gelassenes Fenster seinen letzten Stand, bis der Kampf endet."
 L["BUFF_DUTY_SHOW_HEADER"] = "Im Fenster anzeigen"
-L["BUFF_DUTY_SHOW_DESCRIPTION"] =
-	"Fügt dem Fenster deine eigenen Buffs, die Fremden, die dich gebufft haben, und dein Ziel hinzu."
+L["BUFF_DUTY_SHOW_DESCRIPTION"] = "Fügt dem Fenster deine eigenen Buffs hinzu."
+L["BUFF_DUTY_OTHERS_DESCRIPTION"] = "Fügt dem Fenster die Fremden, die dich gebufft haben, und dein Ziel hinzu."
 -- Return the Favor, Your Target and Ask for Buffs each name both their switch and the window row it adds.
 L["BUFF_DUTY_FAVOR_ENABLE"] = "Gefallen erwidern"
 L["BUFF_DUTY_FAVOR_ENABLE_DESCRIPTION"] =
 	"Listet die Fremden auf, die dich kürzlich gebufft haben, samt den Buffs, die du ihnen zurückgeben kannst. Rechtsklicke auf ein Symbol, um jemanden von der Liste zu nehmen."
+L["BUFF_DUTY_BUFF_PVP_FLAGGED"] = "PvP-aktive Spieler buffen"
+L["BUFF_DUTY_BUFF_PVP_FLAGGED_DESCRIPTION"] =
+	"Wer einen PvP-aktiven Spieler bufft, wird selbst PvP-aktiv. Solange dies aus ist und du kein PvP aktiv hast, bufft der Buff-Dienst sie nicht und wirkt keinen Gruppenbuff, der sie erreichen würde, sondern sagt es dir im Chat."
 L["BUFF_DUTY_FAVOR_SECONDS_DESCRIPTION"] =
 	"Legt fest, wie lange ein Fremder nach seinem letzten Buff auf der Liste bleibt."
 L["BUFF_DUTY_TARGET_ENABLE"] = "Dein Ziel"
@@ -1894,28 +1906,51 @@ L["BUFF_DUTY_SELF_REFRESH_OFF"] = "Aus"
 L["BUFF_DUTY_SELF_REFRESH_MISSING"] = "Bei Fehlen"
 -- %s is a duration from the client, like "5 Minutes".
 L["BUFF_DUTY_SELF_REFRESH_UNDER"] = "Unter %s"
-L["BUFF_DUTY_SELF_REFRESH_DESCRIPTION"] =
-	"Legt fest, wann %s angezeigt wird: nie, nach dem Ablaufen oder wenn weniger als diese Zeit übrig ist."
--- The Self-Buffs panel's last box: consumables any class keeps up on itself (Winterfall Firewater), with a muted note after its name.
-L["BUFF_DUTY_SELF_ITEMS_HEADER"] = "Verbrauchsgüter"
-L["BUFF_DUTY_SELF_ITEMS_NOTE"] = "wenn eins in deinen Taschen ist"
 --[[
-    Hover text on the Consumables box's Well Fed row, whose buff food is
+    Categories of buffs you keep up on yourself, each a section of the Buff
+    Duty window and a page under Buff Duty, after Self-Buffs, Well Fed (the
+    client's name), Weapon Buffs and Scrolls: elixirs, then consumables with
+    a setting of their own.
+]]
+L["BUFF_DUTY_ROW_ELIXIRS"] = "Fläschchen oder Elixiere"
+L["BUFF_DUTY_ROW_OTHER"] = "Andere Buffs"
+-- Each category's page opens with When to Use, a dropdown of when the window shows that category.
+L["BUFF_DUTY_ROW_WHEN"] = "Wann nutzen"
+L["BUFF_DUTY_ROW_WHEN_DESCRIPTION"] =
+	"Legt fest, wann das Fenster diese Buffs zeigt: immer, in jeder Gruppe oder jedem Schlachtzug, oder nur im Schlachtzug."
+L["BUFF_DUTY_ROW_WHEN_ALWAYS"] = "Immer"
+L["BUFF_DUTY_ROW_WHEN_GROUP"] = "In Gruppe oder Schlachtzug"
+L["BUFF_DUTY_ROW_WHEN_RAID"] = "Im Schlachtzug"
+-- Then a checkbox for whether the key uses the category's icons. %s is the key's name, BUFF_KEY.
+L["BUFF_DUTY_ROW_KEY"] = "Mit %s nutzen"
+L["BUFF_DUTY_ROW_KEY_DESCRIPTION"] = "Deine Taste %s nutzt diese Symbole auch. Aus sind sie nur ein Klick im Fenster."
+-- The Well Fed page's description.
+L["BUFF_DUTY_FOOD_PAGE_DESCRIPTION"] = "Buff-Essen, das du dabeihast, angeboten im Fenster, wenn dir sein Buff fehlt."
+--[[
+    Hover text on the Well Fed page's Well Fed row, whose buff food is
     whichever the Food macro would eat. %s is the client's name for Well Fed.
 ]]
 L["BUFF_DUTY_WELL_FED_DESCRIPTION_FORMAT"] =
 	'Wird angezeigt, solange dir "%s" fehlt und du Buff-Essen dabeihast. Klicke im Fenster darauf, um dein bestes zu essen.'
--- The Consumables box's Scrolls row: one icon per scroll buff you're missing, for the types checked under it.
+-- The Scrolls page and its row: one icon per scroll buff you're missing, for the types checked under it.
 L["BUFF_DUTY_SCROLLS"] = "Schriftrollen"
+L["BUFF_DUTY_SCROLLS_PAGE_DESCRIPTION"] =
+	"Schriftrollen, die du dabeihast, angeboten im Fenster, wenn dir ihr Buff fehlt."
 L["BUFF_DUTY_SCROLLS_DESCRIPTION"] =
 	"Zeigt eine Schriftrolle für jeden fehlenden Schriftrollen-Buff, solange du diese Schriftrolle dabeihast. Klicke im Fenster auf eine, um sie zu lesen. Beobachtet werden die unten angehakten Schriftrollenarten."
+-- The Flasks or Elixirs page's description, and its Elixirs row: one icon per elixir in your bags whose buff you're missing.
+L["BUFF_DUTY_ELIXIRS_PAGE_DESCRIPTION"] =
+	"Elixiere, die du dabeihast, angeboten im Fenster, wenn dir ihr Buff fehlt. Um eins auszuschließen, schalte es in den Optionen des Fensters unter Fläschchen oder Elixiere aus."
+L["BUFF_DUTY_ELIXIRS"] = "Elixiere"
+L["BUFF_DUTY_ELIXIRS_DESCRIPTION"] =
+	"Zeigt jedes Elixier in deinen Taschen, dessen Buff dir fehlt, außer ein Buff auf dir nimmt schon seinen Platz ein. Klick eins im Fenster an, um es zu trinken."
+-- The Other Buffs page's description: consumables with a dropdown of their own, like Winterfall Firewater.
+L["BUFF_DUTY_OTHER_PAGE_DESCRIPTION"] =
+	"Andere Verbrauchsgüter, die du dabeihast, jedes mit eigener Einstellung, angeboten im Fenster, wenn dir ihr Buff fehlt."
 -- The Weapon Buffs panel, under Buff Duty after Self-Buffs.
 L["BUFF_DUTY_WEAPON_PANEL_HEADER"] = "Waffenbuffs"
 L["BUFF_DUTY_WEAPON_DESCRIPTION"] =
 	"Hake an, was jede Waffe tragen soll. Das Fenster bietet es an, wenn es fehlt oder bald abläuft, sofern es in deinen Taschen ist und zur Waffe passt."
--- The one timing for every weapon buff, at the top of the panel, captioned Refresh Under (BUFF_DUTY_REFRESH).
-L["BUFF_DUTY_WEAPON_REFRESH_DESCRIPTION"] =
-	"Legt fest, wann ein Waffenbuff erneut angeboten wird: nach dem Ablaufen oder wenn weniger als diese Zeit übrig ist."
 -- The boxes for the weapon items any class can use, after the rogue and shaman boxes.
 L["BUFF_DUTY_WEAPON_KIND_OIL"] = "Öle"
 L["BUFF_DUTY_WEAPON_KIND_STONE"] = "Steine"
@@ -1926,10 +1961,10 @@ L["BUFF_DUTY_WEAPON_KIND_LURE"] = "Köder"
 ]]
 L["BUFF_DUTY_WEAPON_PICK_DESCRIPTION"] =
 	"Bietet %s für die Waffe in deiner %s an. Solange die Waffe keine deiner angehakten Optionen trägt, wird jede angeboten, die du hast."
-L["BUFF_DUTY_SELF_ENABLE"] = "Deine Selbstbuffs"
+L["BUFF_DUTY_SELF_ENABLE"] = "Selbstbuffs"
 L["BUFF_DUTY_SELF_ENABLE_DESCRIPTION"] =
 	"Zeigt oben im Fenster deine eigenen Buffs, wenn sie fehlen oder bald ablaufen: die, die nur du dir selbst geben kannst, etwa eine Rüstung oder Inneres Feuer, und deine Gruppenbuffs auf dir. Welche, legst du unter Selbstbuffs fest."
-L["BUFF_DUTY_WEAPON_ENABLE"] = "Deine Waffenbuffs"
+L["BUFF_DUTY_WEAPON_ENABLE"] = "Waffenbuffs"
 L["BUFF_DUTY_WEAPON_ENABLE_DESCRIPTION"] =
 	"Zeigt die Gifte, Waffenverzauberungen, Öle, Steine und Köder, die deinen Waffen fehlen oder bald ablaufen, zusammen mit deinen Selbstbuffs oben im Fenster. Klicke auf einen Eintrag, um ihn aufzutragen. Welche, legst du unter Waffenbuffs fest."
 
@@ -1959,11 +1994,30 @@ L["BUFF_DUTY_MENU_OPACITY"] = "Fensterdeckkraft"
 L["BUFF_DUTY_MENU_OPACITY_DESCRIPTION"] =
 	"Legt fest, wie deckend der Hintergrund des Buff-Dienst-Fensters ist. Text und Symbole bleiben, wie sie sind."
 L["BUFF_DUTY_MENU_OPACITY_PERCENT"] = "%d%%"
--- The Options menu's Buff Food row, and its flyout of the buff food in your bags. In the food row's hover, the first %s is the food, the second the Well Fed buff's name.
+--[[
+    The window's category menus: each category line's arrow opens one, and the
+    Options line's Show in Window opens each. Show in Buff Duty, Use (when),
+    Show (how soon), Use with Keybind, Show Missing Inventory, then what the
+    category uses, each On or Off. Missing Inventory! is the red line in the
+    window. %s in the item hover is the spell, food, scroll or elixir.
+]]
+L["BUFF_DUTY_MISSING_INVENTORY"] = "Inventar fehlt!"
+L["BUFF_DUTY_MENU_SHOW_IN_BUFF_DUTY"] = "Im Buff-Dienst anzeigen"
+L["BUFF_DUTY_MENU_SHOW_IN_BUFF_DUTY_DESCRIPTION"] = "Zeigt diese Kategorie im Buff-Dienst-Fenster."
+L["BUFF_DUTY_MENU_SHOW"] = "Anzeigen"
+L["BUFF_DUTY_ROW_SHOW_DESCRIPTION"] =
+	"Legt fest, wann diese Buffs angezeigt werden: nach dem Ablaufen oder wenn weniger als diese Zeit übrig ist."
+L["BUFF_DUTY_MENU_SHOW_MISSING_INVENTORY"] = "Fehlendes Inventar anzeigen"
+L["BUFF_DUTY_ROW_OUT_DESCRIPTION"] =
+	'Zeigt "Inventar fehlt!" im Fenster, wenn du den Buff nicht hast und nichts in deinen Taschen ihn gibt.'
+L["BUFF_DUTY_MENU_IN_YOUR_BAGS"] = "In deinen Taschen"
+L["BUFF_DUTY_MENU_YOUR_SPELLS"] = "Deine Zauber"
+L["BUFF_DUTY_MENU_NONE_IN_BAGS"] = "Nichts in deinen Taschen."
+L["BUFF_DUTY_MENU_NO_SPELLS"] = "Keine Buffs für deine Klasse."
+L["BUFF_DUTY_MENU_OTHER_PLAYERS"] = "Andere Spieler"
+L["BUFF_DUTY_MENU_ITEM_DESCRIPTION_FORMAT"] = "Bietet %s im Fenster an, wenn dir sein Buff fehlt. Aus überspringt es."
+-- The Well Fed category's name while the client hasn't named the Well Fed buff yet.
 L["BUFF_DUTY_MENU_BUFF_FOOD"] = "Buff-Essen"
-L["BUFF_DUTY_MENU_FOOD_DESCRIPTION_FORMAT"] =
-	'Bietet %s an, wenn du "%s" brauchst. Aus überspringt es zugunsten des nächstbesten Buff-Essens in deinen Taschen.'
-L["BUFF_DUTY_MENU_NO_BUFF_FOOD"] = "Kein Buff-Essen in deinen Taschen."
 -- The Self-Buffs buff food icon, while you aren't Well Fed.
 L["BUFF_DUTY_TOOLTIP_EAT"] = "Isst eines aus deinen Taschen. Bleib sitzen, bis du satt bist."
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "Wirkt auf %s samt Gruppe."
@@ -1978,6 +2032,8 @@ L["BUFF_DUTY_TOOLTIP_ASKED"] = "%s gefragt. Erneut fragen in %d Min."
 -- An Ask for Buffs icon's menu, its ask rows: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it: %s is one or two names (LIST_PAIR_FORMAT), or BUFF_DUTY_OTHERS_ASK_PEOPLE past two.
 L["BUFF_DUTY_OTHERS_HINT_ASK"] = "Buff anfragen (%s)"
 L["BUFF_DUTY_OTHERS_HINT_WHISPER"] = "%s anflüstern"
+L["BUFF_DUTY_OTHERS_SHORTCUT_LEFT"] = "Kurzbefehl: Linksklick auf das Symbol des Buffs."
+L["BUFF_DUTY_OTHERS_SHORTCUT_RIGHT"] = "Kurzbefehl: Rechtsklick auf das Symbol des Buffs."
 -- An Ask for Buffs menu's name row, on the right: the whole minutes left on that player's buff, or Missing once there is none.
 L["BUFF_DUTY_OTHERS_MINUTES"] = "%d Min."
 L["BUFF_DUTY_OTHERS_MISSING"] = "Fehlt"
@@ -1997,13 +2053,15 @@ L["BUFF_DUTY_OTHERS_ASK_PEOPLE"] = "%d Spieler"
     checkbox, the When to Show header, then the options command.
 ]]
 L["BUFF_DUTY_CLOSED"] =
-	"Buff-Dienst ist ausgeblendet, bis du einer Gruppe beitrittst, dich erneut einloggst oder neu lädst. Um ihn sofort zurückzuholen, mache einen Linksklick auf den Minikarten-Button. Um ihn für die Klasse %s ausgeschaltet zu lassen, entferne den Haken bei %s unter %s in %s."
+	"Buff-Dienst ist ausgeblendet, bis du einer Gruppe beitrittst, dich erneut einloggst oder neu lädst. Um ihn sofort zurückzuholen, klicke im Minikarten-Menü unter Buff-Dienst auf Umschalten. Um ihn für die Klasse %s ausgeschaltet zu lassen, entferne den Haken bei %s unter %s in %s."
 
 -- The Cast Next Buff key: its name in the game's Key Bindings list and the root panel's Key Bindings section, then the notices a press shows.
 L["BUFF_KEY"] = "Nächsten Buff wirken"
 -- %s is a player's name.
 L["BUFF_KEY_WAITING"] = "Warte darauf, dass %s in Reichweite kommt."
 L["BUFF_KEY_DONE"] = "Nichts mehr zu buffen."
+-- Printed when Buff Duty or the key skips a PvP-flagged player. %s is the player's name.
+L["BUFF_DUTY_PVP_FLAGGED"] = "%s hat PvP aktiv, du musst ihn manuell buffen."
 L["BUFF_KEY_OFF"] = "Buff-Dienst ist aus."
 --[[
     The Buff Duty window's last line, under Options, while the Cast Next Buff key has none: the options
@@ -2016,7 +2074,7 @@ L["BUFF_DUTY_KEY_TIP"] = "Belege in %s eine Taste mit %s, um diese Buffs mit ein
 -- Spellbook
 --------------------------------------------------------------------------------
 
--- The window's first tab, and its title before "// Good to Go", is TAB_ENHANCED_SPELLBOOK (Options Panel above).
+-- The window's first tab, and its title before "// GtG", is TAB_ENHANCED_SPELLBOOK (Options Panel above).
 
 -- Page: Sections
 L["SECTION_UNLEARNED"] = "Nicht erlernt"
@@ -2399,7 +2457,7 @@ L["PAGE_CATEGORY_SETTINGS_DESCRIPTION"] =
 -- after a category's count, where it carries on from the column before
 L["PAGE_CONTINUED"] = "(Fortsetzung)"
 
--- What's Next? Tab: the window's second tab and its title before "// Good to Go"
+-- What's Next? Tab: the window's second tab and its title before "// GtG"
 L["WHATS_NEXT_TITLE"] = "Was kommt als Nächstes?"
 L["WHATS_NEXT_EMPTY"] = "Keine Zauber aufzulisten."
 -- The same page while Show Known Spells is off: %s is that toggle's name (WHATS_NEXT_SHOW_KNOWN).
@@ -2473,7 +2531,7 @@ L["WHATS_NEXT_SHOW_TALENTS_RUNES"] = "Nicht gewählte Talente und Runen anzeigen
 L["WHATS_NEXT_SHOW_TALENTS_DESCRIPTION"] =
 	"Listet auch die Talentzauber, die du nicht gewählt hast. Diese erlernst du, indem du Talentpunkte ausgibst, nicht bei einem Lehrer."
 
--- Pet Spellbook Tab: a pet class's third tab and its title before "// Good to Go"
+-- Pet Spellbook Tab: a pet class's third tab and its title before "// GtG"
 L["PET_SPELLBOOK_TITLE"] = "Begleiter-Zauberbuch"
 L["PET_SPELLBOOK_EMPTY"] = "Dein Begleiter hat keine Zauber aufzulisten."
 L["PET_SPELLBOOK_NO_PET"] = "Kein Begleiter draußen. Beschwöre deinen Begleiter, um seine Zauber zu sehen."
@@ -2484,7 +2542,7 @@ L["PET_SPELLBOOK_STATUS_PASSIVE"] = "Passiv"
 L["PET_SPELLBOOK_AUTOCAST_ON"] = "Autozauber an"
 L["PET_SPELLBOOK_AUTOCAST_OFF"] = "Autozauber aus"
 
--- Pet What's Next? Tab: a hunter's or warlock's fourth tab and its title before "// Good to Go"
+-- Pet What's Next? Tab: a hunter's or warlock's fourth tab and its title before "// GtG"
 L["WHATS_NEXT_PET_TITLE"] = "Begleiter: Was kommt als Nächstes?"
 L["WHATS_NEXT_PET_EMPTY"] = "Keine Begleiterfähigkeiten aufzulisten."
 -- the footer's right: the pet out, or that there's none

@@ -160,6 +160,21 @@ local function AppendBuffDutyLines(lines)
 	)
 end
 
+-- A dragged window's saved anchor ({ point, relativePoint, xOffset, yOffset }), or where it opens until dragged.
+local function SavedSpotLine(label, position, default)
+	if type(position) == "table" and position.point then
+		return string.format(
+			"%s saved: %s to UIParent %s, offset %s, %s",
+			label,
+			tostring(position.point),
+			tostring(position.relativePoint),
+			tostring(position.xOffset),
+			tostring(position.yOffset)
+		)
+	end
+	return string.format("%s saved: (never moved; default, %s)", label, default)
+end
+
 --[[
 	The page and the Classic-engine host's tab are kept to themselves, so they are found by shape: the page
 	among its window's children (GoodToGoSpellbookFrame, built on the first click of a tab), carrying the geometry
@@ -263,6 +278,8 @@ local function AppendSpellbookLines(lines)
 		lines[#lines + 1] = FrameLine("Page", page)
 		PageLines(lines, page)
 	end
+	-- The window saves its last anchor account-wide when dragged, and opens in the middle until then.
+	lines[#lines + 1] = SavedSpotLine("Window", ns.db and ns.db.global.windowPosition, "the middle")
 	-- The panels docked against the window's right edge, built on first use.
 	lines[#lines + 1] = FrameLine("Conditionals panel", _G.GoodToGoConditionalsPanel)
 	lines[#lines + 1] = FrameLine("Cast Sequence panel", _G.GoodToGoCastSequencePanel)
@@ -270,7 +287,8 @@ end
 
 --[[
 	The Restock List window saves its last anchor and size (ns.restockSettings.framePosition) when dragged or
-	resized, and opens clamped to the screen; the Staples window always opens centered and saves nothing.
+	resized, and opens clamped to the screen; the Staples window saves its last anchor
+	(ns.restockSettings.staplesPosition) when dragged, and opens in the middle until then.
 ]]
 local function AppendRestockLines(lines)
 	local position = ns.restockSettings and ns.restockSettings.framePosition
@@ -288,6 +306,8 @@ local function AppendRestockLines(lines)
 		lines[#lines + 1] = "Restock List window saved: (never moved; default, beside the right edge)"
 	end
 	lines[#lines + 1] = FrameLine("Restock List window", ns.restockWindow)
+	lines[#lines + 1] =
+		SavedSpotLine("Staples window", ns.restockSettings and ns.restockSettings.staplesPosition, "the middle")
 	lines[#lines + 1] = FrameLine("Staples window", _G.GoodToGoStaplesFrame)
 end
 
@@ -333,9 +353,7 @@ end
 --[[
     What the add-on fills in itself, counted rather than printed, matched by
     key at any depth since AceDB moves it with the active profile: inventory,
-    the Inventory Report's record of every character's bags and bank;
-    selfRefreshMigrated, Buff Duty's
-    record of settings already moved to a new default; and the Spellbook's
+    the Inventory Report's record of every character's bags and bank; the Spellbook's
     ownedMacros and macroTags, the WoW macros it created and tagged, and
     trainerSpells, what it recorded at trainers (listed on Macro Context); and
     Rank Watch's announced, every low rank already reported, by this client or
@@ -343,7 +361,6 @@ end
 ]]
 local SUMMARIZED_BY_KEY = {
 	inventory = "recorded characters",
-	selfRefreshMigrated = "migrated settings",
 	ownedMacros = "macros created",
 	macroTags = "tagged macros",
 	trainerSpells = "recorded classes",

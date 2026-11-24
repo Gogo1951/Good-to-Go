@@ -16,7 +16,8 @@ local Kit = ns.OptionsKit
     order (ns.FEATURES), each followed by its sub-panels:
 
       Good to Go    (welcome, mini-map, Features, Key Bindings, /Commands)
-        Buff Duty               Group Buffs, Self-Buffs, Weapon Buffs
+        Buff Duty               Group Buffs, Self-Buffs, Well Fed, Weapon Buffs, Scrolls,
+                                Flasks or Elixirs, Other Buffs
         Restocker
         Enhanced Spellbook      Ability Alerts While Leveling (where Rank Watch loads)
         Consumable Macros       Food & Drinks, Potions & Mana Gems, Bandages,
@@ -40,12 +41,17 @@ local function RegisterBuffDutyPanels()
 	Kit.PrepareTree("BuffDutySelfBuffs", function()
 		return select(2, UnitClass("player"))
 	end)
+	-- Then a page per category, in the window's order (Options-Buff-Duty-Consumables.lua).
+	Kit.RegisterPanel("BuffDutyFood", ns.BuildBuffDutyFoodOptions, ns.BuffDuty.WellFedLabel(), "BuffDuty")
 	Kit.RegisterPanel(
 		"BuffDutyWeaponBuffs",
 		ns.BuildBuffDutyWeaponBuffsOptions,
 		L["BUFF_DUTY_WEAPON_PANEL_HEADER"],
 		"BuffDuty"
 	)
+	Kit.RegisterPanel("BuffDutyScrolls", ns.BuildBuffDutyScrollsOptions, L["BUFF_DUTY_SCROLLS"], "BuffDuty")
+	Kit.RegisterPanel("BuffDutyElixirs", ns.BuildBuffDutyElixirsOptions, L["BUFF_DUTY_ROW_ELIXIRS"], "BuffDuty")
+	Kit.RegisterPanel("BuffDutyOther", ns.BuildBuffDutyOtherOptions, L["BUFF_DUTY_ROW_OTHER"], "BuffDuty")
 end
 
 --[[

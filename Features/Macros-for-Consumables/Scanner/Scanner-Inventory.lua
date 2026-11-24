@@ -17,6 +17,7 @@ local diagnosticCandidates, candidateRecord = Ranking.diagnosticCandidates, Rank
 local ResetBest, BuildSelectionTables = Ranking.ResetBest, Ranking.BuildSelectionTables
 local FillRecord, IsBetter, RetainCandidate = Ranking.FillRecord, Ranking.IsBetter, Ranking.RetainCandidate
 local AddRankedCandidate, RankCandidates = Ranking.AddRankedCandidate, Ranking.RankCandidates
+local BuffFoodRank = Ranking.BuffFoodRank
 local CaptureDiagnosticCandidates = Ranking.CaptureDiagnosticCandidates
 
 --------------------------------------------------------------------------------
@@ -120,9 +121,11 @@ function ns.ScanBags()
 	--[[
 	    How the Food and Water ladders treat buff food (RANKING_PRIORITY).
 	    Eating it for the buff is Buff Duty's job (its Well Fed icon), so
-	    the macros never put it first: false while Eat Buff Food When Already
-	    Well Fed is on, so it competes on what it restores, or "last", so plain
-	    food wins and buff food is still eaten when it's all the bags hold.
+	    while you have Well Fed the macros never put it first: false while Eat
+	    Buff Food When Already Well Fed is on, so it competes on what it
+	    restores, or "last", so plain food wins and buff food is still eaten
+	    when it's all the bags hold. While you don't, ns.buffFoodFirst below
+	    puts buff food first instead.
 	    Targeting yourself is the plain-food testing aid above, so it keeps
 	    buff food out entirely (the Food and Water accepts hooks read
 	    ns.excludeBuffFood). Arenas need nothing here: the usable gate below
@@ -130,6 +133,16 @@ function ns.ScanBags()
 	]]
 	ns.buffFoodRank = (not settings.useBuffFoodWhenFed) and "last" or false
 	ns.excludeBuffFood = targetingSelf and true or false
+
+	--[[
+	    While you're missing Well Fed the Food macro eats buff food first,
+	    ahead of conjured food too (BuffFoodRank in Scanner-Ranking.lua), so
+	    eating to heal also lands the buff. ns.wellFedState is read at the top
+	    of every scan (ns.UpdateAuraTracking). Hidden auras keep the usual
+	    order rather than acting on the last Well Fed seen; targeting yourself
+	    and arenas already keep buff food out of the macro.
+	]]
+	ns.buffFoodFirst = not ns.wellFedState and not aurasHidden
 
 	--[[
 	    Use Conjured Food & Water First: the setting and its When to Use
@@ -352,7 +365,7 @@ function ns.ScanBags()
 								    everyone else compares with those
 								    steps gated off.
 								]]
-								local buffFood = definition.allowBuffFood and ns.buffFoodRank
+								local buffFood = BuffFoodRank(definition)
 								local allowConjuredFirst = definition.allowConjuredFirst and ns.allowConjuredFirst
 								local allowRestockLast = definition.allowRestockLast and ns.allowRestockLast
 								if
@@ -400,6 +413,16 @@ function ns.ScanBags()
 	if bestBuffFood.id ~= ns.bestBuffFoodID then
 		ns.bestBuffFoodID = bestBuffFood.id
 		ns.RequestBuffDutyRefresh()
+	end
+
+	--[[
+	    Watch Well Fed coming and going only while the bags hold buff food,
+	    the one time it changes what the Food macro eats.
+	]]
+	local carriesBuffFood = next(carriedBuffFoods) ~= nil
+	if carriesBuffFood ~= ns.carriesBuffFood then
+		ns.carriesBuffFood = carriesBuffFood
+		ns.UpdateAuraTracking()
 	end
 
 	return best, dataRetry

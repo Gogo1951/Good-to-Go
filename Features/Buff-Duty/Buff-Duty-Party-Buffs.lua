@@ -15,7 +15,8 @@ local Kit = ns.MenuKit
     Hovering opens a menu on the mini-map menu's kit (Features/Menu-Kit.lua):
     the buff, then who needs it party by party, each name in its class color
     with the minutes left on the right, or Missing; then the two asks as rows,
-    each naming the click that does the same on the icon. It stays open while
+    each one's tooltip naming the click that does the same on the icon. It
+    opens MENU_GAP off the icon's corner, and stays open while
     the cursor is over the icon or the menu and closes a moment after it
     leaves both, so the mouse can reach its rows. The icon's own clicks still
     work without it.
@@ -23,8 +24,11 @@ local Kit = ns.MenuKit
 
 local ICON_SIZE = Data.BUFF_DUTY_ICON_SIZE
 
--- How long the menu waits after the cursor leaves the icon and the menu, as the mini-map menu does.
-local CLOSE_DELAY = 0.4
+-- How long the menu waits after the cursor leaves the icon and the menu: the Menu Kit's HOVER_CLOSE_DELAY.
+local CLOSE_DELAY = 0.5
+
+-- From the icon's corner to the menu's: the Menu Kit's MENU_GAP.
+local MENU_GAP = 2
 
 --[[
     How often an open menu redraws, so the minutes count down, a buff that runs
@@ -67,11 +71,11 @@ local function WhisperTargets(recipients)
 	return L["BUFF_DUTY_OTHERS_ASK_PEOPLE"]:format(#recipients)
 end
 
--- What a name's row says on the right: the whole minutes left, or Missing once it has run out, both gray.
+-- What a name's row says on the right: the whole minutes left in light yellow, or Missing in gray once it has run out.
 local function TimeLeft(expires)
 	local now = GetTime()
 	if expires and expires > now then
-		return L["BUFF_DUTY_OTHERS_MINUTES"]:format(math.ceil((expires - now) / 60)), "MUTED"
+		return L["BUFF_DUTY_OTHERS_MINUTES"]:format(math.ceil((expires - now) / 60)), "VALUE"
 	end
 	return L["BUFF_DUTY_OTHERS_MISSING"], "MUTED"
 end
@@ -79,18 +83,20 @@ end
 local Render
 
 --[[
-    An ask as a row: blue, muted while that ask is still cooling down, with
-    the icon's click that does the same on the right in gray; clicking the row
-    does what that click does, and the menu closes, its job done.
+    An ask as a row: blue, or gray and unclickable while that ask is still
+    cooling down. Its tooltip names the icon's click that does the same, in
+    the helper text's silver; clicking the row does what that click does, and
+    the menu closes, its job done.
 ]]
-local function AskRow(text, keybind, ready, run)
-	local color = ready and "INFO" or "MUTED"
+local function AskRow(text, shortcut, ready, run)
 	return {
 		kind = "action",
 		left = text,
-		right = keybind,
-		leftColor = color,
-		rightColor = "MUTED",
+		disabled = not ready,
+		tooltip = function(tooltip)
+			local help = ns.COLORS_RGB.HELP
+			tooltip:SetText(shortcut, help.r, help.g, help.b, 1, true)
+		end,
 		onClick = function()
 			run()
 			menu:Hide()
@@ -112,7 +118,7 @@ local function BuildEntries(spec)
 		for row, name in ipairs(group.names) do
 			local color = ns.GetClassColor(group.classes[row]) or ns.GetColor("TEXT")
 			local right, rightColor = TimeLeft(group.expires[row])
-			-- a value row, in from its heading like every option, its time left gray on the right
+			-- a value row, in from its heading like every option, its time left on the right
 			entries[#entries + 1] = {
 				kind = "value",
 				left = color .. name .. "|r",
@@ -126,7 +132,7 @@ local function BuildEntries(spec)
 	entries[#entries + 1] = { kind = "separator" }
 	entries[#entries + 1] = AskRow(
 		L["BUFF_DUTY_OTHERS_HINT_ASK"]:format(GroupChatName()),
-		L["MENU_CLICK_LEFT"],
+		L["BUFF_DUTY_OTHERS_SHORTCUT_LEFT"],
 		ns.CanAskForBuff("group", spec.key),
 		function()
 			ns.AskGroupForBuff(spec)
@@ -136,7 +142,7 @@ local function BuildEntries(spec)
 	if spec.recipients[1] then
 		entries[#entries + 1] = AskRow(
 			L["BUFF_DUTY_OTHERS_HINT_WHISPER"]:format(WhisperTargets(spec.recipients)),
-			L["TOOLTIP_KEY_RIGHT_CLICK"],
+			L["BUFF_DUTY_OTHERS_SHORTCUT_RIGHT"],
 			ns.CanAskForBuff("whisper", spec.key),
 			function()
 				ns.WhisperOtherClassBuff(spec)
@@ -211,7 +217,7 @@ local function OnOtherIconEnter(self)
 	state.idle = 0
 	if state.owner ~= self or not menu:IsShown() then
 		state.owner = self
-		-- Off the icon's corner, away from the screen's nearest edges, as the mini-map menu opens off its button.
+		-- MENU_GAP off the icon's corner, away from the screen's nearest edges, as the mini-map menu opens off its button.
 		local x, y = self:GetCenter()
 		local scale = self:GetEffectiveScale() / UIParent:GetEffectiveScale()
 		local openLeft = (x or 0) * scale > UIParent:GetWidth() / 2
@@ -220,7 +226,9 @@ local function OnOtherIconEnter(self)
 		menu:SetPoint(
 			(openDown and "TOP" or "BOTTOM") .. (openLeft and "RIGHT" or "LEFT"),
 			self,
-			(openDown and "BOTTOM" or "TOP") .. (openLeft and "LEFT" or "RIGHT")
+			(openDown and "BOTTOM" or "TOP") .. (openLeft and "LEFT" or "RIGHT"),
+			openLeft and -MENU_GAP or MENU_GAP,
+			openDown and -MENU_GAP or MENU_GAP
 		)
 		menu.tooltipAnchor = openLeft and "ANCHOR_LEFT" or "ANCHOR_RIGHT"
 	end

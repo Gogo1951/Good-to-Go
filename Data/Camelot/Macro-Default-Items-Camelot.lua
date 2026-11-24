@@ -19,7 +19,7 @@ ns.MACRO_DEFAULT_ITEM_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-11-19, wago.tools, WoW Forever 1.60.1.70959
+	2026-11-24, Validate Data, WoW Forever 1.60.1.71037
 
 Notes
 	- The item each macro shows (#showtooltip) while the bags hold nothing it can use, keyed by ns.MACRO_CONFIG's macro type (Data/Data.lua). Read by the macro body builder, the mini-map tooltip, the rogue tools and the Macros options panel.
@@ -36,6 +36,8 @@ wago.tools
 	https://wago.tools/db2/Item?build=1.60.1.70959
 	https://wago.tools/db2/ItemSparse?build=1.60.1.70959
 	https://wago.tools/db2/ItemXItemEffect?build=1.60.1.70959
+	https://wago.tools/db2/Item?build=1.60.1.71037
+	https://wago.tools/db2/ItemSparse?build=1.60.1.71037
 
 QuestieDB
 	None.

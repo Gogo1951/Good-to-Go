@@ -43,13 +43,6 @@ ns.BUFF_KEY_COMMAND = "CLICK " .. KEY_BUTTON .. ":LeftButton"
 ns.BUFF_KEY_MACRO = "/click " .. KEY_BUTTON
 
 --[[
-    MIGRATION (remove after 2026-11-21): The Group Buff key's command, from before the one key picked group buffs
-    on its own. Its button is gone; a key still bound to it moves over at
-    login (ns.MigrateBuffKeys).
-]]
-local OLD_GROUP_COMMAND = "CLICK TFTBBuffGroup:LeftButton"
-
---[[
     MIGRATION (remove after 2026-12-03): the button's name before the GtG name.
     A key still bound to its command moves over at login (ns.MigrateBuffKeys),
     and the old name stays an alias for the button, so a player's own macro
@@ -210,20 +203,20 @@ end
     itself.
 ]]
 local PRESS_REUSE_SECONDS = 1
-local downPick -- { at, spec, waitingOn }: the down half's pick, until its up half
+local downPick -- { at, spec, waitingOn, flagged }: the down half's pick, until its up half
 
 local function PickForPress(down)
 	local now = GetTime()
 	local earlier = downPick
 	downPick = nil
 	if not down and earlier and now - earlier.at <= PRESS_REUSE_SECONDS then
-		return earlier.spec, earlier.waitingOn
+		return earlier.spec, earlier.waitingOn, earlier.flagged
 	end
-	local spec, waitingOn = BuffDuty.PickBuffKeySpec()
+	local spec, waitingOn, flagged = BuffDuty.PickBuffKeySpec()
 	if down then
-		downPick = { at = now, spec = spec, waitingOn = waitingOn }
+		downPick = { at = now, spec = spec, waitingOn = waitingOn, flagged = flagged }
 	end
-	return spec, waitingOn
+	return spec, waitingOn, flagged
 end
 
 --[[
@@ -290,7 +283,7 @@ local function OnKeyPreClick(self, _, down)
 		self.lastSpec = nil
 		return
 	end
-	local spec, waitingOn = PickForPress(down)
+	local spec, waitingOn, flagged = PickForPress(down)
 	ns.SetBuffButtonAttributes(self, spec)
 	TargetWhoItsFor(self, spec)
 	self.lastSpec = spec
@@ -307,6 +300,9 @@ local function OnKeyPreClick(self, _, down)
 		end
 		Remember(spec)
 		ns.NoteBuffCastAttempt(spec)
+	elseif flagged then
+		-- Only a cast held back from a PvP-flagged player is left (BuffDuty.PvPFlaggedTarget).
+		ns:PrintMessage(L["BUFF_DUTY_PVP_FLAGGED"]:format(flagged))
 	elseif waitingOn then
 		ns.ShowUINotice(L["BUFF_KEY_WAITING"]:format(waitingOn))
 	elseif not BuffDuty.isSetUp or not ns.IsBuffDutyTrackingForClass() then
@@ -347,23 +343,16 @@ keyButton:Hide()
 _G[OLD_KEY_BUTTON] = keyButton
 
 --[[
-    Run from Buff Duty's setup at login. A key still bound to an old
-    command now presses this button: the Group Buff key's, since this one
-    picks group buffs itself, and this button's own under its old name. Each
-    move is its own loop, so each deletes on its own date. Once moved,
-    nothing is left to move. Bindings are locked in combat, so a /reload
-    mid-fight tries again next login.
+    Run from Buff Duty's setup at login. A key still bound to this button's
+    command under its old name now presses this button. Once moved, nothing
+    is left to move. Bindings are locked in combat, so a /reload mid-fight
+    tries again next login.
 ]]
 function ns.MigrateBuffKeys()
 	if InCombatLockdown() then
 		return
 	end
 	local moved = false
-	-- MIGRATION (remove after 2026-11-21)
-	for _, key in ipairs({ GetBindingKey(OLD_GROUP_COMMAND) }) do
-		SetBinding(key, ns.BUFF_KEY_COMMAND)
-		moved = true
-	end
 	-- MIGRATION (remove after 2026-12-03)
 	for _, key in ipairs({ GetBindingKey(OLD_KEY_COMMAND) }) do
 		SetBinding(key, ns.BUFF_KEY_COMMAND)

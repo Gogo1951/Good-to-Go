@@ -184,6 +184,7 @@ local function Create(page, name, hintKey)
 	end)
 	panel:SetScript("OnDragStop", function()
 		window:StopMovingOrSizing()
+		ns.SaveSpellbookWindowPosition()
 	end)
 	Box(panel, PANEL_FILL, PANEL_EDGE)
 

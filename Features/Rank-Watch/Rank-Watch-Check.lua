@@ -21,7 +21,7 @@ local RANK_WATCH = Data.RANK_WATCH
       - the recipient's level plus Data.RANK_WATCH.TARGET_LEVEL_RANGE, for a cast on someone else. The game
         lowers a buff's rank on its own to fit a low-level target, so a rank lowered for a lowbie is never
         reported. Detection passes the recipient's level only when it knows the cast landed on another friendly
-        player, and drops the cast outright when it can't tell how low that player is.
+        player or a group member's pet, and drops the cast outright when it can't tell how low that recipient is.
 
     Once per caster and ladder a session, and once per caster, level and spell until the next version (settings.announced,
     shared through NOTIFY with every Rank Watch and Rank Sentinel in the group).

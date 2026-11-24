@@ -28,11 +28,12 @@ end
     favor. Every attribute is written on every use, nil included, because a
     pooled button still carries whatever its last spec set; a nil spec clears
     them all, and so does an ask (Buff-Duty-Asks.lua), whose click whispers
-    from PreClick and casts nothing. Shared with the Buff Key, which writes
-    the same attributes.
+    from PreClick and casts nothing, and so does a cast held back from a
+    PvP-flagged player (spec.pvpFlagged), whose click says so instead.
+    Shared with the Buff Key, which writes the same attributes.
 ]]
 function ns.SetBuffButtonAttributes(button, spec)
-	if not spec or spec.ask then
+	if not spec or spec.ask or spec.pvpFlagged then
 		for _, key in ipairs({ "type1", "spell", "item", "unit", "macrotext", "target-slot" }) do
 			button:SetAttribute(key, nil)
 		end

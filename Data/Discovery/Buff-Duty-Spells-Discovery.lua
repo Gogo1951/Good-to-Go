@@ -182,7 +182,7 @@ ns.BUFF_DUTY_PET_ICONS = {
 	},
 }
 
--- { class, ranks = { { spell id, level learned } }, auras, exclusive, needsPet, castLast, noShadowform, default (minutes left, MISSING or OFF) }, -- Name
+-- { class, ranks = { { spell id, level learned } }, auras, exclusive, needsPet, castLast, noShadowform, party (it lands on your party too), default (minutes left, MISSING or OFF) }, -- Name
 ns.BUFF_DUTY_SELF_SPELLS = {
 	-- Druid ---------------------------------------------------------------------
 	{
@@ -392,6 +392,7 @@ ns.BUFF_DUTY_SELF_SPELLS = {
 	{
 		class = "WARRIOR",
 		ranks = { { 6673, 1 }, { 5242, 12 }, { 6192, 22 }, { 11549, 32 }, { 11550, 42 }, { 11551, 52 }, { 25289, 60 } },
+		party = true,
 		default = MISSING,
 	}, -- Battle Shout
 }
@@ -536,6 +537,9 @@ ns.BUFF_DUTY_WEAPON_ITEMS = {
 	{ 20750, 40, 2627, 0, OIL, 50 }, -- Wizard Oil
 }
 
+-- The weapon items whose enchant goes in the imbue layer. None here: a weapon holds one temporary enchant on this client.
+ns.BUFF_DUTY_WEAPON_IMBUE_ITEMS = {}
+
 -- { item id, auras = { spell ids }, default (minutes left, MISSING or OFF) }, -- Name
 ns.BUFF_DUTY_SELF_ITEMS = {
 	{ 12820, auras = { 17038 }, default = MISSING }, -- Winterfall Firewater
@@ -562,7 +566,7 @@ ns.BUFF_DUTY_RESURRECTIONS = {
 How We Got the Data
 
 Last Validated
-	2026-11-19, wago.tools, Season of Discovery 1.15.9.70576
+	2026-11-24, wago.tools, Season of Discovery 1.15.9.70576
 
 Notes
 	- Every buff one player can put on another that lasts more than two minutes: the ones worth keeping up on a group, and the ones a player may want to hand out on request. Only the rows for the player's own class are read, and only the ranks the player knows are cast.

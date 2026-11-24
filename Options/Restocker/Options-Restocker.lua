@@ -298,7 +298,7 @@ function ns.BuildRestockerOptions()
 
 			--[[
 			    The sound's switch, indented under the reminder it rides with,
-			    with its speaker past the row's end (ns.OptionsSubToggleRow,
+			    with its speaker past the row's end (Kit.SubToggleRow,
 			    Kit.SoundPreview).
 
 			    Only the in-town reminder gets a sound: it arrives while you are
@@ -306,7 +306,7 @@ function ns.BuildRestockerOptions()
 			    and bank reminders fire on a window you just closed, so you are
 			    already looking at the screen.
 			]]
-			soundRow = ns.OptionsSubToggleRow(12, RemindHidden, {
+			soundRow = Kit.SubToggleRow(12, RemindHidden, {
 				type = "toggle",
 				name = L["OPTIONS_RESTOCKER_REMIND_SOUND"],
 				desc = L["OPTIONS_RESTOCKER_REMIND_SOUND_DESCRIPTION"],
@@ -401,6 +401,34 @@ function ns.BuildRestockerOptions()
 					ns.RefreshSettings()
 				end,
 			},
+
+			--[[
+			    Reset Position for each of the Restocker's two windows, captioned
+			    with the window's name: forgets where it was dragged and moves it
+			    back if open. Grayed while it has never been dragged.
+			]]
+			spaceWindow4 = Spacer(28),
+			resetRestockPosition = Kit.ResetRow(
+				29,
+				nil,
+				L["RESTOCKER_WINDOW_TITLE"],
+				L["OPTIONS_RESET_POSITION_DESCRIPTION"],
+				function()
+					return not ns.HasSavedRestockWindowPosition()
+				end,
+				ns.ResetRestockWindowPosition
+			),
+			spaceWindow5 = Spacer(30),
+			resetStaplesPosition = Kit.ResetRow(
+				31,
+				nil,
+				L["STARTER_POPUP_TITLE"],
+				L["OPTIONS_RESET_POSITION_DESCRIPTION"],
+				function()
+					return not ns.HasSavedStaplesPosition()
+				end,
+				ns.ResetStaplesPosition
+			),
 		},
 	}
 	Kit.HideAllExcept(options.args, RestockerOff, { "descRestocker", "spaceEnabled", "toggleRestockerEnabled" })

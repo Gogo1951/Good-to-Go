@@ -42,30 +42,6 @@ Kit.SetText({
 	reset = L["OPTIONS_RESET"],
 })
 
---[[
-    A lone button on a row of its own: its own name on it, at the control
-    column's width, in the control column, never at the left edge at its
-    default width. caption, when given, sits in the label column.
-]]
-function ns.OptionsButtonRow(order, hidden, button, caption)
-	local name = button.name
-	local row = Kit.LabelRow(order, hidden, caption or " ", button, caption and button.desc or nil)
-	button.name = name
-	return row
-end
-
---[[
-    An on/off choice under the control it belongs to, with a sound switch's
-    speaker (Kit.SoundPreview) past the row's end where Kit.ToggleRow puts
-    every other speaker. It stays while the switch is off: it plays whether
-    or not the sound is on, and hearing it first is the point.
-]]
-function ns.OptionsSubToggleRow(order, hidden, toggle, preview)
-	toggle.name = Kit.SubLabel(toggle.name)
-	toggle.width = Kit.ROW_WIDTH - Kit.SUB_INDENT_WIDTH
-	return Kit.SubRow(order, hidden, { toggle, preview })
-end
-
 -- The character's AceDB profile, the Consumable Macros panels' settings table, or nil before the database is open.
 function ns.OptionsProfileSettings()
 	return ns.db and ns.db.profile
@@ -128,6 +104,19 @@ end
 local GROUP_CONTEXT_TOGGLE_WIDTH = 0.75
 
 --[[
+    The words of a switch-is-off line, for Kit.StatusLine: the switch's name in
+    gold, then "is off, so these settings aren't being used.", then, where page
+    is given, the page its switch is on. Both arrive localized.
+]]
+function ns.OptionsSwitchOffStatus(name, page)
+	local title = Kit.Color("TITLE", name) .. ns.GetColor("HELP")
+	if not page then
+		return L["OPTIONS_SWITCH_OFF_HERE"]:format(title)
+	end
+	return L["OPTIONS_FEATURE_OFF_STATUS"]:format(title, page)
+end
+
+--[[
     The line a sub-page opens with while its parent feature is off, and the blank
     line under it; both go while the feature is on, so the page then starts at its
     description. The settings stay editable, so they can be set up first. `setting`
@@ -143,20 +132,25 @@ function ns.AddFeatureOffLine(args, setting, pageSwitch)
 	    pageSwitch, where a sub-page has a switch of its own under the feature's
 	    ({ isOn, name, page }, each name a locale key): with the feature on and
 	    that switch off, the line names that switch and the page that holds it.
+	    name may instead be a function, for a name the client supplies (Well
+	    Fed); page is left out where the switch is on the page itself, and the
+	    line then sends you nowhere else.
 	]]
 	local function PageOn()
 		return not pageSwitch or pageSwitch.isOn()
 	end
-	local function StatusOff(name, page)
-		return L["OPTIONS_FEATURE_OFF_STATUS"]:format(Kit.Color("TITLE", name) .. ns.GetColor("HELP"), page)
+	local function SwitchName()
+		local name = pageSwitch.name
+		return type(name) == "function" and name() or L[name]
 	end
+	local StatusOff = ns.OptionsSwitchOffStatus
 	args.featureOff = Kit.StatusLine(function()
 		if not FeatureOn() then
 			local name = L[feature.name]
 			return StatusOff(name, name)
 		end
 		if not PageOn() then
-			return StatusOff(L[pageSwitch.name], L[pageSwitch.page])
+			return StatusOff(SwitchName(), pageSwitch.page and L[pageSwitch.page])
 		end
 		return nil
 	end, 0.1)

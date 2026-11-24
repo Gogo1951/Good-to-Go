@@ -34,13 +34,12 @@ local COLUMN_TOP, COLUMN_SIDE = 16, 32
 local SLOTS, GAP_X = 2, 16
 local TILE_WIDTH, TILE_HEIGHT = ns.TILE_WIDTH, ns.TILE_HEIGHT
 --[[
-	The strip above each row of tiles: clear space, then a form's label, then a short gap to the tiles it names.
-	The strip is sized so the space between one row's icons and the next is one icon tall (a 32 tile holds a 32
-	icon), rows stepping 64 apart, and the label keeps its place against the tiles under it, so the
-	space falls above the label.
+	The strip above each row of tiles: 8 clear, then a form's label, then 8 to the tiles it names. The strip is
+	sized so the space between one row's icons and the next is one icon tall (a 32 tile holds a 32 icon), rows
+	stepping 64 apart.
 ]]
 local ROW_STRIP_HEIGHT = 32
-local LABEL_HEIGHT, LABEL_GAP = 16, 4
+local LABEL_HEIGHT, LABEL_GAP = 16, 8
 local LABEL_TOP_GAP = ROW_STRIP_HEIGHT - LABEL_HEIGHT - LABEL_GAP
 local HEADER_HEIGHT = 16
 local CONTINUED_GAP = 8 -- a header's name to its "(Continued)"

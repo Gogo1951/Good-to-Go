@@ -35,9 +35,10 @@ local function OnIconEnter(self)
 	end
 	GameTooltip:AddLine(" ")
 	--[[
-	    Who the click lands on, not which click: every icon here casts on a
-	    click. A Self Buffs weapon or Soulstone icon brings its own line, already
-	    worded.
+	    Who the click lands on, not which click: an icon casts on a click,
+	    except an ask icon, which whispers, and one held back for a PvP-flagged
+	    target, which only says why. A Weapon Buffs or Soulstone icon
+	    brings its own line, already worded.
 	]]
 	local hint = spec.hint
 	if spec.ask then
@@ -90,6 +91,13 @@ local function OnIconPreClick(self, button, down)
 	if self.spec.ask then
 		if not down then
 			ns.AskTargetForBuffs(self.spec)
+		end
+		return
+	end
+	-- Held back from a PvP-flagged player (ns.SetBuffDutyIcon): nothing casts, and the up half says why.
+	if self.spec.pvpFlagged then
+		if not down then
+			ns:PrintMessage(L["BUFF_DUTY_PVP_FLAGGED"]:format(self.spec.pvpFlagged))
 		end
 		return
 	end
@@ -152,7 +160,7 @@ function ns.AcquireBuffDutyIcon()
 		-- An ask icon's speech bubble, in the corner over the swipe, so it never reads as a cast.
 		button.askMark = over:CreateTexture(nil, "OVERLAY")
 		button.askMark:SetSize(ASK_MARK_SIZE, ASK_MARK_SIZE)
-		button.askMark:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 3, -3)
+		button.askMark:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 4, -4)
 		button.askMark:SetTexture(ASK_MARK_TEXTURE)
 		button.askMark:Hide()
 		button:SetHighlightTexture("Interface/Buttons/ButtonHilight-Square", "ADD")
@@ -174,6 +182,8 @@ function ns.SetBuffDutyIcon(button, spec)
 	end
 	button.count:SetText(spec.count or "")
 	button.askMark:SetShown(spec.ask ~= nil)
+	-- Read at each draw, out of combat, where the attributes can still change.
+	spec.pvpFlagged = ns.BuffDuty.PvPFlaggedTarget(spec)
 	ns.SetBuffButtonAttributes(button, spec)
 	button:Show()
 end

@@ -14,17 +14,29 @@ local Body = MacroOptions.Body
     switched on and off on Consumable Macros. Every setting lives on the
     AceDB profile. The page carries the off line while Consumable Macros is
     off (MacroOptions.Page), and its settings stay editable so they can be
-    set up first. Registered as a builder function (Options/Options.lua), so
+    set up first. While the Explosives macro itself is off, Click Layout
+    hides and a line under the intro says where to switch it on. Registered as a builder function (Options/Options.lua), so
     AceConfig rebuilds it on every open and NotifyChange.
 ]]
+
+-- The Explosives macro is switched off on Consumable Macros, so Click Layout has nothing to set up.
+local function ExplosivesMacroOff()
+	return not ns.IsMacroEnabled("Explosive")
+end
 
 -- Which click tosses the explosive and which sets it off at your feet.
 function ns.BuildExplosivesOptions()
 	local args = {
 		descIntro = Desc(L["OPTIONS_EXPLOSIVES_DESCRIPTION"], 1),
 		spaceIntro = Spacer(2),
+		explosivesOff = Kit.StatusLine(function()
+			if not ExplosivesMacroOff() then
+				return nil
+			end
+			return ns.OptionsSwitchOffStatus(L["NOTE_MACRO_EXPLOSIVES"], L["TAB_CONSUMABLE_MACROS"])
+		end, 2.5),
 		-- A caption row, so hovering the caption shows the dropdown's tooltip too.
-		explosivesClickMode = Kit.LabelRow(3, nil, Body("OPTIONS_EXPLOSIVES_CLICK_LAYOUT"), {
+		explosivesClickMode = Kit.LabelRow(3, ExplosivesMacroOff, Body("OPTIONS_EXPLOSIVES_CLICK_LAYOUT"), {
 			type = "select",
 			desc = L["OPTIONS_EXPLOSIVES_CLICK_LAYOUT_DESCRIPTION"],
 			values = {

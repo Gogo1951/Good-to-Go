@@ -236,6 +236,20 @@ function ns.GetPlayerBuffSnapshot()
 end
 
 --------------------------------------------------------------------------------
+-- Well Fed
+--------------------------------------------------------------------------------
+
+--[[
+    Whether you have Well Fed, from a snapshot, for the Food macro's buff food
+    first (ns.buffFoodFirst in Scanner-Inventory.lua). Re-Apply Expiring Buffs
+    counts a Well Fed under its threshold as gone, as it does the pet's.
+]]
+local function WellFedFromSnapshot(currentSnapshot)
+	local expiration = currentSnapshot.wellFedExpiration
+	return expiration ~= nil and BuffCountsAsActive(expiration)
+end
+
+--------------------------------------------------------------------------------
 -- Scroll Buffs
 --------------------------------------------------------------------------------
 
@@ -388,15 +402,18 @@ end
 local auraEventRegistered
 
 --[[
-    Keeps UNIT_AURA on for the pet while Pet Food Buffs is live and records
-    the pet food reading the aura handler diffs against. Buff food and scrolls
-    for the player are Buff Duty's, which watches its own auras. UNIT_AURA
-    is only re-registered when the wanted state flips, since every bag scan
-    passes through here.
+    Reads Well Fed for the scan (ns.wellFedState) and keeps UNIT_AURA on for
+    the player while the bags hold buff food (ns.carriesBuffFood, from the
+    scan before), and for the pet while Pet Food Buffs is live, recording the
+    readings the aura handler diffs against. Scrolls are Buff Duty's, which
+    watches its own auras. UNIT_AURA is only re-registered when the wanted
+    units change, since every bag scan passes through here.
 ]]
 function ns.UpdateAuraTracking()
 	local settings = ns.db.profile
 	local petBuffActive = HAS_PET_BUFF_FOODS and settings.usePetBuffFood and ns.IsUseWhenActive(settings, "petBuffFood")
+
+	ns.wellFedState = WellFedFromSnapshot(ns.GetPlayerBuffSnapshot())
 
 	if petBuffActive and ns.ShouldTrackPetFood() then
 		lastPetFoodBuff = ns.HasPetFoodBuff()
@@ -404,10 +421,20 @@ function ns.UpdateAuraTracking()
 		lastPetFoodBuff = nil
 	end
 
-	local wantAuraEvent = petBuffActive and true or false
+	local watchPlayer = ns.carriesBuffFood and true or false
+	local wantAuraEvent = (watchPlayer and petBuffActive and "player+pet")
+		or (watchPlayer and "player")
+		or (petBuffActive and "pet")
+		or false
 	if wantAuraEvent ~= auraEventRegistered then
 		auraEventRegistered = wantAuraEvent
-		ns.SetEventRegistered("UNIT_AURA", wantAuraEvent, "pet")
+		if wantAuraEvent == "player+pet" then
+			ns.SetEventRegistered("UNIT_AURA", true, "player", "pet")
+		elseif wantAuraEvent then
+			ns.SetEventRegistered("UNIT_AURA", true, wantAuraEvent)
+		else
+			ns.SetEventRegistered("UNIT_AURA", false)
+		end
 	end
 end
 
@@ -416,11 +443,11 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    UNIT_AURA handler routed from Core's dispatcher, registered for the pet
-    alone (ns.UpdateAuraTracking). It diffs the one thing the pet decision
-    reads, whether the pet food buff is up: UNIT_AURA is a firehose, a rebuild
-    is a full bag rescan, and a raid's buff round lands blessings and totems
-    on the pet too.
+    UNIT_AURA handler routed from Core's dispatcher, registered for the player
+    and the pet as ns.UpdateAuraTracking wants them. Each side diffs the one
+    thing its decision reads, whether Well Fed or the pet food buff is up:
+    UNIT_AURA is a firehose, a rebuild is a full bag rescan, and a raid's buff
+    round lands blessings and totems on both.
 ]]
 function ns.OnUnitAura(unit)
 	local needsUpdate = false
@@ -434,7 +461,16 @@ function ns.OnUnitAura(unit)
 	]]
 	local reason
 
-	if unit == "pet" then
+	if unit == "player" then
+		if ns.carriesBuffFood then
+			local wellFedState = WellFedFromSnapshot(ns.GetPlayerBuffSnapshot())
+			if wellFedState ~= ns.wellFedState then
+				ns.wellFedState = wellFedState
+				needsUpdate = true
+				reason = "wellfed"
+			end
+		end
+	elseif unit == "pet" then
 		if ns.ShouldTrackPetFood() then
 			local hasPetFoodBuff = ns.HasPetFoodBuff()
 			if hasPetFoodBuff ~= lastPetFoodBuff then

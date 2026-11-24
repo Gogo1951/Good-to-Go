@@ -223,6 +223,7 @@ Features/Buff-Duty/Buff-Duty-Resurrections.lua
 Features/Buff-Duty/Buff-Duty-Pets.lua
 Features/Buff-Duty/Buff-Duty-NPCs.lua
 Features/Buff-Duty/Buff-Duty-Weapons.lua
+Features/Buff-Duty/Buff-Duty-Elixirs.lua
 Features/Buff-Duty/Buff-Duty-Self.lua
 Features/Buff-Duty/Buff-Duty-Favors.lua
 Features/Buff-Duty/Buff-Duty-Asks.lua
@@ -356,6 +357,7 @@ Options/Buff-Duty/Options-Buff-Duty.lua
 Options/Buff-Duty/Options-Buff-Duty-Buffs.lua
 Options/Buff-Duty/Options-Buff-Duty-Self-Buffs.lua
 Options/Buff-Duty/Options-Buff-Duty-Weapon-Buffs.lua
+Options/Buff-Duty/Options-Buff-Duty-Consumables.lua
 Options/Enhanced-Spellbook/Options-Enhanced-Spellbook.lua
 Options/Enhanced-Spellbook/Options-Ability-Alerts.lua
 Options/Options-Profiles.lua

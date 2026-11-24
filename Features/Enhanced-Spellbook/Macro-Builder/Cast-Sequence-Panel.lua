@@ -138,10 +138,10 @@ local function OpenEndMenu(menuOwner)
 			local element = root:CreateRadio(L[choice[2]], function()
 				return ns.CastSequenceStops(macro) == stops
 			end, function()
+				-- the menu stays open and redraws, the pick moved
 				Change(function(own)
 					ns.SetCastSequenceStops(own, stops)
 				end)
-				return MenuResponse.CloseAll
 			end)
 			-- the tooltip's title names what Stop leaves the macro on (NULL)
 			SetTip(element, L[choice[4]], L[choice[3]])

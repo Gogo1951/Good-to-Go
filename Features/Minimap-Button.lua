@@ -12,12 +12,9 @@ local DEFAULT_ICON = "Interface\\Icons\\INV_Misc_Food_02"
 --------------------------------------------------------------------------------
 
 --[[
-    Hovering opens the menu (Features/Minimap-Menu.lua), and a click runs its
-    job from the menu's click table: Left-Click Buff Duty, Right-Click Ignore,
-    Middle-Click Clear Ignore List, Shift + Left-Click the Enhanced Spellbook,
-    Shift + Right-Click the Restock List window, Shift + Middle-Click Options.
-    A Left-Click the table has no job for (Shift + Left-Click while the
-    Enhanced Spellbook is off) opens and holds the menu instead.
+    Hovering opens the menu (Features/Minimap-Menu.lua). Right-Click runs the
+    menu row that names it (Ignore, while there is a food to ignore). Any
+    Left-Click opens and holds the menu, or closes it when a click holds it.
 ]]
 function ns.HandleLauncherClick(self, button)
 	if not ns.RunButtonClick(button) and button == "LeftButton" then

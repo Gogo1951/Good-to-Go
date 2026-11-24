@@ -54,9 +54,10 @@ function ns.MacroMenuTarget(menuState)
 		for place = 1, math.min(places, ns.TARGET_PRIORITY_SLOTS) do
 			local placeKey = "MENU_PRIORITY_" .. place
 			local slotMenu = targetMenu:CreateButton(L[placeKey])
+			slotMenu:SetSetting()
 			slotMenu:SetValue(function()
 				local unit = ns.TargetPriority(menuState.macro)[place]
-				return GetColor("MUTED") .. (unitLabel(unit) or L["MENU_UNIT_NONE"]) .. "|r"
+				return unitLabel(unit) or L["MENU_UNIT_NONE"]
 			end)
 			SetTip(slotMenu, L[placeKey], L["MENU_PRIORITY_DESCRIPTION"])
 			local taken = {}
@@ -118,10 +119,11 @@ function ns.MacroMenuGroupedSpells(menuState)
 	local offersRightClick = ns.OffersOption(menuState.macro, "groupVersion")
 	if offersRightClick or ns.OffersGroupedSpells(menuState.macro) then
 		section()
+		-- On in green, as a switch's On reads
 		local groupedMenu = group("MENU_GROUP_GROUPED", function()
 			local on = ns.IsOptionOn(menuState.macro, "groupVersion") or ns.IsGrouped(menuState.macro)
 			return on and { L["MENU_ON"] } or {}
-		end)
+		end, "ON")
 		if offersRightClick then
 			local label = L["MENU_RIGHT_CLICK_FOR"]:format(rightClick)
 			local element = groupedMenu:CreateCheckbox(label, function()
@@ -177,8 +179,8 @@ end
 
 --[[
 	Rank: Max Rank, naming the rank it casts now, Dynamic (a friendly spell's Dynamic Rank), or a known rank; the
-	rest unclickable, each in its rank color with its note (MenuRank): red with where to learn it for one the
-	character could have now, gray with its level for one still to come
+	rest disabled, gray and unclickable, each with its note (MenuRank): where to learn it for one the character
+	could have now, its level for one still to come
 ]]
 function ns.MacroMenuRank(menuState)
 	local section, group, radio = menuState.section, menuState.group, menuState.radio
@@ -236,7 +238,7 @@ function ns.MacroMenuRank(menuState)
 		for _, rank in ipairs(all) do
 			if rank.unknown then
 				local state = MenuRank(false, rank.id, nil, rank.level)
-				local element = rankMenu:CreateRadio(ns.RankLabel(state, rank.text), isRank(rank.text), function() end)
+				local element = rankMenu:CreateRadio(rank.text, isRank(rank.text), function() end)
 				element:SetEnabled(false)
 				AddRankNote(element, state)
 			else
@@ -398,14 +400,17 @@ function ns.MacroMenuFirst(menuState)
 					ns.ToggleUseSlot(menuState.macro, slot)
 				end)
 			end)
-			-- the icon at line height, and the slot's place in the order gray beside it, read each time the menu redraws
+			--[[
+				the icon at line height, and the slot's place in the order light yellow on the right in On's place,
+				read each time the menu redraws
+			]]
 			element:SetLabel(function()
 				local icon = GetInventoryItemTexture("player", slot)
 				return (icon and "|T" .. icon .. ":0|t " or "") .. ns.SlotLabel(slot)
 			end)
-			element:SetNote(function()
+			element:SetValue(function()
 				local at = ns.IsUsingSlot(menuState.macro, slot)
-				return at and GetColor("MUTED") .. at .. "|r"
+				return at and tostring(at)
 			end)
 			SetTip(element, ns.SlotLabel(slot), L["MENU_USE_ITEM_DESCRIPTION"])
 		end

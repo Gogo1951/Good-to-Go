@@ -84,13 +84,18 @@ end
 	condition, while the row has one; the second offers dropping itself.
 ]]
 local function OpenConditionMenu(owner, index, place)
-	local macro = CurrentMacro()
-	local row = macro and ns.Conditionals(macro)[index]
-	if not row then
+	if not select(2, RowAt(index)) then
 		return
 	end
-	-- on the add-on's own panels (Macro-Menu-Panels.lua), off the field's corner; a pick closes it
+	--[[
+		on the add-on's own panels (Macro-Menu-Panels.lua), off the field's corner; a pick redraws it in place,
+		the row read afresh each time it draws
+	]]
 	ns.OpenMacroMenuPanels(owner, function(_, root)
+		local macro, row = RowAt(index)
+		if not row then
+			return
+		end
 		local function AddChoices(menu, at)
 			local other = row.when[at == 1 and 2 or 1]
 			local opposite = other and ns.ConditionRow(other) and ns.ConditionRow(other).opposite
@@ -105,7 +110,6 @@ local function OpenConditionMenu(owner, index, place)
 						Change(function(own)
 							ns.SetConditionalCondition(own, index, at, key)
 						end)
-						return MenuResponse.CloseAll
 					end)
 					local reason = ns.ConditionBlockReason(macro, key)
 					SetTip(element, label, L[condition.descKey], reason)

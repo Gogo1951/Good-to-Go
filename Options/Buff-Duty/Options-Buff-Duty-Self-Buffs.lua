@@ -1,5 +1,4 @@
 local _, ns = ...
-local Data = ns.Data
 local L = ns.L
 local Kit = ns.OptionsKit
 
@@ -7,22 +6,21 @@ local GetColor = ns.GetColor
 
 --[[
     "Self-Buffs" panel, under Buff Duty: every buff you can put on yourself,
-    one dropdown each picking when it shows -- Off, When Missing, or a few
-    minutes before it runs out. That's the self-only buffs (armors, auras,
+    each On or Off; the category's Show, at the top, says how soon each
+    shows. That's the self-only buffs (armors, auras,
     aspects, Inner Fire) and the class's group buffs (Fortitude, Mark of the
     Wild, the blessings), which the window offers you under Self Buffs and
-    leaves off your party row; Group Buffs says who ELSE gets those. Its own
-    time per buff rather than Group Buffs' one "Refresh Under", since a
-    30-minute armor and a 10-minute Thorns want different warnings.
+    leaves off your party row; Group Buffs says who ELSE gets those.
 
     Laid out as a tree: the classes down the left, opened on your own (the
     settings are account-wide, so every class is listed), and the chosen
-    class's buffs on the right. The consumables any class can use (Winterfall
-    Firewater) come last, as a page of their own, closing with the scroll
-    types the window's Scrolls row and the Readiness Report check.
+    class's buffs on the right. Above the tree, the Self-Buffs category's
+    own settings (ns.AddBuffDutyRowControls). The
+    consumables any class can use have pages of their own, one per window
+    row (Options-Buff-Duty-Consumables.lua).
 
-    The switch for the window's Self-Buffs row lives on the Buff Duty panel with
-    the window's other rows. Like the Group Buffs panel, nothing here hides behind it:
+    Its Show in Buff Duty switch is twinned on the Buff Duty panel with the
+    window's other rows. Like the Group Buffs panel, nothing here hides behind it:
     these are choices worth making before turning the row on. Weapons have a
     panel of their own (Options-Buff-Duty-Weapon-Buffs.lua).
 ]]
@@ -48,10 +46,6 @@ local function CategoryName(category)
 
 	-- the class's plain name, gold like every header, and its notes gray beside it
 	local name = LOCALIZED_CLASS_NAMES_MALE[category.id] or category.name
-	-- The consumables' page says they only show while you carry one.
-	if category.id == "ITEMS" then
-		name = name .. " " .. GetColor("MUTED") .. "· " .. L["BUFF_DUTY_SELF_ITEMS_NOTE"] .. "|r"
-	end
 	for _, family in ipairs(families) do
 		local note = L["BUFF_DUTY_SELF_NOTE_" .. family]
 		if note then
@@ -59,53 +53,6 @@ local function CategoryName(category)
 		end
 	end
 	return name
-end
-
---[[
-    The scroll types on the Consumables page, one checkbox each, named as
-    Buff Duty's Scrolls flyout names them (ns.SCROLL_TYPE_LABELS). A flavor
-    with no consumable buffs still gets the page, for the scrolls alone.
-    scrollTypes is on the AceDB profile: which scrolls are worth offering
-    differs from character to character (a README-Notes exception).
-]]
-local function AddScrollTypes(args, order)
-	local page = args.ITEMS
-	if not page then
-		page = {
-			type = "group",
-			name = L["BUFF_DUTY_SELF_ITEMS_HEADER"],
-			order = order,
-			args = { header = Kit.Header(L["BUFF_DUTY_SELF_ITEMS_HEADER"], 1), spaceHeader = Kit.Spacer(2) },
-		}
-		args.ITEMS = page
-	end
-
-	local toggles = {}
-	for index, scroll in ipairs(ns.SCROLL_TYPE_LABELS or {}) do
-		local key, label = scroll[1], scroll[2] or scroll[1]
-		toggles[key] = {
-			type = "toggle",
-			name = label,
-			desc = L["OPTIONS_BUFF_TYPE_DESCRIPTION"]:format(label),
-			order = index,
-			get = function()
-				local types = ns.db.profile.scrollTypes
-				return types and types[key]
-			end,
-			set = function(_, value)
-				ns.db.profile.scrollTypes[key] = value
-				ns.RefreshBuffDuty()
-			end,
-		}
-	end
-	page.args.spaceScrolls = Kit.Spacer(900)
-	page.args.scrollTypes = {
-		type = "group",
-		name = L["OPTIONS_SCROLL_TYPES"],
-		order = 901,
-		inline = true,
-		args = toggles,
-	}
 end
 
 function ns.BuildBuffDutySelfBuffsOptions()
@@ -119,18 +66,22 @@ function ns.BuildBuffDutySelfBuffsOptions()
 		childGroups = "tree",
 		args = {
 			descIntro = Kit.Desc(L["BUFF_DUTY_SELF_DESCRIPTION"], 1),
+			spaceIntro = Kit.Spacer(1.5),
 		},
 	}
-	-- With Buff Duty on, the line names this page's own switch, on the Buff Duty page, while that is off.
+	ns.AddBuffDutyRowControls(options.args, "self", 2)
+	--[[
+	    With Buff Duty on, the line names this page's own switch while that is off.
+	    The switch is on this page (Show in Buff Duty, above), so the line sends you
+	    nowhere else.
+	]]
 	ns.AddFeatureOffLine(options.args, "buffWindow.enabled", {
 		isOn = function()
 			return Settings().selfEnabled
 		end,
 		name = "BUFF_DUTY_SELF_ENABLE",
-		page = "TAB_BUFF_DUTY",
 	})
 
-	local refreshValues = ns.BuffDutyRefreshValues(Data.SELF_REFRESH_CHOICES)
 	local selfOrder = 10
 	for _, category in ipairs(ns.buffDutySelfCategories or {}) do
 		-- Keyed by the class token, so the tree can open on yours (Options/Options.lua).
@@ -147,26 +98,24 @@ function ns.BuildBuffDutySelfBuffsOptions()
 
 		local entryOrder = 10
 		for index, entry in ipairs(ns.SortedEntries(category.entries)) do
-			-- A blank line between rows, so each dropdown has room around it.
+			-- A blank line between rows, so each checkbox has room around it.
 			if index > 1 then
 				page.args["space" .. index] = Kit.Spacer(entryOrder - 0.25)
 			end
-			ns.DefineSpellSelectRow(
+			ns.DefineSpellToggleRow(
 				page.args,
 				entry,
 				entryOrder,
-				entry.desc or L["BUFF_DUTY_SELF_REFRESH_DESCRIPTION"]:format(entry.spellName),
+				entry.desc or L["BUFF_DUTY_MENU_ITEM_DESCRIPTION_FORMAT"]:format(entry.spellName),
 				{
-					values = refreshValues,
-					sorting = Data.SELF_REFRESH_CHOICES,
-					-- The tree's pane is narrower than the panel: its own caption and dropdown widths.
+					-- The tree's pane is narrower than the panel: its own caption and control widths.
 					labelWidth = Kit.TREE_LABEL_WIDTH,
 					width = Kit.TREE_CONTROL_WIDTH,
 					get = function()
-						return Settings().selfRefresh[entry.key]
+						return ns.BuffDuty.SelfItemOn(entry.key)
 					end,
 					set = function(_, value)
-						Settings().selfRefresh[entry.key] = value
+						ns.BuffDuty.SetSelfItemOn(entry.key, value)
 						ns.RefreshBuffDuty()
 					end,
 				}
@@ -177,6 +126,5 @@ function ns.BuildBuffDutySelfBuffsOptions()
 		selfOrder = selfOrder + 1
 	end
 
-	AddScrollTypes(options.args, selfOrder)
 	return options
 end

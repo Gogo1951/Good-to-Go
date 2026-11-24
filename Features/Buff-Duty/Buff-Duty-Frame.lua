@@ -81,13 +81,13 @@ local PET_INDENT = 16
 ]]
 local PADDING = 16
 --[[
-    The title bar: one row as high as the close button, holding the title and
-    the button, so the button's top sits PADDING from the plate's edge like
-    everything else; then a 16-point gap, so the title doesn't read as one
-    of the sections.
+    The title bar, the Menu Kit's window header (Kit.AddWindowHeader): one
+    16-point row holding the title and a 16-point close button, the button's
+    top PADDING from the plate's edge like everything else; then a 16-point
+    gap, so the title doesn't read as one of the sections.
 ]]
-local CLOSE_SIZE = 22
-local TITLE_HEIGHT = CLOSE_SIZE
+local CLOSE_SIZE = Kit.WINDOW_HEADER_HEIGHT
+local TITLE_HEIGHT = Kit.WINDOW_HEADER_HEIGHT
 local TITLE_GAP = 16
 --[[
     The window's width and height each round up to a multiple of this, as
@@ -105,16 +105,18 @@ local MIN_WINDOW_WIDTH = 208
 -- Room between the end of the title and the close button.
 local TITLE_CLOSE_GAP = 8
 --[[
-    The Options line at the foot of the window, one icon high with PADDING
-    alone under it, under a thin divider on the Spacing Scale: 16 from the
-    last line's content to the divider (more, from the height's rounding),
-    8 from the divider to the Options row.
+    The Options line at the foot of the window, the Menu Kit's
+    (Kit.AddOptionsLine): one menu row high with PADDING alone under it,
+    under a thin divider on the Spacing Scale: 16 from the last line's
+    content to the divider (more, from the height's rounding), 8 from the
+    divider to the Options row. The row reaches FOOTER_INSET past the text
+    on each side, the kit's own inset from a row's edge to its text, so its
+    text and arrow line up with the window's PADDING.
 ]]
-local FOOTER_HEIGHT = ICON_SIZE
+local FOOTER_HEIGHT = Kit.ROW_HEIGHT
+local FOOTER_INSET = Kit.WINDOW_EDGE - Kit.FLYOUT_OVERLAP
 local DIVIDER_ABOVE = 16
 local DIVIDER_BELOW = 8
-local DIVIDER_ALPHA = 0.35
-local FOOTER_HIGHLIGHT_ALPHA = 0.16
 
 --------------------------------------------------------------------------------
 -- State
@@ -186,6 +188,7 @@ local function ReleaseAll()
 	usedLabels, pool.used = 0, 0
 	ns.ReleaseBuffDutyOtherIcons()
 	Layout.ReleaseFoldButtons()
+	Layout.ReleaseMenuButtons()
 end
 
 --[[
@@ -195,6 +198,48 @@ end
     secure buttons, but drawn like one, under Self-Buffs.
 ]]
 local PARTY_BUFFS_GRID = "partyBuffs"
+
+--[[
+    The sections whose rows line up in cast order instead of by column: the
+    next cast leftmost, the rest closing up behind it as each one goes out,
+    the row against the right edge (Buff-Duty-Layout.lua's packed lines).
+]]
+local CAST_ORDER_KINDS = { self = true, target = true, favor = true }
+
+--[[
+    Each of those sections' icons' place in the Buff Key's order
+    (BuffDuty.CastOrder). An icon the key never casts (Winterfall Firewater)
+    goes after the rest, in the row's own order.
+]]
+local function CastRanks(sections)
+	local ordered = {}
+	for _, section in ipairs(sections) do
+		if CAST_ORDER_KINDS[section.kind] then
+			ordered[#ordered + 1] = section
+		end
+	end
+	local ranks = {}
+	for index, spec in ipairs(ns.BuffDuty.CastOrder(ordered)) do
+		ranks[spec] = index
+	end
+	return ranks
+end
+
+local function InCastOrder(specs, ranks)
+	local sorted, place = {}, {}
+	for index, spec in ipairs(specs) do
+		sorted[index] = spec
+		place[spec] = index
+	end
+	table.sort(sorted, function(a, b)
+		local rankA, rankB = ranks[a] or math.huge, ranks[b] or math.huge
+		if rankA ~= rankB then
+			return rankA < rankB
+		end
+		return place[a] < place[b]
+	end)
+	return sorted
+end
 
 --[[
     The window's last line while Cast Next Buff has no key: a section's space
@@ -242,7 +287,11 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 		local top, partyRows = {}, {}
 		local parties = 0
 		local nameWidth = MIN_NAME_WIDTH
+		-- Set once any line opens a category's menu: every line then leaves room for the arrow column.
+		local anyMenu = false
 		local partyBuffsPlaced = #otherBuffs == 0
+		-- Worked out the first time a cast-order row needs them.
+		local castRanks
 		local function AddPartyBuffs()
 			partyBuffsPlaced = true
 			local label, labelWidth = MeasureLabel(GetColor("TITLE") .. L["BUFF_DUTY_ASK_OTHERS"] .. "|r", 0)
@@ -270,9 +319,29 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 				table.insert(partyRows[index], lines)
 			end
 			local grid = section.grid or MAIN_GRID
-			local function Measure(text, indent, specs, lineGrid, header)
+			local packed = CAST_ORDER_KINDS[section.kind] or false
+			local function Measure(text, indent, specs, lineGrid, header, from)
 				local label, width = MeasureLabel(text, indent)
-				local line = { label = label, indent = indent, specs = specs, grid = lineGrid, header = header }
+				if packed then
+					castRanks = castRanks or CastRanks(sections)
+					specs = InCastOrder(specs, castRanks)
+				end
+				local line = {
+					label = label,
+					indent = indent,
+					specs = specs,
+					grid = lineGrid,
+					header = header,
+					packed = packed,
+					menu = from.menu,
+				}
+				if from.menu then
+					anyMenu = true
+				end
+				if from.missing then
+					line.missingLabel, line.missingWidth =
+						MeasureLabel(GetColor("OFF") .. L["BUFF_DUTY_MISSING_INVENTORY"] .. "|r", 0)
+				end
 				lines[#lines + 1] = line
 				nameWidth = math.max(nameWidth, width)
 				return line
@@ -283,14 +352,22 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 				section.foldable and FOLD_INDENT or 0,
 				section.icons,
 				grid,
-				true
+				true,
+				section
 			)
 			if section.foldable then
 				head.fold = { subgroup = section.subgroup, folded = section.folded or false }
 			end
 			for _, row in ipairs(section.rows) do
 				-- A row can set its own indent: the weapon hands sit flush with their header.
-				Measure(row.label, row.indent or (row.pet and PET_INDENT or MEMBER_INDENT), row.icons, row.grid or grid)
+				Measure(
+					row.label,
+					row.indent or (row.pet and PET_INDENT or MEMBER_INDENT),
+					row.icons,
+					row.grid or grid,
+					nil,
+					row
+				)
 			end
 			lines[#lines].sectionEnd = true
 		end
@@ -307,10 +384,12 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 		local function ColumnWidth(grid)
 			return nameWidth + NAME_GAP + math.max(iconWidths[grid] or 0, ICON_SIZE)
 		end
+		-- A line's Missing Inventory! sits after its icons, so it widens the line by its own width.
 		local function ContentWidth()
 			local width = 0
 			for _, line in ipairs(top) do
-				width = math.max(width, ColumnWidth(line.grid))
+				width =
+					math.max(width, ColumnWidth(line.grid) + (line.missingWidth and line.missingWidth + ICON_GAP or 0))
 			end
 			local partyWidth = ColumnWidth(MAIN_GRID)
 			local partyColumns = math.min(parties, PARTIES_PER_ROW)
@@ -327,7 +406,8 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 		    larger font that doesn't widens the name column to make up the
 		    difference.
 		]]
-		local minWidth = math.ceil(title:GetStringWidth()) + TITLE_CLOSE_GAP + CLOSE_SIZE
+		local arrowSpace = anyMenu and Layout.ARROW_SPACE or 0
+		local minWidth = math.ceil(title:GetStringWidth()) + TITLE_CLOSE_GAP + CLOSE_SIZE - arrowSpace
 		local width = ContentWidth()
 		if width < minWidth then
 			nameWidth = SnapUp(nameWidth + (minWidth - width), NAME_STEP)
@@ -340,9 +420,9 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 		    since widening the names would widen each party by it. held.nameWidth
 		    keeps the width from before, so the rounding never builds on itself.
 		]]
-		local windowWidth = math.max(SnapUp(PADDING * 2 + width, WINDOW_STEP), MIN_WINDOW_WIDTH)
+		local windowWidth = math.max(SnapUp(PADDING * 2 + width + arrowSpace, WINDOW_STEP), MIN_WINDOW_WIDTH)
 		if math.min(parties, PARTIES_PER_ROW) <= 1 then
-			nameWidth = nameWidth + (windowWidth - PADDING * 2 - width)
+			nameWidth = nameWidth + (windowWidth - PADDING * 2 - arrowSpace - width)
 			width = ContentWidth()
 		end
 
@@ -355,8 +435,15 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 		    starts under the taller of them.
 		]]
 		local firstMiddle = -(PADDING + TITLE_HEIGHT + TITLE_GAP + ICON_SIZE / 2)
-		local right = windowWidth - PADDING
-		local y, bottom = PlaceLines(top, PADDING, right, firstMiddle, nameWidth, offsetsByGrid, iconWidths)
+		--[[
+		    The arrow column, while any line has a menu, is the last
+		    ARROW_SPACE inside the right padding: every line's icons end
+		    before it, so they still line up down the window, and each
+		    arrow ends where the Options line's does.
+		]]
+		local right = windowWidth - PADDING - arrowSpace
+		local arrowRight = anyMenu and windowWidth - PADDING or nil
+		local y, bottom = PlaceLines(top, PADDING, right, firstMiddle, nameWidth, offsetsByGrid, iconWidths, arrowRight)
 		local partyWidth = ColumnWidth(MAIN_GRID)
 		for _, partyRow in ipairs(partyRows) do
 			local nextY = y
@@ -377,8 +464,9 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 		    rounding can widen the gap above it instead of padding the foot.
 		]]
 		local footerHeight = FOOTER_HEIGHT
+		local footerWidth = width + arrowSpace
 		if showKeyHint then
-			keyHint:SetWidth(width)
+			keyHint:SetWidth(footerWidth)
 			keyHint:SetText(KeyHintText())
 			footerHeight = footerHeight + SECTION_SPACE + math.ceil(keyHint:GetStringHeight())
 		end
@@ -387,11 +475,11 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 		local dividerTop = bottom - DIVIDER_ABOVE - (windowHeight - rawHeight)
 		footerDivider:ClearAllPoints()
 		footerDivider:SetPoint("TOPLEFT", content, "TOPLEFT", PADDING, dividerTop)
-		footerDivider:SetWidth(width)
+		footerDivider:SetWidth(footerWidth)
 		local footerTop = dividerTop - 1 - DIVIDER_BELOW
 		footer:ClearAllPoints()
-		footer:SetPoint("TOPLEFT", content, "TOPLEFT", PADDING, footerTop)
-		footer:SetSize(width, FOOTER_HEIGHT)
+		footer:SetPoint("TOPLEFT", content, "TOPLEFT", PADDING - FOOTER_INSET, footerTop)
+		footer:SetSize(footerWidth + 2 * FOOTER_INSET, FOOTER_HEIGHT)
 		if showKeyHint then
 			keyHint:ClearAllPoints()
 			keyHint:SetPoint("TOPLEFT", content, "TOPLEFT", PADDING, footerTop - FOOTER_HEIGHT - SECTION_SPACE)
@@ -541,31 +629,15 @@ function ns.CreateBuffDutyFrame()
 		ns.RestoreBuffDutyPosition(anchor)
 	end)
 
-	-- Titled like the other windows, the add-on's name last: "Buff Duty // GtG".
-	title = content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	title:SetPoint("LEFT", content, "TOPLEFT", PADDING, -(PADDING + TITLE_HEIGHT / 2))
-	title:SetText(
-		GetColor("TEXT")
-			.. L["TAB_BUFF_DUTY"]
-			.. "|r "
-			.. GetColor("SEPARATOR")
-			.. "//|r "
-			.. GetColor("INFO")
-			.. L["ADDON_SHORT_NAME"]
-			.. "|r"
-	)
-
 	--[[
-	    Closing hides the window for the session (ns.CloseBuffDuty) through the
+	    Titled like the other windows, the add-on's name last: "Buff Duty //
+	    GtG" (Kit.WindowTitle), with the close button on the right. Closing
+	    hides the window for the session (ns.CloseBuffDuty) through the
 	    redraw's own gate, so the next roster or aura change can't reopen it.
 	    The template's own click hides its parent, which is protected (it holds
-	    the secure icons), so the script is replaced outright.
+	    the secure icons), so the kit replaces the script outright.
 	]]
-	local close = CreateFrame("Button", nil, content, "UIPanelCloseButton")
-	close:SetSize(CLOSE_SIZE, CLOSE_SIZE)
-	-- PADDING in from the top and right edges, like everything else on the plate.
-	close:SetPoint("TOPRIGHT", content, "TOPRIGHT", -PADDING, -PADDING)
-	close:SetScript("OnClick", ns.CloseBuffDuty)
+	title = Kit.AddWindowHeader(content, L["TAB_BUFF_DUTY"], ns.CloseBuffDuty)
 
 	-- The Cast Next Buff tip under the list (KeyHintText); placed and shown by RenderBuffDuty.
 	keyHint = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -575,33 +647,20 @@ function ns.CreateBuffDutyFrame()
 	keyHint:Hide()
 
 	--[[
-	    The divider and the Options line, placed by RenderBuffDuty: blue as a
-	    Pretty Wide Quest Log menu's footer line is, with the menu kit's
-	    submenu arrow, and hovering it opens the window's switches beside it
-	    (Buff-Duty-Options-Menu.lua); a click does too. A plain button, not a
+	    The divider and the Options line (Kit.AddOptionsLine), placed by
+	    RenderBuffDuty: blue, with the kit's sub-menu arrow, and hovering it
+	    opens the window's switches beside it (Buff-Duty-Options-Menu.lua); a
+	    click does too. That one menu also opens from the mini-map menu's Buff
+	    Duty row and holds the category flyouts, so the line opens it in place
+	    of the kit's own menu, which is left unused. A plain button, not a
 	    secure one, so it works in combat too, where a change waits for the
 	    redraw combat holds back.
 	]]
-	footerDivider = content:CreateTexture(nil, "ARTWORK")
-	local separator = ns.COLORS_RGB.SEPARATOR
-	footerDivider:SetColorTexture(separator.r, separator.g, separator.b, DIVIDER_ALPHA)
-	footerDivider:SetHeight(1)
-	footer = CreateFrame("Button", nil, content)
-	footer:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-	local footerText = footer:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-	footerText:SetPoint("LEFT")
-	footerText:SetText(GetColor("INFO") .. L["BUFF_DUTY_MENU_OPTIONS"] .. "|r")
-	local footerArrow = footer:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-	footerArrow:SetPoint("RIGHT")
-	footerArrow:SetText(ns.MenuKit.SUBMENU_ARROW)
-	local highlight = footer:CreateTexture(nil, "HIGHLIGHT")
-	local gold = ns.COLORS_RGB.TITLE
-	highlight:SetColorTexture(gold.r, gold.g, gold.b, FOOTER_HIGHLIGHT_ALPHA)
-	highlight:SetPoint("TOPLEFT", -ICON_GAP, 0)
-	highlight:SetPoint("BOTTOMRIGHT", ICON_GAP, 0)
+	footer, footerDivider = Kit.AddOptionsLine(content, L["BUFF_DUTY_MENU_OPTIONS"], function()
+		return {}
+	end)
 	local function OpenOptions(self)
-		-- Overlapping the window as any flyout overlaps its menu (Kit.FLYOUT_OVERLAP), measured from the line's right end.
-		ns.ShowBuffDutyOptions(self, PADDING - ns.MenuKit.FLYOUT_OVERLAP)
+		ns.ShowBuffDutyOptions(self)
 	end
 	footer:SetScript("OnEnter", OpenOptions)
 	footer:SetScript("OnClick", OpenOptions)

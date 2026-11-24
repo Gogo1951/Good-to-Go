@@ -42,7 +42,7 @@ ns.BANDAGES = {
 How We Got the Data
 
 Last Validated
-	2026-11-19, wago.tools, Mists of Pandaria Classic 5.5.4.71060
+	2026-11-24, wago.tools, Mists of Pandaria Classic 5.5.4.71089
 
 Notes
 	- Every First Aid bandage on this client, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) to rank the Bandage macro's picks. The family is the items whose use spell is on the bandage cooldown category (150) and heals over time.
@@ -79,6 +79,8 @@ wago.tools
 	https://wago.tools/db2/ItemEffect?build=5.5.4.71060
 	https://wago.tools/db2/Spell?build=5.5.4.71060
 	https://wago.tools/db2/SpellEffect?build=5.5.4.71060
+	https://wago.tools/db2/Item?build=5.5.4.71089
+	https://wago.tools/db2/ItemSparse?build=5.5.4.71089
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/MoP/mopItemDB.lua

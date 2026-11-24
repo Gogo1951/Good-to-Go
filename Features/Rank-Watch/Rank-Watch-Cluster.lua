@@ -14,7 +14,8 @@ local PREFIX = RANK_WATCH.COMM_PREFIX
     them, and only the leader whispers; everyone else prints. The standalone add-on sends through AceComm, which
     sends a short message as it is, so plain add-on messages read and write the same lines:
 
-      JOIN|<name>,<release>    Sent to the group on joining it or reloading: who whispers here?
+      JOIN|<name>,<release>    Sent to the group on joining it or reloading: who whispers here? A leader
+                               turning off sends one too, handing the lead back.
       LEAD|<name>,<release>    The answer, whispered back to the joiner; also sent to the group to take the lead.
       NOTIFY|<key>             A cast just reported, keyed as settings.announced keys it, so nobody repeats it.
       SYNC|<key>               The standalone add-on's bulk copy of its reported casts; read like NOTIFY.
@@ -61,12 +62,40 @@ function ns.BroadcastRankWatchNotify(key)
 	Broadcast("NOTIFY", key)
 end
 
+-- The group unit holding a short name, or nil when nobody in the group has it.
+local function GroupUnitOf(name)
+	local prefix, count = "party", GetNumSubgroupMembers()
+	if IsInRaid() then
+		prefix, count = "raid", GetNumGroupMembers()
+	end
+	for i = 1, count do
+		local unit = prefix .. i
+		local unitName = UnitName(unit)
+		if ns.IsPlain(unitName) and unitName == name then
+			return unit
+		end
+	end
+	return nil
+end
+
+local function IsInMyGroup(name)
+	return name == MyName() or GroupUnitOf(name) ~= nil
+end
+
 --[[
     Who speaks for the group: "self" when this client whispers, the leader's name when another Rank Watch or
-    Rank Sentinel does, or nil when this client leads with whispers off and nobody whispers.
+    Rank Sentinel does, or nil when this client leads with whispers off and nobody whispers. A leader who has
+    gone offline can't whisper, so this client takes the lead back from them.
 ]]
 function ns.RankWatchWhisperer()
 	local me = MyName()
+	if lead and lead ~= me and IsInGroup() then
+		local unit = GroupUnitOf(lead)
+		local connected = unit and UnitIsConnected(unit)
+		if unit and ns.IsPlain(connected) and not connected then
+			ClaimLead()
+		end
+	end
 	if not lead or lead == me or not IsInGroup() then
 		local settings = ns.RankWatchSettings()
 		return settings and settings.whisper and "self" or nil
@@ -77,23 +106,6 @@ end
 -- The leader's name for the options panel.
 function ns.RankWatchLeadName()
 	return lead or MyName()
-end
-
-local function IsInMyGroup(name)
-	if name == MyName() then
-		return true
-	end
-	local prefix, count = "party", GetNumSubgroupMembers()
-	if IsInRaid() then
-		prefix, count = "raid", GetNumGroupMembers()
-	end
-	for i = 1, count do
-		local unitName = UnitName(prefix .. i)
-		if ns.IsPlain(unitName) and unitName == name then
-			return true
-		end
-	end
-	return false
 end
 
 --------------------------------------------------------------------------------
@@ -137,9 +149,15 @@ local function OnChatMsgAddon(prefix, text, _, sender)
 			end
 		end
 	elseif command == "JOIN" then
-		-- A leader with whispers off stays silent, so a joiner who whispers keeps the lead it gave itself.
+		--[[
+		    A JOIN from the leader itself means it has just turned on again or is handing the lead back (it
+		    turned off), so a copy that whispers takes the lead rather than naming the leader back to it. A
+		    leader with whispers off stays silent, so a joiner who whispers keeps the lead it gave itself.
+		]]
 		local leadName = ns.RankWatchLeadName()
-		if leadName ~= MyName() or settings.whisper then
+		if leadName ~= MyName() and Ambiguate(sender, "short") == leadName and settings.whisper then
+			ClaimLead()
+		elseif leadName ~= MyName() or settings.whisper then
 			Send("LEAD|" .. Release(leadName), "WHISPER", sender)
 		end
 	end
@@ -169,9 +187,15 @@ local function OnGroupRosterUpdate()
 end
 ns.SetRankWatchHandler("GROUP_ROSTER_UPDATE", OnGroupRosterUpdate)
 
--- Turning on in a group asks who leads, as a reload does; turning off forgets the leader.
+--[[
+    Turning on in a group asks who leads, as a reload does. Turning off forgets the leader; a leader turning
+    off sends one JOIN first, so every copy left takes the lead back (the JOIN branch above) and re-elects.
+]]
 function ns.SyncRankWatchCluster(active)
 	C_ChatInfo.RegisterAddonMessagePrefix(PREFIX)
+	if not active and IsInGroup() and lead == MyName() then
+		Broadcast("JOIN", Release(MyName()))
+	end
 	lead = MyName()
 	wasInGroup = IsInGroup()
 	if active and wasInGroup then

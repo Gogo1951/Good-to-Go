@@ -179,6 +179,65 @@ local function IsPhaseShifted(unit)
 end
 BuffDuty.IsPhaseShifted = IsPhaseShifted
 
+--------------------------------------------------------------------------------
+-- PvP Flags
+--------------------------------------------------------------------------------
+
+-- `unit`'s name when it is someone else with their PvP flag up; nil for you, anyone unflagged, or an answer we can't read.
+local function FlaggedName(unit)
+	if not unit or not UnitExists(unit) then
+		return nil
+	end
+	local isSelf = UnitIsUnit(unit, "player")
+	if not ns.IsPlain(isSelf) or isSelf then
+		return nil
+	end
+	local flagged = UnitIsPVP(unit)
+	if not ns.IsPlain(flagged) or not flagged then
+		return nil
+	end
+	local name = GetUnitName(unit, false)
+	return ns.IsPlain(name) and name or nil
+end
+
+--[[
+    Buffing a PvP-flagged player flags you too. While you aren't flagged, the
+    name of a flagged player a cast would reach: who it's aimed at; for a
+    group buff anyone in that party, since it lands on all of them; and for a
+    self-buff that reaches your party (Battle Shout), anyone in yours. Nil
+    when you're flagged already, the Buff PvP-Flagged Players setting is on,
+    or the cast reaches no one flagged. A stranger buffed by name with no unit
+    token (a favor out of sight) can't be asked.
+]]
+function BuffDuty.PvPFlaggedTarget(spec)
+	if not spec or spec.ask or ns.db.global.buffWindow.buffPvPFlagged then
+		return nil
+	end
+	local mine = UnitIsPVP("player")
+	if not ns.IsPlain(mine) or mine then
+		return nil
+	end
+	local subgroup = spec.isGroup and spec.subgroup
+	if spec.party then
+		for _, member in ipairs(BuffDuty.GroupMembers()) do
+			if member.isPlayer then
+				subgroup = member.subgroup
+			end
+		end
+	end
+	if subgroup then
+		for _, member in ipairs(BuffDuty.GroupMembers()) do
+			if member.subgroup == subgroup and not member.isPlayer then
+				local name = FlaggedName(member.unit)
+				if name then
+					return name
+				end
+			end
+		end
+	end
+	return FlaggedName(spec.unit)
+end
+
 --[[
     Is `unit` close enough to take `spellName`? A phase-shifted pet never is.
     Otherwise the spell's own range check first; when it has no answer, a unit

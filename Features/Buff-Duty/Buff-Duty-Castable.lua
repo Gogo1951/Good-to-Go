@@ -194,6 +194,7 @@ function BuffDuty.BuildBuffs()
 
 	wipe(selfBuffs)
 	local selfRefresh = ns.db.global.buffWindow.selfRefresh
+	local selfShow = BuffDuty.RowShowSeconds("self")
 	for _, entry in ipairs(selfEntries) do
 		local when = selfRefresh[entry.key]
 		if entry.row.class == playerClass and when and when ~= Data.SELF_REFRESH_OFF then
@@ -208,13 +209,15 @@ function BuffDuty.BuildBuffs()
 					exclusive = entry.row.exclusive,
 					ranks = ranks,
 					singleName = ranks[1].name,
-					-- Its own "count as missing under", in seconds; 0 waits for it to drop.
-					refreshSeconds = when * 60,
+					-- Self-Buffs' Show, in seconds; 0 waits for it to drop.
+					refreshSeconds = selfShow,
 					-- Soul Link only means anything with a demon out.
 					needsPet = entry.row.needsPet,
 					-- Shadowform: the Buff Key casts it after everything else.
 					castLast = entry.row.castLast,
 					noShadowform = entry.row.noShadowform,
+					-- Battle Shout: it lands on your party too (BuffDuty.PvPFlaggedTarget).
+					party = entry.row.party,
 				}
 			end
 		end
@@ -251,7 +254,7 @@ function BuffDuty.BuildBuffs()
 					ranks = ranks,
 					singleName = ranks[1].name,
 					groupId = HighestKnown(entry.groupIds),
-					refreshSeconds = when * 60,
+					refreshSeconds = selfShow,
 					isGroupBuff = true,
 				}
 			end
@@ -282,7 +285,7 @@ function BuffDuty.BuildBuffs()
 				ranks = {},
 				create = known[1],
 				items = stone.items,
-				refreshSeconds = stoneWhen * 60,
+				refreshSeconds = selfShow,
 			}
 		end
 	end
@@ -290,21 +293,25 @@ function BuffDuty.BuildBuffs()
 	--[[
 	    Self items are for any class, after the Soulstone's column. Shaped like
 	    the Soulstone: no ranks, only auras, so any version on you counts.
+	    Well Fed, Scrolls and Flasks or Elixirs go by their category's own
+	    switch; Other Buffs by its switch and each one's own. Each takes its
+	    category's Show.
 	]]
 	wipe(selfItemBuffs)
 	for _, entry in ipairs(selfItemEntries) do
-		local when = selfRefresh[entry.key]
-		if when and when ~= Data.SELF_REFRESH_OFF then
+		local row = entry.wellFed and "food" or entry.scrolls and "scrolls" or entry.elixirs and "elixirs" or "other"
+		if BuffDuty.RowOn(row) and (row ~= "other" or BuffDuty.SelfItemOn(entry.key)) then
 			selfItemBuffs[#selfItemBuffs + 1] = {
 				column = #selfBuffs + 2 + #selfItemBuffs,
 				key = entry.key,
 				itemId = entry.itemId,
 				wellFed = entry.wellFed,
 				scrolls = entry.scrolls,
+				elixirs = entry.elixirs,
 				auraIds = entry.auraIds,
 				rankLevels = {},
 				ranks = {},
-				refreshSeconds = when * 60,
+				refreshSeconds = BuffDuty.RowShowSeconds(row),
 			}
 		end
 	end

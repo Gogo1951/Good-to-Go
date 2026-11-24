@@ -1,6 +1,5 @@
 local _, ns = ...
 local L = ns.L
-local GetColor = ns.GetColor
 local HasTemplate = ns.HasTemplate
 
 --[[
@@ -72,16 +71,12 @@ local function Notify()
 	end
 end
 
--- "Enhanced Spellbook // Good to Go" in the add-ons' shared colors: the page white, the slashes gray, the name blue
+--[[
+	"Enhanced Spellbook // GtG" by the Menu-Kit's window title, read each time a tab is picked: the page white, the
+	slashes gray, the Short Name blue.
+]]
 local function SetTitle(titleKey)
-	local title = GetColor("TEXT")
-		.. L[titleKey]
-		.. "|r "
-		.. GetColor("SEPARATOR")
-		.. "//|r "
-		.. GetColor("INFO")
-		.. L["ADDON_TITLE"]
-		.. "|r"
+	local title = ns.MenuKit.WindowTitle(L[titleKey])
 	if window.SetTitle then
 		window:SetTitle(title)
 	else
@@ -180,12 +175,47 @@ local function CreateTabs()
 	window.numTabs = #tabs
 end
 
+--[[
+	Where the window stands: the spot it was last dragged to, saved account-wide in windowPosition, or the middle
+	of the screen until then.
+]]
+local function PlaceWindow()
+	local position = ns.db.global.windowPosition
+	window:ClearAllPoints()
+	if position and position.point then
+		window:SetPoint(position.point, UIParent, position.relativePoint, position.xOffset, position.yOffset)
+	else
+		window:SetPoint("CENTER")
+	end
+end
+
+-- Written whole: AceDB can clear an empty windowPosition at logout.
+local function SavePosition()
+	local point, _, relativePoint, xOffset, yOffset = window:GetPoint(window:GetNumPoints())
+	ns.db.global.windowPosition = { point = point, relativePoint = relativePoint, xOffset = xOffset, yOffset = yOffset }
+end
+
+ns.SaveSpellbookWindowPosition = SavePosition
+
+function ns.HasSavedSpellbookWindowPosition()
+	local position = ns.db and ns.db.global.windowPosition
+	return position ~= nil and position.point ~= nil
+end
+
+-- Reset Position (Options-Enhanced-Spellbook.lua): forgets the spot and moves an open window back to the middle.
+function ns.ResetSpellbookWindowPosition()
+	ns.db.global.windowPosition = {}
+	if window then
+		PlaceWindow()
+	end
+end
+
 local function CreateWindow()
 	local template = HasTemplate("PortraitFrameTemplate") and "PortraitFrameTemplate" or "BasicFrameTemplate"
 	window = CreateFrame("Frame", "GoodToGoSpellbookFrame", UIParent, template)
 	window:Hide()
 	window:SetSize(WINDOW_WIDTH, WINDOW_HEIGHT)
-	window:SetPoint("CENTER")
+	PlaceWindow()
 	window:SetFrameStrata("HIGH")
 	window:SetToplevel(true)
 	window:SetClampedToScreen(true)
@@ -193,7 +223,10 @@ local function CreateWindow()
 	window:EnableMouse(true)
 	window:RegisterForDrag("LeftButton")
 	window:SetScript("OnDragStart", window.StartMoving)
-	window:SetScript("OnDragStop", window.StopMovingOrSizing)
+	window:SetScript("OnDragStop", function(self)
+		self:StopMovingOrSizing()
+		SavePosition()
+	end)
 	if window.SetPortraitToAsset then
 		window:SetPortraitToAsset(ICON_ADDON)
 	end

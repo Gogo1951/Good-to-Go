@@ -264,18 +264,26 @@ BuffDuty.GroupChoices = GroupChoices
          all (castLast).
       4. Scrolls.
       5. Weapon buffs: main hand's row, then off hand's, best first.
-      6. Buff food for Well Fed.
-      7. A targeted friendly NPC.
+      6. Elixirs, then Other Buffs (Winterfall Firewater).
+      7. Buff food for Well Fed.
+      8. A targeted friendly NPC.
+    A category whose Use with Cast Next Buff is off (BuffDuty.RowOnKey;
+    Flasks or Elixirs and Other Buffs start off) gives none of its icons,
+    which stay a click on the window.
 ]]
 local function Candidates(sections, now)
 	local list, added = {}, {}
 	--[[
-	    Of the Self Buffs consumables, only scrolls and buff food are
-	    candidates, each added in its own place below; the rest (Winterfall
-	    Firewater) stay a click on the window.
+	    The Self Buffs consumables and weapon buffs are each added in their
+	    own place below, never with the casts.
 	]]
 	local function Add(spec, allowItem)
-		if spec and (allowItem or not (spec.weapon or spec.selfItem)) and not added[spec] then
+		if
+			spec
+			and (allowItem or not (spec.weapon or spec.selfItem))
+			and not added[spec]
+			and not (spec.dutyRow and not BuffDuty.RowOnKey(spec.dutyRow))
+		then
 			added[spec] = true
 			list[#list + 1] = spec
 		end
@@ -294,11 +302,19 @@ local function Candidates(sections, now)
 			end
 		end
 	end
+	-- Every icon in your own sections (Self-Buffs, Well Fed, Weapon Buffs, Scrolls, Flasks or Elixirs, Other Buffs).
 	local function EachSelfIcon(test)
 		Each("self", function(section)
 			for _, spec in ipairs(section.icons) do
 				if test(spec) then
 					Add(spec, true)
+				end
+			end
+			for _, row in ipairs(section.rows) do
+				for _, spec in ipairs(row.icons) do
+					if test(spec) then
+						Add(spec, true)
+					end
 				end
 			end
 		end)
@@ -406,8 +422,16 @@ local function Candidates(sections, now)
 		end
 	end)
 
+	-- 6. Elixirs, then Other Buffs, each while its category is on the key.
+	EachSelfIcon(function(spec)
+		return spec.dutyRow == "elixirs"
+	end)
+	EachSelfIcon(function(spec)
+		return spec.dutyRow == "other"
+	end)
+
 	--[[
-	    6. Well Fed after the casts: eating sits you down, and the next cast
+	    7. Well Fed after the casts: eating sits you down, and the next cast
 	    would stand you back up. Its icon leaves while you eat
 	    (Buff-Duty-Self.lua), so another press doesn't take a second bite.
 	]]
@@ -416,7 +440,7 @@ local function Candidates(sections, now)
 	end)
 
 	--[[
-	    7. A targeted NPC's row cycles forever (BuffDuty.NPCRow), so it waits
+	    8. A targeted NPC's row cycles forever (BuffDuty.NPCRow), so it waits
 	    until the very end: any sooner, it would keep the key from ever
 	    reaching what comes after it.
 	]]
@@ -430,6 +454,15 @@ local function Candidates(sections, now)
 		end
 	end)
 	return list
+end
+
+--[[
+    The key's order, for the window: Buff-Duty-Frame.lua lines up the icons on
+    Self-Buffs, Target and Return the Favor in it, the next cast leftmost. No
+    `now`, as the window's own GroupChoices call, so no press memory.
+]]
+function BuffDuty.CastOrder(sections)
+	return Candidates(sections)
 end
 
 --------------------------------------------------------------------------------
@@ -478,7 +511,9 @@ end
 --[[
     The first candidate that is ready and in reach. With none, the first one
     the client refuses, so its own error ("Missing reagent") says why the key
-    did nothing; failing that, nil and whoever the list is waiting on. A buff
+    did nothing; failing that, nil and whoever the list is waiting on. A cast
+    that would flag you for PvP (BuffDuty.PvPFlaggedTarget) is passed over,
+    and the flagged player's name comes back third. A buff
     with a cooldown of its own (HasCooldown) is never a candidate, ready or
     not.
 ]]
@@ -496,8 +531,9 @@ local function PickNext()
 
 	local now = GetTime()
 	local candidates = Candidates(BuffDuty.BuildSections(), now)
-	local refused, waitingOn
+	local refused, waitingOn, flagged
 	for _, spec in ipairs(candidates) do
+		local flaggedName = not spec.ask and BuffDuty.PvPFlaggedTarget(spec)
 		--[[
 		    An ask (Buff-Duty-Asks.lua) is a whisper, not a cast: no range,
 		    mana or cooldown of yours to wait on, only that player's own wait
@@ -507,6 +543,9 @@ local function PickNext()
 			if BuffDuty.CanAskTarget(spec) then
 				return spec
 			end
+		elseif flaggedName then
+			-- Passed over, so it can't hold up the rest; the press names them if nothing else is left.
+			flagged = flagged or flaggedName
 		elseif not Skipped(spec, now) and not HasCooldown(spec) then
 			local readiness = Readiness(spec)
 			if readiness ~= "cooldown" then
@@ -521,7 +560,7 @@ local function PickNext()
 			end
 		end
 	end
-	return refused, waitingOn
+	return refused, waitingOn, flagged
 end
 
 BuffDuty.PickBuffKeySpec = PickNext

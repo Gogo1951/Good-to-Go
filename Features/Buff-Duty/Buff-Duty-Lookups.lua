@@ -339,6 +339,31 @@ function BuffDuty.BuildLookup()
 	end
 
 	--[[
+	    Elixirs, for any class, wherever the flavor lists elixir buffs: one
+	    entry for every elixir, offered as an icon per elixir in your bags
+	    (Buff-Duty-Elixirs.lua). Named on the panel as Elixirs, with the lowest
+	    elixir buff id the client knows for its icon. Shows When Missing by
+	    default.
+	]]
+	local elixirIds = {}
+	for id in pairs(ns.ELIXIR_BUFF_IDS or {}) do
+		elixirIds[#elixirIds + 1] = id
+	end
+	table.sort(elixirIds)
+	elixirIds = LiveIds(elixirIds)
+	if elixirIds[1] then
+		selfItemEntries[#selfItemEntries + 1] = {
+			key = "elixirs",
+			row = { default = Data.SELF_REFRESH_MISSING },
+			elixirs = true,
+			name = L["BUFF_DUTY_ELIXIRS"],
+			ids = { elixirIds[1] },
+			auraIds = {},
+			desc = L["BUFF_DUTY_ELIXIRS_DESCRIPTION"],
+		}
+	end
+
+	--[[
 	    The Soulstone is offered by its Create Soulstone ranks, counted by its
 	    Soulstone Resurrection auras, and named on the panel by the aura. Its
 	    stones are kept as item ids, lowest level first.

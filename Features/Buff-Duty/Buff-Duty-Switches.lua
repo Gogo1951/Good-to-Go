@@ -3,7 +3,7 @@ local L = ns.L
 
 --[[
     Buff-Duty-Switches -- Buff Duty's on and off: the feature switch, the
-    per-class switch the mini-map button uses, whether it tracks the class
+    per-class switch the mini-map menu's Toggle uses, whether it tracks the class
     you're playing, and the window's close button, which hides it for the
     rest of the session or until you join a group.
 ]]
@@ -13,7 +13,7 @@ local L = ns.L
     session. Never saved: a login or reload brings the window back, and so does
     joining a group (from none: a raid forming out of your party, or one
     member swapping for another, leaves it closed) and turning Buff Duty on by
-    any switch (the mini-map button, the feature switch, or ticking your class).
+    any switch (the mini-map menu's Toggle, the feature switch, or ticking your class).
 ]]
 local hiddenThisSession = false
 
@@ -74,7 +74,7 @@ end
 
 --[[
     Buff Duty's window on the class you're playing: tracking, and the window
-    not closed this session. The mini-map button works per class through
+    not closed this session. The mini-map menu's Toggle works per class through
     these, so turning it off on a rogue leaves it up on a druid. Turning it on
     ticks your class and flips the switch on with it, which also undoes a close.
 ]]

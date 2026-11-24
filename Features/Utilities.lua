@@ -4,7 +4,7 @@ local _, ns = ...
     Utilities -- stateless, cross-cutting helpers used by multiple files: the
     color accessor, cross-client API shims, the secret-value checks, and the
     spell link, GUID, unit and buff-duration helpers several features share,
-    the duration wording, and the level filter's labels. No
+    and the duration wording. No
     module state beyond the hidden tooltip Era and TBC read tooltip text
     through; the one saved-data read is ns.GetClassesByProfileName's, of
     ns.db.global.inventory. A feature's own helpers live in its folder, in

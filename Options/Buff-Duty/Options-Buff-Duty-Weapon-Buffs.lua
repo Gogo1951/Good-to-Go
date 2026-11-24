@@ -4,8 +4,9 @@ local L = ns.L
 local Kit = ns.OptionsKit
 
 --[[
-    "Weapon Buffs" panel, under Buff Duty after Self-Buffs: one Refresh Under
-    timing for everything at the top, then, under a gold header each, a grid
+    "Weapon Buffs" panel, under Buff Duty after Self-Buffs: the category's
+    own settings at the top, its one Show timing among them, then, under a
+    gold header each, a grid
     of checkboxes -- a row per choice, a Main Hand and an Off Hand column. A rogue's poisons, a
     shaman's imbues and, on WoW Forever, a warlock's Firestone and
     Spellstone come first, then the oils, stones and lures any class can
@@ -14,8 +15,8 @@ local Kit = ns.OptionsKit
     use. An item name still loading is warmed when its row draws, and the
     panel repaints as it arrives.
 
-    The switch for the window's weapon rows lives on the Buff Duty panel with
-    the window's other rows.
+    Its Show in Buff Duty switch is twinned on the Buff Duty panel with the
+    window's other rows.
 ]]
 
 -- Each column's share of the control column, so the two sit where a dropdown would.
@@ -127,23 +128,10 @@ function ns.BuildBuffDutyWeaponBuffsOptions()
 		args = {
 			descIntro = Kit.Desc(L["BUFF_DUTY_WEAPON_DESCRIPTION"], 1),
 			spaceIntro = Kit.Spacer(2),
-			-- One timing for every choice below, on the same columns as their checkboxes.
-			refresh = Kit.LabelRow(3, nil, L["BUFF_DUTY_REFRESH"], {
-				type = "select",
-				desc = L["BUFF_DUTY_WEAPON_REFRESH_DESCRIPTION"],
-				values = ns.BuffDutyRefreshValues(Data.WEAPON_REFRESH_CHOICES),
-				sorting = Data.WEAPON_REFRESH_CHOICES,
-				get = function()
-					return Settings().weaponRefresh
-				end,
-				set = function(_, value)
-					Settings().weaponRefresh = value
-					ns.RefreshBuffDuty()
-				end,
-			}),
-			spaceRefresh = Kit.Spacer(4),
 		},
 	}
+	-- The Weapon Buffs category's own settings, its one Show timing among them, above the choices.
+	ns.AddBuffDutyRowControls(options.args, "weapons", 3)
 
 	local function Picks()
 		return Settings().weaponPicks

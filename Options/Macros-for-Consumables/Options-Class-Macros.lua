@@ -37,13 +37,17 @@ local function PetBuffActive()
 	return not NoPetBuffFoods() and settings and settings.usePetBuffFood
 end
 
-local function ReapplyActive()
-	local settings = GetSettings()
-	return settings and settings.earlyReapply
-end
-
 -- No Poisons skill on this flavor (Mists), so no Poisons macro for these rows to set up.
 local NO_POISONS = ns.POISONS_SPELL_ID == nil
+
+-- The Poisons macro is switched off on Consumable Macros, so its rows have nothing to set up.
+local function PoisonsMacroOff()
+	return not ns.IsMacroEnabled("Poisons")
+end
+
+local function PoisonRowsHidden()
+	return NO_POISONS or PoisonsMacroOff()
+end
 
 --------------------------------------------------------------------------------
 -- Shared Widget Factories
@@ -139,17 +143,6 @@ local function PetBuffTypeToggles()
 	return toggles
 end
 
-local REAPPLY_SECONDS = { 60, 120, 180, 240, 300 }
-
-local function ReapplyThresholdValues()
-	local values = { [60] = L["REAPPLY_THRESHOLD_ONE"] }
-	for index = 2, #REAPPLY_SECONDS do
-		local seconds = REAPPLY_SECONDS[index]
-		values[seconds] = string.format(L["REAPPLY_THRESHOLD_MANY"], seconds / 60)
-	end
-	return values
-end
-
 --------------------------------------------------------------------------------
 -- Class Macros Panel
 --------------------------------------------------------------------------------
@@ -157,12 +150,15 @@ end
 --[[
     The macro options that belong to one class, nested under Consumable
     Macros (Options/Options.lua): Druid (DruidMacroHelper on the potion and
-    Healthstone macros), Hunter (Pet Food Buffs in the Food macro, and when a
-    pet food buff counts as worn off), and Rogue (the Poisons macro's hands).
+    Healthstone macros), Hunter (Pet Food Buffs in the Food macro), and Rogue
+    (the Poisons macro's hands). When a food buff counts as worn off is on Food
+    & Drinks.
     The Feed Pet, Soulstone and Poisons macros themselves are switched on and
     off on Consumable Macros; Stealth Eating is with the food, on Food &
     Drinks. Every section shows on every character, the maintainer's choice;
-    the only gates are flavor ones (no pet buff food, no Poisons skill).
+    the only gates are flavor ones (no pet buff food, no Poisons skill), and
+    the Rogue section's rows, which hide while the Poisons macro is off,
+    leaving its header and a line saying so.
 
     Order values are spaced blocks so a section can be reordered or extended
     without renumbering its neighbors. Registered as this builder function
@@ -211,9 +207,8 @@ function ns.BuildClassMacrosOptions()
 
 		--[[
 		    Hunters -- Pet Food Buffs: pet buff food in the Food macro while the
-		    pet lacks the buff, with its When to Use and the food types, then
-		    Refresh Pet Food Under, which sets when that buff counts as worn
-		    off. Hidden where the flavor has no pet buff food.
+		    pet lacks the buff, with its When to Use and the food types. Hidden
+		    where the flavor has no pet buff food.
 		]]
 		spaceHunter0 = Spacer(20, NoPetBuffFoods),
 		headerHunter = Header(
@@ -259,59 +254,37 @@ function ns.BuildClassMacrosOptions()
 			end,
 			args = PetBuffTypeToggles(),
 		},
-		spacePet = Spacer(27, NoPetBuffFoods),
-		-- Its dropdown keys are the threshold in seconds, stored directly in earlyReapplyThreshold.
-		toggleReapply = Kit.ToggleRow(28, {
-			type = "toggle",
-			name = L["OPTIONS_REAPPLY"],
-			desc = L["OPTIONS_REAPPLY_DESCRIPTION"],
-			get = function()
-				return ReapplyActive()
-			end,
-			set = function(_, value)
-				ns.db.profile.earlyReapply = value
-				MacroOptions.Changed()
-			end,
-		}, {
-			control = {
-				type = "select",
-				desc = L["OPTIONS_REAPPLY_THRESHOLD_DESCRIPTION"],
-				values = ReapplyThresholdValues(),
-				sorting = REAPPLY_SECONDS,
-				get = function()
-					return ns.db.profile.earlyReapplyThreshold
-				end,
-				set = function(_, value)
-					ns.db.profile.earlyReapplyThreshold = value
-					MacroOptions.Changed()
-				end,
-			},
-			hidden = NoPetBuffFoods,
-		}),
 
 		--[[
 		    Rogues -- the Poisons macro's poison group per weapon hand. Group
 		    names come from the client's own item names
 		    (ns.GetPoisonGroupName), so the dropdown labels localize for free.
 		    Where the flavor has no Poisons skill (Mists) there is no Poisons
-		    macro, so the section hides.
+		    macro, so the section hides. While the Poisons macro is off, its
+		    rows hide and a line under the header says where to switch it on.
 		]]
 		spaceRogue0 = Spacer(40, NO_POISONS),
 		headerRogue = Header(L["OPTIONS_CLASS_HEADER_FORMAT"]:format(LOCALIZED_CLASS_NAMES_MALE.ROGUE), 41, NO_POISONS),
 		spaceRogue1 = Spacer(42, NO_POISONS),
-		descPoisons = Desc(GetColor("BODY") .. L["OPTIONS_POISONS_DESCRIPTION"] .. "|r", 43, NO_POISONS),
-		spaceRogue2 = Spacer(44, NO_POISONS),
+		poisonsOff = Kit.StatusLine(function()
+			if NO_POISONS or not PoisonsMacroOff() then
+				return nil
+			end
+			return ns.OptionsSwitchOffStatus(L["NOTE_MACRO_POISONS"], L["TAB_CONSUMABLE_MACROS"])
+		end, 42.5),
+		descPoisons = Desc(GetColor("BODY") .. L["OPTIONS_POISONS_DESCRIPTION"] .. "|r", 43, PoisonRowsHidden),
+		spaceRogue2 = Spacer(44, PoisonRowsHidden),
 		-- Label-beside-control rows: the caption, then the unlabeled dropdown, one row wide together.
 		mainHandPoison = Kit.LabelRow(
 			45,
-			NO_POISONS,
+			PoisonRowsHidden,
 			GetColor("BODY") .. L["OPTIONS_POISON_MAIN_HAND"] .. "|r",
 			PoisonHandDropdown(L["OPTIONS_POISON_MAIN_HAND_DESCRIPTION"], "mainHandPoisonGroup")
 		),
-		spaceRogue3 = Spacer(47, NO_POISONS),
+		spaceRogue3 = Spacer(47, PoisonRowsHidden),
 		offHandPoison = Kit.LabelRow(
 			48,
-			NO_POISONS,
+			PoisonRowsHidden,
 			GetColor("BODY") .. L["OPTIONS_POISON_OFF_HAND"] .. "|r",
 			PoisonHandDropdown(L["OPTIONS_POISON_OFF_HAND_DESCRIPTION"], "offHandPoisonGroup")
 		),

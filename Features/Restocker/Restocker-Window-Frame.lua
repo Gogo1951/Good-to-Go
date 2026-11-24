@@ -1,6 +1,4 @@
 local _, ns = ...
-local L = ns.L
-local GetColor = ns.GetColor
 
 --------------------------------------------------------------------------------
 -- Window Frame
@@ -42,22 +40,15 @@ ns.RESTOCK_FOOTER_X = 16
 ns.RESTOCK_HEADER_CENTER_Y = -(BANDS.TITLE_HEIGHT + BANDS.CONTROLS_HEIGHT / 2)
 
 --[[
-    A portrait frame named name, titled "<title> // Good to Go": the
-    window's own name white, the slashes gray, the add-on's name blue, as the
-    Spell Book's title is. A client without the portrait template gets the
-    plain frame and no portrait.
+    A portrait frame named name, titled "<title> // GtG" by the Menu-Kit's
+    window title, read as the frame is made: the window's own name white, the
+    slashes gray, the Short Name blue, as the Spell Book's title is. A client
+    without the portrait template gets the plain frame and no portrait.
 ]]
 function ns.CreateRestockerPortraitFrame(name, title)
 	local template = ns.HasTemplate("PortraitFrameTemplate") and "PortraitFrameTemplate" or "BasicFrameTemplate"
 	local frame = CreateFrame("Frame", name, UIParent, template)
-	local text = GetColor("TEXT")
-		.. title
-		.. "|r "
-		.. GetColor("SEPARATOR")
-		.. "//|r "
-		.. GetColor("INFO")
-		.. L["ADDON_TITLE"]
-		.. "|r"
+	local text = ns.MenuKit.WindowTitle(title)
 	if frame.SetTitle then
 		frame:SetTitle(text)
 	elseif frame.TitleText then

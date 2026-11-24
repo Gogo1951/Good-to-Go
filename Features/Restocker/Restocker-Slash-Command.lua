@@ -40,16 +40,24 @@ local RESTOCKER_COMMANDS = {
 local COMMAND_ORDER = { "show", "config", "profile" }
 local PROFILE_SUBCOMMAND_ORDER = { "add", "delete", "rename", "copy", "use" }
 
-local function PrintProfileHelp()
+--[[
+    The help opens with its title line. withinHelp is true when PrintHelp prints
+    the profile lines under its own title, so the title prints once.
+]]
+local function PrintProfileHelp(withinHelp)
+	if not withinHelp then
+		ns:PrintMessage(L["RESTOCKER_HELP_TITLE"])
+	end
 	for _, subcommand in ipairs(PROFILE_SUBCOMMAND_ORDER) do
 		ns:PrintMessage(RESTOCKER_COMMANDS.profile[subcommand])
 	end
 end
 
 local function PrintHelp()
+	ns:PrintMessage(L["RESTOCKER_HELP_TITLE"])
 	for _, eachCommand in ipairs(COMMAND_ORDER) do
 		if eachCommand == "profile" then
-			PrintProfileHelp()
+			PrintProfileHelp(true)
 		else
 			ns:PrintMessage(RESTOCKER_COMMANDS[eachCommand])
 		end

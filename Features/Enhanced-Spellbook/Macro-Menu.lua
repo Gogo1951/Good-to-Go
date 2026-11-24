@@ -1,6 +1,6 @@
 local _, ns = ...
 local L = ns.L
-local GetColor = ns.GetColor
+local Kit = ns.MenuKit
 
 local SetTip, OptionTip = ns.MenuSetTip, ns.MenuOptionTip
 
@@ -71,25 +71,27 @@ function ns.ShowMacroMenu(button)
 			return element
 		end
 		--[[
-			a submenu whose label shows what is on in it, set again each time the menu redraws; onLabels lists
-			the labels of what is on
+			a setting's submenu whose label shows what is on in it, set again each time the menu redraws; onLabels
+			lists the labels of what is on; the value light yellow, or in color (a palette key) when given
 		]]
-		local function group(labelKey, onLabels)
+		local function group(labelKey, onLabels, color)
 			local menu = root:CreateButton(L[labelKey])
+			menu:SetSetting()
 			menu:SetValue(function()
 				local value = ns.MacroMenuGroupValue(onLabels())
-				return value and GetColor("MUTED") .. value .. "|r"
+				return value and color and Kit.Color(color, value) or value
 			end)
 			return menu
 		end
-		-- the macro text, its length (red over what a macro holds) as the value, the lines in the submenu
+		-- the macro text, its length (light yellow, red over what a macro holds) as the value, the lines in the submenu
 		local function addMacroText()
 			local menu = root:CreateButton(L["MACRO_TEXT"])
 			menu:SetValue(function()
 				local length = #macro.body
-				return GetColor(length > ns.MACRO_BODY_MAX_LENGTH and "OFF" or "MUTED")
-					.. L["MENU_MACRO_LENGTH"]:format(length, ns.MACRO_BODY_MAX_LENGTH)
-					.. "|r"
+				return Kit.Color(
+					length > ns.MACRO_BODY_MAX_LENGTH and "OFF" or "VALUE",
+					L["MENU_MACRO_LENGTH"]:format(length, ns.MACRO_BODY_MAX_LENGTH)
+				)
 			end)
 			-- the lines as one block
 			menu:CreateText(function()
@@ -120,7 +122,7 @@ function ns.ShowMacroMenu(button)
 		end
 
 		--[[
-			Delete, with how many action bar slots hold the macro gray on its right, always asked first, the ask
+			Delete, with how many action bar slots hold the macro light yellow on its right, always asked first, the ask
 			saying whether it comes off the bars. It deletes the WoW macro and resets every option, so the macro
 			starts over (a Duplicate copy leaves the page).
 		]]

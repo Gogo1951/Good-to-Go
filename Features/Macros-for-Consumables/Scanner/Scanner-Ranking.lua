@@ -89,7 +89,8 @@ end
       kind  — "bool" (truthy side wins), "higher", or "lower"
       buffFood                   — step runs only when the caller's buff food
                                    rank matches: "first" (Buff Duty's buff food
-                                   pick wants the Well Fed buff) or "last" (plain food wins,
+                                   pick, and the Food macro while you're missing
+                                   Well Fed) or "last" (plain food wins,
                                    buff food only when nothing else is left)
       falsyWins                  — a "bool" step where the falsy side wins
       gatedOnAllowConjuredFirst  — step runs only when the caller allows
@@ -113,7 +114,8 @@ local RANKING_PRIORITY = {
 	    (ns.buffFoodRank "last"): plain food then wins, and buff food is
 	    eaten only when it's all the bags hold, rather than the macro coming
 	    up empty. While it's on, buff food competes on what it restores.
-	    Buff Duty ranks with "first" for its own buff food pick.
+	    Buff Duty ranks with "first" for its own buff food pick, and so does
+	    the Food macro while you're missing Well Fed (BuffFoodRank below).
 	]]
 	{ field = "isBuffFood", kind = "bool", buffFood = "first" },
 	{ field = "isBuffFood", kind = "bool", buffFood = "last", falsyWins = true },
@@ -124,10 +126,12 @@ local RANKING_PRIORITY = {
 	    a burn-first reason outranks the restore steps, and only by that
 	    choice: conjured items cost nothing and vanish at logout, so a player
 	    handed a weaker conjured water would rather drink it than buy the
-	    vendor one. Buff food stays above it so Buff Food still lands Well
-	    Fed. Gated off, the ordinary isConjured tiebreak below still applies.
-	    Buff Food also outranks plain restore, and pet food picks the lowest
-	    food that still gives full happiness; there are no custom sort orders.
+	    vendor one. Buff food ranked "first" stays above it, so the Food
+	    macro still eats buff food while you're missing Well Fed and
+	    conjured-first decides among the rest. Gated off, the ordinary
+	    isConjured tiebreak below still applies.
+	    Pet food picks the lowest food that still gives full happiness; there
+	    are no custom sort orders.
 	]]
 	{ field = "isConjured", kind = "bool", gatedOnAllowConjuredFirst = true },
 
@@ -271,6 +275,20 @@ local function CompareRecords(a, b, buffFood, preferHybrid, allowConjuredFirst, 
 		end
 	end
 	return false, nil
+end
+
+--[[
+    The buff food rank a single-winner definition compares with: "first" for
+    the Food macro while you're missing Well Fed (buffFoodFirstWhenUnfed,
+    ns.buffFoodFirst), otherwise the scan's ns.buffFoodRank for definitions
+    that take buff food, and no buff food step for the rest. The scan and the
+    diagnostics both ask here, so they always rank the same way.
+]]
+local function BuffFoodRank(definition)
+	if definition.buffFoodFirstWhenUnfed and ns.buffFoodFirst then
+		return "first"
+	end
+	return definition.allowBuffFood and ns.buffFoodRank
 end
 
 --[[
@@ -419,6 +437,7 @@ ns.ScanRanking = {
 	ResetBest = ResetBest,
 	BuildSelectionTables = BuildSelectionTables,
 	CompareRecords = CompareRecords,
+	BuffFoodRank = BuffFoodRank,
 	FillRecord = FillRecord,
 	IsBetter = IsBetter,
 	AddRankedCandidate = AddRankedCandidate,
