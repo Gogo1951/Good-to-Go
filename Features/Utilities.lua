@@ -4,7 +4,7 @@ local _, ns = ...
     Utilities -- stateless, cross-cutting helpers used by multiple files: the
     color accessor, cross-client API shims, the secret-value checks, and the
     spell link, GUID, unit and buff-duration helpers several features share,
-    and the duration wording. No
+    the duration wording, and the side a tooltip opens on. No
     module state beyond the hidden tooltip Era and TBC read tooltip text
     through; the one saved-data read is ns.GetClassesByProfileName's, of
     ns.db.global.inventory. A feature's own helpers live in its folder, in
@@ -75,6 +75,23 @@ end
 
 function ns.ShowUINotice(text)
 	ShowUIMessage(text, "TITLE")
+end
+
+--[[
+    GameTooltip owned by owner, opened away from the screen's edges by the halves Menu-Kit opens its menus by:
+    left of owner when its center is on the right half of the screen, below it when on the top half.
+]]
+local TOOLTIP_ANCHORS = {
+	up = { left = "ANCHOR_LEFT", right = "ANCHOR_RIGHT" },
+	down = { left = "ANCHOR_BOTTOMLEFT", right = "ANCHOR_BOTTOMRIGHT" },
+}
+
+function ns.SetTooltipOwner(owner)
+	local x, y = owner:GetCenter()
+	local scale = owner:GetEffectiveScale() / UIParent:GetEffectiveScale()
+	local openLeft = (x or 0) * scale > UIParent:GetWidth() / 2
+	local openDown = (y or 0) * scale > UIParent:GetHeight() / 2
+	GameTooltip:SetOwner(owner, TOOLTIP_ANCHORS[openDown and "down" or "up"][openLeft and "left" or "right"])
 end
 
 --[[

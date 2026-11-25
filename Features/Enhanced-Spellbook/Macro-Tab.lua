@@ -100,7 +100,7 @@ function ns.SetMacroTab(macro, tab)
 		return
 	end
 	if InCombatLockdown() then
-		ns.ShowUIError(ERR_NOT_IN_COMBAT)
+		ns:PrintMessage(L["ERROR_MACRO_COMBAT"])
 		return
 	end
 	if ns.IsMacroUIOpen() then

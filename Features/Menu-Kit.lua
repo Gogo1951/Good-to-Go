@@ -32,7 +32,7 @@ local ADDON_NAME, ns = ...
       status       left, right            A gold label and where it stands
       submenu      left, right, submenu   A gold label that opens a flyout
       separator                           A thin line
-      action       left, click            A row to click: blue; on the right only what it touches, or a gesture
+      action       left, click            A row to click: blue; on the right what it touches, or its click gray
       toggle       left, on               A switch: On in green, or Off with its name gray
       choice       left, selected         One of a set: the pick light yellow with a check, the rest white
       item         itemID or link, count  An item: its icon, its name in its quality color, the count
@@ -44,11 +44,12 @@ local ADDON_NAME, ns = ...
       leftColor, rightColor   a palette key, a six-digit hex or { r, g, b }
       onClick                 what a click does; the menu's afterChange runs after it
       closes                  true for a pick that acts: the menu closes first
-      click                   the button's kept click that does the same ("RightButton"), never drawn on
-                              the row: a Right-Click is named in its tooltip (MENU_SHORTCUT); or a
-                              gesture's localized name ("Drag"), drawn gray on the right, routing nothing
+      click                   the button's kept click that does the same ("RightButton"), its name from
+                              clicks drawn gray on the right; or a gesture's localized name ("Drag"),
+                              drawn the same and routing nothing
       disabled                true: gray, no highlight, no click, no sub-menu (its arrow gray); its tooltip still shows
       tooltip                 a function(GameTooltip), shown beside the row under the cursor
+      helper                  a gray sentence under the row's tooltip (or an item's), after a spacer
       submenu                 the key of the flyout its hover opens (flyouts[key]), or with
       flyout                  a function returning the flyout's entries in place of flyouts[key]
       rightOnHover            true: the right side shows only while the row is hovered
@@ -96,7 +97,7 @@ local HOVER_CLOSE_DELAY = 0.5 -- Forgiving for a cursor that slips off the edge,
 local CLICK_CLOSE_DELAY = 1.0
 local MENU_GAP = 2 -- From the launcher's corner to the menu's
 local MAX_DEPTH = 4 -- The menu and three sub-menus deep
-local SCROLL_ROWS = 20 -- A panel taller than this many plain rows scrolls with the mouse wheel
+local SCROLL_ROWS = 20 -- A flyout or dropdown list taller than this many plain rows scrolls with the mouse wheel
 local MAX_HEIGHT = 2 * PANEL_INSET + SCROLL_ROWS * (LINE_HEIGHT + 2 * SPACE.LINE)
 local SCROLL_STEP = 3 -- Rows per notch of the wheel
 local THUMB_WIDTH = 2
@@ -142,9 +143,7 @@ Kit.FLYOUT_GAP = ROW_INSET - Kit.FLYOUT_OVERLAP
       count              L["ITEM_QUANTITY"]             "x%d"
       loading            L["LOADING_ITEM"]              "Loading ID: %d"
       shortName          L["ADDON_SHORT_NAME"]          a right-click menu's header
-      shortcut           L["MENU_SHORTCUT"]             "Shortcut: Right-Click the mini-map button."
-
-    A v1 add-on's clicks = { ... } is still accepted and no longer drawn.
+      clicks             { RightButton = L["MENU_CLICK_RIGHT"] }  "Right-Click"; only where the button keeps it
 ]]
 local TEXT = {
 	on = "On",
@@ -157,7 +156,6 @@ local TEXT = {
 	count = "x%d",
 	loading = "Loading ID: %d",
 	shortName = "",
-	shortcut = "",
 	clicks = {},
 }
 
@@ -419,9 +417,13 @@ local function Look(entry)
 		right = entry.selected and Kit.CHECK_MARK or nil
 		leftColor = leftColor or (left == TEXT.off and "MUTED") or (entry.selected and "VALUE") or "BODY"
 	elseif kind == "action" then
-		-- A button click is never named on the row (its tooltip says it); a gesture is, gray.
-		if not right and entry.click and not IsButtonClick(entry.click) then
-			right = entry.click
+		-- The button's kept click is named on its row, gray, as a gesture is ("Drag").
+		if not right and entry.click then
+			if IsButtonClick(entry.click) then
+				right = TEXT.clicks[entry.click]
+			else
+				right = entry.click
+			end
 			rightColor = rightColor or "MUTED"
 		end
 		leftColor, rightColor = leftColor or "INFO", rightColor or "VALUE"
@@ -515,6 +517,16 @@ local function LooksKey(entries, looks, arrows)
 	return table.concat(parts, "\30")
 end
 
+-- A new section of a tooltip gets a spacer above it: the row's helper sits one blank line under the rest, gray.
+local function AddHelper(tooltip, helper)
+	if not helper or helper == "" then
+		return
+	end
+	tooltip:AddLine(" ")
+	local red, green, blue = RGB("HELP")
+	tooltip:AddLine(helper, red, green, blue, true)
+end
+
 local function HideOwnTooltip(owner)
 	if GameTooltip:GetOwner() == owner then
 		GameTooltip:Hide()
@@ -577,18 +589,10 @@ local function Row(panel, index)
 		if self.look and (self.look.hover or self.look.rightOnHover) then
 			Dress(self, true)
 		end
-		local shortcut = entry and entry.click == "RightButton" and TEXT.shortcut ~= "" and TEXT.shortcut
-		if entry and (entry.tooltip or shortcut) then
+		if entry and entry.tooltip then
 			GameTooltip:SetOwner(self, panel.tooltipAnchor or "ANCHOR_RIGHT")
-			local helpRed, helpGreen, helpBlue = RGB("HELP")
-			if entry.tooltip then
-				entry.tooltip(GameTooltip)
-				if shortcut then
-					GameTooltip:AddLine(shortcut, helpRed, helpGreen, helpBlue, true)
-				end
-			else
-				GameTooltip:SetText(shortcut, helpRed, helpGreen, helpBlue, 1, true)
-			end
+			entry.tooltip(GameTooltip)
+			AddHelper(GameTooltip, entry.helper)
 			GameTooltip:Show()
 		elseif entry and entry.kind == "item" and (entry.itemID or entry.link) then
 			GameTooltip:SetOwner(self, panel.tooltipAnchor or "ANCHOR_RIGHT")
@@ -597,6 +601,7 @@ local function Row(panel, index)
 			else
 				GameTooltip:SetItemByID(entry.itemID)
 			end
+			AddHelper(GameTooltip, entry.helper)
 			GameTooltip:Show()
 		end
 		local menu = panel.menu
@@ -698,7 +703,7 @@ function Panel:Render(source, context)
 
 	local key = LooksKey(entries, looks, arrows)
 	if key == self.shownKey then
-		self:Layout() -- Row() showed every row again: a scrolled panel hides the ones out of view
+		self:Layout() -- Row() showed every row again: a scrolled list hides the ones out of view
 		return
 	end
 	self.shownKey = key
@@ -810,11 +815,12 @@ function Panel:Render(source, context)
 end
 
 --[[
-    Stacks the rows and sets the panel's height. A panel whose rows run past
-    MAX_HEIGHT (SCROLL_ROWS plain rows, as a long bag list would) stays that
-    tall and shows whole rows from self.scroll on: the mouse wheel moves them
-    SCROLL_STEP at a time, and a thin thumb in the plate's right margin shows
-    where the view sits in the list.
+    Stacks the rows and sets the panel's height. The main menu always grows to
+    fit every row and never scrolls. A flyout or dropdown list (self.scrollable)
+    whose rows run past MAX_HEIGHT (SCROLL_ROWS plain rows, as a long bag list
+    would) stays that tall and shows whole rows from self.scroll on: the mouse
+    wheel moves them SCROLL_STEP at a time, and a thin thumb in the plate's
+    right margin shows where the view sits in the list.
 ]]
 function Panel:Layout()
 	local rows, count = self.rows, self.rowCount or 0
@@ -823,7 +829,7 @@ function Panel:Layout()
 		content = content + rows[index].height
 	end
 	local room = MAX_HEIGHT - 2 * PANEL_INSET
-	local scrolls = content > room
+	local scrolls = self.scrollable and content > room or false
 
 	-- The first row shown: never so far down that the view has room left at the bottom.
 	local first = 1
@@ -1011,6 +1017,7 @@ function Kit.CreateDropdownMenu(name)
 	})
 	local frame = kitMenu.frame
 	frame:SetFrameStrata("FULLSCREEN_DIALOG") -- In front of the window it drops from
+	frame.scrollable = true -- A long list, as a bag list can be, scrolls past SCROLL_ROWS
 	frame:HookScript("OnHide", function()
 		local onClose = shown.onClose
 		shown.entries, shown.onClose = nil, nil
@@ -1089,6 +1096,7 @@ function Menu:Panel(depth)
 		panel:SetFrameLevel(self.frame:GetFrameLevel() + 20 * (depth - 1))
 		panel.menu = self
 		panel.depth = depth
+		panel.scrollable = true -- A sub-menu scrolls past SCROLL_ROWS; the menu itself never does
 		self.panels[depth] = panel
 	end
 	return panel
@@ -1564,7 +1572,7 @@ end
 
     toggle.name and desc are the feature's Enable option, its tooltip. label
     replaces Toggle (Open). click is the button's kept click that does the same
-    (RightButton), named in the row's tooltip, never on the row.
+    (RightButton), named gray on the row's right.
     With on and confirm, turning it off asks confirm first.
 ]]
 function Kit.FeatureBlock(entries, block)

@@ -8,10 +8,10 @@ local L = ns.L
 	Enhanced Spellbook is: the rows are the What's Next? tab's reading (ns.WhatsNextRows, ns.WhatsNextPetRows),
 	which needs neither.
 
-		Good to Go // You can now learn [icon] [Bash] & [icon] [Moonfire] (Rank 3).
-		Good to Go // Don't forget, you can also learn [icon] [Moonfire] (Rank 2).
-		Good to Go // Your pet can now learn [icon] [Great Stamina] (Rank 4).
-		Good to Go // Don't forget, your pet can also learn [icon] [Growl] (Rank 3).
+		Good to Go // You can now learn [Bash] and [Moonfire] (Rank 3).
+		Good to Go // Don't forget, you can also learn [Moonfire] (Rank 2).
+		Good to Go // Your pet can now learn [Great Stamina] (Rank 4).
+		Good to Go // Don't forget, your pet can also learn [Growl] (Rank 3).
 ]]
 
 local MODULE = "LevelUpAlerts"
@@ -44,8 +44,8 @@ local function RankOf(row)
 end
 
 --[[
-	formatKey filled with rows as "[icon] [Link] (Rank 3)" each, by name, a spell's higher rank first; a rank 1
-	shows no rank. Nil for no rows. rows are { id, name, icon, subtext }.
+	formatKey filled with rows as "[Link] (Rank 3)" each, by name, a spell's higher rank first; a rank 1 shows
+	no rank. Nil for no rows. rows are { id, name, subtext }.
 ]]
 local function SpellsLine(formatKey, rows)
 	if #rows == 0 then
@@ -60,9 +60,6 @@ local function SpellsLine(formatKey, rows)
 	local parts = {}
 	for _, row in ipairs(rows) do
 		local text = ns.GetSpellLink(row.id) or row.name
-		if row.icon then
-			text = "|T" .. row.icon .. ":0|t " .. text
-		end
 		if (RankOf(row) or 1) > 1 then
 			text = text .. " " .. L["WHATS_NEXT_SUBTEXT"]:format(row.subtext)
 		end
@@ -152,7 +149,7 @@ local function SampleRow(id)
 	if not name then
 		return nil
 	end
-	return { id = id, name = name, icon = C_Spell.GetSpellTexture(id), subtext = C_Spell.GetSpellSubtext(id) }
+	return { id = id, name = name, subtext = C_Spell.GetSpellSubtext(id) }
 end
 
 --[[

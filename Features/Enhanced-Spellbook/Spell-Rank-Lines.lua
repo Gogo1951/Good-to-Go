@@ -4,7 +4,7 @@ local GetColor = ns.GetColor
 
 --[[
 	A spell's rank lines: its ranks among the What's Next? rows by level (ns.SpellRankRows), each rank's state,
-	note and colored label (ns.RankState, ns.RankNote, ns.RankLabel), and "GtG // Firebolt Ranks" with a line
+	note and colored label (ns.RankState, ns.RankNote, ns.RankLabel), and "Firebolt Ranks … GtG" with a line
 	for each, added to GameTooltip (ns.AddSpellRankLines). Spell-Ranks-Tooltip.lua puts them under every spell
 	tooltip; the What's Next? rows add them to their own.
 ]]
@@ -105,20 +105,11 @@ end
 ns.RankLabel = RankLabel
 
 --[[
-	"GtG // Firebolt Ranks", then each of ranks (RankRows) in its ns.SPELL_RANK_COLORS color, row's own rank
+	"Firebolt Ranks … GtG", then each of ranks (RankRows) in its ns.SPELL_RANK_COLORS color, row's own rank
 	marked, with its note (RankNote) on the right.
 ]]
 local function AddRankLinesFor(row, ranks)
-	GameTooltip:AddLine(
-		GetColor("INFO")
-			.. L["ADDON_SHORT_NAME"]
-			.. "|r "
-			.. GetColor("SEPARATOR")
-			.. "//|r "
-			.. GetColor("TEXT")
-			.. L["WHATS_NEXT_TOOLTIP_RANKS"]:format(row.name)
-			.. "|r"
-	)
+	ns.AddSpellbookTooltipTitle(L["WHATS_NEXT_TOOLTIP_RANKS"]:format(row.name))
 	for _, rank in ipairs(ranks) do
 		local label = (rank.subtext and rank.subtext ~= "") and rank.subtext or rank.name
 		GameTooltip:AddDoubleLine(

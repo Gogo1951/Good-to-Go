@@ -2,21 +2,20 @@ local _, ns = ...
 
 --[[
     Inventory Report -- the block item tooltips gain under the game's own lines:
-    the total across every character on the realm, this character on top, then
-    one line per other character holding some, each with its bags and bank
-    apart.
+    this character on top, then one line per other character holding some,
+    each with its bags and bank apart, then the total across every character
+    on the realm.
 
-        GtG // Inventory Report                 Total 82
-         Gogodruid                         Bag 7, Bank 18
+        Inventory Report                            GtG
+         Gogodruid                         7 Bag, 18 Bank
+         Coinpurse                                30 Bank
+         Thornhoof                          7 Bag, 20 Bank
+         Total                                         82
 
-         Coinpurse                                Bank 30
-         Thornhoof                          Bag 7, Bank 20
-
-    The shape is the house one for a branded block: the add-on's short name, the
-    separator and a title in the chat prints' own colors (Announcements.lua),
-    then double lines, each a space in from the header so the rows read as the
-    block's own. The total rides on the header's right, so the block costs one
-    line per character and one spacer, and every name wears its class color.
+    The shape is the add-on's other tooltip blocks': a gold title with the
+    short name in gray on its right, then double lines, each a space in from
+    the header so the rows read as the block's own, and every name wears its
+    class color.
 
     Two halves. The recording half, this file, keeps a snapshot of every character's bags
     and bank on ns.db.global.inventory, so an alt's counts can show while it is

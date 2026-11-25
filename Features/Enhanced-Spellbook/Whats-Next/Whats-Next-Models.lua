@@ -358,13 +358,6 @@ local PET_BOOK_MODEL = {
 		if ns.HasWhatsNextPet() then
 			ns.AddSpellRanksTooltip(row.id, true, true)
 		end
-		if not row.passive then
-			GameTooltip:AddLine(" ")
-			GameTooltip:AddDoubleLine(
-				GetColor("INFO") .. L["TOOLTIP_KEY_CLICK_DRAG"] .. "|r",
-				GetColor("INFO") .. L["TOOLTIP_ACTION_PLACE_ON_BAR"] .. "|r"
-			)
-		end
 	end,
 	pickup = function(row)
 		if not row.passive then

@@ -22,7 +22,7 @@ ns.FOOD_AND_WATER = {
 	[3220] = { 1, 0, 234, 0, 0, nil, nil, 5, 40, 20, 0 }, -- Blood Sausage
 	[13546] = { 0, 0, 1338, 0, 0, nil, nil, 25, 62, 20, 0 }, -- Bloodbelly Fish
 	[20516] = { 1, 2, 0, 0, 0, nil, nil, 0, 0, 5, 1 }, -- Bobbing Apple
-	[5525] = { 0, 0, 58, 0, 0, nil, nil, 1, 20, 20, 0 }, -- Boiled Clams
+	[5525] = { 1, 0, 58, 0, 0, nil, nil, 1, 20, 20, 0 }, -- Boiled Clams
 	-- Bottled Alterac Spring Water (19318) is deliberately absent; its Well Fed buff is still recognized via ns.WELL_FED_BUFF_IDS in Well-Fed-Buffs-Camelot.lua.
 	[1119] = { 0, 0, 530, 0, 0, nil, nil, 0, 50, 10, 0 }, -- Bottled Spirits
 	[19300] = { 0, 0, 0, 0, 1915, nil, nil, 35, 100, 20, 0 }, -- Bottled Winterspring Water
@@ -44,8 +44,8 @@ ns.FOOD_AND_WATER = {
 	[278122] = { 0, 0, 2065, 0, 0, nil, nil, 45, 200, 20, 0 }, -- Carrot Salad
 	[2679] = { 0, 0, 58, 0, 0, nil, nil, 1, 5, 20, 0 }, -- Charred Wolf Meat
 	[7808] = { 1, 0, 58, 0, 0, nil, nil, 1, 10, 20, 0 }, -- Chocolate Square
-	[5526] = { 0, 0, 234, 0, 0, nil, nil, 5, 75, 20, 0 }, -- Clam Chowder
-	[250081] = { 0, 0, 2065, 0, 0, nil, nil, 45, 10, 20, 0 }, -- Clam Linguine
+	[5526] = { 1, 0, 234, 0, 0, nil, nil, 5, 75, 20, 0 }, -- Clam Chowder
+	[250081] = { 1, 0, 2065, 0, 0, nil, nil, 45, 10, 20, 0 }, -- Clam Linguine
 	[16971] = { 1, 0, 1338, 0, 0, nil, nil, 40, 300, 20, 0 }, -- Clamlette Surprise
 	[8683] = { 0, 0, 28, 0, 0, nil, nil, 1, 1, 20, 1 }, -- Clara's Fresh Apple
 	[1113] = { 0, 0, 234, 0, 0, nil, 2, 5, 0, 20, 0 }, -- Conjured Bread
@@ -138,7 +138,7 @@ ns.FOOD_AND_WATER = {
 	[13928] = { 1, 0, 2065, 0, 0, nil, nil, 35, 8, 20, 0 }, -- Grilled Squid
 	[287974] = { 1, 0, 2065, 0, 0, nil, nil, 1, 8, 20, 1 }, -- Grilled Squid
 	[11444] = { 0, 0, 2065, 0, 0, nil, nil, 45, 200, 20, 0 }, -- Grim Guzzler Boar
-	[252027] = { 0, 0, 0, 0, 437, nil, nil, 5, 5, 20, 0 }, -- Gustberry Juice
+	[252027] = { 0, 0, 0, 0, 437, nil, nil, 5, 6, 20, 0 }, -- Gustberry Juice
 	[252026] = { 0, 0, 234, 0, 0, nil, nil, 5, 6, 20, 0 }, -- Gustberry Pie
 	[278117] = { 0, 0, 234, 0, 0, nil, nil, 5, 6, 20, 0 }, -- Hard Boiled Eggs
 	[19995] = { 0, 2, 0, 0, 0, nil, nil, 0, 0, 20, 1 }, -- Harvest Boar
@@ -190,7 +190,7 @@ ns.FOOD_AND_WATER = {
 	[287964] = { 0, 0, 0, 0, 2821, nil, nil, 1, 200, 20, 1 }, -- Morning Glory Dew
 	[249873] = { 1, 0, 0, 0, 835, nil, nil, 15, 1, 20, 0 }, -- Mrrggl Smrrthle
 	[4544] = { 0, 0, 841, 0, 0, nil, nil, 25, 50, 20, 0 }, -- Mulgore Spice Bread
-	[3663] = { 1, 0, 58, 0, 0, nil, nil, 1, 125, 20, 0 }, -- Murloc Fin Soup
+	[3663] = { 1, 0, 234, 0, 0, nil, nil, 1, 125, 20, 0 }, -- Murloc Fin Soup
 	[3770] = { 0, 0, 530, 0, 0, nil, nil, 15, 25, 20, 0 }, -- Mutton Chop
 	[12214] = { 1, 0, 530, 0, 0, nil, nil, 15, 300, 20, 0 }, -- Mystery Stew
 	[13931] = { 1, 0, 1338, 0, 0, nil, nil, 35, 12, 20, 0 }, -- Nightfin Soup
@@ -306,7 +306,7 @@ ns.FOOD_AND_WATER = {
 	[249868] = { 1, 0, 0, 0, 1344, nil, nil, 25, 1, 20, 0 }, -- Triage Tea
 	[250077] = { 1, 0, 234, 0, 0, nil, nil, 5, 9, 20, 0 }, -- Twice-Spiced Raptor Slice
 	[12763] = { 0, 0, 2065, 0, 0, nil, nil, 45, 200, 20, 0 }, -- Un'Goro Etherfruit
-	[16766] = { 0, 0, 1338, 0, 0, nil, nil, 35, 100, 20, 0 }, -- Undermine Clam Chowder
+	[16766] = { 1, 0, 1338, 0, 0, nil, nil, 35, 100, 20, 0 }, -- Undermine Clam Chowder
 	[8543] = { 0, 0, 841, 0, 0, nil, nil, 25, 300, 20, 0 }, -- Underwater Mushroom Cap
 	[21238] = { 0, 2, 0, 0, 0, nil, nil, 0, 0, 20, 1 }, -- UNUSED ITEM
 	[249871] = { 1, 0, 0, 0, 151, nil, nil, 1, 1, 20, 0 }, -- Venomous Smoothie
@@ -335,7 +335,7 @@ ns.FOOD_AND_WATER = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, Validate Data, WoW Forever 1.60.1.71037
+	2026-11-25, wago.tools, WoW Forever 1.60.1.71139
 
 Notes
 	- Every food and drink this client knows that restores health or mana while seated, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Food and Water macros and the buff-food choices.
@@ -391,6 +391,21 @@ wago.tools
 	https://wago.tools/db2/ItemXItemEffect?build=1.60.1.70959
 	https://wago.tools/db2/Item?build=1.60.1.71037
 	https://wago.tools/db2/ItemSparse?build=1.60.1.71037
+	https://wago.tools/db2/Item?build=1.60.1.71139
+	https://wago.tools/db2/ItemSparse?build=1.60.1.71139
+	https://wago.tools/db2/ItemEffect?build=1.60.1.71139
+	https://wago.tools/db2/ItemXItemEffect?build=1.60.1.71139
+	https://wago.tools/db2/Spell?build=1.60.1.71139
+	https://wago.tools/db2/SpellEffect?build=1.60.1.71139
+	https://wago.tools/db2/SpellMisc?build=1.60.1.71139
+	https://wago.tools/db2/SpellDuration?build=1.60.1.71139
+	https://wago.tools/db2/SpellCastingRequirements?build=1.60.1.71139
+	https://wago.tools/db2/AreaGroupMember?build=1.60.1.71139
+	https://wago.tools/db2/UiMapAssignment?build=1.60.1.71139
+	https://wago.tools/db2/ItemSearchName?build=1.60.1.71139
+	https://wago.tools/db2/SpellName?build=1.60.1.71139
+	https://wago.tools/db2/SkillLineAbility?build=1.60.1.71139
+	https://wago.tools/db2/SpellReagents?build=1.60.1.71139
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Forever/foreverItemDB.lua

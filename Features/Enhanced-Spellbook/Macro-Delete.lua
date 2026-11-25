@@ -59,7 +59,7 @@ end
 ]]
 function ns.DeleteAddonMacros(general)
 	if InCombatLockdown() then
-		ns.ShowUIError(ERR_NOT_IN_COMBAT)
+		ns:PrintMessage(L["ERROR_MACRO_COMBAT"])
 		return
 	end
 	if ns.IsMacroUIOpen() then
@@ -95,7 +95,7 @@ end
 ]]
 function ns.DeletePageMacro(macro)
 	if InCombatLockdown() then
-		ns.ShowUIError(ERR_NOT_IN_COMBAT)
+		ns:PrintMessage(L["ERROR_MACRO_COMBAT"])
 		return
 	end
 	if ns.IsMacroUIOpen() then

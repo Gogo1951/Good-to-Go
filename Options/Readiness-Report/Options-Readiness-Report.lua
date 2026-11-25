@@ -305,7 +305,7 @@ local SECTIONS = {
 			},
 			{
 				key = "readinessPvP",
-				name = "OPTIONS_READINESS_PVP",
+				name = "READINESS_PVP_ON",
 				description = "OPTIONS_READINESS_PVP_DESCRIPTION",
 			},
 			{

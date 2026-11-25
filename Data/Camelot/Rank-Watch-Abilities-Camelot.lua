@@ -2414,7 +2414,7 @@ ns.RANK_WATCH_ABILITIES = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, Validate Data, WoW Forever 1.60.1.71037
+	2026-11-25, wago.tools, WoW Forever 1.60.1.71139
 
 Notes
 	- Built by Tools/Build-Rank-Watch-Abilities.py from Rank Sentinel's AbilityData/Classic.lua (MIT, Copyright (c) 2021 Gogo1951), the abilities its "Include" column keeps: heals and other spells players lower on purpose are left out there, not here.
@@ -2443,6 +2443,12 @@ wago.tools
 	https://wago.tools/db2/SpellEffect?build=1.60.1.70959
 	https://wago.tools/db2/SpellLevels?build=1.60.1.70959
 	https://wago.tools/db2/SpellName?build=1.60.1.71037
+	https://wago.tools/db2/SpellName?build=1.60.1.71139
+	https://wago.tools/db2/Spell?build=1.60.1.71139
+	https://wago.tools/db2/SpellLevels?build=1.60.1.71139
+	https://wago.tools/db2/SpellMisc?build=1.60.1.71139
+	https://wago.tools/db2/SpellEffect?build=1.60.1.71139
+	https://wago.tools/db2/SkillLineAbility?build=1.60.1.71139
 
 QuestieDB
 	None.

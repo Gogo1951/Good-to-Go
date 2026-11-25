@@ -426,6 +426,13 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(C_UnitAuras) == "table" and type(C_UnitAuras.GetBuffDataByIndex) == "function"
 		end,
 	},
+	-- Camp Benefits' tooltip, the only place a camp item's stats show (Scanner-Auras.lua); absent, no camp item blocks a scroll.
+	{
+		"C_TooltipInfo.GetUnitBuffByAuraInstanceID (guarded)",
+		function()
+			return type(C_TooltipInfo) == "table" and type(C_TooltipInfo.GetUnitBuffByAuraInstanceID) == "function"
+		end,
+	},
 	{
 		"C_Secrets.ShouldAurasBeSecret",
 		function()
@@ -2435,6 +2442,26 @@ for _, listName in ipairs(SortedKeys(ns.CONJURE_SPELLS)) do
 end
 
 --[[
+    The camp items whose line on Camp Benefits' tooltip can block a scroll
+    (Scanner-Auras.lua), each by the name that line starts with, read as the
+    scanner reads it: the data's own name for this locale where the line
+    names the item unlike its spell, otherwise this client's spell name.
+]]
+local campSeen = {}
+for _, scrollType in ipairs(SortedKeys(ns.SCROLL_DATA)) do
+	for index, row in ipairs(ns.SCROLL_DATA[scrollType].campBenefits or {}) do
+		local spellID = row[1]
+		if not campSeen[spellID] then
+			campSeen[spellID] = true
+			AddSpellLookup(string.format("SCROLL_DATA.%s.campBenefits[%d]", scrollType, index), spellID, function()
+				local names = ns.CAMP_BENEFIT_LINE_NAMES and ns.CAMP_BENEFIT_LINE_NAMES[spellID]
+				return names and names[GetLocale()] or C_Spell.GetSpellName(spellID)
+			end)
+		end
+	end
+end
+
+--[[
     The skill lines the profession gates find in the skill list on Era and TBC
     (Scanner-Character.lua), First Aid through the accessor the options read.
 ]]
@@ -2658,6 +2685,15 @@ local CollectScrollConflictSpells = Collector(function(scrollData, add)
 	end
 end)
 
+-- The camp items' spells whose Camp Benefits line can block a scroll; a type without campBenefits adds none.
+local CollectScrollCampBenefits = Collector(function(scrollData, add)
+	for scrollType, data in pairs(scrollData) do
+		for _, row in ipairs(data.campBenefits or {}) do
+			add(row[1], scrollType, row)
+		end
+	end
+end)
+
 local CollectConjureSpells = Collector(function(conjureSpells, add)
 	for listName, spellList in pairs(conjureSpells) do
 		for _, entry in ipairs(spellList) do
@@ -2692,6 +2728,11 @@ ns.DIAGNOSTIC_SPELL_ID_CONSTANTS = {
 	"SHOOT_SPELL_ID",
 	"STEALTH_SPELL_ID",
 	"WELL_FED_SPELL_ID",
+}
+
+-- Scrolls-{Game}.lua's single-id constant, the aura whose tooltip lists the camp items' stats.
+ns.DIAGNOSTIC_SCROLL_SPELL_ID_CONSTANTS = {
+	"CAMP_BENEFITS_SPELL_ID",
 }
 
 ns.DIAGNOSTIC_ITEM_ID_CONSTANTS = {
@@ -2838,6 +2879,14 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_DATA_SOURCES, {
 			{ table = "SCROLL_DATA", kind = "item", collect = CollectScrollColumn(1) },
 			{ table = "SCROLL_DATA", kind = "spell", collect = CollectScrollColumn(2) },
 			{ table = "SCROLL_DATA", kind = "spell", collect = CollectScrollConflictSpells },
+			{ table = "SCROLL_DATA", kind = "spell", collect = CollectScrollCampBenefits },
+			{ table = "CAMP_BENEFIT_LINE_NAMES", kind = "spell", rowId = KeyIsId },
+			{
+				table = "DIAGNOSTIC_SCROLL_SPELL_ID_CONSTANTS",
+				kind = "spell",
+				collect = CollectConstants,
+				dataColumns = { CONSTANT_COLUMN },
+			},
 		},
 	},
 	{

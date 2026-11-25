@@ -359,14 +359,98 @@ local function WellFedLines(lines, db, buff)
 	)
 end
 
+-- The index-th number on text after its first skip bytes, or nil, as Scanner-Auras.lua counts them.
+local function NthNumber(text, skip, index)
+	local count = 0
+	for number in string.gmatch(string.sub(text, skip + 1), "%d+") do
+		count = count + 1
+		if count == index then
+			return tonumber(number)
+		end
+	end
+end
+
+--[[
+    Camp Benefits, which covers a scroll the way an elixir does (Scanner-Auras.lua):
+    whether its aura is on you and this client can read a buff's tooltip, then
+    for each camp item that can block a scroll, the name its tooltip line is
+    matched by, whether a line starts with it, and the amount read from it.
+    A client whose data lists no camp items says so in one line.
+]]
+local function CampBenefitLines(lines)
+	local rows = {}
+	for _, scrollType in ipairs(ns.SCROLL_CHECK_ORDER or {}) do
+		local data = ns.SCROLL_DATA and ns.SCROLL_DATA[scrollType]
+		for _, row in ipairs(data and data.campBenefits or {}) do
+			rows[#rows + 1] = { scrollType = scrollType, spellID = row[1], index = row[2] }
+		end
+	end
+	if #rows == 0 then
+		lines[#lines + 1] = "    camp benefits: no camp item blocks a scroll on this client"
+		return
+	end
+	local canRead = type(C_TooltipInfo) == "table" and type(C_TooltipInfo.GetUnitBuffByAuraInstanceID) == "function"
+	local auraInstanceID
+	for index = 1, 40 do
+		local aura = C_UnitAuras.GetBuffDataByIndex("player", index, "HELPFUL")
+		if not aura then
+			break
+		end
+		if aura.spellId == ns.CAMP_BENEFITS_SPELL_ID then
+			auraInstanceID = aura.auraInstanceID
+			break
+		end
+	end
+	lines[#lines + 1] = string.format(
+		"    camp benefits (spell %s): on you %s, buff tooltip readable %s",
+		tostring(ns.CAMP_BENEFITS_SPELL_ID),
+		tostring(auraInstanceID ~= nil),
+		tostring(canRead)
+	)
+	local tooltipLines = {}
+	if auraInstanceID and canRead then
+		local data = C_TooltipInfo.GetUnitBuffByAuraInstanceID("player", auraInstanceID)
+		for _, line in ipairs(data and data.lines or {}) do
+			for text in string.gmatch(line.leftText or "", "[^\n]+") do
+				tooltipLines[#tooltipLines + 1] = text
+			end
+		end
+	end
+	for _, row in ipairs(rows) do
+		local names = ns.CAMP_BENEFIT_LINE_NAMES and ns.CAMP_BENEFIT_LINE_NAMES[row.spellID]
+		local name = names and names[GetLocale()] or C_Spell.GetSpellName(row.spellID)
+		local matched, amount = false, nil
+		for _, text in ipairs(tooltipLines) do
+			if name and string.sub(text, 1, #name) == name then
+				matched = true
+				local read = NthNumber(text, #name, row.index)
+				if read and (not amount or read > amount) then
+					amount = read
+				end
+			end
+		end
+		lines[#lines + 1] = string.format(
+			"      %s from %s (spell %d, number %d): line name %s, line found %s, amount %s",
+			row.scrollType,
+			tostring(C_Spell.GetSpellName(row.spellID)),
+			row.spellID,
+			row.index,
+			name and string.format("%q", (string.gsub(name, "|", "||"))) or "NIL",
+			tostring(matched),
+			tostring(amount)
+		)
+	end
+end
+
 --[[
     Scrolls' icons, one per type in the Food macro's order: whether this
     character ticks it (scrollTypes, on the profile), how many scrolls of it
     you carry and how many of those the window passes over (on the Ignore
     List, another class's, or turned off in the Scrolls menu: scrollOff),
     the strongest it would read and its amount,
-    the type's scroll buff on you and the strongest elixir or class buff
-    covering it, and whether the window offers it now. Nothing shows while
+    the type's scroll buff on you and the strongest elixir, class buff or
+    camp item covering it, and whether the window offers it now, then the
+    Camp Benefits read behind a camp item's cover. Nothing shows while
     auras are secret.
 ]]
 local function ScrollLines(lines, buff, aurasSecret)
@@ -433,6 +517,7 @@ local function ScrollLines(lines, buff, aurasSecret)
 			shows
 		)
 	end
+	CampBenefitLines(lines)
 end
 
 --[[
@@ -1193,8 +1278,7 @@ function ns:BuildBuffDutyContextReport()
 		end
 		--[[
 		    What the last press set the button to cast. A cast on someone else
-		    is a macro that targets them first (TargetWhoItsFor in
-		    Buff-Duty-Keys.lua), so a changed target after a press shows here.
+		    is a spell aimed at their unit, as a window click is.
 		]]
 		local keyButton = buttonName and _G[buttonName]
 		if keyButton then

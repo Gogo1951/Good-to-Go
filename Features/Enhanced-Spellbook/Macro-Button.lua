@@ -3,7 +3,6 @@ local BODY = ns.COLORS_RGB.BODY
 local L = ns.L
 local GetColor = ns.GetColor
 local HideTooltip = ns.HideTooltip
-local SizedFontString = ns.SizedFontString
 
 --[[
 	One macro's tile on the spellbook page: its icon, its name with its note under it (the rank and the options
@@ -13,7 +12,6 @@ local SizedFontString = ns.SizedFontString
 
 local TILE_WIDTH, TILE_HEIGHT, ICON_SIZE = 224, 32, 32
 ns.TILE_WIDTH, ns.TILE_HEIGHT = TILE_WIDTH, TILE_HEIGHT
-local NAME_SIZE, NOTE_SIZE = 14, 12
 
 local INK_COLOR = ns.INK_COLOR
 local INFO = ns.COLORS_RGB.INFO
@@ -56,18 +54,6 @@ local function SetAtlasOr(texture, atlas, file, scale, icon)
 	return false
 end
 
--- "<label> // <macro name> Macro", the heading of the macro's tooltip block
-local function MacroHeading(label, macro)
-	return GetColor("INFO")
-		.. label
-		.. "|r "
-		.. GetColor("SEPARATOR")
-		.. "//|r "
-		.. GetColor("TEXT")
-		.. L["TOOLTIP_MACRO_HEADING"]:format(macro.label or macro.name)
-		.. "|r"
-end
-
 --[[
 	The spell whose own tooltip heads the macro's: the rank a macro is fixed to (ns.FixedRankID: a rank's own
 	macro, or one set to a rank in its options), else a learned spell by name, so its highest known rank, an
@@ -95,11 +81,6 @@ end
 -- Whether a macro's options menu (on Menu-Kit's panels) or any of the game's menus is open.
 local function MenuOpen()
 	return ns.IsMacroMenuPanelsShown() or (Menu ~= nil and Menu.GetManager ~= nil and Menu.GetManager():IsAnyMenuOpen())
-end
-
--- A keybind and what it does, both in the interaction blue, as a pair across the tooltip.
-local function AddHint(keybind, action)
-	GameTooltip:AddDoubleLine(GetColor("INFO") .. keybind .. "|r", GetColor("INFO") .. action .. "|r")
 end
 
 --[[
@@ -197,7 +178,7 @@ local function CreateMacroButton(parent)
 		the name in dark ink, without the font's shadow, which reads as a smudge on parchment; always high by the
 		icon, so it sits in the same place with a note under it or none
 	]]
-	button.name = SizedFontString(button, "GameFontNormal", NAME_SIZE)
+	button.name = button:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	button.name:SetShadowOffset(0, 0)
 	button.name:SetPoint("TOPLEFT", button.icon, "TOPRIGHT", 8, -2)
 	button.name:SetPoint("TOPRIGHT", button, "TOPRIGHT", 0, -3)
@@ -207,7 +188,7 @@ local function CreateMacroButton(parent)
 		the note under it, in faded ink on the parchment, its letters' foot level with the icon's bottom: the
 		line's box drops a unit below the icon, the room it keeps under the letters for descenders
 	]]
-	button.subText = SizedFontString(button, "GameFontNormalSmall", NOTE_SIZE)
+	button.subText = button:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	button.subText:SetShadowOffset(0, 0)
 	button.subText:SetPoint("BOTTOMLEFT", button.icon, "BOTTOMRIGHT", 8, -1)
 	button.subText:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 0, 0)
@@ -250,11 +231,11 @@ local function CreateMacroButton(parent)
 		if MenuOpen() then
 			return
 		end
-		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		ns.SetTooltipOwner(self)
 		--[[
 			the spell's own tooltip (a consumable's item's) comes first, then its ranks and the level each needs
-			("GtG // Immolate Ranks", Features/Enhanced-Spellbook/Spell-Ranks-Tooltip.lua), then the macro as a block of our own
-			("GtG // Immolate Macro")
+			("Immolate Ranks … GtG", Features/Enhanced-Spellbook/Spell-Ranks-Tooltip.lua), then the macro as a block of our own
+			("Immolate Macro … GtG")
 		]]
 		local spellID = TooltipSpellID(self.macro)
 		if self.macro.itemLink then
@@ -271,13 +252,10 @@ local function CreateMacroButton(parent)
 				ns.AddSpellRanksTooltip(spellID, nil, GameTooltip:NumLines() > 0)
 			end
 		end
-		local title = MacroHeading(L["ADDON_SHORT_NAME"], self.macro)
 		if GameTooltip:NumLines() > 0 then
 			GameTooltip:AddLine(" ")
-			GameTooltip:AddLine(title)
-		else
-			GameTooltip:SetText(title)
 		end
+		ns.AddSpellbookTooltipTitle(L["TOOLTIP_MACRO_HEADING"]:format(self.macro.label or self.macro.name))
 		-- what the macro does beyond its text, set off by a blank line above
 		local notes = {}
 		if not self.macro.consumable then
@@ -316,22 +294,19 @@ local function CreateMacroButton(parent)
 		-- in pick mode a click picks the spell, or can't, and a right-click cancels
 		if ns.IsPickingSpell() then
 			if ns.PickSpellOf(self.macro) then
-				AddHint(L["TOOLTIP_KEY_CLICK"], ns.PickActionText())
+				ns.AddSpellbookClickLine(ns.PickActionText(), L["TOOLTIP_KEY_CLICK"])
 			else
 				GameTooltip:AddLine(GetColor("OFF") .. ns.CannotPickText() .. "|r", nil, nil, nil, true)
 			end
-			GameTooltip:AddLine(" ")
-			AddHint(L["TOOLTIP_KEY_RIGHT_CLICK"], L["CONDITIONALS_ACTION_CANCEL"])
+			ns.AddSpellbookClickLine(L["CONDITIONALS_ACTION_CANCEL"], L["TOOLTIP_KEY_RIGHT_CLICK"])
 			GameTooltip:Show()
 			return
 		end
-		-- each click on a line of its own, a blank line between
-		AddHint(L["TOOLTIP_KEY_CLICK_DRAG"], L["TOOLTIP_ACTION_PLACE_ON_BAR"])
+		-- each click on a line of its own
+		ns.AddSpellbookClickLine(L["TOOLTIP_ACTION_PLACE_ON_BAR"], L["TOOLTIP_KEY_CLICK_DRAG"])
 		if ns.HasOptions(self.macro) then
-			GameTooltip:AddLine(" ")
-			AddHint(L["TOOLTIP_KEY_RIGHT_CLICK"], L["TOOLTIP_ACTION_MACRO_OPTIONS"])
-			GameTooltip:AddLine(" ")
-			AddHint(L["TOOLTIP_KEY_MIDDLE_CLICK"], L["TOOLTIP_ACTION_RESET_OPTIONS"])
+			ns.AddSpellbookClickLine(L["TOOLTIP_ACTION_MACRO_OPTIONS"], L["TOOLTIP_KEY_RIGHT_CLICK"])
+			ns.AddSpellbookClickLine(L["TOOLTIP_ACTION_RESET_OPTIONS"], L["TOOLTIP_KEY_MIDDLE_CLICK"])
 		end
 		GameTooltip:Show()
 	end)

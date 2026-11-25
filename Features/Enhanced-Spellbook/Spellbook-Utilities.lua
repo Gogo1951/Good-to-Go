@@ -97,9 +97,14 @@ function ns.HideTooltip(owner)
 	end
 end
 
--- The heading of the tooltip on the game spellbook's tab: "GtG // Enhanced Spellbook", gold like a tooltip title.
-function ns.SpellbookTabTitle()
-	return GetColor("TITLE") .. ns.L["ADDON_SHORT_NAME"] .. " // " .. ns.L["TAB_ENHANCED_SPELLBOOK"] .. "|r"
+-- The heading of a block of ours in GameTooltip: title in gold, "GtG" in gray on its right ("Immolate Macro … GtG").
+function ns.AddSpellbookTooltipTitle(title)
+	GameTooltip:AddDoubleLine(GetColor("TITLE") .. title .. "|r", GetColor("MUTED") .. ns.L["ADDON_SHORT_NAME"] .. "|r")
+end
+
+-- One click's line in GameTooltip: the job in blue on the left, the click in gray on the right.
+function ns.AddSpellbookClickLine(job, click)
+	GameTooltip:AddDoubleLine(GetColor("INFO") .. job .. "|r", GetColor("MUTED") .. click .. "|r")
 end
 
 --[[
@@ -115,19 +120,6 @@ function ns.PixelInset(region, parent, offset)
 		region:SetPoint("TOPLEFT", offset, -offset)
 		region:SetPoint("BOTTOMRIGHT", -offset, offset)
 	end
-end
-
---[[
-	A font string in a FontObject's face at a size of its own, so a UI skin that changes the game's fonts
-	(ElvUI) still sets its face.
-]]
-function ns.SizedFontString(parent, fontObject, size, layer)
-	local fontString = parent:CreateFontString(nil, layer or "ARTWORK", fontObject)
-	local face, _, flags = fontString:GetFont()
-	if face then
-		fontString:SetFont(face, size, flags)
-	end
-	return fontString
 end
 
 --[[

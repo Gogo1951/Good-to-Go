@@ -83,7 +83,7 @@ local function ItemIcon(itemId)
 end
 
 local function ItemName(itemId)
-	return C_Item.GetItemNameByID(itemId) or L["TRACKED_ITEM_PENDING"]:format(itemId)
+	return C_Item.GetItemNameByID(itemId) or L["LOADING_ITEM"]:format(itemId)
 end
 
 -- An item's switch: on unless off[itemId]. A change asks the macros for a bag scan when `rescan`, which redraws the window too.
@@ -229,7 +229,7 @@ ns.SCROLL_TYPE_LABELS = SCROLL_TYPES
     Ignore List says.
 ]]
 local function AddScrollRows(entries)
-	SectionHeader(entries, L["OPTIONS_SCROLL_TYPES"])
+	SectionHeader(entries, L["BUFF_DUTY_SCROLL_TYPES"])
 	local types = ns.db.profile.scrollTypes
 	local iconFor = {}
 	for itemId, scrollType in pairs(ns.SCROLL_ITEM_LOOKUP or {}) do
@@ -312,7 +312,7 @@ end
 local function WeaponName(entry)
 	local id = entry.ids[1]
 	if entry.items then
-		return C_Item.GetItemInfo(id) or L["TRACKED_ITEM_PENDING"]:format(id)
+		return C_Item.GetItemInfo(id) or L["LOADING_ITEM"]:format(id)
 	end
 	return C_Spell.GetSpellName(id) or L["TRACKED_SPELL_PENDING"]:format(id)
 end

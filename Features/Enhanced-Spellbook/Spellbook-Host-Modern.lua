@@ -11,7 +11,7 @@ local ICON_ADDON = ns.ICON_ADDON
 local SpellbookTabs = ns.SpellbookTabs
 
 SpellbookTabs:RegisterTab(ADDON_NAME, {
-	name = ns.SpellbookTabTitle(),
+	name = ns.L["TAB_ENHANCED_SPELLBOOK"],
 	description = ns.L["SPELLBOOK_TAB_DESCRIPTION"],
 	hint = { ns.L["TOOLTIP_KEY_CLICK"], ns.L["MENU_OPEN_SPELLBOOK"] },
 	icon = ICON_ADDON,

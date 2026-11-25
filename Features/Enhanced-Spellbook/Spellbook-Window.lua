@@ -26,7 +26,7 @@ local TAB_SPACING_OLD_ART, TAB_SPACING_ATLAS_ART = -16, 3
 	itself again on every show, capping the label at its parent's maxTabWidth (88 when unset), which cut off the
 	longer labels, so the window sets a cap that fits them.
 ]]
-local TAB_PADDING, TAB_MIN_WIDTH, TAB_MAX_TEXT_WIDTH = 20, 60, 220
+local TAB_PADDING, TAB_MIN_WIDTH, TAB_MAX_TEXT_WIDTH = 16, 64, 224
 
 --[[
 	The window's tabs, in order, each { title key, builder, refresh as it shows, shown }: the Spell Book page,

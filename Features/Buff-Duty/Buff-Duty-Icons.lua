@@ -27,22 +27,29 @@ local function OnIconEnter(self)
 	if not spec then
 		return
 	end
-	GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+	ns.SetTooltipOwner(self)
 	if spec.itemId then
 		GameTooltip:SetItemByID(spec.itemId)
 	else
 		GameTooltip:SetSpellByID(spec.spellId)
 	end
 	GameTooltip:AddLine(" ")
+	-- The section the icon is in, as the window heads it (Buff-Duty-Frame.lua); a party member's icons go by their name.
+	GameTooltip:AddLine(GetColor("TITLE") .. (spec.sectionTitle or spec.targetName or "") .. "|r")
+	-- A raid group icon names who needs it (Buff-Duty-Groups.lua's spec.needs), since its rows may be folded away or covered by it.
+	if spec.count and spec.needs then
+		GameTooltip:AddLine(L["BUFF_DUTY_TOOLTIP_NEEDS"]:format(ns.JoinNames(spec.needs)), 1, 1, 1, true)
+	end
 	--[[
-	    Who the click lands on, not which click: an icon casts on a click,
-	    except an ask icon, which whispers, and one held back for a PvP-flagged
-	    target, which only says why. A Weapon Buffs or Soulstone icon
-	    brings its own line, already worded.
+	    An ask icon whispers rather than casting, and a Weapon Buffs, Soulstone
+	    or bag item icon brings its own line, already worded. Every other icon
+	    gets a line per click, the job on the left and the click on the right:
+	    a click casts, and a Return the Favor icon's right-click takes them off
+	    the list.
 	]]
-	local hint = spec.hint
 	if spec.ask then
 		-- An ask: who the whisper goes to, or how long until they can be asked again.
+		local hint
 		local at = ns.BuffDuty.AskedAt(spec.ask.guid, spec.askKey)
 		if at then
 			local minutes = math.ceil((at + ns.BuffDuty.ASK_TARGET_COOLDOWN - GetTime()) / 60)
@@ -50,22 +57,21 @@ local function OnIconEnter(self)
 		else
 			hint = L["BUFF_DUTY_TOOLTIP_ASK_TARGET"]:format(spec.targetName)
 		end
-	elseif not hint then
-		local text = (spec.favorGUID and L["BUFF_DUTY_TOOLTIP_FAVOR"])
-			or (spec.isGroup and L["BUFF_DUTY_TOOLTIP_GROUP"])
-			or L["BUFF_DUTY_TOOLTIP_CAST"]
-		hint = text:format(spec.targetName)
-	end
-	GameTooltip:AddLine(GetColor("HELP") .. hint .. "|r", 1, 1, 1, true)
-	-- A raid group icon names who needs it (Buff-Duty-Groups.lua's spec.needs), since its rows may be folded away or covered by it.
-	if spec.count and spec.needs then
-		GameTooltip:AddLine(
-			GetColor("HELP") .. L["BUFF_DUTY_TOOLTIP_NEEDS"]:format(ns.JoinNames(spec.needs)) .. "|r",
-			1,
-			1,
-			1,
-			true
+		GameTooltip:AddLine(GetColor("HELP") .. hint .. "|r", 1, 1, 1, true)
+	elseif spec.hint then
+		GameTooltip:AddLine(GetColor("HELP") .. spec.hint .. "|r", 1, 1, 1, true)
+	else
+		local job = spec.isGroup and L["BUFF_DUTY_TOOLTIP_GROUP"] or L["BUFF_DUTY_TOOLTIP_CAST"]
+		GameTooltip:AddDoubleLine(
+			GetColor("INFO") .. job:format(spec.targetName) .. "|r",
+			GetColor("MUTED") .. L["TOOLTIP_KEY_CLICK"] .. "|r"
 		)
+		if spec.favorGUID then
+			GameTooltip:AddDoubleLine(
+				GetColor("INFO") .. L["BUFF_DUTY_TOOLTIP_TAKE_OFF"] .. "|r",
+				GetColor("MUTED") .. L["TOOLTIP_KEY_RIGHT_CLICK"] .. "|r"
+			)
+		end
 	end
 	GameTooltip:Show()
 end

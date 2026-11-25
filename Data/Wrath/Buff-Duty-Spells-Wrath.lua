@@ -20,6 +20,9 @@ ns.BUFF_DUTY_WEAPON_HANDS = {}
 -- { item id, level required, enchant id, weapon types, kind, item level, zones }, -- Name
 ns.BUFF_DUTY_WEAPON_ITEMS = {}
 
+-- The weapon items whose enchant goes in the imbue layer. None here: a weapon holds one temporary enchant on this client.
+ns.BUFF_DUTY_WEAPON_IMBUE_ITEMS = {}
+
 -- { item id, auras = { spell ids }, default (minutes left, MISSING or OFF) }, -- Name
 ns.BUFF_DUTY_SELF_ITEMS = {}
 

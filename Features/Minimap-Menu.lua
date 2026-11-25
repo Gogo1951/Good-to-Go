@@ -21,8 +21,8 @@ local format = string.format
     the button, the menu and the flyout. A Left-Click holds it open, and a
     second Left-Click closes it. Every row is a plain click, so a controller's
     cursor reaches all of it. The button keeps one click of its own,
-    Right-Click to ignore the current food, named in the Ignore row's tooltip
-    (Button Clicks, below). Every click, row or button, ends in
+    Right-Click to ignore the current food, named in gray on the Ignore row's
+    right side (Button Clicks, below). Every click, row or button, ends in
     ns.RefreshSettings, which redraws the open menu, every open options panel
     and the button's icon.
 
@@ -62,7 +62,7 @@ Kit.SetText({
 	count = L["ITEM_QUANTITY"],
 	loading = L["LOADING_ITEM"],
 	shortName = L["ADDON_SHORT_NAME"],
-	shortcut = L["MENU_SHORTCUT"],
+	clicks = { RightButton = L["MENU_CLICK_RIGHT"] },
 })
 
 local state = {
@@ -206,10 +206,10 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    An action row: blue, with nothing on its right. click is the button's kept
-    click that does the same job ("RightButton"): the kit names it in the
-    row's tooltip, never on the row, and ns.RunButtonClick runs the row it's
-    on.
+    An action row: blue. click is the button's kept click that does the same
+    job ("RightButton"): the kit names it in gray on the row's right side, and
+    ns.RunButtonClick runs the row it's on. Without one, its right side is
+    empty.
 ]]
 local function ActionRow(label, run, tooltip, click)
 	return {
@@ -335,7 +335,12 @@ local function AddCurrentFood(entries)
 		return
 	end
 	entries[#entries + 1] = ItemRow(foodID, nil, C_Item.GetItemCount(foodID))
-	entries[#entries + 1] = ActionRow(L["MENU_IGNORE"], IgnoreCurrentFood, nil, "RightButton")
+	entries[#entries + 1] = ActionRow(
+		L["MENU_IGNORE"],
+		IgnoreCurrentFood,
+		OptionTooltip(L["MENU_IGNORE"], L["MENU_IGNORE_DESCRIPTION"]),
+		"RightButton"
+	)
 end
 
 --[[
@@ -496,7 +501,8 @@ end
     Ignore List empties; the Global list lives in the Ignore List panel.
     Sorted by name, each item in its quality color, and only while it holds
     something. A click on an item takes it off the list (MINIMAP MENU →
-    Editable list), the delete icon showing on the right while it's hovered.
+    Editable list), the delete icon showing on the right while it's hovered
+    and its tooltip saying so under the item's own lines.
     Returns whether any item was still loading.
 ]]
 local function AddIgnoreList(entries)
@@ -527,6 +533,11 @@ local function AddIgnoreList(entries)
 		local row = ItemRow(item.id, Kit.REMOVE_ICON, nil, "MUTED")
 		local itemID = item.id
 		row.rightOnHover = true
+		row.tooltip = function(tooltip)
+			tooltip:SetItemByID(itemID)
+			tooltip:AddLine(" ")
+			tooltip:AddLine(ns.GetColor("HELP") .. L["IGNORE_LIST_CLICK_HINT"] .. "|r")
+		end
 		row.onClick = function()
 			UnignoreItem(itemID)
 			AfterChange()

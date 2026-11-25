@@ -16,7 +16,8 @@ local MACRO_CONFIG = ns.MACRO_CONFIG
     cascade at 12+), pet-spell resolution, dead-pet detection, and its own
     macro state, all in this file. The definition at the bottom scans pet food
     for every Hunter, then routes the engine's update to UpdateFeedPetMacro or
-    removes the macro when disabled; for non-Hunters it does nothing at all.
+    removes the macro when disabled; for non-Hunters it only deletes the macro
+    while Feed Pet is unticked, since the macro sits in the shared General tab.
     The scan sits outside that branch because ns.bestPetFoodID is read by the
     mini-map menu and by Diagnostics whether or not the macro exists.
 ]]

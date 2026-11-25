@@ -181,8 +181,8 @@ function ns.BuildWhatsNextControls(page, model, Layout, SourceLabel)
 	ns.ApplySpellbookElvUISkin(page)
 
 	-- the footer: the counts at its left, the model's own text at its right
-	page.counts = page:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	page.counts = page:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	page.counts:SetPoint("LEFT", page, "BOTTOMLEFT", 16, FRAME_BORDER + FOOTER_HEIGHT / 2)
-	page.footerText = page:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+	page.footerText = page:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	page.footerText:SetPoint("RIGHT", page, "BOTTOMRIGHT", -16, FRAME_BORDER + FOOTER_HEIGHT / 2)
 end

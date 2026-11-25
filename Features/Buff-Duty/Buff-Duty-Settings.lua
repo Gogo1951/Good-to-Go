@@ -118,10 +118,9 @@ local function PopulateBuffDutyAudience()
 		end
 	end
 	--[[
-	    Well Fed, Scrolls and Flasks or Elixirs each had a switch of their
-	    own on the Self-Buffs list before they were categories; a category
-	    never set takes that switch's answer, seeded above from the flavor's
-	    default.
+	    A Well Fed, Scrolls or Flasks or Elixirs category never set takes the
+	    saved answer of that item's own Self-Buffs switch, seeded above from
+	    the flavor's default.
 	]]
 	for _, entry in ipairs(BuffDuty.selfItemEntries) do
 		local row = entry.wellFed and "food" or entry.scrolls and "scrolls" or entry.elixirs and "elixirs"

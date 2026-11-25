@@ -13,8 +13,8 @@ local L = ns.L
     Both width numbers are set by the LIST, not the rows above and below it, and
     they are the sum of three things that each have their own floor:
 
-      the category pane   its widest ALLOWED width (176) plus the gap (8)
-      the table           606, which holds the item name at its readable floor
+      the category pane   its widest ALLOWED width (176) plus the gap (16)
+      the table           598, which holds the item name at its readable floor
                           and brings the sum to 832, on the Spacing Scale
       window chrome       the inset (ns.RESTOCK_WINDOW_BANDS: 4 left, 4 right), its
                           padding (8), the scroll bar (26)
@@ -38,7 +38,7 @@ local L = ns.L
 local DEFAULT_WIDTH = 864
 local DEFAULT_HEIGHT = 448
 local BANDS = ns.RESTOCK_WINDOW_BANDS
-local MIN_WIDTH = 176 + 8 + 606 + BANDS.INSET_LEFT + BANDS.INSET_RIGHT + 8 + 26
+local MIN_WIDTH = 176 + 16 + 598 + BANDS.INSET_LEFT + BANDS.INSET_RIGHT + 8 + 26
 local MIN_HEIGHT = 304
 local MAX_WIDTH = 1600
 local MAX_HEIGHT = 1200
@@ -250,11 +250,11 @@ local LIST_BOTTOM_MARGIN = 8 -- nothing else shares the list's inset
 
 --[[
     How far below the inset's top edge both panes start: the top of the list
-    area, then the column header's own height. Shared so the category rows and
-    the item rows sit on the same baseline.
+    area, then the column header's own height and the space under it. Shared
+    so the category rows and the item rows sit on the same baseline.
 ]]
 local function ListTopInset()
-	return LIST_TOP_GAP + ns.restockColumnHeaderHeight + 4
+	return LIST_TOP_GAP + ns.restockColumnHeaderHeight + ns.RESTOCK_COLUMN_HEADER_GAP
 end
 
 --[[
@@ -322,7 +322,7 @@ local function CreateEmptyState(addonFrame, listInset)
 	panel:SetPoint("BOTTOMRIGHT", listInset, "BOTTOMRIGHT", -8, ns.RESTOCK_LIST_BOTTOM_INSET)
 	panel:Hide()
 
-	local title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+	local title = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	title:SetPoint("BOTTOM", panel, "CENTER", 0, EMPTY_TITLE_OFFSET)
 	title:SetText(L["RESTOCKER_EMPTY_TITLE"])
 
@@ -341,7 +341,7 @@ local function CreateEmptyState(addonFrame, listInset)
 		ns.ShowStarterListPopup()
 	end)
 
-	local hint = panel:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+	local hint = panel:CreateFontString(nil, "OVERLAY", "GameFontDisable")
 	hint:SetPoint("TOP", button, "BOTTOM", 0, -EMPTY_GAP)
 	hint:SetText(L["RESTOCKER_EMPTY_DROP_HINT"])
 

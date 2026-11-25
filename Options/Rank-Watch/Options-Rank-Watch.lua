@@ -276,7 +276,7 @@ function ns.BuildRankWatchOptions()
 			-- 11.1 through 11.49 belong to the tip's whisper composer, added below.
 			tipComposerSpace = Spacer(11.05, WhisperOff),
 			optOutSpace0 = Spacer(11.6, WhisperOff),
-			optOutDescription = Desc(Kit.Color("HELP", L["RANK_WATCH_OPT_OUT_DESCRIPTION"]), 11.7, WhisperOff),
+			optOutDescription = Desc(L["RANK_WATCH_OPT_OUT_DESCRIPTION"], 11.7, WhisperOff),
 			optOutSpace1 = Spacer(11.8, WhisperOff),
 			-- 12 through 12.29 belong to the opt-out whispers' composer, added below.
 			whisperSpace = Spacer(13, WhisperOff),

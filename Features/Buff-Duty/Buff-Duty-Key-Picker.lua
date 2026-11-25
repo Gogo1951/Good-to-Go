@@ -256,7 +256,8 @@ BuffDuty.GroupChoices = GroupChoices
 --[[
     Every icon the key could cast, in the order it should:
       1. Resurrections: your dead target, then your group's dead.
-      2. Asking your target for their buffs (a whisper, so it costs no cast).
+      2. Asking your target for their buffs (a whisper, so it costs no cast,
+         and goes out with the same press's cast: PickNext).
       3. Your own casts: the buffs you can give your target, Return the
          Favor, your self-buffs, then each party -- your target's first --
          with its group buffs (GroupChoices) and then its members' single
@@ -332,7 +333,7 @@ local function Candidates(sections, now)
 		end
 	end)
 
-	-- 2. Asking your target for their buffs (Buff-Duty-Asks.lua): a whisper, before you start casting.
+	-- 2. Asking your target for their buffs (Buff-Duty-Asks.lua): a whisper, sent with the press's cast.
 	Each("target", function(section)
 		for _, row in ipairs(section.rows) do
 			for _, spec in ipairs(row.icons) do
@@ -513,7 +514,8 @@ end
     the client refuses, so its own error ("Missing reagent") says why the key
     did nothing; failing that, nil and whoever the list is waiting on. A cast
     that would flag you for PvP (BuffDuty.PvPFlaggedTarget) is passed over,
-    and the flagged player's name comes back third. A buff
+    and the flagged player's name comes back third. Fourth, the ask icon
+    whose whisper goes out with the same press, if one can be asked. A buff
     with a cooldown of its own (HasCooldown) is never a candidate, ready or
     not.
 ]]
@@ -531,17 +533,18 @@ local function PickNext()
 
 	local now = GetTime()
 	local candidates = Candidates(BuffDuty.BuildSections(), now)
-	local refused, waitingOn, flagged
+	local refused, waitingOn, flagged, askSpec
 	for _, spec in ipairs(candidates) do
 		local flaggedName = not spec.ask and BuffDuty.PvPFlaggedTarget(spec)
 		--[[
 		    An ask (Buff-Duty-Asks.lua) is a whisper, not a cast: no range,
 		    mana or cooldown of yours to wait on, only that player's own wait
-		    since they were last asked for it.
+		    since they were last asked for it. It rides along with the press's
+		    cast, so one press both asks and buffs.
 		]]
 		if spec.ask then
-			if BuffDuty.CanAskTarget(spec) then
-				return spec
+			if not askSpec and BuffDuty.CanAskTarget(spec) then
+				askSpec = spec
 			end
 		elseif flaggedName then
 			-- Passed over, so it can't hold up the rest; the press names them if nothing else is left.
@@ -553,14 +556,14 @@ local function PickNext()
 				if not inReach then
 					waitingOn = waitingOn or waiting
 				elseif readiness == "ready" then
-					return spec
+					return spec, nil, nil, askSpec
 				else
 					refused = refused or spec
 				end
 			end
 		end
 	end
-	return refused, waitingOn, flagged
+	return refused, waitingOn, flagged, askSpec
 end
 
 BuffDuty.PickBuffKeySpec = PickNext

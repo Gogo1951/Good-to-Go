@@ -3,7 +3,6 @@ local L = ns.L
 local GetColor = ns.GetColor
 local TITLE, BODY, INFO = ns.COLORS_RGB.TITLE, ns.COLORS_RGB.BODY, ns.COLORS_RGB.INFO
 local HideTooltip = ns.HideTooltip
-local SizedFontString = ns.SizedFontString
 local PixelInset = ns.PixelInset
 
 --[[
@@ -63,7 +62,7 @@ end
 
 -- A tooltip on owner, its title gold and its lines white, then, if given, why it does nothing, in red.
 local function ShowTip(owner, title, body, reason)
-	GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
+	ns.SetTooltipOwner(owner)
 	GameTooltip:SetText(title, TITLE.r, TITLE.g, TITLE.b, 1, true)
 	if body then
 		GameTooltip:AddLine(body, BODY.r, BODY.g, BODY.b, true)
@@ -106,7 +105,7 @@ local function CreateDropdown(parent, fit, openMenu)
 	caret:SetTexture(TEXTURE_CARET)
 	caret:SetSize(CARET_SIZE, CARET_SIZE)
 	caret:SetPoint("RIGHT", -CARET_RIGHT, 0)
-	dropdown.text = SizedFontString(dropdown, "GameFontHighlightSmall", 12)
+	dropdown.text = dropdown:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
 	dropdown.text:SetPoint("LEFT", DROPDOWN_TEXT_LEFT, 0)
 	dropdown.text:SetJustifyH("LEFT")
 	dropdown.text:SetWordWrap(false)
@@ -203,7 +202,7 @@ local function CreateSlot(row, height, iconSize, iconLeft, ownerOf)
 	slot.icon = slot:CreateTexture(nil, "ARTWORK")
 	slot.icon:SetSize(iconSize, iconSize)
 	slot.icon:SetPoint("LEFT", iconLeft, 0)
-	slot.text = SizedFontString(slot, "GameFontNormal", 13)
+	slot.text = slot:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	slot.text:SetPoint("LEFT", slot.icon, "RIGHT", SLOT_TEXT_GAP, 0)
 	slot.text:SetPoint("RIGHT", -SLOT_TEXT_GAP, 0)
 	slot.text:SetJustifyH("LEFT")

@@ -1,6 +1,5 @@
 local _, ns = ...
 local BODY = ns.COLORS_RGB.BODY
-local GetColor = ns.GetColor
 local HideTooltip = ns.HideTooltip
 
 --[[
@@ -258,13 +257,13 @@ function SpellbookTabs:CreateButton(tab)
 		tab.onClick()
 	end)
 	button:SetScript("OnEnter", function(tabButton)
-		GameTooltip:SetOwner(tabButton, "ANCHOR_RIGHT")
-		GameTooltip:SetText(tab.name)
+		ns.SetTooltipOwner(tabButton)
+		ns.AddSpellbookTooltipTitle(tab.name)
 		if tab.description then
 			GameTooltip:AddLine(tab.description, BODY.r, BODY.g, BODY.b, true)
 		end
 		if tab.hint then
-			GameTooltip:AddDoubleLine(GetColor("INFO") .. tab.hint[1] .. "|r", GetColor("INFO") .. tab.hint[2] .. "|r")
+			ns.AddSpellbookClickLine(tab.hint[2], tab.hint[1])
 		end
 		GameTooltip:Show()
 	end)
@@ -301,9 +300,10 @@ function SpellbookTabs:Attach()
 end
 
 --[[
-	info is { name (the tab's tooltip title), description (a white line under it), hint ({ key, action }, a
-	blue pair under that), icon (texture path or fileID), onClick() (what a click runs), isSelected() (when to
-	light it) }; description, hint and isSelected are optional.
+	info is { name (the tab's tooltip title, gold with "GtG" on its right), description (a white line under it),
+	hint ({ key, action }, a click line under that: the action in blue, the key in gray), icon (texture path or
+	fileID), onClick() (what a click runs), isSelected() (when to light it) }; description, hint and isSelected
+	are optional.
 ]]
 function SpellbookTabs:RegisterTab(id, info)
 	if self.byId[id] then

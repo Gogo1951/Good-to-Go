@@ -159,7 +159,7 @@ L["READINESS_QUESTIONABLE_GEAR"] = "비전투용 장비 착용:"
     What the report calls each thing. The Readiness Report panel labels its
     switches with these same keys, so a switch names exactly the line it
     controls; a switch that needs other words than its line (Main Hand Weapon
-    Buff, PvP Flag On, Scroll Buffs) keeps a label of its own.
+    Buff, Scroll Buffs) keeps a label of its own.
     Well Fed, Main Hand and Off Hand are the client's own names (the buff,
     MAINHANDSLOT and SECONDARYHANDSLOT), so they have no keys here, and
     READINESS_PET_FORMAT puts Well Fed in the pet's line (%s is that name).
@@ -231,10 +231,13 @@ L["TIP_EMPTY_CREATE"] = "가방에 %s이(가) 없습니다. %s을(를) 우클릭
 ]]
 L["MINIMAP_BEST_FOOD"] = "현재 음식"
 
--- The Ignore List block: its heading, the row that ignores the current food, and the row that clears the list.
+-- The Ignore List block: its heading, the row that ignores the current food and its tooltip's description,
+-- the row that clears the list, and the line under each listed item's own tooltip.
 L["MINIMAP_IGNORE_LIST"] = "차단 목록"
 L["MENU_IGNORE"] = "차단"
+L["MENU_IGNORE_DESCRIPTION"] = "이제부터 음식 매크로가 이 음식을 건너뜁니다."
 L["MENU_CLEAR_IGNORE"] = "차단 목록 초기화"
+L["IGNORE_LIST_CLICK_HINT"] = "클릭하면 차단 목록에서 제거합니다."
 
 --[[
     The orders inside the mini-map menu's Restocker block, while it's on: one
@@ -368,8 +371,6 @@ L["MENU_OPEN"] = "열기"
 L["MENU_CLICK_LEFT"] = "좌클릭"
 L["MENU_CLICK_RIGHT"] = "우클릭"
 L["MENU_CLICK_MIDDLE"] = "휠클릭"
--- The last line of a menu row's tooltip when the mini-map button's Right-Click does the same job.
-L["MENU_SHORTCUT"] = "단축키: 미니맵 버튼을 우클릭하세요."
 
 -- The words on the right of a block's title.
 L["MENU_ON"] = "켜짐"
@@ -447,23 +448,23 @@ L["LEVEL_FILTER_MAX_LEVEL"] = "최고 레벨일 때"
 
 --[[
     The block Features/Inventory-Report/Inventory-Report-Tooltip.lua adds under an item's own tooltip
-    lines. Its header is "GtG // Inventory Report": ADDON_SHORT_NAME, then the
-    title, in the chat prints' branded colors, with the total at its right
-    edge. Under it, one line per character, this one first: the name on the
-    left (the client's own character names, so no keys here), its counts at
-    the right edge.
+    lines. Its header is "Inventory Report … GtG": the title in gold, with
+    ADDON_SHORT_NAME in gray at its right edge. Under it, one line per
+    character, this one first: the name on the left (the client's own character
+    names, so no keys here), its counts at the right edge. "Total … 37" is the
+    last line.
 
     Keep the counts short: they share a line with a name, and the tooltip is
     as wide as its longest line.
 ]]
 L["INVENTORY_REPORT_TITLE"] = "보유량 보고서"
--- A character's bags, then its bank: "Bag 39, Bank 1". The words show gray and each count white.
-L["INVENTORY_REPORT_COUNTS"] = "가방 %s, 은행 %s"
+-- A character's bags, then its bank: "39 Bag, 1 Bank". Each count shows white and the words gray.
+L["INVENTORY_REPORT_COUNTS"] = "%s 가방, %s 은행"
 -- The same row when only one of the two holds some; a place holding none is left out.
-L["INVENTORY_REPORT_BAG"] = "가방 %s"
-L["INVENTORY_REPORT_BANK"] = "은행 %s"
--- On the header's right: every character on the realm added up, the word gray and the count white.
-L["INVENTORY_REPORT_TOTAL"] = "합계 %s"
+L["INVENTORY_REPORT_BAG"] = "%s 가방"
+L["INVENTORY_REPORT_BANK"] = "%s 은행"
+-- The last line's left, in gray: every character on the realm added up, its count white at the right edge.
+L["INVENTORY_REPORT_TOTAL"] = "합계"
 
 --------------------------------------------------------------------------------
 -- Options Panel
@@ -650,8 +651,7 @@ L["OPTIONS_BUFF_FOOD_WHEN_FED"] = "포만감 상태에서도 버프 음식 먹�
 L["OPTIONS_BUFF_FOOD_AS_FOOD_DESCRIPTION_FORMAT"] =
 	'음식 및 물 매크로가 버프 음식을 다른 음식과 똑같이 취급하여 가장 많이 회복하는 것을 먹습니다. 끄면 버프 음식을 아껴 두었다가 "%s"이(가) 필요할 때 버프 당번이 제안합니다. 가진 음식이 버프 음식뿐이면 예외입니다.'
 
--- The scroll types on Buff Duty's Scrolls page. The other five are labeled with the client's stat names (SPELL_STAT1_NAME to SPELL_STAT5_NAME); Protection has none.
-L["OPTIONS_SCROLL_TYPES"] = "확인할 두루마리 유형 포함"
+-- The Protection scroll type's label on Buff Duty's Scrolls page. The other five use the client's stat names (SPELL_STAT1_NAME to SPELL_STAT5_NAME).
 L["OPTIONS_SCROLL_PROTECTION"] = "보호"
 -- Hover text on each scroll type and pet food type; %s is the scroll type's label or the pet food's item name.
 L["OPTIONS_BUFF_TYPE_DESCRIPTION"] = "빠진 버프를 확인할 때 %s 유형을 포함합니다."
@@ -690,7 +690,7 @@ L["OPTIONS_HEALTHSTONE_DESCRIPTION"] =
 -- Potions & Healthstones, the first section on Potions & Mana Gems.
 L["OPTIONS_POTIONS_HEADER"] = "물약 및 생명석"
 L["OPTIONS_POTIONS_DESCRIPTION"] =
-	"전투 중에는 매크로를 변경할 수 없으므로(블리자드 제한 사항), 각 물약 및 생명석 매크로는 가장 좋은 아이템과 최대 2개의 예비 아이템으로 미리 구성됩니다. 긴 전투에서는 아이콘과 툴팁이 갱신되지 않아 잘못된 아이템을 표시할 수 있지만, 매크로를 클릭하면 항상 가방에 실제로 있는 가장 좋은 아이템을 사용합니다."
+	"물약 및 생명석 매크로는 전투 중에 바뀔 수 없으므로, 각각 가장 좋은 아이템과 예비 아이템 2개를 담고 있습니다. 긴 전투에서는 아이콘이 잘못된 아이템을 표시할 수 있지만, 클릭하면 항상 가방에 있는 가장 좋은 아이템을 사용합니다."
 L["OPTIONS_POTIONS_USE_FOOD_AND_WATER"] = "비전투 시 물약 매크로에서 음식 및 물 사용"
 L["OPTIONS_POTIONS_USE_FOOD_AND_WATER_DESCRIPTION"] =
 	"전투 중이 아닐 때 치유 물약 매크로는 가장 좋은 음식을 먹고, 마나 물약 매크로는 가장 좋은 물을 마십니다. 전투 중에는 평소처럼 물약을 사용합니다. 소환수 음식과 창조 주문은 계속 음식 및 물 매크로가 담당합니다."
@@ -733,7 +733,7 @@ L["OPTIONS_PET_BUFF_TYPES"] = "확인할 소환수 음식 유형 포함"
 -- Explosives
 L["OPTIONS_EXPLOSIVES_HEADER"] = "폭발물"
 L["OPTIONS_EXPLOSIVES_DESCRIPTION"] =
-	"@player 옵션은 조준 원 없이 폭발물을 발밑에서 바로 터뜨립니다. 대상이 근접 거리일 때 이상적입니다. 다른 클릭은 평소처럼 폭발물을 던집니다."
+	"한쪽 클릭은 폭발물을 발밑에서 바로 터뜨리며, 대상이 근접 거리일 때 가장 좋습니다. 다른 클릭은 평소처럼 폭발물을 던집니다."
 L["OPTIONS_EXPLOSIVES_CLICK_LAYOUT"] = "클릭 할당"
 L["OPTIONS_EXPLOSIVES_CLICK_LAYOUT_DESCRIPTION"] =
 	"어떤 클릭으로 폭발물을 던지고 어떤 클릭으로 발밑에서 터뜨릴지 선택합니다."
@@ -759,7 +759,7 @@ L["OPTIONS_DRUID_DESCRIPTION"] =
 	"DruidMacroHelper 애드온이 필요합니다. 켜면 치유 물약, 마나 물약, 생명석 매크로가 변신을 풀고 아이템을 사용한 뒤, 확인란 옆에서 고른 곰 변신 또는 표범 변신으로 다시 변신시킵니다."
 L["OPTIONS_DRUID_MACRO_HELPER"] = "DruidMacroHelper 사용"
 L["OPTIONS_DRUID_MACRO_HELPER_DESCRIPTION"] =
-	"DruidMacroHelper(/dmh)를 사용하여 치유 물약, 마나 물약, 생명석에 대한 변신 매크로를 생성합니다."
+	"치유 물약, 마나 물약, 생명석 매크로가 변신을 풀고 아이템을 사용한 뒤 다시 변신시킵니다. DruidMacroHelper가 필요합니다."
 --[[
     Return-form dropdown, beside the DruidMacroHelper toggle. The macro
     powershifts out of form, uses the consumable, then returns to this one, so
@@ -788,13 +788,11 @@ L["OPTIONS_FOOD_DRINKS_ROGUE_SUMMARY"] =
     spell the macro appends.
 ]]
 L["OPTIONS_STEALTH_EATING"] = "먹을 때 은신 사용"
-L["OPTIONS_STEALTH_EATING_SPELL_DESCRIPTION"] =
-	"음식 매크로에 %s 주문을 추가하여 음식을 먹는 동안 은신합니다."
+L["OPTIONS_STEALTH_EATING_SPELL_DESCRIPTION"] = "음식을 먹으려고 앉을 때 %s 주문을 시전합니다."
 
 -- Night Elves
 L["OPTIONS_STEALTH_DRINKING"] = "마실 때 은신 사용"
-L["OPTIONS_STEALTH_DRINKING_SPELL_DESCRIPTION"] =
-	"물 매크로에 %s 주문을 추가하여 물을 마시는 동안 은신합니다."
+L["OPTIONS_STEALTH_DRINKING_SPELL_DESCRIPTION"] = "물을 마시려고 앉을 때 %s 주문을 시전합니다."
 L["OPTIONS_STEALTH_PICK_ONE"] =
 	"하나만 선택하세요. 먹기와 마시기는 동시에 할 수 있지만, 은신한 뒤에 먹거나 마시면 은신이 풀립니다."
 
@@ -833,7 +831,8 @@ L["OPTIONS_RAPID_REGENERATION_BANDAGE_DESCRIPTION"] =
     the panel description, the scope and promote labels, the add box, Remove,
     the empty-list line, and LOADING_ITEM, the placeholder shown while the
     client is still resolving an item's name (the mini-map menu, the Macros
-    panel, and the staples pop-up use it too). The mini-map menu's section
+    panel, the staples pop-up, and Buff Duty's Options menu and Weapon Buffs
+    page use it too). The mini-map menu's section
     keeps its own MINIMAP_IGNORE_LIST and MENU_CLEAR_IGNORE keys.
 ]]
 L["TAB_IGNORE_LIST"] = "차단 목록"
@@ -925,6 +924,8 @@ L["OPTIONS_SOUND_PREVIEW_DESCRIPTION"] = "소리가 켜져 있든 꺼져 있든 
 
 L["OPTIONS_RESTOCKER_WINDOW_HEADER"] = "보충 목록 창"
 L["OPTIONS_RESTOCKER_WINDOW_DESCRIPTION"] = "보충 목록이 자동으로 열릴 시점을 선택하세요."
+L["RESTOCKER_RESET_LIST_POSITION"] = "보충 목록 위치"
+L["RESTOCKER_RESET_STAPLES_POSITION"] = "기본 물품 위치"
 
 --[[
     The Inventory Report's page, named by the report's own title
@@ -1046,7 +1047,6 @@ L["OPTIONS_READINESS_DURABILITY_THRESHOLD_DESCRIPTION"] =
 L["OPTIONS_READINESS_SPECIALIZATION"] = "현재 특성"
 L["OPTIONS_READINESS_SPECIALIZATION_DESCRIPTION"] =
 	"특성 분배와 아직 사용하지 않은 포인트를 출력합니다."
-L["OPTIONS_READINESS_PVP"] = "PvP 상태 켜짐"
 L["OPTIONS_READINESS_PVP_DESCRIPTION"] = "PvP 상태가 켜져 있으면 경고합니다."
 L["OPTIONS_READINESS_QUESTIONABLE_GEAR"] = "비전투용 장비 착용"
 L["OPTIONS_READINESS_NONCOMBAT_GEAR_DESCRIPTION"] =
@@ -1792,10 +1792,10 @@ L["POPUP_LEGACY_IMPORT_DECLINE"] = "괜찮습니다"
 -- Options: Group Buffs and Reported Ranks
 --------------------------------------------------------------------------------
 
--- The Group Buffs and Reported Ranks panels' titles, and the stand-in for an item or spell whose name the client hasn't loaded yet.
+-- The Group Buffs and Reported Ranks panels' titles, and the stand-in for a spell whose name the client hasn't loaded
+-- yet (an item's is LOADING_ITEM).
 L["BUFF_DUTY_TRACKED_HEADER"] = "그룹 버프"
 L["RANK_WATCH_TRACKED_HEADER"] = "알릴 주문 레벨"
-L["TRACKED_ITEM_PENDING"] = "아이템 #%d"
 L["TRACKED_SPELL_PENDING"] = "주문 #%d"
 
 --------------------------------------------------------------------------------
@@ -1838,7 +1838,7 @@ L["BUFF_DUTY_FAVOR_ENABLE_DESCRIPTION"] =
 	"최근 당신에게 버프를 준 낯선 사람과 그들에게 돌려줄 수 있는 버프를 보여 줍니다. 아이콘을 우클릭하면 해당 플레이어를 목록에서 제외합니다."
 L["BUFF_DUTY_BUFF_PVP_FLAGGED"] = "PvP 활성 플레이어 버프"
 L["BUFF_DUTY_BUFF_PVP_FLAGGED_DESCRIPTION"] =
-	"PvP가 활성화된 플레이어에게 버프를 걸면 당신도 PvP가 활성화됩니다. 이 옵션이 꺼져 있고 당신의 PvP가 꺼져 있는 동안 버프 당번은 그들에게 버프를 걸거나 그들에게 닿는 파티 버프를 시전하지 않고, 대신 대화창으로 알려 줍니다."
+	"버프 당번이 PvP가 활성화된 플레이어에게 버프를 걸 수 있게 하며, 이 경우 당신도 PvP가 활성화됩니다. 이 옵션이 꺼져 있고 당신의 PvP가 꺼져 있는 동안 버프 당번은 그들과 그들에게 닿는 파티 버프를 건너뛰고 대화창으로 알려 줍니다."
 L["BUFF_DUTY_FAVOR_SECONDS_DESCRIPTION"] =
 	"낯선 사람이 마지막 버프 후 목록에 남아 있는 시간을 설정합니다."
 L["BUFF_DUTY_TARGET_ENABLE"] = "내 대상"
@@ -1946,7 +1946,9 @@ L["BUFF_DUTY_FOOD_PAGE_DESCRIPTION"] = "가지고 있는 버프 음식을 버프
 L["BUFF_DUTY_WELL_FED_DESCRIPTION_FORMAT"] =
 	'"%s" 효과가 없고 버프 음식을 가지고 있는 동안 표시됩니다. 창에서 클릭하면 가장 좋은 버프 음식을 먹습니다.'
 -- The Scrolls page and its row: one icon per scroll buff you're missing, for the types checked under it.
+-- SCROLL_TYPES heads those types, on the page and in the window's Scrolls menu.
 L["BUFF_DUTY_SCROLLS"] = "두루마리"
+L["BUFF_DUTY_SCROLL_TYPES"] = "두루마리 종류"
 L["BUFF_DUTY_SCROLLS_PAGE_DESCRIPTION"] =
 	"가지고 있는 두루마리를 버프가 없을 때 창에 표시합니다."
 L["BUFF_DUTY_SCROLLS_DESCRIPTION"] =
@@ -1982,8 +1984,10 @@ L["BUFF_DUTY_WEAPON_ENABLE_DESCRIPTION"] =
 	"무기에 없거나 곧 끝나는 독, 무기 강화, 오일, 숫돌, 미끼를 창 맨 위에 자기 버프와 함께 표시합니다. 클릭하면 적용합니다. 표시할 항목은 무기 버프에서 고르세요."
 
 -- The window itself
--- A buff icon's tooltip ends with who the click lands on.
-L["BUFF_DUTY_TOOLTIP_CAST"] = "%s에게 시전합니다."
+-- A buff icon's tooltip, a line per click: the job on the left, the click (TOOLTIP_KEY_CLICK, TOOLTIP_KEY_RIGHT_CLICK)
+-- on the right. %s is who the cast lands on; TAKE_OFF is a Return the Favor icon's right-click.
+L["BUFF_DUTY_TOOLTIP_CAST"] = "%s에게 시전"
+L["BUFF_DUTY_TOOLTIP_TAKE_OFF"] = "이 목록에서 빼기"
 -- %s is the client's "Main Hand" or "Off Hand".
 L["BUFF_DUTY_TOOLTIP_WEAPON"] = "%s 무기에 적용합니다."
 L["BUFF_DUTY_TOOLTIP_USE"] =
@@ -2009,11 +2013,13 @@ L["BUFF_DUTY_MENU_OPACITY_DESCRIPTION"] =
 	"버프 당번 창 배경의 불투명도를 설정합니다. 글자와 아이콘은 그대로 유지됩니다."
 L["BUFF_DUTY_MENU_OPACITY_PERCENT"] = "%d%%"
 --[[
-    The window's category menus: each category line's arrow opens one, and the
-    Options line's Show in Window opens each. Show in Buff Duty, Use (when),
-    Show (how soon), Use with Keybind, Show Missing Inventory, then what the
-    category uses, each On or Off. Missing Inventory! is the red line in the
-    window. %s in the item hover is the spell, food, scroll or elixir.
+    The window's category menus, each opened by its category line's arrow:
+    Show in Buff Duty, When to Use (BUFF_DUTY_ROW_WHEN), Show (how soon), Use
+    with Cast Next Buff (BUFF_DUTY_ROW_KEY), Show Missing Inventory, then what
+    the category uses, each On or Off. The Options menu's Show in Window lists
+    every category as a toggle with SHOW_IN_BUFF_DUTY_DESCRIPTION as its hover.
+    Missing Inventory! is the red line in the window. %s in the item hover is
+    the spell, food, scroll or elixir.
 ]]
 L["BUFF_DUTY_MISSING_INVENTORY"] = "소지품 없음!"
 L["BUFF_DUTY_MENU_SHOW_IN_BUFF_DUTY"] = "버프 당번에 표시"
@@ -2037,11 +2043,8 @@ L["BUFF_DUTY_MENU_BUFF_FOOD"] = "버프 음식"
 L["BUFF_DUTY_TOOLTIP_EAT"] =
 	"가방에서 하나를 먹습니다. 포만감 상태가 될 때까지 앉아 있으세요."
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "%s와(과) 그 파티에게 시전합니다."
--- A raid group icon's tooltip, its last line: the members who need it (%s, joined with LIST_PAIR_FORMAT or LIST_LAST_FORMAT).
+-- A raid group icon's tooltip, the line under its title: the members who need it (%s, joined with LIST_PAIR_FORMAT or LIST_LAST_FORMAT).
 L["BUFF_DUTY_TOOLTIP_NEEDS"] = "필요한 사람: %s."
--- A Return the Favor icon: the click targets them and casts; a right-click drops them from the list.
-L["BUFF_DUTY_TOOLTIP_FAVOR"] =
-	"%s을(를) 대상으로 지정하고 시전합니다. 우클릭하면 이 목록에서 뺍니다."
 -- The Ask row under Target: its label (%s is the target's name in their class color), and its icons' tooltip: who the whisper goes to, or, once asked, who and the whole minutes until they can be asked again.
 L["BUFF_DUTY_ASK_TARGET_ROW"] = "%s 님에게 요청"
 L["BUFF_DUTY_TOOLTIP_ASK_TARGET"] = "%s 님에게 귓속말로 요청합니다."
@@ -2078,7 +2081,8 @@ L["BUFF_KEY"] = "다음 버프 시전"
 L["BUFF_KEY_WAITING"] = "%s님이 사거리 안에 들어오기를 기다리는 중입니다."
 L["BUFF_KEY_DONE"] = "더 걸 버프가 없습니다."
 -- Printed when Buff Duty or the key skips a PvP-flagged player. %s is the player's name.
-L["BUFF_DUTY_PVP_FLAGGED"] = "%s님은 PvP가 활성화되어 있습니다. 직접 버프를 걸어야 합니다."
+L["BUFF_DUTY_PVP_FLAGGED"] =
+	"%s님은 PvP가 활성화되어 있어 버프 당번이 건너뛰었습니다. 그래도 버프를 걸려면 PvP 활성 플레이어 버프를 켜세요."
 L["BUFF_KEY_OFF"] = "버프 당번이 꺼져 있습니다."
 --[[
     The Buff Duty window's last line, under Options, while the Cast Next Buff key has none: the options
@@ -2452,7 +2456,7 @@ L["MENU_RESET_CATEGORY_CONFIRM"] =
 -- A middle-click on a macro, asked first. %s is the macro.
 L["MENU_RESET_MACRO_CONFIRM"] = "%s의 옵션을 초기화할까요? 다시 기본값을 따릅니다."
 
--- TRANSLATORS: %s is a spell's name, heading its macro's part of a tile's tooltip after "GtG //" ("Immolate Macro").
+-- TRANSLATORS: %s is a spell's name, the gold title of its macro's part of a tile's tooltip, "GtG" on its right ("Immolate Macro").
 L["TOOLTIP_MACRO_HEADING"] = "%s 매크로"
 
 -- Spellbook Tab Tooltip
@@ -2543,7 +2547,7 @@ L["WHATS_NEXT_TOOLTIP_HOW_TALENT"] = "특성 포인트를 투자하면 배웁니
 L["WHATS_NEXT_TOOLTIP_HOW_RUNE"] = "룬을 각인하면 배웁니다."
 -- TRANSLATORS: %s is a spell's name, with its rank where it has one ("Learn Rend (Rank 1) first.").
 L["WHATS_NEXT_TOOLTIP_NEEDS"] = "먼저 %s을(를) 배우세요."
--- TRANSLATORS: %s is a spell's name, heading the list of its ranks after "GtG //" ("Immolate Ranks").
+-- TRANSLATORS: %s is a spell's name, the gold title over the list of its ranks, "GtG" on its right ("Immolate Ranks").
 L["WHATS_NEXT_TOOLTIP_RANKS"] = "%s 레벨 목록"
 L["TOOLTIP_KEY_SHIFT_CLICK"] = "Shift + 클릭"
 L["TOOLTIP_ACTION_LINK_IN_CHAT"] = "대화창에 링크"
@@ -2645,9 +2649,8 @@ L["OPTIONS_ABILITY_TOOLTIPS_ENABLE_DESCRIPTION"] =
 L["OPTIONS_DELETE_MACROS_HEADER"] = "매크로 삭제"
 L["OPTIONS_DELETE_MACROS_DESCRIPTION"] =
 	"향상된 마법책이 만든 매크로를 삭제하며, 행동 단축바에서도 사라집니다. 직접 만든 매크로는 절대 건드리지 않으며, 페이지에서 클릭하거나 끌어 놓으면 다시 만들어집니다."
--- The two rows' captions, each beside a Delete button (OPTIONS_DELETE).
+-- The character row's caption, beside its Delete button (OPTIONS_DELETE); the General row reads the client's GENERAL_MACROS.
 L["OPTIONS_DELETE_CHARACTER_MACROS_CAPTION"] = "이 캐릭터의 매크로"
-L["OPTIONS_DELETE_GENERAL_MACROS_CAPTION"] = "일반 매크로"
 L["OPTIONS_DELETE"] = "삭제"
 L["OPTIONS_DELETE_CHARACTER_MACROS_DESCRIPTION"] =
 	"이 캐릭터의 매크로 탭에서 향상된 마법책의 매크로를 삭제합니다. 다른 캐릭터는 그 캐릭터에서 같은 작업을 할 때까지 매크로를 유지합니다."
@@ -2706,6 +2709,8 @@ L["KEY_BINDINGS_LOCATION"] = "게임 메뉴를 열고 %s, %s 순으로 들어가
 L["ERROR_MACRO_SLOTS_FULL"] =
 	"빈 매크로 칸이 없습니다. /m에서 매크로 몇 개를 삭제해 자리를 만드세요."
 L["ERROR_MACRO_WINDOW_OPEN"] = "먼저 매크로 창을 닫으세요."
+L["ERROR_MACRO_COMBAT"] =
+	"전투 중에는 매크로를 변경할 수 없습니다. 전투가 끝난 후 다시 시도하세요."
 L["CHAT_MACROS_DELETED"] = "매크로 %d개를 삭제했습니다."
 L["CHAT_MACROS_DELETED_ONE"] = "매크로 1개를 삭제했습니다."
 L["CHAT_MACRO_TOO_LONG"] =

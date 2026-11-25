@@ -9,7 +9,7 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 <img width="800" src="https://github.com/user-attachments/assets/01cbb0ae-c1f1-4fa3-8b6d-5d3c993a6c79" />
 
 * **Every Buff You Owe** // One click-to-cast window, or one key, covers your group, yourself, your weapons, and the stranger who just buffed you.
-* **Never Let a Buff Drop** // Missing or fading buffs, Well Fed and scrolls included, show up right away, and one click puts them back.
+* **Never Let a Buff Drop** // Missing or fading buffs, from Well Fed to scrolls and elixirs, show up right away, and one click puts them back.
 * **Gentle Reminders for the Group** // See which buffs your group is missing, then ask the group, or whisper the class that can cast them.
 * **Your Rules** // Choose which characters and which kinds of group it shows for, or switch it off entirely.
 
@@ -24,7 +24,7 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 <img width="800" src="https://github.com/user-attachments/assets/fa63db86-8638-4483-9f18-f47765ba8a8f" />
 
 * **Pick Your Staples Once** // Every merchant and bank visit tops up your food, water, ammo, and reagents, and never spends your last gold.
-* **Your List Levels With You** // Food, water, ammo, poisons, and reagents climb to the next tier as you level.
+* **Your List Levels with You** // Food, water, ammo, poisons, and reagents climb to the next tier as you level.
 * **Rogues Get a Bonus** // List the poison you want, and the ingredients buy themselves.
 * **Never Run Dry** // Get a heads-up in town, or as you leave a merchant or the bank, whenever something on your list is low or out.
 * **Your Rules** // Hold Shift while opening a merchant or the bank to skip restocking that time, or switch it off entirely.

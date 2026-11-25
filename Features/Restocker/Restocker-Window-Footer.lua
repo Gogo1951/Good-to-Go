@@ -77,7 +77,7 @@ local function ShowOrdersTooltip(owner)
 		return
 	end
 
-	GameTooltip:SetOwner(owner, "ANCHOR_TOPRIGHT")
+	ns.SetTooltipOwner(owner)
 	GameTooltip:SetText(L["RESTOCKER_SHORT_ITEMS_TITLE"], TITLE.r, TITLE.g, TITLE.b)
 	for index = 1, math.min(#groceries, ORDERS_TOOLTIP_MAX_ROWS) do
 		local entry = groceries[index]

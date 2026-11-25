@@ -1,7 +1,6 @@
 local _, ns = ...
 local BODY = ns.COLORS_RGB.BODY
 local L = ns.L
-local GetColor = ns.GetColor
 local HideTooltip = ns.HideTooltip
 
 --[[
@@ -84,13 +83,10 @@ local function CreateTab()
 	tab.checked:Hide()
 	tab:SetScript("OnClick", ns.ToggleSpellbookWindow)
 	tab:SetScript("OnEnter", function(self)
-		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-		GameTooltip:SetText(ns.SpellbookTabTitle())
+		ns.SetTooltipOwner(self)
+		ns.AddSpellbookTooltipTitle(L["TAB_ENHANCED_SPELLBOOK"])
 		GameTooltip:AddLine(L["SPELLBOOK_TAB_DESCRIPTION"], BODY.r, BODY.g, BODY.b, true)
-		GameTooltip:AddDoubleLine(
-			GetColor("INFO") .. L["TOOLTIP_KEY_CLICK"] .. "|r",
-			GetColor("INFO") .. L["MENU_OPEN_SPELLBOOK"] .. "|r"
-		)
+		ns.AddSpellbookClickLine(L["MENU_OPEN_SPELLBOOK"], L["TOOLTIP_KEY_CLICK"])
 		GameTooltip:Show()
 	end)
 	tab:SetScript("OnLeave", HideTooltip)

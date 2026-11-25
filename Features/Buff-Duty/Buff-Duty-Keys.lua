@@ -6,10 +6,11 @@ local L = ns.L
     one press at a time, the way Pally Power's auto-buff keys do. A
     resurrection on your dead target, then on your group's dead, then your
     target, Return the Favor, your self-buffs, and your group -- your
-    target's party first. Each cast on someone else targets them
-    (TargetWhoItsFor), and the key never puts your old target back. A press can also whisper your target an ask for a buff of
-    theirs you're missing (Buff-Duty-Asks.lua), before the buffs you can
-    give them. For each buff a party is missing, the key casts the group
+    target's party first. A cast on someone else goes straight at them, as
+    a click on their window icon does, except Return the Favor, whose macro
+    targets the stranger. A press can also whisper your target an ask for a buff of
+    theirs you're missing (Buff-Duty-Asks.lua), in the same press as the
+    buff it casts on them. For each buff a party is missing, the key casts the group
     version when it costs less mana than buffing everyone it would reach one
     at a time, and the single one otherwise (AddParty, in
     Buff-Duty-Key-Picker.lua, which makes the pick).
@@ -203,20 +204,20 @@ end
     itself.
 ]]
 local PRESS_REUSE_SECONDS = 1
-local downPick -- { at, spec, waitingOn, flagged }: the down half's pick, until its up half
+local downPick -- { at, spec, waitingOn, flagged, askSpec }: the down half's pick, until its up half
 
 local function PickForPress(down)
 	local now = GetTime()
 	local earlier = downPick
 	downPick = nil
 	if not down and earlier and now - earlier.at <= PRESS_REUSE_SECONDS then
-		return earlier.spec, earlier.waitingOn, earlier.flagged
+		return earlier.spec, earlier.waitingOn, earlier.flagged, earlier.askSpec
 	end
-	local spec, waitingOn, flagged = BuffDuty.PickBuffKeySpec()
+	local spec, waitingOn, flagged, askSpec = BuffDuty.PickBuffKeySpec()
 	if down then
-		downPick = { at = now, spec = spec, waitingOn = waitingOn, flagged = flagged }
+		downPick = { at = now, spec = spec, waitingOn = waitingOn, flagged = flagged, askSpec = askSpec }
 	end
-	return spec, waitingOn, flagged
+	return spec, waitingOn, flagged, askSpec
 end
 
 --[[
@@ -239,33 +240,6 @@ local function Busy()
 	return BuffDuty.IsEating() and true or false
 end
 
---[[
-    A spell the key casts on someone else targets them as it goes: a party
-    member, a pet, the player a group buff is aimed at. Whatever was targeted
-    before isn't put back. Your own buffs, your current target, a favor
-    (whose macro already targets the stranger) and items are left as written.
-    Unit tokens and rank text are the add-on's own, so the line is safe to
-    build; it stays far under the macro's 255 characters.
-]]
-local function TargetWhoItsFor(button, spec)
-	if not spec or spec.ask or spec.macrotext or spec.item then
-		return
-	end
-	local unit = spec.unit
-	local castText = spec.castSpell or spec.spellName
-	if not unit or not castText or unit == "player" or unit == "target" then
-		return
-	end
-	local isSelf = UnitIsUnit(unit, "player")
-	if not ns.IsPlain(isSelf) or isSelf or not UnitExists(unit) then
-		return
-	end
-	button:SetAttribute("type1", "macro")
-	button:SetAttribute("spell", nil)
-	button:SetAttribute("unit", nil)
-	button:SetAttribute("macrotext", "/target " .. unit .. "\n/cast [@" .. unit .. "] " .. castText)
-end
-
 local function OnKeyPreClick(self, _, down)
 	local acting = not down
 	if InCombatLockdown() then
@@ -283,23 +257,24 @@ local function OnKeyPreClick(self, _, down)
 		self.lastSpec = nil
 		return
 	end
-	local spec, waitingOn, flagged = PickForPress(down)
+	local spec, waitingOn, flagged, askSpec = PickForPress(down)
 	ns.SetBuffButtonAttributes(self, spec)
-	TargetWhoItsFor(self, spec)
 	self.lastSpec = spec
 	if not acting then
 		return
 	end
-	if spec and spec.ask then
-		-- An ask casts nothing (its attributes are cleared): the whisper goes out here.
-		ns.AskTargetForBuffs(spec)
-	elseif spec then
+	-- The ask's whisper goes out here, and the same press casts the buff picked alongside it.
+	local asked = askSpec and ns.AskTargetForBuffs(askSpec)
+	if spec then
 		-- A weapon buff's "replace your enchant?" is answered, as for a click on its icon.
 		if spec.confirmReplace then
 			ns.ExpectReplaceEnchant()
 		end
 		Remember(spec)
 		ns.NoteBuffCastAttempt(spec)
+	elseif asked then
+		-- The whisper was the press: nothing left to cast, and no notice over it.
+		return
 	elseif flagged then
 		-- Only a cast held back from a PvP-flagged player is left (BuffDuty.PvPFlaggedTarget).
 		ns:PrintMessage(L["BUFF_DUTY_PVP_FLAGGED"]:format(flagged))

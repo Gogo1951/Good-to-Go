@@ -3,7 +3,6 @@ local L = ns.L
 local GetColor = ns.GetColor
 local SetTip = ns.MenuSetTip
 local HideTooltip = ns.HideTooltip
-local SizedFontString = ns.SizedFontString
 local Widgets = ns.PanelWidgets
 local Box, ShowTip = Widgets.Box, Widgets.ShowTip
 local UI = ns.ConditionalsUI
@@ -15,8 +14,8 @@ local CurrentMacro, Change, RedrawPage, Update = UI.CurrentMacro, UI.Change, UI.
 	controls in Features/Enhanced-Spellbook/Macro-Builder/Panel-Widgets.lua.
 ]]
 
-local PADDING, INNER_WIDTH = ns.DockedPanel.PADDING, ns.DockedPanel.INNER_WIDTH
-local ROWS_TOP, ROW_HEIGHT, ROW_GAP = UI.ROWS_TOP, UI.ROW_HEIGHT, UI.ROW_GAP
+local INNER_WIDTH = ns.DockedPanel.INNER_WIDTH
+local ROW_HEIGHT, ROW_GAP = UI.ROW_HEIGHT, UI.ROW_GAP
 local SLOT_ICON, TEXTURE_ARROW = Widgets.SLOT_ICON, UI.TEXTURE_ARROW
 local DROPDOWN_MIN_WIDTH = 64
 local SLOT_HEIGHT = 32
@@ -176,7 +175,7 @@ local function CreateSlot(row)
 		end
 		local spellID = ns.ConditionalSpellID(conditional)
 		if spellID then
-			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+			ns.SetTooltipOwner(self)
 			GameTooltip:SetSpellByID(spellID)
 		else
 			ShowTip(self, L["CONDITIONALS_PICK_SPELL"], L["CONDITIONALS_SLOT_DESCRIPTION"])
@@ -196,7 +195,7 @@ local function CreateRow(parent, index)
 	row.index = index
 	row:SetHeight(ROW_HEIGHT)
 	row:SetWidth(INNER_WIDTH)
-	row:SetPoint("TOPLEFT", PADDING, -(ROWS_TOP + (index - 1) * (ROW_HEIGHT + ROW_GAP)))
+	ns.DockedPanel.SetRowPoint(parent, row, (index - 1) * (ROW_HEIGHT + ROW_GAP))
 	Box(row, ROW_FILL, ROW_EDGE)
 	row.drop = Widgets.CreateDropWash(row)
 	row.grip = Widgets.CreateGrip(row, UI.panel, "CONDITIONALS_REORDER_DESCRIPTION", function(from, to)
@@ -206,7 +205,7 @@ local function CreateRow(parent, index)
 	end, Update)
 	row.first = CreateDropdown(row, 1)
 	row.first:SetPoint("LEFT", row.grip, "RIGHT", 8, 0)
-	row.andText = SizedFontString(row, "GameFontHighlightSmall", 12)
+	row.andText = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
 	row.andText:SetTextColor(unpack(ARROW_INK))
 	row.andText:SetPoint("LEFT", row.first, "RIGHT", 8, 0)
 	row.andText:SetText(L["CONDITIONALS_AND"])

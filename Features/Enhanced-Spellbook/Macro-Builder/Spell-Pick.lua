@@ -1,7 +1,6 @@
 local _, ns = ...
 local L = ns.L
 local INFO = ns.COLORS_RGB.INFO
-local SizedFontString = ns.SizedFontString
 local Widgets = ns.PanelWidgets
 local Box = Widgets.Box
 
@@ -60,7 +59,7 @@ local function PickOverlay(who)
 	banner:SetPoint("TOP", 0, -8)
 	banner:SetHeight(32)
 	Box(banner, FIELD_FILL, { INFO.r, INFO.g, INFO.b })
-	local text = SizedFontString(banner, "GameFontHighlight", 13, "OVERLAY")
+	local text = banner:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	text:SetPoint("CENTER")
 	text:SetText(L["CONDITIONALS_PICK_BANNER"])
 	banner:SetWidth(math.ceil(text:GetStringWidth()) + 32)
@@ -143,7 +142,7 @@ function ns.PickSpell(macro)
 	local index, who = picking, owner
 	local pick = who and who.pickOf(macro)
 	if not pick then
-		ns.ShowUIError(L[who and who.cannotPickKey or "CONDITIONALS_CANNOT_PICK"])
+		ns.ShowUIError(L["ADDON_SHORT_NAME"] .. " // " .. L[who and who.cannotPickKey or "CONDITIONALS_CANNOT_PICK"])
 		return
 	end
 	SetPicking(nil, who)
