@@ -261,7 +261,10 @@ end
     against the single ones.
 
     A version the game already refused to cast over (BuffDuty.NoteBounce)
-    counts as had, by either rule, for as long as it stays on them.
+    counts as had, by either rule, for as long as it stays on them. A refusal
+    with no known version on them was caused by a buff this data doesn't list,
+    so the buff counts as had until one of the buffs they carried then ends or
+    is refreshed.
 
     An exclusive buff (a blessing) also counts as had when the unit carries
     ANOTHER of yours from the same family, even one running low: you can only
@@ -279,11 +282,24 @@ local function Has(buff, unit)
 	local best = RankFor(buff, unit and UnitLevel(unit))
 	local mine = (best and myStrengths[best.id]) or (buff.groupId and myStrengths[buff.groupId])
 	local bounce = auraGUID and bounced[auraGUID] and bounced[auraGUID][buff.key]
+	if bounce and bounce.others then
+		local unchanged = true
+		for id, expires in pairs(bounce.others) do
+			if auraExpires[id] ~= expires then
+				unchanged = false
+				break
+			end
+		end
+		if unchanged then
+			return true
+		end
+	end
+	local versions = bounce and bounce.versions
 	local lowExpires, lowDuration
 	for id in pairs(buff.auraIds) do
 		local expires = auraExpires[id]
 		if expires then
-			if bounce and bounce[id] == expires then
+			if versions and versions[id] == expires then
 				return true
 			end
 			local level = buff.rankLevels[id]
@@ -336,7 +352,9 @@ end
 --[[
     The game refused a cast of the buff with this key on `unit`: record every
     version of it they carry now, so Has leaves them alone until it changes.
-    Read straight off the unit rather than the cache, which may be older.
+    With no version of it on them, the stronger buff is one this data doesn't
+    list, so every buff they carry is recorded instead. Read straight off the
+    unit rather than the cache, which may be older.
 ]]
 function BuffDuty.NoteBounce(unit, buffKey)
 	if ns.AreAurasSecret() then
@@ -350,20 +368,31 @@ function BuffDuty.NoteBounce(unit, buffKey)
 	for _, list in ipairs({ buffs, selfBuffs }) do
 		for _, buff in ipairs(list) do
 			if buff.key == buffKey then
-				local seen = {}
+				local seen, others = {}, {}
 				for i = 1, 40 do
 					local data = C_UnitAuras.GetBuffDataByIndex(unit, i, "HELPFUL")
 					if not data then
 						break
 					end
 					local id, expires = data.spellId, data.expirationTime
-					if ns.IsPlain(id) and ns.IsPlain(expires) and buff.auraIds[id] then
-						seen[id] = expires
+					if ns.IsPlain(id) and id then
+						-- Kept as ReadAuras keeps it, so Has compares like with like.
+						expires = ns.IsPlain(expires) and expires or 0
+						others[id] = expires
+						if buff.auraIds[id] then
+							seen[id] = expires
+						end
 					end
 				end
+				local record
 				if next(seen) then
+					record = { versions = seen }
+				elseif next(others) then
+					record = { others = others }
+				end
+				if record then
 					bounced[guid] = bounced[guid] or {}
-					bounced[guid][buffKey] = seen
+					bounced[guid][buffKey] = record
 					dirtyGUIDs[guid] = true
 				end
 				return
