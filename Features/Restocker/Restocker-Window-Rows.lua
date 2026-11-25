@@ -306,7 +306,7 @@ function ns.CreateRestockListRow(item)
 		if not (rowItem and rowItem.itemID) then
 			return
 		end
-		GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
+		ns.SetTooltipOwner(button)
 		-- Prefer the cached colored link; fall back to a bare item: link (always valid)
 		local info = ns.GetItemData(rowItem.itemID)
 		GameTooltip:SetHyperlink((info and info.itemLink) or ("item:" .. rowItem.itemID))

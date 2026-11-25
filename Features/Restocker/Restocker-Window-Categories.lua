@@ -75,7 +75,7 @@ local GROUP_PANE_MIN_WIDTH = 128
 local GROUP_PANE_MAX_WIDTH = 176
 
 ns.restockGroupPaneWidth = GROUP_PANE_MIN_WIDTH
-ns.RESTOCK_GROUP_PANE_GAP = 8 -- pane to table
+ns.RESTOCK_GROUP_PANE_GAP = 16 -- pane to table, space rather than a line
 ns.RESTOCK_GROUP_ROW_INSET = GROUP_ROW_INSET -- where a type name starts
 
 -- Scratch FontString used only to measure the row font; never shown.
@@ -227,13 +227,6 @@ function ns.CreateRestockGroupPane(parent, listInset, topInset)
 	end)
 	pane.scrollFrame = scroll
 	pane.scrollChild = child
-
-	-- A hairline down the right edge, separating the pane from the table.
-	local edge = pane:CreateTexture(nil, "ARTWORK")
-	edge:SetPoint("TOPRIGHT", pane, "TOPRIGHT", 0, 0)
-	edge:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", 0, 0)
-	edge:SetWidth(1)
-	edge:SetColorTexture(GOLD.r, GOLD.g, GOLD.b, 0.12)
 
 	ns.restockGroupPane = pane
 	return pane

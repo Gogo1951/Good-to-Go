@@ -204,7 +204,7 @@ local function OpenManagePullout(anchor)
 	-- The control's own tooltip would sit over the menu it opened.
 	GameTooltip:Hide()
 	-- Opening upward, as the list menu does from the footer.
-	ns.RestockMenu:Open(anchor, entries, nil, true)
+	ns.RestockMenu:Open(anchor, entries, nil, true, "click")
 end
 
 local function ToggleManagePullout(anchor)

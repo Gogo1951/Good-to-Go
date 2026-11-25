@@ -16,8 +16,8 @@ local L = ns.L
     off ns.
 ]]
 local BAR_HEIGHT = 22
-local BAR_INSET_LEFT = 8 -- past the portrait's clearance, as the Spell Book's filter sits
-local BAR_INSET_RIGHT = 8
+local BAR_INSET_LEFT = 16 -- past the portrait's clearance
+local BAR_INSET_RIGHT = 16
 ns.RESTOCK_BAR_HEIGHT = BAR_HEIGHT
 ns.RESTOCK_BAR_INSET_RIGHT = BAR_INSET_RIGHT
 
@@ -162,7 +162,7 @@ local function CreatePlainFilterBox(bar)
 
 	-- Anchored on both sides with no wrap, so a hint longer than the field truncates inside it.
 	local placeholder = box:CreateFontString(nil, "OVERLAY")
-	placeholder:SetFontObject("GameFontDisableSmall")
+	placeholder:SetFontObject("GameFontDisable")
 	placeholder:SetPoint("LEFT", box, "LEFT", 4, 0)
 	placeholder:SetPoint("RIGHT", box, "RIGHT", -4, 0)
 	placeholder:SetJustifyH("LEFT")
@@ -305,7 +305,7 @@ local function CreateEditBox(addonFrame, header)
 	    Add button.
 	]]
 	local placeholder = editBox:CreateFontString(nil, "OVERLAY")
-	placeholder:SetFontObject("GameFontDisableSmall")
+	placeholder:SetFontObject("GameFontDisable")
 	placeholder:SetPoint("LEFT", editBox, "LEFT", 4, 0)
 	placeholder:SetPoint("RIGHT", editBox, "RIGHT", -4, 0)
 	placeholder:SetJustifyH("LEFT")

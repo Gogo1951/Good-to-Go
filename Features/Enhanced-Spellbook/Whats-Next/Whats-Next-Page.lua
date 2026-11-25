@@ -2,7 +2,6 @@ local _, ns = ...
 local L = ns.L
 local GetColor = ns.GetColor
 local HideTooltip = ns.HideTooltip
-local SizedFontString = ns.SizedFontString
 local PixelLine = ns.SpellbookPixelLine
 local FramePool = ns.SpellbookFramePool
 local Bright = ns.WhatsNextBright
@@ -30,8 +29,7 @@ local COLUMN_TOP, COLUMN_SIDE = ns.SPELLBOOK_COLUMN_TOP, ns.SPELLBOOK_COLUMN_SID
 
 -- A section's header and the space under it, then each spell's row, as Whats-Next-Layout.lua lays them out.
 local HEADER_HEIGHT, HEADER_GAP, ROW_HEIGHT = METRICS.HEADER_HEIGHT, METRICS.HEADER_GAP, METRICS.ROW_HEIGHT
-local ICON_SIZE = 16
-local HEADER_SIZE, CONTINUED_SIZE, NAME_SIZE, NOTE_SIZE = 16, 12, 13, 12
+local ICON_SIZE = 20
 --[[
 	the row's right-hand fields: the source, then the level (or, sorted by level, the status). The source is as
 	wide as the page's widest source label, so "Demon Trainer" stays on one line, and never narrower than
@@ -41,7 +39,7 @@ local MIN_SOURCE_WIDTH, LEVEL_WIDTH, STATUS_WIDTH = 64, 64, 128
 local EMPTY_WIDTH = 464 -- the empty note's wrap width, a Spell Book column's
 
 local INK, FADED_INK = ns.INK_COLOR, ns.FADED_INK_COLOR
-local HEADER_INK, RULE_COLOR = ns.SPELLBOOK_HEADER_INK, ns.SPELLBOOK_RULE_COLOR
+local HEADER_INK = ns.SPELLBOOK_HEADER_INK
 local CONTINUED_INK, DIVIDER_COLOR = ns.SPELLBOOK_CONTINUED_INK, ns.SPELLBOOK_DIVIDER_COLOR
 local INKS = ns.WHATS_NEXT_INKS
 local FADED_SUBTEXT = CreateColor(unpack(FADED_INK)) -- made once, for the rank text every row wraps in it
@@ -74,19 +72,16 @@ local function BuildPage(frame, model)
 	-- Frames
 	----------------------------------------------------------------------------
 
-	-- A section's header: its name, "(Continued)" where it carries on from the column before, and a rule.
+	-- A section's header: its name, and "(Continued)" where it carries on from the column before.
 	local function CreateHeader()
 		local header = CreateFrame("Frame", nil, page.parchment.paper)
 		header:SetHeight(HEADER_HEIGHT)
-		header.Text = SizedFontString(header, "GameFontNormalLarge", HEADER_SIZE)
+		header.Text = header:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 		header.Text:SetShadowOffset(0, 0)
 		header.Text:SetPoint("LEFT")
-		header.Continued = SizedFontString(header, "GameFontNormal", CONTINUED_SIZE)
+		header.Continued = header:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 		header.Continued:SetTextColor(unpack(CONTINUED_INK))
 		header.Continued:SetShadowOffset(0, 0)
-		local rule = PixelLine(header, "ARTWORK", RULE_COLOR)
-		rule:SetPoint("LEFT", header.Continued, "RIGHT", 8, 0)
-		rule:SetPoint("RIGHT")
 		return header
 	end
 
@@ -126,7 +121,7 @@ local function BuildPage(frame, model)
 
 	local function ShowRowTooltip(self)
 		local row = self.row
-		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		ns.SetTooltipOwner(self)
 		-- the rows add their own ranks below, so the tooltip hook (Spell-Ranks-Tooltip.lua) stays out
 		ns.spellTooltipHasOwnRanks = true
 		GameTooltip:SetSpellByID(row.id)
@@ -141,22 +136,13 @@ local function BuildPage(frame, model)
 			GameTooltip:AddLine(" ")
 			ns.AddSpellRankLines(row, ranks)
 		end
+		-- each click on a line of its own; a passive pet ability can't be picked up, so it has no click line
 		local click = self.click
-		-- The pickup line is the Pet Spell Book model's own (Whats-Next-Models.lua); the others are added here.
-		if click and not model.pickup then
-			GameTooltip:AddLine(" ")
-			GameTooltip:AddDoubleLine(
-				GetColor("INFO") .. L[click.key] .. "|r",
-				GetColor("INFO") .. L[click.action] .. "|r"
-			)
+		GameTooltip:AddLine(" ")
+		if click and not (model.pickup and self.row.passive) then
+			ns.AddSpellbookClickLine(L[click.action], L[click.key])
 		end
-		if not (click and not model.pickup) then
-			GameTooltip:AddLine(" ")
-		end
-		GameTooltip:AddDoubleLine(
-			GetColor("INFO") .. L["TOOLTIP_KEY_SHIFT_CLICK"] .. "|r",
-			GetColor("INFO") .. L["TOOLTIP_ACTION_LINK_IN_CHAT"] .. "|r"
-		)
+		ns.AddSpellbookClickLine(L["TOOLTIP_ACTION_LINK_IN_CHAT"], L["TOOLTIP_KEY_SHIFT_CLICK"])
 		GameTooltip:Show()
 	end
 
@@ -182,18 +168,18 @@ local function BuildPage(frame, model)
 		button.icon = button:CreateTexture(nil, "ARTWORK")
 		button.icon:SetSize(ICON_SIZE, ICON_SIZE)
 		button.icon:SetPoint("LEFT")
-		button.right = SizedFontString(button, "GameFontNormal", NOTE_SIZE)
+		button.right = button:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 		button.right:SetShadowOffset(0, 0)
 		button.right:SetJustifyH("RIGHT")
 		button.right:SetPoint("RIGHT")
-		button.source = SizedFontString(button, "GameFontNormal", NOTE_SIZE)
+		button.source = button:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 		button.source:SetShadowOffset(0, 0)
 		button.source:SetTextColor(unpack(FADED_INK))
 		button.source:SetJustifyH("RIGHT")
 		button.source:SetWidth(page.sourceWidth)
 		button.source:SetWordWrap(false)
 		button.source:SetPoint("RIGHT", button.right, "LEFT", -8, 0)
-		button.name = SizedFontString(button, "GameFontNormal", NAME_SIZE)
+		button.name = button:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 		button.name:SetShadowOffset(0, 0)
 		button.name:SetJustifyH("LEFT")
 		button.name:SetWordWrap(false)
@@ -302,7 +288,6 @@ local function BuildPage(frame, model)
 				header:SetWidth(width)
 				header.Text:SetText(block.section.name)
 				header.Text:SetTextColor(unpack(block.section.status and INKS[block.section.status] or HEADER_INK))
-				-- an empty "(Continued)" sits flush against the name, so the rule starts where it always does
 				header.Continued:SetText(block.continued and L["PAGE_CONTINUED"] or "")
 				header.Continued:SetPoint("LEFT", header.Text, "RIGHT", block.continued and 8 or 0, 0)
 				top = top + HEADER_HEIGHT + HEADER_GAP
@@ -347,7 +332,7 @@ local function BuildPage(frame, model)
 	divider:SetPoint("BOTTOM", 0, PAGER_HEIGHT)
 
 	-- the source column's width: its widest label, measured in the rows' own font
-	local measure = SizedFontString(page, "GameFontNormal", NOTE_SIZE)
+	local measure = page:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	measure:Hide()
 	page.sourceWidth = MIN_SOURCE_WIDTH
 	for _, source in ipairs(model.sources or {}) do
@@ -358,7 +343,7 @@ local function BuildPage(frame, model)
 	page.headers = FramePool(CreateHeader)
 	page.rowButtons = FramePool(CreateRow)
 
-	page.empty = parchment.paper:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+	page.empty = parchment.paper:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	page.empty:SetTextColor(unpack(INK))
 	page.empty:SetShadowOffset(0, 0)
 	page.empty:SetPoint("CENTER", 0, PAGER_HEIGHT / 2)

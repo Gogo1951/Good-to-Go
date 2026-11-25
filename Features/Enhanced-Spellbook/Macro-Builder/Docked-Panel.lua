@@ -2,7 +2,6 @@ local _, ns = ...
 local L = ns.L
 local GetColor = ns.GetColor
 local INFO, OFF, WARNING = ns.COLORS_RGB.INFO, ns.COLORS_RGB.OFF, ns.COLORS_RGB.TITLE
-local SizedFontString = ns.SizedFontString
 local SettingsKey = ns.SettingsKey
 local Widgets = ns.PanelWidgets
 local Box = Widgets.Box
@@ -22,7 +21,8 @@ local HEADER_ICON = 32
 local HEADER_TOP = 16 -- the panel's top edge to the heading's icon
 local HEADER_GAP = 8 -- the icon to the heading beside it
 local CLOSE_ROOM = 32 -- what the heading leaves clear for the close button
-local HINT_TOP = 56 -- one gap under the icon
+local HINT_TOP = HEADER_TOP + HEADER_ICON + 16 -- 16 under the icon
+local ROWS_GAP = 16 -- the hint to the rows under it
 local FOOTER_PAD = 8 -- the footer box's edge to its text
 local FOOTER_BODY_TOP = 32 -- the footer's top edge to the macro text, under its title line
 local FOOTER_GAP = 8 -- between the footer's lines, and the meter to its count
@@ -110,10 +110,10 @@ local function CreateFooter(parent)
 	footer:SetPoint("BOTTOMLEFT", PADDING, PADDING)
 	footer:SetPoint("BOTTOMRIGHT", -PADDING, PADDING)
 	Box(footer, FIELD_FILL, FOOTER_EDGE)
-	local title = SizedFontString(footer, "GameFontNormal", 13)
+	local title = footer:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	title:SetPoint("TOPLEFT", FOOTER_PAD, -FOOTER_PAD)
 	title:SetText(GetColor("TITLE") .. L["MACRO_TEXT"] .. "|r")
-	footer.count = SizedFontString(footer, "GameFontHighlightSmall", 12)
+	footer.count = footer:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
 	footer.count:SetPoint("TOPRIGHT", -FOOTER_PAD, -FOOTER_PAD)
 	local track = footer:CreateTexture(nil, "ARTWORK")
 	track:SetColorTexture(unpack(METER_TRACK))
@@ -122,12 +122,12 @@ local function CreateFooter(parent)
 	footer.meter = footer:CreateTexture(nil, "OVERLAY")
 	footer.meter:SetPoint("TOPLEFT", track)
 	footer.meter:SetHeight(METER_HEIGHT)
-	footer.body = SizedFontString(footer, "GameFontHighlightSmall", 12)
+	footer.body = footer:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
 	footer.body:SetPoint("TOPLEFT", FOOTER_PAD, -FOOTER_BODY_TOP)
 	footer.body:SetWidth(INNER_WIDTH - 2 * FOOTER_PAD)
 	footer.body:SetJustifyH("LEFT")
 	footer.body:SetWordWrap(true)
-	footer.tooLong = SizedFontString(footer, "GameFontHighlightSmall", 12)
+	footer.tooLong = footer:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
 	footer.tooLong:SetPoint("TOPLEFT", footer.body, "BOTTOMLEFT", 0, -FOOTER_GAP)
 	footer.tooLong:SetWidth(INNER_WIDTH - 2 * FOOTER_PAD)
 	footer.tooLong:SetJustifyH("LEFT")
@@ -159,14 +159,19 @@ end
 
 Docked.SetHeading, Docked.CreateFooter, Docked.UpdateFooter = SetHeading, CreateFooter, UpdateFooter
 
+-- Pins region's top left y below the top of the panel's rows, ROWS_GAP under its hint however many lines that takes.
+function Docked.SetRowPoint(panel, region, y)
+	region:SetPoint("TOPLEFT", panel.hint, "BOTTOMLEFT", 0, -(ROWS_GAP + y))
+end
+
 --------------------------------------------------------------------------------
 -- Panel
 --------------------------------------------------------------------------------
 
 --[[
 	Builds a panel, hidden, named name, docked beside page's window: its heading (panel.icon, panel.title), close
-	button and hint (hintKey). It docks while shown, takes the keyboard only in pick mode, and closes with the
-	window.
+	button and hint (hintKey, panel.hint). It docks while shown, takes the keyboard only in pick mode, and
+	closes with the window.
 ]]
 local function Create(page, name, hintKey)
 	local window = page:GetParent()
@@ -191,7 +196,7 @@ local function Create(page, name, hintKey)
 	panel.icon = panel:CreateTexture(nil, "ARTWORK")
 	panel.icon:SetSize(HEADER_ICON, HEADER_ICON)
 	panel.icon:SetPoint("TOPLEFT", PADDING, -HEADER_TOP)
-	panel.title = SizedFontString(panel, "GameFontNormalLarge", 16)
+	panel.title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	panel.title:SetPoint("LEFT", panel.icon, "RIGHT", HEADER_GAP, 0)
 	panel.title:SetWidth(INNER_WIDTH - HEADER_ICON - HEADER_GAP - CLOSE_ROOM)
 	panel.title:SetJustifyH("LEFT")
@@ -201,12 +206,13 @@ local function Create(page, name, hintKey)
 	close:SetScript("OnClick", function()
 		panel:Hide()
 	end)
-	local hint = SizedFontString(panel, "GameFontHighlightSmall", 13)
+	local hint = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
 	hint:SetPoint("TOPLEFT", PADDING, -HINT_TOP)
 	hint:SetWidth(INNER_WIDTH)
 	hint:SetJustifyH("LEFT")
 	hint:SetTextColor(unpack(MUTED_INK))
 	hint:SetText(L[hintKey])
+	panel.hint = hint
 
 	--[[
 		the panel takes the keyboard only in pick mode, where Escape ends it and every other key goes on to the

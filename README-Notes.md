@@ -93,3 +93,15 @@
 - **Departs from:** MINIMAP MENU → Two Homes for Every Setting, the options panel is complete.
 - **Instead:** Buff Duty's Window Opacity and its choices to skip a buff food, scroll or elixir are set only in the Options flyout on its window.
 - **Why:** They are about the window itself, so they are changed while looking at it.
+
+### Escape leaves Buff Duty open
+
+- **Departs from:** WINDOWS, the close button and Escape close it.
+- **Instead:** Only Buff Duty's close button hides its window; Escape opens the game menu and leaves the window up.
+- **Why:** The maintainer keeps the window up through Escape.
+
+### Macros Window refusal reuses the Options combat line
+
+- **Departs from:** OPTIONS PANEL → Combat Guard, its refusal line used nowhere else.
+- **Instead:** The Macros Window button's refusal in combat prints the same line as the options command.
+- **Why:** The maintainer keeps one combat refusal line for both.

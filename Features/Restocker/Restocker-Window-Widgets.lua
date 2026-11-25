@@ -103,9 +103,9 @@ end
     Every explanatory tooltip in the Restocker window routes through here, so the
     colors, the spacing, and the wrap all live in one place.
 
-    Shape: a gold title, then white body lines with a blank line before each, so
-    a multi-line tooltip reads as paragraphs instead of one wall. Single-body
-    tooltips are unaffected -- they get the one spacer under the title either way.
+    Shape: a gold title, then white body lines straight under it, with a blank
+    line between each pair, so a multi-line tooltip reads as paragraphs instead
+    of one wall.
 
     Colors are passed explicitly rather than left to default: the two defaults
     disagree, SetText falling back to gold and AddLine to white, so a tooltip that
@@ -131,10 +131,12 @@ local TOOLTIP_TITLE = ns.COLORS_RGB.TITLE
 local TOOLTIP_BODY = ns.COLORS_RGB.TEXT
 
 function ns.ShowRestockerTooltip(owner, title, ...)
-	GameTooltip:SetOwner(owner, "ANCHOR_TOP")
+	ns.SetTooltipOwner(owner)
 	GameTooltip:SetText(title, TOOLTIP_TITLE.r, TOOLTIP_TITLE.g, TOOLTIP_TITLE.b, 1, true)
 	for i = 1, select("#", ...) do
-		GameTooltip:AddLine(" ") -- blank line under the title, then between each pair
+		if i > 1 then
+			GameTooltip:AddLine(" ") -- blank line between each pair, none under the title
+		end
 		GameTooltip:AddLine((select(i, ...)), TOOLTIP_BODY.r, TOOLTIP_BODY.g, TOOLTIP_BODY.b, true)
 	end
 	GameTooltip:Show()

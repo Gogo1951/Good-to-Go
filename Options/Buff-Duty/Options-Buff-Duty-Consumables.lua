@@ -74,7 +74,7 @@ function ns.BuildBuffDutyScrollsOptions()
 	options.args.spaceScrolls = Kit.Spacer(900)
 	options.args.scrollTypes = {
 		type = "group",
-		name = L["OPTIONS_SCROLL_TYPES"],
+		name = L["BUFF_DUTY_SCROLL_TYPES"],
 		order = 901,
 		inline = true,
 		args = toggles,

@@ -160,7 +160,7 @@ end
 ]]
 function ns.PickupMacro(macro)
 	if InCombatLockdown() then
-		ns.ShowUIError(ERR_NOT_IN_COMBAT)
+		ns:PrintMessage(L["ERROR_MACRO_COMBAT"])
 		return
 	end
 	-- a consumable's macro is Consumable Macros' to write, so the page only picks it up

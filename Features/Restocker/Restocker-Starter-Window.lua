@@ -46,19 +46,19 @@ local SCROLL_BAR_SPACE = 32
 local PARAGRAPH_GAP = 8
 local SECTION_GAP = 16
 local HEADER_HEIGHT = 16
-local HEADER_GAP = 8 -- the rule under a section's name to its first row
+local HEADER_GAP = 8 -- a section's name to its first row
 local ROW_HEIGHT = 32
 local COLUMN_GAP = 32
 
 -- One staple's cell, left to right: the box, the item's icon, its name, and the stacks dropdown at the cell's end.
 local CHECKBOX_SIZE = 16
-local ICON_SIZE = 16
+local ICON_SIZE = 20
 local ICON_GAP = 4
 local NAME_GAP = 8
 local DROPDOWN_WIDTH = 128
 local DROPDOWN_GAP = 8
-
-local RULE_COLOR = ns.COLORS_RGB.TITLE
+-- The window's height is drawn in to a whole number of these.
+local HEIGHT_STEP = 16
 
 -- The key the window's cold items wait under (ns.WarmItemCache).
 local WARM_KEY = "StaplesWindow"
@@ -144,38 +144,39 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    A plain button that names the current choice and opens the kit's menu
-    (Kit.OpenContextMenu) on every client, never the game's
-    WowStyle1DropdownTemplate: the maintainer has chosen the kit's menu for
-    every menu the add-on opens. Live either way round: picked first, it
-    decides what a later tick adds; changed after, it rewrites the listed
-    entry's amount on the spot.
+    A plain button that names the current choice and opens the stack sizes on
+    the kit's own menu plate (ns.RestockMenu, the Restock List's kit
+    dropdown), never the game's WowStyle1DropdownTemplate or its context
+    menu: the maintainer has chosen the kit's menu for every menu the add-on
+    opens. The picked size is light yellow with a check, the rest white. Live
+    either way round: picked first, it decides what a later tick adds; changed
+    after, it rewrites the listed entry's amount on the spot.
 ]]
-local function SetupStacksMenu(dropdown)
-	return function(_, rootDescription)
-		local category = dropdown.category
-		if not category then
-			return
-		end
-		for _, stacks in ipairs(StackChoices(category)) do
-			rootDescription:CreateRadio(StackLabel(category, stacks), function()
-				return ns.GetStarterCategoryStacks(category) == stacks
-			end, function()
-				ns.SetStarterCategoryStacks(category, stacks)
-				-- picking a count can tick the box opposite (see ns.SetStarterCategoryStacks)
-				if window and window:IsShown() then
-					window:Layout()
-				end
-			end)
-		end
+local function StacksEntries(category)
+	local entries = {}
+	for _, stacks in ipairs(StackChoices(category)) do
+		local selected = ns.GetStarterCategoryStacks(category) == stacks
+		entries[#entries + 1] = ns.RestockChoiceRow(StackLabel(category, stacks), nil, selected, function()
+			ns.SetStarterCategoryStacks(category, stacks)
+			-- picking a count can tick the box opposite (see ns.SetStarterCategoryStacks)
+			if window and window:IsShown() then
+				window:Layout()
+			end
+		end)
 	end
+	return entries
 end
 
 local function CreateStacksDropdown(parent)
 	local dropdown = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
 	dropdown:SetSize(DROPDOWN_WIDTH, 22)
 	dropdown:SetScript("OnClick", function(self)
-		ns.MenuKit.OpenContextMenu(self, SetupStacksMenu(self))
+		if not self.category then
+			return
+		end
+		-- The control's own tooltip would sit over the menu it opened.
+		GameTooltip:Hide()
+		ns.RestockMenu:Open(self, StacksEntries(self.category), nil, nil, "click")
 	end)
 	-- hooked, so the template's own hover highlight survives
 	dropdown:HookScript("OnEnter", function(self)
@@ -301,18 +302,13 @@ local function FillStapleCell(cell, category, width)
 	end
 end
 
--- A section's name in gold with a rule running from it to the column's end, as the Restock List's headings are.
+-- A section's name in gold, set off by space rather than a line.
 local function CreateSectionHeader(content)
 	local header = CreateFrame("Frame", nil, content)
 	header:SetHeight(HEADER_HEIGHT)
 	local text = header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	text:SetPoint("LEFT", header, "LEFT", 0, 0)
 	header.text = text
-	local rule = header:CreateTexture(nil, "ARTWORK")
-	rule:SetHeight(1)
-	rule:SetPoint("LEFT", text, "RIGHT", 8, 0)
-	rule:SetPoint("RIGHT", header, "RIGHT", 0, 0)
-	rule:SetColorTexture(RULE_COLOR.r, RULE_COLOR.g, RULE_COLOR.b, 0.25)
 	return header
 end
 
@@ -408,7 +404,8 @@ local function Layout(frame)
 	content:SetHeight(y)
 
 	local chrome = BANDS.TITLE_HEIGHT + BANDS.FOOTER_HEIGHT + BANDS.FRAME_BORDER + 8
-	frame:SetHeight(math.max(WINDOW_MIN_HEIGHT, math.min(WINDOW_MAX_HEIGHT, y + chrome)))
+	local height = math.ceil((y + chrome) / HEIGHT_STEP) * HEIGHT_STEP
+	frame:SetHeight(math.max(WINDOW_MIN_HEIGHT, math.min(WINDOW_MAX_HEIGHT, height)))
 end
 
 --------------------------------------------------------------------------------

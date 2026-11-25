@@ -3,7 +3,6 @@ local L = ns.L
 local GetColor = ns.GetColor
 local SetTip = ns.MenuSetTip
 local HideTooltip = ns.HideTooltip
-local SizedFontString = ns.SizedFontString
 local SettingsKey = ns.SettingsKey
 local Docked = ns.DockedPanel
 local Widgets = ns.PanelWidgets
@@ -24,9 +23,8 @@ local Box, ShowTip = Widgets.Box, Widgets.ShowTip
 	Conditionals panel, as are the controls in Features/Enhanced-Spellbook/Macro-Builder/Panel-Widgets.lua.
 ]]
 
-local PADDING, INNER_WIDTH = Docked.PADDING, Docked.INNER_WIDTH
+local INNER_WIDTH = Docked.INNER_WIDTH
 local SLOT_ICON = Widgets.SLOT_ICON
-local ROWS_TOP = 80
 local ROW_HEIGHT, ROW_GAP = 32, 4 -- a tighter gap than a Conditionals row's, so eight steps leave the footer room
 local NUMBER_WIDTH = 16
 local SLOT_HEIGHT = 32
@@ -92,7 +90,7 @@ local owner = {
 
 -- A step's number at a row's left, in the muted ink.
 local function NumberText(row, number)
-	local text = SizedFontString(row, "GameFontHighlightSmall", 12)
+	local text = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
 	text:SetTextColor(unpack(MUTED_INK))
 	text:SetWidth(NUMBER_WIDTH)
 	text:SetJustifyH("CENTER")
@@ -104,7 +102,7 @@ end
 local function CreateSetting(parent, labelKey, openMenu)
 	local setting = CreateFrame("Frame", nil, parent)
 	setting:SetSize(INNER_WIDTH, SETTING_HEIGHT)
-	local label = SizedFontString(setting, "GameFontNormal", 13)
+	local label = setting:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	label:SetPoint("LEFT")
 	label:SetWidth(SETTING_LABEL_WIDTH)
 	label:SetJustifyH("LEFT")
@@ -208,7 +206,7 @@ end
 local function CreateFirst(parent)
 	local row = CreateFrame("Frame", nil, parent)
 	row:SetSize(INNER_WIDTH, ROW_HEIGHT)
-	row:SetPoint("TOPLEFT", PADDING, -ROWS_TOP)
+	Docked.SetRowPoint(parent, row, 0)
 	row:SetAlpha(0.8)
 	row:EnableMouse(true)
 	Box(row, PANEL_FILL, ROW_EDGE)
@@ -217,11 +215,11 @@ local function CreateFirst(parent)
 	row.icon = row:CreateTexture(nil, "ARTWORK")
 	row.icon:SetSize(SLOT_ICON, SLOT_ICON)
 	row.icon:SetPoint("LEFT", number, "RIGHT", 8, 0)
-	local first = SizedFontString(row, "GameFontHighlightSmall", 12)
+	local first = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
 	first:SetTextColor(unpack(MUTED_INK))
 	first:SetPoint("RIGHT", -8, 0)
 	first:SetText(L["CAST_SEQUENCE_FIRST"])
-	row.text = SizedFontString(row, "GameFontNormal", 13)
+	row.text = row:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	row.text:SetPoint("LEFT", row.icon, "RIGHT", 8, 0)
 	row.text:SetPoint("RIGHT", first, "LEFT", -8, 0)
 	row.text:SetJustifyH("LEFT")
@@ -245,7 +243,7 @@ local function CreateSlot(row)
 			return
 		end
 		if step.spellID then
-			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+			ns.SetTooltipOwner(self)
 			GameTooltip:SetSpellByID(step.spellID)
 		else
 			ShowTip(self, L["CONDITIONALS_PICK_SPELL"], L["CAST_SEQUENCE_SLOT_DESCRIPTION"])
@@ -259,7 +257,7 @@ local function CreateStep(parent, index)
 	local row = CreateFrame("Frame", nil, parent)
 	row.index = index
 	row:SetSize(INNER_WIDTH, ROW_HEIGHT)
-	row:SetPoint("TOPLEFT", PADDING, -(ROWS_TOP + index * (ROW_HEIGHT + ROW_GAP)))
+	Docked.SetRowPoint(parent, row, index * (ROW_HEIGHT + ROW_GAP))
 	Box(row, ROW_FILL, ROW_EDGE)
 	row.drop = Widgets.CreateDropWash(row)
 	row.grip = Widgets.CreateGrip(row, panel, "CAST_SEQUENCE_REORDER_DESCRIPTION", function(from, to)
@@ -324,16 +322,16 @@ Update = function()
 			UpdateStep(row, steps[i], blocked)
 		end
 	end
-	local y = ROWS_TOP + (#steps + 1) * (ROW_HEIGHT + ROW_GAP) + 4
-	panel.add:SetPoint("TOPLEFT", PADDING, -y)
+	local y = (#steps + 1) * (ROW_HEIGHT + ROW_GAP) + 4
+	Docked.SetRowPoint(panel, panel.add, y)
 	panel.add:SetEnabled(#steps < ns.CAST_SEQUENCE_MAX_STEPS)
 	y = y + 22 + 12
-	panel.finish:SetPoint("TOPLEFT", PADDING, -y)
+	Docked.SetRowPoint(panel, panel.finish, y)
 	panel.finish.dropdown:SetLabel(
 		L[ns.CastSequenceStops(macro) and "CAST_SEQUENCE_END_STOP_SHORT" or "CAST_SEQUENCE_END_LOOP"]
 	)
 	y = y + SETTING_HEIGHT + 4
-	panel.reset:SetPoint("TOPLEFT", PADDING, -y)
+	Docked.SetRowPoint(panel, panel.reset, y)
 	local labels = ns.CastSequenceResetLabels(macro)
 	panel.reset.dropdown:SetLabel(
 		#labels > 0 and table.concat(labels, L["LIST_SEPARATOR"]) or L["CAST_SEQUENCE_RESET_NEVER"]
@@ -341,7 +339,7 @@ Update = function()
 	y = y + SETTING_HEIGHT + 6
 	local warning = blocked
 		or (ns.CastSequenceStops(macro) and not ns.CastSequenceResetText(macro) and L["CAST_SEQUENCE_STOP_NO_RESET"])
-	panel.warning:SetPoint("TOPLEFT", PADDING, -y)
+	Docked.SetRowPoint(panel, panel.warning, y)
 	panel.warning:SetShown(warning ~= nil and warning ~= false)
 	panel.warning:SetText(warning and GetColor("OFF") .. warning .. "|r" or "")
 	Docked.UpdateFooter(panel.footer, macro)
@@ -381,7 +379,7 @@ local function CreatePanel(page)
 	panel.add:SetScript("OnLeave", HideTooltip)
 	panel.finish = CreateSetting(panel, "CAST_SEQUENCE_END", OpenEndMenu)
 	panel.reset = CreateSetting(panel, "CAST_SEQUENCE_RESET", OpenResetMenu)
-	panel.warning = SizedFontString(panel, "GameFontHighlightSmall", 12)
+	panel.warning = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
 	panel.warning:SetWidth(INNER_WIDTH)
 	panel.warning:SetJustifyH("LEFT")
 	panel.footer = Docked.CreateFooter(panel)

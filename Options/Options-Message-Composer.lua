@@ -118,6 +118,10 @@ local function DefineMessageRows(args, spec, message, key, order)
 		width = RESET_WIDTH,
 		order = order + 0.04,
 		hidden = hidden,
+		-- Grayed while the whisper holds its own default, so there is nothing to reset.
+		disabled = function()
+			return Text() == ns.GetDefaultMessage(message.field)
+		end,
 		func = function()
 			ns.SetMessageText(message.field, nil)
 			ns.RefreshSettings()

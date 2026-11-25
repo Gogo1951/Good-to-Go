@@ -291,7 +291,8 @@ local liveItemCounts = setmetatable({}, {
 --[[
     Scrolls: an icon per scroll type you carry and lack the buff of, or have
     it running low by your own time for Scrolls, in the Food macro's order
-    (ns.SCROLL_CHECK_ORDER). Only the types Buff Duty's Self-Buffs page ticks count,
+    (ns.SCROLL_CHECK_ORDER). Only the types ticked on Buff Duty's Scrolls page
+    (and the window's Scrolls menu) count,
     by default the ones your class gets use from. Each reads the strongest
     scroll of its type in your bags that the Scrolls menu leaves on
     (scrollOff; ns.FindBestScroll keeps to the Ignore List), and a stronger elixir or class buff already on you covers

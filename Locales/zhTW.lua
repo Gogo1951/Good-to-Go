@@ -159,7 +159,7 @@ L["READINESS_QUESTIONABLE_GEAR"] = "裝備了非戰鬥裝備："
     What the report calls each thing. The Readiness Report panel labels its
     switches with these same keys, so a switch names exactly the line it
     controls; a switch that needs other words than its line (Main Hand Weapon
-    Buff, PvP Flag On, Scroll Buffs) keeps a label of its own.
+    Buff, Scroll Buffs) keeps a label of its own.
     Well Fed, Main Hand and Off Hand are the client's own names (the buff,
     MAINHANDSLOT and SECONDARYHANDSLOT), so they have no keys here, and
     READINESS_PET_FORMAT puts Well Fed in the pet's line (%s is that name).
@@ -231,10 +231,13 @@ L["TIP_EMPTY_CREATE"] = "你的背包裡沒有%s了。右鍵點擊 %s 製造一�
 ]]
 L["MINIMAP_BEST_FOOD"] = "當前食物"
 
--- The Ignore List block: its heading, the row that ignores the current food, and the row that clears the list.
+-- The Ignore List block: its heading, the row that ignores the current food and its tooltip's description,
+-- the row that clears the list, and the line under each listed item's own tooltip.
 L["MINIMAP_IGNORE_LIST"] = "忽略列表"
 L["MENU_IGNORE"] = "忽略"
+L["MENU_IGNORE_DESCRIPTION"] = "從現在起，你的食物巨集會跳過這種食物。"
 L["MENU_CLEAR_IGNORE"] = "清除忽略列表"
+L["IGNORE_LIST_CLICK_HINT"] = "點擊將其移出你的忽略列表。"
 
 --[[
     The orders inside the mini-map menu's Restocker block, while it's on: one
@@ -365,8 +368,6 @@ L["MENU_OPEN"] = "開啟"
 L["MENU_CLICK_LEFT"] = "左鍵點擊"
 L["MENU_CLICK_RIGHT"] = "右鍵點擊"
 L["MENU_CLICK_MIDDLE"] = "中鍵點擊"
--- The last line of a menu row's tooltip when the mini-map button's Right-Click does the same job.
-L["MENU_SHORTCUT"] = "快捷方式：右鍵點擊小地圖按鈕。"
 
 -- The words on the right of a block's title.
 L["MENU_ON"] = "開啟"
@@ -443,23 +444,23 @@ L["LEVEL_FILTER_MAX_LEVEL"] = "滿等時"
 
 --[[
     The block Features/Inventory-Report/Inventory-Report-Tooltip.lua adds under an item's own tooltip
-    lines. Its header is "GtG // Inventory Report": ADDON_SHORT_NAME, then the
-    title, in the chat prints' branded colors, with the total at its right
-    edge. Under it, one line per character, this one first: the name on the
-    left (the client's own character names, so no keys here), its counts at
-    the right edge.
+    lines. Its header is "Inventory Report … GtG": the title in gold, with
+    ADDON_SHORT_NAME in gray at its right edge. Under it, one line per
+    character, this one first: the name on the left (the client's own character
+    names, so no keys here), its counts at the right edge. "Total … 37" is the
+    last line.
 
     Keep the counts short: they share a line with a name, and the tooltip is
     as wide as its longest line.
 ]]
 L["INVENTORY_REPORT_TITLE"] = "庫存報告"
--- A character's bags, then its bank: "Bag 39, Bank 1". The words show gray and each count white.
-L["INVENTORY_REPORT_COUNTS"] = "背包 %s，銀行 %s"
+-- A character's bags, then its bank: "39 Bag, 1 Bank". Each count shows white and the words gray.
+L["INVENTORY_REPORT_COUNTS"] = "%s 背包，%s 銀行"
 -- The same row when only one of the two holds some; a place holding none is left out.
-L["INVENTORY_REPORT_BAG"] = "背包 %s"
-L["INVENTORY_REPORT_BANK"] = "銀行 %s"
--- On the header's right: every character on the realm added up, the word gray and the count white.
-L["INVENTORY_REPORT_TOTAL"] = "總計 %s"
+L["INVENTORY_REPORT_BAG"] = "%s 背包"
+L["INVENTORY_REPORT_BANK"] = "%s 銀行"
+-- The last line's left, in gray: every character on the realm added up, its count white at the right edge.
+L["INVENTORY_REPORT_TOTAL"] = "總計"
 
 --------------------------------------------------------------------------------
 -- Options Panel
@@ -641,8 +642,7 @@ L["OPTIONS_BUFF_FOOD_WHEN_FED"] = "已充分進食時仍食用增益食物"
 L["OPTIONS_BUFF_FOOD_AS_FOOD_DESCRIPTION_FORMAT"] =
 	'你的食物和水巨集會像對待其他食物一樣對待增益食物，食用恢復量最高的那種。關閉後會把它留給增益值班，在你需要"%s"時提供，除非你身上只有它。'
 
--- The scroll types on Buff Duty's Scrolls page. The other five are labeled with the client's stat names (SPELL_STAT1_NAME to SPELL_STAT5_NAME); Protection has none.
-L["OPTIONS_SCROLL_TYPES"] = "在檢查中包含卷軸類型"
+-- The Protection scroll type's label on Buff Duty's Scrolls page. The other five use the client's stat names (SPELL_STAT1_NAME to SPELL_STAT5_NAME).
 L["OPTIONS_SCROLL_PROTECTION"] = "保護"
 -- Hover text on each scroll type and pet food type; %s is the scroll type's label or the pet food's item name.
 L["OPTIONS_BUFF_TYPE_DESCRIPTION"] = '檢查缺少的增益時包含"%s"。'
@@ -681,7 +681,7 @@ L["OPTIONS_HEALTHSTONE_DESCRIPTION"] =
 -- Potions & Healthstones, the first section on Potions & Mana Gems.
 L["OPTIONS_POTIONS_HEADER"] = "藥水與治療石"
 L["OPTIONS_POTIONS_DESCRIPTION"] =
-	"巨集在戰鬥中無法更改（這是暴雪的限制），因此每個藥水和治療石巨集都預先包含你最好的物品以及最多兩個備用物品。在較長的戰鬥中，圖示和提示可能會過時並顯示錯誤的物品，但點擊該巨集將始終使用你背包中實際擁有的最佳物品。"
+	"你的藥水和治療石巨集在戰鬥中無法更改，所以每個巨集都帶著你最好的物品和兩個備用物品。在長時間的戰鬥中，圖示可能顯示錯誤的物品，但點擊總會使用你背包中最好的那個。"
 L["OPTIONS_POTIONS_USE_FOOD_AND_WATER"] = "非戰鬥時在藥水巨集中使用食物與水"
 L["OPTIONS_POTIONS_USE_FOOD_AND_WATER_DESCRIPTION"] =
 	"非戰鬥時，你的治療藥水巨集會食用你最好的食物，法力藥水巨集會飲用你最好的水。戰鬥中則照舊使用你的藥水。寵物食物和魔法製造仍保留在食物和水巨集中。"
@@ -724,7 +724,7 @@ L["OPTIONS_PET_BUFF_TYPES"] = "在檢查中包含寵物食物類型"
 -- Explosives
 L["OPTIONS_EXPLOSIVES_HEADER"] = "爆炸物"
 L["OPTIONS_EXPLOSIVES_DESCRIPTION"] =
-	"@player 選項會跳過目標指示圈，直接將爆炸物在你腳下引爆，非常適合目標處於近戰距離時使用。另一個鍵則照常投擲。"
+	"其中一種點擊會直接在你腳下引爆爆炸物，最適合目標在近戰距離內時使用。另一種點擊則照常投擲。"
 L["OPTIONS_EXPLOSIVES_CLICK_LAYOUT"] = "點擊方式"
 L["OPTIONS_EXPLOSIVES_CLICK_LAYOUT_DESCRIPTION"] =
 	"選擇用哪個鍵投擲爆炸物，用哪個鍵將它在你腳下引爆。"
@@ -750,7 +750,7 @@ L["OPTIONS_DRUID_DESCRIPTION"] =
 	"需要 DruidMacroHelper 插件。開啟後，你的治療藥水、法力藥水和治療石巨集會讓你脫離形態、使用物品，再讓你回到熊形態或獵豹形態，取決於你在核取方塊旁選擇的那個。"
 L["OPTIONS_DRUID_MACRO_HELPER"] = "使用 DruidMacroHelper"
 L["OPTIONS_DRUID_MACRO_HELPER_DESCRIPTION"] =
-	"使用 DruidMacroHelper (/dmh) 為治療藥水、法力藥水和治療石建立變形巨集。"
+	"你的治療藥水、法力藥水和治療石巨集會讓你脫離變形、使用物品，然後變回原來的形態。需要 DruidMacroHelper。"
 --[[
     Return-form dropdown, beside the DruidMacroHelper toggle. The macro
     powershifts out of form, uses the consumable, then returns to this one, so
@@ -775,11 +775,11 @@ L["OPTIONS_FOOD_DRINKS_ROGUE_SUMMARY"] = "坐下進食時進入潛行，讓你�
     spell the macro appends.
 ]]
 L["OPTIONS_STEALTH_EATING"] = "啟用進食時潛行"
-L["OPTIONS_STEALTH_EATING_SPELL_DESCRIPTION"] = "將%s加入你的食物巨集中，以便你在進食時潛行。"
+L["OPTIONS_STEALTH_EATING_SPELL_DESCRIPTION"] = "你坐下進食時施放%s。"
 
 -- Night Elves
 L["OPTIONS_STEALTH_DRINKING"] = "啟用喝水時潛行"
-L["OPTIONS_STEALTH_DRINKING_SPELL_DESCRIPTION"] = "將%s加入你的水巨集中，以便你在喝水時潛行。"
+L["OPTIONS_STEALTH_DRINKING_SPELL_DESCRIPTION"] = "你坐下喝水時施放%s。"
 L["OPTIONS_STEALTH_PICK_ONE"] =
 	"只選一個。你可以同時進食和喝水，但潛行後再進食或喝水會解除潛行。"
 
@@ -818,7 +818,8 @@ L["OPTIONS_RAPID_REGENERATION_BANDAGE_DESCRIPTION"] =
     the panel description, the scope and promote labels, the add box, Remove,
     the empty-list line, and LOADING_ITEM, the placeholder shown while the
     client is still resolving an item's name (the mini-map menu, the Macros
-    panel, and the staples pop-up use it too). The mini-map menu's section
+    panel, the staples pop-up, and Buff Duty's Options menu and Weapon Buffs
+    page use it too). The mini-map menu's section
     keeps its own MINIMAP_IGNORE_LIST and MENU_CLEAR_IGNORE keys.
 ]]
 L["TAB_IGNORE_LIST"] = "忽略列表"
@@ -902,6 +903,8 @@ L["OPTIONS_SOUND_PREVIEW_DESCRIPTION"] = "立即播放此音效，無論音效�
 
 L["OPTIONS_RESTOCKER_WINDOW_HEADER"] = "補貨清單視窗"
 L["OPTIONS_RESTOCKER_WINDOW_DESCRIPTION"] = "選擇你的補貨清單何時自動開啟。"
+L["RESTOCKER_RESET_LIST_POSITION"] = "補貨清單位置"
+L["RESTOCKER_RESET_STAPLES_POSITION"] = "基礎物資位置"
 
 --[[
     The Inventory Report's page, named by the report's own title
@@ -1020,7 +1023,6 @@ L["OPTIONS_READINESS_DURABILITY_THRESHOLD_DESCRIPTION"] =
 -- Character
 L["OPTIONS_READINESS_SPECIALIZATION"] = "目前天賦"
 L["OPTIONS_READINESS_SPECIALIZATION_DESCRIPTION"] = "輸出你的天賦分配，以及尚未使用的點數。"
-L["OPTIONS_READINESS_PVP"] = "PvP 標記開啟"
 L["OPTIONS_READINESS_PVP_DESCRIPTION"] = "當你的 PvP 標記開啟時發出警告。"
 L["OPTIONS_READINESS_QUESTIONABLE_GEAR"] = "裝備了非戰鬥裝備"
 L["OPTIONS_READINESS_NONCOMBAT_GEAR_DESCRIPTION"] =
@@ -1740,10 +1742,10 @@ L["POPUP_LEGACY_IMPORT_DECLINE"] = "不用了，謝謝"
 -- Options: Group Buffs and Reported Ranks
 --------------------------------------------------------------------------------
 
--- The Group Buffs and Reported Ranks panels' titles, and the stand-in for an item or spell whose name the client hasn't loaded yet.
+-- The Group Buffs and Reported Ranks panels' titles, and the stand-in for a spell whose name the client hasn't loaded
+-- yet (an item's is LOADING_ITEM).
 L["BUFF_DUTY_TRACKED_HEADER"] = "隊伍增益"
 L["RANK_WATCH_TRACKED_HEADER"] = "回報的法術等級"
-L["TRACKED_ITEM_PENDING"] = "物品 #%d"
 L["TRACKED_SPELL_PENDING"] = "法術 #%d"
 
 --------------------------------------------------------------------------------
@@ -1783,7 +1785,7 @@ L["BUFF_DUTY_FAVOR_ENABLE_DESCRIPTION"] =
 	"列出最近為你施放增益的陌生人，以及你可以回贈他們的增益。右鍵點擊圖示可將某人從列表中移除。"
 L["BUFF_DUTY_BUFF_PVP_FLAGGED"] = "為已開啟 PvP 的玩家施放增益"
 L["BUFF_DUTY_BUFF_PVP_FLAGGED_DESCRIPTION"] =
-	"為已開啟 PvP 的玩家施放增益也會讓你開啟 PvP。此項關閉且你未開啟 PvP 時，增益值班不會為他們施放增益，也不會施放會波及他們的隊伍增益，而是在聊天中提示你。"
+	"讓增益值班為已開啟 PvP 的玩家施放增益，這也會讓你開啟 PvP。此項關閉且你未開啟 PvP 時，增益值班會跳過他們以及會波及他們的隊伍增益，並在聊天中提示你。"
 L["BUFF_DUTY_FAVOR_SECONDS_DESCRIPTION"] = "設定陌生人在最後一次施放增益後保留在列表中的時間。"
 L["BUFF_DUTY_TARGET_ENABLE"] = "你的目標"
 L["BUFF_DUTY_TARGET_ENABLE_DESCRIPTION"] =
@@ -1890,7 +1892,9 @@ L["BUFF_DUTY_FOOD_PAGE_DESCRIPTION"] = "你攜帶的增益食物，在你缺少�
 L["BUFF_DUTY_WELL_FED_DESCRIPTION_FORMAT"] =
 	'當你缺少"%s"且身上有增益食物時顯示。在視窗中點擊它即可食用最好的一種。'
 -- The Scrolls page and its row: one icon per scroll buff you're missing, for the types checked under it.
+-- SCROLL_TYPES heads those types, on the page and in the window's Scrolls menu.
 L["BUFF_DUTY_SCROLLS"] = "卷軸"
+L["BUFF_DUTY_SCROLL_TYPES"] = "卷軸類型"
 L["BUFF_DUTY_SCROLLS_PAGE_DESCRIPTION"] = "你攜帶的卷軸，在你缺少其增益時顯示在視窗中。"
 L["BUFF_DUTY_SCROLLS_DESCRIPTION"] =
 	"對於你缺少的每種卷軸增益，只要身上帶有該卷軸，就顯示一個卷軸。在視窗中點擊即可閱讀。監視的卷軸類型為下方勾選的那些。"
@@ -1925,8 +1929,10 @@ L["BUFF_DUTY_WEAPON_ENABLE_DESCRIPTION"] =
 	"將武器上缺失或即將結束的毒藥、武器強化、油、磨刀石和魚餌，與你的自身增益一起顯示在視窗頂部。點擊即可施加。可在武器增益中選擇要顯示哪些。"
 
 -- The window itself
--- A buff icon's tooltip ends with who the click lands on.
-L["BUFF_DUTY_TOOLTIP_CAST"] = "對 %s 施放。"
+-- A buff icon's tooltip, a line per click: the job on the left, the click (TOOLTIP_KEY_CLICK, TOOLTIP_KEY_RIGHT_CLICK)
+-- on the right. %s is who the cast lands on; TAKE_OFF is a Return the Favor icon's right-click.
+L["BUFF_DUTY_TOOLTIP_CAST"] = "對 %s 施放"
+L["BUFF_DUTY_TOOLTIP_TAKE_OFF"] = "從此清單中移除"
 -- %s is the client's "Main Hand" or "Off Hand".
 L["BUFF_DUTY_TOOLTIP_WEAPON"] = "施加到你的%s武器。"
 L["BUFF_DUTY_TOOLTIP_USE"] = "你的隊伍中沒有人有靈魂石。對 %s 使用一顆。"
@@ -1951,11 +1957,13 @@ L["BUFF_DUTY_MENU_OPACITY_DESCRIPTION"] =
 	"設定增益值班視窗背景的不透明度。文字和圖示保持不變。"
 L["BUFF_DUTY_MENU_OPACITY_PERCENT"] = "%d%%"
 --[[
-    The window's category menus: each category line's arrow opens one, and the
-    Options line's Show in Window opens each. Show in Buff Duty, Use (when),
-    Show (how soon), Use with Keybind, Show Missing Inventory, then what the
-    category uses, each On or Off. Missing Inventory! is the red line in the
-    window. %s in the item hover is the spell, food, scroll or elixir.
+    The window's category menus, each opened by its category line's arrow:
+    Show in Buff Duty, When to Use (BUFF_DUTY_ROW_WHEN), Show (how soon), Use
+    with Cast Next Buff (BUFF_DUTY_ROW_KEY), Show Missing Inventory, then what
+    the category uses, each On or Off. The Options menu's Show in Window lists
+    every category as a toggle with SHOW_IN_BUFF_DUTY_DESCRIPTION as its hover.
+    Missing Inventory! is the red line in the window. %s in the item hover is
+    the spell, food, scroll or elixir.
 ]]
 L["BUFF_DUTY_MISSING_INVENTORY"] = "缺少物品！"
 L["BUFF_DUTY_MENU_SHOW_IN_BUFF_DUTY"] = "在增益值班中顯示"
@@ -1976,10 +1984,8 @@ L["BUFF_DUTY_MENU_BUFF_FOOD"] = "增益食物"
 -- The Self-Buffs buff food icon, while you aren't Well Fed.
 L["BUFF_DUTY_TOOLTIP_EAT"] = "從背包中食用一個。請保持坐下，直到獲得充分進食效果。"
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "對 %s 及其隊伍施放。"
--- A raid group icon's tooltip, its last line: the members who need it (%s, joined with LIST_PAIR_FORMAT or LIST_LAST_FORMAT).
+-- A raid group icon's tooltip, the line under its title: the members who need it (%s, joined with LIST_PAIR_FORMAT or LIST_LAST_FORMAT).
 L["BUFF_DUTY_TOOLTIP_NEEDS"] = "需要的人：%s。"
--- A Return the Favor icon: the click targets them and casts; a right-click drops them from the list.
-L["BUFF_DUTY_TOOLTIP_FAVOR"] = "選取 %s 為目標並施放。右鍵點擊可將其從此清單中移除。"
 -- The Ask row under Target: its label (%s is the target's name in their class color), and its icons' tooltip: who the whisper goes to, or, once asked, who and the whole minutes until they can be asked again.
 L["BUFF_DUTY_ASK_TARGET_ROW"] = "請求 %s"
 L["BUFF_DUTY_TOOLTIP_ASK_TARGET"] = "密語 %s 請求該增益。"
@@ -2016,7 +2022,8 @@ L["BUFF_KEY"] = "施放下一個增益"
 L["BUFF_KEY_WAITING"] = "正在等待 %s 進入範圍。"
 L["BUFF_KEY_DONE"] = "沒有需要施放的增益了。"
 -- Printed when Buff Duty or the key skips a PvP-flagged player. %s is the player's name.
-L["BUFF_DUTY_PVP_FLAGGED"] = "%s 已開啟 PvP，你需要手動為其施放增益。"
+L["BUFF_DUTY_PVP_FLAGGED"] =
+	'%s 已開啟 PvP，因此增益值班跳過了該玩家。開啟"為已開啟 PvP 的玩家施放增益"即可仍為其施放增益。'
 L["BUFF_KEY_OFF"] = "增益值班已關閉。"
 --[[
     The Buff Duty window's last line, under Options, while the Cast Next Buff key has none: the options
@@ -2371,7 +2378,7 @@ L["MENU_RESET_CATEGORY_CONFIRM"] =
 -- A middle-click on a macro, asked first. %s is the macro.
 L["MENU_RESET_MACRO_CONFIRM"] = "要重設 %s 的選項嗎？它會重新遵循預設值。"
 
--- TRANSLATORS: %s is a spell's name, heading its macro's part of a tile's tooltip after "GtG //" ("Immolate Macro").
+-- TRANSLATORS: %s is a spell's name, the gold title of its macro's part of a tile's tooltip, "GtG" on its right ("Immolate Macro").
 L["TOOLTIP_MACRO_HEADING"] = "%s巨集"
 
 -- Spellbook Tab Tooltip
@@ -2460,7 +2467,7 @@ L["WHATS_NEXT_TOOLTIP_HOW_TALENT"] = "投入一點天賦點數即可學會。"
 L["WHATS_NEXT_TOOLTIP_HOW_RUNE"] = "銘刻它的符文即可學會。"
 -- TRANSLATORS: %s is a spell's name, with its rank where it has one ("Learn Rend (Rank 1) first.").
 L["WHATS_NEXT_TOOLTIP_NEEDS"] = "請先學會%s。"
--- TRANSLATORS: %s is a spell's name, heading the list of its ranks after "GtG //" ("Immolate Ranks").
+-- TRANSLATORS: %s is a spell's name, the gold title over the list of its ranks, "GtG" on its right ("Immolate Ranks").
 L["WHATS_NEXT_TOOLTIP_RANKS"] = "%s的等級"
 L["TOOLTIP_KEY_SHIFT_CLICK"] = "Shift + 點擊"
 L["TOOLTIP_ACTION_LINK_IN_CHAT"] = "在聊天中連結"
@@ -2558,9 +2565,8 @@ L["OPTIONS_ABILITY_TOOLTIPS_ENABLE_DESCRIPTION"] =
 L["OPTIONS_DELETE_MACROS_HEADER"] = "刪除巨集"
 L["OPTIONS_DELETE_MACROS_DESCRIPTION"] =
 	"刪除強化法術書建立的巨集，同時會將它們從快捷列上移除。你自己的巨集絕不會被改動，在頁面上點擊或拖曳任一個巨集即可重新建立。"
--- The two rows' captions, each beside a Delete button (OPTIONS_DELETE).
+-- The character row's caption, beside its Delete button (OPTIONS_DELETE); the General row reads the client's GENERAL_MACROS.
 L["OPTIONS_DELETE_CHARACTER_MACROS_CAPTION"] = "此角色的巨集"
-L["OPTIONS_DELETE_GENERAL_MACROS_CAPTION"] = "一般巨集"
 L["OPTIONS_DELETE"] = "刪除"
 L["OPTIONS_DELETE_CHARACTER_MACROS_DESCRIPTION"] =
 	"從此角色的巨集分頁中刪除強化法術書的巨集。你的其他角色會保留各自的巨集，直到你在那些角色上也這樣做。"
@@ -2611,6 +2617,7 @@ L["KEY_BINDINGS_LOCATION"] = "開啟遊戲選單，依序進入 %s 和 %s，找�
 -- Macro errors and prints: the Enhanced Spellbook's, then the Consumable Macros' too-long notice.
 L["ERROR_MACRO_SLOTS_FULL"] = "沒有空的巨集欄位。請在 /m 中刪除幾個巨集來騰出位置。"
 L["ERROR_MACRO_WINDOW_OPEN"] = "請先關閉巨集視窗。"
+L["ERROR_MACRO_COMBAT"] = "戰鬥中無法變更巨集。請在戰鬥結束後再試一次。"
 L["CHAT_MACROS_DELETED"] = "已刪除 %d 個巨集。"
 L["CHAT_MACROS_DELETED_ONE"] = "已刪除 1 個巨集。"
 L["CHAT_MACRO_TOO_LONG"] =

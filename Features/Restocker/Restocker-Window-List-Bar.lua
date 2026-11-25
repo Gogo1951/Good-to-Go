@@ -164,7 +164,7 @@ local function OpenListPullout(anchor)
 	-- The control's own tooltip would sit over the menu it opened.
 	GameTooltip:Hide()
 	-- Opening upward: the selector sits in the footer, so a menu below it would leave the window.
-	ns.RestockMenu:Open(anchor, entries, nil, true)
+	ns.RestockMenu:Open(anchor, entries, nil, true, "click")
 end
 
 -- The selector and its arrow open the menu, and close it again when it is already open.
@@ -210,7 +210,7 @@ end
 ]]
 local function CreateUsersLine(bar)
 	local users = bar:CreateFontString(nil, "OVERLAY")
-	users:SetFontObject("GameFontHighlightSmall")
+	users:SetFontObject("GameFontHighlight")
 	users:SetJustifyH("LEFT")
 	users:SetWordWrap(false)
 	users:SetPoint("LEFT", bar.manageButton, "RIGHT", BAR_ITEM_GAP, 0)

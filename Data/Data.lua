@@ -64,9 +64,10 @@ ns.PALETTE = {
 	HELP = "CCCCCC", -- Silver: Pro Tips, Helper Text
 	TEXT = "FFFFFF", -- White: Messages, Values, Spell Names
 	ON = "33CC33", -- Green: On
-	OFF = "CC3333", -- Red: Off
+	OFF = "CC3333", -- Red: Off (menus show Off in MUTED, never red)
 	SEPARATOR = "AAAAAA", -- Gray: Separators, Dividers
 	MUTED = "808080", -- Dark Gray: Meta-data, Version Numbers
+	VALUE = "FFFF99", -- Light Yellow: What a Setting Is Set To, in a Menu
 }
 
 ns.SPELL_LINK_COLOR = "71D5FF" -- the client's own spell-link blue
@@ -723,10 +724,9 @@ Data.BUFF_DUTY_WHERE_ORDER = { "ALWAYS", "INSTANCE" }
 
 --[[
     Whether a self buff, the Soulstone or a consumable with a switch of its
-    own shows on the Buff Duty window: OFF, or anything else for on. The
-    stored values once picked a timing each (MISSING, or minutes left);
-    the category's Show timing (BUFF_DUTY_ROW_SHOW_CHOICES) has that job now,
-    and any value but OFF reads as on.
+    own shows on the Buff Duty window: any saved value but OFF (MISSING or a
+    minutes count) reads as on, and the category's Show timing
+    (BUFF_DUTY_ROW_SHOW_CHOICES) decides when it shows.
 ]]
 Data.SELF_REFRESH_OFF = "OFF"
 Data.SELF_REFRESH_MISSING = 0

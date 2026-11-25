@@ -113,7 +113,7 @@ local function OpenBagMenu(anchor)
 			ns.AddRestockItem(item.itemID)
 		end)
 		entry:SetCallback("OnEnter", function(widget)
-			GameTooltip:SetOwner(widget.frame, "ANCHOR_RIGHT")
+			ns.SetTooltipOwner(widget.frame)
 			if item.link then
 				GameTooltip:SetHyperlink(item.link)
 			else
@@ -178,7 +178,7 @@ function ns.CreateRestockBagMenu(addonFrame, parent)
 	    running under the arrow.
 	]]
 	local caption = field:CreateFontString(nil, "OVERLAY")
-	caption:SetFontObject("GameFontHighlightSmall")
+	caption:SetFontObject("GameFontHighlight")
 	caption:SetPoint("LEFT", field, "LEFT", 4, 0)
 	caption:SetPoint("RIGHT", field.arrow, "LEFT", -2, 0)
 	caption:SetJustifyH("LEFT")

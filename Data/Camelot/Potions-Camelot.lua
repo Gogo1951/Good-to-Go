@@ -50,7 +50,7 @@ ns.POTIONS = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, Validate Data, WoW Forever 1.60.1.71037
+	2026-11-25, wago.tools, WoW Forever 1.60.1.71139
 
 Notes
 	- Every potion this client knows that restores health or mana instantly on the potion cooldown, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Health Potion and Mana Potion macros. Healing Amount and Mana Amount are each effect's low end; requiredAlchemy is the Alchemy rank the tooltip requires.
@@ -94,6 +94,17 @@ wago.tools
 	https://wago.tools/db2/ItemXItemEffect?build=1.60.1.70959
 	https://wago.tools/db2/Item?build=1.60.1.71037
 	https://wago.tools/db2/ItemSparse?build=1.60.1.71037
+	https://wago.tools/db2/Item?build=1.60.1.71139
+	https://wago.tools/db2/ItemSparse?build=1.60.1.71139
+	https://wago.tools/db2/ItemEffect?build=1.60.1.71139
+	https://wago.tools/db2/ItemXItemEffect?build=1.60.1.71139
+	https://wago.tools/db2/Spell?build=1.60.1.71139
+	https://wago.tools/db2/SpellEffect?build=1.60.1.71139
+	https://wago.tools/db2/SpellMisc?build=1.60.1.71139
+	https://wago.tools/db2/SpellDuration?build=1.60.1.71139
+	https://wago.tools/db2/SpellCastingRequirements?build=1.60.1.71139
+	https://wago.tools/db2/AreaGroupMember?build=1.60.1.71139
+	https://wago.tools/db2/UiMapAssignment?build=1.60.1.71139
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Forever/foreverItemDB.lua

@@ -404,14 +404,14 @@ function ns.BuildRestockerOptions()
 
 			--[[
 			    Reset Position for each of the Restocker's two windows, captioned
-			    with the window's name: forgets where it was dragged and moves it
-			    back if open. Grayed while it has never been dragged.
+			    as that window's position: forgets where it was dragged and moves
+			    it back if open. Grayed while it has never been dragged.
 			]]
 			spaceWindow4 = Spacer(28),
 			resetRestockPosition = Kit.ResetRow(
 				29,
 				nil,
-				L["RESTOCKER_WINDOW_TITLE"],
+				L["RESTOCKER_RESET_LIST_POSITION"],
 				L["OPTIONS_RESET_POSITION_DESCRIPTION"],
 				function()
 					return not ns.HasSavedRestockWindowPosition()
@@ -422,7 +422,7 @@ function ns.BuildRestockerOptions()
 			resetStaplesPosition = Kit.ResetRow(
 				31,
 				nil,
-				L["STARTER_POPUP_TITLE"],
+				L["RESTOCKER_RESET_STAPLES_POSITION"],
 				L["OPTIONS_RESET_POSITION_DESCRIPTION"],
 				function()
 					return not ns.HasSavedStaplesPosition()

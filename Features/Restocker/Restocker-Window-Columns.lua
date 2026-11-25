@@ -37,11 +37,11 @@ ns.restockButtonHeight = 22
     category pane so the two halves cannot drift apart. On ns rather than a
     file-local for that reason alone.
 ]]
-ns.RESTOCK_BUTTON_FONT = "GameFontNormalSmall"
+ns.RESTOCK_BUTTON_FONT = "GameFontNormal"
 local BUTTON_FONT = ns.RESTOCK_BUTTON_FONT
 local BUTTON_PAD_X = 16 -- caption to button edge, both sides together
 local BUTTON_PAD_Y = 8
-local BUTTON_MIN_WIDTH = 28
+local BUTTON_MIN_WIDTH = 32
 local ROW_PAD_Y = 4 -- breathing room above and below the tallest control
 local ROW_MIN_HEIGHT = 32 -- the row's floor, on the spacing scale; a larger font grows it past
 
@@ -335,9 +335,9 @@ ns.FitRestockButton = FitButton
 ]]
 local REMOVE_ICON_SIZE = 16
 -- The row's inset from both its edges: the icon on the left, this on the right.
-local ROW_INSET = 8
+local ROW_INSET = 16
 
-local ICON_SIZE = 16
+local ICON_SIZE = 20
 local ICON_TEXT_GAP = 8
 local NAME_INSET = ROW_INSET + ICON_SIZE + ICON_TEXT_GAP
 local NAME_COLUMN_GAP = 8 -- name to the Keep box

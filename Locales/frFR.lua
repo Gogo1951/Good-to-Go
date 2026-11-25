@@ -159,7 +159,7 @@ L["READINESS_QUESTIONABLE_GEAR"] = "Équipement hors combat porté :"
     What the report calls each thing. The Readiness Report panel labels its
     switches with these same keys, so a switch names exactly the line it
     controls; a switch that needs other words than its line (Main Hand Weapon
-    Buff, PvP Flag On, Scroll Buffs) keeps a label of its own.
+    Buff, Scroll Buffs) keeps a label of its own.
     Well Fed, Main Hand and Off Hand are the client's own names (the buff,
     MAINHANDSLOT and SECONDARYHANDSLOT), so they have no keys here, and
     READINESS_PET_FORMAT puts Well Fed in the pet's line (%s is that name).
@@ -231,10 +231,13 @@ L["TIP_EMPTY_CREATE"] = "%s : il n'y en a plus dans vos sacs. Faites un clic dro
 ]]
 L["MINIMAP_BEST_FOOD"] = "Nourriture actuelle"
 
--- The Ignore List block: its heading, the row that ignores the current food, and the row that clears the list.
+-- The Ignore List block: its heading, the row that ignores the current food and its tooltip's description,
+-- the row that clears the list, and the line under each listed item's own tooltip.
 L["MINIMAP_IGNORE_LIST"] = "Liste d'exclusion"
 L["MENU_IGNORE"] = "Ignorer"
+L["MENU_IGNORE_DESCRIPTION"] = "Votre macro Nourriture ignore désormais cette nourriture."
 L["MENU_CLEAR_IGNORE"] = "Vider la liste d'exclusion"
+L["IGNORE_LIST_CLICK_HINT"] = "Cliquez pour le retirer de votre liste d'exclusion."
 
 --[[
     The orders inside the mini-map menu's Restocker block, while it's on: one
@@ -367,8 +370,6 @@ L["MENU_OPEN"] = "Ouvrir"
 L["MENU_CLICK_LEFT"] = "Clic gauche"
 L["MENU_CLICK_RIGHT"] = "Clic droit"
 L["MENU_CLICK_MIDDLE"] = "Clic milieu"
--- The last line of a menu row's tooltip when the mini-map button's Right-Click does the same job.
-L["MENU_SHORTCUT"] = "Raccourci : clic droit sur le bouton de la minicarte."
 
 -- The words on the right of a block's title.
 L["MENU_ON"] = "Activé"
@@ -448,23 +449,23 @@ L["LEVEL_FILTER_MAX_LEVEL"] = "Au niveau maximum"
 
 --[[
     The block Features/Inventory-Report/Inventory-Report-Tooltip.lua adds under an item's own tooltip
-    lines. Its header is "GtG // Inventory Report": ADDON_SHORT_NAME, then the
-    title, in the chat prints' branded colors, with the total at its right
-    edge. Under it, one line per character, this one first: the name on the
-    left (the client's own character names, so no keys here), its counts at
-    the right edge.
+    lines. Its header is "Inventory Report … GtG": the title in gold, with
+    ADDON_SHORT_NAME in gray at its right edge. Under it, one line per
+    character, this one first: the name on the left (the client's own character
+    names, so no keys here), its counts at the right edge. "Total … 37" is the
+    last line.
 
     Keep the counts short: they share a line with a name, and the tooltip is
     as wide as its longest line.
 ]]
 L["INVENTORY_REPORT_TITLE"] = "Rapport d'inventaire"
--- A character's bags, then its bank: "Bag 39, Bank 1". The words show gray and each count white.
-L["INVENTORY_REPORT_COUNTS"] = "Sacs %s, Banque %s"
+-- A character's bags, then its bank: "39 Bag, 1 Bank". Each count shows white and the words gray.
+L["INVENTORY_REPORT_COUNTS"] = "%s Sacs, %s Banque"
 -- The same row when only one of the two holds some; a place holding none is left out.
-L["INVENTORY_REPORT_BAG"] = "Sacs %s"
-L["INVENTORY_REPORT_BANK"] = "Banque %s"
--- On the header's right: every character on the realm added up, the word gray and the count white.
-L["INVENTORY_REPORT_TOTAL"] = "Total %s"
+L["INVENTORY_REPORT_BAG"] = "%s Sacs"
+L["INVENTORY_REPORT_BANK"] = "%s Banque"
+-- The last line's left, in gray: every character on the realm added up, its count white at the right edge.
+L["INVENTORY_REPORT_TOTAL"] = "Total"
 
 --------------------------------------------------------------------------------
 -- Options Panel
@@ -648,8 +649,7 @@ L["OPTIONS_BUFF_FOOD_WHEN_FED"] = "Manger de la nourriture à amélioration mêm
 L["OPTIONS_BUFF_FOOD_AS_FOOD_DESCRIPTION_FORMAT"] =
 	"Vos macros Nourriture et Eau traitent la nourriture à amélioration comme n'importe quelle nourriture et mangent ce qui rend le plus. Désactivé, elle est gardée pour que la Corvée d'améliorations la propose quand il vous faut \"%s\", sauf si c'est tout ce que vous avez."
 
--- The scroll types on Buff Duty's Scrolls page. The other five are labeled with the client's stat names (SPELL_STAT1_NAME to SPELL_STAT5_NAME); Protection has none.
-L["OPTIONS_SCROLL_TYPES"] = "Types de parchemins à vérifier"
+-- The Protection scroll type's label on Buff Duty's Scrolls page. The other five use the client's stat names (SPELL_STAT1_NAME to SPELL_STAT5_NAME).
 L["OPTIONS_SCROLL_PROTECTION"] = "Protection"
 -- Hover text on each scroll type and pet food type; %s is the scroll type's label or the pet food's item name.
 L["OPTIONS_BUFF_TYPE_DESCRIPTION"] = 'Inclut "%s" lors de la vérification des améliorations manquantes.'
@@ -688,7 +688,7 @@ L["OPTIONS_HEALTHSTONE_DESCRIPTION"] =
 -- Potions & Healthstones, the first section on Potions & Mana Gems.
 L["OPTIONS_POTIONS_HEADER"] = "Potions et Pierres de soins"
 L["OPTIONS_POTIONS_DESCRIPTION"] =
-	"Les macros ne peuvent pas être modifiées en combat (c'est une restriction de Blizzard), chaque macro de Potion et de Pierre de soins est donc pré-générée avec votre meilleur objet et jusqu'à deux options de secours. Lors de longs combats, l'icône et l'infobulle peuvent devenir obsolètes et afficher le mauvais objet, mais cliquer sur la macro utilisera toujours le meilleur objet que vous possédez réellement dans vos sacs."
+	"Vos macros de Potion et de Pierre de soins ne peuvent pas changer en plein combat, chacune contient donc votre meilleur objet et deux de secours. Lors d'un long combat, l'icône peut afficher le mauvais objet, mais un clic utilise toujours le meilleur de vos sacs."
 L["OPTIONS_POTIONS_USE_FOOD_AND_WATER"] = "Utiliser la nourriture et l'eau dans les macros de potion hors combat"
 L["OPTIONS_POTIONS_USE_FOOD_AND_WATER_DESCRIPTION"] =
 	"Hors combat, votre macro de Potion de soins vous fait manger votre meilleure nourriture et votre macro de Potion de mana vous fait boire votre meilleure eau. En combat, elles utilisent vos potions comme avant. La nourriture pour familier et l'invocation restent dans les macros Nourriture et Eau."
@@ -731,7 +731,7 @@ L["OPTIONS_PET_BUFF_TYPES"] = "Types de nourriture pour familier à vérifier"
 -- Explosives
 L["OPTIONS_EXPLOSIVES_HEADER"] = "Explosifs"
 L["OPTIONS_EXPLOSIVES_DESCRIPTION"] =
-	"L'option @player ignore le réticule de ciblage et déclenche l'explosif à vos pieds. Idéal quand votre cible est au corps à corps. Votre autre clic le lance comme d'habitude."
+	"Un clic déclenche l'explosif juste à vos pieds, idéal quand votre cible est au corps à corps. Votre autre clic le lance comme d'habitude."
 L["OPTIONS_EXPLOSIVES_CLICK_LAYOUT"] = "Attribution des clics"
 L["OPTIONS_EXPLOSIVES_CLICK_LAYOUT_DESCRIPTION"] =
 	"Détermine quel clic lance l'explosif et lequel le déclenche à vos pieds."
@@ -757,7 +757,7 @@ L["OPTIONS_DRUID_DESCRIPTION"] =
 	"Nécessite l'add-on DruidMacroHelper. Activé, vos macros de Potion de soins, de Potion de mana et de Pierre de soins vous font quitter votre forme par powershifting, utilisent l'objet et vous remettent en Forme d'ours ou en Forme de félin, selon ce que vous choisissez à côté de la case."
 L["OPTIONS_DRUID_MACRO_HELPER"] = "Utiliser DruidMacroHelper"
 L["OPTIONS_DRUID_MACRO_HELPER_DESCRIPTION"] =
-	"Crée des macros de powershifting pour les potions de soins, les potions de mana et les pierres de soins à l'aide de DruidMacroHelper (/dmh)."
+	"Vos macros de Potion de soins, Potion de mana et Pierre de soins vous font quitter votre forme, utilisent l'objet et vous y remettent. Nécessite DruidMacroHelper."
 --[[
     Return-form dropdown, beside the DruidMacroHelper toggle. The macro
     powershifts out of form, uses the consumable, then returns to this one, so
@@ -786,13 +786,11 @@ L["OPTIONS_FOOD_DRINKS_ROGUE_SUMMARY"] =
     spell the macro appends.
 ]]
 L["OPTIONS_STEALTH_EATING"] = "Activer le camouflage en mangeant"
-L["OPTIONS_STEALTH_EATING_SPELL_DESCRIPTION"] =
-	"Ajoute %s à votre macro Nourriture pour vous camoufler pendant que vous mangez."
+L["OPTIONS_STEALTH_EATING_SPELL_DESCRIPTION"] = "Vous lancez %s en vous asseyant pour manger."
 
 -- Night Elves
 L["OPTIONS_STEALTH_DRINKING"] = "Activer le camouflage en buvant"
-L["OPTIONS_STEALTH_DRINKING_SPELL_DESCRIPTION"] =
-	"Ajoute %s à votre macro Eau pour vous camoufler pendant que vous buvez."
+L["OPTIONS_STEALTH_DRINKING_SPELL_DESCRIPTION"] = "Vous lancez %s en vous asseyant pour boire."
 L["OPTIONS_STEALTH_PICK_ONE"] =
 	"Choisissez-en un. Vous pouvez manger et boire en même temps, mais manger ou boire après vous être camouflé rompra le camouflage."
 
@@ -831,7 +829,8 @@ L["OPTIONS_RAPID_REGENERATION_BANDAGE_DESCRIPTION"] =
     the panel description, the scope and promote labels, the add box, Remove,
     the empty-list line, and LOADING_ITEM, the placeholder shown while the
     client is still resolving an item's name (the mini-map menu, the Macros
-    panel, and the staples pop-up use it too). The mini-map menu's section
+    panel, the staples pop-up, and Buff Duty's Options menu and Weapon Buffs
+    page use it too). The mini-map menu's section
     keeps its own MINIMAP_IGNORE_LIST and MENU_CLEAR_IGNORE keys.
 ]]
 L["TAB_IGNORE_LIST"] = "Liste d'exclusion"
@@ -924,6 +923,8 @@ L["OPTIONS_SOUND_PREVIEW_DESCRIPTION"] = "Joue ce son tout de suite, que le son 
 
 L["OPTIONS_RESTOCKER_WINDOW_HEADER"] = "Fenêtre de la liste de réapprovisionnement"
 L["OPTIONS_RESTOCKER_WINDOW_DESCRIPTION"] = "Choisissez quand votre liste de réapprovisionnement s'ouvre d'elle-même."
+L["RESTOCKER_RESET_LIST_POSITION"] = "Position de la liste de réapprovisionnement"
+L["RESTOCKER_RESET_STAPLES_POSITION"] = "Position des Produits de base"
 
 --[[
     The Inventory Report's page, named by the report's own title
@@ -1047,7 +1048,6 @@ L["OPTIONS_READINESS_DURABILITY_THRESHOLD_DESCRIPTION"] =
 L["OPTIONS_READINESS_SPECIALIZATION"] = "Spécialisation actuelle"
 L["OPTIONS_READINESS_SPECIALIZATION_DESCRIPTION"] =
 	"Affiche votre répartition de talents, et les points que vous n'avez pas dépensés."
-L["OPTIONS_READINESS_PVP"] = "Marqueur JcJ actif"
 L["OPTIONS_READINESS_PVP_DESCRIPTION"] = "Avertit quand vous portez un marqueur JcJ."
 L["OPTIONS_READINESS_QUESTIONABLE_GEAR"] = "Équipement hors combat porté"
 L["OPTIONS_READINESS_NONCOMBAT_GEAR_DESCRIPTION"] =
@@ -1784,10 +1784,10 @@ L["POPUP_LEGACY_IMPORT_DECLINE"] = "Non merci"
 -- Options: Group Buffs and Reported Ranks
 --------------------------------------------------------------------------------
 
--- The Group Buffs and Reported Ranks panels' titles, and the stand-in for an item or spell whose name the client hasn't loaded yet.
+-- The Group Buffs and Reported Ranks panels' titles, and the stand-in for a spell whose name the client hasn't loaded
+-- yet (an item's is LOADING_ITEM).
 L["BUFF_DUTY_TRACKED_HEADER"] = "Améliorations de groupe"
 L["RANK_WATCH_TRACKED_HEADER"] = "Rangs signalés"
-L["TRACKED_ITEM_PENDING"] = "Objet #%d"
 L["TRACKED_SPELL_PENDING"] = "Sort #%d"
 
 --------------------------------------------------------------------------------
@@ -1828,7 +1828,7 @@ L["BUFF_DUTY_FAVOR_ENABLE_DESCRIPTION"] =
 	"Liste les inconnus qui vous ont amélioré récemment, avec les améliorations que vous pouvez leur rendre. Faites un clic droit sur une icône pour retirer quelqu'un de la liste."
 L["BUFF_DUTY_BUFF_PVP_FLAGGED"] = "Améliorer les joueurs avec JcJ activé"
 L["BUFF_DUTY_BUFF_PVP_FLAGGED_DESCRIPTION"] =
-	"Améliorer un joueur avec le JcJ activé vous l'active aussi. Tant que cette option est désactivée et que votre JcJ ne l'est pas, la Corvée d'améliorations ne les améliore pas et ne lance aucune amélioration de groupe qui les atteindrait, et vous le signale dans la discussion."
+	"Permet à la Corvée d'améliorations d'améliorer les joueurs avec le JcJ activé, ce qui vous l'active aussi. Tant que cette option est désactivée et que votre JcJ ne l'est pas, la Corvée d'améliorations les ignore, ainsi que toute amélioration de groupe qui les atteindrait, et vous le signale dans la discussion."
 L["BUFF_DUTY_FAVOR_SECONDS_DESCRIPTION"] =
 	"Définit combien de temps un inconnu reste dans la liste après sa dernière amélioration."
 L["BUFF_DUTY_TARGET_ENABLE"] = "Votre cible"
@@ -1937,7 +1937,9 @@ L["BUFF_DUTY_FOOD_PAGE_DESCRIPTION"] =
 L["BUFF_DUTY_WELL_FED_DESCRIPTION_FORMAT"] =
 	"S'affiche tant qu'il vous manque \"%s\" et que vous avez de la nourriture à amélioration. Cliquez dessus dans la fenêtre pour manger la meilleure."
 -- The Scrolls page and its row: one icon per scroll buff you're missing, for the types checked under it.
+-- SCROLL_TYPES heads those types, on the page and in the window's Scrolls menu.
 L["BUFF_DUTY_SCROLLS"] = "Parchemins"
+L["BUFF_DUTY_SCROLL_TYPES"] = "Types de parchemins"
 L["BUFF_DUTY_SCROLLS_PAGE_DESCRIPTION"] =
 	"Les parchemins que vous transportez, proposés dans la fenêtre quand il vous manque leur amélioration."
 L["BUFF_DUTY_SCROLLS_DESCRIPTION"] =
@@ -1973,8 +1975,10 @@ L["BUFF_DUTY_WEAPON_ENABLE_DESCRIPTION"] =
 	"Affiche les poisons, imprégnations, huiles, pierres et appâts qui manquent à vos armes ou arrivent bientôt à expiration, avec vos améliorations personnelles en haut de la fenêtre. Cliquez sur l'un d'eux pour l'appliquer. Choisissez lesquelles dans Améliorations d'arme."
 
 -- The window itself
--- A buff icon's tooltip ends with who the click lands on.
-L["BUFF_DUTY_TOOLTIP_CAST"] = "Lance le sort sur %s."
+-- A buff icon's tooltip, a line per click: the job on the left, the click (TOOLTIP_KEY_CLICK, TOOLTIP_KEY_RIGHT_CLICK)
+-- on the right. %s is who the cast lands on; TAKE_OFF is a Return the Favor icon's right-click.
+L["BUFF_DUTY_TOOLTIP_CAST"] = "Lancer sur %s"
+L["BUFF_DUTY_TOOLTIP_TAKE_OFF"] = "Retirer de cette liste"
 -- %s is the client's "Main Hand" or "Off Hand".
 L["BUFF_DUTY_TOOLTIP_WEAPON"] = "S'applique à votre arme (%s)."
 L["BUFF_DUTY_TOOLTIP_USE"] = "Personne dans votre groupe n'a de pierre d'âme. En utilise une sur %s."
@@ -1999,11 +2003,13 @@ L["BUFF_DUTY_MENU_OPACITY_DESCRIPTION"] =
 	"Règle l'opacité du fond de la fenêtre de la Corvée d'améliorations. Le texte et les icônes restent tels quels."
 L["BUFF_DUTY_MENU_OPACITY_PERCENT"] = "%d%%"
 --[[
-    The window's category menus: each category line's arrow opens one, and the
-    Options line's Show in Window opens each. Show in Buff Duty, Use (when),
-    Show (how soon), Use with Keybind, Show Missing Inventory, then what the
-    category uses, each On or Off. Missing Inventory! is the red line in the
-    window. %s in the item hover is the spell, food, scroll or elixir.
+    The window's category menus, each opened by its category line's arrow:
+    Show in Buff Duty, When to Use (BUFF_DUTY_ROW_WHEN), Show (how soon), Use
+    with Cast Next Buff (BUFF_DUTY_ROW_KEY), Show Missing Inventory, then what
+    the category uses, each On or Off. The Options menu's Show in Window lists
+    every category as a toggle with SHOW_IN_BUFF_DUTY_DESCRIPTION as its hover.
+    Missing Inventory! is the red line in the window. %s in the item hover is
+    the spell, food, scroll or elixir.
 ]]
 L["BUFF_DUTY_MISSING_INVENTORY"] = "Inventaire manquant !"
 L["BUFF_DUTY_MENU_SHOW_IN_BUFF_DUTY"] = "Afficher dans Corvée d'améliorations"
@@ -2027,10 +2033,8 @@ L["BUFF_DUTY_MENU_BUFF_FOOD"] = "Nourriture à amélioration"
 -- The Self-Buffs buff food icon, while you aren't Well Fed.
 L["BUFF_DUTY_TOOLTIP_EAT"] = "En mange une depuis vos sacs. Restez assis jusqu'à être Bien nourri."
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "Lance le sort sur %s et son groupe."
--- A raid group icon's tooltip, its last line: the members who need it (%s, joined with LIST_PAIR_FORMAT or LIST_LAST_FORMAT).
+-- A raid group icon's tooltip, the line under its title: the members who need it (%s, joined with LIST_PAIR_FORMAT or LIST_LAST_FORMAT).
 L["BUFF_DUTY_TOOLTIP_NEEDS"] = "En ont besoin : %s."
--- A Return the Favor icon: the click targets them and casts; a right-click drops them from the list.
-L["BUFF_DUTY_TOOLTIP_FAVOR"] = "Cible %s et lance le sort. Clic droit pour retirer ce joueur de la liste."
 -- The Ask row under Target: its label (%s is the target's name in their class color), and its icons' tooltip: who the whisper goes to, or, once asked, who and the whole minutes until they can be asked again.
 L["BUFF_DUTY_ASK_TARGET_ROW"] = "Demander à %s"
 L["BUFF_DUTY_TOOLTIP_ASK_TARGET"] = "Chuchote à %s pour la demander."
@@ -2067,7 +2071,8 @@ L["BUFF_KEY"] = "Lancer l'amélioration suivante"
 L["BUFF_KEY_WAITING"] = "En attente que %s soit à portée."
 L["BUFF_KEY_DONE"] = "Plus rien à améliorer."
 -- Printed when Buff Duty or the key skips a PvP-flagged player. %s is the player's name.
-L["BUFF_DUTY_PVP_FLAGGED"] = "%s a le JcJ activé, vous devrez l'améliorer manuellement."
+L["BUFF_DUTY_PVP_FLAGGED"] =
+	"%s a le JcJ activé, la Corvée d'améliorations l'a donc ignoré. Activez Améliorer les joueurs avec JcJ activé pour l'améliorer quand même."
 L["BUFF_KEY_OFF"] = "La corvée d'améliorations est désactivée."
 --[[
     The Buff Duty window's last line, under Options, while the Cast Next Buff key has none: the options
@@ -2433,7 +2438,7 @@ L["MENU_RESET_CATEGORY_CONFIRM"] =
 -- A middle-click on a macro, asked first. %s is the macro.
 L["MENU_RESET_MACRO_CONFIRM"] = "Réinitialiser les options de %s ? Elle suivra de nouveau ses réglages par défaut."
 
--- TRANSLATORS: %s is a spell's name, heading its macro's part of a tile's tooltip after "GtG //" ("Immolate Macro").
+-- TRANSLATORS: %s is a spell's name, the gold title of its macro's part of a tile's tooltip, "GtG" on its right ("Immolate Macro").
 L["TOOLTIP_MACRO_HEADING"] = "Macro %s"
 
 -- Spellbook Tab Tooltip
@@ -2522,7 +2527,7 @@ L["WHATS_NEXT_TOOLTIP_HOW_TALENT"] = "Dépensez un point de talent dessus pour l
 L["WHATS_NEXT_TOOLTIP_HOW_RUNE"] = "Gravez sa rune pour l'apprendre."
 -- TRANSLATORS: %s is a spell's name, with its rank where it has one ("Learn Rend (Rank 1) first.").
 L["WHATS_NEXT_TOOLTIP_NEEDS"] = "Apprenez d'abord %s."
--- TRANSLATORS: %s is a spell's name, heading the list of its ranks after "GtG //" ("Immolate Ranks").
+-- TRANSLATORS: %s is a spell's name, the gold title over the list of its ranks, "GtG" on its right ("Immolate Ranks").
 L["WHATS_NEXT_TOOLTIP_RANKS"] = "Rangs de %s"
 L["TOOLTIP_KEY_SHIFT_CLICK"] = "Maj + Clic"
 L["TOOLTIP_ACTION_LINK_IN_CHAT"] = "Insérer un lien dans le chat"
@@ -2623,9 +2628,8 @@ L["OPTIONS_ABILITY_TOOLTIPS_ENABLE_DESCRIPTION"] =
 L["OPTIONS_DELETE_MACROS_HEADER"] = "Supprimer les macros"
 L["OPTIONS_DELETE_MACROS_DESCRIPTION"] =
 	"Supprime les macros créées par le Grimoire enrichi, ce qui les retire aussi de vos barres d'action. Vos propres macros ne sont jamais touchées, et la page recrée chacune d'elles quand vous cliquez dessus ou la faites glisser."
--- The two rows' captions, each beside a Delete button (OPTIONS_DELETE).
+-- The character row's caption, beside its Delete button (OPTIONS_DELETE); the General row reads the client's GENERAL_MACROS.
 L["OPTIONS_DELETE_CHARACTER_MACROS_CAPTION"] = "Macros de ce personnage"
-L["OPTIONS_DELETE_GENERAL_MACROS_CAPTION"] = "Macros générales"
 L["OPTIONS_DELETE"] = "Supprimer"
 L["OPTIONS_DELETE_CHARACTER_MACROS_DESCRIPTION"] =
 	"Supprime les macros du Grimoire enrichi de l'onglet de macros de ce personnage. Vos autres personnages gardent les leurs jusqu'à ce que vous fassiez de même sur eux."
@@ -2682,6 +2686,7 @@ L["KEY_BINDINGS_LOCATION"] = "Ouvrez le menu du jeu, puis %s, puis %s, et cherch
 L["ERROR_MACRO_SLOTS_FULL"] =
 	"Aucun emplacement de macro libre. Supprimez quelques-unes de vos macros dans /m pour faire de la place."
 L["ERROR_MACRO_WINDOW_OPEN"] = "Fermez d'abord la fenêtre des macros."
+L["ERROR_MACRO_COMBAT"] = "Les macros ne peuvent pas changer en combat. Réessayez une fois le combat terminé."
 L["CHAT_MACROS_DELETED"] = "%d macros supprimées."
 L["CHAT_MACROS_DELETED_ONE"] = "1 macro supprimée."
 L["CHAT_MACRO_TOO_LONG"] =

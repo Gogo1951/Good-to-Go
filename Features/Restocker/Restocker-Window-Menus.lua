@@ -8,19 +8,21 @@ local L = ns.L
     the headings Restocker-Window-Column-Header.lua.
 
     Both are the one kit dropdown every Restock List menu shares (the list
-    bar's and Manage Lists' too): its own frames, never the game's shared
-    dropdown frames, so nothing here taints them. It closes 0.4 s after the
-    cursor leaves it and what opened it, on Escape, on a pick, when the window
-    hides, and on ns.UpdateRestockList.
+    bar's, Manage Lists' and the Staples window's stack sizes too): its own
+    frames, never the game's shared dropdown frames, so nothing here taints
+    them. It closes after the cursor
+    leaves it and what opened it (the kit's delay: a second when a click opened
+    it, half that for a hover), on Escape, on a pick, when the window hides,
+    and on ns.UpdateRestockList.
 ]]
 
 --[[
     The dropdown on the kit's own menu (Kit.CreateMenu), with the shape every
-    Restock List control calls: menu:Open(anchor, entries, onClose, upward)
+    Restock List control calls: menu:Open(anchor, entries, onClose, upward, how)
     shows entries under anchor, or over it when upward (a click on the open
-    anchor again closes it); menu:Close(); and menu:IsOpenFor(anchor). A row's
-    click closes the menu first, unless the entry sets keepOpen. onClose runs
-    whenever it hides.
+    anchor again closes it), how being "click" or "hover", the way it was
+    opened; menu:Close(); and menu:IsOpenFor(anchor). A row's click closes the
+    menu first, unless the entry sets keepOpen. onClose runs whenever it hides.
 ]]
 -- The kit's MENU_GAP (Features/Menu-Kit.lua), which the kit keeps to itself: a menu opens 2 points off its control.
 local MENU_GAP_POINTS = 2
@@ -54,7 +56,7 @@ local function CreateDropdownMenu(name)
 		return kitMenu:IsShown() and kitMenu.state.anchor == anchor
 	end
 
-	function menu:Open(anchor, entries, onClose, upward)
+	function menu:Open(anchor, entries, onClose, upward, how)
 		if menu:IsOpenFor(anchor) then
 			kitMenu:Hide()
 			return
@@ -73,7 +75,7 @@ local function CreateDropdownMenu(name)
 			list[index] = entry
 		end
 		shown.entries, shown.onClose = list, onClose
-		kitMenu:Show(anchor, "hover")
+		kitMenu:Show(anchor, how or "hover")
 		--[[
 		    A dropdown's list hangs straight under its field, or over it, not off
 		    a corner, MENU_GAP_POINTS clear of it as every kit menu opens.
@@ -168,7 +170,7 @@ local function OpenReputationMenu(cell, row)
 	end
 	-- The control's own tooltip would sit over the menu it opened.
 	GameTooltip:Hide()
-	RestockMenu:Open(cell, entries)
+	RestockMenu:Open(cell, entries, nil, nil, "click")
 end
 
 ns.OpenRestockReputationMenu = OpenReputationMenu
@@ -272,5 +274,5 @@ function ns.OpenRestockColumnMenu(column, anchor)
 	end
 	-- The control's own tooltip would sit over the menu it opened.
 	GameTooltip:Hide()
-	RestockMenu:Open(anchor, entries)
+	RestockMenu:Open(anchor, entries, nil, nil, "click")
 end

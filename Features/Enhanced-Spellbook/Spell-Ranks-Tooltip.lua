@@ -3,7 +3,7 @@ local ByLevel = ns.SpellRankByLevel
 local AddRankLinesFor = ns.AddSpellRankLines
 
 --[[
-	A spell's ranks and the level each needs, "GtG // Firebolt Ranks" and a line for each (ns.AddSpellRanksTooltip;
+	A spell's ranks and the level each needs, "Firebolt Ranks … GtG" and a line for each (ns.AddSpellRanksTooltip;
 	the What's Next? rows, Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Page.lua, use ns.SpellRankRows and ns.AddSpellRankLines),
 	under every spell tooltip the game shows: action bars, the game's own spell book, other add-ons. Tooltips that
 	add the ranks themselves (the Spell Book page's tiles, the What's Next? rows) set ns.spellTooltipHasOwnRanks

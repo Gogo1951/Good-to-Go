@@ -39,7 +39,7 @@ ns.EXPLOSIVES = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, Validate Data, WoW Forever 1.60.1.71037
+	2026-11-25, wago.tools, WoW Forever 1.60.1.71139
 
 Notes
 	- Every Engineering explosive this client knows that deals damage, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Explosive macro. The family is the items sharing Coarse Dynamite's (4365) use category, which on this client is class 0, subclass 0.
@@ -111,6 +111,14 @@ wago.tools
 	https://wago.tools/db2/ItemXItemEffect?build=1.60.1.70959
 	https://wago.tools/db2/Item?build=1.60.1.71037
 	https://wago.tools/db2/ItemSparse?build=1.60.1.71037
+	https://wago.tools/db2/Item?build=1.60.1.71139
+	https://wago.tools/db2/ItemSparse?build=1.60.1.71139
+	https://wago.tools/db2/ItemEffect?build=1.60.1.71139
+	https://wago.tools/db2/ItemXItemEffect?build=1.60.1.71139
+	https://wago.tools/db2/Spell?build=1.60.1.71139
+	https://wago.tools/db2/SpellEffect?build=1.60.1.71139
+	https://wago.tools/db2/SpellMisc?build=1.60.1.71139
+	https://wago.tools/db2/SpellDuration?build=1.60.1.71139
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Forever/foreverItemDB.lua

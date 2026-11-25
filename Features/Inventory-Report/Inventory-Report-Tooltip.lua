@@ -79,32 +79,26 @@ local TEXT_COLOR = GetColor("TEXT")
 
 --[[
     The header line, built once: it says the same thing on every tooltip. It is
-    the chat prints' branded shape (ns.PrintMessage): tooltips carry the
-    add-on's short name.
+    the shape of the add-on's other tooltip blocks ("Fireball Ranks … GtG"):
+    the title in gold, the add-on's short name in gray at the right edge.
 ]]
-local REPORT_HEADER = GetColor("INFO")
-	.. L["ADDON_SHORT_NAME"]
-	.. "|r "
-	.. GetColor("SEPARATOR")
-	.. "//"
-	.. "|r "
-	.. TEXT_COLOR
-	.. L["INVENTORY_REPORT_TITLE"]
-	.. "|r"
+local REPORT_HEADER = {
+	GetColor("TITLE") .. L["INVENTORY_REPORT_TITLE"] .. "|r",
+	GetColor("MUTED") .. L["ADDON_SHORT_NAME"] .. "|r",
+}
 
 --[[
-    The right-hand values put their words (Total, Bag, Bank) in the header's
-    separator gray and every count in white, so the numbers stand out. The gray
-    picks up again after each count, for a locale that puts more words behind
-    it.
+    The counts put their words (Bag, Bank, Total) in gray and every number in
+    white, so the numbers stand out. The gray picks up again after each number,
+    for the words behind it.
 ]]
-local LABEL_COLOR = GetColor("SEPARATOR")
+local LABEL_COLOR = GetColor("MUTED")
 
 local function Count(value)
 	return TEXT_COLOR .. value .. "|r" .. LABEL_COLOR
 end
 
--- Only the places holding some: "Bag 7, Bank 18", "Bag 7" or "Bank 18", and nil when both are 0.
+-- Only the places holding some: "7 Bag, 18 Bank", "7 Bag" or "18 Bank", and nil when both are 0.
 local function Counts(bags, bank)
 	if bags > 0 and bank > 0 then
 		return format(L["INVENTORY_REPORT_COUNTS"], Count(bags), Count(bank))
@@ -136,11 +130,11 @@ end
 
     Each line is { left, right }. A line with both goes in as a double line, a
     label with its count at the tooltip's right edge; one with only a left is a
-    plain line (a spacer).
+    plain line.
 
     This character always leads, holding any or not, so the list reads top to
-    bottom against the total; the others follow under a spacer, and only those
-    holding some.
+    bottom against the total; the others follow, only those holding some, and
+    "Total … 37" is the last row.
 
     Published for the tooltip hooks below, and for the panel's Example, which
     passes `always` so an item nobody holds still draws: the Example shows
@@ -172,16 +166,18 @@ function ns.GetInventoryReportLines(itemID, always)
 		return nil
 	end
 
-	local lines = { { REPORT_HEADER, LABEL_COLOR .. format(L["INVENTORY_REPORT_TOTAL"], Count(total)) .. "|r" } }
+	local lines = { REPORT_HEADER }
 
 	lines[#lines + 1] = CharacterRow(record.name, record.class, bags, bank)
 
-	if #holders > 0 then
-		lines[#lines + 1] = { " " }
-		for _, holder in ipairs(holders) do
-			lines[#lines + 1] = CharacterRow(holder.character.name, holder.character.class, holder.bags, holder.bank)
-		end
+	for _, holder in ipairs(holders) do
+		lines[#lines + 1] = CharacterRow(holder.character.name, holder.character.class, holder.bags, holder.bank)
 	end
+
+	lines[#lines + 1] = {
+		ROW_INDENT .. LABEL_COLOR .. L["INVENTORY_REPORT_TOTAL"] .. "|r",
+		TEXT_COLOR .. total .. "|r",
+	}
 
 	return lines
 end

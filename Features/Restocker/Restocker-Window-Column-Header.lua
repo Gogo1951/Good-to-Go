@@ -17,6 +17,9 @@ local TooltipBody = ns.RestockColumnTooltipBody
 local ResolveColumns = ns.ResolveRestockColumns
 -- The caption tier's height: the header's 32 is this under the group bands' line.
 local CAPTION_HEIGHT = 16
+-- The space between the captions and the first row, in place of a rule; Restocker-Window.lua reserves it too.
+local HEADER_GAP = 16
+ns.RESTOCK_COLUMN_HEADER_GAP = HEADER_GAP
 
 --[[
     The header above the Restock List grid: the column captions, the Keep
@@ -108,15 +111,9 @@ end
 ]]
 function ns.CreateRestockColumnHeader(parent, scrollFrame)
 	local header = CreateFrame("Frame", nil, parent)
-	header:SetPoint("BOTTOMLEFT", scrollFrame, "TOPLEFT", 0, 2)
-	header:SetPoint("BOTTOMRIGHT", scrollFrame, "TOPRIGHT", 0, 2)
+	header:SetPoint("BOTTOMLEFT", scrollFrame, "TOPLEFT", 0, HEADER_GAP)
+	header:SetPoint("BOTTOMRIGHT", scrollFrame, "TOPRIGHT", 0, HEADER_GAP)
 	header:SetHeight(ns.restockColumnHeaderHeight)
-
-	local rule = header:CreateTexture(nil, "ARTWORK")
-	rule:SetPoint("BOTTOMLEFT", header, "BOTTOMLEFT", 0, 0)
-	rule:SetPoint("BOTTOMRIGHT", header, "BOTTOMRIGHT", 0, 0)
-	rule:SetHeight(1)
-	rule:SetColorTexture(GOLD.r, GOLD.g, GOLD.b, 0.20)
 
 	--[[
 	    The lower tier is its own frame so everything in it centers vertically by
@@ -125,8 +122,8 @@ function ns.CreateRestockColumnHeader(parent, scrollFrame)
 	    caption's baseline.
 	]]
 	local captionRow = CreateFrame("Frame", nil, header)
-	captionRow:SetPoint("BOTTOMLEFT", header, "BOTTOMLEFT", 0, 2)
-	captionRow:SetPoint("BOTTOMRIGHT", header, "BOTTOMRIGHT", 0, 2)
+	captionRow:SetPoint("BOTTOMLEFT", header, "BOTTOMLEFT", 0, 0)
+	captionRow:SetPoint("BOTTOMRIGHT", header, "BOTTOMRIGHT", 0, 0)
 	captionRow:SetHeight(CAPTION_HEIGHT)
 
 	-- The upper tier, the rest of the height: the group bands' line.

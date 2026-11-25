@@ -2,7 +2,6 @@ local _, ns = ...
 local L = ns.L
 local GetColor = ns.GetColor
 local HideTooltip = ns.HideTooltip
-local SizedFontString = ns.SizedFontString
 local SettingsKey = ns.SettingsKey
 local Docked = ns.DockedPanel
 local Widgets = ns.PanelWidgets
@@ -31,9 +30,8 @@ local Box, ShowTip = Widgets.Box, Widgets.ShowTip
 	each refresh (ns.OnSpellbookPageRefreshed).
 ]]
 
-local PADDING, INNER_WIDTH = Docked.PADDING, Docked.INNER_WIDTH
+local INNER_WIDTH = Docked.INNER_WIDTH
 local SLOT_ICON = Widgets.SLOT_ICON
-local ROWS_TOP = 80
 local ROW_HEIGHT, ROW_GAP = 32, 8
 local OTHERWISE_LABEL_WIDTH = 128
 
@@ -51,7 +49,7 @@ local panel
 ]]
 local UI = {}
 ns.ConditionalsUI = UI
-UI.ROWS_TOP, UI.ROW_HEIGHT, UI.ROW_GAP = ROWS_TOP, ROW_HEIGHT, ROW_GAP
+UI.ROW_HEIGHT, UI.ROW_GAP = ROW_HEIGHT, ROW_GAP
 UI.TEXTURE_ARROW = TEXTURE_ARROW
 
 --------------------------------------------------------------------------------
@@ -95,7 +93,7 @@ local function CreateOtherwise(parent)
 	row:SetSize(INNER_WIDTH, ROW_HEIGHT)
 	row:SetAlpha(0.8)
 	Box(row, PANEL_FILL, ROW_EDGE)
-	local label = SizedFontString(row, "GameFontHighlightSmall", 13)
+	local label = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
 	label:SetTextColor(unpack(MUTED_INK))
 	label:SetPoint("LEFT", 32, 0) -- under the rows' condition dropdowns
 	label:SetWidth(OTHERWISE_LABEL_WIDTH)
@@ -109,7 +107,7 @@ local function CreateOtherwise(parent)
 	row.icon = row:CreateTexture(nil, "ARTWORK")
 	row.icon:SetSize(SLOT_ICON, SLOT_ICON)
 	row.icon:SetPoint("LEFT", arrow, "RIGHT", 8, 0)
-	row.text = SizedFontString(row, "GameFontNormal", 13)
+	row.text = row:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	row.text:SetPoint("LEFT", row.icon, "RIGHT", 8, 0)
 	row.text:SetPoint("RIGHT", -8, 0)
 	row.text:SetJustifyH("LEFT")
@@ -141,12 +139,12 @@ local function Update()
 	end
 	-- with no rows yet, a line saying what one does stands where they go
 	panel.empty:SetShown(#conditionals == 0)
-	local y = ROWS_TOP + math.max(#conditionals, panel.empty:IsShown() and 1 or 0) * (ROW_HEIGHT + ROW_GAP)
-	panel.otherwise:SetPoint("TOPLEFT", PADDING, -y)
+	local y = math.max(#conditionals, panel.empty:IsShown() and 1 or 0) * (ROW_HEIGHT + ROW_GAP)
+	Docked.SetRowPoint(panel, panel.otherwise, y)
 	local own = ns.CastSpellName(macro)
 	panel.otherwise.icon:SetTexture(C_Spell.GetSpellTexture(own) or macro.icon or ns.QUESTION_MARK_ICON)
 	panel.otherwise.text:SetText(GetColor("TITLE") .. own .. "|r")
-	panel.add:SetPoint("TOPLEFT", PADDING, -(y + ROW_HEIGHT + ROW_GAP + 4))
+	Docked.SetRowPoint(panel, panel.add, y + ROW_HEIGHT + ROW_GAP + 4)
 	panel.add:SetEnabled(#conditionals < ns.CONDITIONALS_MAX_ROWS)
 	Docked.UpdateFooter(panel.footer, macro)
 end
@@ -156,8 +154,8 @@ local function CreatePanel(page)
 	panel = Docked.Create(page, "GoodToGoConditionalsPanel", "CONDITIONALS_HINT")
 	UI.panel = panel
 
-	panel.empty = SizedFontString(panel, "GameFontHighlightSmall", 13)
-	panel.empty:SetPoint("TOPLEFT", PADDING, -ROWS_TOP)
+	panel.empty = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+	Docked.SetRowPoint(panel, panel.empty, 0)
 	panel.empty:SetSize(INNER_WIDTH, ROW_HEIGHT)
 	panel.empty:SetJustifyH("LEFT")
 	panel.empty:SetJustifyV("MIDDLE")

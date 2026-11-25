@@ -1061,7 +1061,7 @@ ns.CLASS_SPELL_LISTS = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, Validate Data, WoW Forever 1.60.1.71037
+	2026-11-25, wago.tools, WoW Forever 1.60.1.71139
 
 Notes
 	- Each class's lists for the spellbook page: the spells whose macros get the mouseover, cursor, channeled and stealth options; the stance bar order and the stances each spell needs; the ability each demon or pet summon's macro can cast; the spells listed until learned that no trainer row covers (extraSpells: quest-learned spells and talents without trainer ranks). Features/Enhanced-Spellbook/Macro-Builder/Macro-Builder.lua reads them.
@@ -1089,6 +1089,11 @@ wago.tools
 	https://wago.tools/db2/SpellEffect?build=1.60.1.70959
 	https://wago.tools/db2/SpellLevels?build=1.60.1.70959
 	https://wago.tools/db2/SpellName?build=1.60.1.71037
+	https://wago.tools/db2/SpellName?build=1.60.1.71139
+	https://wago.tools/db2/Spell?build=1.60.1.71139
+	https://wago.tools/db2/SpellMisc?build=1.60.1.71139
+	https://wago.tools/db2/SpellEffect?build=1.60.1.71139
+	https://wago.tools/db2/SpellLevels?build=1.60.1.71139
 
 QuestieDB
 	None.

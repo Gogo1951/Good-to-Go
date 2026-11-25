@@ -346,6 +346,16 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 				nameWidth = math.max(nameWidth, width)
 				return line
 			end
+			-- Each icon's tooltip is headed by its section; a party member's go by their own name (Buff-Duty-Icons.lua).
+			local function TagSection(specs, sectionTitle)
+				for _, spec in ipairs(specs) do
+					spec.sectionTitle = sectionTitle
+				end
+			end
+			TagSection(section.icons, section.label)
+			for _, row in ipairs(section.rows) do
+				TagSection(row.icons, not section.party and section.label or nil)
+			end
 			-- A raid group's name sits past its fold glyph (Buff-Duty-Layout.lua's fold buttons).
 			local head = Measure(
 				GetColor("TITLE") .. section.label .. "|r",

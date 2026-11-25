@@ -10,9 +10,9 @@ local _, ns = ...
 --------------------------------------------------------------------------------
 
 --[[
-    What a /use line names an item by: its name, which reads it at a unit
-    ([@player]) where "item:<id>" didn't on WoW Forever. The item is in your
-    bags, so its name is known; "item:<id>" if it somehow isn't.
+    What a Self Buffs item is used by: its name, which uses it at "player"
+    where "item:<id>" didn't on WoW Forever. The item is in your bags, so its
+    name is known; "item:<id>" if it somehow isn't.
 ]]
 local function ItemUseName(spec)
 	local name = spec.itemId and C_Item.GetItemNameByID(spec.itemId)
@@ -45,26 +45,17 @@ function ns.SetBuffButtonAttributes(button, spec)
 	]]
 	button:SetAttribute("target-slot", spec.targetSlot)
 	--[[
-	    A Self Buffs item goes through a /use line, since the template's item
-	    action aimed at "player" used nothing on WoW Forever:
-	      - Buff food and Winterfall Firewater: "/use item:<id>", the line the
-	        Food macro eats with.
-	      - A scroll is read at someone, so its line names you, by the scroll's
-	        name: "/use [@player] Scroll of Spirit". Bare, it answered "Target
-	        is not a player" with nothing targeted, and "[@player] item:<id>"
-	        read nothing at all.
-	    A weapon item keeps the template's item action and target-slot, which
-	    applies it from a click, the key and a macro's /click alike; as a macro
-	    line, /click GtGBuffKey ran it as a macro inside one and it never landed.
+	    A Self Buffs item (buff food, a scroll, an elixir, Winterfall Firewater)
+	    uses the template's item action aimed at "player", naming the item by
+	    its name: aimed at "player" by "item:<id>" it used nothing on WoW
+	    Forever. Not a /use line: on the Buff Key, a macro line never went off
+	    in game (a /use from a macro's /click GtGBuffKey, and a "/target" +
+	    "/cast" line from the key itself). Why isn't known. By name, food and
+	    scrolls were used from a /click.
+	    A weapon item keeps "item:<id>" and target-slot, which already applied
+	    from a click, the key and a macro's /click alike.
 	]]
 	local macrotext = spec.macrotext
-	if not macrotext and spec.item then
-		if spec.scroll then
-			macrotext = "/use [@player] " .. ItemUseName(spec)
-		elseif spec.selfItem then
-			macrotext = "/use " .. spec.item
-		end
-	end
 	if macrotext then
 		button:SetAttribute("type1", "macro")
 		button:SetAttribute("spell", nil)
@@ -72,10 +63,10 @@ function ns.SetBuffButtonAttributes(button, spec)
 		button:SetAttribute("unit", nil)
 		button:SetAttribute("macrotext", macrotext)
 	elseif spec.item then
-		-- "item:12345", resolved by the template the way /use resolves it.
+		-- "item:12345", or a Self Buffs item's name, resolved by the template the way /use resolves it.
 		button:SetAttribute("type1", "item")
 		button:SetAttribute("spell", nil)
-		button:SetAttribute("item", spec.item)
+		button:SetAttribute("item", spec.selfItem and ItemUseName(spec) or spec.item)
 		button:SetAttribute("unit", spec.unit)
 		button:SetAttribute("macrotext", nil)
 	else

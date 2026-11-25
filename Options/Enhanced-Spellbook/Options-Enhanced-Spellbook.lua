@@ -13,9 +13,10 @@ local Spacer = Kit.Spacer
 --[[
 	A Delete button deleting the Spellbook's macros from one list (ns.DeleteAddonMacros), behind a confirm,
 	and grayed out while the list holds none, in the control column beside its caption (which list). Every
-	panel repaints after, so the button grays out at once.
+	panel repaints after, so the button grays out at once. The General caption is the game's own name for
+	that macro tab (GENERAL_MACROS).
 ]]
-local function DeleteMacrosButton(general, captionKey, descKey, confirmKey, order)
+local function DeleteMacrosButton(general, caption, descKey, confirmKey, order)
 	return Kit.ButtonRow(order, nil, {
 		type = "execute",
 		name = L["OPTIONS_DELETE"],
@@ -29,7 +30,7 @@ local function DeleteMacrosButton(general, captionKey, descKey, confirmKey, orde
 			ns.DeleteAddonMacros(general)
 			ns.RefreshSettings()
 		end,
-	}, L[captionKey])
+	}, caption)
 end
 
 --------------------------------------------------------------------------------
@@ -99,7 +100,7 @@ function ns.BuildSpellbookOptions()
 		spacerDeleteMacros2 = Spacer(64),
 		deleteCharacterMacros = DeleteMacrosButton(
 			false,
-			"OPTIONS_DELETE_CHARACTER_MACROS_CAPTION",
+			L["OPTIONS_DELETE_CHARACTER_MACROS_CAPTION"],
 			"OPTIONS_DELETE_CHARACTER_MACROS_DESCRIPTION",
 			"OPTIONS_DELETE_CHARACTER_MACROS_CONFIRM",
 			65
@@ -107,7 +108,7 @@ function ns.BuildSpellbookOptions()
 		spacerDeleteMacros3 = Spacer(65.5),
 		deleteGeneralMacros = DeleteMacrosButton(
 			true,
-			"OPTIONS_DELETE_GENERAL_MACROS_CAPTION",
+			GENERAL_MACROS,
 			"OPTIONS_DELETE_GENERAL_MACROS_DESCRIPTION",
 			"OPTIONS_DELETE_GENERAL_MACROS_CONFIRM",
 			66

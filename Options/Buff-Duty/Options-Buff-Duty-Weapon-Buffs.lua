@@ -35,7 +35,7 @@ local function WeaponChoiceName(entry)
 			return name
 		end
 		Kit.WarmItems({ id }, ns.OPTIONS_REGISTRY.BuffDutyWeaponBuffs)
-		return L["TRACKED_ITEM_PENDING"]:format(id)
+		return L["LOADING_ITEM"]:format(id)
 	end
 	return C_Spell.GetSpellName(id) or L["TRACKED_SPELL_PENDING"]:format(id)
 end

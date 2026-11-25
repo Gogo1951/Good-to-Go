@@ -1,17 +1,17 @@
 # Good to Go // Test Plan
 
-Good to Go keeps you buffed, fed and stocked: macros for your best food, potions and healthstones, a Restock List that shops for you, a click-to-cast window for missing buffs, and ready-made spell macros. This time we most want you to try the Buff Duty window's new menu on each line, elixirs in the window, and the mini-map button's new clicks.
+Good to Go keeps you buffed, fed and stocked: macros for your best food, potions and healthstones, a Restock List that shops for you, a click-to-cast window for missing buffs, and ready-made spell macros. This time we most want you to try the Cast Next Buff key, the new tooltips in the Buff Duty window and the mini-map menu, and the Inventory Report's new look.
 
 **Play on Classic Era, Season of Discovery, TBC Anniversary, WoW Forever and MoP Classic.** If something looks wrong, tell us the check number and what you saw on [Discord](https://discord.gg/eh8hKq992Q).
 
 ## What's New
 
-1. Left-Click the mini-map button to open its menu, then Right-Click it to ignore the food your Food macro would eat next.
-2. In the Buff Duty window, hover the arrow at the end of a line like Well Fed or Scrolls, set When to Use to In Raid, and check that line leaves the window while you're out of a raid.
-3. With an elixir in your bags whose buff you're missing, click its icon under Flasks or Elixirs in the Buff Duty window to drink it.
-4. Turn on Show Missing Inventory in a line's menu, then use up what gives that buff, and check the window shows Missing Inventory! in red.
-5. While you aren't PvP flagged, try to buff a PvP-flagged player from the Buff Duty window: it should skip them and tell you in chat.
-6. Carry buff food while you're missing Well Fed, and check your Food macro picks the buff food first.
+1. In a group, press Cast Next Buff while a teammate is missing your buff, and check it buffs them without changing your target.
+2. Target a player who can give a buff you're missing and press Cast Next Buff once: it should whisper them an ask and buff them in the same press.
+3. Hover an icon in the Buff Duty window and check its tooltip names its section on top, with each click's job on the left and the click on the right.
+4. In the mini-map menu, check the Ignore row says Right-Click on its right, then hover a food on your Ignore List and click it to take it off.
+5. Hover an item you carry on more than one character and check the tooltip reads like "39 Bag, 1 Bank" for each, with the Total on the last line.
+6. In combat, try to drag a spell from the Enhanced Spellbook tab onto your bars: chat should tell you macros can't change during combat.
 
 ## Everything Else
 

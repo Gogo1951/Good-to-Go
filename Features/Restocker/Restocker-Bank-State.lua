@@ -14,8 +14,9 @@ local L = ns.L
 ns.bankIsOpen = false
 
 --[[
-    After this many consecutive steps that fail to reduce the outstanding work (a move that
-    keeps being rejected, or an item stuck locked), stop and report what's still short --
+    After this many consecutive steps where the outstanding work is unchanged (a move that
+    keeps being rejected, or an item stuck locked; work that grew counts as a change), stop
+    and report what's still short --
     instead of retrying forever. Retrying a handful of times first rides out transient
     "Couldn't split those items" races without ever bothering the user.
 ]]

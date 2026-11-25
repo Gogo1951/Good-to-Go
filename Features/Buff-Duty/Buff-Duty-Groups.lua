@@ -132,7 +132,7 @@ end
 --[[
     An unfolded raid group's rows less the single icons the group casts it
     shows cover (BuffDuty.GroupChoices). A member left with nothing drops off,
-    unless their pet's row follows: it keeps them listed, as it always has.
+    unless their pet's row follows: it keeps them listed.
 ]]
 local function UncoveredRows(rows, covered)
 	local kept = {}

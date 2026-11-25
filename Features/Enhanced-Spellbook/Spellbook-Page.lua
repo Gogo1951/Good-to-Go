@@ -2,7 +2,6 @@ local _, ns = ...
 local TITLE, BODY = ns.COLORS_RGB.TITLE, ns.COLORS_RGB.BODY
 local L = ns.L
 local HideTooltip = ns.HideTooltip
-local SizedFontString = ns.SizedFontString
 local FramePool = ns.SpellbookFramePool
 local CreateGearButton = ns.CreateSpellbookGearButton
 local SpellbookPageCategories = ns.SpellbookPageCategories
@@ -52,8 +51,6 @@ local COLUMN_WIDTH = SLOTS * TILE_WIDTH + (SLOTS - 1) * GAP_X
 ]]
 local ROW_HEIGHT = LABEL_TOP_GAP + LABEL_HEIGHT + LABEL_GAP + TILE_HEIGHT
 
-local HEADER_SIZE, CONTINUED_SIZE, LABEL_SIZE = 16, 12, 10
-
 -- The ink on the parchment: oxblood for the headers and form labels, set apart from the spell names' near-black.
 local HEADER_INK = ns.HEADER_INK_COLOR
 local LABEL_INK = ns.LABEL_INK_COLOR
@@ -63,27 +60,23 @@ local DIVIDER_COLOR = ns.HexToColorList("A68B60")
 
 --[[
 	A category's header: its name in dark ink, "(Continued)" in lighter ink where it carries on from the
-	column before, a rule filling the width, and the gear that opens the category's menu. Layout sets the text
-	and what the gear acts on.
+	column before, and the gear that opens the category's menu. Layout sets the text and what the gear acts on.
 ]]
 local function CreateHeader(page)
 	local header = CreateFrame("Frame", nil, page.parchment.paper)
 	header:SetSize(COLUMN_WIDTH, HEADER_HEIGHT)
-	header.Text = SizedFontString(header, "GameFontNormalLarge", HEADER_SIZE)
+	header.Text = header:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	header.Text:SetTextColor(unpack(HEADER_INK))
 	header.Text:SetShadowOffset(0, 0)
 	header.Text:SetPoint("LEFT")
-	header.Continued = SizedFontString(header, "GameFontNormal", CONTINUED_SIZE)
+	header.Continued = header:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	header.Continued:SetTextColor(unpack(CONTINUED_INK))
 	header.Continued:SetShadowOffset(0, 0)
 	local gear = CreateGearButton(header, 16)
 	header.gear = gear
 	gear:SetPoint("RIGHT")
-	local rule = ns.SpellbookPixelLine(header, "ARTWORK", RULE_COLOR)
-	rule:SetPoint("LEFT", header.Continued, "RIGHT", 8, 0)
-	rule:SetPoint("RIGHT", gear, "LEFT", -8, 0)
 	gear:SetScript("OnEnter", function(self)
-		GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+		ns.SetTooltipOwner(self)
 		GameTooltip:SetText(ns.CategoryMenuTitle(header.name, #header.macros), TITLE.r, TITLE.g, TITLE.b, 1, true)
 		GameTooltip:AddLine(L["PAGE_CATEGORY_SETTINGS_DESCRIPTION"], BODY.r, BODY.g, BODY.b, true)
 		GameTooltip:Show()
@@ -101,7 +94,7 @@ end
 local function CreateSubLabel(page)
 	local label = CreateFrame("Frame", nil, page.parchment.paper)
 	label:SetHeight(LABEL_HEIGHT)
-	label.Text = SizedFontString(label, "GameFontNormalSmall", LABEL_SIZE)
+	label.Text = label:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	label.Text:SetTextColor(unpack(LABEL_INK))
 	label.Text:SetShadowOffset(0, 0)
 	label.Text:SetPoint("LEFT")
@@ -129,7 +122,6 @@ local function DrawColumn(page, column, x, y, bars)
 			settable = settable or ns.HasOptions(macro)
 		end
 		header.gear:SetShown(settable)
-		-- an empty "(Continued)" sits flush against the name, so the rule starts where it always does
 		header.Continued:SetText(block.continued and L["PAGE_CONTINUED"] or "")
 		header.Continued:SetPoint("LEFT", header.Text, "RIGHT", block.continued and CONTINUED_GAP or 0, 0)
 		top = top + HEADER_HEIGHT
@@ -271,7 +263,7 @@ local function BuildPage(page)
 		return button
 	end)
 
-	page.empty = parchment.paper:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+	page.empty = parchment.paper:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	page.empty:SetTextColor(unpack(ns.INK_COLOR))
 	page.empty:SetShadowOffset(0, 0)
 	page.empty:SetPoint("CENTER", 0, PAGER_HEIGHT / 2)
@@ -355,7 +347,7 @@ ns.SPELLBOOK_FOOTER_HEIGHT, ns.SPELLBOOK_FRAME_BORDER = FOOTER_HEIGHT, FRAME_BOR
 -- the parchment's place in the window, and the padding and page strip inside it
 ns.SPELLBOOK_PARCHMENT_SIDE, ns.SPELLBOOK_PAGER_HEIGHT = PARCHMENT_SIDE, PAGER_HEIGHT
 ns.SPELLBOOK_COLUMN_TOP, ns.SPELLBOOK_COLUMN_SIDE = COLUMN_TOP, COLUMN_SIDE
-ns.SPELLBOOK_HEADER_INK, ns.SPELLBOOK_RULE_COLOR = HEADER_INK, RULE_COLOR
+ns.SPELLBOOK_HEADER_INK = HEADER_INK
 ns.SPELLBOOK_CONTINUED_INK, ns.SPELLBOOK_DIVIDER_COLOR = CONTINUED_INK, DIVIDER_COLOR
 -- the flow inside a column, which Features/Enhanced-Spellbook/Spellbook-Page-Layout.lua packs and paginates by
 ns.SPELLBOOK_SLOTS, ns.SPELLBOOK_GAP_X = SLOTS, GAP_X
