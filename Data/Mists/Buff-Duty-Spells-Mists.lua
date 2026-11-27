@@ -122,8 +122,33 @@ ns.BUFF_DUTY_PET_ICONS = {
 	},
 }
 
--- { class, ranks = { { spell id, level learned } }, auras, exclusive, needsPet, castLast, default (minutes left, MISSING or OFF) }, -- Name
+-- { class, ranks = { { spell id, level learned } }, auras, exclusive, needsPet, castLast, pickOne, selfType, default (minutes left, MISSING or OFF) }, -- Name
 ns.BUFF_DUTY_SELF_SPELLS = {
+	-- Druid ---------------------------------------------------------------------
+	{
+		class = "DRUID",
+		ranks = { { 5487, 8 } },
+		castLast = true,
+		pickOne = "DRUID_FORM",
+		selfType = "forms",
+		default = OFF,
+	}, -- Bear Form
+	{
+		class = "DRUID",
+		ranks = { { 768, 6 } },
+		castLast = true,
+		pickOne = "DRUID_FORM",
+		selfType = "forms",
+		default = OFF,
+	}, -- Cat Form
+	{
+		class = "DRUID",
+		ranks = { { 24858, 10 } },
+		castLast = true,
+		pickOne = "DRUID_FORM",
+		selfType = "forms",
+		default = OFF,
+	}, -- Moonkin Form
 	-- Hunter --------------------------------------------------------------------
 	{
 		class = "HUNTER",
@@ -167,26 +192,31 @@ ns.BUFF_DUTY_SELF_SPELLS = {
 		class = "PALADIN",
 		ranks = { { 105361, 3 }, { 31801, 24 } },
 		default = MISSING,
+		selfType = "seals",
 	}, -- Seal of Command, Seal of Truth
 	{
 		class = "PALADIN",
 		ranks = { { 20165, 32 } },
 		default = OFF,
+		selfType = "seals",
 	}, -- Seal of Insight
 	{
 		class = "PALADIN",
 		ranks = { { 20154, 42 } },
 		default = OFF,
+		selfType = "seals",
 	}, -- Seal of Righteousness
 	{
 		class = "PALADIN",
 		ranks = { { 20164, 70 } },
 		default = OFF,
+		selfType = "seals",
 	}, -- Seal of Justice
 	{
 		class = "PALADIN",
 		ranks = { { 25780, 12 } },
 		default = OFF,
+		selfType = "threat",
 	}, -- Righteous Fury
 	-- Priest --------------------------------------------------------------------
 	{
@@ -204,37 +234,44 @@ ns.BUFF_DUTY_SELF_SPELLS = {
 		ranks = { { 15473, 24 } },
 		default = MISSING,
 		castLast = true,
+		selfType = "forms",
 	}, -- Shadowform
 	-- Rogue ---------------------------------------------------------------------
 	{
 		class = "ROGUE",
 		ranks = { { 2823, 10 } },
 		default = 3,
+		selfType = "poisons",
 	}, -- Deadly Poison
 	{
 		class = "ROGUE",
 		ranks = { { 8679, 30 } },
 		default = OFF,
+		selfType = "poisons",
 	}, -- Wound Poison
 	{
 		class = "ROGUE",
 		ranks = { { 3408, 20 } },
 		default = 3,
+		selfType = "poisons",
 	}, -- Crippling Poison
 	{
 		class = "ROGUE",
 		ranks = { { 5761, 28 } },
 		default = OFF,
+		selfType = "poisons",
 	}, -- Mind-numbing Poison
 	{
 		class = "ROGUE",
 		ranks = { { 108211, 45 } },
 		default = OFF,
+		selfType = "poisons",
 	}, -- Leeching Poison
 	{
 		class = "ROGUE",
 		ranks = { { 108215, 75 } },
 		default = OFF,
+		selfType = "poisons",
 	}, -- Paralytic Poison
 	-- Shaman --------------------------------------------------------------------
 	{
@@ -390,6 +427,8 @@ Notes
 	- Left out of the single buffs: anything under two minutes (Hand spells, Power Infusion, Innervate, Pain Suppression, Guardian Spirit, Life Cocoon, Ironbark, Vigilance); passive auras (Trueshot Aura, Leader of the Pack, Grace of Air, Unholy Aura, Moonkin and Shadowform's haste); hunter pet buffs; Battle Shout, Commanding Shout and Horn of Winter, which have a cooldown of their own (60, 60 and 20 seconds in SpellCooldowns.CategoryRecoveryTime) and that GetSpellBaseCooldown may not report, so the Buff Key could spend them; Symbiosis, whose target buff depends on the target's class; and Soulstone, now a spell cast on a target with a 10-minute cooldown (see BUFF_DUTY_SOULSTONE). Thorns, Amplify Magic, Dampen Magic, Shadow Protection, Divine Spirit, Water Breathing, Detect Invisibility, Arcane Intellect, the other Blessings and every group version are gone from this client.
 	- BUFF_DUTY_PET_ICONS: a demon wears its own summoning spell's icon, matched by creature ID, which is the SUMMON_PET effect's misc value in SpellEffect. The Grimoire of Supremacy demons (Fel Imp, Voidlord, Shivarra, Observer, Wrathguard) and the Incubus are added. The Grimoire of Service demons, the Infernal and the Doomguard are temporary and left out, as on TBC.
 	- BUFF_DUTY_SELF_SPELLS: the long self buffs. Aspect of the Iron Hawk shares Hawk's row, since the talent replaces it (Talent.OverridesSpellID 13165) and lands in tier 3, level 45 (CLASS_TALENT_LEVELS in the client's FrameXML Constants.lua). Mage armors, Inner Fire, Inner Will, Shadowform, the seals and the aspects have no timer here (SpellDuration -1), so they default to MISSING or OFF; Lightning Shield, Water Shield and the poisons last an hour.
+	- selfType names the type a self buff sits under in the window, the Enhanced Spellbook's own heading for it (threat for Righteous Fury, forms for Shadowform, pets for Demonic Sacrifice, buffs for the party auras and shouts, seals, and poisons, which the spellbook has no heading for). Unset, a blessing, a paladin aura or an aspect goes by its exclusive family, any other group buff under Buffs and any other self buff under Self-Buffs (Features/Buff-Duty/Buff-Duty-Lookups.lua).
+	- The druid forms you stay in (Bear Form, Cat Form, Moonkin Form) share pickOne = "DRUID_FORM": the druid picks one of them, or none, and only that one is offered. Each starts OFF, so no druid is shifted without choosing, and castLast casts it after every other buff, since a form shuts out the rest. Their learn levels here haven't been checked against this client. Travel, Aquatic and Flight Form are left out, and so is Incarnation: Tree of Life, which is a cooldown.
 	- castLast puts a self buff after every other cast of yours on the Buff Key: Shadowform shuts out Holy spells, so it waits until your other casts are out.
 	- A rogue's poisons are self buffs on this client: each one's cast puts an hour-long aura on the rogue (APPLY_AURA, PROC_TRIGGER_SPELL), not a weapon enchant. Leeching Poison (tier 3, level 45) and Paralytic Poison (tier 5, level 75) are talents.
 	- The seals, Inner Fire and Inner Will, and the lethal and non-lethal poisons each allow only one up at a time, but they carry no exclusive family: the Self-Buffs panel names a family of two or more by L["BUFF_DUTY_SELF_NOTE_<family>"], and this locale has no such entry for them yet, so a new family would raise a missing-entry error. Instead one of each starts on (Seal of Truth, Inner Fire, Deadly Poison, Crippling Poison) and the rest start OFF. Seal of Command shares Seal of Truth's row: Truth replaces it at 24 (SkillLineAbility.SupercedesSpell).

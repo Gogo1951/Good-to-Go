@@ -32,6 +32,8 @@ local SECTION_GAP = 16
 local BUTTON_HEIGHT = 22
 local DIVIDER_ABOVE = 16
 local DIVIDER_BELOW = 8
+-- Under the Options row: the row's own 8 below its text makes up PADDING.
+local FOOT = PADDING - 8
 local COLUMN_GAP = 32 -- between the columns, so one amount doesn't run into the next
 local ARROW_WIDTH = 12
 
@@ -183,6 +185,12 @@ end
 
 local function NameText(item)
 	return ns.ClassColoredName(item.record.name or "?", item.record.class)
+end
+
+-- Class color; the value color for a class the table does not hold.
+local function BankText(bank)
+	local color = ns.GetClassColor(bank.class)
+	return color and (color .. bank.name .. "|r") or Kit.Color("VALUE", bank.name)
 end
 
 local function Widest(texts, least)
@@ -339,7 +347,7 @@ function CR.RenderWindow()
 	bankLine:ClearAllPoints()
 	bankLine:SetPoint("TOPLEFT", PADDING - ROW_INSET, y)
 	bankLine:SetWidth(rowWidth)
-	bankValue:SetText(bank and Kit.Color("VALUE", bank.name) or Muted(L["CURRENCY_REPLENISH_NO_BANK"]))
+	bankValue:SetText(bank and BankText(bank) or Muted(L["CURRENCY_REPLENISH_NO_BANK"]))
 	y = y - ROW_HEIGHT - GROUP_GAP
 
 	local x = PADDING
@@ -396,7 +404,10 @@ function CR.RenderWindow()
 	end
 	y = y - BUTTON_HEIGHT
 
-	y = y - DIVIDER_ABOVE
+	-- The footer is measured first, so the height's rounding widens the gap above it, not the foot.
+	local rawHeight = -y + DIVIDER_ABOVE + 1 + DIVIDER_BELOW + ROW_HEIGHT + FOOT
+	local height = SnapUp(rawHeight)
+	y = y - DIVIDER_ABOVE - (height - rawHeight)
 	footerDivider:ClearAllPoints()
 	footerDivider:SetPoint("TOPLEFT", content, "TOPLEFT", PADDING, y)
 	footerDivider:SetWidth(inner)
@@ -404,9 +415,8 @@ function CR.RenderWindow()
 	footer:ClearAllPoints()
 	footer:SetPoint("TOPLEFT", content, "TOPLEFT", PADDING - ROW_INSET, y)
 	footer:SetWidth(rowWidth)
-	y = y - ROW_HEIGHT - PADDING
 
-	anchor:SetSize(width, SnapUp(-y))
+	anchor:SetSize(width, height)
 end
 
 --------------------------------------------------------------------------------

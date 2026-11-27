@@ -27,6 +27,7 @@ ns.FISHING_LURES = {
 ns.FISHING_GEAR = {
 	head = {
 		[19972] = { 5, 1, 0 }, -- Lucky Fishing Hat
+		[33820] = { 5, 0, 0 }, -- Weather-Beaten Fishing Hat
 	},
 	feet = {
 		[19969] = { 5, 1, 0 }, -- Nat Pagle's Extreme Anglin' Boots
@@ -54,13 +55,17 @@ Notes
 	- Lures are the items whose use spell puts a temporary enchant (SpellEffect 54) on the weapon carrying a Fishing skill spell. Left out: Ninja Hook [PH] (35713, a placeholder), QAEnchant Gloves +5 Fishing (23727, a QA item), Weather-Beaten Fishing Hat (33820, whose lure works only while worn), and the permanent lines (19971, 34836).
 	- Captain Rumsey's Lager (34832) buffs the player (+10 Fishing), not the pole, and isn't Well Fed, so no row.
 	- Spearfisher's Waders are WoW Forever's alone, so this client has no legs row.
-	- Worn Fishing Hat (7996, +5 Fishing, level 15) and Weather-Beaten Fishing Hat (33820, +5 Fishing) are left out of the gear: QuestieDB's TBC table names no drop, vendor or quest for either and no spell makes them, so they're likely unobtainable here.
+	- Weather-Beaten Fishing Hat (33820, +5 Fishing, no requirements) comes in the Bag of Fishing Treasures (34863, 35348) from the Shattrath fishing dailies, per Wowhead TBC; QuestieDB's TBC table doesn't list that bag's contents.
+	- Worn Fishing Hat (7996, +5 Fishing, level 15) is left out: its only source is quest 8226 (Rare Fish - Pale Ghoulfish), which has no quest giver on Wowhead and isn't in QuestieDB, so it's unobtainable here.
+	- Nat Pagle's Extreme Angler FC-5000 binds on pickup and comes only from Snapjaws, Mon! (7815), a Horde quest (QuestieDB required races 178), so only Horde characters carry it.
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query
 
 Wowhead
-	None.
+	https://www.wowhead.com/tbc/item=33820
+	https://www.wowhead.com/tbc/item=19022
+	https://www.wowhead.com/classic/quest=8226
 
 wago.tools
 	https://wago.tools/db2/ItemSparse?build=2.5.6.70577

@@ -56,7 +56,8 @@ Notes
 	- Lures are the items whose use spell puts a temporary enchant (SpellEffect 54) on the weapon carrying a Fishing skill spell. QAEnchant Gloves +5 Fishing (23727) is a QA item and left out; High Test Eternium Fishing Line (19971) is a permanent pole enchant, not a lure.
 	- 12221 and 12222 have Item rows and a +5 effect but no ItemSparse row or name, so they're left out.
 	- Spearfisher's Waders are WoW Forever's alone, so this client has no legs row.
-	- Worn Fishing Hat (7996, +5 Fishing, level 15) is left out: QuestieDB's Classic table names no drop, vendor or quest for it and no spell makes it, so it's likely unobtainable here.
+	- Worn Fishing Hat (7996, +5 Fishing, level 15) is left out: its only source is quest 8226 (Rare Fish - Pale Ghoulfish), which has no quest giver on Wowhead and isn't in QuestieDB, so it's unobtainable here.
+	- Nat Pagle's Extreme Angler FC-5000 binds on pickup and comes only from Snapjaws, Mon! (7815), a Horde quest (QuestieDB required races 178), so only Horde characters carry it.
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query

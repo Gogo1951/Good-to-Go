@@ -6,16 +6,17 @@ local SetIcon = ns.SetBuffDutyIcon
 local AcquireOtherIcon = ns.AcquireBuffDutyOtherIcon
 local SetOtherIcon = ns.SetBuffDutyOtherIcon
 
+local Kit = ns.MenuKit
+
 local Layout = {}
 ns.buffDutyLayout = Layout
 
 local ICON_SIZE = Data.BUFF_DUTY_ICON_SIZE
 local LABEL_ICON_SIZE = Data.BUFF_DUTY_LABEL_ICON_SIZE
 local ICON_GAP = 4
-local ROW_HEIGHT = ICON_SIZE + ICON_GAP
--- Four times the row gap, so a section's last row never reads as the next one's first.
-local SECTION_SPACE = 16
 local NAME_GAP = 8
+-- Fold buttons, like the icons, sit over the window's rows (Kit.AddWindowRow), which sit one above the window.
+local ABOVE_ROWS = 2
 
 --[[
     Held while the window stays up for the same group, so it keeps its width
@@ -104,7 +105,8 @@ local function AcquireFoldButton()
 	local button = foldButtons[usedFoldButtons]
 	if not button then
 		button = CreateFrame("Button", nil, pool.content)
-		button:SetHeight(ICON_SIZE)
+		button:SetFrameLevel(pool.content:GetFrameLevel() + ABOVE_ROWS)
+		button:SetHeight(Kit.ROW_HEIGHT)
 		button:RegisterForClicks("LeftButtonUp")
 		button:RegisterForDrag("LeftButton")
 		button.glyph = button:CreateTexture(nil, "ARTWORK")
@@ -127,96 +129,63 @@ local function ReleaseFoldButtons()
 end
 
 --[[
-    Menu buttons are plain, so they work in combat, and kept by the menu they
-    open rather than pooled by place, so an open menu stays on its line
-    across a redraw.
+    A line with a menu is one window row across the window, lit end to end,
+    opening its menu on hover anywhere on it (Kit.AddWindowRow). The rows
+    share Buff Duty's one menu by key, so each opens it through
+    ns.ShowBuffDutyMenu, which keeps the row lit as Kit.OpenRowMenu does.
+    Rows are plain, so they work in combat, and kept by the menu they open
+    rather than pooled by place, so an open menu stays on its line across a
+    redraw. The line's name is Buff Duty's own label, so the row's sides stay
+    empty; its icons sit over it at a higher frame level, so a click on one
+    still casts.
 ]]
-local ARROW_WIDTH = 12
-local ARROW_GAP = 4
-local ARROW_HIGHLIGHT_ALPHA = 0.16
-local arrowButtons, nameButtons = {}, {}
+local menuRows = {}
 
 local function OpenLineMenu(self)
-	local key = self.menuKey
-	ns.ShowBuffDutyMenu(arrowButtons[key] or self, key)
+	ns.ShowBuffDutyMenu(self, self.menuKey)
 end
 
-local function AcquireArrowButton(key)
-	local button = arrowButtons[key]
-	if not button then
-		button = CreateFrame("Button", nil, pool.content)
-		button:SetSize(ARROW_WIDTH, ICON_SIZE)
-		button:RegisterForClicks("LeftButtonUp")
-		button:RegisterForDrag("LeftButton")
-		local arrow = button:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-		arrow:SetPoint("RIGHT")
-		arrow:SetText(ns.MenuKit.SUBMENU_ARROW)
-		local highlight = button:CreateTexture(nil, "HIGHLIGHT")
-		local gold = ns.COLORS_RGB.TITLE
-		highlight:SetColorTexture(gold.r, gold.g, gold.b, ARROW_HIGHLIGHT_ALPHA)
-		highlight:SetPoint("TOPLEFT", -ARROW_GAP, 0)
-		highlight:SetPoint("BOTTOMRIGHT", ARROW_GAP, 0)
-		button:SetScript("OnEnter", OpenLineMenu)
-		button:SetScript("OnClick", OpenLineMenu)
-		button:SetScript("OnDragStart", OnFoldDragStart)
-		button:SetScript("OnDragStop", OnFoldDragStop)
-		-- So the menu overlaps the window's edge rather than the arrow (Menu Kit's "line").
-		button.window = pool.content
-		button.menuKey = key
-		arrowButtons[key] = button
+local function AcquireMenuRow(key)
+	local row = menuRows[key]
+	if not row then
+		row = Kit.AddWindowRow(pool.content, ns.buffDutyOptionsMenu)
+		row:SetScript("OnEnter", OpenLineMenu)
+		row:SetScript("OnClick", OpenLineMenu)
+		row:RegisterForDrag("LeftButton")
+		row:SetScript("OnDragStart", OnFoldDragStart)
+		row:SetScript("OnDragStop", OnFoldDragStop)
+		row.menuKey = key
+		menuRows[key] = row
 	end
-	return button
-end
-
-local function AcquireNameButton(key)
-	local button = nameButtons[key]
-	if not button then
-		button = CreateFrame("Button", nil, pool.content)
-		button:SetHeight(ICON_SIZE)
-		button:RegisterForClicks("LeftButtonUp")
-		button:RegisterForDrag("LeftButton")
-		button:SetScript("OnClick", OpenLineMenu)
-		button:SetScript("OnDragStart", OnFoldDragStart)
-		button:SetScript("OnDragStop", OnFoldDragStop)
-		button.menuKey = key
-		nameButtons[key] = button
-	end
-	return button
+	return row
 end
 
 local function ReleaseMenuButtons()
-	for _, button in pairs(arrowButtons) do
-		button:Hide()
-	end
-	for _, button in pairs(nameButtons) do
-		button:Hide()
+	for _, row in pairs(menuRows) do
+		row:Hide()
 	end
 end
 
 --[[
     `offsets` maps a buff's column to pixels from the grid's first icon; `x`
-    and `right` are the window column's edges, `y` the row's middle. A packed
+    and `right` are the window column's edges, `top` the row's top. Every
+    line is a Kit.ROW_HEIGHT row, its name and icons centered on it. A packed
     line skips the columns, its icons side by side against the right edge, so
-    a cast leaves no gap.
+    a cast leaves no gap. withMenus places a line's menu row across the window.
 ]]
-local function PlaceRow(line, x, right, y, nameWidth, offsets, gridWidth, arrowRight)
+local function PlaceRow(line, x, right, top, nameWidth, offsets, gridWidth, withMenus)
 	local content = pool.content
+	local y = top - Kit.ROW_HEIGHT / 2
 	local label, indent = line.label, line.indent
 	label:ClearAllPoints()
 	label:SetPoint("LEFT", content, "TOPLEFT", x + indent, y)
 	label:SetWidth(nameWidth - indent)
 	label:Show()
 
-	if line.menu and arrowRight then
-		local arrow = AcquireArrowButton(line.menu)
-		arrow:ClearAllPoints()
-		arrow:SetPoint("RIGHT", content, "TOPLEFT", arrowRight, y)
-		arrow:Show()
-		local name = AcquireNameButton(line.menu)
-		name:ClearAllPoints()
-		name:SetPoint("LEFT", content, "TOPLEFT", x, y)
-		name:SetWidth(nameWidth)
-		name:Show()
+	if line.menu and withMenus then
+		local row = AcquireMenuRow(line.menu)
+		Kit.PlaceWindowRow(row, top)
+		row:Show()
 	end
 
 	-- Missing Inventory! sits at the line's right end, after any icons, which move left to make room.
@@ -301,24 +270,22 @@ local function GridSlots(sections)
 	return offsetsByGrid, widths
 end
 
--- Returns the next run's first middle and this run's lowest edge.
-local function PlaceLines(lines, x, right, y, nameWidth, offsetsByGrid, widths, arrowRight)
-	local bottom = y
+-- Rows stack edge to edge; a section's end adds a spacer. Returns the next run's top and this run's lowest row edge.
+local function PlaceLines(lines, x, right, top, nameWidth, offsetsByGrid, widths, withMenus)
+	local bottom = top
 	for _, line in ipairs(lines) do
-		PlaceRow(line, x, right, y, nameWidth, offsetsByGrid[line.grid], widths[line.grid], arrowRight)
-		bottom = y - ICON_SIZE / 2
-		y = y - ROW_HEIGHT
+		PlaceRow(line, x, right, top, nameWidth, offsetsByGrid[line.grid], widths[line.grid], withMenus)
+		bottom = top - Kit.ROW_HEIGHT
+		top = bottom
 		if line.sectionEnd then
-			y = y - (SECTION_SPACE - ICON_GAP)
+			top = top - Kit.WINDOW_SPACER
 		end
 	end
-	return y, bottom
+	return top, bottom
 end
 
 Layout.ICON_GAP = ICON_GAP
-Layout.SECTION_SPACE = SECTION_SPACE
 Layout.FOLD_INDENT = LABEL_ICON_SIZE
-Layout.ROW_HEIGHT = ROW_HEIGHT
 Layout.NAME_GAP = NAME_GAP
 Layout.MAIN_GRID = MAIN_GRID
 Layout.held = held
@@ -327,4 +294,4 @@ Layout.GridSlots = GridSlots
 Layout.PlaceLines = PlaceLines
 Layout.ReleaseFoldButtons = ReleaseFoldButtons
 Layout.ReleaseMenuButtons = ReleaseMenuButtons
-Layout.ARROW_SPACE = ARROW_WIDTH + ARROW_GAP
+Layout.ABOVE_ROWS = ABOVE_ROWS

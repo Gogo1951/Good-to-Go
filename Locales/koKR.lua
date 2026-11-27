@@ -2067,9 +2067,12 @@ L["BUFF_DUTY_MENU_SHOW_MISSING_INVENTORY"] = "소지품 없음 표시"
 L["BUFF_DUTY_ROW_OUT_DESCRIPTION"] =
 	'버프가 없고 가방에 그 버프를 주는 것이 없을 때 창에 "소지품 없음!"을 표시합니다.'
 L["BUFF_DUTY_MENU_IN_YOUR_BAGS"] = "가방 안"
-L["BUFF_DUTY_MENU_YOUR_SPELLS"] = "내 주문"
 L["BUFF_DUTY_MENU_NONE_IN_BAGS"] = "가방에 없습니다."
 L["BUFF_DUTY_MENU_NO_SPELLS"] = "직업에 맞는 버프가 없습니다."
+L["BUFF_DUTY_MENU_PICK_NONE"] = "없음"
+L["BUFF_DUTY_SELF_FORM_PICK"] = "변신"
+L["BUFF_DUTY_SELF_FORM_PICK_DESCRIPTION"] =
+	"변신하지 않은 동안 창에서 제안할 변신을 고릅니다. 없음은 절대 변신시키지 않습니다."
 L["BUFF_DUTY_MENU_OTHER_PLAYERS"] = "다른 플레이어"
 L["BUFF_DUTY_MENU_ITEM_DESCRIPTION_FORMAT"] =
 	"버프가 없을 때 창에서 %s을(를) 제안합니다. 끄면 건너뜁니다."
@@ -2772,11 +2775,11 @@ L["CURRENCY_REPLENISH_GOLD_NOW"] = "현재 금액"
 L["CURRENCY_REPLENISH_KEEPS"] = "목표 금액"
 L["CURRENCY_REPLENISH_RECORDED_AGO"] = "%s 전에 기록됨"
 
--- The Target Amount list's last row, its popup (%s is the character's name), and the Skip Under 1g switch.
+-- The Target Amount list's last row, its popup (%s is the character's name), and the Skip Top-Ups Under 1g switch.
 L["CURRENCY_REPLENISH_OTHER_AMOUNT"] = "다른 금액"
 L["CURRENCY_REPLENISH_REMOVE_CHARACTER"] = "캐릭터 제거"
 L["CURRENCY_REPLENISH_KEEPS_FOR"] = "%s의 목표 금액"
-L["CURRENCY_REPLENISH_SKIP_SMALL"] = "1골드 미만 건너뛰기"
+L["CURRENCY_REPLENISH_SKIP_SMALL"] = "1골드 미만 보충 건너뛰기"
 L["CURRENCY_REPLENISH_SKIP_SMALL_DESCRIPTION"] =
 	"부족분이 1골드 미만인 캐릭터는 우편을 보낼 만하지 않으므로 보충에서 제외합니다."
 

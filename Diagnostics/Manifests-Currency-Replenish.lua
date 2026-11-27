@@ -258,7 +258,7 @@ function ns:BuildCurrencyReplenishContextReport()
 	end
 
 	lines[#lines + 1] = string.format(
-		"Currency Replenish: %s (off hides the tab and hears nothing but the login) // Skip Under 1g: %s",
+		"Currency Replenish: %s (off hides the tab and hears nothing but the login) // Skip Top-Ups Under 1g: %s",
 		OnOff(settings.enabled),
 		OnOff(settings.skipSmall)
 	)

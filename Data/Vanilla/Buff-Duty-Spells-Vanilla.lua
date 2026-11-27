@@ -166,7 +166,7 @@ ns.BUFF_DUTY_PET_ICONS = {
 	},
 }
 
--- { class, ranks = { { spell id, level learned } }, auras, exclusive, needsPet, castLast, noShadowform, party (it lands on your party too), default (minutes left, MISSING or OFF) }, -- Name
+-- { class, ranks = { { spell id, level learned } }, auras, exclusive, needsPet, castLast, noShadowform, party (it lands on your party too), pickOne, selfType, default (minutes left, MISSING or OFF) }, -- Name
 ns.BUFF_DUTY_SELF_SPELLS = {
 	-- Druid ---------------------------------------------------------------------
 	{
@@ -174,11 +174,36 @@ ns.BUFF_DUTY_SELF_SPELLS = {
 		ranks = { { 16864, 20 } },
 		default = 3,
 	}, -- Omen of Clarity
+	{
+		class = "DRUID",
+		ranks = { { 5487, 10 }, { 9634, 40 } },
+		castLast = true,
+		pickOne = "DRUID_FORM",
+		selfType = "forms",
+		default = OFF,
+	}, -- Bear Form, Dire Bear Form
+	{
+		class = "DRUID",
+		ranks = { { 768, 20 } },
+		castLast = true,
+		pickOne = "DRUID_FORM",
+		selfType = "forms",
+		default = OFF,
+	}, -- Cat Form
+	{
+		class = "DRUID",
+		ranks = { { 24858, 40 } },
+		castLast = true,
+		pickOne = "DRUID_FORM",
+		selfType = "forms",
+		default = OFF,
+	}, -- Moonkin Form
 	-- Hunter --------------------------------------------------------------------
 	{
 		class = "HUNTER",
 		ranks = { { 19506, 40 }, { 20905, 50 }, { 20906, 60 } },
 		default = 3,
+		selfType = "buffs",
 	}, -- Trueshot Aura
 	{
 		class = "HUNTER",
@@ -284,6 +309,7 @@ ns.BUFF_DUTY_SELF_SPELLS = {
 		class = "PALADIN",
 		ranks = { { 25780, 16 } },
 		default = OFF,
+		selfType = "threat",
 	}, -- Righteous Fury
 	-- Priest --------------------------------------------------------------------
 	{
@@ -307,6 +333,7 @@ ns.BUFF_DUTY_SELF_SPELLS = {
 		ranks = { { 15473, 40 } },
 		default = MISSING,
 		castLast = true,
+		selfType = "forms",
 	}, -- Shadowform
 	-- Shaman --------------------------------------------------------------------
 	{
@@ -328,6 +355,7 @@ ns.BUFF_DUTY_SELF_SPELLS = {
 		auras = { 18789, 18790, 18791, 18792 },
 		exclusive = WARLOCK_DEMON,
 		default = MISSING,
+		selfType = "pets",
 	}, -- Demonic Sacrifice
 	{
 		class = "WARLOCK",
@@ -343,6 +371,7 @@ ns.BUFF_DUTY_SELF_SPELLS = {
 		ranks = { { 6673, 1 }, { 5242, 12 }, { 6192, 22 }, { 11549, 32 }, { 11550, 42 }, { 11551, 52 }, { 25289, 60 } },
 		party = true,
 		default = MISSING,
+		selfType = "buffs",
 	}, -- Battle Shout
 }
 
@@ -508,6 +537,8 @@ Notes
 	- The setting is keyed by the first single-target ID, the lowest rank.
 	- BUFF_DUTY_PET_ICONS picks the icon in front of a pet's name: a warlock demon wears its own summoning spell's icon, found by the creature ID inside the pet's GUID, and any other pet wears Call Pet's. Only the spell IDs are stored; the icons come from the client.
 	- BUFF_DUTY_SELF_SPELLS are the long buffs a player can only put on themselves, behind the window's Self Buffs row: armors, shields, Inner Fire, Omen of Clarity, Trueshot Aura, Shadowform, Demonic Sacrifice, Soul Link, the paladin auras and hunter aspects, which have no timer and only need to be up, and Battle Shout, which a warrior shouts for the group but is listed here to keep up on themselves; a rogue's poisons are weapon enchants, below.
+	- selfType names the type a self buff sits under in the window, the Enhanced Spellbook's own heading for it (threat for Righteous Fury, forms for Shadowform, pets for Demonic Sacrifice, buffs for the party auras and shouts, seals, and poisons, which the spellbook has no heading for). Unset, a blessing, a paladin aura or an aspect goes by its exclusive family, any other group buff under Buffs and any other self buff under Self-Buffs (Features/Buff-Duty/Buff-Duty-Lookups.lua).
+	- The druid forms you stay in (Bear Form with Dire Bear Form as its higher rank, Cat Form, Moonkin Form) share pickOne = "DRUID_FORM": the druid picks one of them, or none, and only that one is offered. Each starts OFF, so no druid is shifted without choosing, and castLast casts it after every other buff, since a form shuts out the rest. Moonkin Form is a talent, learned from level 40. Travel, Aquatic and Flight Form are left out: they're for getting around, not for keeping up.
 	- Talent buffs (Omen of Clarity, Trueshot Aura, Shadowform, Demonic Sacrifice, Soul Link) carry the level their talent tier opens at, and a row only shows for a player who took the talent.
 	- auras names the buffs a cast leaves when they aren't the cast's own ID: Demonic Sacrifice leaves one of four, by the demon sacrificed (Burning Wish, Fel Stamina, Touch of Shadow, Fel Energy), and Soul Link's cast is a dummy that puts up 25228.
 	- Demonic Sacrifice and Soul Link share exclusive = WARLOCK_DEMON: a Soul Link warlock keeps a demon out, so with Soul Link up the sacrifice stops asking, and the other way round. Soul Link starts OFF, and needsPet keeps it from asking while there is no demon to link to.

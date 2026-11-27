@@ -113,6 +113,31 @@ local function PopulateBuffDutyAudience()
 			settings.rowKey[key] = nil
 		end
 	end
+
+	--[[
+	    Each Self-Buffs type starts from the one set Self-Buffs had before it
+	    split, so nothing changes until the player changes it. Show in Buff Duty
+	    needs no seed: unset reads as on.
+	]]
+	for key in pairs(settings.rowShow) do
+		if BuffDuty.IsSelfTypeRow(key) and not tContains(Data.BUFF_DUTY_ROW_SHOW_CHOICES, settings.rowShow[key]) then
+			settings.rowShow[key] = nil
+		end
+	end
+	for _, list in ipairs({ lookup, selfLookup, { BuffDuty.soulstoneEntry } }) do
+		for _, entry in pairs(list) do
+			local row = BuffDuty.SelfTypeRow(entry.selfType, entry.row.class)
+			if settings.rowWhen[row] == nil then
+				settings.rowWhen[row] = settings.rowWhen.self
+			end
+			if settings.rowShow[row] == nil then
+				settings.rowShow[row] = settings.rowShow.self
+			end
+			if settings.rowKey[row] == nil then
+				settings.rowKey[row] = settings.rowKey.self
+			end
+		end
+	end
 end
 
 --------------------------------------------------------------------------------
@@ -164,8 +189,9 @@ function BuffDuty.RowShowSeconds(row)
 	return (ns.db.global.buffWindow.rowShow[row] or Data.BUFF_DUTY_ROW_SHOW_DEFAULT) * 60
 end
 
+-- Self-Buffs are spells: nothing to run out of.
 function BuffDuty.RowOut(row)
-	return row ~= "self" and ns.db.global.buffWindow.rowOut[row] == true
+	return row ~= "self" and not BuffDuty.IsSelfTypeRow(row) and ns.db.global.buffWindow.rowOut[row] == true
 end
 
 -- So a menu leaves out a category this client could never fill.
@@ -204,6 +230,15 @@ end
 
 function BuffDuty.SetSelfItemOn(key, value)
 	ns.db.global.buffWindow.selfRefresh[key] = value and Data.SELF_REFRESH_MISSING or Data.SELF_REFRESH_OFF
+end
+
+-- A pick-one family (the druid forms): `key` goes on and the rest of the family off; nil picks none.
+function BuffDuty.PickSelfItem(entries, family, key)
+	for _, entry in ipairs(entries) do
+		if entry.pickOne == family then
+			BuffDuty.SetSelfItemOn(entry.key, entry.key == key)
+		end
+	end
 end
 ns.PopulateBuffDutyAudience = PopulateBuffDutyAudience
 

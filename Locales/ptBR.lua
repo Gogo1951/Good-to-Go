@@ -2040,9 +2040,12 @@ L["BUFF_DUTY_MENU_SHOW_MISSING_INVENTORY"] = "Mostrar inventário em falta"
 L["BUFF_DUTY_ROW_OUT_DESCRIPTION"] =
 	'Mostra "Inventário em falta!" na janela quando você está sem o buff e nada nas suas bolsas o dá.'
 L["BUFF_DUTY_MENU_IN_YOUR_BAGS"] = "Nas suas bolsas"
-L["BUFF_DUTY_MENU_YOUR_SPELLS"] = "Seus feitiços"
 L["BUFF_DUTY_MENU_NONE_IN_BAGS"] = "Nada nas suas bolsas."
 L["BUFF_DUTY_MENU_NO_SPELLS"] = "Nenhum buff para a sua classe."
+L["BUFF_DUTY_MENU_PICK_NONE"] = "Nenhuma"
+L["BUFF_DUTY_SELF_FORM_PICK"] = "Forma"
+L["BUFF_DUTY_SELF_FORM_PICK_DESCRIPTION"] =
+	"Escolhe a forma que a janela oferece enquanto você não estiver nela. Nenhuma nunca muda sua forma."
 L["BUFF_DUTY_MENU_OTHER_PLAYERS"] = "Outros jogadores"
 L["BUFF_DUTY_MENU_ITEM_DESCRIPTION_FORMAT"] =
 	"Oferece %s na janela quando você está sem o buff dele. Desligado, é ignorado."
@@ -2726,11 +2729,11 @@ L["CURRENCY_REPLENISH_GOLD_NOW"] = "Valor atual"
 L["CURRENCY_REPLENISH_KEEPS"] = "Valor-alvo"
 L["CURRENCY_REPLENISH_RECORDED_AGO"] = "Registrado há %s"
 
--- The Target Amount list's last row, its popup (%s is the character's name), and the Skip Under 1g switch.
+-- The Target Amount list's last row, its popup (%s is the character's name), and the Skip Top-Ups Under 1g switch.
 L["CURRENCY_REPLENISH_OTHER_AMOUNT"] = "Outro valor"
 L["CURRENCY_REPLENISH_REMOVE_CHARACTER"] = "Remover personagem"
 L["CURRENCY_REPLENISH_KEEPS_FOR"] = "Valor-alvo de %s"
-L["CURRENCY_REPLENISH_SKIP_SMALL"] = "Pular menos de 1o"
+L["CURRENCY_REPLENISH_SKIP_SMALL"] = "Pular reposições abaixo de 1o"
 L["CURRENCY_REPLENISH_SKIP_SMALL_DESCRIPTION"] =
 	"O reabastecimento deixa de fora um personagem a quem falta menos de 1o, que não vale uma correspondência."
 

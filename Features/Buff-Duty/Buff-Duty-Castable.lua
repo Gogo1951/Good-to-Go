@@ -132,7 +132,10 @@ function BuffDuty.BuildBuffs()
 
 	wipe(selfBuffs)
 	local selfRefresh = ns.db.global.buffWindow.selfRefresh
-	local selfShow = BuffDuty.RowShowSeconds("self")
+	-- Each Self-Buffs type keeps its own Show.
+	local function SelfShow(entry)
+		return BuffDuty.RowShowSeconds(BuffDuty.SelfTypeRow(entry.selfType))
+	end
 	for _, entry in ipairs(selfEntries) do
 		local when = selfRefresh[entry.key]
 		if entry.row.class == playerClass and when and when ~= Data.SELF_REFRESH_OFF then
@@ -147,7 +150,8 @@ function BuffDuty.BuildBuffs()
 					exclusive = entry.row.exclusive,
 					ranks = ranks,
 					singleName = ranks[1].name,
-					refreshSeconds = selfShow,
+					refreshSeconds = SelfShow(entry),
+					selfType = entry.selfType,
 					-- Soul Link only means anything with a demon out.
 					needsPet = entry.row.needsPet,
 					-- Shadowform: the Buff Key casts it after everything else.
@@ -188,7 +192,8 @@ function BuffDuty.BuildBuffs()
 					ranks = ranks,
 					singleName = ranks[1].name,
 					groupId = HighestKnown(entry.groupIds),
-					refreshSeconds = selfShow,
+					refreshSeconds = SelfShow(entry),
+					selfType = entry.selfType,
 					isGroupBuff = true,
 				}
 			end
@@ -215,7 +220,8 @@ function BuffDuty.BuildBuffs()
 				ranks = {},
 				create = known[1],
 				items = stone.items,
-				refreshSeconds = selfShow,
+				refreshSeconds = SelfShow(stone),
+				selfType = stone.selfType,
 			}
 		end
 	end

@@ -2140,9 +2140,12 @@ L["BUFF_DUTY_MENU_SHOW_MISSING_INVENTORY"] = "Показывать нехват�
 L["BUFF_DUTY_ROW_OUT_DESCRIPTION"] =
 	'Показывает "Нет в сумках!" в окне, когда баффа на вас нет и в сумках нет ничего, что его дает.'
 L["BUFF_DUTY_MENU_IN_YOUR_BAGS"] = "В ваших сумках"
-L["BUFF_DUTY_MENU_YOUR_SPELLS"] = "Ваши заклинания"
 L["BUFF_DUTY_MENU_NONE_IN_BAGS"] = "В сумках ничего нет."
 L["BUFF_DUTY_MENU_NO_SPELLS"] = "Для вашего класса баффов нет."
+L["BUFF_DUTY_MENU_PICK_NONE"] = "Нет"
+L["BUFF_DUTY_SELF_FORM_PICK"] = "Облик"
+L["BUFF_DUTY_SELF_FORM_PICK_DESCRIPTION"] =
+	"Выбирает облик, который окно предлагает, пока вы не в нём. «Нет» никогда не меняет облик."
 L["BUFF_DUTY_MENU_OTHER_PLAYERS"] = "Другие игроки"
 L["BUFF_DUTY_MENU_ITEM_DESCRIPTION_FORMAT"] =
 	"Предлагает %s в окне, когда у вас нет его баффа. Если выключено, пропускается."
@@ -2884,11 +2887,11 @@ L["CURRENCY_REPLENISH_GOLD_NOW"] = "Текущая сумма"
 L["CURRENCY_REPLENISH_KEEPS"] = "Целевая сумма"
 L["CURRENCY_REPLENISH_RECORDED_AGO"] = "Записано %s назад"
 
--- The Target Amount list's last row, its popup (%s is the character's name), and the Skip Under 1g switch.
+-- The Target Amount list's last row, its popup (%s is the character's name), and the Skip Top-Ups Under 1g switch.
 L["CURRENCY_REPLENISH_OTHER_AMOUNT"] = "Другая сумма"
 L["CURRENCY_REPLENISH_REMOVE_CHARACTER"] = "Удалить персонажа"
 L["CURRENCY_REPLENISH_KEEPS_FOR"] = "Целевая сумма: %s"
-L["CURRENCY_REPLENISH_SKIP_SMALL"] = "Пропускать меньше 1з"
+L["CURRENCY_REPLENISH_SKIP_SMALL"] = "Пропускать пополнения меньше 1з"
 L["CURRENCY_REPLENISH_SKIP_SMALL_DESCRIPTION"] =
 	"Пополнение пропускает персонажа, которому не хватает меньше 1з: это не стоит письма."
 

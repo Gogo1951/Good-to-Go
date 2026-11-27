@@ -247,7 +247,7 @@ ns.DATABASE_DEFAULTS = {
 		    reset can forget an alt's gold.
 		      enabled    the feature's switch. Ships ON: it only adds a tab to
 		                 the mailbox, and never mails anything unless clicked.
-		      skipSmall  Skip Under 1g: Replenish leaves out a character short
+		      skipSmall  Skip Top-Ups Under 1g: Replenish leaves out a character short
 		                 by less than 1g, which isn't worth a mail's postage.
 		      characters each character's record by ns.GetCharacterKey(): name,
 		                 realm, class, faction, money and when it was seen, what
