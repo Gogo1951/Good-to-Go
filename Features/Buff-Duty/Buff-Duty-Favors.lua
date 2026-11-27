@@ -1,14 +1,6 @@
 local _, ns = ...
 local Data = ns.Data
 
---[[
-    Return the Favor's memory: the strangers outside your group who just buffed
-    you, heard from the combat log or, on WoW Forever, where registering it is
-    forbidden, from your own UNIT_AURA.
-    Each is kept for favorSeconds from their latest buff, up to
-    Data.BUFF_DUTY_FAVOR_MAX of them. Buff-Duty-Outsiders.lua draws the list.
-]]
-
 local BuffDuty = ns.BuffDuty
 
 --------------------------------------------------------------------------------
@@ -17,17 +9,16 @@ local BuffDuty = ns.BuffDuty
 
 local favors = {} -- stranger GUID -> { name, short, class, at, given = { [buff key] = true } }
 
--- The favor kept for a stranger, or nil.
 function BuffDuty.FavorOf(guid)
 	return favors[guid]
 end
 
--- Every favor kept, as guid, favor; a favor may be forgotten while the loop runs.
+-- A favor may be forgotten while the loop runs.
 function BuffDuty.EachFavor()
 	return next, favors, nil
 end
 
--- Drops a favor without a redraw, for the Return the Favor list as it draws.
+-- No redraw: called while the list draws.
 function BuffDuty.ForgetFavor(guid)
 	favors[guid] = nil
 end
@@ -36,12 +27,6 @@ end
 -- Return the Favor
 --------------------------------------------------------------------------------
 
---[[
-    Called for every helpful buff a player outside your group puts on you,
-    from the combat log (ns.NoteFavorFromCombatLog) or, on WoW Forever, from
-    your own UNIT_AURA (ns.NoteFavorFromAuras). Kept for the player's
-    favorSeconds from their latest buff.
-]]
 function ns.NoteFavor(guid, name)
 	if not BuffDuty.isSetUp or not ns.db or not ns.db.global.buffWindow.favorEnabled then
 		return
@@ -62,7 +47,6 @@ function ns.NoteFavor(guid, name)
 			at = GetTime(),
 			given = {},
 		}
-		-- Over the cap, the stranger who buffed you longest ago makes room.
 		local count, oldestGUID, oldestAt = 0, nil, nil
 		for key, entry in pairs(favors) do
 			count = count + 1
@@ -77,17 +61,14 @@ function ns.NoteFavor(guid, name)
 	ns.RequestBuffDutyRefresh()
 end
 
--- The favor icons' right-click.
 function ns.DismissFavor(guid)
 	favors[guid] = nil
 	ns.RequestBuffDutyRefresh()
 end
 
 --[[
-    A buff landing on you in the combat log, where there is one. The source's
-    flags say friendly and outside your group, so a cross-realm "Name-Realm"
-    needs no name lookup; ns.NoteFavor's GUID check then drops a pet, whatever
-    its flags claim.
+    Source flags, not a name lookup, say friendly and outside your group, since
+    cross-realm names break lookups; ns.NoteFavor's GUID check drops a pet.
 ]]
 local band = bit.band
 local playerGUID -- read on the first line, since a character's GUID never changes in a session
@@ -107,12 +88,7 @@ function ns.NoteFavorFromCombatLog(sourceGUID, sourceName, sourceFlags, destGUID
 	ns.NoteFavor(sourceGUID, sourceName)
 end
 
---[[
-    Who put an aura on you, as a GUID and a whisperable name, when it was a
-    friendly player outside your group; nil for anyone else. The aura's own
-    sourceUnit comes first; without one (a stranger with no nameplate) the
-    caster is read by GUID and named with UnitNameFromGUID.
-]]
+-- A stranger with no nameplate has no sourceUnit, so the caster is read by GUID instead.
 local function FavorCaster(aura)
 	local unit = aura.sourceUnit
 	local guid
@@ -157,9 +133,9 @@ local function FavorCaster(aura)
 	end
 
 	--[[
-	    Known by GUID alone: a helpful buff on you is something the other
-	    faction can't cast, so no friendliness check is needed. Whispers need
-	    "Name-Realm" across realms, and a realm name has no spaces there.
+	    No friendliness check: the other faction can't cast a helpful buff on
+	    you. Whispers need "Name-Realm" across realms, with the realm's spaces
+	    stripped.
 	]]
 	local name, realm = UnitNameFromGUID(guid)
 	if not ns.IsPlain(name) or not name or name == "" then
@@ -172,9 +148,8 @@ local function FavorCaster(aura)
 end
 
 --[[
-    Registering the combat log is forbidden on WoW Forever, so the auras just added to you are read
-    off UNIT_AURA instead. Nothing is read in combat or while auras are
-    secret, and a recast of a buff you already have adds nothing to see.
+    WoW Forever forbids the combat log, so added auras are read off UNIT_AURA.
+    A recast of a buff you already have adds nothing to see.
 ]]
 function ns.NoteFavorFromAuras(updateInfo)
 	if not BuffDuty.isSetUp or not ns.db.global.buffWindow.favorEnabled then

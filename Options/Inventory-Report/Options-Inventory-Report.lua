@@ -12,32 +12,17 @@ local Spacer = Kit.Spacer
 --------------------------------------------------------------------------------
 
 --[[
-    The counts Features/Inventory-Report/Inventory-Report-Tooltip.lua adds to
-    item tooltips, on a page of its own in the tree. Its name is the
-    tooltip block's own title (INVENTORY_REPORT_TITLE), so the panel and the
-    tooltip cannot name it two ways.
-
-    The switch is read at every tooltip, so switching it takes effect on the
-    next one without a reload. Not a Restocker settings key: it sits on
-    ns.db.global itself (Data/Default-Settings.lua).
+    The page is named by the tooltip block's own title, so the two can't name it
+    two ways. The switch sits on ns.db.global itself, not the Restocker's settings.
 ]]
 
--- Whatever the report's switch turns off leaves the page with it.
 local function ReportOff()
 	return not ns.db.global.inventoryReport
 end
 
 --[[
-    Recorded Characters: one row per other character on this realm the
-    Inventory Report holds, A to Z, the name in its class color (no realm:
-    every row is on this one), with a remove icon that asks before it forgets them
-    (ns.ForgetRecordedCharacter). Only this realm's, the same characters the
-    tooltip reads (Inventory-Report-Tooltip.lua): the saved table is
-    account-wide, so it also holds characters from the client's other realms
-    and from a WTF folder copied in from another game version, none of whom
-    the tooltip can show here. Added to args only while there is one, so
-    the section isn't there at all otherwise, and hidden while the report is
-    off; the panel is built afresh each time it draws.
+    This realm's only, as the tooltip reads: the saved table is account-wide, so
+    it also holds other realms' characters and ones from a copied WTF folder.
 ]]
 local function AddRecordedCharacters(args, order)
 	local ownKey = ns.GetCharacterKey()
@@ -94,16 +79,7 @@ local function AddRecordedCharacters(args, order)
 	end
 end
 
---[[
-    The Example: the block an item's tooltip gets, under the item's name as
-    the tooltip leads with it, for a consumable in the bags
-    (ns.GetInventoryReportExampleItem; a Hearthstone without one). Drawn
-    through the tooltip's own builder, so it reads the same. A tooltip puts
-    the counts at its right edge, which a panel line cannot, so each row is a
-    name cell and a counts cell. Built with the page, which is built afresh
-    each time it draws, so it follows the bags; shown only while the report is
-    on.
-]]
+-- A tooltip puts the counts at its right edge, which a panel line can't, so each row is two cells.
 local function AddExample(args, order)
 	if ReportOff() then
 		return
@@ -136,7 +112,6 @@ local function AddExample(args, order)
 	args.exampleInventory = example
 end
 
--- Page order: the description, the switch, its Example, then the characters the report has recorded.
 function ns.BuildInventoryReportOptions()
 	local options = {
 		type = "group",

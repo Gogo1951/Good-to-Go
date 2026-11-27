@@ -11,55 +11,24 @@ local Spacer = Kit.Spacer
 --------------------------------------------------------------------------------
 
 --[[
-    What Good to Go says when a ready check starts. One master switch, then
-    three sections matching the three lines the report prints, so the panel and
-    the chat output read as the same feature: Missing Buffs, Missing Items,
-    Character.
-
-    Every switch here can only ever ADD a line about something that is wrong.
-    The report says nothing when a character is ready, and that silence is what
-    lets it cover this much without becoming noise -- see
-    Features/Readiness-Report/Readiness-Report.lua.
-
-    The report itself is built in Features/Readiness-Report/Readiness-Report.lua; this only owns
-    the switches. All of them are account-wide (ns.db.global) -- see
-    Data/Default-Settings.lua for why, and for the defaults.
-
-    LAYOUT. Seventeen switches is more than a page can present as a plain column
-    of checkboxes, so the rows are BUILT rather than declared: SECTIONS below
-    says what exists, and AddReportRow gives every one of them the same parts --
-    the switch, its threshold dropdown where it has one, then a blank line.
-    Building them is what holds that rhythm identical across all seventeen.
+    Every switch may only ADD a line about something wrong; see the silence
+    rule in Readiness-Report.lua. Rows are built from SECTIONS so every one gets
+    the same parts in the same rhythm.
 ]]
 
---[[
-    Everything below the master toggle hides with it, so the page collapses to
-    one switch when the report is off. Baked into the local builders rather than
-    repeated per widget, the same arrangement the Diagnostics panel uses.
-]]
 local function ReportsHidden()
 	return not (ns.db and ns.db.global.readinessReportEnabled)
 end
 
---[[
-    Hidden on Classic Era and Forever on top of the standard gate, matching the
-    check itself: Era raids have flasks and elixirs but do not run on them, so
-    the switch would only offer a line that is wrong for most of the characters
-    it fired at. See ns.HasFlaskOrElixirs' caller in Features/Readiness-Report/Readiness-Report.lua.
-]]
+-- Matches the check: Era raids don't run on flasks (the maintainer's choice).
 local function FlaskHidden()
 	return ReportsHidden() or ns.EXPANSION < 2
 end
 
--- Hidden where this flavor's folder has no pet buff food, since ns.ShouldTrackPetFood can never pass there.
 local function PetWellFedHidden()
 	return ReportsHidden() or next(ns.PET_BUFF_FOODS) == nil
 end
 
---[[
-    Hidden where ns.GetCurrentSpecializationLabel can never answer (Forever, whose
-    talents are Retail's), since the switch would do nothing.
-]]
 local function SpecHidden()
 	return ReportsHidden() or not ns.CanReportSpecialization()
 end
@@ -69,31 +38,14 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Every Readiness Report category back to what a fresh install ships with.
-    The report's own on/off switch (readinessReportEnabled) is left as it is.
-
-    A Reset row of its own (Kit.ResetRow, which repaints every panel after),
-    because these settings are account-wide, and nothing
-    else reaches that scope -- ns.db:ResetProfile() clears the active profile
-    and the profile alone -- so without this button the page has no path back
-    to its defaults at all.
-
-    The keys are derived from ns.DATABASE_DEFAULTS rather than listed again
-    here, so the button can never drift from the declared defaults and a
-    readiness key added later joins the reset for free. Every one of them is a
-    scalar (booleans, plus the two thresholds), which is what makes writing the
-    default straight across safe -- a table default would have to be copied, or
-    the saved table would end up aliasing the defaults table itself.
-
-    Scoped and well-behaved on every other count: it touches this page's own
-    keys and nothing else, no profile among them, and it writes through ns.db
-    like every other control here rather than nil-ing the saved variable, so
-    AceDB stays the only owner of that table.
+    Its own Reset: these are account-wide, and ResetProfile reaches only the
+    profile. Keys come from ns.DATABASE_DEFAULTS, so a new readiness key joins
+    for free. All are scalars, so writing the default across is safe; a table
+    default would alias the defaults table.
 ]]
 local READINESS_KEY_PATTERN = "^readiness"
 local MASTER_SWITCH_KEY = "readinessReportEnabled"
 
--- Whether every category already holds its default, so Reset has nothing to do and grays out.
 local function ReadinessAtDefaults()
 	local defaults = ns.DATABASE_DEFAULTS and ns.DATABASE_DEFAULTS.global
 	if not (ns.db and defaults) then
@@ -124,12 +76,7 @@ end
 -- Thresholds
 --------------------------------------------------------------------------------
 
---[[
-    Expiry choices in seconds, which is what the report compares against. The
-    labels are minutes because that is how a player thinks about a pull timer,
-    and 2.5 is offered because the useful answer sits between the two round
-    numbers either side of it.
-]]
+-- Seconds, labeled as minutes.
 local EXPIRING_SECONDS = { 60, 120, 150, 180, 300, 480 }
 
 local function ExpiringValues()
@@ -140,7 +87,7 @@ local function ExpiringValues()
 			-- Its own key: no plural template renders the one-minute entry grammatically.
 			values[seconds] = L["OPTIONS_READINESS_EXPIRING_MINUTES_ONE"]
 		else
-			-- Trim a whole number's ".0" without rounding the half-minute entry away; that entry takes the locale's decimal mark.
+			-- Trims a whole number's ".0" without rounding the half minute away.
 			local label = (minutes % 1 == 0) and tostring(math.floor(minutes))
 				or (tostring(minutes):gsub("%.", L["DECIMAL_SEPARATOR"]))
 			values[seconds] = string.format(L["OPTIONS_READINESS_EXPIRING_MINUTES"], label)
@@ -159,12 +106,7 @@ local function DurabilityValues()
 	return values
 end
 
---[[
-    A row's optional dropdown: which key it writes, its hover text, the choices
-    and their order. It has no caption: it sits on its switch's line, and the
-    switch's label reads straight into it ("Damaged Gear Below 20%"). The key's
-    default comes from Data/Default-Settings.lua.
-]]
+-- No caption: the switch's label reads straight into it ("Damaged Gear Below 20%").
 local EXPIRING_THRESHOLD = {
 	key = "readinessExpiringThreshold",
 	description = "OPTIONS_READINESS_EXPIRING_THRESHOLD_DESCRIPTION",
@@ -184,18 +126,9 @@ local DURABILITY_THRESHOLD = {
 --------------------------------------------------------------------------------
 
 --[[
-    Every section and every switch, in the order the panel draws them and the
-    order the report prints them.
-
-    Locale KEYS rather than resolved strings, the same way the Restocker
-    window's column table carries its captions: this is a file-scope constant,
-    and the panel resolves each key when it builds.
-
-    A row is its account-wide settings key, its label, and the sentence saying
-    what it reports. A label or sentence that names a game record carries the
-    client's name: `nameArg` and `descriptionArg` fill the key's %s, and a
-    function in place of a key is the label itself. `hidden` overrides the
-    standard gate; `threshold` adds the dropdown that sets the row's value.
+    In the report's print order. Locale keys, resolved at build. `nameArg` and
+    `descriptionArg` fill a key's %s with the client's name for a game record;
+    a function in place of a key is the text itself.
 ]]
 local SECTIONS = {
 	{
@@ -321,12 +254,7 @@ local SECTIONS = {
 -- Row Builders
 --------------------------------------------------------------------------------
 
---[[
-    Opens a section: a break, its header, a break, its summary line and a
-    break under that -- the house rhythm every other panel's sections open with. Every row already ends with
-    its own break, so only the first section, which follows the switch, adds
-    the break above its header. Returns the next order.
-]]
+-- Every row ends with its own break, so only the first section adds one above its header.
 local function AddSection(args, section, order, isFirst)
 	if isFirst then
 		args["space" .. section.key .. "Top"] = Spacer(order, ReportsHidden)
@@ -338,7 +266,6 @@ local function AddSection(args, section, order, isFirst)
 	return order + 5
 end
 
--- A row's label or sentence: a function as it stands, or a key, filled with its arg when it has one.
 local function RowText(text, arg)
 	if type(text) == "function" then
 		return text
@@ -351,15 +278,7 @@ local function RowText(text, arg)
 	return L[text]
 end
 
---[[
-    One category row: the switch, its threshold dropdown on the same line where
-    it has one, and the break under it. What the row reports is the switch's
-    hover text. A change redraws the Example.
-
-    Every part carries the row's own `hidden`, so a row that is not offered
-    (Flask on Era) takes its break with it rather than leaving a gap where
-    its switch would be. A threshold also hides while its own switch is off.
-]]
+-- Every part carries the row's `hidden`, so a row not offered (Flask on Era) takes its break with it.
 local function AddReportRow(args, row, order)
 	local hidden = row.hidden or ReportsHidden
 	local key = row.key
@@ -418,11 +337,6 @@ function ns.BuildReadinessReportOptions()
 	local args = {}
 	local order = 1
 
-	--[[
-	    No leading header repeating the panel's own name: AceConfigDialog already
-	    draws that at the top, and every sibling panel opens straight into its
-	    intro line instead.
-	]]
 	args.descIntro = Desc(L["OPTIONS_READINESS_DESCRIPTION"], order)
 	order = order + 1
 	args.spaceIntro = Spacer(order)
@@ -437,18 +351,12 @@ function ns.BuildReadinessReportOptions()
 		end
 	end
 
-	-- The report as it prints, under the switches that shape it.
 	args.exampleReadiness = Kit.Example(order, ReportsHidden, function()
 		return ns.PrintedExampleLines(ns.BuildReadinessSampleLines())
 	end)
 	order = order + 1
 
-	--[[
-	    Deliberately NOT gated on the report being on: it is what returns the
-	    categories to their defaults, and those keep their values while the
-	    report is off, so a player who has switched the report off still has to
-	    be able to reach it.
-	]]
+	-- Not gated on the switch: the categories keep their values while the report is off.
 	args.spaceReset = Spacer(order)
 	order = order + 1
 	args.resetReadiness = Kit.ResetRow(

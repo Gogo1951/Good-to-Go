@@ -6,20 +6,11 @@ local ADDON_NAME, ns = ...
 
 --[[
     Every feature's on/off switch, in the kit's record shape (Options-Kit.lua →
-    Features). Kit.FeatureSwitch draws it atop the feature's own panel and
-    Kit.FeatureSwitches on the root panel's Features section, two to a line, so
-    both copies share one caption, one tooltip, one confirm and one setter.
+    Features), drawn both atop the feature's panel and on the root panel.
+    Order matches the mini-map menu: its blocks first, then More Features.
 
-    The order is the mini-map menu's: its blocks first (Buff Duty, Restocker),
-    then More Features. The settings tree lists the features' panels in the
-    same order.
-
-    Each switch lives in ns.db.global at `setting`; `apply` runs the feature's
-    own setter, which writes it and does its side effects. `confirm` asks
-    before a switch that keeps macros current turns off: off stops the updates
-    and leaves every macro as it last was, which a player could take for
-    deleting them. The prompt says it doesn't, and turning the switch on never
-    asks.
+    `confirm` asks before a macro-keeping switch turns off: off leaves every
+    macro as it last was, which a player could take for deleting them.
 ]]
 ns.FEATURES = {
 	{
@@ -87,12 +78,26 @@ ns.FEATURES = {
 			ns.SyncReadinessReportEvents()
 		end,
 	},
+	{
+		store = "global",
+		setting = "currencyReplenish.enabled",
+		name = "CURRENCY_REPLENISH",
+		caption = "SWITCH_CURRENCY_REPLENISH",
+		desc = "SWITCH_CURRENCY_REPLENISH_DESCRIPTION",
+		apply = function(value)
+			ns.db.global.currencyReplenish.enabled = value
+			ns.SyncCurrencyReplenishEvents()
+			if not value then
+				ns.CurrencyReplenish.CloseWindow()
+			end
+			ns.CurrencyReplenish.SyncTab()
+		end,
+	},
 }
 
 --[[
-    Wherever Rank Watch's TOC loads it (Mists has no ranks and leaves it out): Ability Alerts While Leveling
-    after Enhanced Spellbook, whose panel it sits under, then Rank Watch after Consumable Macros. The level-up
-    prints run whether Rank Watch is on or not, so their switch only writes its setting.
+    Only where Rank Watch loads (Mists has no ranks). The level-up prints run
+    whether Rank Watch is on or not, so their switch only writes its setting.
 ]]
 if ns.SetRankWatchEnabled then
 	table.insert(ns.FEATURES, 4, {
@@ -115,9 +120,8 @@ if ns.SetRankWatchEnabled then
 end
 
 --[[
-    The ns.FEATURES record for a setting, for its name, its switch's strings and its setter. An unknown setting
-    is a typo in the caller, so it errors. Read when a panel or the mini-map menu is drawn, after every file
-    has loaded, so Features/Minimap-Menu.lua (loaded before this) can call it too.
+    An unknown setting is a caller typo, so it errors. Called only at draw
+    time, so files loaded before this one (Minimap-Menu.lua) can use it too.
 ]]
 function ns.FindFeature(setting)
 	for _, feature in ipairs(ns.FEATURES) do

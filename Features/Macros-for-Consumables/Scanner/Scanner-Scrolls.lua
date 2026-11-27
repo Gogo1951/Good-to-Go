@@ -1,24 +1,13 @@
 local _, ns = ...
 
---[[
-    Scanner-Scrolls -- picks the best scroll in the bags for each enabled
-    scroll type and lists the scrolls whose buff the player still lacks. Whether a scroll buff is already covered is
-    ns.HasScrollBuff in Scanner-Auras.lua.
-]]
-
 --------------------------------------------------------------------------------
 -- Scroll Selection
 --------------------------------------------------------------------------------
 
 --[[
-    Finds the best scroll for a type in the bags: the strongest one carried.
-    Scroll entries: {[1] itemID, [2] buffID, [3] requiredLevel, [4] amount,
-    [5] class token or nil}. The required level only orders the list
-    (Scanner-Auras.lua sorts it highest first); it never gates a scroll, so
-    a scroll in the bags is a scroll Buff Duty offers, at any level. A scroll
-    with a class token is skipped for every other class, since anyone can
-    carry one but only that class can read it. Returns itemID, amount (or
-    nil, nil if nothing usable is found). Diagnostics reads the same pick.
+    Entry: {itemID, buffID, requiredLevel, amount, class token or nil}. The
+    level only orders the list, never gates it. A class scroll is skipped for
+    other classes: anyone can carry it, only its class can read it.
 ]]
 function ns.FindBestScroll(scrollType, bagItemCounts)
 	local data = ns.SCROLL_DATA and ns.SCROLL_DATA[scrollType]
@@ -28,10 +17,7 @@ function ns.FindBestScroll(scrollType, bagItemCounts)
 
 	local _, playerClass = UnitClass("player")
 	for _, entry in ipairs(data.items or {}) do
-		--[[
-		    Scrolls never pass the scanner's ignore filter (callers hand raw
-		    bag counts), so this honors the Ignore List itself.
-		]]
+		-- Callers hand raw bag counts, which skip the scanner's ignore filter.
 		if (entry[5] == nil or entry[5] == playerClass) and not ns.IsIgnored(entry[1]) then
 			if bagItemCounts[entry[1]] and bagItemCounts[entry[1]] > 0 then
 				return entry[1], entry[4]
@@ -42,14 +28,6 @@ function ns.FindBestScroll(scrollType, bagItemCounts)
 	return nil, nil
 end
 
---[[
-    The scrolls you could read now: for each type Buff Duty's Self-Buffs page
-    ticks (scrollTypes), the best one in the bags whose buff you still lack, in
-    ns.SCROLL_CHECK_ORDER. nil when there are none. currentSnapshot is a
-    player snapshot the caller already took, when it has one. The Readiness
-    Report and Diagnostics ask; Buff Duty's window reads the same pieces per
-    type (Buff-Duty-Self.lua).
-]]
 function ns.FindMissingScrolls(bagItemCounts, currentSnapshot)
 	local settings = ns.db and ns.db.profile
 	local scrollTypes = settings and settings.scrollTypes

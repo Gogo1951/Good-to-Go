@@ -1,20 +1,11 @@
 local _, ns = ...
 
---[[
-	The class spells the player hasn't learned yet, for the page's Show Unlearned Spells option: the class
-	trainers teach spell ranks the bundled data lists.
-]]
-
--- The rank in a spell's subtext ("Rank 2"), or nil for a spell without ranks.
 local function RankOf(id)
 	local subtext = C_Spell.GetSpellSubtext(id)
 	return subtext and tonumber(subtext:match("%d+"))
 end
 
---[[
-	Whether a spell isn't rank 1: its subtext says a higher rank, or it requires its own previous rank. Nil
-	while a required spell's name isn't loaded.
-]]
+-- Nil while a required spell's name isn't loaded.
 local function IsHigherRank(spell, name)
 	if (RankOf(spell.id) or 1) > 1 then
 		return true
@@ -32,15 +23,9 @@ local function IsHigherRank(spell, name)
 end
 
 --[[
-	Calls fn(name, icon, id, level, talent) for the rank 1 of every class trainer spell whose name isn't in
-	learned: the bundled ones (Data/) and the ones this character's trainers offered (Trainer-Recording.lua)
-	together with the class lists' extraSpells, by level. level is the row's learn level; an extraSpells
-	entry takes the level ns.EXTRA_SPELL_SOURCES gives it (the level its class quest opens), else the
-	client's learn level, else nil, and those without one come last. talent is true for a row Data/ marks as
-	a talent, or an extraSpells entry whose source is TALENT. Data/ includes the rank 1 of each talent that
-	has trainer ranks, so those talents show until learned; talents without trainer ranks need an extraSpells
-	entry.
-	Spells whose data isn't loaded yet are skipped: the page refreshes on SPELL_DATA_LOAD_RESULT.
+	fn(name, icon, id, level, talent) per unlearned spell's rank 1. Data/ includes the rank 1 of each talent that
+	has trainer ranks; talents without trainer ranks need an extraSpells entry. Spells whose data isn't loaded
+	yet are skipped: the page refreshes on SPELL_DATA_LOAD_RESULT.
 ]]
 function ns.ForEachUnlearnedSpell(fn, learned)
 	local faction, race = UnitFactionGroup("player"), select(3, UnitRace("player"))
@@ -61,10 +46,7 @@ function ns.ForEachUnlearnedSpell(fn, learned)
 		end
 		spells[#spells + 1] = { id = id, level = level and level > 0 and level or nil, talent = source == "TALENT" }
 	end
-	--[[
-		by level, the lowest level row of a spell being its rank 1; rows without a level last; otherwise in list
-		order, so a trainer row stays ahead of an extraSpells entry at the same level
-	]]
+	-- a level tie keeps list order, so a trainer row stays ahead of an extraSpells entry
 	local order = {}
 	for i, spell in ipairs(spells) do
 		order[spell] = i

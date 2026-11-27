@@ -3,34 +3,16 @@ local Data = ns.Data
 local L = ns.L
 
 --[[
-    Ask Your Target for Buffs: Return the Favor the other way round. When your
-    target is a player outside your group whose class casts a buff you're
-    missing, the Target section lists it on a row of its own, "Ask Kiib",
-    and a click on one of its icons, or the Buff Key, whispers them a polite
-    ask naming every buff on the row: "Hey Mate, any chance I could snag a
-    [Fortitude] or [Shadow Protection]? Pretty please // GtG".
-
-    What counts as one they can give: a buff of their class with a
-    single-target version, that your own Who Gets It setting offers you (a
-    buff set to Tanks only while you count as one), that you lack or have
-    running under Refresh Under, and whose lowest rank their level has
-    reached. A talent buff (Divine Spirit) only once they carry it
-    themselves, which shows they can cast it. One Blessing at most, the
-    first your settings want. Your own class's buffs are yours to cast, so
-    they're never asked for, nor is a buff its caster keeps for one player
-    at a time (noAsk: Fear Ward, Earth Shield).
-
-    Manners: no ask while either of you is in combat, or while they're AFK
-    or DND, and each player is asked for each buff at most once every
-    ASK_COOLDOWN; the icon shows the wait as a cooldown swipe. Nothing is
-    printed: the whisper itself shows in your chat.
+    A talent buff (Divine Spirit) is asked for only once the target carries it,
+    which shows they can cast it. Never a noAsk buff, which its caster keeps
+    for one player at a time (Fear Ward, Earth Shield).
 ]]
 
 local BuffDuty = ns.BuffDuty
 -- a secret answer on WoW Forever counts as no, rather than erroring when tested
 local Yes = ns.IsPlainYes
 
--- How long a player waits before they can be asked for the same buff again.
+-- Per player and buff.
 local ASK_COOLDOWN = 300
 BuffDuty.ASK_TARGET_COOLDOWN = ASK_COOLDOWN
 
@@ -44,7 +26,6 @@ local function AskKey(guid, key)
 	return guid .. ":" .. key
 end
 
--- When this player was asked for this buff, while that was under ASK_COOLDOWN ago; otherwise nil.
 function BuffDuty.AskedAt(guid, key)
 	local at = asked[AskKey(guid, key)]
 	if at and GetTime() - at < ASK_COOLDOWN then
@@ -53,7 +34,6 @@ function BuffDuty.AskedAt(guid, key)
 	return nil
 end
 
--- Whether an ask icon's buff can be asked for now. The Buff Key passes over one that can't.
 function BuffDuty.CanAskTarget(spec)
 	local ask = spec and spec.ask
 	return ask ~= nil and not InCombatLockdown() and not BuffDuty.AskedAt(ask.guid, spec.askKey)
@@ -63,7 +43,6 @@ end
 -- Which Buffs
 --------------------------------------------------------------------------------
 
--- Not now: someone fighting, away or busy isn't asked for anything.
 local function Approachable(unit)
 	return not Yes(UnitAffectingCombat(unit))
 		and not Yes(UnitAffectingCombat("player"))
@@ -71,7 +50,7 @@ local function Approachable(unit)
 		and not (UnitIsDND and Yes(UnitIsDND(unit)))
 end
 
--- Whether a player of `level` has learned the buff's lowest rank (BuffDuty.BuildLookup sorts them); an unknown level (UnitLevel's -1) may have.
+-- An unknown level (UnitLevel's -1) may have learned it.
 local function LevelAllows(entry, level)
 	local lowest = entry.ranks[1]
 	if not lowest or not ns.IsPlain(level) or not level or level <= 0 then
@@ -80,11 +59,7 @@ local function LevelAllows(entry, level)
 	return level >= lowest.level
 end
 
---[[
-    Every buff of `class` your settings offer anyone, shaped like a castable
-    buff so Wants and Has can read it. No ranks of yours to weigh theirs
-    against, so any version on you counts, by its time left.
-]]
+-- Shaped like a castable buff for Wants and Has; empty ranks, so any version counts by time left.
 local function Candidates(class, level)
 	local audience = ns.db.global.buffWindow.audience
 	local candidates = {}
@@ -115,11 +90,7 @@ local function Candidates(class, level)
 	return candidates
 end
 
---[[
-    The Target section's ask row for your target, or nil when there is
-    nothing to ask them for. `class` and `short` are theirs. Asked while
-    BuildSections runs, which sets the Refresh Under time Has reads.
-]]
+-- Called while BuildSections runs, which sets the refresh time Has reads.
 function BuffDuty.TargetAskRow(class, short)
 	local db = ns.db.global.buffWindow
 	if not db.askTarget or not class then
@@ -163,7 +134,7 @@ function BuffDuty.TargetAskRow(class, short)
 				if family then
 					picked[family] = true
 				end
-				-- The top rank (the ids are sorted lowest first), for the icon, its tooltip and the whisper's link.
+				-- The top rank: ids are sorted lowest first.
 				local spellId = entry.ids[#entry.ids]
 				ask.specs[#ask.specs + 1] = BuffDuty.WithTimeLeft({
 					ask = ask,
@@ -191,14 +162,7 @@ end
 -- Asking
 --------------------------------------------------------------------------------
 
---[[
-    An ask icon's click and the Buff Key: one whisper naming every buff on
-    the row not asked for in the last ASK_COOLDOWN, in the player's own
-    words (the Buff Duty panel's composer) or the chosen language's default.
-    Linked buffs that won't fit the chat ceiling go by name instead. An
-    emptied whisper sends nothing. Only while they're still your target,
-    out of combat. Returns whether it sent.
-]]
+-- Returns whether it sent. An emptied whisper sends nothing; nothing is printed, since the whisper shows in chat.
 function ns.AskTargetForBuffs(spec)
 	local ask = spec and spec.ask
 	if not ask or InCombatLockdown() then
@@ -230,7 +194,6 @@ function ns.AskTargetForBuffs(spec)
 		asked[AskKey(ask.guid, key)] = now
 	end
 	ns:QueueAutomatedWhisper(ask.name, message)
-	-- The wait shows at once as each icon's cooldown swipe.
 	ns.UpdateBuffDutyCooldowns()
 	return true
 end

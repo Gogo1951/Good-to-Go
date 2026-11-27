@@ -15,50 +15,16 @@ local _, ns = ...
 ]]
 
 --[[
-    A WoW Forever character has a first name and a surname. Every release up
-    to and including 2026.09.24.A keyed a character by UnitName's first value
-    and its realm, which on Forever is the first name alone
-    ("Gogodruid-ClassicBetaPvE"). The Restock List then showed every character
-    by half its name, and two characters sharing a first name shared one key.
-    ns.GetCharacterKey (Features/Utilities.lua) now takes
-    the whole name ("Gogodruid Forever-ClassicBetaPvE"), and this moves what
-    was saved under the old key to the new one, in each table keyed by
-    character:
+    Moves a Forever character's first-name key ("Gogodruid-Realm") in
+    listsByCharacter and inventory to its whole-name key. Must run before
+    ns.MoveCharactersOntoOwnProfiles, which finds entries by whole name.
 
-      ns.db.global.restocker.listsByCharacter       the list a character uses
-      ns.db.global.inventory                        its Inventory Report record
-
-    The first of those is itself on its way out: the list a character uses is
-    kept in global.restocker.listChoices now, and ns.MoveCharactersOntoOwnProfiles
-    (Features/Macros-for-Consumables/Default-Profile-Migration.lua) carries each entry there right
-    after this. It finds a character's entry by its whole name, which is why
-    this runs first.
-
-    Without it a character would log in as one the add-on has never seen: onto
-    a fresh, empty class-named list, with its real list still in the file.
-
-    The old key's entry replaces one already under the new key. That one can
-    only be a leftover: an early beta build's UnitName gave the whole name, so
-    a file that has been through it holds the same character under both keys,
-    and the first-name key is the one the add-on has been writing since.
-
-    Only the character playing moves, by what the client says its names are,
-    and every other character moves at its own login. A logged-out character's
-    entries wait under its first name: nothing tells an add-on its surname, and
-    profileKeys holds no realm for a Forever character, so a first name alone
-    could belong to a namesake on another realm, and matching by it would hand
-    one character's list and bags to the other.
-
-    Era and TBC characters have the one name, so their keys do not change and
-    this returns at once.
-
-    Called from InitializeDatabase in Features/Core.lua, after the settings
-    copied in from Connoisseur & Restocker and before
-    ns.MoveCharactersOntoOwnProfiles reads listsByCharacter. Once it has run this character's first-name key is
-    gone, so a second login changes nothing.
+    The old key's entry wins over one already under the new key: that one is
+    a leftover from an early beta build. Only the character playing moves; a
+    logged-out character's surname is unknown and profileKeys holds no realm,
+    so matching by first name could hand its data to a namesake.
 ]]
 
--- Every saved table keyed by character, handed to `visit` one at a time.
 local function ForEachCharacterTable(visit)
 	local global = ns.db.global
 	local restocker = global.restocker
@@ -82,12 +48,12 @@ end
 function ns.RekeyCharactersByFullName()
 	local firstName = UnitName("player")
 	local fullName = ns.GetPlayerFullName()
-	-- Era and TBC, where the two are the same name. Or a name the client has not given yet, which moves nothing.
+	-- Era and TBC have one name, so nothing moves.
 	if not firstName or not fullName or fullName == firstName then
 		return
 	end
 
-	-- This character's old key is its new one with the surname taken back out.
+	-- The old key is the new one with the surname taken out.
 	local newKey = ns.GetCharacterKey()
 	MoveCharacter(firstName .. newKey:sub(#fullName + 1), newKey)
 end

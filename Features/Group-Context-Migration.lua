@@ -15,11 +15,9 @@ local _, ns = ...
 ]]
 
 --[[
-    Every setting that turns on or off by group became one checkbox per group
-    context (Solo, Party, Raid, Battleground; ns.GROUP_CONTEXTS). What each
-    setting did before carries over for battlegrounds, which used to count as
-    a raid, and as a party or raid. Arenas now follow Battleground: they used
-    to count as a party, and no single old answer covers both.
+    Every by-group setting becomes one checkbox per ns.GROUP_CONTEXTS entry.
+    Battleground takes the old raid answer (a battleground counted as a raid);
+    arenas follow Battleground, since no single old answer covers them.
 
     Buff Duty's When to Show, account-wide: showSolo, showParty and showRaid
     become showIn's solo, party and raid, and Battleground takes Raid's
@@ -34,16 +32,13 @@ local _, ns = ...
       maxlevel  every box ticked, level filter At Max Level
     An unknown mode reads as always, as ns.IsModeActive read it.
 
-    AceDB saves only what differs from the defaults, so an old key is present
-    only when the player set it, and a missing one meant the old default,
-    which the new defaults keep meaning. The active tables already carry the
-    new defaults; a profile nobody has loaded yet gets only what differs, and
-    AceDB fills in the rest when it loads. Each old key goes once it has moved,
-    so a second login changes nothing.
+    AceDB saves only what differs from the defaults, so a missing old key
+    meant the old default, which the new defaults keep meaning; a profile not
+    yet loaded gets only what differs. Each old key goes once moved, so a
+    second login changes nothing.
 
-    Called from InitializeDatabase in Features/Core.lua, right after AceDB
-    loads and before any profile is copied onto another, so every copy is
-    already in the new shape.
+    Must run right after AceDB loads and before any profile copy, so every
+    copy is already in the new shape.
 ]]
 
 local BUFF_DUTY_SHOW = {

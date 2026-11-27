@@ -2,36 +2,19 @@ local _, ns = ...
 local L = ns.L
 
 --[[
-    Buff-Duty-Elixirs -- the Buff Duty window's Flasks or Elixirs section: an icon
-    for every elixir in your bags whose buff you're missing, or have running
-    low by your own time for Elixirs. A click drinks it; the Cast Next Buff key
-    leaves them alone unless the category's Use with Cast Next Buff is on.
-
-    An elixir is any bag item whose use spell is a buff in this client's
-    ns.ELIXIR_BUFF_IDS, the table those buffs are keyed by. Each buff's value
-    there names what it can't be up beside: from TBC on, "BATTLE" or
-    "GUARDIAN", the two slots a character has, both filled by a flask; on
-    Classic Era and its kin, a group of buffs that don't stack. A buff whose
-    value is still plain true stands alone, blocked by nothing but itself. An
-    elixir is passed over while another buff of its slot or group is on you,
-    so the section never offers what the game would refuse or what would overwrite
-    a buff already up. One the category's menu turns off (elixirOff) is
-    passed over.
-
-    Left to their own sections: scrolls (some of whose buffs fill an elixir
-    slot on Mists of Pandaria) and any consumable with a dropdown of its own
-    (Winterfall Firewater, under Other Buffs). Items the Ignore List holds are passed over too.
+    ns.ELIXIR_BUFF_IDS values name what a buff can't be up beside: a slot
+    ("BATTLE" / "GUARDIAN", from TBC on), a non-stacking group, or true for
+    itself alone. An elixir is passed over while its slot or group is taken,
+    so the section never offers what the game would refuse or overwrite.
+    Scrolls (some fill an elixir slot on Mists) and Other Buffs' items keep
+    to their own sections.
 ]]
 
 local BuffDuty = ns.BuffDuty
 
 local GetItemCount = C_Item.GetItemCount
 
---[[
-    Item id -> the buff its use spell gives, or false for an item that gives
-    none of the elixir buffs. An item the client hasn't loaded yet answers
-    nothing and is asked again next time.
-]]
+-- Item id -> elixir buff, or false for none. A cold item answers nil uncached and is asked again next time.
 local itemBuffs = {}
 
 local function ElixirBuff(itemId)
@@ -48,13 +31,11 @@ local function ElixirBuff(itemId)
 	return buff or nil
 end
 
--- What a buff can't be up beside: its slot or group, or the buff itself when the data names none.
 local function GroupOf(spellId)
 	local group = ns.ELIXIR_BUFF_IDS[spellId]
 	return group == true and spellId or group
 end
 
--- The items with a dropdown of their own (Other Buffs), which keep to it.
 local function OwnRowItems()
 	local items = {}
 	for _, entry in ipairs(BuffDuty.selfItemEntries) do
@@ -65,12 +46,7 @@ local function OwnRowItems()
 	return items
 end
 
---[[
-    The elixirs in your bags, one per buff, each { itemId, spellId }, sorted
-    by item name so the section keeps its order as bags change. honorIgnore
-    passes over what the Ignore List holds, as the window does; the Options
-    flyout asks without it.
-]]
+-- One per buff, sorted by name so the section keeps its order as bags change. The Options flyout passes no honorIgnore.
 function BuffDuty.CarriedElixirs(honorIgnore)
 	local found, seen = {}, {}
 	if not ns.ELIXIR_BUFF_IDS or not next(ns.ELIXIR_BUFF_IDS) then
@@ -106,12 +82,7 @@ function BuffDuty.CarriedElixirs(honorIgnore)
 	return found
 end
 
---[[
-    Your elixir and flask buffs: buff id -> { expires, duration }, and each
-    slot or group a buff on you takes. From TBC on a flask takes both slots.
-    Nil when your auras can't be read (secret on WoW Forever, in combat), so
-    the section stays quiet rather than nag about a buff that may be there.
-]]
+-- Nil when an aura is secret, so the section stays quiet rather than nag about a buff that may be there.
 local function ReadElixirAuras()
 	local own, taken = {}, {}
 	local flaskFillsSlots = (ns.EXPANSION or 1) >= 2
@@ -137,12 +108,7 @@ local function ReadElixirAuras()
 	return own, taken
 end
 
---[[
-    The section's icons: an elixir whose own buff is on you shows only once it's
-    running low; one whose slot or group another buff takes shows not at
-    all; the rest show as missing. Each sits a hundredth past Elixirs'
-    column, in the section's own order.
-]]
+-- Icons sit a hundredth apart past Elixirs' column, so the grid keeps them together and in order.
 function BuffDuty.AddElixirIcons(buff, icons)
 	if ns.AreAurasSecret() then
 		return
@@ -178,11 +144,6 @@ function BuffDuty.AddElixirIcons(buff, icons)
 	end
 end
 
---[[
-    Flasks or Elixirs' Missing Inventory!: no elixir or flask buff on you,
-    and none in your bags that the category's menu leaves on. Says no while
-    your auras can't be read.
-]]
 function BuffDuty.ElixirsMissing()
 	if ns.AreAurasSecret() then
 		return false

@@ -4,7 +4,6 @@ local _, ns = ...
 -- Inventory Model
 --------------------------------------------------------------------------------
 
--- Collection of items in the inventory or bank with their precise slot locations and counts, and summaries
 local Inventory = {}
 Inventory.__index = Inventory
 
@@ -30,7 +29,6 @@ function ns.NewRestockInventory()
 	}, Inventory)
 end
 
--- Sorts bag slots for each item, with smallest stacks first
 function Inventory:SortSlots()
 	for _, eachItemSlots in pairs(self.slots) do
 		table.sort(eachItemSlots, ns.CompareByStackSizeAscending)
@@ -62,7 +60,7 @@ function Inventory:FindBestFit(cachedItem, amount)
 
 	table.sort(mergeDestinations, ns.CompareByStackSizeAscending)
 
-	-- First element should be lowest, i.e. closest to the perfection of a full stack
+	-- Each candidate's count is the room left after the merge, so the first is the tightest fit.
 	local bestDestination = mergeDestinations[1]
 	ns.RestockerDebug(
 		"TRACE_BEST_FIT_CANDIDATE",

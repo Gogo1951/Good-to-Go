@@ -76,6 +76,7 @@ ns.PET_BUFF_FOODS = {}
 ns.FIRST_AID_SKILL_LINE_ID = 129
 ns.ALCHEMY_SKILL_LINE_ID = 171
 ns.ENGINEERING_SKILL_LINE_ID = 202
+ns.FISHING_SKILL_LINE_ID = 356
 
 -- The Engineering specialization Diagnostics checks the player for.
 ns.GOBLIN_ENGINEER_SPELL_ID = 20222
@@ -99,7 +100,7 @@ ns.DRINK_SPELL_ID = 430
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Mists of Pandaria Classic 5.5.4.71089
+	2026-11-26, wago.tools, Mists of Pandaria Classic 5.5.4.71089
 
 Notes
 	- Single spell, item, race and skill-line IDs the feature code reads by name, grouped by use. The client supplies every name the player sees from these IDs.
@@ -148,6 +149,7 @@ wago.tools
 	https://wago.tools/db2/Item?build=5.5.4.71089
 	https://wago.tools/db2/ItemSparse?build=5.5.4.71089
 	https://wago.tools/db2/SpellName?build=5.5.4.71089
+	https://wago.tools/db2/SkillLine?build=5.5.4.71089
 
 QuestieDB
 	None.

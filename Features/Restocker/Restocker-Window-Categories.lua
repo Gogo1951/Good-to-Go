@@ -6,31 +6,14 @@ local BUTTON_FONT = ns.RESTOCK_BUTTON_FONT
 -- Category Pane
 --------------------------------------------------------------------------------
 
---[[
-    The list's item types down the left of the window, one per line with a count,
-    and "All items" above them. It names every type at once and says how many of
-    each there are, which no in-list section band can do: a band costs a row per
-    group and only describes the stretch of list on screen.
-
-    Rows are pooled like the item rows, because the set of types is whatever the
-    lists currently hold -- adding a bandage can bring a category into being, and
-    removing the last one takes it away again.
-]]
-
 --------------------------------------------------------------------------------
 -- Category Selection
 --------------------------------------------------------------------------------
 
 --[[
-    Which item type the list is showing, or nil for all of them. View state for one
-    sitting, like ns.restockNewItems: never persisted, and reset when the window closes,
-    so a session that ended filtered down to Quest items does not open on an
-    apparently half-empty list days later.
-
-    Held as the group's key (a classID, or ns.RESTOCK_GROUP_NEW and its Other
-    twin) rather than an index, because the list of groups is derived from
-    whatever the list happens to contain and changes as items are added and
-    removed; the label is looked up only to draw it (ns.GetRestockGroupLabel).
+    Never saved and reset when the window closes, so a session that ended
+    filtered doesn't open on a half-empty list later. A group key, not an index:
+    the groups change as items come and go.
 ]]
 ns.restockSelectedGroup = nil
 
@@ -47,10 +30,7 @@ function ns.ClearRestockGroupSelection()
 	ns.restockSelectedGroup = nil
 end
 
---[[
-    The two grays are this pane's own states, not palette roles: an unselected
-    type, and its count, a step quieter than its label.
-]]
+-- The two grays are this pane's own states, not palette roles.
 local GOLD = ns.COLORS_RGB.TITLE
 local ROW_LABEL = ns.HexToRGB(ns.RESTOCKER_WINDOW_COLORS.ROW_LABEL)
 local ROW_COUNT = ns.HexToRGB(ns.RESTOCKER_WINDOW_COLORS.ROW_COUNT)
@@ -60,16 +40,9 @@ local GROUP_ROW_INSET = 8
 local GROUP_COUNT_WIDTH = 32
 
 --[[
-    The pane is as wide as the longest type name it actually has to show, because
-    a guessed width truncates the moment it is wrong: type names come from
-    the client (ns.GetRestockItemTypeName) and are localized by the CLIENT, so no fixed number is right in
-    every locale, and "Miscellaneous" already overruns a guess that looked generous
-    in English.
-
-    Clamped at both ends. The floor keeps a short list from drawing a sliver of a
-    pane; the ceiling is what MIN_WIDTH is set against, so the table below always
-    keeps enough room for a readable item name however long a type name gets. See
-    WINDOW GEOMETRY in Restocker-Window.lua.
+    Sized to the longest type name shown: the client localizes those, so no
+    fixed width fits every locale. MIN_WIDTH (Restocker-Window.lua) is built on
+    the cap, so the item name always keeps room.
 ]]
 local GROUP_PANE_MIN_WIDTH = 128
 local GROUP_PANE_MAX_WIDTH = 176
@@ -78,18 +51,9 @@ ns.restockGroupPaneWidth = GROUP_PANE_MIN_WIDTH
 ns.RESTOCK_GROUP_PANE_GAP = 16 -- pane to table, space rather than a line
 ns.RESTOCK_GROUP_ROW_INSET = GROUP_ROW_INSET -- where a type name starts
 
--- Scratch FontString used only to measure the row font; never shown.
 local measureFontString
 
---[[
-    Size the pane to the widest label it will draw. Called before the window is
-    laid out, since the table's left edge is anchored past the pane, and again
-    each time it opens (RefitGroupPane in Restocker-Window.lua).
-
-    Types come from ns.GetRestockItemTypeName, which needs no item cache, so the
-    labels measured here are the strings the pane goes on to display even at
-    window build time.
-]]
+-- Type names need no item cache, so this measures true even before the window is laid out.
 function ns.ResolveRestockGroupPaneWidth()
 	if not measureFontString then
 		measureFontString = (ns.restockHiddenFrame or UIParent):CreateFontString(nil, "ARTWORK", BUTTON_FONT)
@@ -154,10 +118,7 @@ local function GetCategoryRow()
 	count:SetPoint("RIGHT", row, "RIGHT", -GROUP_ROW_INSET, 0)
 	row.count = count
 
-	--[[
-	    Anchored on both sides with no wrap, so a long type name truncates inside
-	    the pane instead of running under its own count.
-	]]
+	-- No wrap, so a long type name truncates before its count.
 	local name = row:CreateFontString(nil, "OVERLAY")
 	name:SetFontObject(BUTTON_FONT)
 	name:SetJustifyH("LEFT")
@@ -174,17 +135,13 @@ local function GetCategoryRow()
 	return row
 end
 
--- Paint one category row. `group` is nil for the "All items" entry.
+-- `group` is nil for the "All items" entry.
 local function SetCategoryRow(row, label, count, group, isSelected)
 	row.group = group
 	row.name:SetText(label)
 	row.count:SetText(tostring(count))
 	row.selected:SetShown(isSelected)
-	--[[
-	    The selected row goes gold and the rest stay muted, which is the same
-	    on/off vocabulary the toggle columns use. A zero-count category draws only
-	    while selected, so it takes the selected look and needs no third state.
-	]]
+	-- A zero-count category draws only while selected, so it needs no third state.
 	if isSelected then
 		row.name:SetTextColor(GOLD.r, GOLD.g, GOLD.b)
 		row.count:SetTextColor(GOLD.r, GOLD.g, GOLD.b)
@@ -201,13 +158,7 @@ function ns.CreateRestockGroupPane(parent, listInset, topInset)
 	pane:SetPoint("BOTTOMLEFT", listInset, "BOTTOMLEFT", 8, ns.RESTOCK_LIST_BOTTOM_INSET)
 	pane:SetWidth(ns.restockGroupPaneWidth)
 
-	--[[
-	    Its own scroll frame, but a bare one driven by the wheel rather than
-	    UIPanelScrollFrameTemplate. That template's bar would take its width off
-	    the narrow pane permanently, while the type list only overflows at the
-	    smallest window heights, so the bar would sit invisible almost all of the
-	    time.
-	]]
+	-- Wheel-only: UIPanelScrollFrameTemplate's bar would take width off the narrow pane for good.
 	local scroll = CreateFrame("ScrollFrame", nil, pane)
 	scroll:SetAllPoints(pane)
 
@@ -217,10 +168,7 @@ function ns.CreateRestockGroupPane(parent, listInset, topInset)
 
 	scroll:EnableMouseWheel(true)
 	scroll:SetScript("OnMouseWheel", function(self, delta)
-		--[[
-		    Clamped both ends: an unclamped SetVerticalScroll happily scrolls a short
-		    list off the top and leaves the pane looking empty.
-		]]
+		-- Clamped: an unclamped SetVerticalScroll scrolls a short list off the top.
 		local maxScroll = math.max(0, self:GetScrollChild():GetHeight() - self:GetHeight())
 		local target = self:GetVerticalScroll() - (delta * GROUP_ROW_HEIGHT * 2)
 		self:SetVerticalScroll(math.max(0, math.min(maxScroll, target)))
@@ -232,11 +180,6 @@ function ns.CreateRestockGroupPane(parent, listInset, topInset)
 	return pane
 end
 
---[[
-    Refill the pane from the current list. Called by ns.UpdateRestockList, so the counts
-    and the set of categories track every add, remove and keystroke in the filter
-    box without anything else having to remember to ask.
-]]
 function ns.UpdateRestockGroupPane(items, view)
 	local pane = ns.restockGroupPane
 	if not pane then
@@ -251,12 +194,7 @@ function ns.UpdateRestockGroupPane(items, view)
 
 	local groups, total = ns.BuildRestockGroupList(items, view)
 	local child = pane.scrollChild
-	--[[
-	    GetWidth reads 0 until the frame has been laid out, which the very first
-	    Update can beat. Falling back to the pane's own fixed width keeps that first
-	    pass from building a column of zero-width rows that never get re-measured,
-	    since a row is only resized when the pane is refilled.
-	]]
+	-- GetWidth reads 0 before layout, which the first refill can beat, and rows resize only on refill.
 	local width = pane.scrollFrame:GetWidth()
 	if not width or width <= 0 then
 		width = ns.restockGroupPaneWidth
@@ -286,13 +224,7 @@ function ns.UpdateRestockGroupPane(items, view)
 		end
 	end
 
-	--[[
-	    A category only appears while it holds something, so filtering everything out
-	    of the SELECTED one would take its row away with it -- leaving an empty list,
-	    no visible selection, and nothing on screen explaining either. Keep it,
-	    showing the zero: the list is empty because this category is selected and the
-	    filter matches none of it, and the row is still there to click away from.
-	]]
+	-- The selected category stays at zero when the filter empties it, so the empty list has a visible reason.
 	if not selectedShown then
 		Place(ns.GetRestockGroupLabel(ns.restockSelectedGroup), 0, ns.restockSelectedGroup)
 	end

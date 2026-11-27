@@ -4,12 +4,7 @@ local _, ns = ...
 -- Smart Spell Resolution
 --------------------------------------------------------------------------------
 
---[[
-    Best rank first, by requiredLevel: GetSmartSpell walks each list top-down
-    and its fallback bottom-up, so the data's row order carries no meaning.
-    Sorted once at load; the lists have no two rows at one level, and the
-    spell ID settles any that ever do.
-]]
+-- Sorted once at load, so the data's row order carries no meaning.
 local function ByRequiredLevelDescending(a, b)
 	if a[2] ~= b[2] then
 		return a[2] > b[2]
@@ -22,10 +17,9 @@ for _, spellList in pairs(ns.CONJURE_SPELLS) do
 end
 
 --[[
-    The name a /cast line needs. Only a row whose client casts the rank by
-    number carries one (see the RECURRING BUG note on WarlockCreateHealthstone),
-    and the rank text must be the client's own: word order and grammar differ
-    by locale ("7 레벨", "7-й уровень"), so a translated rank word never matches.
+    Only rows the client casts by rank number carry one (the RECURRING BUG note
+    on WarlockCreateHealthstone). The rank text must be the client's own: word
+    order differs by locale ("7 레벨", "7-й уровень").
 ]]
 local function CastName(spellName, spellID, rankNumber)
 	if rankNumber then
@@ -37,11 +31,6 @@ local function CastName(spellName, spellID, rankNumber)
 	return spellName
 end
 
---[[
-    Picks the highest-rank spell the player knows that the target (or player)
-    can still receive. Targeting a friendly player of lower level drops the
-    rank down so the conjured item matches their level cap.
-]]
 function ns.GetSmartSpell(spellList, ignoreTarget, checkUnique)
 	if not spellList then
 		return nil, 0
@@ -83,14 +72,7 @@ function ns.GetSmartSpell(spellList, ignoreTarget, checkUnique)
 		end
 	end
 
-	--[[
-	    Fallback when no rank matched the level cap (targeting a low-level
-	    friend), or checkUnique skipped every known rank: walk the list bottom-up and use the lowest rank the player
-	    actually KNOWS. Players can skip training low ranks, so the list's
-	    last entry may be untrained — and /cast of an untrained spell is a
-	    silent no-op that would make the conjure click look broken. Knows
-	    nothing at all → nil, 0, same as an empty list.
-	]]
+	-- The lowest rank actually KNOWN: low ranks can go untrained, and /cast of one silently does nothing.
 	for i = #spellList, 1, -1 do
 		local spellID, rankNumber = spellList[i][1], spellList[i][3]
 

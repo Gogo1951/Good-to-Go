@@ -10,27 +10,15 @@ local GetColor = ns.GetColor
 --------------------------------------------------------------------------------
 
 --[[
-    The whisper composer, for every whisper a player words themselves and
-    Good to Go sends for them (Buff Duty's ask, Rank Watch's tip and opt-out
-    whispers). Laid out under the toggle that sends the whispers, in order:
+    The composer for every whisper a player words themselves.
 
-    - Send Messages In: the language the whispers go out in. One setting for
-      the account (ns.SetMessageLanguage), so picking another swaps in that
-      language's default for every whisper still on the old one's, and
-      nobody's own words are ever replaced. A composer whose panel already
-      shows it leaves it out (spec.language false).
-    - Then for each whisper: the message row (its caption, the Star marker,
-      the box, the "// GtG" sign-off and Reset). The marker and sign-off are
-      captions, not part of the box: the build adds them to whatever is
-      typed, so they can't be deleted, and showing them either side makes
-      that plain before anything is sent.
-    - The tokens under the box: what the box understands. Once the filled
-      message passes the chat ceiling (in bytes, so Cyrillic, Korean and
-      Chinese get there sooner), a line says the default goes instead. There
-      is no live count: the panel only redraws on save, so one would lag the
-      typing.
-    - The Example line, drawn as the whisper the other player receives, and
-      Send Test to Me, both built by the same code that sends.
+    - The Star marker and "// GtG" sign-off are captions beside the box, not
+      part of it: the build adds them to whatever is typed, so they can't be
+      deleted.
+    - The chat ceiling is in bytes, so Cyrillic, Korean and Chinese reach it
+      sooner. No live count: the panel redraws only on save, so one would lag
+      the typing.
+    - The Example and Send Test to Me are built by the same code that sends.
 
     `spec` says what the composer edits:
     - prefix: starts every arg key, so two composers can share a panel.
@@ -52,10 +40,7 @@ local INPUT_WIDTH = ns.OPTIONS_ROW_WIDTH - LABEL_WIDTH - MARKER_WIDTH - SIGN_OFF
 local HINT_INDENT = LABEL_WIDTH + MARKER_WIDTH
 local TEST_WIDTH = 1.0
 
---[[
-    Chat draws the marker as its icon; the panel needs the texture itself, at 16 px in a cell of its own
-    (Kit.Markers sizes it to the line's text, for markers inside a sentence).
-]]
+-- Chat draws the marker as its icon; the panel needs the texture itself (Kit.Markers sizes to inline text).
 local MARKER_TEXTURE = (ns.TARGET_MARKER:gsub("{rt(%d)}", "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_%1:16|t"))
 
 local languageValues, languageSorting
@@ -71,7 +56,6 @@ local function LanguageChoices()
 	return languageValues, languageSorting
 end
 
--- A caption cell (Kit.Label) that hides with the row it sits in; with desc, hovering it shows the tooltip.
 local function Label(text, order, width, hidden, desc)
 	local label = Kit.Label(text, order, width, desc)
 	label.hidden = hidden
@@ -88,7 +72,6 @@ local function DefineMessageRows(args, spec, message, key, order)
 		return hidden() or Text() == ""
 	end
 
-	-- The message row: label, marker, box, sign-off, Reset.
 	args[key .. "Label"] = Label(message.label, order, LABEL_WIDTH, hidden, message.description)
 	args[key .. "Marker"] = Label(MARKER_TEXTURE, order + 0.01, MARKER_WIDTH, hidden, L["WHISPER_SIGN_OFF_DESCRIPTION"])
 	args[key] = {
@@ -118,7 +101,6 @@ local function DefineMessageRows(args, spec, message, key, order)
 		width = RESET_WIDTH,
 		order = order + 0.04,
 		hidden = hidden,
-		-- Grayed while the whisper holds its own default, so there is nothing to reset.
 		disabled = function()
 			return Text() == ns.GetDefaultMessage(message.field)
 		end,
@@ -128,7 +110,7 @@ local function DefineMessageRows(args, spec, message, key, order)
 		end,
 	}
 
-	-- The tokens line under the box, a blank cell holding it clear of the label column.
+	-- A blank cell holds the tokens line clear of the label column.
 	if message.tokens then
 		args[key .. "TokensIndent"] = Label(" ", order + 0.05, HINT_INDENT, hidden)
 		args[key .. "Tokens"] = {
@@ -143,7 +125,6 @@ local function DefineMessageRows(args, spec, message, key, order)
 		}
 	end
 
-	-- Past the ceiling, measured in bytes: say what goes out instead.
 	local function FitsHidden()
 		return MessageHidden() or #message.fill(Text()) <= ns.CHAT_MESSAGE_MAX_LENGTH
 	end
@@ -157,7 +138,6 @@ local function DefineMessageRows(args, spec, message, key, order)
 		hidden = FitsHidden,
 	}
 
-	-- The Example line: the whisper as the recipient gets it, "[You] whispers: ...". Then Send Test to Me.
 	args[key .. "Example"] = Kit.Example(order + 0.071, MessageHidden, function()
 		return Kit.SentLine("WHISPER", message.build(Text()) or "")
 	end)
@@ -181,10 +161,7 @@ end
 ]]
 function ns.DefineWhisperComposer(args, spec, order)
 	local prefix = spec.prefix
-	--[[
-	    Send Messages In can hide on its own (spec.languageHidden) where two
-	    composers on one panel each show it only while the other is hidden.
-	]]
+	-- Two composers on one panel each show Send Messages In only while the other is hidden.
 	local languageHidden = spec.languageHidden or spec.hidden
 
 	if spec.language ~= false then

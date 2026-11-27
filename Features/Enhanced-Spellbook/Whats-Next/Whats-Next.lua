@@ -1,36 +1,23 @@
 local _, ns = ...
 
---[[
-	The class spells for the What's Next? tab (Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Page.lua): every rank the class
-	trainers, books, quests and talents teach this character, each with where it's learned, the level it asks
-	for, and whether it can be learned now. The rows come from the trainer data (Data/), the trainers this
-	character recorded (Features/Enhanced-Spellbook/Trainer-Recording.lua), and the class lists' extraSpells with their
-	sources (ns.EXTRA_SPELL_SOURCES).
-]]
-
 local NO_IDS = {}
 
 -- Within this many levels of the player's, an unlearned spell is Coming Soon rather than Not Yet Available.
 local SOON_LEVELS = 2
 
 --[[
-	The statuses in the order Sort By Availability lists them: the spells to go and learn first, Known last.
-	MISSING is a spell that needs another spell first, at any level (or a talent not taken);
-	TALENT a talent not taken, which is a choice rather than something coming.
+	In Sort By Availability's order. MISSING needs another spell first, at any level; TALENT is a talent not
+	taken, a choice rather than something coming.
 ]]
 ns.WHATS_NEXT_STATUSES = { "AVAILABLE", "SOON", "LATER", "MISSING", "TALENT", "KNOWN" }
 
--- The sources the filter offers, in its order.
 ns.WHATS_NEXT_SOURCES = { "START", "TRAINER", "BOOK", "QUEST", "TALENT", "RUNE" }
 
 --------------------------------------------------------------------------------
 -- Settings
 --------------------------------------------------------------------------------
 
---[[
-	How the tab orders its spells: "availability", under each status in ns.WHATS_NEXT_STATUSES' order, or
-	"level", under each learn level.
-]]
+-- "availability" or "level"
 function ns.WhatsNextSort()
 	return ns.db.profile.whatsNextSort
 end
@@ -39,7 +26,6 @@ function ns.SetWhatsNextSort(sort)
 	ns.db.profile.whatsNextSort = sort
 end
 
--- Whether the tab also lists the spells already learned, under Known.
 function ns.WhatsNextShowsKnown()
 	return ns.db.profile.whatsNextShowKnown
 end
@@ -48,7 +34,7 @@ function ns.SetWhatsNextShowKnown(on)
 	ns.db.profile.whatsNextShowKnown = on
 end
 
--- Whether the tab also lists the talents (and Season of Discovery's runes) not taken.
+-- Season of Discovery's runes count as talents.
 function ns.WhatsNextShowsTalents()
 	return ns.db.profile.whatsNextShowTalents
 end
@@ -62,8 +48,8 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-	The level a talent's tier opens at, by the talent's name, from the client's talent tree: a point a level
-	from 10, and five in the tree for each tier down. Empty from MoP on, whose talents have no such tree.
+	By talent name: a point a level from 10, and five in the tree for each tier down. Empty from MoP on, whose
+	talents have no such tree.
 ]]
 local function TalentLevels()
 	local levels = {}
@@ -83,9 +69,8 @@ local function TalentLevels()
 end
 
 --[[
-	A row's source: a book, a quest (a rank only a class quest teaches) or a talent, as the trainer data marks
-	it, else the trainer. A talent row on Season of Discovery is one of WoW Forever's talents that reuses a rune
-	spell, which this client learns by engraving, so it's a rune unless the talent tree has it.
+	A talent row on Season of Discovery is one of WoW Forever's talents that reuses a rune spell, which this
+	client learns by engraving, so it's a rune unless the talent tree has it.
 ]]
 local function RowSource(row, name, talentLevels)
 	if row.book then
@@ -102,11 +87,9 @@ local function RowSource(row, name, talentLevels)
 end
 
 --[[
-	Every row for this character, unsorted, as { id, name, icon, subtext, level, source, requires, extra, ids }:
-	the trainer data's rows for its faction and race, the recorded trainer spells the data lacks, the
-	extraSpells entries (extra), and the rank 1s no list names. An extraSpells entry listing alternatives
-	({ 13819, 34769 }: Summon Warhorse, and its Blood Elf version) is one row under its first ID, with every
-	alternative in ids, so whichever the character knows counts. A spell whose data isn't loaded yet is skipped:
+	Unsorted { id, name, icon, subtext, level, source, requires, extra, ids }. An extraSpells entry listing
+	alternatives ({ 13819, 34769 }: Summon Warhorse and its Blood Elf version) is one row with every alternative in
+	ids, so whichever the character knows counts. A spell whose data isn't loaded yet is skipped:
 	SPELL_DATA_LOAD_RESULT redraws the tab.
 ]]
 local function CollectRows(talentLevels)
@@ -157,10 +140,9 @@ local function CollectRows(talentLevels)
 		add(id, source, level and level > 0 and level or nil, nil, true, ids)
 	end
 	--[[
-		A rank's earlier rank is in its requires under the same name. Where that's an extraSpells row (a rank 1
-		a class quest teaches: Redemption, Searing Totem) it is one of the spell's ranks, not an extra; where no
-		list has it, it's one the class starts with (Shadow Bolt, Fireball) unless ns.EXTRA_SPELL_SOURCES says
-		otherwise, as Features/Enhanced-Spellbook/Spell-Ranks.lua reads it too.
+		A rank's earlier rank is in its requires under the same name. An extraSpells row there (a class quest's
+		rank 1: Redemption, Searing Totem) is one of the spell's ranks, not an extra; one no list has is a spell
+		the class starts with (Shadow Bolt, Fireball) unless ns.EXTRA_SPELL_SOURCES says otherwise.
 	]]
 	local byId = {}
 	for _, row in ipairs(rows) do
@@ -197,19 +179,14 @@ local function AnyKnown(ids)
 end
 
 --[[
-	Gives each row its status for a character at level, and the rows it waits on (row.waitsOn, the spells its
-	requires names that aren't known): KNOWN once learned; TALENT for a talent or rune not taken; MISSING
-	where a spell it needs can't come first (a talent not taken, or a spell from another source not learned
-	yet), at any level, since it can't be learned until that changes; then by level, AVAILABLE once reached,
-	SOON within SOON_LEVELS, LATER beyond. A rank whose earlier rank the same trainer teaches now is
-	AVAILABLE too: both are learned in the one visit.
+	MISSING where a spell it needs can't come first (a talent not taken, or one from another source), at any level.
+	A rank whose earlier rank the same trainer teaches now is AVAILABLE too: both are learned in the one visit.
 ]]
 local function SetStatuses(rows, level)
 	--[[
-		A rank counts as known when it is, or when a later rank of the same spell is: a client whose spellbook
-		keeps only the highest rank no longer reports the ones it replaced. Only the ranks of the trainer rows
-		count: an extraSpells entry can share a trainer spell's name (Polymorph (Pig) and Polymorph) without
-		being one of its ranks. An extraSpells row is known when any of its alternatives (row.ids) is.
+		A later rank known counts: a client whose spellbook keeps only the highest rank no longer reports the ones
+		it replaced. Only trainer rows count, since an extraSpells entry can share a trainer spell's name
+		(Polymorph (Pig) and Polymorph) without being one of its ranks.
 	]]
 	local byId, highestKnown = {}, {}
 	for _, row in ipairs(rows) do
@@ -269,11 +246,7 @@ local function SetStatuses(rows, level)
 	end
 end
 
---[[
-	The rows for this character as { id, name, icon, subtext, level, source, status, waitsOn }, unsorted.
-	level is the level to read the statuses against, for PLAYER_LEVEL_UP, whose new level UnitLevel doesn't
-	report yet; it defaults to the player's.
-]]
+-- level is for PLAYER_LEVEL_UP, whose new level UnitLevel doesn't report yet.
 function ns.WhatsNextRows(level)
 	local rows = CollectRows(TalentLevels())
 	SetStatuses(rows, level or UnitLevel("player"))

@@ -5,32 +5,13 @@ local Kit = ns.OptionsKit
 local GetColor = ns.GetColor
 
 --[[
-    "Self-Buffs" panel, under Buff Duty: every buff you can put on yourself,
-    each On or Off; the category's Show, at the top, says how soon each
-    shows. That's the self-only buffs (armors, auras,
-    aspects, Inner Fire) and the class's group buffs (Fortitude, Mark of the
-    Wild, the blessings), which the window offers you under Self Buffs and
-    leaves off your party row; Group Buffs says who ELSE gets those.
-
-    Laid out as a tree: the classes down the left, opened on your own (the
-    settings are account-wide, so every class is listed), and the chosen
-    class's buffs on the right. Above the tree, the Self-Buffs category's
-    own settings (ns.AddBuffDutyRowControls). The
-    consumables any class can use have pages of their own, one per window
-    row (Options-Buff-Duty-Consumables.lua).
-
-    Its Show in Buff Duty switch is twinned on the Buff Duty panel with the
-    window's other rows. Like the Group Buffs panel, nothing here hides behind it:
-    these are choices worth making before turning the row on. Weapons have a
-    panel of their own (Options-Buff-Duty-Weapon-Buffs.lua).
+    Lists your class's group buffs too, since the window offers them to you
+    under Self Buffs; Group Buffs says who else gets them. Nothing hides
+    behind the category switch: these are choices worth making before
+    turning it on.
 ]]
 
---[[
-    "Hunter · any one aspect counts", the header over a class's page: a class
-    with two or more buffs from one exclusive family says so after its name,
-    since any one of them up is enough. A family of one (Lightning Shield
-    alone) needs no note.
-]]
+-- "Hunter · any one aspect counts": a family of two or more says any one up is enough.
 local function CategoryName(category)
 	local counts, families = {}, {}
 	for _, entry in ipairs(category.entries) do
@@ -44,7 +25,6 @@ local function CategoryName(category)
 	end
 	table.sort(families)
 
-	-- the class's plain name, gold like every header, and its notes gray beside it
 	local name = LOCALIZED_CLASS_NAMES_MALE[category.id] or category.name
 	for _, family in ipairs(families) do
 		local note = L["BUFF_DUTY_SELF_NOTE_" .. family]
@@ -70,11 +50,7 @@ function ns.BuildBuffDutySelfBuffsOptions()
 		},
 	}
 	ns.AddBuffDutyRowControls(options.args, "self", 2)
-	--[[
-	    With Buff Duty on, the line names this page's own switch while that is off.
-	    The switch is on this page (Show in Buff Duty, above), so the line sends you
-	    nowhere else.
-	]]
+	-- No page key: the category's switch is on this page, so the line sends you nowhere else.
 	ns.AddFeatureOffLine(options.args, "buffWindow.enabled", {
 		isOn = function()
 			return Settings().selfEnabled
@@ -98,7 +74,6 @@ function ns.BuildBuffDutySelfBuffsOptions()
 
 		local entryOrder = 10
 		for index, entry in ipairs(ns.SortedEntries(category.entries)) do
-			-- A blank line between rows, so each checkbox has room around it.
 			if index > 1 then
 				page.args["space" .. index] = Kit.Spacer(entryOrder - 0.25)
 			end

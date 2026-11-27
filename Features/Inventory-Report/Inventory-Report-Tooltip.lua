@@ -2,34 +2,23 @@ local _, ns = ...
 local L = ns.L
 local GetColor = ns.GetColor
 
--- The Inventory Report's lines in item tooltips; what it shows and why is in Inventory-Report-Recording.lua.
-
 --[[
-    How long after login the tooltips are hooked, in seconds. A tooltip's add-on
-    lines appear in the order their hooks were installed, and this block belongs
-    under the others', so it goes in after the add-ons that hook at load, at
-    login, or a few staged seconds into it have all had their turn. The cost is
-    that an item hovered in the first moments of a session shows no report.
-    Best effort: an add-on that loads on demand later still lands below.
+    Lines appear in hook order and this block belongs under other add-ons', so
+    it hooks after they have. Cost: an item hovered in the first seconds shows
+    no report. An add-on loaded on demand later still lands below.
 ]]
 local TOOLTIP_HOOK_DELAY = 5
 
--- Leading pad on each row under the header, matching the other add-ons' tooltip blocks (Water Dispenser's).
+-- Matches the other add-ons' tooltip blocks.
 local ROW_INDENT = " "
 
 --------------------------------------------------------------------------------
 -- Report
 --------------------------------------------------------------------------------
 
---[[
-    The other characters on this realm, unpacked once per login. They are
-    logged out, so nothing in game can change them during this session; a new
-    login binds a new record, which rebuilds the list, and the panel's Forget
-    drops it (ns.ResetInventoryReportOthers).
-]]
+-- Unpacked once per login: they are logged out, so nothing this session changes them.
 local others, othersRecord
 
--- Drops the unpacked list, so the next tooltip rebuilds it without a character the panel forgot.
 function ns.ResetInventoryReportOthers()
 	others, othersRecord = nil, nil
 end
@@ -54,7 +43,6 @@ local function OtherCharacters()
 		end
 	end
 
-	-- Alphabetical by name; the key only settles two characters that share one.
 	table.sort(others, function(a, b)
 		local left, right = a.name:lower(), b.name:lower()
 		if left ~= right then
@@ -65,7 +53,6 @@ local function OtherCharacters()
 	return others
 end
 
--- The Keep amount of this item on the current Restock List, or nil when it is not on it or keeps none.
 local function KeepAmount(itemID)
 	local settings = ns.restockSettings
 	local list = settings and settings.lists and settings.lists[settings.currentList]
@@ -77,28 +64,19 @@ end
 
 local TEXT_COLOR = GetColor("TEXT")
 
---[[
-    The header line, built once: it says the same thing on every tooltip. It is
-    the shape of the add-on's other tooltip blocks ("Fireball Ranks … GtG"):
-    the title in gold, the add-on's short name in gray at the right edge.
-]]
 local REPORT_HEADER = {
 	GetColor("TITLE") .. L["INVENTORY_REPORT_TITLE"] .. "|r",
 	GetColor("MUTED") .. L["ADDON_SHORT_NAME"] .. "|r",
 }
 
---[[
-    The counts put their words (Bag, Bank, Total) in gray and every number in
-    white, so the numbers stand out. The gray picks up again after each number,
-    for the words behind it.
-]]
+-- Words gray, numbers white; the gray resumes after each number for the words behind it.
 local LABEL_COLOR = GetColor("MUTED")
 
 local function Count(value)
 	return TEXT_COLOR .. value .. "|r" .. LABEL_COLOR
 end
 
--- Only the places holding some: "7 Bag, 18 Bank", "7 Bag" or "18 Bank", and nil when both are 0.
+-- Nil when both are 0.
 local function Counts(bags, bank)
 	if bags > 0 and bank > 0 then
 		return format(L["INVENTORY_REPORT_COUNTS"], Count(bags), Count(bank))
@@ -109,11 +87,6 @@ local function Counts(bags, bank)
 	end
 end
 
---[[
-    A character's row: its name one space in and in its class color, its
-    counts at the right edge. A character holding none (this one can lead the
-    block that way) is the name alone.
-]]
 local function CharacterRow(name, class, bags, bank)
 	local counts = Counts(bags, bank)
 	return {
@@ -123,22 +96,9 @@ local function CharacterRow(name, class, bags, bank)
 end
 
 --[[
-    The report's lines, ready to add, or nil when there is nothing to say: the
-    report is off, or nobody on the realm holds the item and it is not on the
-    Restock List either. An item on the list always reports, so a list item
-    nobody holds says so rather than saying nothing.
-
-    Each line is { left, right }. A line with both goes in as a double line, a
-    label with its count at the tooltip's right edge; one with only a left is a
-    plain line.
-
-    This character always leads, holding any or not, so the list reads top to
-    bottom against the total; the others follow, only those holding some, and
-    "Total … 37" is the last row.
-
-    Published for the tooltip hooks below, and for the panel's Example, which
-    passes `always` so an item nobody holds still draws: the Example shows
-    while the report is on, and has to show something then.
+    Lines of { left, right }. An item on the Restock List always reports, so a
+    list item nobody holds says so. `always` is the panel's Example, which must
+    draw something.
 ]]
 function ns.GetInventoryReportLines(itemID, always)
 	local record = ns.GetInventoryRecord()
@@ -189,11 +149,8 @@ end
 local CONSUMABLE_CLASS_ID = Enum.ItemClass and Enum.ItemClass.Consumable or 0
 
 --[[
-    The item the panel's Example reports on: a consumable in this character's
-    bags, the one the most characters on the realm hold (then the most of it,
-    then the lowest id, so it holds still between draws), so the Example shows
-    off the block's other rows where it can. A Hearthstone when the bags hold
-    no consumable.
+    The carried consumable the most characters hold, to show off the most rows;
+    ties by count, then lowest id, so it holds still between draws.
 ]]
 function ns.GetInventoryReportExampleItem()
 	local carried = {}
@@ -232,13 +189,7 @@ end
 -- Tooltip Hooks
 --------------------------------------------------------------------------------
 
---[[
-    Which tooltips already carry a report for what they are showing. Era can
-    fire OnTooltipSetItem more than once for one item (a recipe and the item it
-    makes), and a second block under the first is the bug this prevents.
-    Cleared with the tooltip's lines. Weak-keyed, though only the two tooltips
-    below ever land in it.
-]]
+-- Era can fire OnTooltipSetItem twice for one tooltip (a recipe and what it makes); this stops a second block.
 local reported = setmetatable({}, { __mode = "k" })
 
 local function AddReport(tooltip, itemID)
@@ -272,11 +223,7 @@ end
 -- A hook cannot be removed, so it is installed once however often login runs.
 local tooltipsHooked = false
 
---[[
-    Only the main tooltip and the clicked-link one are reported on: the
-    comparison tooltips beside them would only repeat the same block. How each
-    client hands over an item tooltip is ns.AddItemTooltipPostCall's business.
-]]
+-- Not the comparison tooltips: they would only repeat the block.
 local function HookTooltips()
 	if tooltipsHooked then
 		return
@@ -291,7 +238,6 @@ local function HookTooltips()
 	ns.AddItemTooltipPostCall(tooltips, AddReport)
 end
 
--- Called at login (ns.InitializeInventoryReport) to hook the tooltips once TOOLTIP_HOOK_DELAY has passed.
 function ns.HookInventoryReportTooltipsLater()
 	C_Timer.After(TOOLTIP_HOOK_DELAY, HookTooltips)
 end

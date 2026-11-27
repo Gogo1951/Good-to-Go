@@ -1,10 +1,8 @@
 local _, ns = ...
 
 --[[
-	The page strip along the parchment's bottom: the previous arrow at its left, "Page 1/2" in the faded ink of
-	a tile's rank line in its middle, the next arrow at its right; the caller sizes and places it. Built here rather than from Blizzard's
-	paging template, which reads a format string the Classic engine's clients don't define. A click or wheel
-	step that turns the page calls page:OnPageChanged(); SetMaxPages and SetCurrentPage never do.
+	Built here rather than from Blizzard's paging template, which reads a format string the Classic engine's
+	clients don't define. A click or wheel step calls page:OnPageChanged(); SetMaxPages and SetCurrentPage never do.
 ]]
 local PAGE_BUTTON_SIZE = 32
 local PAGE_PREV_TEXTURE = "Interface\\Buttons\\UI-SpellbookIcon-PrevPage"

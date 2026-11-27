@@ -6,13 +6,8 @@ local L = ns.L
 --------------------------------------------------------------------------------
 
 --[[
-    The player's named shopping lists; the compact form they are saved in lives
-    in Restocker-Saved-Format.lua. These are not AceDB profiles: each is a list
-    of items shared by the whole account, and the stock Reset Profile control
-    never reaches them. Which list each character uses is kept by character,
-    in settings.listChoices (see This Character's List below), never on a
-    profile: two characters sharing a profile still shop from lists of their
-    own, and switching one never moves the other.
+    Account-wide, never AceDB profiles, so Reset Profile can't reach them. Each
+    character's choice is its own, so two sharing a profile keep separate lists.
 ]]
 
 --------------------------------------------------------------------------------
@@ -20,18 +15,14 @@ local L = ns.L
 --------------------------------------------------------------------------------
 
 --[[
-    This character's key in settings.listChoices: its name as profileKeys holds
-    it, so a choice and the character's profile are named alike and the list's
-    users read their names and classes the way the Profiles panel does. The
-    client is asked first, because AceDB's own reading is the client's
-    placeholder in a session where the library loaded before the character
-    was named (Features/Core.lua).
+    Named as profileKeys names it. The client is asked first: AceDB's own key is
+    a placeholder when the library loaded before the character was named.
 ]]
 local function OwnCharacterKey()
 	return ns.GetCharacterProfileName() or ns.db.keys.char
 end
 
--- The list this character has chosen, or nil before its first login has picked one.
+-- Nil before the first login has picked one.
 function ns.GetChosenRestockList()
 	return ns.db.global.restocker.listChoices[OwnCharacterKey()]
 end
@@ -45,14 +36,7 @@ local IsListNameTaken
 function ns.AddRestockList(newListName)
 	local settings = ns.restockSettings
 
-	--[[
-	    Never overwrite an existing list: an add without this check replaces it with
-	    an empty one, and the items can't be got back. Nor take a name another
-	    character still points at (IsListNameTaken). Same refusal
-	    ns.RenameCurrentRestockList makes. ns.CreateRestockList picks a free name
-	    before calling in; ns.CloneCurrentRestockList picks one too and writes its
-	    copy itself.
-	]]
+	-- Without this an existing list would be replaced by an empty one, past recovery.
 	if IsListNameTaken(settings, newListName) then
 		ns:PrintMessage(string.format(L["RESTOCKER_PROFILE_EXISTS"], newListName))
 		return
@@ -67,7 +51,6 @@ function ns.AddRestockList(newListName)
 
 	ns.UpdateRestockListWidgets()
 
-	-- A bank run in progress works from the list in use, so it starts over on the new one.
 	if ns.bankIsOpen then
 		ns.StartRestockBankRun()
 	end
@@ -78,30 +61,14 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The name a brand-new list gets: the character's class, because class is
-    what actually decides a shopping list -- every Warlock wants shards and
-    stones, whichever alt is holding the bags. The localized class name, since
-    this is a player-facing, player-editable name like any the player could
-    type themselves.
-
-    An existing list with that name is NEVER joined automatically: it is some
-    other character's curated list, and quietly attaching a new character to it
-    would let that character's Starter List picks and level-up upgrades write
-    into it uninvited. The new list takes a numbered variant instead
-    ("Warrior (2)"), and whether to reuse the other list stays the player's own
-    call (Copy replaces the current list with a copy of it; nothing merges).
-    Login calls this only for a character that has chosen no list, so nobody's
-    existing setup is renamed or moved. The New List entry calls it
-    too, and so does deleting the very last list, which has to leave the
-    character on something (see Delete List below).
+    A new list is named for the class, which decides a shopping list. A list of
+    that name is never joined: its owner's Staples picks and upgrades would write
+    into it uninvited, so the name is numbered ("Warrior (2)").
 ]]
 
 --[[
-    Is this name spoken for? By a list, or by another character still pointed
-    at a list of that name which has since been deleted. That character makes
-    the list again, empty, at its next login (ns.InitializeCharacterRestockList),
-    so a fresh list that took the name first would be joined by it uninvited --
-    the very thing a fresh name exists to prevent, arrived at by the back door.
+    A name another character still points at is taken too: that character
+    remakes the list at login and would join a fresh list that took the name.
 ]]
 function IsListNameTaken(settings, name)
 	if settings.lists[name] ~= nil then
@@ -131,11 +98,7 @@ end
 -- List Order
 --------------------------------------------------------------------------------
 
---[[
-    Every list's name in the one order the add-on shows them in: A to Z, the
-    order the selector's menu draws. pairs() order is arbitrary, and "the top
-    list" has to be the same list to the menu and to a delete.
-]]
+-- The one A-to-Z order: "the top list" must be the same list to the menu and to a delete.
 function ns.GetRestockListNames()
 	local names = {}
 	for name in pairs(ns.restockSettings.lists) do
@@ -150,18 +113,9 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The characters on a list, A to Z, each as { key, name, class }: every
-    character whose choice it is. name is what to show: the bare name for a
-    character on this realm, Name-Realm for one elsewhere. class is the token
-    its name is colored by, or nil when the add-on has not recorded it
-    (ns.GetClassesByProfileName in Utilities). othersOnly leaves this character out, for the
-    delete confirm, which names who else loses the list.
-
-    Read from settings.listChoices, which a character joins at its first login
-    and stays in after it is deleted: nothing tells an add-on that a character
-    is gone. This character is read from the client instead, so it is listed
-    even in a session where AceDB could not name it (Features/Core.lua), and an
-    entry under the placeholder AceDB read then names nobody and is passed over.
+    { key, name, class }, A to Z; class is nil when unrecorded. A deleted
+    character stays listed, since nothing tells an add-on it is gone. This
+    character is read from the client, and AceDB's placeholder key is skipped.
 ]]
 function ns.GetRestockListUsers(listName, othersOnly)
 	local users = {}
@@ -199,18 +153,10 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Where deleting the list in use leaves this character: on the top list, the
-    first of those that remain in the selector's own order. nil when the list is
-    the last one and there is nothing left to land on.
-
-    The maintainer's ruling: a delete never makes a list while
-    another one exists. A fresh class-named list on every delete would turn
-    deleting "Druid (2)" into "Druid (3)", so a list could be renamed by
-    deleting it but never got rid of.
-
-    The top list can be another character's. That is part of the ruling, and it
-    is why the confirm names the list before the player agrees
-    (Restocker-Window-List-Manage.lua reads this too).
+    The top remaining list, or nil for the last. The maintainer's ruling: a
+    delete never makes a list while another exists, or deleting "Druid (2)" would
+    make "Druid (3)". The top list can be another character's, so the confirm
+    names it.
 ]]
 function ns.GetRestockListAfterDelete(listName)
 	for _, name in ipairs(ns.GetRestockListNames()) do
@@ -226,10 +172,7 @@ function ns.DeleteRestockList(listName)
 	if listName == nil or settings.lists[listName] == nil then
 		return
 	end
-	--[[
-	    Deleting the CURRENT list clears via ns.UseRestockList below; this covers
-	    deleting any other list, which ns.UseRestockList never sees.
-	]]
+	-- For deleting another list, which ns.UseRestockList never sees.
 	ns.ClearRestockNewItems()
 
 	local wasCurrent = settings.currentList == listName
@@ -238,22 +181,13 @@ function ns.DeleteRestockList(listName)
 
 	if wasCurrent then
 		if not landing then
-			--[[
-			    The last list is gone, and a character always has to be on some
-			    list, so this is the one delete that makes one: empty, and named
-			    for the class like any fresh list. Named now that the deleted
-			    list has given its name up, so deleting an only list called
-			    "Druid" leaves an empty "Druid", not a "Druid (2)".
-			]]
+			-- Named after the old name is freed, so an only "Druid" leaves an empty "Druid", not "Druid (2)".
 			landing = FreeClassListName(settings)
 			settings.lists[landing] = {}
 		end
 		--[[
-		    Landed on, not picked: ns.UseRestockList rather than
-		    ns.SwitchRestockList, which reruns the bank restock and the merchant
-		    buy while either window is open. A bank run already under way is
-		    stopped as well, since it re-reads the list in use at every step and
-		    would carry straight on against this one.
+		    Landed on, not picked: no rerun of the bank or merchant buy. A bank run
+		    already going stops, since it rereads the list in use every step.
 		]]
 		ns.StopBankRestock()
 		ns.UseRestockList(landing)
@@ -270,11 +204,6 @@ end
 -- List Widgets
 --------------------------------------------------------------------------------
 
---[[
-    Sync the window's list bar with the active list: its name, the characters
-    on it, and an end to any rename in progress. A no-op until the window is
-    built, which the login path reaches only after the character's list is set.
-]]
 function ns.UpdateRestockListWidgets()
 	if ns.restockWindow then
 		ns.RefreshRestockListBar()
@@ -285,12 +214,7 @@ end
 -- Rename List
 --------------------------------------------------------------------------------
 
---[[
-    The list New List or Copy just made, as { name, rows }: its name and a copy
-    of its rows as made, so backing out of its rename can tell whether anything
-    was put on it since (ns.DiscardMadeRestockList). Replaced by the next New
-    List or Copy, and cleared by a rename or a discard.
-]]
+-- The list New List or Copy just made, with its rows as made, so a backed-out rename can tell if it was used.
 local madeList
 
 local function RememberMadeList(settings)
@@ -298,7 +222,6 @@ local function RememberMadeList(settings)
 	madeList = { name = name, rows = CopyTable(settings.lists[name]) }
 end
 
--- Whether two saved values hold the same thing, tables compared key by key.
 local function SameValue(a, b)
 	if type(a) ~= "table" or type(b) ~= "table" then
 		return a == b
@@ -320,10 +243,6 @@ function ns.RenameCurrentRestockList(newName)
 	local settings = ns.restockSettings
 	local currentListName = settings.currentList
 
-	--[[
-	    Trim; ignore empty names and no-ops, and never clobber an existing list
-	    or take a name another character still points at.
-	]]
 	newName = (newName or ""):gsub("^%s+", ""):gsub("%s+$", "")
 	if newName == "" or newName == currentListName then
 		ns.UpdateRestockListWidgets()
@@ -339,11 +258,7 @@ function ns.RenameCurrentRestockList(newName)
 	settings.lists[newName] = settings.lists[currentListName]
 	settings.lists[currentListName] = nil
 
-	--[[
-	    Every character following the old name keeps following it under the new
-	    name (otherwise its choice would dangle and it would get a fresh empty
-	    list with the old name on next login).
-	]]
+	-- Otherwise their choice would dangle and remake an empty list under the old name.
 	for characterKey, listName in pairs(settings.listChoices) do
 		if listName == currentListName then
 			settings.listChoices[characterKey] = newName
@@ -352,21 +267,11 @@ function ns.RenameCurrentRestockList(newName)
 
 	ns.UseRestockList(newName)
 	ns.UpdateRestockListWidgets()
-	--[[
-	    ns.UseRestockList just retired the "New" flags and any undo on offer, and
-	    both are drawn: the rows still sit in the New group and the status line
-	    still offers the undo until the window is repainted.
-	]]
+	-- ns.UseRestockList cleared the New flags and undo, which stay drawn until a repaint.
 	ns.UpdateRestockList()
 end
 
---[[
-    The "New List" entry, on the list selector's menu and the Manage Lists menu. Starts a
-    fresh list seeded with the class name (numbered on collision, like every
-    new list), switches to it, then opens the rename over it so a different
-    name is one line of typing away. The rename is told the list the character
-    left, so Cancel can take the new one back (ns.DiscardMadeRestockList).
-]]
+-- The rename is told the list left behind, so Cancel can take the new one back.
 function ns.CreateRestockList()
 	local previousList = ns.restockSettings.currentList
 	ns.AddRestockList(FreeClassListName(ns.restockSettings))
@@ -374,12 +279,6 @@ function ns.CreateRestockList()
 	ns.BeginRestockListRename(previousList)
 end
 
---[[
-    The Manage Lists menu's Copy entry. Clones the active list into a new, uniquely named one
-    ("<name> Copy", then "<name> Copy 2", ...), switches to the clone, and opens
-    the rename over it so the real name can be typed immediately, told the
-    source list so Cancel can take the clone back as it does a new list.
-]]
 function ns.CloneCurrentRestockList()
 	local settings = ns.restockSettings
 	local sourceName = settings.currentList
@@ -406,19 +305,14 @@ function ns.CloneCurrentRestockList()
 	RememberMadeList(settings)
 	ns.BeginRestockListRename(sourceName)
 
-	-- A bank run in progress works from the list in use, so it starts over on the new one.
 	if ns.bankIsOpen then
 		ns.StartRestockBankRun()
 	end
 end
 
 --[[
-    Backing out of the name a new list was given (Escape or Cancel in the
-    rename that New List and Copy open). While its rows are still as made, the
-    list goes, with no confirm, and the character returns to previousList,
-    which reruns a bank or merchant restock the way any switch does. Once
-    anything was put on it or taken off, it stays under its generated name and
-    only the rename ends: Escape there is as likely meant for another window.
+    Escape or Cancel deletes the made list, unconfirmed, only while its rows are
+    as made. Once used it stays: Escape is as likely meant for another window.
 ]]
 function ns.DiscardMadeRestockList(previousList)
 	local settings = ns.restockSettings
@@ -457,11 +351,9 @@ function ns.SwitchRestockList(newListName)
 	end
 
 	--[[
-	    Buys for the new list once the previous run's buys have landed (or timed out), since
-	    a run counts only what is already in the bags and would buy the in-flight items again.
-	    Not through ns.OnRestockerMerchantShow, whose doubled-MERCHANT_SHOW throttle and Shift
-	    check would swallow a switch made just after the merchant opened, or with Shift held
-	    while clicking.
+	    After the last run's buys land, or it would buy them again. Not through
+	    ns.OnRestockerMerchantShow, whose throttle and Shift check would swallow
+	    the switch.
 	]]
 	if ns.merchantIsOpen and not ns.merchantBuyingSkipped then
 		ns.AfterMerchantBuysLand(function()
@@ -487,14 +379,10 @@ function ns.CopyIntoCurrentRestockList(listToCopy)
 	local copiedList = CopyTable(settings.lists[listToCopy])
 	settings.lists[settings.currentList] = copiedList
 
-	--[[
-	    The copy replaced this list's contents wholesale, so the "New" notes no
-	    longer describe anything in it -- and no ns.UseRestockList runs to clear them.
-	]]
+	-- No ns.UseRestockList runs here to clear them.
 	ns.ClearRestockNewItems()
 	ns.UpdateRestockList()
 
-	-- A bank run in progress works from the list in use, so it starts over on the new one.
 	if ns.bankIsOpen then
 		ns.StartRestockBankRun()
 	end
@@ -505,26 +393,17 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Switch the active list AND remember the choice for this character, so it
-    returns to that list next login. Use this instead of writing
-    settings.currentList directly.
-
-    The choice is the character's, not its profile's: profiles carry the
-    Consumable Macros panel's settings, and a player who puts a bank alt on their main's
-    profile, or copies one over another, has not asked for the two to shop
-    from one list. Switching profiles therefore leaves the list alone.
+    The only writer of currentList and the character's choice. Switching
+    profiles leaves the list alone: a bank alt on its main's profile hasn't asked
+    to share a list.
 ]]
 function ns.UseRestockList(name)
 	if name == nil or name == "" then
 		return
 	end
 	--[[
-	    Any list event stales the "New" group, and every one of them --
-	    create, switch, clone, delete-with-fallback, login init -- passes
-	    through here. (A rename lands here too and clears; a note about "what
-	    I just added" does not outrank keeping this the single choke point.)
-	    Every list opens on All, scrolled to the top: a category or scroll
-	    position picked on the last list says nothing about this one.
+	    Every list event passes here, a rename included. Each list opens on All at
+	    the top: the last list's category and scroll say nothing about this one.
 	]]
 	ns.ClearRestockNewItems()
 	ns.ClearRestockGroupSelection()
@@ -538,14 +417,8 @@ function ns.UseRestockList(name)
 end
 
 --[[
-    Pick the list this character uses on login: its own choice, or -- for a
-    character that has made none, which is any character seen for the first
-    time -- a fresh class-named list (FreeClassListName above). Only those get
-    the class scheme, so no existing setup is renamed or moved.
-
-    The pointed-at list is created when missing, because another character can
-    delete it between logins. No character is given an eponymous "Name-Realm"
-    list, so hand-deleting one of those legacy lists sticks.
+    Only a character with no choice gets a class-named list. A missing chosen
+    list is remade, since another character can delete it between logins.
 ]]
 function ns.InitializeCharacterRestockList()
 	local settings = ns.restockSettings
@@ -557,10 +430,7 @@ function ns.InitializeCharacterRestockList()
 	ns.UseRestockList(listName)
 end
 
---[[
-    Remove empty lists that no character points at: the list each character
-    has chosen is kept, and so is the one in use.
-]]
+-- Empty lists no character has chosen; the one in use is kept too.
 function ns.PruneEmptyOrphanRestockLists(db)
 	local keep = {}
 	for _, listName in pairs(db.listChoices or {}) do

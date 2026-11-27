@@ -4,10 +4,8 @@ local L = ns.L
 local HideTooltip = ns.HideTooltip
 
 --[[
-	Hosts the page on the Classic engine (Classic Era, TBC, MoP Classic): a tab under the class's skill line
-	tabs down the book's right edge toggles the page's window (Features/Enhanced-Spellbook/Spellbook-Window.lua). The tab is
-	parented to UIParent and only anchored to the book, so nothing Blizzard owns is written to and the book's
-	own buttons stay untainted; native tab clicks are watched with hooksecurefunc.
+	The tab is parented to UIParent and only anchored to the book, and the book is only hooked, so its own
+	buttons stay untainted.
 ]]
 
 local ICON_ADDON = ns.ICON_ADDON
@@ -27,10 +25,8 @@ local function SyncTab()
 end
 
 --[[
-	The skill line tab the page's tab lines up under: the class's last spell tab, so it sits right under the
-	class's own tabs. Other add-ons show tabs of their own in the book's spare slots (WhatsTraining takes the
-	second to last), and lining up under the last shown tab would put ours below theirs, off the bottom of the book.
-	Falls back to the last shown tab when the spell tab count doesn't name a shown tab.
+	The class's last spell tab: other add-ons fill the book's spare slots (WhatsTraining takes the second to
+	last), and under the last shown tab ours would fall off the bottom of the book.
 ]]
 local function AnchorSkillLineTab()
 	local classLast = GetNumSpellTabs and _G["SpellBookSkillLineTab" .. GetNumSpellTabs()]
@@ -93,11 +89,7 @@ local function CreateTab()
 	tab:SetScript("OnHide", HideTooltip)
 end
 
---[[
-	Closes the game's book when the window opens (Features/Enhanced-Spellbook/Spellbook-Window.lua), the way the game closes one of
-	its panels for another. Not in combat, where the book's spell buttons are protected and hiding it is blocked;
-	there the book just stays open behind the window.
-]]
+-- Not in combat, where hiding the protected book is blocked; it stays open behind the window.
 function ns.CloseGameSpellbook()
 	if book:IsShown() and not InCombatLockdown() then
 		HideUIPanel(book)

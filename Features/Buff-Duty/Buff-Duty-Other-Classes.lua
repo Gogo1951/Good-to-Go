@@ -2,37 +2,15 @@ local _, ns = ...
 local Data = ns.Data
 
 --[[
-    The group's raid buffs, counted under the window's Party-Buffs: one icon
-    per raid-wide buff -- a ns.BUFF_DUTY_SPELLS row with a group version
-    (Mark of the Wild, Arcane Intellect, Fortitude) -- of your class, or of a
-    class up and online in your group, numbered with how many members are
-    missing it. One you can cast yourself is left out, since your own party
-    sections list it (a priest's Fortitude), but your class's talent buff you
-    lack (Divine Spirit) stays. A buff running low counts as missing under the same Refresh
-    Under as your own buffs. Blessings are left out: which one a player gets
-    is the paladins' call, not a gap.
-
-    Each buff keeps its Who Gets It setting from the panel, so one set to Off
-    isn't counted and one set to Tanks counts only the tanks. A talent buff
-    (Divine Spirit) is only counted once someone in the group carries it: a
-    raid with no priest who can cast it would otherwise count everyone, for
-    good.
-
-    Clicking an icon (Buff-Duty-Party-Buffs.lua) asks the party or raid for
-    the buff; right-clicking whispers the same ask to every other player of
-    that class in the group (Features/Announcements.lua builds and sends
-    both). One of your own class's, with nobody else of it in the group, has
-    no one to whisper.
-    The whole row is the panel's Ask for Buffs switch. The
-    frame draws the icons; this file counts and asks.
+    Blessings (exclusive rows) are left out: which one a player gets is the
+    paladins' call, not a gap. A talent buff (Divine Spirit) counts only once
+    someone in the group carries it, or a raid with no priest who can cast it
+    would count everyone for good.
 ]]
 
 local BuffDuty = ns.BuffDuty
 
---[[
-    How long a buff's ask waits before it can go out again the same way, so
-    the group isn't asked twice in a row.
-]]
+-- Per way and buff, so the group isn't asked twice in a row.
 local ASK_COOLDOWN = 10
 local lastAsked = { group = {}, whisper = {} } -- way -> buff key -> GetTime() of its last ask
 
@@ -40,11 +18,7 @@ local lastAsked = { group = {}, whisper = {} } -- way -> buff key -> GetTime() o
 -- Counting
 --------------------------------------------------------------------------------
 
---[[
-    The raid-wide buffs of every class that the panel hasn't turned off, less
-    the ones you can cast yourself (BuffDuty.buffs): the window's party
-    sections already list who needs those, with an icon to cast each.
-]]
+-- Less the buffs you can cast yourself: the window's party sections already list who needs those.
 local function Candidates()
 	local audience = ns.db.global.buffWindow.audience
 	local yours = {}
@@ -57,11 +31,7 @@ local function Candidates()
 		local who = audience[entry.key]
 		if row.group and not row.exclusive and who and who ~= Data.BUFF_AUDIENCE.OFF and not yours[entry.key] then
 			candidates[#candidates + 1] = {
-				--[[
-				    Shaped like a castable buff so Wants and Has can read it. No
-				    ranks of yours to weigh theirs against, so any version on a
-				    member counts, by its time left.
-				]]
+				-- Shaped like a castable buff for Wants and Has; empty ranks, so any version counts by time left.
 				buff = {
 					key = entry.key,
 					audience = who,
@@ -87,17 +57,7 @@ local function Candidates()
 	return candidates
 end
 
---[[
-    The icons to draw, in data order (druids, mages, priests), each one
-    { key, spellId, spellName, link, class, count, groups, missing, recipients }: `groups` the names missing it, party by party, each
-    { label, names, classes, expires, durations }, for the tooltip, `expires`
-    and `durations` holding when each one's low buff runs out and how long it
-    lasts, or 0 for none at all; `missing` the same names in
-    one list, for the ask; and `recipients` the other
-    players of its class to whisper, which may be none for your own class.
-    Empty outside a group, and asked after BuildSections, which sets the
-    Refresh Under time Has reads.
-]]
+-- Called after BuildSections, which sets the refresh time Has reads.
 function BuffDuty.BuildOtherClassBuffs()
 	local summary = {}
 	if not IsInGroup() or not ns.db.global.buffWindow.askOtherClasses then
@@ -161,7 +121,6 @@ function BuffDuty.BuildOtherClassBuffs()
 				local names = candidate.names[subgroup]
 				if names then
 					groups[#groups + 1] = {
-						-- Headed like the window's own party sections.
 						label = raid and GROUP_NUMBER:format(subgroup) or GROUP,
 						names = names,
 						classes = candidate.classes[subgroup],
@@ -194,13 +153,11 @@ end
 -- Asking
 --------------------------------------------------------------------------------
 
--- False while the same ask went out the same way under ASK_COOLDOWN ago. The Party-Buffs tooltip greys its hints by it.
 function ns.CanAskForBuff(way, key)
 	local last = lastAsked[way][key]
 	return not (last and GetTime() - last < ASK_COOLDOWN)
 end
 
--- As ns.CanAskForBuff, and when it can, starts the cooldown.
 local function ReadyToAsk(way, key)
 	if not ns.CanAskForBuff(way, key) then
 		return false
@@ -209,19 +166,13 @@ local function ReadyToAsk(way, key)
 	return true
 end
 
--- A Party-Buffs icon's click: the ask, said to the party or raid.
 function ns.AskGroupForBuff(spec)
 	if ReadyToAsk("group", spec.key) then
 		ns:SayBuffRequest(spec.missing, spec.count, spec.link)
 	end
 end
 
---[[
-    A Party-Buffs icon's right-click: the ask whispered to every other player
-    of the class, in the player's own words (the Buff Duty panel's whisper
-    composer) or the chosen language's default. An emptied whisper sends
-    nothing. Nothing is printed: the whispers show in your own chat.
-]]
+-- An emptied whisper sends nothing. Nothing is printed: the whispers show in your own chat.
 function ns.WhisperOtherClassBuff(spec)
 	if not spec.recipients[1] or not ReadyToAsk("whisper", spec.key) then
 		return

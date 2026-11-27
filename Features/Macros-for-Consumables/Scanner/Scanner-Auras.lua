@@ -1,33 +1,13 @@
 local _, ns = ...
 
---[[
-    Scanner-Auras -- reads live player/pet auras and decides which buffs the
-    character still needs: aura probes (Well Fed, scroll, and pet-food buffs),
-    early re-application, and the UNIT_AURA handler. Scrolls are Buff Duty's
-    (Buff-Duty-Self.lua), which reads Scanner-Scrolls.lua.
-]]
-
 --------------------------------------------------------------------------------
 -- Derived Scroll Lookups
 --------------------------------------------------------------------------------
 
---[[
-    Built once at load from ns.SCROLL_DATA (Data/{Game}/Scrolls-{Game}.lua, which
-    loads before this file). ns.SCROLL_ITEM_LOOKUP maps each scroll itemID to its
-    scroll type so the bag scanners route scroll items away from normal
-    consumable processing. Each type's items are sorted by required level,
-    highest first, so ns.FindBestScroll's first usable hit is the best scroll
-    whatever the data's row order. Every consumer reads these from inside a
-    function (runtime), so the build only needs to finish before the first scan.
-]]
+-- Routes scroll items away from normal consumable processing.
 ns.SCROLL_ITEM_LOOKUP = {}
 
---[[
-    A flavor with no scroll file, or a type missing either list, reads as no
-    scrolls rather than erroring: every walk below and in Scanner-Scrolls.lua
-    runs ipairs/pairs on these lists. ns.SCROLL_DATA_GAPS records what was
-    filled in, and Diagnostics' context report prints it.
-]]
+-- A missing table or list reads as no scrolls rather than erroring; Diagnostics prints what was filled in.
 ns.SCROLL_DATA_GAPS = {}
 if type(ns.SCROLL_DATA) ~= "table" then
 	ns.SCROLL_DATA = {}
@@ -51,13 +31,7 @@ local function ByRequiredLevelDescending(a, b)
 	return a[4] > b[4]
 end
 
---[[
-    Reverse maps from a spell ID back to the scroll type(s) it covers, so the
-    aura walk below resolves each aura in one lookup instead of testing every
-    type. Both hold lists: several conflict buffs (Elixir of the Sages) cover
-    two stats, and each registers against every type it covers rather than
-    silently claiming one.
-]]
+-- Lists, not single owners: a conflict buff like Elixir of the Sages covers two stats.
 local scrollBuffOwners = {}
 local scrollConflictOwners = {}
 
@@ -86,17 +60,9 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    With Re-Apply Expiring Buffs on, a tracked buff whose remaining time is
-    under the profile threshold counts as already expired, so the macros offer
-    a fresh application before the pull. Auras without a duration
-    (expirationTime 0) never count as expiring.
-
-    Crossing the threshold fires no UNIT_AURA event, so when a scan finds a
-    buff still above it, a one-shot timer requests a rebuild for the moment
-    the buff crosses. C_Timer.After cannot be canceled, so nextRecheckAt
-    tracks the earliest pending fire time and later-firing stale timers
-    no-op; a duplicate rebuild within the epsilon is harmless (RequestUpdate
-    is throttled).
+    Crossing the threshold fires no UNIT_AURA, so a timer requests the rebuild.
+    C_Timer.After can't be canceled: nextRecheckAt keeps the earliest, and
+    stale later timers do nothing.
 ]]
 local nextRecheckAt
 
@@ -137,39 +103,11 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    One walk of the player's helpful auras, shared by the Well Fed and scroll
-    probes below and by the readiness report (Features/Readiness-Report/Readiness-Report.lua).
-    The snapshot holds raw expiration times, never a verdict: the probes apply
-    BuffCountsAsActive, which owns the early re-application threshold and its
-    rebuild timer, while the report reads the same numbers with no side
-    effects of its own.
-
-    Expiration convention, shared with the pet probe below: nil means the buff
-    is absent, 0 means the aura carries no duration.
-
-    Per buff we keep the longest-lasting match, and a 0 outranks any timed one.
-    BuffCountsAsActive is monotonic in remaining time, so testing the longest
-    match answers "does any match count as active" exactly as testing every
-    match would. Neither Well Fed nor a scroll buff stacks with itself, so in
-    practice there is only ever one match to choose from.
-
-    Scroll entries also keep the largest conflicting buff amount seen (a class
-    buff or a same-stat elixir), so the scroll probe can settle "is a
-    conflicting buff already at least as good as the scroll I would use"
-    without a second pass; that comparison needs the scroll's own amount,
-    which is per-call.
-
-    The table is reused in place rather than rebuilt, because UNIT_AURA is a
-    firehose and the Well Fed probe runs on every tick. That makes the return
-    value a single shared buffer, not a private copy: a caller must not hold it
-    across another call to this function, and one that needs several answers
-    takes one snapshot and passes it down (see ns.FindMissingScrolls).
-
-    While the client restricts aura data (Forever, which is Retail's engine),
-    every field read comes back secret and comparing one errors, so the walk is
-    skipped and the previous snapshot is returned untouched. An unchanged
-    snapshot reads as "nothing moved"; a reset one would read as "no buffs"
-    and rebuild the macros around a buff the player still has.
+    Raw expiration times, never a verdict (nil absent, 0 no duration), so the
+    Readiness Report reads them with no side effects. One shared buffer reused
+    in place: never hold it across another call. While auras are secret
+    (Forever) the last snapshot is returned untouched; a reset one would read
+    as "no buffs" and rebuild around a buff the player still has.
 ]]
 local snapshot = { scrolls = {} }
 for scrollType in pairs(ns.SCROLL_DATA) do
@@ -192,6 +130,7 @@ function ns.GetPlayerBuffSnapshot()
 	end
 
 	snapshot.wellFedExpiration = nil
+	snapshot.fishingFed = false
 	for _, entry in pairs(snapshot.scrolls) do
 		entry.expiration = nil
 		entry.conflictAmount = nil
@@ -209,6 +148,10 @@ function ns.GetPlayerBuffSnapshot()
 			if IsLongerExpiration(expirationTime, snapshot.wellFedExpiration) then
 				snapshot.wellFedExpiration = expirationTime
 			end
+		end
+
+		if ns.FISHING_WELL_FED_BUFF_IDS[spellID] then
+			snapshot.fishingFed = true
 		end
 
 		local buffOwners = scrollBuffOwners[spellID]
@@ -239,11 +182,11 @@ end
 -- Well Fed
 --------------------------------------------------------------------------------
 
---[[
-    Whether you have Well Fed, from a snapshot, for the Food macro's buff food
-    first (ns.buffFoodFirst in Scanner-Inventory.lua). Re-Apply Expiring Buffs
-    counts a Well Fed under its threshold as gone, as it does the pet's.
-]]
+-- Any time left counts: the Fishing Lure macro eats only once it's gone.
+function ns.HasFishingWellFed(currentSnapshot)
+	return currentSnapshot.fishingFed == true
+end
+
 local function WellFedFromSnapshot(currentSnapshot)
 	local expiration = currentSnapshot.wellFedExpiration
 	return expiration ~= nil and BuffCountsAsActive(expiration)
@@ -253,17 +196,7 @@ end
 -- Scroll Buffs
 --------------------------------------------------------------------------------
 
---[[
-    A scroll buff of any rank counts as covered. A conflict spell (e.g. Fort,
-    or Elixir of the Mongoose for Agility) only counts as covered if its base
-    amount is at least as large as the scroll we would use — otherwise the
-    scroll would still improve the stat.
-
-    callerSnapshot is an optional snapshot from ns.GetPlayerBuffSnapshot.
-    Callers asking about more than one scroll type pass one in, so a single
-    walk of the player's auras serves the whole set; omitting it takes a
-    fresh one.
-]]
+-- A scroll buff of any rank covers; a conflict buff covers only at an equal or larger amount.
 function ns.HasScrollBuff(scrollType, scrollAmount, callerSnapshot)
 	if not ns.SCROLL_DATA[scrollType] then
 		return true
@@ -275,13 +208,7 @@ function ns.HasScrollBuff(scrollType, scrollAmount, callerSnapshot)
 		return true
 	end
 
-	--[[
-	    Check conflict spells — only block the scroll if the conflicting
-	    buff provides at least as much stat as our best scroll would.
-	    Exempt from the early re-application threshold: a still-active
-	    stronger buff cannot be overwritten, so treating it as expired
-	    would build a scroll line that errors on use.
-	]]
+	-- No early re-application here: a stronger buff can't be overwritten, so the scroll would error.
 	return entry.conflictAmount ~= nil and entry.conflictAmount >= (scrollAmount or 0)
 end
 
@@ -289,10 +216,6 @@ end
 -- Pet Food Buffs
 --------------------------------------------------------------------------------
 
---[[
-    The buffs ns.PET_BUFF_FOODS grant, matched against the pet's auras, and the
-    lowest level any of the foods can be used at.
-]]
 local PET_BUFF_FOOD_SPELL_IDS = {}
 local PET_BUFF_FOOD_MIN_LEVEL
 for _, row in pairs(ns.PET_BUFF_FOODS) do
@@ -300,22 +223,11 @@ for _, row in pairs(ns.PET_BUFF_FOODS) do
 	PET_BUFF_FOOD_MIN_LEVEL = math.min(PET_BUFF_FOOD_MIN_LEVEL or row[4], row[4])
 end
 
--- A flavor whose data folder has no pet buff food runs none of this feature.
 local HAS_PET_BUFF_FOODS = next(ns.PET_BUFF_FOODS) ~= nil
 
 --[[
-    Whether pet buff food applies to this character right now: this flavor has
-    one, the feature is on, its group restriction is satisfied, the player is
-    high enough level for the food to exist, and there is a live pet to feed.
-    No class test: a Hunter's beast and a Warlock's demon both eat it, and a
-    character with no pet out (a Warlock who sacrificed the demon) fails the
-    live-pet test anyway.
-
-    Single source of truth on purpose. Both ns.FindPetBuffOverride
-    (Macros/Tools-Hunters-Pet-Food.lua), which decides whether to splice the feed line
-    into the Food macro, and the readiness report (Features/Readiness-Report/Readiness-Report.lua)
-    have to agree: apart, the report can ask a level-30 Hunter for a buff its
-    own macro will never apply, with no way to satisfy it.
+    No class test: a Warlock's demon eats it too. Shared with the Readiness
+    Report on purpose: apart, it could ask for a buff the macro never applies.
 ]]
 function ns.ShouldTrackPetFood()
 	if not HAS_PET_BUFF_FOODS then
@@ -337,15 +249,7 @@ function ns.ShouldTrackPetFood()
 	return true
 end
 
---[[
-    The pet is a separate unit and so a separate walk from the player snapshot
-    above, but it follows the same expiration convention: nil when the buff is
-    absent, 0 when the aura carries no duration. Consumed by
-    ns.FindPetBuffOverride (Macros/Tools-Hunters-Pet-Food.lua) and by the readiness
-    report; the probe lives here because BuffCountsAsActive is private to this
-    file. Like the player snapshot, it answers with its last reading while the
-    client restricts aura data.
-]]
+-- Same conventions as the player snapshot, including the last reading while auras are secret.
 local lastPetFoodBuffExpiration
 
 function ns.GetPetFoodBuffExpiration()
@@ -382,15 +286,9 @@ end
 -- Pet Food Reading
 --------------------------------------------------------------------------------
 
--- The pet food decision's last reading: nil until a scan or the handler records one.
 local lastPetFoodBuff
 
---[[
-    Called from ns.ResetMacroState: a forced rebuild drops the pet food
-    reading so nothing is compared against one taken under the old settings.
-    The next scan records a fresh one, and an aura event that arrives first
-    counts as a change.
-]]
+-- So nothing is compared against a reading taken under the old settings.
 function ns.ResetScrollBuffTracking()
 	lastPetFoodBuff = nil
 end
@@ -401,14 +299,9 @@ end
 
 local auraEventRegistered
 
---[[
-    Reads Well Fed for the scan (ns.wellFedState) and keeps UNIT_AURA on for
-    the player while the bags hold buff food (ns.carriesBuffFood, from the
-    scan before), and for the pet while Pet Food Buffs is live, recording the
-    readings the aura handler diffs against. Scrolls are Buff Duty's, which
-    watches its own auras. UNIT_AURA is only re-registered when the wanted
-    units change, since every bag scan passes through here.
-]]
+local lastFishingFed
+
+-- Re-registers only when the wanted units change: every bag scan passes through here.
 function ns.UpdateAuraTracking()
 	local settings = ns.db.profile
 	local petBuffActive = HAS_PET_BUFF_FOODS and settings.usePetBuffFood and ns.IsUseWhenActive(settings, "petBuffFood")
@@ -421,7 +314,13 @@ function ns.UpdateAuraTracking()
 		lastPetFoodBuff = nil
 	end
 
-	local watchPlayer = ns.carriesBuffFood and true or false
+	if ns.watchFishingFed then
+		lastFishingFed = ns.HasFishingWellFed(ns.GetPlayerBuffSnapshot())
+	else
+		lastFishingFed = nil
+	end
+
+	local watchPlayer = (ns.carriesBuffFood or ns.watchFishingFed) and true or false
 	local wantAuraEvent = (watchPlayer and petBuffActive and "player+pet")
 		or (watchPlayer and "player")
 		or (petBuffActive and "pet")
@@ -442,23 +341,10 @@ end
 -- Aura Event Handler
 --------------------------------------------------------------------------------
 
---[[
-    UNIT_AURA handler routed from Core's dispatcher, registered for the player
-    and the pet as ns.UpdateAuraTracking wants them. Each side diffs the one
-    thing its decision reads, whether Well Fed or the pet food buff is up:
-    UNIT_AURA is a firehose, a rebuild is a full bag rescan, and a raid's buff
-    round lands blessings and totems on both.
-]]
+-- A busy event and a rebuild is a full rescan, so each side diffs only the one thing it reads.
 function ns.OnUnitAura(unit)
 	local needsUpdate = false
-	--[[
-	    What made this firing worth acting on. UNIT_AURA is a firehose, so the
-	    diagnostics capture tap can only count it -- it runs before this handler
-	    and cannot yet know. This is the end that does know, so the signal
-	    firings are logged from here (see ns:LogEventNow in
-	    Diagnostics/Event-Log.lua), which keeps the event log from disagreeing
-	    with what the add-on actually reacted to.
-	]]
+	-- Logged from here, not the capture tap, which runs first and can't know which firings mattered.
 	local reason
 
 	if unit == "player" then
@@ -468,6 +354,14 @@ function ns.OnUnitAura(unit)
 				ns.wellFedState = wellFedState
 				needsUpdate = true
 				reason = "wellfed"
+			end
+		end
+		if ns.watchFishingFed then
+			local fishingFed = ns.HasFishingWellFed(ns.GetPlayerBuffSnapshot())
+			if fishingFed ~= lastFishingFed then
+				lastFishingFed = fishingFed
+				needsUpdate = true
+				reason = reason or "fishingfed"
 			end
 		end
 	elseif unit == "pet" then

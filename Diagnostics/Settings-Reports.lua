@@ -11,6 +11,7 @@ local CountKeys = ns.CountDiagnosticKeys
     Answers "it's gone / off-screen" reports for everything the add-on draws:
     screen size and UI scale, then the mini-map button's saved placement and menu, the
     Buff Duty window's, the Restock List window's and the Staples window's,
+    where the Currency Replenish tab and window sit beside the mail window,
     and where the spellbook, the Spellbook's tab and its page sit. Read-only.
 ]]
 
@@ -311,6 +312,16 @@ local function AppendRestockLines(lines)
 	lines[#lines + 1] = FrameLine("Staples window", _G.GoodToGoStaplesFrame)
 end
 
+--[[
+	Currency Replenish's tab and window save no position: both anchor to the right edge of the mail window
+	showing, Blizzard's or TSM's, each time it opens, and are built the first time they're needed.
+]]
+local function AppendCurrencyReplenishLines(lines)
+	lines[#lines + 1] = FrameLine("Currency Replenish tab", _G.GoodToGoCurrencyReplenishTab)
+	lines[#lines + 1] = FrameLine("Currency Replenish window", _G.GoodToGoCurrencyReplenishWindow)
+	lines[#lines + 1] = FrameLine("Blizzard mail window", _G.MailFrame)
+end
+
 function ns:BuildDisplayContextReport()
 	local lines = { GetClientHeader(), "" }
 
@@ -325,6 +336,8 @@ function ns:BuildDisplayContextReport()
 	AppendBuffDutyLines(lines)
 	lines[#lines + 1] = ""
 	AppendRestockLines(lines)
+	lines[#lines + 1] = ""
+	AppendCurrencyReplenishLines(lines)
 	lines[#lines + 1] = ""
 	AppendSpellbookLines(lines)
 

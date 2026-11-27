@@ -6,12 +6,7 @@ local L = ns.L
 --------------------------------------------------------------------------------
 
 --[[
-    Size and position both live in ns.db.global.restocker.framePosition. That is the
-    account-wide half of the AceDB database, so one window layout follows the
-    player across every character and no profile switch can move it.
-
-    Both width numbers are set by the LIST, not the rows above and below it, and
-    they are the sum of three things that each have their own floor:
+    Account-wide, so no profile switch moves it. MIN_WIDTH is set by the list:
 
       the category pane   its widest ALLOWED width (176) plus the gap (16)
       the table           598, which holds the item name at its readable floor
@@ -19,21 +14,9 @@ local L = ns.L
       window chrome       the inset (ns.RESTOCK_WINDOW_BANDS: 4 left, 4 right), its
                           padding (8), the scroll bar (26)
 
-    and MIN_WIDTH is that sum, built from the bands' own numbers so a change to
-    the inset carries through. The pane sizes itself to the longest type
-    name it actually has to draw (see ns.ResolveRestockGroupPaneWidth) and is capped so this
-    number stays honest: MIN_WIDTH is set against the CAP rather than the usual
-    width, so the item name keeps its floor even on a client whose type names run
-    long. Raising that cap means raising this. The header's own floor (the
-    portrait's clearance, the filter, the bag menu, the add box, Add and Pick
-    Staples) sits under it by about 60 pixels in English, which is the room
-    longer button captions have.
-
-    DEFAULT_WIDTH is a step above the floor so a fresh window opens with room for
-    a long consumable name rather than at the edge of truncation. MAX_* is a
-    sanity ceiling for a corrupt saved value, not a real limit.
-
-    Both height numbers include the title and the header above the list.
+    It uses the pane's cap, so raising the cap means raising this. The header's
+    floor sits about 60 pixels under it in English, room for longer captions.
+    MAX_* only guards a corrupt saved value. Heights include title and header.
 ]]
 local DEFAULT_WIDTH = 864
 local DEFAULT_HEIGHT = 448
@@ -52,8 +35,8 @@ local function Clamp(value, minimum, maximum, fallback)
 end
 
 --[[
-	Written whole: AceDB can clear an empty framePosition at logout before this runs. sizeOnly keeps the
-	saved spot as it is, so a window that was never dragged still has none.
+	Written whole: AceDB can clear an empty framePosition at logout first.
+	sizeOnly keeps the saved spot, so a never-dragged window still has none.
 ]]
 function ns.SaveRestockWindowGeometry(sizeOnly)
 	local frame = ns.restockWindow
@@ -75,7 +58,6 @@ function ns.SaveRestockWindowGeometry(sizeOnly)
 	}
 end
 
--- The saved spot, or the right edge of the screen until the window is first dragged.
 local function PlaceFrame(frame)
 	local position = ns.restockSettings.framePosition
 	frame:ClearAllPoints()
@@ -93,7 +75,7 @@ function ns.HasSavedRestockWindowPosition()
 	return settings ~= nil and settings.framePosition.point ~= nil
 end
 
--- Reset Position (Options-Restocker.lua): forgets the spot, keeps the size, and moves an open window back.
+-- Keeps the size.
 function ns.ResetRestockWindowPosition()
 	local position = ns.restockSettings.framePosition
 	ns.restockSettings.framePosition = { width = position.width, height = position.height }
@@ -102,10 +84,7 @@ function ns.ResetRestockWindowPosition()
 	end
 end
 
---[[
-    Forward-declared: CreateAddonFrame's OnSizeChanged closure names it, and a
-    local that is not yet in scope on that line compiles as a nil global instead.
-]]
+-- Forward-declared, or the closures below would compile them as nil globals.
 local RelayoutFrame
 local RefitGroupPane
 
@@ -132,33 +111,20 @@ local function CreateAddonFrame()
 
 	addonFrame:SetResizeBounds(MIN_WIDTH, MIN_HEIGHT, MAX_WIDTH, MAX_HEIGHT)
 
-	--[[
-	    Children are anchored to two corners rather than given a size, so the whole
-	    layout follows the window on its own. Only the scroll child and the pooled
-	    rows need telling -- a scroll child is sized, not anchored -- which is what
-	    RelayoutFrame does.
-	]]
+	-- Children anchor to corners; only the sized scroll child and rows need telling.
 	addonFrame:SetScript("OnSizeChanged", function(self)
 		RelayoutFrame(self)
 	end)
 
-	--[[
-	    Redrawn on the way in, whichever route opened it (the slash command, the
-	    mini-map button, a bank or merchant visit): the yellow Keep marks and the
-	    orders under the list are read from the bags, which nothing repaints while
-	    the window is hidden.
-	]]
+	-- Nothing repaints the bag-read marks while hidden, so every route in redraws.
 	addonFrame:SetScript("OnShow", function(self)
 		RefitGroupPane(self)
 		ns.UpdateRestockList()
 	end)
 
 	--[[
-	    The "New" group lasts exactly as long as the window is open, and an open
-	    menu is parented to UIParent rather than to the window, so it would outlive
-	    it. Hooked on OnHide rather than in ns.HideRestockWindow because the frame
-	    also closes by routes that never reach it -- the title bar's X, and Escape
-	    via UISpecialFrames.
+	    On OnHide, since the X and Escape never reach ns.HideRestockWindow. Menus
+	    are parented to UIParent and would outlive the window.
 	]]
 	addonFrame:SetScript("OnHide", function()
 		ns.CloseRestockMenus()
@@ -173,13 +139,7 @@ local function CreateAddonFrame()
 		end
 	end)
 
-	--[[
-	    An item dropped on any bare part of the window joins the list, so the add
-	    box is one target rather than the only one. Every control takes the mouse
-	    before the window does, and each makes this same call: the rows' own
-	    (Restocker-Window-Rows.lua), and the rest through ns.SetRestockControlClick
-	    (Restocker-Window-Widgets.lua).
-	]]
+	-- A drop anywhere joins the list; controls take the mouse first, and each makes this same call.
 	local function TakeCursorItem()
 		ns.AddRestockItemFromCursor()
 	end
@@ -188,21 +148,13 @@ local function CreateAddonFrame()
 	return addonFrame
 end
 
---[[
-    Push the current window size down into the parts that cannot follow it by
-    anchoring alone. Cheap enough to run on every frame of a resize drag: it
-    sets widths and never rebuilds the list.
-]]
+-- Runs every frame of a resize drag, so it only sets widths.
 function RelayoutFrame(addonFrame)
 	local scrollChild = addonFrame.scrollChild
 	if not scrollChild then
 		return -- still being built; ns.CreateRestockWindow lays out once at the end
 	end
 
-	--[[
-	    Only the table's rows follow the window: the category pane is a fixed width
-	    (see WINDOW GEOMETRY), so nothing in it needs resizing on a drag.
-	]]
 	local rowWidth = addonFrame.scrollFrame:GetWidth()
 	scrollChild:SetWidth(rowWidth)
 	for _, row in ipairs(ns.restockRowPool) do
@@ -210,10 +162,7 @@ function RelayoutFrame(addonFrame)
 	end
 end
 
---[[
-    The corner grip that resizes the window. A child button, so it takes the
-    mouse before the frame-wide drag-to-move handler sees it.
-]]
+-- A child button, so it takes the mouse before the window's drag-to-move.
 local function CreateResizeGrip(addonFrame)
 	local grip = CreateFrame("Button", nil, addonFrame)
 	grip:SetSize(16, 16)
@@ -233,47 +182,26 @@ local function CreateResizeGrip(addonFrame)
 	return grip
 end
 
--- Two corners instead of a size (ns.CreateRestockerBodyInset): the inset then tracks the window by itself.
 local function CreateListInset(addonFrame)
 	local listInset = ns.CreateRestockerBodyInset(addonFrame)
 	addonFrame.listInset = listInset
 	return listInset
 end
 
---[[
-    Clear space between the inset's top edge and the list's column headings: where
-    the list area starts, and with it the empty list's invitation, which takes that
-    whole area over.
-]]
 local LIST_TOP_GAP = 8
 local LIST_BOTTOM_MARGIN = 8 -- nothing else shares the list's inset
 
---[[
-    How far below the inset's top edge both panes start: the top of the list
-    area, then the column header's own height and the space under it. Shared
-    so the category rows and the item rows sit on the same baseline.
-]]
+-- Shared so category rows and item rows sit on the same baseline.
 local function ListTopInset()
 	return LIST_TOP_GAP + ns.restockColumnHeaderHeight + ns.RESTOCK_COLUMN_HEADER_GAP
 end
 
---[[
-    How far above the inset's bottom edge both panes stop. Everything the player
-    types into sits in the header, so this is a plain margin rather than a
-    reserved band. Read by the category pane too
-    (Restocker-Window-Categories.lua), so the two halves end on the same line.
-]]
+-- Shared so both panes end on the same line.
 ns.RESTOCK_LIST_BOTTOM_INSET = LIST_BOTTOM_MARGIN
 
 local function CreateScrollFrame(addonFrame, listInset)
 	local scrollFrame = CreateFrame("ScrollFrame", nil, addonFrame, "UIPanelScrollFrameTemplate")
-	--[[
-	    The category pane owns the left of the inset, so the table starts past it.
-	    26 on the right for the scroll bar, and the plain bottom margin
-	    (ns.RESTOCK_LIST_BOTTOM_INSET). The column header is anchored to this
-	    frame's top corners rather than measured against the inset, so it
-	    inherits the same right edge the rows lay out from.
-	]]
+	-- 26 on the right for the scroll bar.
 	local left = 8 + ns.restockGroupPaneWidth + ns.RESTOCK_GROUP_PANE_GAP
 	scrollFrame:SetPoint("TOPLEFT", listInset, "TOPLEFT", left, -ListTopInset())
 	scrollFrame:SetPoint("BOTTOMRIGHT", listInset, "BOTTOMRIGHT", -26, ns.RESTOCK_LIST_BOTTOM_INSET)
@@ -296,19 +224,9 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    What an empty list shows in place of the grid: a short body and one button.
-    A bare header over no rows, with "All Items 0" beside it, reads as a window
-    that failed to load; this says the list is empty and what to do about it.
-
-    The block is centered on the list area as a stack hung from its title, so a
-    body that wraps to another line in another locale pushes the button down
-    rather than running under it. The body is capped in width for the same
-    reason a paragraph is: a sentence spanning the whole window is hard to read.
-    In English it wraps to three lines, which is what the title's offset
-    centers the stack for.
-
-    It takes no mouse, so an item dropped on it falls through to the window's
-    own drop handler like a drop on any other bare part of the window.
+    A bare header over no rows reads as a failed load. The stack hangs from its
+    title, so a longer locale pushes the button down; the offset centers the
+    three lines English wraps to. No mouse, so drops fall through to the window.
 ]]
 local EMPTY_BODY_WIDTH = 448
 local EMPTY_TITLE_OFFSET = 64 -- the title's foot above the area's center, which centers the stack
@@ -349,11 +267,6 @@ local function CreateEmptyState(addonFrame, listInset)
 	return panel
 end
 
---[[
-    The one line a list with items shows when none of them is drawn: the filter
-    matches nothing, or the selected category just lost its last item. On the
-    scroll frame, so it sits where the first row would.
-]]
 local function CreateNothingShownText(addonFrame)
 	local text = addonFrame.scrollFrame:CreateFontString(nil, "OVERLAY", "GameFontDisable")
 	text:SetPoint("TOP", addonFrame.scrollFrame, "TOP", 0, -16)
@@ -362,15 +275,7 @@ local function CreateNothingShownText(addonFrame)
 	return text
 end
 
---[[
-    Swap the grid for the empty list's invitation and back, and set the
-    nothing-shown line. Called by ns.UpdateRestockList at the end of every
-    redraw, with what it just found: whether the list holds anything at all,
-    and the line to show when it does but no row was drawn (nil otherwise).
-
-    The column header and the category pane are siblings of the scroll frame
-    rather than children of it, so each is switched by name.
-]]
+-- The column header and category pane are the scroll frame's siblings, so each is switched by name.
 function ns.UpdateRestockEmptyState(listIsEmpty, nothingShown)
 	local window = ns.restockWindow
 	window.emptyState:SetShown(listIsEmpty)
@@ -384,13 +289,7 @@ function ns.UpdateRestockEmptyState(listIsEmpty, nothingShown)
 	end
 end
 
---[[
-    Escape closes the window through UISpecialFrames. The staples pop-up takes
-    the window off that list while it is open: both are on it, and one press
-    of Escape closes every window on the list, so it would otherwise close both.
-    The pop-up hands it back a frame after it hides, never while Escape's own
-    walk of the list is still running.
-]]
+-- Staples takes the window off UISpecialFrames while open, or one Escape would close both.
 function ns.SetRestockWindowClosesOnEscape(closes)
 	for index = #UISpecialFrames, 1, -1 do
 		if UISpecialFrames[index] == "GoodToGoRestockFrame" then
@@ -402,11 +301,7 @@ function ns.SetRestockWindowClosesOnEscape(closes)
 	end
 end
 
---[[
-    Measured again each time the window opens, not only when it is built: a font
-    can measure as zero at login, and items of a new type may have been added
-    since. A new width moves the table's left edge with the pane's right one.
-]]
+-- On every open: a font can measure zero at login, and new item types may have arrived.
 function RefitGroupPane(addonFrame)
 	local before = ns.restockGroupPaneWidth
 	ns.ResolveRestockGroupPaneWidth()
@@ -420,9 +315,8 @@ function RefitGroupPane(addonFrame)
 end
 
 function ns.CreateRestockWindow()
-	-- Row and button heights come from the font, so measure before anything is built.
+	-- Both before anything is built: heights come from the font, and the table anchors past the pane.
 	ns.RefreshRestockRowMetrics()
-	-- The table's left edge is anchored past the category pane, so size it first; each opening sizes it again (RefitGroupPane).
 	ns.ResolveRestockGroupPaneWidth()
 
 	local addonFrame = CreateAddonFrame()
@@ -433,20 +327,15 @@ function ns.CreateRestockWindow()
 	ns.CreateRestockGroupPane(addonFrame, listInset, ListTopInset())
 	CreateEmptyState(addonFrame, listInset)
 	CreateNothingShownText(addonFrame)
-	-- The header bar with the filter and Pick Staples in it (Restocker-Window-Header.lua).
 	local header = ns.CreateRestockHeader(addonFrame)
 	addonFrame.staplesButton = header.staplesButton
 
-	-- Order matters, and the adders chain right to left: Add off Pick Staples, the add box off Add, the bag menu off the box.
+	-- Order matters: each adder anchors off the one before, right to left.
 	ns.CreateRestockAddButton(addonFrame, header)
 	ns.CreateRestockAddBox(addonFrame, header)
 	ns.PlaceRestockBagMenu(addonFrame, header)
-	-- The footer's list controls (Restocker-Window-List-Bar.lua).
 	local bar = ns.CreateRestockListBar(addonFrame)
-	--[[
-	    Settings live in the add-on's options panel (the mini-map menu, /gtg);
-	    the frame deliberately has no Settings button.
-	]]
+	-- No Settings button, on purpose: settings live in the options panel.
 	ns.CreateRestockWindowFooter(addonFrame)
 	CreateResizeGrip(addonFrame)
 	ns.ApplyRestockerElvUISkin({
@@ -468,17 +357,11 @@ function ns.CreateRestockWindow()
 	addonFrame:Hide()
 
 	ns.restockWindow = addonFrame
-	-- Now that scrollChild exists, settle the sizes the anchors could not carry.
 	RelayoutFrame(addonFrame)
 	return ns.restockWindow
 end
 
---[[
-    The player's ways to open the window end here or in ns.ToggleRestockWindow,
-    so both answer the master switch. Restocker-Saved-Lists.lua shows it
-    directly after adding or copying a list, which only a switched-on
-    Restocker can reach.
-]]
+-- Every player route in ends here or in ns.ToggleRestockWindow, so both answer the master switch.
 local function RestockerSwitchedOff()
 	if ns.IsRestockerEnabled() then
 		return false
@@ -509,11 +392,7 @@ function ns.HideRestockWindow()
 	end
 end
 
---[[
-    A merchant or bank visit closes the window only when that visit opened it:
-    a window the player opened stays open, and a loading screen, which fires the
-    _CLOSED events with nothing open, never closes it. OnHide clears the flag.
-]]
+-- A visit closes the window only if it opened it; a player-opened window stays.
 ns.restockWindowOpenedByVisit = false
 
 function ns.ShowRestockWindowForVisit()

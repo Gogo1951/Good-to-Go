@@ -1,23 +1,6 @@
 local _, ns = ...
 local MACRO_CONFIG = ns.MACRO_CONFIG
 
---[[
-    Engine -- the shared macro-writing machinery. Owns the update loop that
-    drives one registered definition per macro, and the switch setter that
-    rebuilds them. Beside it: the definition protocol and registry
-    (Definitions.lua), target and group signatures (Signatures.lua), conjure
-    rank resolution (Smart-Spell.lua), macro create/edit/delete (Writer.lua),
-    and the standard-body, conjure-block and state-key builders with the
-    macro-length trim (Body-Builder.lua).
-
-    The macro-callback globals (GtGFire, GtGTip,
-    GtGTipIf, GtGNoItem, GtGReplace) and the state they share live in
-    Features/Macros-for-Consumables/Macros/Runtime.lua, which loads immediately after this file.
-    Body-Builder.lua writes the `/run GtG...` lines into macro bodies
-    at update time, long after load, so the later load order is safe --
-    nothing calls those globals while the files are being read.
-]]
-
 --------------------------------------------------------------------------------
 -- State
 --------------------------------------------------------------------------------
@@ -28,12 +11,7 @@ local currentMacroState = {}
 -- Macro Enablement
 --------------------------------------------------------------------------------
 
---[[
-    Which macros the account wants. Account-wide to match the macros themselves,
-    which live in the shared General tab (see ns.TryCreateMacro in Writer.lua), so
-    a character switch never adds or removes a macro -- it only rewrites the
-    shared bodies to that character's best items.
-]]
+-- Account-wide like the General-tab macros, so a character switch only rewrites bodies.
 function ns.IsMacroEnabled(typeName)
 	local enabled = ns.db and ns.db.global.enabledMacros
 	if not enabled then
@@ -51,7 +29,7 @@ end
 -- Macro Writing
 --------------------------------------------------------------------------------
 
--- Writes through ns.WriteMacroBody (Writer.lua), recording the state key only when the write landed.
+-- The state key is recorded only when the write landed, or a full tab would block every retry.
 local function WriteMacro(macroName, body, stateKey, typeName)
 	if ns.WriteMacroBody(macroName, body) then
 		currentMacroState[typeName] = stateKey
@@ -65,23 +43,11 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    One-time OnHide hook on the Blizzard Macro UI. MacroFrame saves its edit box
-    back over the selected macro when the selection changes and when it hides,
-    so a Consumable Macros macro the user had selected may just have been reverted to
-    the text from when the frame opened. The state keys can't see that -- they
-    track what WE last wrote, and after a revert they match a body that is no
-    longer there -- so drop them all and rebuild from scratch.
-
-    The frame is load-on-demand, so this can only run once Blizzard_MacroUI has
-    loaded. UpdateMacros calls it on EVERY pass rather than only from the
-    frame-is-shown deferral below: installed from that branch alone, the hook
-    arms only when an update happens to land while the frame is open, and a
-    short visit that requests no update never arms it at all -- leaving exactly
-    the stale-macro case this hook exists to close.
-
-    One gap survives by design: a first open-and-close with no macro update in
-    between still misses the hook, because the frame does not exist until the
-    open and nothing runs before the close.
+    MacroFrame saves its edit box back on close, reverting a write the state
+    keys already recorded, so its OnHide drops every key. Tried on EVERY pass
+    (the frame is load-on-demand): armed only from the shown-frame branch, a
+    short visit that requests no update would never arm it. A first open and
+    close before any update is the one gap.
 ]]
 local macroUIHooked = false
 
@@ -97,19 +63,9 @@ local function EnsureMacroUIHook()
 end
 
 function ns.UpdateMacros(forced)
-	--[[
-	    Arm the Macro UI hook as early as possible. It self-guards on both
-	    "already hooked" and "frame does not exist yet", so this costs one
-	    boolean test per update.
-	]]
 	EnsureMacroUIHook()
 
-	--[[
-	    The wipe runs ahead of the deferral guards so a forced rebuild that
-	    arrives in combat or with the Macro UI open keeps its force: the
-	    deferred pass runs unforced, and only the wiped state guarantees it
-	    rewrites bodies whose state key did not change.
-	]]
+	-- Wiped before the deferral guards: the deferred pass runs unforced, so only the wipe keeps the force.
 	if forced then
 		wipe(currentMacroState)
 	end
@@ -120,15 +76,9 @@ function ns.UpdateMacros(forced)
 	end
 
 	--[[
-	    Writing while the Blizzard Macro UI is open is worse than useless: the
-	    open frame never refreshes (the user stares at the old body and
-	    concludes the rebuild is broken), and its save-back then reverts the
-	    write -- leaving currentMacroState recording a body the macro no longer
-	    has, which blocks every later rewrite whose state key matches (the
-	    "stale macros until something else changes" failure). Leave the work
-	    pending without re-arming the throttle: the OnHide hook above replays it
-	    as a full rebuild the moment the frame closes, and it is always armed by
-	    now, since EnsureMacroUIHook ran first and the frame exists.
+	    Never write while the Macro UI is open: its save-back would revert the
+	    write and leave a state key for a body that's gone. The OnHide hook,
+	    armed just above, replays the pass.
 	]]
 	if MacroFrame and MacroFrame:IsShown() then
 		ns.MarkUpdatePending()
@@ -143,11 +93,7 @@ function ns.UpdateMacros(forced)
 		ns.UnregisterDataRetry()
 	end
 
-	--[[
-	    The Macros master switch: off, every macro stays as it last was, but the
-	    scan still runs, because the Readiness Report and the mini-map read what
-	    it publishes.
-	]]
+	-- Off, the macros stay as they are, but the scan still feeds the Readiness Report and the mini-map.
 	if not ns.db.global.macrosEnabled then
 		if ns.isHunter then
 			ns.ScanPetFood()
@@ -167,48 +113,35 @@ function ns.UpdateMacros(forced)
 			local bestEntry = best[typeName]
 			local itemID = bestEntry and bestEntry.id
 
-			-- Definition hook: swap the scanned item (Food's pet-buff override).
 			if definition.modifyItem then
 				itemID = definition.modifyItem(itemID)
 			end
 
-			--[[
-			    Definition hook: the Cannibalize line, for a body that uses the
-			    scanned pick (or has none). A swapped item, Food's pet-buff
-			    override, feeds the pet, so it gets no line.
-			]]
+			-- Only for the scanned pick: a swapped item (Food's pet-buff override) feeds the pet.
 			local corpseCast
 			if definition.corpseSpell and itemID == (bestEntry and bestEntry.id) then
 				corpseCast = definition.corpseSpell(bestEntry)
 			end
 
-			-- Definition hook: a spell a press out of combat casts instead (Bandage's Rapid Regeneration), same rule.
 			local leadCast
 			if definition.leadSpell and itemID == (bestEntry and bestEntry.id) then
 				leadCast = definition.leadSpell(bestEntry)
 			end
 
-			-- Definition hook: a spell a press in combat casts instead (Food's Rapid Regeneration), same rule.
 			local combatCast
 			if definition.combatSpell and itemID == (bestEntry and bestEntry.id) then
 				combatCast = definition.combatSpell(bestEntry)
 			end
 
-			--[[
-			    Ranked /use list for multi-use types; topIDs[1] is itemID
-			    itself, so the list only adds fallback lines below it.
-			]]
 			local useIDs
 			if itemID and ns.MULTI_USE_MACRO_TYPES[typeName] and bestEntry.topIDs and #bestEntry.topIDs > 0 then
 				useIDs = bestEntry.topIDs
 			end
 
 			--[[
-			    Definition hook: ranked ids appended below the main block
-			    (Health Potion's healthstone stacking). With no main item they
-			    become the whole body instead -- a Health Potion macro with no
-			    potion, which is every TBC arena, still uses the stones -- and
-			    the DruidMacroHelper guards follow what the body now uses.
+			    With no main item the stack becomes the whole body (a Health Potion
+			    macro in every TBC arena still uses the stones), and the
+			    DruidMacroHelper guards follow what the body now uses.
 			]]
 			local stackIDs
 			local overrideTypeName = typeName
@@ -222,21 +155,12 @@ function ns.UpdateMacros(forced)
 				end
 			end
 
-			--[[
-			    Definition field: the food or water a potion macro uses out
-			    of combat. It is the scanner's pick for that type as it
-			    stands, buff food included, whether or not that type's own
-			    macro is enabled; none in bags leaves the body as it was.
-			]]
+			-- That type's scanned pick, buff food included, whether or not its own macro is on.
 			local outOfCombatID, outOfCombatStealth, outOfCombatCorpse
 			if definition.outOfCombatTypeName and ns.db.profile.potionsUseFoodAndWater then
 				local outOfCombatEntry = best[definition.outOfCombatTypeName]
 				outOfCombatID = outOfCombatEntry and outOfCombatEntry.id
 
-				--[[
-				    Its own macro's stealth and Cannibalize, so eating from the
-				    potion macro hides you, or cannibalizes, the same way.
-				]]
 				local source = ns.MacroDefinitionByType(definition.outOfCombatTypeName)
 				if outOfCombatID and source and source.stealthSpell then
 					outOfCombatStealth = source.stealthSpell()
@@ -246,11 +170,6 @@ function ns.UpdateMacros(forced)
 				end
 			end
 
-			--[[
-			    Class-specific macro overrides. The Druid builder owns the
-			    DMH-wrap path (HP/MP/HS). Returns nil here means "no override
-			    for this type/item" — fall through to the standard body.
-			]]
 			local classBody, classStateID
 			if itemID then
 				classBody, classStateID = ns.BuildDruidMacroOverride(
@@ -264,26 +183,13 @@ function ns.UpdateMacros(forced)
 			end
 
 			if classBody then
-				--[[
-				    Class-override mode. The class builder produced a fully
-				    formed macro body and a state key it owns; we just write
-				    it. State keys from class builders MUST be prefixed
-				    distinctly (e.g. "DMH:") so they cannot collide with the
-				    standard keys — a transition into or out
-				    of override mode always triggers a rewrite.
-				]]
+				-- Override keys MUST carry their own prefix ("DMH:"), so a switch to or from one always rewrites.
 				if currentMacroState[typeName] ~= classStateID or forced then
 					WriteMacro(config.macro, classBody, classStateID, typeName)
 				end
 			else
-				--[[
-				    Class-specific conjure spells (or "spell not yet learned"
-				    print tips). The definition's resolver may return nil for
-				    macro types this player's class doesn't engage with.
-				]]
 				local conjureInfo = definition.conjure and definition.conjure() or nil
 
-				-- Definition hook: appended block + its state flag, given the item the body uses.
 				local appendText, appendFlag
 				if definition.appendBlock then
 					appendText, appendFlag = definition.appendBlock(itemID)
@@ -325,16 +231,10 @@ function ns.UpdateMacros(forced)
 		end
 	end
 
-	--[[
-	    Definitions that own their whole update cycle (Feed Pet and Poisons,
-	    which route to the Hunter and Rogue builders and gate on the class
-	    internally).
-	]]
 	for _, definition in ipairs(ns.REGISTERED_CUSTOM_MACRO_DEFINITIONS) do
 		definition.customUpdate(forced)
 	end
 
-	-- The button shows the food just picked, and an open mini-map menu redraws with the new items.
 	ns.UpdateMinimapIcon()
 	ns.RefreshMenu()
 end
@@ -343,6 +243,7 @@ function ns.ResetMacroState()
 	wipe(currentMacroState)
 	ns.ResetHunterMacroState()
 	ns.ResetPoisonMacroState()
+	ns.ResetFishingLureMacroState()
 	ns.ResetScrollBuffTracking()
 	ns.ResetTargetTracking()
 end
@@ -351,13 +252,7 @@ end
 -- Feature Toggles
 --------------------------------------------------------------------------------
 
---[[
-    ns.ToggleMacroSetting is the setter the profile switches that reshape
-    macro bodies use: the Consumable Macros options panels' checkboxes and
-    Buff Duty's options flyout (Buff-Duty-Options-Menu.lua). The panels
-    repaint either way, since a flyout click has nothing else to ask for one
-    while a panel is open.
-]]
+-- Repaints the panels too: a Buff Duty flyout click has nothing else to ask for one.
 function ns.ToggleMacroSetting(key, value)
 	ns.db.profile[key] = value
 	ns.ResetMacroState()
@@ -365,12 +260,7 @@ function ns.ToggleMacroSetting(key, value)
 	ns.RefreshSettings()
 end
 
---[[
-    Whether the player's own cast changes what the macros hold: a conjure spell
-    in ns.spellCache, Cannibalize, whose cooldown takes its line out of the
-    Food and Water macros, or Rapid Regeneration, whose cooldown hands the
-    Bandage macro back to bandaging.
-]]
+-- Cannibalize and Rapid Regeneration count because their cooldowns take their lines out of the bodies.
 function ns.SpellCastChangesMacros(spellID)
 	return (ns.spellCache ~= nil and ns.spellCache[spellID] ~= nil)
 		or (ns.isForsaken and spellID == ns.CANNIBALIZE_SPELL_ID)
@@ -378,7 +268,6 @@ function ns.SpellCastChangesMacros(spellID)
 		or false
 end
 
--- The Macros master switch. Back on, every body is rewritten from the bags as they are now.
 function ns.SetMacrosEnabled(value)
 	ns.db.global.macrosEnabled = value
 	if value then

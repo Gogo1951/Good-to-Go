@@ -2,7 +2,7 @@ local ADDON_NAME, ns = ...
 
 local GetClientHeader = ns.GetDiagnosticClientHeader
 
--- A value that may be secret on WoW Forever, as text that never tests it.
+-- Never tests the value: it may be secret on WoW Forever.
 local function PlainText(value)
 	if ns.IsPlain(value) then
 		return tostring(value)
@@ -14,7 +14,6 @@ end
 -- Buff Duty Context
 --------------------------------------------------------------------------------
 
--- The group the Buff Duty window reads, in its order: the raid by subgroup, or you and your party.
 local function GroupUnits()
 	local members = {}
 	if IsInRaid() then
@@ -50,7 +49,6 @@ local function SpellLabel(entry)
 	return string.format("%s (%d)", C_Spell.GetSpellName(id) or "?", id)
 end
 
--- The cooldown left as text: "none", seconds, or <secret> on WoW Forever.
 local function CooldownLeft(start, duration)
 	if not (ns.IsPlain(start) and ns.IsPlain(duration)) then
 		return "<secret>"
@@ -61,14 +59,6 @@ local function CooldownLeft(start, duration)
 	return "none"
 end
 
---[[
-    The reads the Buff Key weighs a spell by before it presses it: usable (false
-    with noMana false is a missing reagent or Soul Shard), the cooldown running
-    now (the global one included), the spell's own cooldown in
-    milliseconds, which keeps it off the key altogether when above zero, and
-    its mana cost, which the key weighs a group version against single casts
-    by (nil when the client names none).
-]]
 local function ManaCost(id)
 	local costs = C_Spell.GetSpellPowerCost and C_Spell.GetSpellPowerCost(id)
 	if type(costs) ~= "table" then
@@ -82,6 +72,7 @@ local function ManaCost(id)
 	return "nil"
 end
 
+-- usable=false with noMana=false is a missing reagent or Soul Shard; ownCooldown above zero keeps it off the key.
 local function SpellReadiness(id)
 	if not id then
 		return "n/a"
@@ -98,7 +89,7 @@ local function SpellReadiness(id)
 	)
 end
 
--- Ranks you know whose name the client hasn't loaded: the window drops each one until it has.
+-- The window drops a known rank until the client has loaded its name.
 local function CountUnnamed(ids)
 	local unnamed = 0
 	for _, id in ipairs(ids or {}) do
@@ -109,19 +100,6 @@ local function CountUnnamed(ids)
 	return unnamed
 end
 
---[[
-    One line per member as the window sees them: class, level, the role a
-    Tanks or Healers buff is matched against, whether they can take a buff at
-    all, whether they're in range of your first castable buff, whether they're
-    in sight and AFK (a group buff on the Buff Key waits for a member out of
-    sight unless AFK), whether a dead one gets a resurrection icon (none while
-    one is already being cast on them), and their pet, with what keeps one
-    off the list: dead, phase-shifted, or a borrowed mob (charmed, or neither
-    a known demon nor a Focus beast and with no pet family). A buffable pet
-    also names the buffs held off it: one cast that went off, trusted until
-    it would need a refresh, or one the game refused, held while it stays.
-]]
--- The buffs Buff Duty holds off a pet or NPC (BuffDuty.IsHeld), by name.
 local function HeldBuffs(BW, unit)
 	local guid = UnitGUID(unit)
 	if not (ns.IsPlain(guid) and guid) then
@@ -190,7 +168,7 @@ local function MemberLine(BW, member, rangeSpell)
 	)
 end
 
--- A unit's helpful auras straight off the client: spell id -> seconds left (0 for no timer), and whether you cast it.
+-- Straight off the client, not the window's cache: spell id -> seconds left (0 for no timer).
 local function ReadUnitBuffs(unit)
 	local left, mine = {}, {}
 	local now = GetTime()
@@ -209,14 +187,10 @@ local function ReadUnitBuffs(unit)
 end
 
 --[[
-    What a unit has on of each castable buff in `list` that is offered to it:
-    the longest-lasting version and its time left (yours or someone else's), or
-    missing with the rank the window would cast at the unit's level, TOO LOW
-    when none of yours fits. `class` nil skips the audience check (self buffs).
-    Where the window's own verdict (BuffDuty.Has, after it reads the unit into
-    its aura cache) differs, it is said: one on but offered (running under
-    Refresh Under, or a weaker rank than yours), or one missing but skipped
-    (another of your blessings is on them).
+    `class` nil skips the audience check (self buffs). Where the window's own
+    verdict differs from the raw read, it is said: on but offered (under
+    Refresh Under, or a weaker rank), or missing but skipped (another of your
+    blessings is on them).
 ]]
 local function BuffStates(BW, unit, class, list)
 	local left, mine = ReadUnitBuffs(unit)
@@ -262,7 +236,6 @@ local function BuffStates(BW, unit, class, list)
 	return "    buffs: " .. table.concat(parts, " | ")
 end
 
--- Seconds left as "4m10s", "(no timer)" for 0, or "missing" for nil.
 local function TimeLeftText(expires)
 	if expires == nil then
 		return "missing"
@@ -274,11 +247,7 @@ local function TimeLeftText(expires)
 	return math.floor(seconds / 60) .. "m" .. (seconds % 60) .. "s"
 end
 
---[[
-    Well Fed on you as the window reads it: the longest Well Fed aura, by
-    spell id or icon, and whether the buff food's own eating aura is on you
-    (the icon waits while you eat). nil for had when an aura is secret.
-]]
+-- had is nil when an aura is secret.
 local function ReadWellFed(eatingSpellId)
 	local had, expires, duration, eating = false, nil, nil, false
 	for index = 1, 40 do
@@ -305,13 +274,7 @@ local function ReadWellFed(eatingSpellId)
 	return had, expires, duration, eating
 end
 
---[[
-    Well Fed's icon: the buff food the Food macro's bag scan picked
-    (ns.bestBuffFoodID, nil with none in your bags or in an arena), less any
-    the Options flyout turned off (buffFoodOff), whether you still carry it,
-    the spell its eating aura carries, every buff food the scan found, then
-    Well Fed on you now and whether the icon shows by your timing for it.
-]]
+-- best is nil with no buff food in your bags, or in an arena.
 local function WellFedLines(lines, db, buff)
 	local food = ns.bestBuffFoodID
 	local eatingSpell
@@ -359,7 +322,7 @@ local function WellFedLines(lines, db, buff)
 	)
 end
 
--- The index-th number on text after its first skip bytes, or nil, as Scanner-Auras.lua counts them.
+-- Counted as Scanner-Auras.lua counts them.
 local function NthNumber(text, skip, index)
 	local count = 0
 	for number in string.gmatch(string.sub(text, skip + 1), "%d+") do
@@ -370,13 +333,7 @@ local function NthNumber(text, skip, index)
 	end
 end
 
---[[
-    Camp Benefits, which covers a scroll the way an elixir does (Scanner-Auras.lua):
-    whether its aura is on you and this client can read a buff's tooltip, then
-    for each camp item that can block a scroll, the name its tooltip line is
-    matched by, whether a line starts with it, and the amount read from it.
-    A client whose data lists no camp items says so in one line.
-]]
+-- Camp Benefits covers a scroll the way an elixir does, read from its tooltip lines.
 local function CampBenefitLines(lines)
 	local rows = {}
 	for _, scrollType in ipairs(ns.SCROLL_CHECK_ORDER or {}) do
@@ -442,17 +399,6 @@ local function CampBenefitLines(lines)
 	end
 end
 
---[[
-    Scrolls' icons, one per type in the Food macro's order: whether this
-    character ticks it (scrollTypes, on the profile), how many scrolls of it
-    you carry and how many of those the window passes over (on the Ignore
-    List, another class's, or turned off in the Scrolls menu: scrollOff),
-    the strongest it would read and its amount,
-    the type's scroll buff on you and the strongest elixir, class buff or
-    camp item covering it, and whether the window offers it now, then the
-    Camp Benefits read behind a camp item's cover. Nothing shows while
-    auras are secret.
-]]
 local function ScrollLines(lines, buff, aurasSecret)
 	local types = ns.db.profile.scrollTypes or {}
 	local ticked = {}
@@ -466,7 +412,7 @@ local function ScrollLines(lines, buff, aurasSecret)
 		lines[#lines + 1] = "    (auras secret: no scroll icon shows)"
 		return
 	end
-	-- Read as the window reads them (Buff-Duty-Self.lua): a scroll the Scrolls menu turned off counts as none.
+	-- As the window reads them: a scroll the Scrolls menu turned off counts as none.
 	local scrollOff = ns.db.global.buffWindow.scrollOff or {}
 	local counts = setmetatable({}, {
 		__index = function(_, itemId)
@@ -520,17 +466,7 @@ local function ScrollLines(lines, buff, aurasSecret)
 	CampBenefitLines(lines)
 end
 
---[[
-    Ask Your Target for Buffs, as BuffDuty.TargetAskRow weighs it: the
-    switches, a target of your own class or one fighting, AFK or DND (or you
-    fighting) gets no row, a name the client won't give plainly gets none;
-    then each buff of their class with why it is or isn't asked for, in the
-    row's order. A buff its caster keeps for one player (noAsk) or set to Off
-    is never asked for, nor one whose lowest rank their level hasn't reached;
-    a talent buff only once they carry it; one Blessing at most; then your
-    own Who Gets It, whether you have it, and each buff's five-minute wait
-    since you last asked them for it.
-]]
+-- Weighs each buff as BuffDuty.TargetAskRow does, so the two must keep in step.
 local function AskLines(lines, BW, db, targetClass)
 	local _, playerClass = UnitClass("player")
 	local fullName = GetUnitName("target", true)
@@ -615,25 +551,8 @@ local function AskLines(lines, BW, db, targetClass)
 end
 
 --[[
-    The state behind a "the Buff Duty window never shows" or "it doesn't offer
-    X" report: whether it set up, every switch and setting, each gate its
-    refresh checks (combat, WoW Forever's secret auras, being dead, nothing to
-    offer or ask for), whether the window and its Options flyout are up now,
-    every buff and self buff your class has on this client with who it's
-    offered to, the ranks you know, the rank and group version the window
-    would cast and whether the Buff Key would find each ready, and a
-    warrior's Bloodrage; each hand's weapon and what your bags hold for it,
-    the Soulstone and who already carries one, the consumables (Well Fed's
-    buff food and each scroll type, what you carry and why each shows or
-    doesn't), and the Buff Key's binding and any override taking its key;
-    then every group member and your target as the window reads them, their
-    PvP flags and yours, each with which of your buffs they have on or are
-    missing and where the
-    window's own verdict differs, what a pet or a friendly NPC target is held
-    off or takes, which of a stranger target's buffs you'd ask them for, the
-    other classes' buffs Party-Buffs counts, and what feeds Return the Favor.
-    The group read is skipped in combat, as the window skips it.
-    Existence/value reads only: nothing is cast, targeted or redrawn.
+    Reads only: nothing is cast, targeted or redrawn. The group read is
+    skipped in combat, as the window skips it.
 ]]
 function ns:BuildBuffDutyContextReport()
 	local lines = { GetClientHeader(), "" }
@@ -655,13 +574,7 @@ function ns:BuildBuffDutyContextReport()
 		tostring(class),
 		tostring(ns.BuffDutyHasClassRows and ns.BuffDutyHasClassRows())
 	)
-	--[[
-	    On for your class: the switch, your class not turned off (Classes, or
-	    Shift+Click on the mini-map button), and the window not closed this
-	    session. The close button saves nothing and lasts until a login, a
-	    reload or joining a group; the mini-map menu shows that close as
-	    Paused, from the same read (ns.IsBuffDutyHiddenThisSession).
-	]]
+	-- The mini-map menu shows a closed-this-session window as Paused, from the same read.
 	local onForClass = ns.IsBuffDutyOnForClass and ns.IsBuffDutyOnForClass()
 	lines[#lines + 1] = string.format(
 		"Switches: enabled=%s onForYourClass=%s closedThisSession (menu: Paused)=%s hideInCombat=%s locked=%s selfBuffs=%s returnTheFavor=%s target=%s targetNPCs=%s askTarget=%s askOtherClasses=%s buffPvPFlagged=%s",
@@ -692,7 +605,6 @@ function ns:BuildBuffDutyContextReport()
 		end
 	end
 	table.sort(hiddenClasses)
-	-- The read BW.ShowsHere's In Instance takes, and the kind of instance it says this is.
 	local inInstance, instanceType = IsInInstance()
 	local showIn, showWhere = db.showIn or {}, db.showWhere or {}
 	lines[#lines + 1] = string.format(
@@ -722,23 +634,11 @@ function ns:BuildBuffDutyContextReport()
 		tostring(db.refreshMinutes),
 		#tankWhen > 0 and table.concat(tankWhen, " ") or "none"
 	)
-	--[[
-	    This flavor's data switches: whether the consumable icons (Well Fed,
-	    scrolls) start as Missing rather than off (Buff-Duty-Lookups.lua), and
-	    whether a pet takes only the buffs its data row marks (Buff-Duty-Pets.lua).
-	]]
 	lines[#lines + 1] = string.format(
 		"Flavor data: consumablesShownByDefault=%s petsTakeMarkedBuffsOnly=%s",
 		tostring(ns.BUFF_DUTY_ITEM_BUFFS_SHOWN),
 		tostring(ns.BUFF_DUTY_PETS_FLAGGED_ONLY)
 	)
-	--[[
-	    While you aren't PvP-flagged and Buff PvP-Flagged Players is off, a cast
-	    that would reach a flagged player (its target, anyone in a group buff's
-	    party, or your party for Battle Shout) is held back on the window and
-	    passed over by the Buff Key (BuffDuty.PvPFlaggedTarget). Each member's
-	    and your target's flag shows on their line below.
-	]]
 	lines[#lines + 1] = string.format(
 		"Gates now: inCombat=%s aurasSecret=%s cooldownsSecret=%s youDead=%s youPvPFlagged=%s anythingToOffer=%s castableBuffs=%d castableSelfBuffs=%d castableConsumables=%d weaponHands=%d soulstone=%s resurrection=%s",
 		tostring(InCombatLockdown() and true or false),
@@ -754,23 +654,14 @@ function ns:BuildBuffDutyContextReport()
 		tostring(BW.soulstoneBuff ~= nil),
 		tostring(BW.resurrection ~= nil)
 	)
-	--[[
-	    The refresh hides the window unless one of these holds: something of
-	    yours to cast or use, Missing Party Buffs watching (in a group, with
-	    Ask for Buffs on), or Ask Your Target for Buffs watching (Your Target
-	    and its Ask switch both on).
-	]]
+	-- The refresh hides the window unless one of these holds.
 	lines[#lines + 1] = string.format(
 		"Anything to show: yoursToCast=%s partyBuffsWatching=%s targetAsksWatching=%s",
 		tostring(BW.HasAnythingToOffer()),
 		tostring((IsInGroup() and db.askOtherClasses) and true or false),
 		tostring((db.targetEnabled and db.askTarget) and true or false)
 	)
-	--[[
-	    Where it stands and whether that is on screen are on the Display Context
-	    report. Icons dim while a roster or target change in combat leaves them
-	    naming the old one, until the next redraw.
-	]]
+	-- Where it stands, and whether that is on screen, are on the Display Context report.
 	local pool = ns.buffDutyIconPool
 	local content = pool and pool.content
 	lines[#lines + 1] = content
@@ -782,12 +673,6 @@ function ns:BuildBuffDutyContextReport()
 				tostring(pool.rosterStale)
 			)
 		or "Window now: (not built yet)"
-	--[[
-	    The Options line at the window's foot, and each category line's
-	    arrow, open the one menu on hover or click, only while the window is
-	    on screen. Its Show in Window rows are each category's switch, read
-	    under each Row below.
-	]]
 	local flyout = _G[ADDON_NAME .. "BuffDutyOptions"]
 	lines[#lines + 1] = string.format(
 		"Options menu: built=%s shown=%s",
@@ -872,7 +757,7 @@ function ns:BuildBuffDutyContextReport()
 			end
 		end
 	end
-	-- Your group buffs on yourself: Self Buffs offers them by the Self-Buffs panel's timing, never your party row.
+	-- Your group buffs on you go by the Self-Buffs panel's timing, never your party row.
 	for _, entry in ipairs(BW.entries) do
 		if entry.row.class == class then
 			any = true
@@ -888,19 +773,12 @@ function ns:BuildBuffDutyContextReport()
 	if not any then
 		lines[#lines + 1] = "  (none for this class on this client)"
 	end
-	-- A self buff that needs a pet (Soul Link) waits for one that is out and alive.
 	local petState = "none"
 	if UnitExists("pet") then
 		local petDead = UnitIsDeadOrGhost("pet")
 		petState = not ns.IsPlain(petDead) and "<secret>" or petDead and "dead" or "out"
 	end
 	lines[#lines + 1] = "  Your pet: " .. petState
-	--[[
-	    A warrior's self buff short on rage (Battle Shout) has its icon cast
-	    Bloodrage first, while Bloodrage is known and off its own cooldown;
-	    rage is heard (UNIT_POWER_UPDATE) for a warrior alone. A client
-	    without Bloodrage leaves its ID out, and the line is skipped.
-	]]
 	if class == "WARRIOR" and ns.BLOODRAGE_SPELL_ID then
 		local bloodrage = ns.BLOODRAGE_SPELL_ID
 		local info = C_Spell.GetSpellCooldown(bloodrage)
@@ -917,18 +795,8 @@ function ns:BuildBuffDutyContextReport()
 	end
 
 	--[[
-	    Each hand as the window sees it: your class's picks ticked or not,
-	    the weapon items set apart from the default (ticked), how many made the
-	    castable list and how many of those item picks you carry at your level
-	    (an oil, stone or lure shows only from your bags), what the slot holds
-	    and whether it is a weapon the window asks about (an off hand holding a
-	    shield, or a fishing pole for anything but a lure, gets nothing), the
-	    temporary enchant's seconds left, and which row's enchant it is; then how
-	    many castable picks take that weapon (a sharpening stone wants an edge, a
-	    lure a fishing pole) and how many work only somewhere you aren't. Every
-	    class has hands, since any class can use an oil; your class's own picks
-	    are asked about only on the hands its data names, and an imbue only on
-	    the hand it would land on.
+	    Every class has hands, since any class can use an oil; your class's own
+	    picks are asked about only on the hands its data names.
 	]]
 	local classHands = ns.BUFF_DUTY_WEAPON_HANDS and ns.BUFF_DUTY_WEAPON_HANDS[class]
 	lines[#lines + 1] = ""
@@ -938,7 +806,6 @@ function ns:BuildBuffDutyContextReport()
 		tostring(db.rowShow.weapons),
 		classHands and #classHands > 0 and table.concat(classHands, " ") or "no hand"
 	)
-	-- An imbue is offered only once you know a rank of it.
 	local hasImbues = false
 	for _, entry in ipairs(BW.weaponEntries) do
 		if entry.row.class == class and entry.ranks then
@@ -951,7 +818,7 @@ function ns:BuildBuffDutyContextReport()
 				CountUnnamed(entry.ids)
 			)
 		end
-		-- A warlock stone line: its Create ranks, which the icon casts while none is in the bags.
+		-- A warlock stone's icon casts its Create rank while none is in the bags.
 		if entry.row.class == class and entry.create then
 			local createIds = {}
 			for _, rank in ipairs(entry.create) do
@@ -1001,7 +868,6 @@ function ns:BuildBuffDutyContextReport()
 		end
 		return subclassID == fishingPole and "fishing pole" or ("weapon subclass " .. tostring(subclassID))
 	end
-	-- The weapon subclass in a slot, or nil for anything but a weapon.
 	local function SubclassIn(itemID)
 		if not (ns.IsPlain(itemID) and itemID) then
 			return nil
@@ -1009,14 +875,13 @@ function ns:BuildBuffDutyContextReport()
 		local _, _, _, _, _, classID, subclassID = C_Item.GetItemInfoInstant(itemID)
 		return classID == weaponClass and subclassID or nil
 	end
-	-- Where you are, by the instance map GetInstanceInfo reports and the zone map, as a zone-limited item asks.
 	local instanceID = select(8, GetInstanceInfo())
 	local uiMapID = C_Map.GetBestMapForUnit("player")
 	local function InZones(zones)
 		return (ns.IsPlain(instanceID) and tContains(zones.instances or {}, instanceID))
 			or (ns.IsPlain(uiMapID) and uiMapID ~= nil and tContains(zones.uiMaps or {}, uiMapID))
 	end
-	-- Each hand's temporary enchants, one per layer where two stack (WoW Forever): seconds, enchant id, its row.
+	-- One per layer where two stack (WoW Forever).
 	local worn = BW.ReadWeaponEnchants()
 	for _, hand in ipairs(ns.Data.WEAPON_HAND_ORDER) do
 		local slot = ns.Data.WEAPON_HAND_SLOTS[hand]
@@ -1082,13 +947,12 @@ function ns:BuildBuffDutyContextReport()
 			)
 		end
 	end
-	-- An imbue picks its own hand: the main, unless it has an imbue and a bare off-hand weapon waits.
 	if hasImbues then
 		local landsOn = BW.ImbueLandsOn(worn)
 		lines[#lines + 1] = "  next imbue lands on: " .. (landsOn == ns.Data.WEAPON_HAND_SLOTS.OFF and "OFF" or "MAIN")
 	end
 	lines[#lines + 1] = "  enchants stack (imbue beside oil or stone): " .. tostring(ns.WEAPON_ENCHANTS_STACK == true)
-	-- What the Readiness Report would say about each hand, before its switches and the Shaman waiver.
+	-- Before the Readiness Report's switches and the Shaman waiver.
 	local mainMissing, offMissing = ns.GetMissingWeaponBuffs()
 	lines[#lines + 1] =
 		string.format("  readiness missing: MAIN=%s OFF=%s", tostring(mainMissing), tostring(offMissing))
@@ -1099,7 +963,6 @@ function ns:BuildBuffDutyContextReport()
 		for _, rank in ipairs(stone.ranks) do
 			createIds[#createIds + 1] = rank.id
 		end
-		-- With no stone in your bags the button makes one; with one, it goes on a healer or you.
 		local stonesCarried, bestStone = 0, nil
 		for _, id in ipairs(stone.items or {}) do
 			local count = C_Item.GetItemCount(id)
@@ -1108,7 +971,7 @@ function ns:BuildBuffDutyContextReport()
 				bestStone = id
 			end
 		end
-		-- The icon stays away while anyone in your group carries a Soulstone, yours or another warlock's.
+		-- The icon stays away while anyone in your group carries one, yours or another warlock's.
 		local carriers = {}
 		if not aurasSecret then
 			for _, member in ipairs(GroupUnits()) do
@@ -1146,14 +1009,8 @@ function ns:BuildBuffDutyContextReport()
 	end
 
 	--[[
-	    The consumables any class keeps up, each in its own category: each
-	    one's stored switch (Off keeps an Other Buffs one out of the window;
-	    Well Fed, Scrolls and Flasks or Elixirs keep to their category's), and
-	    whether it made the castable list. An item
-	    shows while one is in your bags and its buff is missing or low; Well
-	    Fed and Scrolls read further below. Well Fed has no row without its
-	    spell and aura tables, and Scrolls none without the first type's
-	    lowest scroll's buff on this client.
+	    stored Off keeps only an Other Buffs item out; Well Fed, Scrolls and
+	    Flasks or Elixirs keep to their category's switch.
 	]]
 	local castableItems = {}
 	for _, buff in ipairs(BW.selfItemBuffs) do
@@ -1194,10 +1051,6 @@ function ns:BuildBuffDutyContextReport()
 			lines[#lines + 1] =
 				string.format("    item %d: inBags=%d buff=%s", entry.itemId, C_Item.GetItemCount(entry.itemId), onFor)
 		elseif entry.elixirs then
-			--[[
-			    Each elixir in your bags (the Ignore List aside), the slot or group its buff takes, whether the
-			    category's menu turned it off (elixirOff), and whether that buff is on you.
-			]]
 			local left = aurasSecret and {} or ReadUnitBuffs("player")
 			local carried = BW.CarriedElixirs()
 			local elixirOff = db.elixirOff or {}
@@ -1224,7 +1077,6 @@ function ns:BuildBuffDutyContextReport()
 	if not hasScrolls then
 		lines[#lines + 1] = "  Scrolls: no row on this client"
 	end
-	-- Each category's switch, When to Use, Show, Missing Inventory, whether it shows here, and whether the Buff Key uses it.
 	for _, row in ipairs(ns.Data.BUFF_DUTY_ROWS) do
 		lines[#lines + 1] = string.format(
 			"  Row %s: on=%s when=%s show=%s missingInventory=%s showsHere=%s onKey=%s",
@@ -1238,15 +1090,7 @@ function ns:BuildBuffDutyContextReport()
 		)
 	end
 
-	--[[
-	    The Buff Key: its binding (unbound, a press can't happen), the hidden
-	    button it clicks and a macro's /click reaches, any key still on an old
-	    command (the Group Buff key's, or this button's name before GtG; moved
-	    at login, out of combat), and the resurrection a press casts on a dead
-	    target first. A press also does nothing in combat, while you're dead,
-	    and while the window is off, not set up, hidden by When to Show or
-	    reading secret auras (the switches and gates above).
-	]]
+	-- A press also does nothing in combat, while you're dead, or behind any gate above.
 	lines[#lines + 1] = ""
 	lines[#lines + 1] = string.format(
 		"Buff Key: resurrection=%s",
@@ -1276,10 +1120,6 @@ function ns:BuildBuffDutyContextReport()
 				lines[#lines + 1] = string.format("  %s now runs %s instead", key, action ~= "" and action or "nothing")
 			end
 		end
-		--[[
-		    What the last press set the button to cast. A cast on someone else
-		    is a spell aimed at their unit, as a window click is.
-		]]
 		local keyButton = buttonName and _G[buttonName]
 		if keyButton then
 			local macrotext = keyButton:GetAttribute("macrotext")
@@ -1310,11 +1150,7 @@ function ns:BuildBuffDutyContextReport()
 		return table.concat(lines, "\n")
 	end
 	local members = GroupUnits()
-	--[[
-	    In a raid each group starts folded to its header (its group icons and
-	    a counted icon per buff with no group version) until its header is
-	    clicked open; which ones are open isn't readable here.
-	]]
+	-- Which raid groups are clicked open isn't readable here.
 	lines[#lines + 1] = string.format(
 		"Group: party=%s raid=%s members read=%d%s",
 		tostring(IsInGroup() and true or false),
@@ -1333,14 +1169,6 @@ function ns:BuildBuffDutyContextReport()
 		end
 	end
 
-	--[[
-	    Party-Buffs: every class's raid-wide buff (blessings aside) with its
-	    Who Gets It, less your own castable ones (yours), counted in a group
-	    with Ask Other Classes on, once its class is up and online in the
-	    group, and a talent buff once anyone carries it; then how many icons
-	    it would draw now. It alone keeps the window up for a class with
-	    nothing to offer.
-	]]
 	local partyBuffRows = {}
 	for _, entry in ipairs(BW.entries) do
 		local row = entry.row
@@ -1377,11 +1205,6 @@ function ns:BuildBuffDutyContextReport()
 			PlainText(not UnitIsPlayer("target") and UnitPlayerControlled("target")),
 			PlainText(UnitIsPVP("target"))
 		)
-		--[[
-		    Who the Target list takes: a player outside your group who isn't
-		    you, or a pet outside it that isn't yours and whose owner isn't in
-		    your group (a group's own sit under their owners).
-		]]
 		lines[#lines + 1] = string.format(
 			"  outsider: isYou=%s isYourPet=%s playerOrPetInParty=%s playerOrPetInRaid=%s",
 			PlainText(UnitIsUnit("target", "player")),
@@ -1389,10 +1212,6 @@ function ns:BuildBuffDutyContextReport()
 			PlainText(UnitPlayerOrPetInParty("target")),
 			PlainText(UnitPlayerOrPetInRaid("target"))
 		)
-		--[[
-		    A dead friendly player gets the resurrection alone, a targeted pet its
-		    own row, and a targeted player's pet a row under them.
-		]]
 		local targetIsPlayer = UnitIsPlayer("target")
 		lines[#lines + 1] = string.format(
 			"  friend=%s dead=%s resurrectable=%s %s=%s",
@@ -1406,7 +1225,7 @@ function ns:BuildBuffDutyContextReport()
 			local _, targetClass = UnitClass("target")
 			lines[#lines + 1] = aurasSecret and "    buffs: (auras secret)"
 				or BuffStates(BW, "target", targetClass, BW.buffs)
-			-- The ask row is for a player outside your group alone: a group member's buffs are Party-Buffs'.
+			-- A group member's buffs are Party-Buffs', so no ask row for them.
 			local inGroup = ns.IsPlainYes(UnitInParty("target")) or ns.IsPlainYes(UnitInRaid("target"))
 			if aurasSecret then
 				lines[#lines + 1] = "  ask: (auras secret)"
@@ -1416,16 +1235,7 @@ function ns:BuildBuffDutyContextReport()
 				AskLines(lines, BW, db, targetClass)
 			end
 		end
-		--[[
-		    A friendly NPC (a quest's wounded soldier) gets the Target list's
-		    row: not a player or anyone's pet, alive, in sight, and one you can
-		    help. It is offered every single-target buff you have on, whatever
-		    it wears and whoever the buff is set for, one after another in a
-		    cycle (which buff the cycle has reached isn't readable here); a
-		    Mana-only buff still wants a mana bar, Blessing of Might skips a
-		    caster's class, and a buff the game refused on it stays held off
-		    while it's around.
-		]]
+		-- Which buff an NPC's cycle has reached isn't readable here.
 		local canBuffNPC = BW.CanBuffNPC and BW.CanBuffNPC("target") or false
 		local npcClass = select(2, UnitClass("target"))
 		local npcPower = UnitPowerType("target")
@@ -1461,10 +1271,7 @@ function ns:BuildBuffDutyContextReport()
 		db.favorSeconds,
 		ns.Data.BUFF_DUTY_FAVOR_MAX
 	)
-	--[[
-	    Strangers' buffs are heard after the pause that follows login and every
-	    loading screen, and then how many strangers are kept inside that time.
-	]]
+	-- Strangers' buffs are heard only after the pause that follows login and every loading screen.
 	local favorsKept, now = 0, GetTime()
 	if BW.EachFavor then
 		for _, favor in BW.EachFavor() do
@@ -1488,19 +1295,11 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Existence and shape checks only: read-only, no side effects, no protected
-    calls. One row per API Good to Go actually calls or guards, wherever it lives --
-    nothing incidental, and nothing the add-on does not use. Buff Duty's own
-    reads sit here beside the ones every feature shares.
-
-    Every modern/legacy pair the add-on still picks between is listed as both
-    halves: the unit tooltip the Buff Duty window reads a pet's owner from
-    (C_TooltipInfo.GetUnit or a hidden tooltip's SetUnit), Validate Data's stat
-    read, and its tooltip-text read (C_TooltipInfo.GetItemByID and
-    GetSpellByID, or the hidden scan tooltip). The hidden tooltips are probed
-    through the GameTooltip methods they inherit, so the check creates nothing.
-    A FAIL on one half is the report working rather than a defect: the pair
-    tells a bug report which branch that client took.
+    Existence checks only, with no protected calls: one row per API the
+    add-on calls or guards. A modern/legacy pair lists both halves, so a FAIL
+    on one half is the report working: it tells a bug report which branch
+    that client took. Hidden tooltips are probed through the GameTooltip
+    methods they inherit, so the check creates nothing.
 ]]
 local function HasFunction(namespace, name)
 	return function()
@@ -1730,14 +1529,8 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 --------------------------------------------------------------------------------
 
 --[[
-    The event log's per-id filter asks this whether a firing of an id-filtered
-    event (ns.MESSAGE_ID_FILTERED_EVENTS) is one Buff Duty acts on. For
-    UNIT_SPELLCAST_SUCCEEDED that is any rank of a spell the window can cast,
-    which is what a Buff Key press waits to hear go off (the set built from
-    this client's Buff-Duty-Spells data, on the first firing while logging).
-    For UI_ERROR_MESSAGE it is the "more powerful spell" refusal, whose error type
-    Buff Duty learns from its text the first time it acts on one and logs that
-    firing itself (ns.IsBuffBounceError). Everything else is counted.
+    The "more powerful spell" refusal's error type is learned from its text
+    the first time Buff Duty acts on one, which logs that firing itself.
 ]]
 local IsBuffDutySpell -- defined under Validate Data Sources, from the same collectors
 
@@ -1776,26 +1569,10 @@ local function UiLabel(constant)
 end
 
 --[[
-    Every record Good to Go shows or matches by the name this client gives it, for
-    the Localization tab's Game Names report, built at load from this client's
-    data. Each row reads the name exactly as the features do:
-
-    - every ns.GAME_IDS constant, a spell named through C_Spell.GetSpellName
-      (what ns.GetSpellLink builds the panel samples from), requested when it
-      loads late, and Bloodrage, which a warrior's self-buff icon casts by
-      that name (Buff-Duty-Self.lua);
-    - every class token this client has, named through
-      LOCALIZED_CLASS_NAMES_MALE as the panels show it;
-    - the client's duration strings, through ns.FormatDuration as the Buff
-      Duty panels use them, with the sample count in the ID cell;
-    - the pet-owner tooltip formats Buff Duty turns into patterns to find
-      a targeted pet's owner (NIL means that wording is skipped on this client);
-    - the group labels the Buff Duty window heads its party sections with, the
-      hand names its weapon rows and the Weapon Buffs panel show, the error a
-      Buff Key pressed in combat shows, and the "more powerful spell" refusal
-      Buff Duty matches by its text (NIL means it never learns a buff bounced).
-
-    Buff Duty names no item by constant: its items' names show on Validate Data.
+    Each row reads the name exactly as the features do. Bloodrage is here
+    because a warrior's icon casts it by name. A NIL pet-owner format is
+    skipped on this client; a NIL SPELL_FAILED_AURA_BOUNCED means Buff Duty
+    never learns a buff bounced.
 ]]
 ns.AppendDiagnosticRows(ns.DIAGNOSTIC_NAME_LOOKUPS, {})
 
@@ -1884,28 +1661,12 @@ end
 -- Message Length
 --------------------------------------------------------------------------------
 
--- The longest name a character can have, in letters.
 local CHARACTER_NAME_MAX_LETTERS = 12
 
 --[[
-    Every chat line and macro Buff Duty sends or writes, for the Localization
-    tab's Message Length report, built at report time through the add-on's own
-    builders. Returns rows of { label, ceiling, text } and a list of notes.
-    The ceiling is in bytes, so the overflow canary is the widest-encoding
-    locale, usually ruRU.
-
-    Buff Duty's ask for another class's buff is built for every raid-wide
-    buff the window counts, and the longest is kept: once as said to the
-    group, and once whispered, in the player's saved text (or the Send
-    Messages In language's default), through ns:BuildBuffAskWhisper. A
-    whisper the player emptied sends nothing, and the notes say so. The ask
-    to your target is built per class at its widest the same way, through
-    ns:BuildBuffAskTargetWhisper.
-
-    Buff Duty's Return the Favor buttons cast through a macro naming the
-    stranger, one per buff you can give right now, built by ns.BuffDuty's
-    own SingleIcon with your top rank's cast text and a 12-letter name on your
-    realm.
+    Rows of { label, ceiling, text }, built through the add-on's own
+    builders. The ceiling is in bytes, so the overflow canary is the
+    widest-encoding locale, usually ruRU.
 ]]
 ns.DIAGNOSTIC_MESSAGES = function()
 	local rows, notes = {}, {}
@@ -1913,7 +1674,7 @@ ns.DIAGNOSTIC_MESSAGES = function()
 	if BW and BW.entries then
 		local longestAsk, longestWhisper
 		local template = ns.GetMessageText("buffAsk")
-		-- the longest names list an ask can carry: as many as it names, each at the game's 12-letter limit
+		-- As many names as an ask carries, each at the game's 12-letter limit.
 		local longestNames = {}
 		for i = 1, ns.BUFF_ASK_MAX_NAMES do
 			longestNames[i] = string.rep("W", 12)
@@ -1950,11 +1711,7 @@ ns.DIAGNOSTIC_MESSAGES = function()
 			notes[#notes + 1] = "The whispered ask is emptied on the Buff Duty panel, so nothing is whispered."
 		end
 
-		--[[
-		    The ask to your target, at its widest: every buff of one class it
-		    could name (one per exclusive family, as the Ask row picks), to a
-		    12-letter name, for the class that makes it longest.
-		]]
+		-- One per exclusive family, as the Ask row picks.
 		local targetTemplate = ns.GetMessageText("buffAskTarget")
 		local byClass, families = {}, {}
 		for _, entry in ipairs(BW.entries) do
@@ -2015,14 +1772,10 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    One entry per data file, and one report row per entry on the Data tab
-    (Diagnostics/Options-Diagnostics.lua). Each entry's label is the table-name
-    part of its file name, so ns.DataSourceFileName can name the file this
-    client's folder built. Each source names the static table on ns and its kind,
-    and reaches its ids through collect(tbl), which returns { id, key, row }
-    entries. dataColumns carries the shipped row's own values as
-    { header, getter(key, row) }, so the export sets what the file says beside
-    what the client says.
+    Each entry's label is the table-name part of its file name, so
+    ns.DataSourceFileName can name the file. collect(tbl) returns
+    { id, key, row } entries; dataColumns is { header, getter(key, row) }, so
+    the export sets what the file says beside what the client says.
 ]]
 local function BuffRowField(field)
 	return function(_, row)
@@ -2369,12 +2122,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_DATA_SOURCES, {
 	},
 })
 
---[[
-    Only a client whose weapons carry an imbue beside an oil or stone
-    (ns.WEAPON_ENCHANTS_STACK, WoW Forever) ships the items that put on an
-    imbue, so only there does the table get its row: elsewhere it is rightly
-    absent, not a missing table.
-]]
+-- Only a client where enchants stack ships this table: elsewhere it is rightly absent, not missing.
 if ns.WEAPON_ENCHANTS_STACK then
 	ns.AppendDiagnosticRows(ns.DIAGNOSTIC_DATA_SOURCES, {
 		{

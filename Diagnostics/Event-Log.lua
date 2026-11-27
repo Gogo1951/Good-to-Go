@@ -22,8 +22,9 @@ ns.DIAGNOSTIC_EVENT_EXCLUDE = {}
     Events that carry an id worth classifying, and the argument position it
     arrives in, for ns:SuppressUncorrelatedMessage to classify per firing
     rather than drop wholesale. A firing logs in full when a feature
-    correlates it (Buff Duty's ns.IsCorrelatedMessage, or Consumable Macros'
-    and Rank Watch's checks below), and every other firing is counted.
+    correlates it (Buff Duty's ns.IsCorrelatedMessage, or Consumable Macros',
+    Rank Watch's and Currency Replenish's checks below), and every other
+    firing is counted.
 
     - UNIT_SPELLCAST_SUCCEEDED fires for every unit the client tracks, so in a
       group or a city it is a firehose; its id is the spell id.
@@ -32,7 +33,8 @@ ns.DIAGNOSTIC_EVENT_EXCLUDE = {}
       item id, and only a consumable's matters.
     - UI_ERROR_MESSAGE fires on every red error the game shows; its id is the
       error type. "A more powerful spell is already active" matters, which
-      Buff Duty acts on, and so do the two the consumable macros read by text.
+      Buff Duty acts on, and so do the two the consumable macros read by text
+      and the mail refusals Currency Replenish reads by text during a send.
 ]]
 ns.MESSAGE_ID_FILTERED_EVENTS = {
 	UNIT_SPELLCAST_SUCCEEDED = 3,
@@ -159,7 +161,7 @@ local GLOBAL_COOLDOWN_MAX = 1.5
     The SPELL_UPDATE_COOLDOWN firings Buff Duty acts on beyond a cooldown
     swipe: Bloodrage starting or ending its own cooldown, which can put it in
     front of a warrior's rage-costing self buff on the window and the Buff
-    Key (BuffDuty.CheckRageFirst, Buff-Duty-Self.lua).
+    Key (BuffDuty.CheckRageFirst, Buff-Duty-Rage.lua).
 ]]
 local function DecodeBloodrageCooldown()
 	if ns.db == nil or not ns.IsBuffDutyTrackingForClass() then
@@ -303,6 +305,48 @@ local function ConnoisseurCorrelates(event, id, text)
 end
 
 --[[
+    Currency Replenish's correlation, the test its live handler makes
+    (Features/Currency-Replenish/Currency-Replenish-Mailer.lua): while a run
+    of mail is going out, an error whose text is one of the game's ERR_MAIL
+    strings, or the wrong-faction refusal, is a mail's answer. The strings
+    are gathered as the handler gathers them, once, on first use; one with a
+    %s in it arrives filled in, so it is left out.
+]]
+local mailErrors
+
+local function IsMailError(text)
+	if not mailErrors then
+		mailErrors = {}
+		for name, value in pairs(_G) do
+			if
+				type(name) == "string"
+				and type(value) == "string"
+				and name:find("^ERR_MAIL")
+				and not value:find("%%")
+			then
+				mailErrors[value] = true
+			end
+		end
+		local wrongFaction = _G.ERR_PLAYER_WRONG_FACTION
+		if type(wrongFaction) == "string" and not wrongFaction:find("%%") then
+			mailErrors[wrongFaction] = true
+		end
+	end
+	return mailErrors[text] == true
+end
+
+local function CurrencyReplenishCorrelates(event, text)
+	local replenish = ns.CurrencyReplenish
+	return event == "UI_ERROR_MESSAGE"
+		and replenish ~= nil
+		and replenish.Mailer ~= nil
+		and replenish.Mailer.busy == true
+		and IsPlain(text)
+		and type(text) == "string"
+		and IsMailError(text)
+end
+
+--[[
     Folds one uncorrelated firing into its counter: the first-seen text plus a
     count. Counters are keyed by event, then id, so one id arriving on two
     events stays two rows. A secret id counts under SECRET_ID with the text
@@ -378,6 +422,7 @@ function ns:SuppressUncorrelatedMessage(event, ...)
 			ns.IsCorrelatedMessage(event, messageID)
 			or ConnoisseurCorrelates(event, messageID, text)
 			or RankWatchCorrelates(event, messageID)
+			or CurrencyReplenishCorrelates(event, text)
 		then
 			return false
 		end

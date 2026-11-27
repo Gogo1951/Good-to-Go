@@ -6,12 +6,11 @@ local Data = ns.Data
 --------------------------------------------------------------------------------
 
 --[[
-    The languages Good to Go can write its whispers in, for the "Send Messages
-    In" dropdown. This is the language other players read. The Locales files
-    are the language of the player's own UI, and AceLocale loads only the
-    client's own file, so the default text of every editable whisper lives
-    here, where every language loads in every client: an English client
-    whispering in German still needs the German default.
+    The languages whispers go out in (the "Send Messages In" dropdown): what
+    other players read, not the player's UI. AceLocale loads only the client's
+    own Locales file, so every editable whisper's default text lives here,
+    where every language loads: an English client whispering in German still
+    needs the German default.
 
     One row per supported locale, in the master list's order (which is also
     the dropdown's): the client locale code, the language's name in that
@@ -40,10 +39,10 @@ Data.MESSAGE_LANGUAGES = {
 	{
 		locale = "enUS",
 		name = "English",
-		buffAsk = "{names} are missing {spell}.",
-		buffAskOne = "{names} is missing {spell}.",
-		buffAskCount = "{count} people are missing the {spell} buff.",
-		buffAskTarget = "Hey Mate, any chance I could snag a {spells}? Pretty please!",
+		buffAsk = "Could you give {names} {spell}, please?",
+		buffAskOne = "Could you give {names} {spell}, please?",
+		buffAskCount = "Could you give {count} people {spell}, please?",
+		buffAskTarget = "Hey Mate, any chance I could snag a {spells}? Pretty please?",
 		rankWatchTip = "FYI, no biggie, but you used {spell}. There's a newer rank at level {level}. Update your action bars or visit your trainer and you'll be Good to Go.",
 		rankWatchTipPet = "FYI, no biggie, but your pet {pet} used {spell}. There's a newer rank at pet level {level}. Teach it with Beast Training and you'll be Good to Go.",
 		rankWatchTipDemon = "FYI, no biggie, but your {pet} used {spell}. There's a newer rank at level {level}. Grab its grimoire from a demon trainer and you'll be Good to Go.",
@@ -53,10 +52,10 @@ Data.MESSAGE_LANGUAGES = {
 	{
 		locale = "deDE",
 		name = "Deutsch",
-		buffAsk = "{names} fehlt {spell}.",
-		buffAskOne = "{names} fehlt {spell}.",
-		buffAskCount = "{count} Spielern fehlt der Buff {spell}.",
-		buffAskTarget = "Hey, könnte ich mir vielleicht {spells} schnappen? Bitte bitte!",
+		buffAsk = "Könntest du bitte {names} {spell} geben?",
+		buffAskOne = "Könntest du bitte {names} {spell} geben?",
+		buffAskCount = "Könntest du bitte {count} Spielern {spell} geben?",
+		buffAskTarget = "Hey, könnte ich mir vielleicht {spells} schnappen? Bitte bitte?",
 		rankWatchTip = "Nur als Info, nichts Wildes, aber du hast {spell} benutzt. Ab Stufe {level} gibt es einen neueren Rang. Aktualisiere deine Aktionsleisten oder besuch deinen Lehrer, und du bist Good to Go.",
 		rankWatchTipPet = "Nur als Info, nichts Wildes: Dein Begleiter {pet} hat {spell} benutzt. Ab Begleiterstufe {level} gibt es einen neueren Rang. Per Wildtierausbildung beibringen, und du bist Good to Go.",
 		rankWatchTipDemon = "Nur als Info, nichts Wildes: Dein Dämon {pet} hat {spell} benutzt. Ab Stufe {level} gibt es einen neueren Rang. Hol dir das Grimoire beim Dämonenausbilder, und du bist Good to Go.",
@@ -66,10 +65,10 @@ Data.MESSAGE_LANGUAGES = {
 	{
 		locale = "esES",
 		name = "Español (EU)",
-		buffAsk = "A {names} les falta {spell}.",
-		buffAskOne = "A {names} le falta {spell}.",
-		buffAskCount = "A {count} personas les falta el beneficio {spell}.",
-		buffAskTarget = "¡Hola! ¿Me podrías echar {spells}? ¡Porfa, porfa!",
+		buffAsk = "¿Podrías darles a {names} {spell}, por favor?",
+		buffAskOne = "¿Podrías darle a {names} {spell}, por favor?",
+		buffAskCount = "¿Podrías darles a {count} personas {spell}, por favor?",
+		buffAskTarget = "¡Hola! ¿Me podrías echar {spells}? ¿Porfa, porfa?",
 		rankWatchTip = "Por cierto, nada grave, pero has usado {spell}. Hay un rango más alto desde el nivel {level}. Actualiza tus barras de acción o visita a tu instructor y estarás Good to Go.",
 		rankWatchTipPet = "Por cierto, nada grave, pero tu mascota {pet} ha usado {spell}. Hay un rango más alto desde el nivel de mascota {level}. Enséñaselo con Adiestrar bestia y estarás Good to Go.",
 		rankWatchTipDemon = "Por cierto, nada grave, pero tu {pet} ha usado {spell}. Hay un rango más alto desde el nivel {level}. Hazte con su grimorio en un instructor de demonios y estarás Good to Go.",
@@ -79,10 +78,10 @@ Data.MESSAGE_LANGUAGES = {
 	{
 		locale = "esMX",
 		name = "Español (AL)",
-		buffAsk = "A {names} les falta {spell}.",
-		buffAskOne = "A {names} le falta {spell}.",
-		buffAskCount = "A {count} personas les falta el beneficio {spell}.",
-		buffAskTarget = "¡Hola! ¿Me podrías echar {spells}? ¡Porfa, porfa!",
+		buffAsk = "¿Podrías darles a {names} {spell}, por favor?",
+		buffAskOne = "¿Podrías darle a {names} {spell}, por favor?",
+		buffAskCount = "¿Podrías darles a {count} personas {spell}, por favor?",
+		buffAskTarget = "¡Hola! ¿Me podrías echar {spells}? ¿Porfa, porfa?",
 		rankWatchTip = "Oye, no pasa nada, pero usaste {spell}. Hay un rango más alto desde el nivel {level}. Actualiza tus barras de acción o visita a tu instructor y estarás Good to Go.",
 		rankWatchTipPet = "Oye, no pasa nada, pero tu mascota {pet} usó {spell}. Hay un rango más alto desde el nivel de mascota {level}. Enséñaselo con Adiestramiento de bestias y estarás Good to Go.",
 		rankWatchTipDemon = "Oye, no pasa nada, pero tu {pet} usó {spell}. Hay un rango más alto desde el nivel {level}. Consigue su grimorio con un instructor de demonios y estarás Good to Go.",
@@ -92,10 +91,10 @@ Data.MESSAGE_LANGUAGES = {
 	{
 		locale = "frFR",
 		name = "Français",
-		buffAsk = "{names} n'ont pas {spell}.",
-		buffAskOne = "{names} n'a pas {spell}.",
-		buffAskCount = "{count} joueurs n'ont pas l'amélioration {spell}.",
-		buffAskTarget = "Salut ! Tu pourrais me filer {spells} ? S'il te plaît !",
+		buffAsk = "Tu pourrais donner à {names} {spell}, s'il te plaît ?",
+		buffAskOne = "Tu pourrais donner à {names} {spell}, s'il te plaît ?",
+		buffAskCount = "Tu pourrais donner à {count} joueurs {spell}, s'il te plaît ?",
+		buffAskTarget = "Salut ! Tu pourrais me filer {spells} ? S'il te plaît ?",
 		rankWatchTip = "Pour info, rien de grave : tu as utilisé {spell}, mais il y a un rang supérieur dès le niveau {level}. Mets à jour tes barres ou passe voir ton maître, et tu seras Good to Go.",
 		rankWatchTipPet = "Pour info, rien de grave : ton familier {pet} a utilisé {spell}, mais il y a un rang supérieur dès son niveau {level}. Enseigne-le-lui avec Dressage des bêtes et tu seras Good to Go.",
 		rankWatchTipDemon = "Pour info, rien de grave : ton démon ({pet}) a utilisé {spell}, mais il y a un rang supérieur dès le niveau {level}. Prends son grimoire chez un maître des démons et tu seras Good to Go.",
@@ -105,10 +104,10 @@ Data.MESSAGE_LANGUAGES = {
 	{
 		locale = "itIT",
 		name = "Italiano",
-		buffAsk = "A {names} manca {spell}.",
-		buffAskOne = "A {names} manca {spell}.",
-		buffAskCount = "A {count} giocatori manca il potenziamento {spell}.",
-		buffAskTarget = "Ciao! Per caso mi passeresti {spells}? Per favore!",
+		buffAsk = "Potresti dare a {names} {spell}, per favore?",
+		buffAskOne = "Potresti dare a {names} {spell}, per favore?",
+		buffAskCount = "Potresti dare a {count} giocatori {spell}, per favore?",
+		buffAskTarget = "Ciao! Per caso mi passeresti {spells}? Per favore?",
 		rankWatchTip = "Ehi, niente di grave, ma hai usato {spell}. C'è un grado più alto al livello {level}. Aggiorna le barre delle azioni o passa dal tuo istruttore e sarai Good to Go.",
 		rankWatchTipPet = "Ehi, niente di grave, ma il tuo famiglio {pet} ha usato {spell}. C'è un grado più alto al livello {level} del famiglio. Insegnaglielo con Addestramento bestie e sarai Good to Go.",
 		rankWatchTipDemon = "Ehi, niente di grave, ma il tuo demone {pet} ha usato {spell}. C'è un grado più alto al livello {level}. Prendi il suo grimorio da un istruttore di demoni e sarai Good to Go.",
@@ -118,10 +117,10 @@ Data.MESSAGE_LANGUAGES = {
 	{
 		locale = "koKR",
 		name = "한국어",
-		buffAsk = "{names} 님에게 {spell} 버프가 없습니다.",
-		buffAskOne = "{names} 님에게 {spell} 버프가 없습니다.",
-		buffAskCount = "{count}명에게 {spell} 버프가 없습니다.",
-		buffAskTarget = "안녕하세요! 혹시 {spells} 하나 받을 수 있을까요? 제발요!",
+		buffAsk = "{names} 님에게 {spell} 버프를 걸어 주실 수 있나요?",
+		buffAskOne = "{names} 님에게 {spell} 버프를 걸어 주실 수 있나요?",
+		buffAskCount = "{count}명에게 {spell} 버프를 걸어 주실 수 있나요?",
+		buffAskTarget = "안녕하세요! 혹시 {spells} 하나 받을 수 있을까요? 제발요?",
 		rankWatchTip = "참고로 {spell}을(를) 쓰셨는데, {level}레벨부터 상위 레벨이 있어요. 단축바를 바꾸시거나 상급자에게 들르시면 바로 Good to Go!",
 		rankWatchTipPet = "참고로 소환수 {pet}이(가) {spell}을(를) 썼는데, 소환수 {level}레벨부터 상위 레벨이 있어요. 야수 조련으로 가르쳐 주시면 바로 Good to Go!",
 		rankWatchTipDemon = "참고로 소환하신 {pet}이(가) {spell}을(를) 썼는데, {level}레벨부터 상위 레벨이 있어요. 악마 조련사에게서 마법서를 구하시면 바로 Good to Go!",
@@ -131,10 +130,10 @@ Data.MESSAGE_LANGUAGES = {
 	{
 		locale = "ptBR",
 		name = "Português (BR)",
-		buffAsk = "{names} estão sem {spell}.",
-		buffAskOne = "{names} está sem {spell}.",
-		buffAskCount = "{count} pessoas estão sem o buff {spell}.",
-		buffAskTarget = "Opa, rola um {spells}? Por favorzinho!",
+		buffAsk = "Pode ajudar {names} com {spell}, por favor?",
+		buffAskOne = "Pode ajudar {names} com {spell}, por favor?",
+		buffAskCount = "Pode ajudar {count} pessoas com {spell}, por favor?",
+		buffAskTarget = "Opa, rola um {spells}? Por favorzinho?",
 		rankWatchTip = "Só um toque, nada demais: você usou {spell}. Tem um grau mais novo no nível {level}. Atualize suas barras de ação ou visite seu instrutor e você vai estar Good to Go.",
 		rankWatchTipPet = "Só um toque, nada demais: seu ajudante {pet} usou {spell}. Tem um grau mais novo no nível {level} do ajudante. Ensine com Treinamento de Feras e você vai estar Good to Go.",
 		rankWatchTipDemon = "Só um toque, nada demais: seu {pet} usou {spell}. Tem um grau mais novo no nível {level}. Pegue o grimório com um instrutor de demônios e você vai estar Good to Go.",
@@ -144,10 +143,10 @@ Data.MESSAGE_LANGUAGES = {
 	{
 		locale = "ruRU",
 		name = "Русский",
-		buffAsk = "{names}: нет {spell}.",
-		buffAskOne = "{names}: нет {spell}.",
-		buffAskCount = "{count} чел. без {spell}.",
-		buffAskTarget = "Привет! Не подкинешь {spells}? Ну пожалуйста!",
+		buffAsk = "{names}: нужен {spell}. Поможешь, пожалуйста?",
+		buffAskOne = "{names}: нужен {spell}. Поможешь, пожалуйста?",
+		buffAskCount = "{count} чел. без {spell}. Поможешь, пожалуйста?",
+		buffAskTarget = "Привет! Не подкинешь {spells}? Ну пожалуйста?",
 		rankWatchTip = "Вы применили {spell}, а с {level} ур. есть ранг выше. Обновите панели или зайдите к учителю, и будете Good to Go.",
 		rankWatchTipPet = "Ваш питомец {pet} применил {spell}, а с {level} ур. есть ранг выше. Обучите его, и будете Good to Go.",
 		rankWatchTipDemon = "Ваш {pet} применил {spell}, а с {level} ур. есть ранг выше. Купите гримуар у учителя демонов, и будете Good to Go.",
@@ -157,10 +156,10 @@ Data.MESSAGE_LANGUAGES = {
 	{
 		locale = "zhCN",
 		name = "简体中文",
-		buffAsk = "{names}缺少{spell}。",
-		buffAskOne = "{names}缺少{spell}。",
-		buffAskCount = "{count}名玩家缺少{spell}增益。",
-		buffAskTarget = "你好！能给我加个{spells}吗？拜托啦！",
+		buffAsk = "能麻烦你给{names}加个{spell}吗？",
+		buffAskOne = "能麻烦你给{names}加个{spell}吗？",
+		buffAskCount = "能麻烦你给{count}名玩家加个{spell}吗？",
+		buffAskTarget = "你好！能给我加个{spells}吗？拜托啦？",
 		rankWatchTip = "友情提示，没啥大不了的：你刚才用的是{spell}，{level}级就有更新的等级了。更新一下动作条或者去找训练师，马上就 Good to Go。",
 		rankWatchTipPet = "友情提示，没啥大不了的：你的宠物{pet}刚才用的是{spell}，宠物{level}级就有更新的等级了。用训练野兽教给它，马上就 Good to Go。",
 		rankWatchTipDemon = "友情提示，没啥大不了的：你的{pet}刚才用的是{spell}，{level}级就有更新的等级了。去恶魔训练师那里买本魔典，马上就 Good to Go。",
@@ -170,10 +169,10 @@ Data.MESSAGE_LANGUAGES = {
 	{
 		locale = "zhTW",
 		name = "繁體中文",
-		buffAsk = "{names}缺少{spell}。",
-		buffAskOne = "{names}缺少{spell}。",
-		buffAskCount = "{count}名玩家缺少{spell}增益。",
-		buffAskTarget = "你好！能幫我加個{spells}嗎？拜託啦！",
+		buffAsk = "能麻煩你幫{names}加個{spell}嗎？",
+		buffAskOne = "能麻煩你幫{names}加個{spell}嗎？",
+		buffAskCount = "能麻煩你幫{count}名玩家加個{spell}嗎？",
+		buffAskTarget = "你好！能幫我加個{spells}嗎？拜託啦？",
 		rankWatchTip = "小提醒，沒什麼大不了的：你剛剛用的是{spell}，{level}級就有更新的等級了。更新一下快捷列或去找訓練師，馬上就 Good to Go。",
 		rankWatchTipPet = "小提醒，沒什麼大不了的：你的寵物{pet}剛剛用的是{spell}，寵物{level}級就有更新的等級了。用訓練野獸教牠，馬上就 Good to Go。",
 		rankWatchTipDemon = "小提醒，沒什麼大不了的：你的{pet}剛剛用的是{spell}，{level}級就有更新的等級了。去惡魔訓練師那裡買本魔典，馬上就 Good to Go。",
@@ -211,10 +210,7 @@ function ns.GetMessageLanguageInfo(locale)
 	return locale and languageByLocale[locale] or nil
 end
 
---[[
-    The language whispers go out in. A saved code Good to Go no longer lists
-    reads as the default, so a stale value never leaves a whisper with no text.
-]]
+-- A saved code no longer listed reads as the default, so a whisper never goes out with no text.
 function ns.GetMessageLanguage()
 	local saved = ns.db and ns.db.global.messageLanguage
 	if languageByLocale[saved] then
@@ -223,20 +219,17 @@ function ns.GetMessageLanguage()
 	return Data.DEFAULT_MESSAGE_LANGUAGE
 end
 
--- A whisper's default text in `locale`, or in the language whispers go out in now.
 function ns.GetDefaultMessage(field, locale)
 	local language = languageByLocale[locale or ns.GetMessageLanguage()]
 		or languageByLocale[Data.DEFAULT_MESSAGE_LANGUAGE]
 	return language[field]
 end
 
--- The table holding a whisper's saved text, or nil before the database is open.
 local function MessageSettings(field)
 	local message = Data.EDITABLE_MESSAGES[field]
 	return ns.db and ns.db.global[message.scope], message.key
 end
 
--- What a whisper goes out with: the player's own text, or the chosen language's default while they haven't edited it.
 function ns.GetMessageText(field)
 	local settings, key = MessageSettings(field)
 	local saved = settings and settings[key]
@@ -246,11 +239,7 @@ function ns.GetMessageText(field)
 	return saved
 end
 
---[[
-    Saves a whisper's text, trimmed. Nil, or the chosen language's default,
-    clears it, so it follows the language from then on; an empty string is
-    kept, and sends nothing.
-]]
+-- Nil or the language's default clears the key so it follows the language; an empty string is kept and sends nothing.
 function ns.SetMessageText(field, text)
 	local settings, key = MessageSettings(field)
 	if not settings then
@@ -265,11 +254,7 @@ function ns.SetMessageText(field, text)
 	settings[key] = text
 end
 
---[[
-    Switches the language whispers go out in. A whisper still holding the old
-    language's default follows to the new one; text the player wrote is never
-    replaced.
-]]
+-- A whisper still holding the old language's default follows to the new one; the player's own text is never replaced.
 function ns.SetMessageLanguage(locale)
 	if not ns.db or not languageByLocale[locale] then
 		return

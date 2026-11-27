@@ -1,17 +1,10 @@
 local _, ns = ...
 
 --[[
-	The pet abilities for the Pet What's Next? tab (Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Page.lua). For a hunter, every
-	rank its pets learn (ns.PET_ABILITIES), where the hunter learns it (a pet trainer, or taming a beast that knows
-	it), and whether the pet out now knows it, can be taught it with Beast Training, or waits on a level; with no
-	pet out, the statuses are the hunter's own Beast Training: what it has learned, and what it can learn by its
-	level. On WoW Forever the hunter's own trainer teaches the pet out (HUNTER_TRAINER, with no Beast Training
-	spell), so only the pet out says what it knows, and that trainer sells a rank by the hunter's level, not the
-	pet's. There a taming rank (TAMING, with no teach) comes only with a newly tamed beast that knows it, so it too
-	reads by the hunter's level, the highest beast it can tame. And with no grimoires, its demon trainer teaches a
-	demon's rank (DEMON_TRAINER, with no item). For a warlock, every rank its demons learn from a grimoire
-	(ns.DEMON_ABILITIES), and whether the demon out knows it, its grimoire is in the bags to use, or it waits on a
-	level; with no demon out, nothing reads as known, since only the demon out says what it knows.
+	WoW Forever has no Beast Training spell and no grimoires: the hunter's trainer teaches the pet out by the
+	hunter's level, a taming rank comes only with a newly tamed beast (so it reads by the hunter's level too), and
+	the demon trainer teaches a demon's rank itself. With no demon out, nothing reads as known, since only the
+	demon out says what it knows.
 ]]
 
 local NO_IDS = {}
@@ -20,23 +13,18 @@ local NO_IDS = {}
 local SOON_LEVELS = 2
 
 --[[
-	The statuses in the order Sort By Availability lists them. TEACH is a rank the pet can be taught now (the
-	hunter knows it, or the warlock has its grimoire); AVAILABLE one to go and get now; OTHER one the pet's
-	family can't learn.
+	In Sort By Availability's order. TEACH: the pet can be taught it now; AVAILABLE: one to go and get now;
+	OTHER: one the pet's family can't learn.
 ]]
 ns.WHATS_NEXT_PET_STATUSES = { "TEACH", "AVAILABLE", "SOON", "LATER", "OTHER", "KNOWN" }
 
---[[
-	The sources the filter offers, in its order. HUNTER_TRAINER is WoW Forever's: the hunter's own class trainer
-	teaches the pet out, with no Beast Training spell between.
-]]
+-- HUNTER_TRAINER is WoW Forever's.
 ns.WHATS_NEXT_PET_SOURCES = { "TRAINER", "HUNTER_TRAINER", "TAMING", "DEMON_TRAINER" }
 
 --------------------------------------------------------------------------------
 -- Settings
 --------------------------------------------------------------------------------
 
--- Whether the tab also lists the abilities the pet (or, with no pet out, the hunter) already knows.
 function ns.WhatsNextPetShowsKnown()
 	return ns.db.profile.whatsNextPetShowKnown
 end
@@ -45,7 +33,6 @@ function ns.SetWhatsNextPetShowKnown(on)
 	ns.db.profile.whatsNextPetShowKnown = on
 end
 
--- Whether the tab also lists the abilities the pet's family can't learn.
 function ns.WhatsNextPetShowsOtherFamilies()
 	return ns.db.profile.whatsNextPetShowOtherFamilies
 end
@@ -58,7 +45,6 @@ end
 -- The Pet
 --------------------------------------------------------------------------------
 
--- The ability ranks for the player's class: a hunter's pets' or a warlock's demons'; none for another class.
 local function ClassAbilities()
 	local class = select(2, UnitClass("player"))
 	if class == "HUNTER" then
@@ -69,7 +55,6 @@ local function ClassAbilities()
 	return NO_IDS
 end
 
--- Whether this client's data has abilities for the player's class's pets, so the tab is worth showing.
 function ns.HasWhatsNextPet()
 	return #ClassAbilities() > 0
 end
@@ -78,10 +63,7 @@ function ns.IsWhatsNextPetWarlock()
 	return select(2, UnitClass("player")) == "WARLOCK"
 end
 
---[[
-	Whether a hunter's statuses with no pet out can come from Beast Training: its data has the hunter's teaching
-	spells (teach). WoW Forever's has none, so there only the pet out says what it knows.
-]]
+-- WoW Forever's data has no teach spells, so there only the pet out says what it knows.
 function ns.WhatsNextPetUsesBeastTraining()
 	if ns.IsWhatsNextPetWarlock() then
 		return false
@@ -94,12 +76,7 @@ function ns.WhatsNextPetUsesBeastTraining()
 	return false
 end
 
---[[
-	Whether a hunter's rank reads against the hunter's level rather than the pet's: WoW Forever's, where the
-	hunter's trainer sells a rank by the hunter's level (HUNTER_TRAINER) and, with no Beast Training, a taming rank
-	comes only with a newly tamed beast, one no higher than the hunter. beastTraining is
-	ns.WhatsNextPetUsesBeastTraining(), passed in by a caller checking many rows.
-]]
+-- beastTraining is ns.WhatsNextPetUsesBeastTraining(), passed in by a caller checking many rows.
 function ns.WhatsNextPetReadsHunterLevel(row, beastTraining)
 	if row.source == "HUNTER_TRAINER" then
 		return true
@@ -110,7 +87,6 @@ function ns.WhatsNextPetReadsHunterLevel(row, beastTraining)
 	return row.source == "TAMING" and not beastTraining
 end
 
--- Whether any rank in this client's data is limited to some pet families (families), so Other Families has rows.
 function ns.WhatsNextPetHasFamilies()
 	for _, row in ipairs(ClassAbilities()) do
 		if row.families then
@@ -120,12 +96,7 @@ function ns.WhatsNextPetHasFamilies()
 	return false
 end
 
---[[
-	The hunter's pet out now, as { name, level, family, familyID }, or nil with none out (a warlock's demon
-	or a pet under Eyes of the Beast doesn't count, unless anyPet, as for the Pet Spell Book's footer and a
-	warlock's demon). familyID
-	is nil where the client doesn't give one.
-]]
+-- A warlock's demon or a pet under Eyes of the Beast counts only with anyPet.
 function ns.WhatsNextPet(anyPet)
 	if not UnitExists("pet") or not HasPetUI then
 		return nil
@@ -143,10 +114,7 @@ function ns.WhatsNextPet(anyPet)
 	}
 end
 
---[[
-	The pet's training points: the ones it has left, then its total, or nil where the client has no training
-	points.
-]]
+-- left, total; nil where the client has no training points
 function ns.WhatsNextPetTrainingPoints()
 	if not GetPetTrainingPoints then
 		return nil
@@ -179,12 +147,8 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-	Every rank, unsorted, as { id, name, icon, subtext, level, source, tp, item, beasts, status, ready }: ready
-	is a rank the pet can be taught once its level allows, the hunter's Beast Training spell known or the
-	warlock's grimoire in the bags. The statuses read against the pet out's level, or with no pet out against
-	level, the level for PLAYER_LEVEL_UP, which defaults to the player's. A rank the hunter gets for the pet
-	(ns.WhatsNextPetReadsHunterLevel) always reads against the hunter's level. A rank whose name isn't loaded yet
-	is skipped: SPELL_DATA_LOAD_RESULT redraws the tab.
+	Unsorted { id, name, icon, subtext, level, source, tp, item, beasts, status, ready }. level is for
+	PLAYER_LEVEL_UP. A rank whose name isn't loaded yet is skipped: SPELL_DATA_LOAD_RESULT redraws the tab.
 ]]
 function ns.WhatsNextPetRows(level)
 	local warlock = ns.IsWhatsNextPetWarlock()
@@ -220,10 +184,7 @@ function ns.WhatsNextPetRows(level)
 		end
 	end
 
-	--[[
-		A pet's spellbook keeps only the highest rank of each ability, so a rank counts as known to the pet when
-		it or a later rank of the same ability is.
-	]]
+	-- a pet's spellbook keeps only the highest rank of each ability
 	local highestKnown = {}
 	if pet then
 		for _, row in ipairs(rows) do
@@ -241,8 +202,8 @@ function ns.WhatsNextPetRows(level)
 			known = row.level <= (highestKnown[row.name] or -1)
 		else
 			--[[
-				the hunter's Beast Training; a warlock's grimoire is spent on one demon, and a WoW Forever rank goes
-				straight to the pet, so nothing reads as known for those
+				a warlock's grimoire is spent on one demon, and a WoW Forever rank goes straight to the pet, so
+				nothing reads as known for those
 			]]
 			known = not warlock and row.ready
 		end

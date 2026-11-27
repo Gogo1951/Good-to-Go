@@ -36,6 +36,7 @@ L["OPTIONS_LEVEL_UP_THANKS"] = "Thanks for choosing Good to Go!"
 L["MACRO_BANDAGE"] = "- Bandage"
 L["MACRO_EXPLOSIVES"] = "- Explosives"
 L["MACRO_FEED_PET"] = "- Feed Pet"
+L["MACRO_FISHING_LURE"] = "- Fishing Lure"
 L["MACRO_FOOD"] = "- Food"
 L["MACRO_HEALTH_POTION"] = "- Health Potion"
 L["MACRO_HEALTHSTONE"] = "- Healthstone"
@@ -272,7 +273,7 @@ L["MENU_RESTOCKER_OPEN_OFF_DESCRIPTION"] = "Opens your Restock List. Turn the Re
 
 -- Buff Duty's block in the menu while its close button has hidden it: the word on its right, and the note under it.
 L["MENU_BUFF_DUTY_PAUSED"] = "Paused"
-L["MENU_BUFF_DUTY_PAUSED_NOTE"] = "Hidden until you join a group, log in again, or reload."
+L["MENU_BUFF_DUTY_PAUSED_NOTE"] = "Taking a break until you join a group, log in again, or reload."
 
 --------------------------------------------------------------------------------
 -- Class Notes
@@ -302,6 +303,7 @@ L["NOTE_MACRO_HEALTHSTONE"] = "Healthstone Macro"
 L["NOTE_MACRO_SOULSTONE"] = "Soulstone Macro"
 L["NOTE_MACRO_POISONS"] = "Poisons Macro"
 L["NOTE_MACRO_EXPLOSIVES"] = "Explosives Macro"
+L["NOTE_MACRO_FISHING_LURE"] = "Fishing Lure Macro"
 
 -- Hunter. NOTE_PET_MEND_CLICK is the click that casts Mend Pet: a Right-Click, or any click during combat.
 L["NOTE_PET_CALL_FEED_REVIVE"] = "Call, Feed, or Revive"
@@ -734,6 +736,37 @@ L["EXPLOSIVES_MODE_ATPLAYER"] = "Left-Click @player"
 L["EXPLOSIVES_MODE_TOSS"] = "Left-Click Toss"
 
 --[[
+    Fishing Lure (Options-Fishing-Lure.lua): TAB_FISHING_LURE is its label in the settings tree and the end of
+    its title.
+]]
+L["TAB_FISHING_LURE"] = "Fishing Lure"
+L["OPTIONS_FISHING_LURE_DESCRIPTION"] = "Applies lures and food if you're missing them."
+-- The page's three section headers.
+L["OPTIONS_FISHING_HEADER_GEAR"] = "Gear"
+L["OPTIONS_FISHING_HEADER_FOOD"] = "Food"
+L["OPTIONS_FISHING_HEADER_LURES"] = "Lures"
+L["OPTIONS_FISHING_EQUIP_POLE"] = "Equip Fishing Pole"
+L["OPTIONS_FISHING_EQUIP_POLE_DESCRIPTION"] =
+	"Puts on the best fishing pole in your bags that your Fishing skill allows, when it beats the one in your hand."
+L["OPTIONS_FISHING_EQUIP_PANTS"] = "Equip Pants"
+L["OPTIONS_FISHING_EQUIP_PANTS_DESCRIPTION"] =
+	"Puts on the best fishing pants in your bags that you can use, when they beat the pair you have on."
+L["OPTIONS_FISHING_EQUIP_HAT"] = "Equip Hat"
+L["OPTIONS_FISHING_EQUIP_HAT_DESCRIPTION"] =
+	"Puts on the best fishing hat in your bags that you can use, when it beats the one you have on."
+L["OPTIONS_FISHING_EQUIP_BOOTS"] = "Equip Boots"
+L["OPTIONS_FISHING_EQUIP_BOOTS_DESCRIPTION"] =
+	"Puts on the best fishing boots in your bags that you can use, when they beat the pair you have on."
+L["OPTIONS_FISHING_EQUIP_GLOVES"] = "Equip Gloves"
+L["OPTIONS_FISHING_EQUIP_GLOVES_DESCRIPTION"] = "Puts on gloves from your bags that carry a Fishing enchant."
+L["OPTIONS_FISHING_USE_FOOD"] = "Use Food When Missing Bonus Fishing Skill Well Fed"
+L["OPTIONS_FISHING_USE_FOOD_DESCRIPTION"] =
+	"Eats the best fishing food in your bags when you don't have its Well Fed Fishing bonus."
+L["OPTIONS_FISHING_USE_LURE"] = "Use Best Lure"
+L["OPTIONS_FISHING_USE_LURE_DESCRIPTION"] =
+	"Puts the best lure your Fishing skill allows on your fishing pole when it has none."
+
+--[[
     Class Macros panel (Options-Class-Macros.lua), nested under Consumable Macros. TAB_CLASS_MACROS
     is its label in the settings tree and the end of its title; OPTIONS_CLASS_MACROS_DESCRIPTION is the
     intro beneath it. The class and race headers below also head Food & Drinks' racial sections.
@@ -925,6 +958,7 @@ L["INVENTORY_REPORT_FORGET_CHARACTER_CONFIRM"] =
 
 -- Readiness Report
 L["TAB_READINESS_REPORT"] = "Readiness Report"
+L["TAB_CURRENCY_REPLENISH"] = "Currency Replenish"
 --[[
     Says what the report does AND that it stays quiet, because the quiet is the
     feature: a player who turns this on and sees nothing for three pulls has to
@@ -1289,7 +1323,7 @@ L["RESTOCKER_STILL_OUT_AND_LOW_MANY"] = "You're still out of %d items, and low o
     sum rather than the old amount moved across.
 ]]
 L["RESTOCKER_UPGRADED"] = "Your Restock List has been upgraded."
-L["RESTOCKER_UPGRADED_ITEM"] = "%sx%d upgrades to %sx%d."
+L["RESTOCKER_UPGRADED_ITEM"] = "%s x%d upgrades to %s x%d."
 
 --[[
     Verbose follow-up line, one per item the headline counted, out first and
@@ -1756,8 +1790,7 @@ L["BUFF_DUTY_NO_BUFFS"] = "Your class has no buffs on this list, so the window n
 L["BUFF_DUTY_WHEN_HEADER"] = "When to Show"
 L["BUFF_DUTY_WHEN_DESCRIPTION"] = "Choose when the window can appear."
 L["BUFF_DUTY_WHEN_NONE"] = "Nothing is checked, so the window never appears."
-L["BUFF_DUTY_AURAS_HIDDEN"] =
-	"Buff Duty is hidden here. The game doesn't let add-ons see buffs in this area, so it can't tell who is missing one."
+L["BUFF_DUTY_AURAS_HIDDEN"] = "Buff Duty can't see buffs here. The game hides them from add-ons in this area."
 L["BUFF_DUTY_WHERE_DESCRIPTION"] =
 	"Sets where the window shows: anywhere, or only inside an instance, like a dungeon or raid."
 L["BUFF_DUTY_WHERE_ALWAYS"] = "Anywhere"
@@ -1780,7 +1813,7 @@ L["BUFF_DUTY_FAVOR_ENABLE_DESCRIPTION"] =
 	"Lists the strangers who recently buffed you, with the buffs you can give them back. Right-Click an icon to take someone off the list."
 L["BUFF_DUTY_BUFF_PVP_FLAGGED"] = "Buff PvP-Flagged Players"
 L["BUFF_DUTY_BUFF_PVP_FLAGGED_DESCRIPTION"] =
-	"Lets Buff Duty buff PvP-flagged players, which flags you too. While it's off and you aren't flagged, Buff Duty skips them, and any party buff that would reach them, and tells you in chat."
+	"Lets Buff Duty buff PvP-flagged players, which flags you too. Off, while you aren't flagged, it skips them and any party buff that would reach them, and lets you know in chat."
 L["BUFF_DUTY_FAVOR_SECONDS_DESCRIPTION"] = "Sets how long a stranger stays on the list after their last buff."
 L["BUFF_DUTY_TARGET_ENABLE"] = "Your Target"
 L["BUFF_DUTY_TARGET_ENABLE_DESCRIPTION"] =
@@ -1864,7 +1897,7 @@ L["BUFF_DUTY_SELF_REFRESH_UNDER"] = "Under %s"
     client's name), Weapon Buffs and Scrolls: elixirs, then consumables with
     a setting of their own.
 ]]
-L["BUFF_DUTY_ROW_ELIXIRS"] = "Flasks or Elixirs"
+L["BUFF_DUTY_ROW_ELIXIRS"] = "Flasks & Elixirs"
 L["BUFF_DUTY_ROW_OTHER"] = "Other Buffs"
 -- Each category's page opens with When to Use, a dropdown of when the window shows that category.
 L["BUFF_DUTY_ROW_WHEN"] = "When to Use"
@@ -1875,7 +1908,7 @@ L["BUFF_DUTY_ROW_WHEN_GROUP"] = "In Party or Raid"
 L["BUFF_DUTY_ROW_WHEN_RAID"] = "In Raid"
 -- Then a checkbox for whether the key uses the category's icons. %s is the key's name, BUFF_KEY.
 L["BUFF_DUTY_ROW_KEY"] = "Use with %s"
-L["BUFF_DUTY_ROW_KEY_DESCRIPTION"] = "Your %s key uses these icons too. Off, they're only a click in the window."
+L["BUFF_DUTY_ROW_KEY_DESCRIPTION"] = "Your %s key casts these too. Off, they're click-only in the window."
 -- The Well Fed page's description.
 L["BUFF_DUTY_FOOD_PAGE_DESCRIPTION"] = "Buff food you carry, offered in the window when you're missing its buff."
 --[[
@@ -1891,9 +1924,9 @@ L["BUFF_DUTY_SCROLL_TYPES"] = "Scroll Types"
 L["BUFF_DUTY_SCROLLS_PAGE_DESCRIPTION"] = "Scrolls you carry, offered in the window when you're missing their buff."
 L["BUFF_DUTY_SCROLLS_DESCRIPTION"] =
 	"Shows a scroll for each scroll buff you're missing while you carry that scroll. Click one in the window to read it. The scroll types it watches are the ones checked below."
--- The Flasks or Elixirs page's description, and its Elixirs row: one icon per elixir in your bags whose buff you're missing.
+-- The Flasks & Elixirs page's description, and its Elixirs row: one icon per elixir in your bags whose buff you're missing.
 L["BUFF_DUTY_ELIXIRS_PAGE_DESCRIPTION"] =
-	"Elixirs you carry, offered in the window when you're missing their buff. To keep one out, turn it off under Flasks or Elixirs in the window's Options."
+	"Elixirs you carry, offered in the window when you're missing their buff. To keep one out, turn it off under Flasks & Elixirs in the window's Options."
 L["BUFF_DUTY_ELIXIRS"] = "Elixirs"
 L["BUFF_DUTY_ELIXIRS_DESCRIPTION"] =
 	"Shows each elixir in your bags whose buff you're missing, unless a buff already on you takes its place. Click one in the window to drink it."
@@ -1925,11 +1958,11 @@ L["BUFF_DUTY_WEAPON_ENABLE_DESCRIPTION"] =
 -- A buff icon's tooltip, a line per click: the job on the left, the click (TOOLTIP_KEY_CLICK, TOOLTIP_KEY_RIGHT_CLICK)
 -- on the right. %s is who the cast lands on; TAKE_OFF is a Return the Favor icon's right-click.
 L["BUFF_DUTY_TOOLTIP_CAST"] = "Cast on %s"
-L["BUFF_DUTY_TOOLTIP_TAKE_OFF"] = "Take Off This List"
+L["BUFF_DUTY_TOOLTIP_TAKE_OFF"] = "Remove from List"
 -- %s is the client's "Main Hand" or "Off Hand".
 L["BUFF_DUTY_TOOLTIP_WEAPON"] = "Applies to your %s."
-L["BUFF_DUTY_TOOLTIP_USE"] = "Nobody in your group has a Soulstone. Uses one on %s."
-L["BUFF_DUTY_TOOLTIP_CREATE"] = "Nobody in your group has a Soulstone. Creates one."
+L["BUFF_DUTY_TOOLTIP_USE"] = "No one in your group has a Soulstone yet. Uses one on %s."
+L["BUFF_DUTY_TOOLTIP_CREATE"] = "No one in your group has a Soulstone yet. Creates one."
 -- A Firestone or Spellstone icon with none in the bags conjures one.
 L["BUFF_DUTY_TOOLTIP_CREATE_WEAPON"] = "None in your bags. Creates one."
 -- A Self-Buffs consumable's icon (Winterfall Firewater).
@@ -1946,8 +1979,7 @@ L["BUFF_DUTY_MENU_ALL_SETTINGS_DESCRIPTION"] =
 	"Opens the Buff Duty settings, with every timing, class, and buff the window can show."
 -- The Options menu's Window Opacity row, and its flyout of 0% to 100%. %d is the percent.
 L["BUFF_DUTY_MENU_OPACITY"] = "Window Opacity"
-L["BUFF_DUTY_MENU_OPACITY_DESCRIPTION"] =
-	"Sets how solid the Buff Duty window's background is. The text and icons stay as they are."
+L["BUFF_DUTY_MENU_OPACITY_DESCRIPTION"] = "Sets how solid the window's background is. Text and icons always stay clear."
 L["BUFF_DUTY_MENU_OPACITY_PERCENT"] = "%d%%"
 --[[
     The window's category menus, each opened by its category line's arrow:
@@ -1962,8 +1994,7 @@ L["BUFF_DUTY_MISSING_INVENTORY"] = "Missing Inventory!"
 L["BUFF_DUTY_MENU_SHOW_IN_BUFF_DUTY"] = "Show in Buff Duty"
 L["BUFF_DUTY_MENU_SHOW_IN_BUFF_DUTY_DESCRIPTION"] = "Shows this category in the Buff Duty window."
 L["BUFF_DUTY_MENU_SHOW"] = "Show"
-L["BUFF_DUTY_ROW_SHOW_DESCRIPTION"] =
-	"Sets when these buffs show: once one is gone, or once it has less than this left."
+L["BUFF_DUTY_ROW_SHOW_DESCRIPTION"] = "Shows these buffs once they wear off, or once they're down to this much time."
 L["BUFF_DUTY_MENU_SHOW_MISSING_INVENTORY"] = "Show Missing Inventory"
 L["BUFF_DUTY_ROW_OUT_DESCRIPTION"] =
 	'Shows "Missing Inventory!" in the window when the buff isn\'t on you and nothing in your bags gives it.'
@@ -1972,21 +2003,20 @@ L["BUFF_DUTY_MENU_YOUR_SPELLS"] = "Your Spells"
 L["BUFF_DUTY_MENU_NONE_IN_BAGS"] = "None in your bags."
 L["BUFF_DUTY_MENU_NO_SPELLS"] = "No buffs for your class."
 L["BUFF_DUTY_MENU_OTHER_PLAYERS"] = "Other Players"
-L["BUFF_DUTY_MENU_ITEM_DESCRIPTION_FORMAT"] =
-	"Offers %s in the window when you're missing its buff. Off passes it over."
+L["BUFF_DUTY_MENU_ITEM_DESCRIPTION_FORMAT"] = "Offers %s in the window when you're missing its buff. Off skips it."
 -- The Well Fed category's name while the client hasn't named the Well Fed buff yet.
 L["BUFF_DUTY_MENU_BUFF_FOOD"] = "Buff Food"
 -- The Self-Buffs buff food icon, while you aren't Well Fed.
 L["BUFF_DUTY_TOOLTIP_EAT"] = "Eats one from your bags. Stay seated until you're Well Fed."
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "Casts on %s and their party."
 -- A raid group icon's tooltip, the line under its title: the members who need it (%s, joined with LIST_PAIR_FORMAT or LIST_LAST_FORMAT).
-L["BUFF_DUTY_TOOLTIP_NEEDS"] = "Needs it: %s."
+L["BUFF_DUTY_TOOLTIP_NEEDS"] = "Needed by %s."
 -- The Ask row under Target: its label (%s is the target's name in their class color), and its icons' tooltip: who the whisper goes to, or, once asked, who and the whole minutes until they can be asked again.
 L["BUFF_DUTY_ASK_TARGET_ROW"] = "Ask %s"
-L["BUFF_DUTY_TOOLTIP_ASK_TARGET"] = "Whispers %s to ask for it."
-L["BUFF_DUTY_TOOLTIP_ASKED"] = "Asked %s. You can ask again in %d min."
+L["BUFF_DUTY_TOOLTIP_ASK_TARGET"] = "Whispers %s a friendly ask."
+L["BUFF_DUTY_TOOLTIP_ASKED"] = "Already asked %s. You can ask again in %d min."
 -- An Ask for Buffs icon's menu, its ask rows: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it: %s is one or two names (LIST_PAIR_FORMAT), or BUFF_DUTY_OTHERS_ASK_PEOPLE past two.
-L["BUFF_DUTY_OTHERS_HINT_ASK"] = "Ask for Buff in %s"
+L["BUFF_DUTY_OTHERS_HINT_ASK"] = "Ask in %s"
 L["BUFF_DUTY_OTHERS_HINT_WHISPER"] = "Whisper %s"
 L["BUFF_DUTY_OTHERS_SHORTCUT_LEFT"] = "Shortcut: Left-Click the buff's icon."
 L["BUFF_DUTY_OTHERS_SHORTCUT_RIGHT"] = "Shortcut: Right-Click the buff's icon."
@@ -1994,14 +2024,14 @@ L["BUFF_DUTY_OTHERS_SHORTCUT_RIGHT"] = "Shortcut: Right-Click the buff's icon."
 L["BUFF_DUTY_OTHERS_MINUTES"] = "%d min"
 L["BUFF_DUTY_OTHERS_MISSING"] = "Missing"
 --[[
-    The ask either click sends, signed off like every sent message ({star} ... // GtG), so it
-    ends as a statement, not a question. Up to five missing players are named (ONE for one,
+    The ask either click sends, signed off like every sent message ({star} ... // GtG), and it
+    asks, so it ends in a question mark. Up to five missing players are named (ONE for one,
     NAMES for two to five, joined with LIST_PAIR_FORMAT or LIST_LAST_FORMAT), then the buff's link;
     past five, COUNT gives how many, then the link.
 ]]
-L["BUFF_DUTY_OTHERS_ASK_ONE"] = "%s is missing %s."
-L["BUFF_DUTY_OTHERS_ASK_NAMES"] = "%s are missing %s."
-L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "%d people are missing the %s buff."
+L["BUFF_DUTY_OTHERS_ASK_ONE"] = "Could someone give %s %s, please?"
+L["BUFF_DUTY_OTHERS_ASK_NAMES"] = "Could someone give %s %s, please?"
+L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "Could someone give %d people %s, please?"
 -- The whispered ask's {names} past five missing players, when the player has written their own whisper, and the Ask for Buffs menu's whisper row past two players. %d is how many.
 L["BUFF_DUTY_OTHERS_ASK_PEOPLE"] = "%d people"
 --[[
@@ -2009,23 +2039,22 @@ L["BUFF_DUTY_OTHERS_ASK_PEOPLE"] = "%d people"
     checkbox, the When to Show header, then the options command.
 ]]
 L["BUFF_DUTY_CLOSED"] =
-	"Buff Duty is hidden until you join a group, log in again, or reload. To bring it back now, click Toggle under Buff Duty in the mini-map menu. To keep it off for the %s class, uncheck %s under %s in %s."
+	"Buff Duty is taking a break until you join a group, log in again, or reload. Want it back sooner? Click Toggle under Buff Duty in the mini-map menu. To keep it off on your %s, uncheck %s under %s in %s."
 
 -- The Cast Next Buff key: its name in the game's Key Bindings list and the root panel's Key Bindings section, then the notices a press shows.
 L["BUFF_KEY"] = "Cast Next Buff"
 -- %s is a player's name.
-L["BUFF_KEY_WAITING"] = "Waiting on %s to get in range."
-L["BUFF_KEY_DONE"] = "Nothing left to buff."
+L["BUFF_KEY_WAITING"] = "Waiting for %s to come into range."
+L["BUFF_KEY_DONE"] = "Everyone's buffed. Good to go!"
 -- Printed when Buff Duty or the key skips a PvP-flagged player. %s is the player's name.
-L["BUFF_DUTY_PVP_FLAGGED"] =
-	"%s is PvP flagged, so Buff Duty skipped them. Turn on Buff PvP-Flagged Players to buff them anyway."
+L["BUFF_DUTY_PVP_FLAGGED"] = "Skipped %s, who's PvP-flagged. To buff them anyway, turn on Buff PvP-Flagged Players."
 L["BUFF_KEY_OFF"] = "Buff Duty is off."
 --[[
     The Buff Duty window's last line, under Options, while the Cast Next Buff key has none: the options
     command (OPTIONS_COMMAND), then the key's name (BUFF_KEY). Kept to about three lines at the window's
     narrowest, with the command near the start so a line never breaks inside it.
 ]]
-L["BUFF_DUTY_KEY_TIP"] = "In %s, bind %s to cast these buffs with one key."
+L["BUFF_DUTY_KEY_TIP"] = "Tip: in %s, bind %s to cast all these with one key."
 
 --------------------------------------------------------------------------------
 -- Spellbook
@@ -2297,9 +2326,9 @@ L["CATEGORY_BLESSINGS"] = "Blessings"
 L["CATEGORY_CURSES"] = "Curses"
 L["CATEGORY_PETS"] = "Pets"
 L["KIND_RESURRECT"] = "Resurrections"
-L["CATEGORY_TELEPORTS"] = "Teleports and Portals"
+L["CATEGORY_TELEPORTS"] = "Teleports & Portals"
 L["CATEGORY_UTILITY"] = "Utility"
-L["CATEGORY_THREAT"] = "Taunts and Threat"
+L["CATEGORY_THREAT"] = "Taunts & Threat"
 L["SUBCATEGORY_BASIC_ATTACKS"] = "Basic Attacks"
 L["CATEGORY_STANCES"] = "Stances"
 L["CATEGORY_FORMS"] = "Forms"
@@ -2618,3 +2647,56 @@ L["CHAT_MACRO_TOO_LONG"] =
 	'The "%s" macro is %d bytes with its options on, over the %d a macro holds. Turn an option off to shorten it.'
 L["CHAT_CONSUMABLE_MACRO_TOO_LONG"] =
 	'The "%s" macro is %d bytes, over the %d a macro holds, so its last line is cut off.'
+
+--[[
+    Currency Replenish: the coins tab on the mailbox and its window
+    (Features/Currency-Replenish/). The tab's menu opens the window; the
+    window's title is CURRENCY_REPLENISH // ADDON_SHORT_NAME.
+]]
+L["CURRENCY_REPLENISH"] = "Currency Replenish"
+L["CURRENCY_REPLENISH_OPEN"] = "Open Currency Replenish"
+L["CURRENCY_REPLENISH_OPTIONS"] = "Options"
+L["CURRENCY_REPLENISH_ALL_SETTINGS"] = "All Currency Replenish Settings"
+
+-- The window's Bank line and its column heads. RECORDED_AGO is Current Amount's tooltip; %s is how long ago.
+L["CURRENCY_REPLENISH_BANK"] = "Bank"
+L["CURRENCY_REPLENISH_NO_BANK"] = "None"
+L["CURRENCY_REPLENISH_CHARACTER"] = "Character"
+L["CURRENCY_REPLENISH_GOLD_NOW"] = "Current Amount"
+L["CURRENCY_REPLENISH_KEEPS"] = "Target Amount"
+L["CURRENCY_REPLENISH_RECORDED_AGO"] = "Recorded %s ago"
+
+-- The Target Amount list's last row, its popup (%s is the character's name), and the Skip Under 1g switch.
+L["CURRENCY_REPLENISH_OTHER_AMOUNT"] = "Other Amount"
+L["CURRENCY_REPLENISH_REMOVE_CHARACTER"] = "Remove Character"
+L["CURRENCY_REPLENISH_KEEPS_FOR"] = "Target Amount for %s"
+L["CURRENCY_REPLENISH_SKIP_SMALL"] = "Skip Under 1g"
+L["CURRENCY_REPLENISH_SKIP_SMALL_DESCRIPTION"] =
+	"Replenish leaves out a character short by less than 1g, which isn't worth a mail."
+
+-- The window's red button, Replenish on the bank and Send Excess to Bank anywhere else. The reasons show under it while it can't be pressed; in AT_KEEPS, %s is what the character keeps.
+L["CURRENCY_REPLENISH_REPLENISH"] = "Replenish"
+L["CURRENCY_REPLENISH_SEND_EXCESS"] = "Send Excess to Bank"
+L["CURRENCY_REPLENISH_REASON_SENDING"] = "Sending..."
+L["CURRENCY_REPLENISH_REASON_NO_BANK"] = "Pick a bank first."
+L["CURRENCY_REPLENISH_REASON_NO_KEEPS"] = "Set your Target Amount first."
+L["CURRENCY_REPLENISH_REASON_AT_KEEPS"] = "At or under %s."
+L["CURRENCY_REPLENISH_REASON_FULL"] = "Everyone is full."
+L["CURRENCY_REPLENISH_REASON_NO_GOLD"] = "Not enough gold."
+
+-- Chat after a send. %s is gold and %s a character, except where %d counts characters. OUT_OF_GOLD's %s is a list of SHORT_BY lines.
+L["CURRENCY_REPLENISH_SENT"] = "Sent %s to %s."
+L["CURRENCY_REPLENISH_REPLENISHED"] = "Replenished %d characters with %s."
+L["CURRENCY_REPLENISH_REPLENISHED_ONE"] = "Replenished %d character with %s."
+L["CURRENCY_REPLENISH_SHORT_BY"] = "%s is %s short"
+L["CURRENCY_REPLENISH_OUT_OF_GOLD"] = "Out of gold. %s."
+L["CURRENCY_REPLENISH_STOPPED_FAILED"] = "Stopped at %s: the mail didn't go through."
+L["CURRENCY_REPLENISH_STOPPED_MAILBOX"] = "Stopped at %s: the mailbox closed."
+L["CURRENCY_REPLENISH_STOPPED_GOLD"] = "Stopped at %s: not enough gold for the mail."
+
+-- The feature's switch, and the description at the top of its options page.
+L["SWITCH_CURRENCY_REPLENISH"] = "Enable Currency Replenish"
+L["SWITCH_CURRENCY_REPLENISH_DESCRIPTION"] =
+	"Adds a coins tab to the mailbox. Your characters mail your bank character the gold over what they keep, and the bank mails them back up to it. Off removes the tab; your bank and Target Amounts stay saved."
+L["OPTIONS_CURRENCY_REPLENISH_DESCRIPTION"] =
+	"Pick a bank character and how much gold each character keeps, from the coins tab on the mailbox. Your other characters mail the bank what they have over their Target Amount, and the bank mails them back up to it."

@@ -31,7 +31,7 @@
 ### Other-client cleanup reaches account-wide records
 
 - **Departs from:** SAVED VARIABLES → Other-Client Characters, use this code as written.
-- **Instead:** The prune also drops other-client characters' Restock List choices and Inventory Report records from `ns.db.global`, telling a realm-free record by its name's shape and, for one with no surname, by its realm.
+- **Instead:** The prune also drops other-client characters' Restock List choices, Inventory Report records and Currency Replenish records from `ns.db.global`, telling a realm-free record by its name's shape and, for one with no surname, by its realm.
 - **Why:** Those records are keyed by character outside AceDB's `char` and `profileKeys`, so the stock prune leaves copied characters in the Restock List and the Inventory Report.
 
 ### Older Forever character keys kept until 2026-12-08
@@ -105,3 +105,9 @@
 - **Departs from:** OPTIONS PANEL → Combat Guard, its refusal line used nowhere else.
 - **Instead:** The Macros Window button's refusal in combat prints the same line as the options command.
 - **Why:** The maintainer keeps one combat refusal line for both.
+
+### Fishing Lure and Poisons macros start off
+
+- **Departs from:** DATA → Default-Settings.lua, a macro the add-on writes starts on.
+- **Instead:** The Fishing Lure and Poisons macros start off, and a player ticks them on in Consumable Macros.
+- **Why:** Most characters never fish, and Buff Duty already offers poisons.

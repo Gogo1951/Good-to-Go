@@ -3,10 +3,8 @@ local L = ns.L
 local HasTemplate = ns.HasTemplate
 
 --[[
-	The page's window, GoodToGoSpellbookFrame, which every host opens from its tab on the game's spellbook: the
-	Blizzard portrait frame (the gold book in its portrait, the title, the close button) holding the page
-	Features/Enhanced-Spellbook/Spellbook-Page.lua builds. It stays clear of the book, so UI skins that restyle the book leave it
-	alone, and it is parented to UIParent, so nothing Blizzard owns is written to.
+	Kept clear of the game's book, so skins that restyle the book leave it alone, and parented to UIParent, so
+	nothing Blizzard owns is written to.
 ]]
 
 local ICON_ADDON = ns.ICON_ADDON
@@ -22,18 +20,12 @@ local TAB_HEIGHT, TAB_LEFT, TAB_TOP = 32, 11, 2
 -- the gap between tabs: the old tab art has clear margins the next tab tucks into, the atlas art none
 local TAB_SPACING_OLD_ART, TAB_SPACING_ATLAS_ART = -16, 3
 --[[
-	Each tab is its label's width plus this padding, at least TAB_MIN_WIDTH. The Classic tab template sizes
-	itself again on every show, capping the label at its parent's maxTabWidth (88 when unset), which cut off the
-	longer labels, so the window sets a cap that fits them.
+	The Classic tab template resizes itself on every show, capping the label at its parent's maxTabWidth (88 when
+	unset), so the window sets a cap that fits the longer labels.
 ]]
 local TAB_PADDING, TAB_MIN_WIDTH, TAB_MAX_TEXT_WIDTH = 16, 64, 224
 
---[[
-	The window's tabs, in order, each { title key, builder, refresh as it shows, shown }: the Spell Book page,
-	the What's Next? page where its file loaded (Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Page.lua), which refreshes
-	itself, then for a class with a pet the Pet Spell Book page, and the Pet What's Next? page where the client's
-	data lists the pet's abilities (ns.HasWhatsNextPet). shown, where given, says whether this character gets the tab at all.
-]]
+-- Each { title key, builder, refresh as it shows, shown }; shown, where given, gates the tab for this character.
 local TABS = {
 	{ "TAB_ENHANCED_SPELLBOOK", ns.BuildSpellbookPage, ns.RefreshSpellbookPage },
 	{ "WHATS_NEXT_TITLE", ns.BuildWhatsNextPage },
@@ -47,10 +39,7 @@ local dockWidth = 0 -- the panel docked at the window's right edge (ns.DockSpell
 local tabPages = {} -- the page each tab shows
 local selectedTab = 1 -- kept while the window is closed, so it opens again on the tab it closed on
 
---[[
-	Shrinks the window, never grows it, so the whole spread fits on screen at any resolution or UI scale, a docked
-	panel and the tabs under it included.
-]]
+-- Only shrinks, never grows, counting a docked panel and the tabs.
 local function FitToScreen()
 	local scale = math.min(
 		1,
@@ -71,10 +60,6 @@ local function Notify()
 	end
 end
 
---[[
-	"Enhanced Spellbook // GtG" by the Menu-Kit's window title, read each time a tab is picked: the page white, the
-	slashes gray, the Short Name blue.
-]]
 local function SetTitle(titleKey)
 	local title = ns.MenuKit.WindowTitle(L[titleKey])
 	if window.SetTitle then
@@ -84,10 +69,7 @@ local function SetTitle(titleKey)
 	end
 end
 
---[[
-	Shows the tab's page and lights its tab; leaving the Spell Book closes the Conditionals or Cast Sequence panel
-	docked beside it.
-]]
+-- Leaving the Spell Book closes a docked panel.
 local function SelectTab(index)
 	selectedTab = index
 	for i, page in pairs(tabPages) do
@@ -109,10 +91,7 @@ local function SelectTab(index)
 	end
 end
 
---[[
-	Opens the tab at index (TABS above) when the window has it, and says whether it did: What's Next's rows open
-	the page a spell or a pet ability is on (Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Page.lua).
-]]
+-- Says whether the window has the tab.
 function ns.ShowSpellbookTab(index)
 	if not tabPages[index] then
 		return false
@@ -123,9 +102,8 @@ end
 ns.SPELLBOOK_TAB_BOOK, ns.SPELLBOOK_TAB_PET_BOOK = 1, 3
 
 --[[
-	The Classic engine's own windows (Collections, Friends) hang their tabs from CharacterFrameTabButtonTemplate,
-	whose unselected tabs tuck under the window's border. Its PanelTabButtonTemplate is newer art that raises
-	itself over the border, so it's only the fallback, for the Retail engine, which lacks the older one.
+	CharacterFrameTabButtonTemplate's unselected tabs tuck under the window's border; PanelTabButtonTemplate
+	raises itself over it, so it's only the fallback, for the Retail engine, which lacks the older one.
 ]]
 local function TabTemplate()
 	for _, template in ipairs({ "CharacterFrameTabButtonTemplate", "PanelTabButtonTemplate" }) do
@@ -135,7 +113,7 @@ local function TabTemplate()
 	end
 end
 
--- The tabs under the window's bottom edge, one per page, when there's more than one page and a tab template.
+-- Only with more than one page and a tab template.
 local function CreateTabs()
 	local template = TabTemplate()
 	if #tabPages < 2 or not template or not PanelTemplates_SelectTab then
@@ -175,10 +153,6 @@ local function CreateTabs()
 	window.numTabs = #tabs
 end
 
---[[
-	Where the window stands: the spot it was last dragged to, saved account-wide in windowPosition, or the middle
-	of the screen until then.
-]]
 local function PlaceWindow()
 	local position = ns.db.global.windowPosition
 	window:ClearAllPoints()
@@ -202,7 +176,7 @@ function ns.HasSavedSpellbookWindowPosition()
 	return position ~= nil and position.point ~= nil
 end
 
--- Reset Position (Options-Enhanced-Spellbook.lua): forgets the spot and moves an open window back to the middle.
+-- Moves an open window back to the middle too.
 function ns.ResetSpellbookWindowPosition()
 	ns.db.global.windowPosition = {}
 	if window then
@@ -246,10 +220,7 @@ local function CreateWindow()
 		Notify()
 	end)
 
-	--[[
-		each tab's page covers the whole window; it draws its controls, parchment and footer inside the frame's
-		border, and refreshes as it shows
-	]]
+	-- each page covers the whole window and draws inside the frame's border
 	for i, tab in ipairs(TABS) do
 		local build, refresh, shown = tab[2], tab[3], tab[4]
 		if build and (not shown or shown()) then
@@ -283,26 +254,17 @@ function ns.IsSpellbookWindowShown()
 	return window ~= nil and window:IsShown()
 end
 
--- Calls fn whenever the window shows or hides, so a host's tab can show it as selected.
 function ns.OnSpellbookWindowToggled(fn)
 	listeners[#listeners + 1] = fn
 end
 
---[[
-	Closes the window, for the Spellbook's switch turning off (ns.SetSpellbookEnabled).
-]]
 function ns.HideSpellbookWindow()
 	if window then
 		window:Hide()
 	end
 end
 
---[[
-	Docks a panel width wide against the window's right edge, the Conditionals or Cast Sequence panel
-	(Features/Enhanced-Spellbook/Macro-Builder/Conditionals-Panel.lua, Cast-Sequence-Panel.lua), or none with 0: the window
-	shrinks to fit both, and keeps the panel on screen as it is dragged, pulled back in at once if it hangs off
-	the edge now.
-]]
+-- 0 undocks. Re-placing the window pulls it back in at once if it now hangs off the edge.
 function ns.DockSpellbookPanel(width)
 	dockWidth = width
 	if not window then
@@ -317,5 +279,5 @@ function ns.DockSpellbookPanel(width)
 	end
 end
 
--- The key binding's toggle (Features/Enhanced-Spellbook/Key-Bindings.lua), the same as a click on a host's tab.
+-- the key binding's toggle
 ns.ToggleSpellbookPage = ns.ToggleSpellbookWindow

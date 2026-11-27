@@ -1,30 +1,16 @@
 local _, ns = ...
 
---[[
-    Item-Cache -- derives per-item consumable data from the consumable tables
-    once per session, and retries a scan that met a cold item. The session's
-    item info and its GET_ITEM_INFO_RECEIVED waiters are shared, in
-    Features/Item-Info.lua.
-]]
-
 --------------------------------------------------------------------------------
 -- Item Cache
 --------------------------------------------------------------------------------
 
---[[
-    One record per consumable, built the first time a scan meets it. Every fact
-    in it comes from this load's consumable tables, or from the item info the
-    server sends, so it lasts the session and is never saved: a new release or
-    another data folder starts from an empty cache by itself.
-]]
+-- Never saved: every fact comes from this load's data tables or the server, so a new release or data folder starts clean.
 local itemCache = {}
 
--- The record ns.CacheItemData built for the item this session, or nil while it waits on the server's item info.
 function ns.GetCachedItemData(itemID)
 	return itemCache[itemID]
 end
 
--- How many consumables have a record this session (Diagnostics).
 function ns.CountCachedItems()
 	local count = 0
 	for _ in pairs(itemCache) do
@@ -33,10 +19,7 @@ function ns.CountCachedItems()
 	return count
 end
 
---[[
-    The consumable tables in the order ns.CacheItemData reads them, each with
-    the column where its Min Level, Vendor Price, Max Stack and Bind Type start.
-]]
+-- Each table with the column where its Min Level, Vendor Price, Max Stack and Bind Type start.
 local CONSUMABLE_TABLES = {
 	{ "FOOD_AND_WATER", 8 },
 	{ "POTIONS", 5 },
@@ -48,7 +31,6 @@ local CONSUMABLE_TABLES = {
 	{ "EXPLOSIVES", 5 },
 }
 
--- The item's row in the first consumable table that carries it, and the column where its item facts start.
 local function FindConsumableRow(itemID)
 	for _, entry in ipairs(CONSUMABLE_TABLES) do
 		local row = ns[entry[1]][itemID]
@@ -75,7 +57,6 @@ function ns.RetireSavedItemCache()
 	end
 end
 
--- Whether any consumable table carries the item: the test that decides what ns.CacheItemData caches.
 function ns.HasRawData(itemID)
 	return FindConsumableRow(itemID) ~= nil
 end
@@ -84,21 +65,14 @@ end
 -- Cold Item Retry
 --------------------------------------------------------------------------------
 
--- Budget for the cold-item retry below, sized to cover a slow login.
+-- Sized to cover a slow login.
 local DATA_RETRY_MAX_ATTEMPTS = 10
 local dataRetryAttempts = 0
 
 --[[
-    An id the server never answers for would spin the rescan forever: every
-    scan that ends with an unresolved bag item calls this, and the timer walks
-    straight back into another scan, so the pair is self-sustaining with no
-    outside signal to stop it. The timer therefore gets a budget of
-    DATA_RETRY_MAX_ATTEMPTS and then stops arming.
-
-    GET_ITEM_INFO_RECEIVED stays registered past the budget: the event is the
-    real signal, it costs nothing while idle, and an answer arriving late still
-    rebuilds. UnregisterDataRetry refunds the budget, so the next cold item
-    starts from a full one rather than inheriting an exhausted one.
+    Budgeted: an ID the server never answers would loop scan → timer → scan
+    forever. The event stays registered past the budget so a late answer still
+    rebuilds.
 ]]
 function ns.RegisterDataRetry()
 	ns.RequestItemInfoEvents("scan")
@@ -138,14 +112,9 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Looks up an item in the consumable tables, derives a canonical shape
-    (type, health/mana values, requirements, zones), and caches it for the
-    session. An item no consumable table carries returns "IGNORE" without
-    calling C_Item.GetItemInfo or writing to the cache, so the cache holds
-    consumables only and a cold non-consumable never arms a rescan. The item
-    facts (required level, vendor price, stack size, binding) come from the
-    row's columns; a row added since the last Validate Data run carries none
-    yet, and C_Item.GetItemInfo stands in for it, returning nil while cold.
+    A non-consumable returns "IGNORE" with no C_Item.GetItemInfo call, so it
+    never arms a rescan. A row added since the last Validate Data run has no
+    item facts yet; GetItemInfo stands in and returns nil while cold.
 ]]
 function ns.CacheItemData(itemID)
 	local cached = itemCache[itemID]
@@ -191,12 +160,8 @@ function ns.CacheItemData(itemID)
 		price = vendorPrice or 0,
 		maxStack = maxStack or 1,
 		--[[
-		    bindType 1 is Enum.ItemBind.OnAcquire. For a consumable that is
-		    the exact test for "the stack in the bag is soulbound": you can
-		    only be holding one by having acquired it, so the item's binding
-		    rule and the state of this copy always agree, and no per-slot
-		    lookup is needed. Bind-on-use (3) is deliberately NOT soulbound
-		    -- it stays tradeable right up until it is consumed.
+		    OnAcquire (1): a carried copy is always bound, so no per-slot lookup.
+		    Bind-on-use (3) stays tradeable until consumed, so it isn't soulbound.
 		]]
 		isSoulbound = (bindType == 1),
 		isBuffFood = false,
@@ -212,27 +177,14 @@ function ns.CacheItemData(itemID)
 		data.isBuffFood = isBuffFoodType
 		data.zones = BuildZoneSet(rawFoodAndWater[6])
 
-		--[[
-		    Arena usability (column 7), a static per-item property so it caches
-		    like the other fields. 1 = usable ONLY inside a PvP Arena (Star's
-		    Tears/Lament); 2 = conjured, so ALSO usable inside an arena. The
-		    scanner gates on the live instance type (IsInInstance) rather than a
-		    zone-ID list, so every arena is covered with no map IDs to maintain.
-		]]
+		-- Column 7: 1 = arena only, 2 = conjured (also arena-usable).
 		local arenaFlag = rawFoodAndWater[7]
 		data.arenaOnly = (arenaFlag == 1)
 		data.arenaUsable = (arenaFlag ~= nil)
 		--[[
-		    Conjured (flag 2) is a distinct selection axis from arena usability:
-		    arenaUsable is true for BOTH the arena-only drinks (flag 1) and
-		    conjured items (flag 2), so it can't tell them apart. isConjured
-		    records the conjured status on its own so the scanner can prefer a
-		    free, infinite conjured ration over an equal-value purchased,
-		    quested, or arena-only item (see IsBetter in Scanner-Ranking).
-		    Only flag 2 marks an item conjured: one that merely sells for
-		    nothing, or whose tooltip says Conjured Item without an arena value
-		    (Harvest Bread, Winter Veil Loaf), is ordinary food to Use Conjured
-		    Food & Water First.
+		    Only flag 2 is conjured: food that sells for nothing or says Conjured
+		    Item with no arena value (Harvest Bread, Winter Veil Loaf) is ordinary
+		    food to Use Conjured Food & Water First.
 		]]
 		data.isConjured = (arenaFlag == 2)
 
@@ -277,11 +229,6 @@ function ns.CacheItemData(itemID)
 	elseif rawHealthstone then
 		data.itemType = "healthstone"
 		data.healthValue = rawHealthstone[1]
-		--[[
-		    Required level for the bag-scan usable gate comes from the curated
-		    ns.HEALTHSTONES Required Level column, falling back to the item's
-		    Min Level. (Conjure downranking uses a separate table.)
-		]]
 		data.requiredLevel = rawHealthstone[2] or data.requiredLevel
 	elseif rawSoulstone then
 		data.itemType = "soulstone"
@@ -303,11 +250,7 @@ function ns.CacheItemData(itemID)
 		data.itemType = "explosive"
 		data.damageValue = rawExplosive[1]
 		data.requiredEngineering = rawExplosive[3] or 0
-		--[[
-		    Engineering specialization gate (e.g. 20222 = Goblin Engineer for
-		    the Global Thermal Sapper Charge). The scanner treats the item as
-		    unusable until the player knows this spell.
-		]]
+		-- An Engineering specialization (Goblin Engineer for the Global Thermal Sapper Charge).
 		data.requiredSpellID = rawExplosive[4]
 	end
 

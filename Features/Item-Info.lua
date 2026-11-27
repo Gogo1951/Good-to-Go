@@ -2,49 +2,25 @@ local _, ns = ...
 local L = ns.L
 local GetColor = ns.GetColor
 
---[[
-    Item-Info -- the session's C_Item.GetItemInfo answers, the links built from
-    them, and the GET_ITEM_INFO_RECEIVED subscription every feature waiting on a
-    cold item shares. Owned here rather than by any one feature, so each one's
-    item names fill in whichever features this client loads.
-]]
-
 --------------------------------------------------------------------------------
 -- Item Info Waiters
 --------------------------------------------------------------------------------
 
 --[[
-    GET_ITEM_INFO_RECEIVED has more than one waiter -- the consumable macros' bag
-    scan (ns.RegisterDataRetry); the Restock List, which defers an add, an
-    upgrade or a Starter List tick on the same cold-cache miss; the Staples
-    window showing items that have not loaded yet (ns.WarmItemCache); and a
-    What's Next? tooltip waiting on a grimoire's name. The client
-    answers this event once per item it resolves, which during a login is a
-    flood, so it is registered only while somebody is actually waiting.
-
-    Keyed rather than counted: a waiter that asks twice must not need to release
-    twice, and the last one out is what unregisters.
+    GET_ITEM_INFO_RECEIVED floods during a login, so it is registered only while
+    a waiter exists. Keyed rather than counted: a waiter that asks twice must
+    not need to release twice.
 ]]
 local itemInfoWaiters = {}
 
---[[
-    The misses ns.GetItemData is remembering, [itemID] = true. Kept beside the
-    waiters because the waiters decide how long a miss can be trusted, and the
-    last one out drops them all: see Session Item Data below.
-]]
+-- Beside the waiters, which decide how long a miss can be trusted (Session Item Data below).
 local rememberedMisses = {}
 
 local MODULE = "ItemInfo"
 
 local OnWindowItemInfoReceived -- Window Item Warming, below
 
---[[
-    Every answer goes to each waiter in this order: the Restocker forgets the
-    item's remembered miss and retries its rows first, then a window waiting
-    on it (ns.WarmItemCache) repaints, asking only once the miss is gone, then the
-    consumable macros rebuild if the item is one of theirs, then a What's Next?
-    row tooltip waiting on a grimoire's name is drawn again.
-]]
+-- The Restocker goes first: it forgets the item's remembered miss before anything retries.
 ns.RegisterEventModule(MODULE, function(_, itemID, success)
 	if ns.OnRestockerItemInfoReceived then
 		ns.OnRestockerItemInfoReceived(itemID, success)
@@ -63,7 +39,6 @@ function ns.RequestItemInfoEvents(key)
 	ns.SetModuleEvent(MODULE, "GET_ITEM_INFO_RECEIVED", true)
 end
 
--- A release by a key that isn't waiting changes nothing, so it leaves the event and the remembered misses be.
 function ns.ReleaseItemInfoEvents(key)
 	if itemInfoWaiters[key] == nil then
 		return
@@ -80,32 +55,17 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    C_Item.GetItemInfo answers nil for an item the client has not cached yet, which is
-    the normal state for a list of item ids on a fresh login -- nothing has put
-    those items in front of the player, so nothing has pulled their data. A
-    window that lists items (the Restocker's Staples window; the options
-    panels' item lists warm through the kit's Kit.WarmItems) renders those
-    rows as L["LOADING_ITEM"] and hands the cold ids here, with its own key
-    and the function that repaints it.
-
-    Each id is requested from the server, and the window's key holds a
-    GET_ITEM_INFO_RECEIVED waiter (ns.RequestItemInfoEvents) while any id it
-    handed in is still outstanding. Every answer the dispatcher above hears
-    repaints the windows waiting on that id and releases a window's waiter
-    once nothing it asked about is left. A repaint that re-enters with
-    still-cold ids just adds to the window's pending set. An id the client
-    has no item for, one whose answer already failed, or one already cached is
-    never requested: no answer may come for it, so a wait on it could hold the
-    event for the rest of the session.
+    A window holds a waiter while any cold id it handed in is outstanding. An
+    id that is unknown, already failed or already cached is never requested:
+    no answer may come, and a wait on it would hold the event all session.
 ]]
 
--- windowKey -> { [itemID] = true }, the ids each window still waits on.
+-- windowKey -> { [itemID] = true }
 local warming = {}
 
--- windowKey -> the function the window repaints itself with.
+-- windowKey -> repaint function
 local arriveHandlers = {}
 
--- [itemID] = true for every id whose answer came back failed this session.
 local failedItemIDs = {}
 
 local function WaiterKey(windowKey)
@@ -135,12 +95,7 @@ function ns.WarmItemCache(itemIDs, windowKey, onArrive)
 	end
 end
 
---[[
-    One GET_ITEM_INFO_RECEIVED answer, after the Restocker has forgotten the
-    item's remembered miss. A failed answer settles the wait too, and is
-    remembered so the repaint that follows does not ask again: its row keeps
-    its loading text.
-]]
+-- A failed answer settles the wait too, and is remembered so the repaint does not ask again.
 function OnWindowItemInfoReceived(itemID, success)
 	if success ~= true then
 		failedItemIDs[itemID] = true
@@ -162,53 +117,30 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    A plain memo over C_Item.GetItemInfo, and the link builder that rides on it. Distinct
-    from the consumable cache (Features/Macros-for-Consumables/Item-Cache.lua): that one is
-    enriched from the consumable tables and only ever holds consumables, while this one
-    answers for any item at all. Both are built per session and never saved. Reach for
-    the consumable cache when a consumable's own facts are wanted, and for this
-    when a name, an icon or a link is.
+    Any item, session-only. The consumable cache (Item-Cache.lua) holds only
+    consumables' own facts; reach here for a name, an icon or a link.
 ]]
 
--- Every C_Item.GetItemInfo answer this session, keyed by whatever was asked for.
+-- Keyed by whatever was asked for: an id on the hot paths, an item link at a merchant.
 local getItemInfoCache = {}
 
 --[[
-    A miss is remembered too, but only while somebody is waiting on
-    GET_ITEM_INFO_RECEIVED, which is when the same cold item gets asked about
-    over and over. Every answer that arrives re-runs the parked upgrades,
-    recipes and Starter List ticks, and each of those asks again about whatever
-    is still cold. During a login that is a flood, and without the remembered
-    miss every one of those asks would be a fresh C_Item.GetItemInfo call.
+    A miss is remembered only while a waiter listens, when every answer re-runs
+    the parked asks and a login floods with repeat calls. With nobody listening
+    the client's one answer lands unheard, so a remembered miss would strand
+    the item for the session; the last waiter out drops them all for the same
+    reason.
 
-    A miss taken while nobody is listening is never remembered. The client
-    announces its answer once, and with the event unregistered that answer
-    lands unheard, so a remembered miss would outlive it for the rest of the
-    session: a Restock List row stuck on a question-mark icon, and a later add,
-    upgrade or recipe for that item parked for an answer that already came.
-    The last waiter out drops every remembered miss for the same reason
-    (ns.ReleaseItemInfoEvents above). While somebody listens a miss is safe to
-    keep, because every answer heard reaches ns.OnRestockerItemInfoReceived
-    (Restocker-List.lua), which forgets that item's miss before it retries
-    anything. The one answer it skips is for an item that does not exist,
-    whose miss stays true. The price is a fresh call for every ask while
-    nothing waits, which a Restock List redraw pays once or twice per cold row.
+    Trap: scoping a miss to a frame by GetTime() fails too. The clock can read
+    the same across frames, so a miss outlives its unheard answer.
 
-    Not scoped to a frame by GetTime() instead. That clock can read the same
-    across consecutive frames, so a frame's miss can still be trusted after
-    its answer has landed unheard, and a deferral that reads it then is
-    stranded just the same.
-
-    Only ID-keyed misses are remembered. This cache is keyed by whatever the
-    caller asked with -- an id on the hot paths, an item link at a merchant --
-    and GET_ITEM_INFO_RECEIVED reports an id, so an id is the only key
-    ns.ForgetItemDataMiss can clear when the answer arrives.
+    Only id-keyed misses: the event reports an id, the only key
+    ns.ForgetItemDataMiss can clear.
 ]]
 function ns.ForgetItemDataMiss(itemID)
 	rememberedMisses[itemID] = nil
 end
 
--- Calls C_Item.GetItemInfo and saves the results; an ID-keyed miss is remembered only while a waiter listens.
 function ns.GetItemData(request)
 	local cached = getItemInfoCache[request]
 	if cached ~= nil then
@@ -246,18 +178,9 @@ function ns.GetItemData(request)
 end
 
 --[[
-    A printable, hoverable, shift-clickable link for an item, always.
-
-    C_Item.GetItemInfo returns nothing until the client has resolved an item, and on a
-    fresh login that is exactly when the Restocker wants to name things -- so a
-    bare-name fallback would print plain text most of the time. A link built by
-    hand from the id works the moment it is printed: the
-    client resolves |Hitem:| on hover, so the tooltip is correct even while the
-    cache behind it is still cold.
-
-    The color on the hand-built form is white rather than the item's quality
-    color, which is the one thing that cannot be known without the cache. The
-    cached link is preferred whenever it exists, and it carries the real color.
+    Always a working link: while the item is cold, one built by hand from the
+    id, which the client resolves on hover. It is white because quality color
+    is the one thing unknowable without the cache.
 ]]
 function ns.GetItemHyperlink(itemID, fallbackName)
 	local info = itemID and ns.GetItemData(itemID) or nil
@@ -274,15 +197,8 @@ function ns.GetItemHyperlink(itemID, fallbackName)
 end
 
 --[[
-    An item's name for the add-on's own windows, panels and tooltips: the
-    link's text in its quality color, with the square brackets taken off.
-    Brackets are how chat marks a link, so everything printed to chat keeps
-    them (ns.GetItemHyperlink above). Beside the item's icon they are clutter,
-    and the Restock List's own rows have never worn them.
-
-    ns.UnbracketItemLink takes a link the caller already holds. ns.GetItemLabel
-    names an item from its ID the way ns.GetItemHyperlink does, cold cache
-    included.
+    For the add-on's own windows, panels and tooltips: brackets beside an icon
+    are clutter. Chat keeps them, since that is how chat marks a link.
 ]]
 function ns.UnbracketItemLink(link)
 	return (link:gsub("|h%[(.-)%]|h", "|h%1|h"))

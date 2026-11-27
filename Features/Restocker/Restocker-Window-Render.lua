@@ -1,26 +1,15 @@
 local _, ns = ...
 local L = ns.L
 
---[[
-    The Restock List's redraw: the list in use gathered, narrowed to the rows
-    shown and laid out on pooled rows. The rows themselves are built and
-    painted by Restocker-Window-Rows.lua, which loads first.
-]]
 local PaintKeep = ns.PaintRestockKeep
 local RefreshItemName = ns.RefreshRestockItemName
 
--- Scratch list rebuilt on every render; never escapes this file.
 local restockItemList = {}
 
---[[
-    The items the last render drew, in order. A column heading's menu acts on
-    exactly these -- "every item shown" has to mean what the player is looking
-    at, category and filter included -- so it is kept from the render rather than
-    rebuilt when the menu opens.
-]]
+-- Kept from the render, so a column menu's "every item shown" is exactly what the player sees.
 local shownItems = {}
 
--- Read by the column menus (Restocker-Window-Menus.lua). Don't modify it.
+-- Read-only for callers.
 function ns.GetRestockShownItems()
 	return shownItems
 end
@@ -29,13 +18,7 @@ end
 -- Update
 --------------------------------------------------------------------------------
 
---[[
-    Repaint what the bags decide and nothing else: each shown row's Keep box, and
-    the orders counted under the list. For the moments the bags change with the
-    window open -- a merchant or bank visit filling them, a Keep amount being
-    typed -- where the rows themselves have not moved and a full redraw would
-    close an open menu for nothing.
-]]
+-- Only what the bags decide: a full redraw would close an open menu for nothing.
 function ns.RefreshRestockShortfall()
 	for _, row in ipairs(ns.restockRowPool) do
 		if row.isInUse then
@@ -45,11 +28,7 @@ function ns.RefreshRestockShortfall()
 	ns.UpdateRestockStatus()
 end
 
---[[
-    Use Restock List Food & Water Last reads which items the list in use holds,
-    so a redraw that changed them asks for a macro rebuild. Most redraws change
-    nothing: a filter keystroke, a category click, the window opening.
-]]
+-- Use Restock List Food & Water Last reads the list's members, so a change asks for a macro rebuild.
 local lastListName
 local lastListMembers = {}
 
@@ -77,12 +56,7 @@ local function ListMembershipChanged(listName, list)
 	return true
 end
 
---[[
-    What the removed row waits on: the list's every row and setting, the
-    filter and the category. Any change to one of them drops the removed row
-    (ns.restockLastRemoved) at the next redraw. Item names are left out, since
-    the client fills them in as they load.
-]]
+-- Item names are left out, since the client fills them in as they load.
 local function ListSignature(list)
 	local parts = { tostring(ns.restockListFilter or ""), tostring(ns.restockSelectedGroup or "") }
 	local itemIDs = {}
@@ -103,7 +77,6 @@ local function ListSignature(list)
 	return table.concat(parts, "|")
 end
 
--- A row drawn before the client had its item, repainted in place once the answer lands.
 function ns.RepaintRestockRows(itemID)
 	for _, row in ipairs(ns.restockRowPool) do
 		if row.isInUse and row.item and row.item.itemID == itemID then
@@ -114,12 +87,8 @@ end
 
 function ns.UpdateRestockList()
 	--[[
-	    Rows are about to be released to the pool and rebound to different items, so
-	    an open reputation menu has to go first -- it is anchored to a cell, and its
-	    pick would land on whatever item that cell ends up holding. A column menu
-	    goes with it: its count is of the rows shown, which are about to change.
-	    So does the bag menu, which offers what the list lacks and would go on
-	    offering it after the list, or the list in use, has changed.
+	    Rows are about to rebind: a reputation pick would land on another item, a
+	    column menu's count goes stale, and the bag menu offers what the list lacked.
 	]]
 	ns.CloseReputationMenu()
 	ns.CloseRestockColumnMenu()
@@ -128,7 +97,6 @@ function ns.UpdateRestockList()
 	local settings = ns.restockSettings
 	local currentList = settings.lists[settings.currentList]
 
-	-- The removed row goes once anything it waits on has changed since it was drawn (ListSignature).
 	local removed = ns.restockLastRemoved
 	if removed and removed.signature and removed.signature ~= ListSignature(currentList) then
 		ns.restockLastRemoved, removed = nil, nil
@@ -139,11 +107,6 @@ function ns.UpdateRestockList()
 		ns.RequestUpdate()
 	end
 
-	--[[
-	    Gather items (the list is keyed by itemID, so walk it with pairs), each
-	    under the client's current name. A row the client cannot name yet is
-	    watched while the window is open, and repainted as its answer arrives.
-	]]
 	local watchColdRows = ns.restockWindow and ns.restockWindow:IsShown()
 	local wasWatching = next(ns.restockColdRows) ~= nil
 	wipe(ns.restockColdRows)
@@ -158,14 +121,7 @@ function ns.UpdateRestockList()
 		ns.SyncRestockItemInfoSubscription()
 	end
 
-	--[[
-	    One view per redraw: each item's group resolved once and the filter lowered
-	    once, shared by the category pane and the render list.
-	]]
-	--[[
-	    The removed row is drawn in its place among the rest, sorted as it was,
-	    but counts in no category and is acted on by no column menu.
-	]]
+	-- The removed row is drawn in place but counts in no category and no column menu.
 	local removedItem = removed
 		and removed.listName == settings.currentList
 		and currentList[removed.item.itemID] == nil
@@ -180,11 +136,9 @@ function ns.UpdateRestockList()
 	local renderList = ns.BuildRestockRenderList(drawList, view)
 
 	--[[
-	    Release every pooled item row back to the hidden frame. A row can come back
-	    bound to another item, so its Keep box lets go of its item and its focus
-	    first, or the next keystroke would set that other item's amount; the box
-	    now showing the item being typed into takes the focus back below, with the
-	    cursor at the end and nothing selected, so the next digit adds to the number.
+	    A Keep box drops its item and focus first, or the next keystroke would set
+	    another item's amount; the box now showing the typed item takes focus back
+	    below, cursor at the end, so the next digit adds on.
 	]]
 	local typingItem
 	for _, row in ipairs(ns.restockRowPool) do
@@ -198,11 +152,6 @@ function ns.UpdateRestockList()
 		row:Hide()
 	end
 
-	--[[
-	    Every item is one row tall, so the running offset is just an accumulator.
-	    It also gives the scroll child its height, which is what keeps the scroll
-	    bar's range honest.
-	]]
 	local scrollChild = ns.restockWindow.scrollChild
 	local offset = 0
 	-- A late column measurement lands here first; the rows pick it up below.
@@ -233,11 +182,7 @@ function ns.UpdateRestockList()
 
 	scrollChild:SetHeight(math.max(1, offset))
 
-	--[[
-	    What stands in for the rows when there are none to draw: the empty list's
-	    invitation, or one line saying why a list that has items is showing none of
-	    them -- the filter, or a category whose last item just left.
-	]]
+	-- A list with items showing none says why: the filter, or a category just emptied.
 	local nothingShown = nil
 	if #renderList == 0 and #restockItemList > 0 then
 		nothingShown = view.filter and L["RESTOCKER_NO_MATCH_FILTER"] or L["RESTOCKER_NO_MATCH_GROUP"]

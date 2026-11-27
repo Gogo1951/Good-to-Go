@@ -3,18 +3,8 @@ local L = ns.L
 local COPPER_PER_GOLD = ns.COPPER_PER_GOLD
 
 --[[
-    What a merchant run prints, and the wait for its buys to land before it
-    does. Restocker-Merchant.lua sends the run and hands it over through
-    ns.AwaitMerchantRun.
-]]
-
---[[
-    The line a merchant run prints when gold turned a chunk away. money is the
-    purse before the run. When the Gold Reserve is on and the purse started at
-    or below it, the line says buying waits on the reserve, naming it, so a
-    player who forgot setting it knows why the vendor was skipped; a purse above
-    the reserve that simply ran short gets the plain line. The Restocker panel's
-    Example draws it too.
+    A purse that started at or under the Gold Reserve gets a line naming the
+    reserve, so a player who forgot setting it knows why the vendor was skipped.
 ]]
 function ns.BuildOutOfGoldLine(settings, money)
 	if settings.goldReserve and (money or 0) <= (settings.goldReserveAmount or 0) * COPPER_PER_GOLD then
@@ -24,11 +14,7 @@ function ns.BuildOutOfGoldLine(settings, money)
 	return L["RESTOCKER_OUT_OF_GOLD"]
 end
 
---[[
-    What a merchant run prints: filled and partly filled orders, counted apart
-    and each silent at zero. The counts are of what arrived in the bags, read
-    once the buys have landed (ReportRun), not of what was sent.
-]]
+-- The counts are of what arrived in the bags once the buys landed, not of what was sent.
 local function BuildRestockSummaryLines(ordersFilled, ordersPartlyFilled)
 	local lines = {}
 	if ordersFilled == 1 then
@@ -49,18 +35,14 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The server answers a run's buys after the run has been sent, and may turn
-    some away (a limited slot emptied by someone else, a stack refused), so the
-    summary waits for the bags: each BAG_UPDATE_DELAYED checks whether every
-    order's buys have arrived, and BUY_SETTLE_TIMEOUT seconds report whatever
-    has, which is what catches a buy that never comes.
+    The server answers after the run is sent and may turn buys away, so the
+    summary waits for the bags; the timeout reports whatever arrived, which
+    catches a buy that never comes.
 ]]
 local BUY_SETTLE_TIMEOUT = 3
 
--- The run whose buys are still landing, or nil.
 local pendingRun
 
--- How much of an order is in the bags now that wasn't when the run began.
 local function OrderDelivered(order)
 	return math.max(0, (C_Item.GetItemCount(order.itemID, false, false) or 0) - order.startCount)
 end
@@ -80,11 +62,8 @@ local function ReportRun(run)
 	end
 
 	--[[
-	    Each order counts once, however many slots it bought from. The > 0 half
-	    matters for a zero-amount order, which both the crafting-reagent path and a
-	    fully stocked Extra row can create: nothing arriving must never read as an
-	    order filled. An Extra row that did clear a slot passes on the same test,
-	    since anything at all covers a zero target.
+	    The > 0 test guards a zero-amount order (a reagent, or a fully stocked
+	    Extra row): nothing arriving must never read as an order filled.
 	]]
 	local ordersFilled = 0
 	local ordersPartlyFilled = 0
@@ -99,15 +78,7 @@ local function ReportRun(run)
 		end
 	end
 
-	--[[
-	    Report this run, and nothing more. What is still outstanding is the
-	    closing reminder's job (ns.RemindRestockShortfallAfterVisit) and the
-	    mini-map's Restocker Report's, so the summary never repeats them.
-
-	    Filled and partly filled are counted apart and printed apart, so a mixed run
-	    needs no combined string and a clean one never mentions partials. Both are
-	    silent at zero, which keeps a vendor that stocked nothing on our list quiet.
-	]]
+	-- This run only: what is still outstanding is the closing reminder's job, so the summary never repeats it.
 	for _, line in ipairs(BuildRestockSummaryLines(ordersFilled, ordersPartlyFilled)) do
 		ns:PrintMessage(line)
 	end
@@ -126,7 +97,6 @@ local function ReportRun(run)
 	end
 end
 
--- Called on BAG_UPDATE_DELAYED (Restocker-Events.lua): reports the pending run once all its buys are in.
 function ns.SettleMerchantBuys()
 	if pendingRun and AllBuysLanded(pendingRun) then
 		ReportRun(pendingRun)
@@ -149,10 +119,6 @@ function ns.ReportPendingMerchantRun()
 	end
 end
 
---[[
-    A run ns.RestockFromMerchant has just sent waits here for its buys to land,
-    and reports at once when it sent none.
-]]
 function ns.AwaitMerchantRun(run)
 	local anySent = false
 	for _, order in pairs(run.orders) do

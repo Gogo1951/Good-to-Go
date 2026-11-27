@@ -1,18 +1,10 @@
 local _, ns = ...
 
---[[
-	A SPELL_GROUPS spell learned in place of another (Dire Bear Form for Bear Form) taking over the macro the
-	other spell had, and noticing a group spell learned or lost with no page open.
-]]
-
 local NO_IDS = {}
 
 --[[
-	The spells a learned spell replaced in its SPELL_GROUPS group: those just before it no longer in the
-	spellbook, nearest first, up to the first that still is. Bear Form goes from the book once Dire Bear
-	Form is learned, so its WoW macro, wherever the player placed it, would never be rewritten again; the
-	new spell takes it over instead (see ns.HandOverMacro). members is the group as { name, id, learned }.
-	Returns their names, then their Rank 1 IDs.
+	Bear Form leaves the book once Dire Bear Form is learned, so its WoW macro would never be rewritten again;
+	the new spell takes it over. members is { name, id, learned }; returns names, then Rank 1 IDs.
 ]]
 local function ReplacedSpells(name, members)
 	local replaced, ids, at = {}, {}, nil
@@ -32,10 +24,8 @@ local function ReplacedSpells(name, members)
 end
 
 --[[
-	Gives a learned spell the WoW macro of the nearest spell it replaced that has one, settings and Duplicates
-	included, when it has no macro of its own yet. The sync then finds each of those macros by its
-	tag, rewrites it to cast the new spell and renames it (see SyncAt in Features/Enhanced-Spellbook/Macro-Sync.lua,
-	which reads macro.replaces). baseID is the learned spell's Rank 1 ID, replacedIds the replaced spells'.
+	Only while the learned spell has no macro of its own. The sync then finds the macros by tag, rewrites and
+	renames them (SyncAt reads macro.replaces).
 ]]
 function ns.HandOverMacro(baseID, replacedIds)
 	for _, from in ipairs(replacedIds) do
@@ -46,11 +36,7 @@ function ns.HandOverMacro(baseID, replacedIds)
 	end
 end
 
---[[
-	Whether a spell learned since the last build has a replaced spell's macro to take over, read from the
-	spell IDs alone, so a spell learned with no page open still rewrites that macro (see RefreshForSpells in
-	Features/Enhanced-Spellbook/Spellbook-Events.lua).
-]]
+-- Read from spell IDs alone, so a spell learned with no page open still takes its macro over.
 function ns.HandOverDue()
 	local class = select(2, UnitClass("player"))
 	for _, ids in ipairs((ns.SPELL_GROUPS or NO_IDS)[class] or NO_IDS) do
@@ -84,11 +70,7 @@ end
 
 local groupSpellsKnown -- as the last call to ns.GroupSpellLearned found them
 
---[[
-	Whether a SPELL_GROUPS spell was learned or lost since the last call, which can move a grouped macro to
-	another spell (ns.CastSpellName), so a spell learned with no page open still rewrites it (see
-	RefreshForSpells in Features/Enhanced-Spellbook/Spellbook-Events.lua). The first call only takes note.
-]]
+-- A group spell learned or lost can move a grouped macro to another spell. The first call only takes note.
 function ns.GroupSpellLearned()
 	local known = GroupSpellsKnown()
 	local changed = groupSpellsKnown ~= nil and known ~= groupSpellsKnown

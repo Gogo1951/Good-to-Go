@@ -1,23 +1,13 @@
 local _, ns = ...
 local L = ns.L
 
---[[
-    The Restock List's reputation wording: a required standing's label, its
-    entry in the standings menu, and the Rep column's explanation.
-
-    Loads before Restocker-Window-Columns.lua, whose column definitions hold
-    the Rep column's tooltip body from load.
-]]
+-- Loads before Restocker-Window-Columns.lua, whose column definitions read the Rep tooltip at load.
 
 --------------------------------------------------------------------------------
 -- Reputation Standings
 --------------------------------------------------------------------------------
 
---[[
-    A required-reputation standing's label, by its reaction code. No requirement
-    is our own word; a standing is the client's, in the player's gender, picked
-    the way the reputation pane picks it.
-]]
+-- No requirement is our own word; a standing is the client's, in the player's gender.
 function ns.GetStandingLabel(reaction)
 	if not reaction or reaction == 0 then
 		return L["RESTOCKER_REPUTATION_ANY"]
@@ -25,7 +15,6 @@ function ns.GetStandingLabel(reaction)
 	return GetText("FACTION_STANDING_LABEL" .. reaction, UnitSex("player"))
 end
 
--- The standings themselves are Data/Data.lua's; these two format them.
 local REPUTATION_STANDINGS = ns.REPUTATION_STANDINGS
 
 local function ReputationStandingByValue(value)
@@ -35,7 +24,7 @@ local function ReputationStandingByValue(value)
 			return standing
 		end
 	end
-	return REPUTATION_STANDINGS[1] -- default to "Any"
+	return REPUTATION_STANDINGS[1]
 end
 
 -- Menu label: the standing, and its discount for the row's right side ("10% Off"), or nil.
@@ -47,7 +36,6 @@ local function ReputationMenuText(standing)
 	return label
 end
 
--- The Rep column's explanation, naming the four standings by the client's own labels.
 local function ReputationTooltipBody()
 	local labels = {}
 	for index = 2, #REPUTATION_STANDINGS do

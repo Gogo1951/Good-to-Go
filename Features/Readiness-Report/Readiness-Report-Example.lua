@@ -4,20 +4,10 @@ local Clause = ns.ReadinessClause
 local Line = ns.ReadinessLine
 
 --[[
-    Readiness-Report-Example -- the Readiness Report panel's Example: every
-    line the report would print with something wrong for every switch that is
-    on (buffs, items, character; the title alone when none is), so each switch
-    turned on visibly adds to it, built with the same clauses and keys as
-    ns.BuildReadinessLines (Readiness-Report.lua). Well Fed stands under
-    Expiring Soon while that switch is on, rather than under Missing Buffs as
-    well, so no buff is listed as both missing and running out. A switch the panel hides on
-    this client (flask, pet, spec) never shows here either, and nor does a line
-    the real report keeps to a class this character isn't: the Soulstone
-    (Warlocks), the Mana Gem (Mages) and a mana potion (classes that use mana).
-    Well Fed, the pet's food, scrolls, the Soulstone and the Mana Gem go
-    through the real report's own checks (ns.ReadinessAsksWellFed,
-    ns.ShouldTrackPetFood and the rest), so a macro switched off, a pet not
-    out or a conjure spell not yet learned keeps them out of here too.
+    Every line the report would print for each switch that is on, through the
+    real report's clauses and gates, so whatever keeps a line out of the report
+    keeps it out here too. Well Fed shows under Expiring Soon while that switch
+    is on, so no buff reads as both missing and running out.
 ]]
 
 local function FirstQuestionableLink()

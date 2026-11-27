@@ -1,35 +1,13 @@
 local _, ns = ...
 
---[[
-    Scanner-Ranking -- how the bag scan (Features/Macros-for-Consumables/Scanner/Scanner-Inventory.lua)
-    picks between items: the best item per macro category, the RANKING_PRIORITY
-    tiebreak ladder and the ranked candidate lists of the multi-use macros.
-    Shared with the scan as ns.ScanRanking, to which Scanner-Diagnostics.lua
-    adds the candidates Diagnostics keeps.
-]]
-
 --------------------------------------------------------------------------------
 -- Best Item Tracking
 --------------------------------------------------------------------------------
 
---[[
-    Per-category winner records and ranked-candidate lists, built from the
-    definition registry (ns.REGISTERED_MACRO_DEFINITIONS) instead of hardcoded here:
-    every registered definition with an itemTypes set gets a winner record,
-    and ranked definitions also get a topIDs list plus a candidate
-    collector. Definitions register from Features/Macros-for-Consumables/Macros/*.lua, which load
-    after this file, so the tables are built lazily on the first scan
-    (BuildSelectionTables below) — every scan happens long after load.
-]]
+-- Built lazily on the first scan: the definitions register after this file loads.
 local best = {}
 
---[[
-    Expose the scanner's live best table for diagnostics. ScanBags resets and
-    repopulates these entries in place every pass, so the reference always
-    reflects the last scan. Read-only for consumers (Diagnostics' context
-    report); the scanner itself owns all writes. This is what lets the context
-    report show the per-category winner for every type, not just bestFoodID.
-]]
+-- Refilled in place every pass, so readers always see the last scan. Read-only outside the scanner.
 ns.bestSelection = best
 
 local rankedCandidates = {}
@@ -78,178 +56,59 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    RANKING_PRIORITY is the single source of truth for how consumables are
-    ranked. Both comparator forms — IsBetter's single-winner test and the
-    ranked lists' pairwise sort (CompareRankedCandidates) — are generated from
-    this one ordered list by CompareRecords, so reordering a step here is the
-    only edit needed to change the ranking everywhere.
+    The one ranking order, for both IsBetter and the ranked sort; reordering a
+    step is the only edit needed. A step with buffFood, gatedOnAllowConjuredFirst
+    or gatedOnAllowRestockLast runs only when the caller passes that gate.
 
-    Step shape:
-      field — record field to compare
-      kind  — "bool" (truthy side wins), "higher", or "lower"
-      buffFood                   — step runs only when the caller's buff food
-                                   rank matches: "first" (Buff Duty's buff food
-                                   pick, and the Food macro while you're missing
-                                   Well Fed) or "last" (plain food wins,
-                                   buff food only when nothing else is left)
-      falsyWins                  — a "bool" step where the falsy side wins
-      gatedOnAllowConjuredFirst  — step runs only when the caller allows
-                                   conjured-first (Food and Water, while Use
-                                   Conjured Food & Water First holds)
-      gatedOnAllowRestockLast    — step runs only when the caller allows
-                                   restock-last (Food and Water, while Use
-                                   Restock List Food & Water Last holds)
-      truthyWinsWhenPreferHybrid — direction flag for the hybrid step: truthy
-                                   wins when the caller prefers hybrids (Food);
-                                   falsy wins otherwise (Water, ranked potions)
-
-    Boolean fields are compared RAW (~=), never coerced. Both sides are
-    FillRecord output, built from the item cache's own true/false flags, so a
-    nil never reaches a step; a new flag has to keep that true.
+    Booleans compare RAW (~=), never coerced: FillRecord builds both sides from
+    the cache's true/false flags, so a nil never reaches a step. A new flag
+    must keep that true.
 ]]
 
 local RANKING_PRIORITY = {
-	--[[
-	    Buff food last while Eat Buff Food When Already Well Fed is off
-	    (ns.buffFoodRank "last"): plain food then wins, and buff food is
-	    eaten only when it's all the bags hold, rather than the macro coming
-	    up empty. While it's on, buff food competes on what it restores.
-	    Buff Duty ranks with "first" for its own buff food pick, and so does
-	    the Food macro while you're missing Well Fed (BuffFoodRank below).
-	]]
+	-- "last": buff food is eaten only when it's all the bags hold, rather than the macro coming up empty.
 	{ field = "isBuffFood", kind = "bool", buffFood = "first" },
 	{ field = "isBuffFood", kind = "bool", buffFood = "last", falsyWins = true },
 
 	--[[
-	    Conjured food and water next, when the player asked for it (Use
-	    Conjured Food & Water First, on Food and Water only). The one place
-	    a burn-first reason outranks the restore steps, and only by that
-	    choice: conjured items cost nothing and vanish at logout, so a player
-	    handed a weaker conjured water would rather drink it than buy the
-	    vendor one. Buff food ranked "first" stays above it, so the Food
-	    macro still eats buff food while you're missing Well Fed and
-	    conjured-first decides among the rest. Gated off, the ordinary
-	    isConjured tiebreak below still applies.
-	    Pet food picks the lowest food that still gives full happiness; there
-	    are no custom sort orders.
+	    The one burn-first reason above the restore steps, and only by the
+	    player's choice: conjured items are free and vanish at logout.
 	]]
 	{ field = "isConjured", kind = "bool", gatedOnAllowConjuredFirst = true },
 
-	-- Percent-based restores beat flat values.
 	{ field = "isPercent", kind = "bool" },
 
-	--[[
-	    Higher restore/damage, raw from the item data. No bonuses are folded
-	    in, so this compares exactly what the item restores.
-	]]
 	{ field = "value", kind = "higher" },
 
-	--[[
-	    Off the Restock List next, when the player asked for it (Use Restock
-	    List Food & Water Last, on Food and Water only): of two items that
-	    restore the same amount, eat the one not on the Restock List, and
-	    keep the list's stock for later. Below value, so it never picks
-	    the weaker item.
-	]]
+	-- Below value, so it never picks the weaker item.
 	{ field = "isOffRestockList", kind = "bool", gatedOnAllowRestockLast = true },
 
 	--[[
-	    THE BURN-FIRST LADDER. Three tiebreaks among items that restore the
-	    SAME amount, ordered by SHELF LIFE -- spend the copy that will be
-	    worth the least to you soonest:
-
-	      isConjured  -- gone at logout, so its shelf life is this session
-	                     and nothing else on the list expires on a timer.
-	                     Free to replace, too, so spending it costs nothing.
-	      hasZones    -- survives logout, but is dead weight the moment you
-	                     leave the zone. Spend it while it still does
-	                     something.
-	      isSoulbound -- keeps its value indefinitely, but only for THIS
-	                     character: it cannot be mailed to an alt, traded,
-	                     or sold.
-
-	    Then price, then isHighStack -- both below, with their own notes. They
-	    rank lower because neither is about shelf life: an item that vendors
-	    for nothing has simply already lost its gold value, and stack size is
-	    pure bag economy.
-
-	    This ORDER is the whole specification. Moving a line changes the
-	    preference; nothing else needs to change with it.
-
-	    They sit BELOW value deliberately. Promote any of them above it and a
-	    zone-locked Superior Mana Draught (560) beats a Super Mana Potion
-	    (1800) in a battleground -- "worthless elsewhere" is a reason to spend
-	    a tie, never a reason to drink the weaker potion.
-
-	    The three above plus isHighStack are ladder steps, never numeric
-	    bonuses added into value: a bonus can outweigh a genuine restore
-	    difference of 1 or 2, and two equal bonuses cancel each other instead
-	    of ranking.
-
-	    Uniform inside a category is a no-op, which covers most of them:
-	    zones and binding only really vary across the potion and bandage
-	    families. Note isConjured is set from the food/water data alone, so
-	    every healthstone, soulstone and mana gem candidate reads false,
-	    conjured or not -- harmless, because a step that reads the same for
-	    every candidate in a category never separates two of them.
+	    Burn-first, by shelf life: conjured (gone at logout), zone-locked (dead
+	    weight elsewhere), soulbound (this character only). BELOW value on
+	    purpose, or a zone-locked Superior Mana Draught (560) beats a Super Mana
+	    Potion (1800) in a battleground. Steps, never bonuses folded into value:
+	    a bonus can outweigh a real restore gap of 1 or 2.
 	]]
 	{ field = "isConjured", kind = "bool" },
 	{ field = "hasZones", kind = "bool" },
 	{ field = "isSoulbound", kind = "bool" },
 
-	--[[
-	    Cheaper wins, and it sits ABOVE isHighStack because a 0 here does not
-	    mean "cheap", it means the item has NO vendor price at all: drinking
-	    it forgoes nothing, which outweighs any bag-space argument. The
-	    Auchenai potions are the live case -- they vendor for nothing, so
-	    they burn ahead of the injectors.
-
-	    A separate "has no sell price" step would be redundant. Ascending
-	    price already sorts the zero-price items to the front; only a step
-	    ranked above this one, such as isHighStack, can keep them behind.
-	]]
+	-- Above isHighStack: a 0 price forgoes nothing, so the Auchenai potions burn ahead of the injectors.
 	{ field = "price", kind = "lower" },
 
-	--[[
-	    Bag economy, and the weakest reason on the list: injectors (stack 20)
-	    ahead of the potions they are made from spares the reagents and the
-	    slot. Last of the burn-first steps, so it only separates items already
-	    equal on restore, shelf life AND price.
-	]]
+	-- Bag economy, the weakest reason: injectors (stack 20) ahead of the potions they're made from.
 	{ field = "isHighStack", kind = "bool" },
 
-	--[[
-	    Hybrid food/water: the Food macro prefers hybrids; Water and the
-	    ranked potion lists prefer dedicated items.
-	]]
 	{ field = "isHybrid", kind = "bool", truthyWinsWhenPreferHybrid = true },
 
-	-- Fewer copies in bags: burn the smaller pile first.
 	{ field = "count", kind = "lower" },
 
-	--[[
-	    Final, never-equal tiebreak. Without it, two items that match on every
-	    other field compare equal, so the winner is whichever the pairs() scan
-	    over slotItems happened to reach first. That order is not stable
-	    between an in-session rescan (a wiped-and-rebuilt table) and a fresh
-	    table after /reload, so the selection could flip for identical bags —
-	    the item would only "update" after a reload. Comparing itemID last
-	    makes the pick deterministic, so a buy-triggered rescan and a reload
-	    always agree; it also keeps table.sort's instability from reordering
-	    equal ranks between scans and churning macro rewrites.
-	]]
+	-- Never equal: pairs() and table.sort order aren't stable, so a full tie would flip picks and churn rewrites.
 	{ field = "id", kind = "lower" },
 }
 
---[[
-    Returns true when record `a` outranks record `b` under RANKING_PRIORITY,
-    plus the field name of the step that decided it (nil when every step
-    compared equal). Only the diagnostics Selection Report reads the second
-    value -- it is what turns "this item lost" into "it lost on price" -- and
-    returning it costs nothing on the hot path, but every other caller must
-    take the first value alone so the extra return can never leak into a
-    boolean or a table constructor.
-]]
+-- The second return, the deciding field, is for Diagnostics; every other caller takes the first value alone.
 local function CompareRecords(a, b, buffFood, preferHybrid, allowConjuredFirst, allowRestockLast)
 	for i = 1, #RANKING_PRIORITY do
 		local step = RANKING_PRIORITY[i]
@@ -277,13 +136,7 @@ local function CompareRecords(a, b, buffFood, preferHybrid, allowConjuredFirst, 
 	return false, nil
 end
 
---[[
-    The buff food rank a single-winner definition compares with: "first" for
-    the Food macro while you're missing Well Fed (buffFoodFirstWhenUnfed,
-    ns.buffFoodFirst), otherwise the scan's ns.buffFoodRank for definitions
-    that take buff food, and no buff food step for the rest. The scan and the
-    diagnostics both ask here, so they always rank the same way.
-]]
+-- The scan and Diagnostics both ask here, so they always rank the same way.
 local function BuffFoodRank(definition)
 	if definition.buffFoodFirstWhenUnfed and ns.buffFoodFirst then
 		return "first"
@@ -292,17 +145,9 @@ local function BuffFoodRank(definition)
 end
 
 --[[
-    THE one place a comparison field is derived. The running winner, the
-    ranked candidate lists and the diagnostics retention all fill through
-    here, so both sides of every comparison are built the same way by
-    construction -- there is no second reading of an item to drift from the
-    first. A new ladder step goes in the step list above, this function,
+    THE one place a comparison field is derived, so both sides of every
+    comparison match. A new ladder step goes in RANKING_PRIORITY, here,
     ResetBest and CopyCandidateRecord.
-
-    score arrives as a parameter rather than being read off the item because
-    each category picks its own field (health, mana, damage) in its score()
-    hook. isOffRestockList reads scanRestockList, the current Restock List
-    ScanBags captures before its bag walk.
 ]]
 local scanRestockList = {}
 
@@ -322,12 +167,7 @@ local function FillRecord(record, candidate, candidateCount, candidatePrice, sco
 	return record
 end
 
---[[
-    Single-winner form: does this bag item beat the current best entry? Both
-    sides are FillRecord output, so CompareRecords reads the same field names
-    on each. The scratch record is reused across the whole scan -- FillRecord
-    writes every field, so nothing leaks from one candidate to the next.
-]]
+-- Reused across the scan: FillRecord writes every field, so nothing leaks between candidates.
 local candidateRecord = {}
 
 local function IsBetter(
@@ -361,20 +201,7 @@ end
 -- Ranked Candidates (Multi-Use Macros)
 --------------------------------------------------------------------------------
 
---[[
-    The ranked definitions (ranked = true — the ns.MULTI_USE_MACRO_TYPES
-    categories) stack up to ns.MULTI_USE_MAX_ITEMS /use lines per macro, so
-    instead of tracking a single running winner they collect every usable
-    candidate during the scan into rankedCandidates (declared above, keyed
-    by typeName from the registry) and are ranked once it completes. The
-    other categories keep the single-winner IsBetter path.
-]]
-
---[[
-    Each list slot reuses its record from the scan before, kept per type in
-    rankedRecordPools: FillRecord writes every field, and the diagnostics copy
-    a record before they keep it.
-]]
+-- Slots reuse last scan's records: FillRecord writes every field, and Diagnostics copies before keeping.
 local rankedRecordPools = {}
 
 local function AddRankedCandidate(typeName, data, score, count)
@@ -393,14 +220,6 @@ local function AddRankedCandidate(typeName, data, score, count)
 	list[index] = FillRecord(record, data, count, data.price, score)
 end
 
---[[
-    Pairwise sort form for the ranked categories — the same RANKING_PRIORITY
-    chain with buffFood, preferHybrid, allowConjuredFirst and
-    allowRestockLast always false: percent heals first, then higher value,
-    the burn-first steps, price, non-hybrid, fewer copies, itemID. Ranked
-    records come from FillRecord like every other record, so the isBuffFood,
-    conjured-first and restock-last steps are gated off rather than absent.
-]]
 local function CompareRankedCandidates(a, b)
 	-- First value only: table.sort must see a plain boolean comparator.
 	local outranks = CompareRecords(a, b, false, false, false, false)
@@ -425,7 +244,6 @@ local function RankCandidates()
 	end
 end
 
--- The current Restock List, which FillRecord reads; ns.ScanBags sets it before its bag walk.
 local function SetScanRestockList(list)
 	scanRestockList = list
 end

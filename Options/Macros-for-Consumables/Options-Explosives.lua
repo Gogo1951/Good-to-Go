@@ -8,23 +8,10 @@ local Spacer = Kit.Spacer
 local MacroOptions = ns.MacroOptions
 local Body = MacroOptions.Body
 
---[[
-    The Explosives page under Consumable Macros. It opens with what its
-    macros do, then the settings that shape them; the macros themselves are
-    switched on and off on Consumable Macros. Every setting lives on the
-    AceDB profile. The page carries the off line while Consumable Macros is
-    off (MacroOptions.Page), and its settings stay editable so they can be
-    set up first. While the Explosives macro itself is off, Click Layout
-    hides and a line under the intro says where to switch it on. Registered as a builder function (Options/Options.lua), so
-    AceConfig rebuilds it on every open and NotifyChange.
-]]
-
--- The Explosives macro is switched off on Consumable Macros, so Click Layout has nothing to set up.
 local function ExplosivesMacroOff()
 	return not ns.IsMacroEnabled("Explosive")
 end
 
--- Which click tosses the explosive and which sets it off at your feet.
 function ns.BuildExplosivesOptions()
 	local args = {
 		descIntro = Desc(L["OPTIONS_EXPLOSIVES_DESCRIPTION"], 1),

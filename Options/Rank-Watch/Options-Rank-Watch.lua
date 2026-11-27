@@ -12,17 +12,6 @@ local Spacer = Kit.Spacer
 -- Rank Watch Panel
 --------------------------------------------------------------------------------
 
---[[
-    The switch, then, while Rank Watch is on, the two grace periods and how Rank Watch speaks up. Under the
-    whisper toggle, while it is on: who whispers for the group right now, the tip's composer, and how a player
-    opts out with the opt-out offer and reply's composer (Options/Options-Message-Composer.lua). The tip has its
-    own form for a hunter's pet and a warlock's demon; the print is fixed. Ability Alerts While Leveling has
-    its own switch and a panel under Enhanced Spellbook
-    (Options/Enhanced-Spellbook/Options-Ability-Alerts.lua). Which ranks it watches and the players it leaves
-    alone are the Reported Ranks and Ignored Players panels under this one. Every setting is account-wide
-    (ns.db.global.rankWatch; Data/Default-Settings.lua says why).
-]]
-
 local function Settings()
 	return ns.RankWatchSettings()
 end
@@ -47,10 +36,7 @@ local function Toggle(key, name, desc, order)
 	}
 end
 
---[[
-    The Examples' sample cast: the lowest and highest ranks of one of the player's own class's abilities, so the
-    lines show spells the player knows, and the class they belong to. Any class serves where theirs has none.
-]]
+-- The player's own class, so the Examples show spells they know. Any class serves where theirs has none.
 local function SampleRows()
 	local ladders = ns.RankWatchLadders()
 	local _, playerClass = UnitClass("player")
@@ -66,10 +52,7 @@ local function SampleRows()
 	return nil
 end
 
---[[
-    A pet's sample cast: the lowest and highest ranks of one of its owner's pet abilities, or the player's own
-    sample where this client's pets have none with two ranks.
-]]
+-- The player's own sample where this client's pets have none with two ranks.
 local function SamplePetRows(owner)
 	for _, ladder in ipairs(ns.RankWatchPetLadders()[owner] or {}) do
 		if #ladder.rows > 1 then
@@ -79,7 +62,6 @@ local function SamplePetRows(owner)
 	return SampleRows()
 end
 
--- The demon a warlock's sample names: its kind, as the client names the creature family.
 local function SampleDemonName()
 	local info = C_CreatureInfo
 		and C_CreatureInfo.GetCreatureFamilyInfo
@@ -87,10 +69,7 @@ local function SampleDemonName()
 	return info and info.name or ns.SAMPLE_PET_NAME
 end
 
---[[
-    Each form of the tip with its sample parts: the cast linked and named, the newer rank's level and, for a
-    pet's form, the pet. fill and build are the composer's, through the same builders the real whisper uses.
-]]
+-- Through the same builders the real whisper uses.
 local TIP_SAMPLES = {
 	{
 		rows = SampleRows,
@@ -144,7 +123,6 @@ local function TipBuild(sample)
 	end
 end
 
--- The tokens line: each %s a token, drawn in blue.
 local function Tokens(key, ...)
 	local tokens = { ... }
 	return function()
@@ -157,7 +135,7 @@ local function Tokens(key, ...)
 	end
 end
 
--- The caster is the house roster's name for the sample spell's class, borrowing a name for a class with none.
+-- Borrows a name for a class the house roster has none for.
 local function PrintExample()
 	local castRow, betterRow, class = SampleRows()
 	if not castRow then
@@ -167,7 +145,7 @@ local function PrintExample()
 	return ns.PrintedExampleLines(ns.BuildRankWatchOtherLine(name, castRow, betterRow))
 end
 
--- An Example shows only while its message is on, so it never shows a message the player hasn't chosen.
+-- So an Example never shows a message the player hasn't chosen.
 local function WhisperOff()
 	return not Settings().whisper
 end
@@ -186,10 +164,7 @@ local function WhispererText()
 	return L["RANK_WATCH_WHISPERER_NONE"]
 end
 
---[[
-    Who whispers for the group: a silver line under the whisper toggle, in the control column like Kit.Helper's,
-    read each time the panel draws. Only one Rank Watch or Rank Sentinel in a group whispers.
-]]
+-- Only one Rank Watch or Rank Sentinel in a group whispers; read each time the panel draws.
 local function WhispererHelper(order, hidden)
 	return Kit.Row(order, hidden, {
 		Kit.Label(" ", nil, Kit.LABEL_WIDTH),
@@ -199,10 +174,7 @@ local function WhispererHelper(order, hidden)
 	})
 end
 
---[[
-    A grace period: a label, then a dropdown of 0 to 5 levels beside it. The check takes this many levels off the
-    caster's level before asking which rank they could have, so a rank only just reached isn't reported.
-]]
+-- Levels off the caster's, so a rank only just reached isn't reported.
 local GRACE_MAX = 5
 
 local function GraceValues()
@@ -232,7 +204,6 @@ local function GraceRow(args, key, name, desc, order)
 	})
 end
 
--- The standalone add-on's notice and the space above it, shown only while that add-on runs.
 local function StandaloneHidden()
 	return not ns.RankWatchStandaloneTitle()
 end
@@ -250,7 +221,7 @@ function ns.BuildRankWatchOptions()
 			space0 = Spacer(2),
 			switch = Kit.FeatureSwitch("rankWatch.enabled", 3),
 			standaloneSpace = Spacer(3.1, StandaloneHidden),
-			-- A status line: it shows only while another add-on changes what this page does.
+			-- Shows only while another add-on changes what this page does.
 			standalone = Kit.StatusLine(function()
 				if StandaloneHidden() then
 					return nil
@@ -263,7 +234,7 @@ function ns.BuildRankWatchOptions()
 			graceSpace1 = Spacer(5.1),
 			graceDescription = Desc(L["RANK_WATCH_GRACE_DESCRIPTION"], 5.2),
 			graceSpace2 = Spacer(5.3),
-			-- The two grace period rows (GraceRow, below) at 6 and 7, a blank line between them.
+			-- The grace period rows (GraceRow, below) fill 6 and 7.
 			graceSpace3 = Spacer(6.5),
 
 			messagesSpace0 = Spacer(9),
@@ -342,7 +313,7 @@ function ns.BuildRankWatchOptions()
 	}, 12)
 	GraceRow(options.args, "graceMaxLevel", "RANK_WATCH_GRACE_MAX_LEVEL", "RANK_WATCH_GRACE_MAX_LEVEL_DESCRIPTION", 6)
 	GraceRow(options.args, "graceLeveling", "RANK_WATCH_GRACE_LEVELING", "RANK_WATCH_GRACE_LEVELING_DESCRIPTION", 7)
-	-- While Rank Watch is off, only its description, its switch and the standalone add-on's notice show.
+	-- Last: it wraps only args already present.
 	Kit.HideAllExcept(
 		options.args,
 		RankWatchOff,

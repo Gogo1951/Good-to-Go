@@ -8,13 +8,6 @@ local CreateGearButton = ns.CreateSpellbookGearButton
 local Layout = ns.LayoutSpellbookPage
 local Refresh = ns.RefreshSpellbookPage
 
---[[
-	The Spell Book page's controls row along the top of its window (the filter box, the filter and sort dropdowns
-	and the settings gear) and its footer along the bottom (the legend, Mark All Spells As Placed and the macro
-	slot counts). Features/Enhanced-Spellbook/Spellbook-Page.lua builds the page between them.
-]]
-
--- The window's bands, in UI units from its edges, as Features/Enhanced-Spellbook/Spellbook-Page.lua sets them.
 local TITLE_HEIGHT, CONTROLS_HEIGHT = ns.SPELLBOOK_TITLE_HEIGHT, ns.SPELLBOOK_CONTROLS_HEIGHT
 local FOOTER_HEIGHT, FRAME_BORDER = ns.SPELLBOOK_FOOTER_HEIGHT, ns.SPELLBOOK_FRAME_BORDER
 
@@ -23,10 +16,6 @@ local LEGEND_COLOR = ns.HexToColorList("BFBFBF")
 local GLOW_SWATCH = ns.HexToColorList("FFE27A")
 local GLOW_SWATCH_FILL = ns.HexToColorList("2E2A24")
 
---[[
-	The general and character macro slots used, at the footer's right: "Macro Slots" in TITLE gold, the list
-	names in MUTED gray, the counts in TEXT white, and a full list's count in OFF red.
-]]
 local function SlotCount(label, used, max)
 	local count = used .. "/" .. max
 	local color = GetColor(used >= max and "OFF" or "TEXT")
@@ -47,13 +36,12 @@ end
 
 ns.UpdateSpellbookMacroCount = UpdateMacroCount
 
--- Shared with the What's Next? tab's controls row (Features/Enhanced-Spellbook/Spellbook-Widgets.lua).
 local AddMenuTooltip = ns.AddSpellbookMenuTooltip
 local ApplyElvUISkin = ns.ApplySpellbookElvUISkin
 local CreateDropdown = ns.CreateSpellbookDropdown
 local CreateFilterBox = ns.CreateSpellbookFilterBox
 
--- The footer's legend at its left: a dark square ringed in the glow's gold, for a spell not on the bars yet.
+-- The legend: a dark square ringed in the glow's gold, for a spell not on the bars yet.
 local function BuildLegend(page)
 	local glow = CreateFrame("Frame", nil, page)
 	glow:SetSize(16, 16)
@@ -71,10 +59,6 @@ local function BuildLegend(page)
 	page.legendLabel = label
 end
 
---[[
-	Builds the page's controls row and footer, after its parchment and before its page strip; the page's
-	Layout and Refresh redraw what they show.
-]]
 function ns.BuildSpellbookControls(page)
 	local function SetupSettingsMenu(_, rootDescription)
 		rootDescription:CreateHeader(SETTINGS, L["ADDON_SHORT_NAME"])
@@ -112,10 +96,7 @@ function ns.BuildSpellbookControls(page)
 				ns.SetShowUnlearned
 			)
 		end
-		--[[
-			Highlight Unplaced Spells Again: undoes Mark All Spells as Placed, so every spell not on the bars
-			glows again. Listed only while something is marked, since there's nothing to undo otherwise.
-		]]
+		-- Listed only while something is marked, since there's nothing to undo otherwise.
 		if ns.HasPlacedMarks() then
 			rootDescription:CreateSpacer()
 			rootDescription:CreateDivider()
@@ -148,7 +129,6 @@ function ns.BuildSpellbookControls(page)
 		ns.OpenMacroMenuPanels(self, SetupSettingsMenu, true)
 	end)
 
-	-- the filter box: the page lists only the macros whose names hold its text, as it is typed
 	local filterBox = CreateFilterBox(page, L["PAGE_FILTER"], function(text)
 		if text ~= (page.filterText or "") then
 			page.filterText = text
@@ -158,11 +138,7 @@ function ns.BuildSpellbookControls(page)
 	end)
 	page.filterBox = filterBox
 
-	--[[
-		The filter dropdown: under Sort By Category it shows one school (spellbook tab), under Sort By School one
-		category, or all of them (page.groupFilter nil). It offers only those the page's macros fill, in page
-		order, and forgets its pick when the sort changes.
-	]]
+	-- Offers only the groups the page's macros fill, in page order, and forgets its pick when the sort changes.
 	local function FilterChoices()
 		local choices, seen = {}, {}
 		if ns.PageSort() == "category" then
@@ -236,7 +212,6 @@ function ns.BuildSpellbookControls(page)
 	end
 	page.UpdateFilterButton()
 
-	-- The sort dropdown: Sort By Category or Sort By School (ns.PageSort).
 	local SORTS = { { "category", "SORT_BY_CATEGORY" }, { "school", "SORT_BY_SCHOOL" } }
 	local function SortLabel()
 		for _, sort in ipairs(SORTS) do
@@ -279,11 +254,7 @@ function ns.BuildSpellbookControls(page)
 	-- the footer: the legend at its left, the macro slot counts at its right
 	BuildLegend(page)
 
-	--[[
-		Stops every macro glowing, whether or not it's on the bars, at once and without asking: the settings
-		menu undoes it. A spell learned later still glows until it is placed. It sits in the footer beside the
-		legend for the glow it clears, shown only while some macro glows (ns.UpdateMarkPlacedButton).
-	]]
+	-- At once and without asking, since the settings menu undoes it; shown only while some macro glows.
 	local markPlaced = CreateFrame("Button", nil, page, "UIPanelButtonTemplate")
 	page.markPlaced = markPlaced
 	markPlaced:SetText(L["SETTINGS_MARK_ALL_PLACED"])
@@ -319,10 +290,7 @@ function ns.BuildSpellbookControls(page)
 	slotsHover:SetScript("OnHide", HideTooltip)
 end
 
---[[
-	Shows Mark All Spells as Placed only while some macro glows; bars is ns.ScanActionBars's result when the
-	caller has it. Run on every layout and every glow redraw.
-]]
+-- bars is ns.ScanActionBars's result when the caller has it.
 function ns.UpdateMarkPlacedButton(page, bars)
 	page.markPlaced:SetShown(ns.AnyMacroGlows(bars or ns.ScanActionBars()))
 end

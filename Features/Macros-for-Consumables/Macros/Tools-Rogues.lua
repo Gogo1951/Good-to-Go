@@ -5,34 +5,7 @@ local MACRO_CONFIG = ns.MACRO_CONFIG
 -- Poisons Macro (Rogue)
 --------------------------------------------------------------------------------
 
---[[
-    Rogue-only, and like Feed Pet it owns its whole update cycle: the body
-    doesn't fit the engine's standard tooltip+conjure+/use shape.
-
-    Click layout (the Poisons Macro rows of the mini-map menu's class notes):
-      Left-Click   → apply the Off Hand poison group's best rank to slot 17
-      Right-Click  → apply the Main Hand poison group's best rank to slot 16
-      Middle-Click → open the Poisons crafting window (if known)
-
-    The body applies in two steps — /use the poison item, then /use the
-    inventory slot number — and then calls GtGReplace() (Macros/Runtime.lua)
-    to confirm the client's "replace your current enchant/poison" popup, so
-    pressing the macro overwrites whatever poison is already on the weapon.
-    GtGReplace answers only that popup, never another confirmation box that
-    happens to be open, such as Delete Item. The trailing
-    UIErrorsFrame:Clear() swallows the noise from clicking with no off-hand
-    weapon equipped or a poison already pending.
-
-    The player picks a poison GROUP per hand (the Class Macros page →
-    Rogues); the scan resolves each group to the best rank the rogue can use
-    and actually has in bags. Poisons aren't soulbound, so a twink can carry
-    ranks above their level — the required-level column in ns.POISON_DATA
-    gates those out.
-
-    The tooltip/icon always tracks the Main Hand pick (falling back to the
-    Off Hand item, then the config default) so the button reads as "your
-    main poison."
-]]
+-- Its own update cycle: the body doesn't fit the engine's tooltip, conjure and /use shape.
 
 --------------------------------------------------------------------------------
 -- State
@@ -48,13 +21,7 @@ end
 -- Derived Poison Lookups
 --------------------------------------------------------------------------------
 
---[[
-    Per-group candidate lists sorted best-first (highest required level =
-    highest rank), precomputed once from ns.POISON_DATA (Data/{Game}/Poisons-{Game}.lua, which
-    loads before this file) so the per-update scan is a plain walk. Same pattern
-    as the derived scroll lookups in Features/Macros-for-Consumables/Scanner/Scanner-Auras.lua. Only
-    FindBestPoison below reads it.
-]]
+-- Sorted once at load, highest required level (rank) first.
 local POISONS_BY_GROUP = {}
 for itemID, row in pairs(ns.POISON_DATA) do
 	local group = row[2]
@@ -78,23 +45,13 @@ end
 -- Poison Resolution
 --------------------------------------------------------------------------------
 
---[[
-    Localized group name for the Options dropdowns: the base (rank 1) item's
-    client-localized name. Nil while C_Item.GetItemInfo is still cold -- the
-    call itself starts the async load -- and the dropdown shows the panels'
-    loading text until Kit.WarmItems repaints it.
-]]
+-- Nil while the rank-1 item's info is cold; the dropdown shows loading text until Kit.WarmItems repaints.
 function ns.GetPoisonGroupName(groupID)
 	local baseItem = ns.POISON_GROUP_BASE_ITEMS[groupID]
 	return baseItem and (C_Item.GetItemInfo(baseItem))
 end
 
---[[
-    Best usable poison for a group: the lists in POISONS_BY_GROUP are sorted
-    best-first, so the first entry the rogue meets the level requirement for,
-    has in bags AND has not ignored wins. Returns nil when the group has nothing
-    usable.
-]]
+-- Poisons aren't soulbound, so a twink can carry ranks above its level; the level gate skips them.
 local function FindBestPoison(groupID)
 	local list = POISONS_BY_GROUP[groupID]
 	if not list then
@@ -109,22 +66,13 @@ local function FindBestPoison(groupID)
 	return nil
 end
 
---[[
-    The player's group pick for one hand, resolved to its best usable item.
-    hand is "main" or "off".
-]]
 local function BestPoisonForHand(hand)
 	local settings = ns.db and ns.db.profile
 	local key = (hand == "off") and "offHandPoisonGroup" or "mainHandPoisonGroup"
 	return FindBestPoison(settings and settings[key])
 end
 
---[[
-    Resolved poison for one hand as (itemID, itemLink), for the mini-map
-    menu. Resolved on demand rather than published the way ns.bestPetFoodID
-    is: the answer tracks bag contents, which change without a macro rebuild,
-    and there is no rebuild at all while the Poisons macro is disabled.
-]]
+-- On demand, not published: bags change without a rebuild, and none runs while the macro is off.
 function ns.GetBestPoisonForHand(hand)
 	local id = BestPoisonForHand(hand)
 	if not id then
@@ -144,17 +92,9 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Four body shapes:
-
-      Poisons not learned → tip-only stub ("You don't currently know Poisons.")
-      neither hand     → crafting middle-click + "no suitable Poison found"
-      one hand missing → working hand keeps its branch; the missing hand's
-                         click prints TIP_NO_HAND_POISON via GtGTipIf and halts
-      both hands       → the full dual-apply body
-
-    [btn:2] is the Main Hand branch; everything that isn't btn:2/btn:3 —
-    left-click and keybind presses (which register as left-click, see
-    Macros/Explosive.lua) — is the Off Hand branch, tested as [btn:1].
+    Right-Click is the Main Hand (slot 16); Left-Click and keybinds the Off Hand
+    (17), tested as [btn:1]. GtGReplace confirms the replace-poison popup;
+    clearing UIErrorsFrame hides the noise from a missing off hand.
 ]]
 local function BuildPoisonsBody(knows, mainID, offID)
 	local tooltipID = mainID or offID or ns.MACRO_DEFAULT_ITEM_IDS["Poisons"]
@@ -219,11 +159,7 @@ local function UpdatePoisonsMacro(forced)
 	local mainID = knows and BestPoisonForHand("main") or nil
 	local offID = knows and BestPoisonForHand("off") or nil
 
-	--[[
-	    Every input that affects the body: skill knowledge, and the resolved
-	    item per hand (which already encodes the group picks and bag
-	    contents). Same lossless-key rule as the engine's standard keys.
-	]]
+	-- Lossless like the standard keys: the resolved items already encode the group picks and bags.
 	local stateID = (knows and "K" or "NK")
 		.. "_"
 		.. (mainID and tostring(mainID) or "none")
@@ -236,7 +172,6 @@ local function UpdatePoisonsMacro(forced)
 
 	local body = BuildPoisonsBody(knows, mainID, offID)
 
-	-- On a failed create, leave the state unset so the next update retries.
 	if not ns.WriteMacroBody(config.macro, body) then
 		currentPoisonState = nil
 		return
@@ -254,8 +189,8 @@ ns.RegisterMacroType({
 
 	customUpdate = function(forced)
 		--[[
-		    A flavor with no Poisons skill (Mists) has nothing for the macro to apply, so it is never made there.
-		    Unticked or unmakeable, the macro goes on any class: it sits in the General macros every character shares.
+		    Deleted on any class: it sits in the shared General tab. A flavor with
+		    no Poisons skill (Mists) never makes it.
 		]]
 		if not (ns.IsMacroEnabled("Poisons") and ns.POISONS_SPELL_ID) then
 			local config = MACRO_CONFIG["Poisons"]

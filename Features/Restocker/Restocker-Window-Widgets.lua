@@ -4,11 +4,7 @@ local _, ns = ...
 -- Menus and Drops
 --------------------------------------------------------------------------------
 
---[[
-    The window's menus are its one kit menu (ns.RestockMenu) and the bag
-    menu's AceGUI pullout, which scrolls. Each closes the others as it opens,
-    and the window closes them all as it hides.
-]]
+-- The kit menu and the bag pullout: each closes the others as it opens, and the window's hide closes all.
 function ns.CloseRestockMenus()
 	ns.CloseReputationMenu()
 	ns.CloseRestockColumnMenu()
@@ -17,13 +13,7 @@ function ns.CloseRestockMenus()
 	ns.CloseRestockBagMenu()
 end
 
---[[
-    Add the item on the cursor to the list, and say whether there was one.
-    Shared by the add box, the window and every control on a row, so a drop
-    lands the same way wherever it falls. The cursor is cleared either way the
-    add goes: a duplicate is already on the list, and leaving it on the cursor
-    would read as the drop having missed.
-]]
+-- The cursor is cleared either way: a duplicate left on it would read as a missed drop.
 function ns.AddRestockItemFromCursor()
 	local infoType, _, itemLink = GetCursorInfo()
 	if infoType ~= "item" then
@@ -34,13 +24,7 @@ function ns.AddRestockItemFromCursor()
 	return true
 end
 
---[[
-    A control's click, or the script standing in for one, set so that an item
-    carried onto the control is dropped on the list instead, as it would be on
-    any bare part of the window; a drag let go over the control is taken the
-    same way. onClick runs only for a click that brought no item, and a control
-    that only explains itself on hover passes none.
-]]
+-- A click or drag that brings an item drops it on the list; onClick runs only for an empty-handed click.
 function ns.SetRestockControlClick(control, onClick, script)
 	control:SetScript(script or "OnClick", function(...)
 		if not ns.AddRestockItemFromCursor() and onClick then
@@ -57,21 +41,9 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    A closed menu, as the list selector and the bag menu both draw one: an
-    InputBoxTemplate field with a menu arrow inside its right edge, calling
-    onToggle with the field when either is clicked with nothing in hand; with
-    an item in hand the click is a drop. The caller places it, sizes it, and
-    says what it shows.
-
-    Read-only -- keyboard is off and focus bounces straight back out, so it
-    renders as a field but behaves as a button. Why a field and not an AceGUI
-    Dropdown is in Restocker-Window-List-Bar.lua.
-
-    The arrow is the same three textures Blizzard's own UIDropDownMenuTemplate
-    puts on its button, so the control opens with the chevron players already
-    read as "this is a menu" rather than a generic arrow painted into a text
-    field. A real Button rather than a texture, so it presses and highlights
-    like one.
+    Read-only (keyboard off, focus bounced), so it draws as a field and acts as
+    a button; why not an AceGUI Dropdown is in Restocker-Window-List-Bar.lua.
+    The arrow is UIDropDownMenuTemplate's own textures, so it reads as a menu.
 ]]
 function ns.CreateRestockMenuField(parent, arrowSize, onToggle)
 	local field = CreateFrame("EditBox", nil, parent, "InputBoxTemplate")
@@ -100,32 +72,10 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Every explanatory tooltip in the Restocker window routes through here, so the
-    colors, the spacing, and the wrap all live in one place.
-
-    Shape: a gold title, then white body lines straight under it, with a blank
-    line between each pair, so a multi-line tooltip reads as paragraphs instead
-    of one wall.
-
-    Colors are passed explicitly rather than left to default: the two defaults
-    disagree, SetText falling back to gold and AddLine to white, so a tooltip that
-    leaves them out gets its title and body the wrong way round. Both come from the
-    shared numeric palette.
-
-    The trailing `true` on each line is the textWrap argument. Without it a
-    tooltip is exactly as wide as its longest line, and the longer strings here
-    (the reputation control's discount line especially) would run wider than
-    the game window. With it the client breaks each line at its standard
-    tooltip width -- which is also why we do not hand-measure a pixel budget: the
-    client's own break points are correct in locales that don't put spaces
-    between words.
-
-    A one-argument call is a whole tooltip in one line, and renders as the title.
-
-    Two entry points. ns.SetupRestockerTooltip wires a control whose tooltip
-    never changes. ns.ShowRestockerTooltip draws one on the spot, for the
-    controls whose text depends on their state when hovered -- a cell that
-    cannot be set on its row says why instead.
+    Colors are passed explicitly: SetText defaults to gold and AddLine to white,
+    so leaving them out swaps title and body. The trailing `true` is textWrap,
+    so the client breaks lines at its own width, correct even in locales
+    without spaces; nothing hand-measures a width.
 ]]
 local TOOLTIP_TITLE = ns.COLORS_RGB.TITLE
 local TOOLTIP_BODY = ns.COLORS_RGB.TEXT

@@ -10,30 +10,16 @@ local Sections, Paginate = ns.WhatsNextSections, ns.WhatsNextPaginate
 local BuildControls = ns.BuildWhatsNextControls
 local METRICS = ns.WHATS_NEXT_METRICS
 
---[[
-	The What's Next? tabs' pages in the Spell Book window (Features/Enhanced-Spellbook/Spellbook-Window.lua): the class
-	spells, a hunter's or warlock's pet abilities, and the pet's own spellbook. Each is on the same parchment as
-	the Spell Book page, two columns to a page, with a controls row along the top (filter box, source filter,
-	sort, settings gear) and a footer of counts along the bottom. Sort By Availability lists the rows under each
-	status, the ones to learn now first and Known last; Sort By Level under each learn level. The three pages
-	differ only in their model, ns.WHATS_NEXT_MODELS (Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Models.lua): the rows,
-	statuses, sources, settings and tooltip lines. How the rows are ordered and filled into columns is
-	Whats-Next-Layout.lua's, and the controls row and footer Whats-Next-Controls.lua's.
-]]
-
--- The window's bands and the parchment's padding, as Features/Enhanced-Spellbook/Spellbook-Page.lua sets them.
 local TITLE_HEIGHT, CONTROLS_HEIGHT = ns.SPELLBOOK_TITLE_HEIGHT, ns.SPELLBOOK_CONTROLS_HEIGHT
 local FOOTER_HEIGHT, FRAME_BORDER = ns.SPELLBOOK_FOOTER_HEIGHT, ns.SPELLBOOK_FRAME_BORDER
 local PARCHMENT_SIDE, PAGER_HEIGHT = ns.SPELLBOOK_PARCHMENT_SIDE, ns.SPELLBOOK_PAGER_HEIGHT
 local COLUMN_TOP, COLUMN_SIDE = ns.SPELLBOOK_COLUMN_TOP, ns.SPELLBOOK_COLUMN_SIDE
 
--- A section's header and the space under it, then each spell's row, as Whats-Next-Layout.lua lays them out.
 local HEADER_HEIGHT, HEADER_GAP, ROW_HEIGHT = METRICS.HEADER_HEIGHT, METRICS.HEADER_GAP, METRICS.ROW_HEIGHT
 local ICON_SIZE = 20
 --[[
-	the row's right-hand fields: the source, then the level (or, sorted by level, the status). The source is as
-	wide as the page's widest source label, so "Demon Trainer" stays on one line, and never narrower than
-	MIN_SOURCE_WIDTH, so the columns line up between pages with short labels.
+	The source column is as wide as the page's widest source label, so "Demon Trainer" stays on one line, and
+	never narrower than MIN_SOURCE_WIDTH, so the columns line up between pages with short labels.
 ]]
 local MIN_SOURCE_WIDTH, LEVEL_WIDTH, STATUS_WIDTH = 64, 64, 128
 local EMPTY_WIDTH = 464 -- the empty note's wrap width, a Spell Book column's
@@ -44,9 +30,8 @@ local CONTINUED_INK, DIVIDER_COLOR = ns.SPELLBOOK_CONTINUED_INK, ns.SPELLBOOK_DI
 local INKS = ns.WHATS_NEXT_INKS
 local FADED_SUBTEXT = CreateColor(unpack(FADED_INK)) -- made once, for the rank text every row wraps in it
 
-local pages = {} -- each built page, for ns.RefreshWhatsNext
+local pages = {}
 
--- A spell's name with its rank (or "Passive") after it in faded ink, as "Rend (Rank 2)".
 local function NameWithSubtext(name, subtext)
 	if not subtext or subtext == "" then
 		return name
@@ -58,7 +43,6 @@ end
 -- Page
 --------------------------------------------------------------------------------
 
--- Builds a page for model in frame, which covers the window; returns the page.
 local function BuildPage(frame, model)
 	local page = frame
 	page.rows = {}
@@ -72,7 +56,6 @@ local function BuildPage(frame, model)
 	-- Frames
 	----------------------------------------------------------------------------
 
-	-- A section's header: its name, and "(Continued)" where it carries on from the column before.
 	local function CreateHeader()
 		local header = CreateFrame("Frame", nil, page.parchment.paper)
 		header:SetHeight(HEADER_HEIGHT)
@@ -85,11 +68,7 @@ local function BuildPage(frame, model)
 		return header
 	end
 
-	--[[
-		What a click on a row opens, or nil when it names nothing that opens: a class spell's tile on the
-		Enhanced Spellbook page, a pet ability the pet knows in the Pet Spell Book, or, on a page that places
-		spells, the spell on the cursor. Each comes with its tooltip's click line.
-	]]
+	-- nil when the row names nothing that opens
 	local function RowClick(row)
 		if model.pickup then
 			return { key = "TOOLTIP_KEY_CLICK_DRAG", action = "TOOLTIP_ACTION_PLACE_ON_BAR", run = model.pickup }
@@ -136,7 +115,7 @@ local function BuildPage(frame, model)
 			GameTooltip:AddLine(" ")
 			ns.AddSpellRankLines(row, ranks)
 		end
-		-- each click on a line of its own; a passive pet ability can't be picked up, so it has no click line
+		-- a passive pet ability can't be picked up, so it has no click line
 		local click = self.click
 		GameTooltip:AddLine(" ")
 		if click and not (model.pickup and self.row.passive) then
@@ -146,10 +125,6 @@ local function BuildPage(frame, model)
 		GameTooltip:Show()
 	end
 
-	--[[
-		Shift-click puts the spell's link in the chat box, as the game's own book does; on a page that places
-		spells, a plain click picks it up.
-	]]
 	local function ClickRow(self)
 		if IsModifiedClick("CHATLINK") then
 			local link = C_Spell.GetSpellLink(self.row.id)
@@ -161,7 +136,6 @@ local function BuildPage(frame, model)
 		end
 	end
 
-	-- One spell's row: its icon, its name and rank, and at its right the source and the level or status.
 	local function CreateRow()
 		local button = CreateFrame("Button", nil, page.parchment.paper)
 		button:SetHeight(ROW_HEIGHT)
@@ -207,7 +181,6 @@ local function BuildPage(frame, model)
 		button.click = RowClick(row)
 		button.highlight:SetShown(button.click ~= nil)
 		button.icon:SetTexture(row.icon)
-		-- known, or not this pet's to learn: faded
 		local faded = row.status == "KNOWN" or row.status == "OTHER"
 		button.icon:SetDesaturated(faded)
 		button.name:SetText(NameWithSubtext(row.name, row.subtext))
@@ -230,7 +203,6 @@ local function BuildPage(frame, model)
 	-- Layout
 	----------------------------------------------------------------------------
 
-	-- The footer on the dark frame: how many rows are in each counted status, and the model's own text at its right.
 	local function UpdateFooter(context)
 		local counts = {}
 		for _, row in ipairs(page.rows) do
@@ -303,8 +275,8 @@ local function BuildPage(frame, model)
 	end
 
 	--[[
-		Reads the rows again and redraws, the sort's label included, since a profile switch can change the sort.
-		level is the level to read them against, for PLAYER_LEVEL_UP; nil reads the player's.
+		The sort's label too, since a profile switch can change the sort. level is for PLAYER_LEVEL_UP; nil reads
+		the player's.
 	]]
 	function page.Refresh(level)
 		local rows, context = model.rows(level)
@@ -331,7 +303,6 @@ local function BuildPage(frame, model)
 	divider:SetPoint("TOP", 0, -COLUMN_TOP / 2)
 	divider:SetPoint("BOTTOM", 0, PAGER_HEIGHT)
 
-	-- the source column's width: its widest label, measured in the rows' own font
 	local measure = page:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	measure:Hide()
 	page.sourceWidth = MIN_SOURCE_WIDTH
@@ -352,7 +323,6 @@ local function BuildPage(frame, model)
 
 	BuildControls(page, model, Layout, SourceLabel)
 
-	-- the page strip along the parchment's bottom; the wheel turns the page anywhere on the parchment
 	local controls = ns.CreatePagingControls(page, parchment.paper)
 	page.pagingControls = controls
 	controls:SetPoint("BOTTOMLEFT", parchment.paper, "BOTTOMLEFT", 16, 0)
@@ -374,25 +344,18 @@ local function BuildPage(frame, model)
 	return page
 end
 
--- Builds the class spells' page in frame; the window shows it for the What's Next? tab.
 function ns.BuildWhatsNextPage(frame)
 	BuildPage(frame, MODELS.CLASS)
 end
 
--- Builds the pet's spellbook page in frame; the window shows it for the Pet Spell Book tab.
 function ns.BuildPetSpellbookPage(frame)
 	BuildPage(frame, MODELS.PET_BOOK)
 end
 
--- Builds the pet abilities' page in frame; the window shows it for a hunter's or warlock's Pet What's Next? tab.
 function ns.BuildWhatsNextPetPage(frame)
 	BuildPage(frame, MODELS.PET)
 end
 
---[[
-	Redraws whichever of these pages is open, after the spells known, the player's level or the pet change
-	(Features/Enhanced-Spellbook/Spellbook-Events.lua); level as page.Refresh takes it.
-]]
 function ns.RefreshWhatsNext(level)
 	for _, page in ipairs(pages) do
 		if page:IsVisible() then
@@ -401,7 +364,7 @@ function ns.RefreshWhatsNext(level)
 	end
 end
 
--- The same for the pet tabs alone, after a pet change, which the class's spells don't follow.
+-- The class's spells don't follow a pet change.
 function ns.RefreshWhatsNextPet()
 	for _, page in ipairs(pages) do
 		if page.isPetPage and page:IsVisible() then
@@ -410,7 +373,6 @@ function ns.RefreshWhatsNextPet()
 	end
 end
 
--- Whether a pet tab is open.
 function ns.IsWhatsNextPetShown()
 	for _, page in ipairs(pages) do
 		if page.isPetPage and page:IsVisible() then

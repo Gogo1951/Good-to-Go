@@ -6,32 +6,12 @@ local L = ns.L
 --------------------------------------------------------------------------------
 
 --[[
-    First-run suggestions for the Restock List. A character past level 5 who
-    logs in with nothing on their list gets a small window of staples
-    (Features/Restocker/Restocker-Starter-Window.lua): tick one and the best tier for
-    the character's level goes on the list with the same everything-on
-    defaults as a hand-added item. From there the normal machinery owns it --
-    merchants top it up, and Restocker-Upgrade.lua walks it up its ladder on level-up.
-
-    Every offering -- foods, water, ammo, poisons, class reagents -- is drawn
-    from the ladders in ns.CONSUMABLE_UPGRADE_CHAINS rather than a list of its own,
-    so the popup can never offer a staple the upgrader would not then
-    maintain. Single-tier "ladders" (most reagents) ride the same rails and
-    simply never move.
-
-    A few staples arrive PRE-TICKED for the class (defaultFor below): the
-    window opens with bread already on the list for everyone, water for the
-    mana classes, meat for hunters. Closing the window untouched keeps them,
-    so it does not return; unticking them all before closing leaves the list
-    empty, so the window returns next login.
+    Every staple comes from ns.CONSUMABLE_UPGRADE_CHAINS, so none is offered that
+    the upgrader won't then maintain. Closing with the pre-ticks kept fills the
+    list, so the window doesn't return; unticking them all brings it back.
 ]]
 
---[[
-    Ladders keyed for the category list below: food by diet number, poisons
-    by group number, reagents by their reagent string, the single-ladder kinds
-    by kind. Potions are deliberately absent -- past the first tiers they are
-    Alchemy goods no vendor restock can rely on.
-]]
+-- No potions: past the first tiers they are Alchemy goods no vendor restock can rely on.
 local CHAINS_BY_KEY = {}
 for _, chain in ipairs(ns.CONSUMABLE_UPGRADE_CHAINS) do
 	if chain.kind == "food" then
@@ -45,11 +25,7 @@ for _, chain in ipairs(ns.CONSUMABLE_UPGRADE_CHAINS) do
 	end
 end
 
---[[
-    Resolve every data row (ns.STARTER_LIST_CATEGORIES, in Restocker-Starter-Categories.lua) to the ladder its
-    chainKey names. A row whose ladder this client's folder does not carry is dropped here
-    rather than crashing the popup open.
-]]
+-- A row whose ladder this flavor lacks is dropped here rather than breaking the popup.
 local STARTER_CATEGORIES = {}
 for _, row in ipairs(ns.STARTER_LIST_CATEGORIES) do
 	local chain = CHAINS_BY_KEY[row.chainKey]
@@ -64,7 +40,6 @@ function ns.GetStarterCategories()
 	return STARTER_CATEGORIES
 end
 
--- Is this category for this character's class? No classes set means everyone.
 function ns.IsStarterCategoryForClass(category)
 	if category.classes == nil then
 		return true
@@ -73,14 +48,7 @@ function ns.IsStarterCategoryForClass(category)
 	return category.classes[classToken] == true
 end
 
---[[
-    A category is offerable only when its ladder yields an item right now:
-    this hides reagents whose spell the character has not trained toward yet
-    (their ladders open at the spell's level), and the chains this client's
-    folder holds empty -- Anesthetic on an Era client, and Blinding Powder
-    anywhere past Classic. Food, water and ammo
-    all open at level 1, so it never hides them.
-]]
+-- Hides reagents for spells not yet trainable and ladders this flavor holds empty.
 function ns.IsStarterCategoryAvailable(category)
 	return ns.BestChainItemID(category.chain, UnitLevel("player") or 1) ~= nil
 end
@@ -94,22 +62,12 @@ local function CurrentList()
 	return settings and settings.lists and settings.lists[settings.currentList]
 end
 
---[[
-    Whether this character's Restock List holds nothing. The login trigger below
-    trades on it, and so does the pop-up's opening line: the window is also
-    reachable from the Restock window's Pick Staples button, where the list it
-    opens over is usually not empty at all.
-]]
 function ns.IsRestockListEmpty()
 	local list = CurrentList()
 	return list == nil or next(list) == nil
 end
 
---[[
-    Any tier of this ladder already on the list? The whole chain is checked
-    rather than today's best tier, so the box stays ticked after a level-up
-    moves the entry, and unticking removes whichever tier is actually there.
-]]
+-- Any tier, not today's best, so the box stays ticked after an upgrade moves the entry.
 local function ChainItemOnList(list, chain)
 	for _, tier in ipairs(chain.tiers) do
 		if list[tier[2]] ~= nil then
@@ -120,12 +78,8 @@ local function ChainItemOnList(list, chain)
 end
 
 --[[
-    Ticked staples whose item had not resolved yet, [itemID] = category.
-    C_Item.GetItemInfo asks the server on a miss, so the retry rides on
-    GET_ITEM_INFO_RECEIVED (Restocker-List.lua) -- the same arrangement as
-    Restocker-Upgrade.lua's deferred moves, and for the same reason: inserting
-    before the answer arrives would write a nameless row. The box reads as
-    ticked while an add is pending, so the click visibly takes.
+    [itemID] = category for ticks whose item is cold: adding now would write a
+    nameless row. The box reads ticked meanwhile, so the click visibly takes.
 ]]
 local pendingStarterAdds = {}
 
@@ -133,7 +87,6 @@ function ns.HasPendingStarterAdds()
 	return next(pendingStarterAdds) ~= nil
 end
 
--- Drops a pending tick whose item the server said it has no item for.
 function ns.DropPendingStarterAdd(itemID)
 	pendingStarterAdds[itemID] = nil
 end
@@ -146,7 +99,7 @@ function ns.RetryPendingStarterAdds()
 	end
 end
 
--- Items per dropdown step: one stack of the item (nil until it resolves), or one item where the category counts.
+-- Nil until the item resolves, unless the category counts single items.
 local function StepSize(category, stackSize)
 	if category.countsItems then
 		return 1
@@ -154,7 +107,6 @@ local function StepSize(category, stackSize)
 	return stackSize
 end
 
--- What a tick of this category puts on the list right now; nil while its stack size is unknown.
 local function CategoryAmount(category, stackSize)
 	if category.fixedAmount then
 		return category.fixedAmount
@@ -184,10 +136,7 @@ function ns.AddStarterCategory(category)
 		return
 	end
 
-	--[[
-	    Same shape and same everything-on defaults as a hand-added item
-	    (ns.AddRestockItem in Restocker-List.lua); only the amount differs.
-	]]
+	-- The hand-add defaults (ns.AddRestockItem); only the amount differs.
 	list[itemID] = {
 		itemName = info.itemName,
 		itemID = itemID,
@@ -197,12 +146,6 @@ function ns.AddStarterCategory(category)
 		restockFromBank = true,
 	}
 
-	--[[
-	    Into the window's "New" group, so the rows this popup creates show
-	    together with their controls ready -- live, when the Restock window is
-	    open behind the popup. Closing the popup clears the group, so they sit
-	    in New only while it is open.
-	]]
 	ns.restockNewItems[itemID] = true
 
 	ns.UpdateRestockList()
@@ -235,7 +178,6 @@ function ns.RemoveStarterCategory(category)
 	end
 end
 
--- The popup checkbox handler: ticking adds, unticking removes.
 function ns.SetStarterCategory(category, checked)
 	if checked then
 		ns.AddStarterCategory(category)
@@ -258,34 +200,14 @@ function ns.IsStarterCategoryChecked(category)
 end
 
 --[[
-    The stack count each dropdown shows and writes, clamped to
-    1..category.maxStacks. fixedAmount categories have no dropdown; they
-    answer 1 and ignore writes, so no caller needs its own guard.
-
-    Two homes, and the list wins: while the staple is ON the list the count is
-    derived from the entry's real amount and its item's own stack size
-    (rounded to the nearest whole stack, so a hand-edited amount in the
-    Restocker window still reads sensibly here), and writing pushes straight
-    back onto that entry. While it is off the list the choice is view state in
-    selectedStacks -- one sitting only, never saved -- so a stack count can be
-    picked BEFORE ticking the box, and survives an untick-retick without a row
-    ever existing to carry it. A listed entry whose item has not resolved has
-    no stack size to scale by, so until it does it reads as that remembered
-    choice and takes no write; the pop-up repaints once it resolves.
-
-    An untouched dropdown opens on defaultStacks where the category sets one,
-    and on one stack otherwise -- the opening offer, not a saved choice, so it
-    reads the same on a fresh character as on a fifth one.
+    The count lives on the listed row's amount while ticked (rounded to whole
+    stacks, so a hand edit reads sensibly), and here otherwise: never saved, so
+    a count can be picked before ticking. A listed row whose item is cold takes
+    no write. fixedAmount rows answer 1 and ignore writes.
 ]]
 local selectedStacks = {} -- [category.key] = stacks, while the staple is not on the list
 
---[[
-    What a raw count reads as in the dropdown. The every-number categories
-    simply clamp; one that offers a handful (Soul Shards) snaps up to the
-    smallest offer that still covers the count, so an amount the dropdown could
-    not have produced -- hand-edited in the Restocker window, or left behind by
-    a shorter choices list -- lands on a real entry instead of blanking it.
-]]
+-- With choices (Soul Shards), snaps up to the smallest offer covering the count, so a hand edit never blanks it.
 local function SnapStacks(category, count)
 	local choices = category.choices
 	if not choices then
@@ -299,22 +221,14 @@ local function SnapStacks(category, count)
 	return choices[#choices]
 end
 
---[[
-    The item a category's stacks are measured in: the tier on the list while
-    the staple is ticked, since that entry's amount is what the dropdown reads
-    and writes, and otherwise the tier a tick would add right now.
-]]
+-- The listed tier while ticked, since its amount is what the dropdown reads; else what a tick would add.
 function ns.GetStarterCategoryItemID(category)
 	local list = CurrentList()
 	return (list and ChainItemOnList(list, category.chain))
 		or ns.BestChainItemID(category.chain, UnitLevel("player") or 1)
 end
 
---[[
-    The item a row is named for: the one above for most rows, and for a
-    namesFirstTier row (the poison types) its ladder's first item, whose name
-    is the type's own ("Instant Poison").
-]]
+-- A poison row is named by its first tier, whose name is the type's ("Instant Poison").
 function ns.GetStarterCategoryNameItemID(category)
 	if category.namesFirstTier then
 		return category.chain.tiers[1][2]
@@ -322,12 +236,7 @@ function ns.GetStarterCategoryNameItemID(category)
 	return ns.GetStarterCategoryItemID(category)
 end
 
---[[
-    What the row's checkbox says: its label where the data gives one (a kind of
-    item, like Bread), otherwise the client's own name for the item it is named
-    for, so the row needs no translation. Nil while that item is still cold; the
-    pop-up shows loading text until ns.WarmItemCache repaints it.
-]]
+-- The client's item name needs no translation. Nil while cold; the pop-up repaints when it warms.
 function ns.GetStarterCategoryName(category)
 	if category.label then
 		return category.label
@@ -335,11 +244,7 @@ function ns.GetStarterCategoryName(category)
 	return (C_Item.GetItemInfo(ns.GetStarterCategoryNameItemID(category)))
 end
 
---[[
-    One stack of that item, as the item itself reports it, or nil until the
-    client has resolved the item. Read from C_Item.GetItemInfo directly; the pop-up
-    repaints when ns.WarmItemCache hears the item's answer.
-]]
+-- Nil until the item resolves.
 function ns.GetStarterCategoryStackSize(category)
 	local itemID = ns.GetStarterCategoryItemID(category)
 	local stackSize = itemID and select(8, C_Item.GetItemInfo(itemID))
@@ -378,28 +283,13 @@ function ns.SetStarterCategoryStacks(category, stacks)
 		return
 	end
 
-	--[[
-	    Off the list, picking a count IS asking for the staple. The dropdown
-	    beside an unticked box otherwise does nothing you can see -- it only
-	    pre-loads what a later tick would add -- so setting one to 28 and
-	    watching the Restock List stay empty reads as the add being broken.
-	    The tick goes through the same add path the checkbox uses, and the
-	    Staples window redraws after the pick, which shows the box opposite
-	    ticked.
-	]]
+	-- Picking a count ticks the staple: otherwise the list staying empty would read as broken.
 	ns.AddStarterCategory(category)
 end
 
 --[[
-    The checkbox tooltip: the exact item a tick adds right now, with the
-    count the current stack choice (or fixed amount) works out to. Ladder
-    items mention the upgrading; single-tier reagents, which never move, get
-    the plain form.
-
-    Nil until the item has resolved, which the pop-up shows as loading text.
-    That is checked with C_Item.GetItemInfo because ns.GetItemLabel never says
-    so: it names an item from a hand-built link while the item is still cold.
-    The name wears no brackets, like every item the add-on's own windows name.
+    Nil until the item resolves, tested with C_Item.GetItemInfo because
+    ns.GetItemLabel names a cold item from a hand-built link.
 ]]
 function ns.DescribeStarterCategory(category)
 	local itemID = ns.BestChainItemID(category.chain, UnitLevel("player") or 1)
@@ -410,7 +300,6 @@ function ns.DescribeStarterCategory(category)
 	end
 	local template = (#category.chain.tiers > 1) and L["STARTER_POPUP_ITEM_DESCRIPTION"]
 		or L["STARTER_POPUP_ITEM_DESCRIPTION_STATIC"]
-	-- the item's name as the title, and the sentence under it
 	return name, string.format(template, ns.GetItemLabel(itemID, nil), amount)
 end
 
@@ -418,13 +307,10 @@ end
 -- Login Trigger
 --------------------------------------------------------------------------------
 
---[[
-    "After level 5": a level-5 character is still on starter-zone money; by 6
-    they have met vendors worth a shopping list.
-]]
+-- At 5 a character is still on starter-zone money; by 6 they have met vendors worth a list.
 local STARTER_MIN_LEVEL = 6
 
--- Matches Macros-for-Consumables-Core.lua's post-login settle timer: past the loading-screen flurry.
+-- Past the loading-screen flurry, as the Consumable Macros' settle timer is.
 local STARTER_POPUP_DELAY = 3
 
 local function IsDefaultCategory(category)
@@ -440,7 +326,7 @@ local function IsDefaultCategory(category)
 end
 
 function ns.MaybeShowStarterListPopup()
-	-- Read again here, since the login trigger waits out a delay the switch can be flipped in.
+	-- Read again: the switch can flip during the login delay.
 	if not ns.restockerLoaded or not ns.IsRestockerEnabled() then
 		return
 	end
@@ -457,16 +343,7 @@ function ns.MaybeShowStarterListPopup()
 		return
 	end
 
-	--[[
-	    Nothing OFFERABLE means nothing to show -- with bread open to every
-	    class at level 1 that is a formality today, but it keeps a future
-	    class or data change from opening an empty window. Logging in
-	    mid-combat skips this login -- the empty list is still empty
-	    tomorrow.
-
-	    No item warming here: the pop-up warms its own items as it draws,
-	    for this route and the Pick Staples button alike.
-	]]
+	-- Keeps a data change from opening an empty window. Mid-combat skips this login only.
 	local level = UnitLevel("player") or 1
 	local anyOffered = false
 	for _, category in ipairs(STARTER_CATEGORIES) do
@@ -479,14 +356,7 @@ function ns.MaybeShowStarterListPopup()
 		return
 	end
 
-	--[[
-	    The pre-ticked staples go on the list just before the window opens,
-	    through the same add path a hand-tick uses -- so the window opens
-	    with those boxes genuinely checked, and unticking one takes it
-	    straight back off. Only ever from here: the popup is the only place
-	    the defaults exist, so a player who never sees it never has a list
-	    written for them.
-	]]
+	-- Only here: a player who never sees the popup never has a list written for them.
 	for _, category in ipairs(STARTER_CATEGORIES) do
 		if
 			IsDefaultCategory(category)
@@ -497,24 +367,11 @@ function ns.MaybeShowStarterListPopup()
 		end
 	end
 
-	--[[
-	    The staples open alone, one window to read at a time, and the Restock
-	    List opens once Done is clicked, with the pre-ticks above and every tick
-	    already on it (Restocker-Starter-Window.lua). Every other route to the
-	    staples is the Pick Staples button, which is in that window, so it is
-	    already open behind them.
-	]]
-	-- Told it is the login route: Done opens the list, and the footer names the command.
+	-- Alone, one window to read at a time; on this route Done opens the list and the footer names the command.
 	ns.ShowStarterListPopup(true)
 end
 
---[[
-    Fresh logins only. isInitialLogin is false on /reload and on every
-    mid-session loading screen, and both would otherwise re-open a window the
-    player already closed this sitting -- the "don't spam them" half of the
-    feature is this one argument. Called from ns.OnRestockerEnteringWorld
-    (Restocker-Events.lua), the Restocker's PLAYER_ENTERING_WORLD handler.
-]]
+-- Fresh logins only: a /reload or loading screen would reopen a window already closed this sitting.
 function ns.OnStarterListEnteringWorld(isInitialLogin, _isReloadingUi)
 	if not isInitialLogin then
 		return

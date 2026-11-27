@@ -20,11 +20,9 @@ ns.Version = GetVersion()
 --------------------------------------------------------------------------------
 
 --[[
-    Every event the add-on uses, in one list. The dispatcher below registers
-    from it, and Diagnostics' Event Registration check reads the same list, so
-    the two can never drift. Each feature subscribes to the events it handles
-    with ns.SetModuleEvent; a name missing here stops the load, and fails
-    Tests/Run.lua in CI first.
+    The dispatcher and Diagnostics' Event Registration check both read this
+    list, so the two can't drift. A name missing here stops the load (and
+    fails Tests/Run.lua first).
 ]]
 ns.EVENT_NAMES = {
 	"ACTIONBAR_SLOT_CHANGED",
@@ -37,6 +35,11 @@ ns.EVENT_NAMES = {
 	"GET_ITEM_INFO_RECEIVED",
 	"GROUP_ROSTER_UPDATE",
 	"ITEM_PUSH",
+	"MAIL_CLOSED",
+	"MAIL_FAILED",
+	"MAIL_INBOX_UPDATE",
+	"MAIL_SHOW",
+	"MAIL_SUCCESS",
 	"MERCHANT_CLOSED",
 	"MERCHANT_SHOW",
 	"PET_BAR_UPDATE",
@@ -47,6 +50,7 @@ ns.EVENT_NAMES = {
 	"PLAYER_LEVEL_UP",
 	"PLAYER_LOGIN",
 	"PLAYER_LOGOUT",
+	"PLAYER_MONEY",
 	"PLAYER_REGEN_DISABLED",
 	"PLAYER_REGEN_ENABLED",
 	"PLAYER_TARGET_CHANGED",
@@ -97,11 +101,8 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    One frame for the whole add-on, so the diagnostics event log captures
-    everything from a single tap. Each feature is a module with its own
-    dispatcher, handed only the events it subscribed to, in the order the
-    modules loaded. A module subscribed with units hears only those units' firings;
-    the frame itself registers each event once, unit-filtered only while every
+    One frame for the whole add-on, so the diagnostics event log taps
+    everything once. Each event registers once, unit-filtered only while every
     subscriber filters to the same two units or fewer.
 ]]
 local eventFrame = CreateFrame("Frame")
@@ -145,10 +146,7 @@ local function RefreshRegistration(event)
 	end
 end
 
---[[
-    Subscribes or releases one module's interest in one event. Unit arguments
-    after `enabled` make the subscription unit-filtered.
-]]
+-- Unit arguments after `enabled` make the subscription unit-filtered.
 function ns.SetModuleEvent(name, event, enabled, ...)
 	assert(KNOWN_EVENTS[event], "Event missing from ns.EVENT_NAMES: " .. tostring(event))
 	local module = assert(modulesByName[name], "Unknown event module: " .. tostring(name))
@@ -171,16 +169,12 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    AceDB reads the character's name once, as the library loads, and keeps the
-    character's profile choice under it. The newest AceDB among the enabled
-    add-ons is the one that loads, and when that happens before the client has
-    named the character, the name it read is the client's placeholder. Every
-    such login would then share one profile, and with it another character's
-    settings and Restock List. By PLAYER_LOGIN the name is known, so the
-    character is put on the profile saved under its real name, or on its own.
-    The logout half saves the session's choice under the real name and drops
-    the placeholder's entry. An AceDB older than the vendored one, which on
-    Forever reads a first name and no surname, is caught the same way.
+    Trap: AceDB reads the character's name once, as the newest copy among the
+    enabled add-ons loads, which can be before the client names the
+    character, so every such login would share the placeholder's profile. By
+    PLAYER_LOGIN the name is known, so the character goes on the profile saved
+    under its real name; logout saves under it and drops the placeholder. An
+    older AceDB reading Forever's first name alone is caught the same way.
 ]]
 local realProfileKey
 
@@ -226,11 +220,9 @@ local function MoveRenamedSettings()
 end
 
 --[[
-    Characters from another game version, dropped without a word. AceDB keys
-    a character "Name - Realm" on realm clients and "First Last" on the
-    realm-free ones (WoW Forever), so a saved key shaped the other way from
-    the one being played came from a copied WTF folder: its char section,
-    its profile choice and, unless someone still uses it, its own profile go.
+    AceDB keys a character "Name - Realm" on realm clients and "First Last" on
+    Forever, so a key shaped the other way came from a copied WTF folder: its
+    char section, profile choice and (unless still in use) its profile go.
 ]]
 local REALM_KEY_SEPARATOR = " - "
 
@@ -293,17 +285,12 @@ local function PruneSavedTable(sv, realmClient, profilesInUse)
 end
 
 --[[
-    The same characters' account-wide leftovers on ns.db.global. A Restock
-    List choice is keyed by the AceDB name, so the shape test above settles
-    it; its list then has no chooser, and goes at the Restocker's login if it
-    is empty (ns.PruneEmptyOrphanRestockLists).
-
-    An Inventory Report record names the character and its realm apart, so
-    the name settles it instead. A realm client's names never hold a space,
-    and a Forever one is the first name and surname (ns.GetPlayerFullName),
-    so a realm client drops every record whose name has one. Forever drops
-    the records with no space only when they are on another realm too, so a
-    Forever character with no surname on this realm stays.
+    The same characters' leftovers on ns.db.global. A Restock List choice is
+    keyed by the AceDB name, so the shape test settles it. Inventory Report
+    and Currency Replenish records name character and realm apart: a realm
+    client's names never hold a space, so a realm client drops every name with
+    one; Forever drops a spaceless name only on another realm, so a Forever
+    character with no surname here stays.
 ]]
 ---@param realmClient boolean
 ---@return nil
@@ -318,16 +305,18 @@ local function PruneOtherClientGlobals(realmClient)
 		end
 	end
 
-	local inventory = global.inventory
-	if type(inventory) ~= "table" then
-		return
-	end
+	-- The Inventory Report's records and Currency Replenish's carry the same name and realm, so one test fits both.
 	local realm = GetRealmName()
-	for key, record in pairs(inventory) do
-		if type(record) == "table" and type(record.name) == "string" then
-			local hasSurname = record.name:find("%s") ~= nil
-			if realmClient and hasSurname or not realmClient and not hasSurname and record.realm ~= realm then
-				inventory[key] = nil
+	local replenish = type(global.currencyReplenish) == "table" and global.currencyReplenish.characters
+	for _, records in ipairs({ global.inventory, replenish }) do
+		if type(records) == "table" then
+			for key, record in pairs(records) do
+				if type(record) == "table" and type(record.name) == "string" then
+					local hasSurname = record.name:find("%s") ~= nil
+					if realmClient and hasSurname or not realmClient and not hasSurname and record.realm ~= realm then
+						records[key] = nil
+					end
+				end
 			end
 		end
 	end
@@ -358,16 +347,11 @@ end
 
 --[[
     MIGRATION (remove after 2026-12-13)
-    Before Send Messages In, Buff Duty's whispered ask and Rank Watch's
-    whispers always went out in the client's language. An account that had
-    either turned on -- Buff Duty on with Ask for Buffs, or Rank
-    Watch on with Whisper Group Members -- keeps whispering in that language:
-    it gets the client's locale as its message language, when Good to Go
-    lists it. A whisper with no saved text follows that language's default,
-    so nothing else moves. Read from the raw saved table before AceDB fills
-    in defaults, since a value left at its default is simply absent there.
-    Runs once per account, stamped (messageLanguageMigrated, right after
-    AceDB opens) so a player who later picks English is never switched back.
+    An account already whispering (Buff Duty asks or Rank Watch whispers on)
+    keeps the client's language as its message language. Reads the raw saved
+    table before AceDB fills in defaults, since a value at its default is
+    absent there. Stamped once per account (messageLanguageMigrated), so a
+    later pick of English is never switched back.
 ]]
 local function MigrateMessageLanguage()
 	local sv = _G[ns.SAVED_VARIABLES_NAME]
@@ -397,17 +381,11 @@ end
 
 --[[
     MIGRATION (remove after 2026-12-19)
-    The Poisons macro became off by default for new players, now that Buff
-    Duty offers poisons too. An account that already had Good to Go keeps the
-    macro it had: left at the old default (absent from the saved table), it
-    gets an explicit true, so the new default doesn't remove a macro sitting
-    on someone's bar. An account carried over from Connoisseur keeps its
-    macro through the Connoisseur importer itself (Legacy-Migration.lua),
-    whichever login the import lands on. Reads the raw saved table before
-    AceDB fills in defaults. A table holding only the import's own
-    record (legacyImported) is a fresh install, which gets the new default.
-    Runs once per account, stamped (poisonsDefaultMigrated, right after AceDB
-    opens), fresh installs included, so a later uncheck stays.
+    Poisons is off by default for new players. An existing account's Poisons
+    left at the old default (absent from the raw saved table) gets an explicit
+    true, so the new default doesn't pull a macro off someone's bar. A table
+    holding only legacyImported is a fresh install. Stamped once per account
+    (poisonsDefaultMigrated), so a later uncheck stays.
 ]]
 local function HasSavedSettings(sv)
 	for key in pairs(sv) do
@@ -447,13 +425,9 @@ local function KeepPoisonsMacro()
 end
 
 --[[
-    One account-wide SavedVariable managed by AceDB-3.0, Per-Character: every
-    character lands on a profile of its own, named as AceDB names the
-    character (its first name and surname on WoW Forever, "Name - Realm" on
-    every other flavor). What differs by character rides the profile; what the whole
-    account shares -- the Restock Lists, every character's inventory, which
-    macros exist, Buff Duty's settings, presentation -- lives on
-    ns.db.global, each with its reason (see Data/Default-Settings.lua).
+    Per-Character: every character gets a profile of its own. What the whole
+    account shares lives on ns.db.global, each with its reason in
+    Data/Default-Settings.lua.
 ]]
 local function InitializeDatabase()
 	-- MIGRATION (remove after 2026-12-03)
@@ -500,14 +474,9 @@ local function InitializeDatabase()
 
 	--[[
 	    MIGRATION (remove after 2026-12-08)
-	    Connoisseur & Restocker's saved-data repairs, run on what it copied in:
-	    first each Forever character's list choice and Inventory Report
-	    record move to its whole-name key, then every
-	    character still on the shared Default profile gets one of its own. Both
-	    run before the callbacks below are wired, so their profile switch fires
-	    no handler halfway through login. Features/Macros-for-Consumables/Character-Key-Migration.lua
-	    and Features/Macros-for-Consumables/Default-Profile-Migration.lua list the pieces
-	    that come out together.
+	    Before the callbacks below are wired, so their profile switch fires no
+	    handler halfway through login. Character-Key-Migration.lua and
+	    Default-Profile-Migration.lua list the pieces that come out together.
 	]]
 	ns.RekeyCharactersByFullName()
 	ns.MoveCharactersOntoOwnProfiles()
@@ -518,13 +487,9 @@ local function InitializeDatabase()
 end
 
 --[[
-    A profile switch, copy or reset swaps every per-character setting at once.
-    Settings read live from the database update themselves; each feature
-    re-applies what it applied imperatively (macro bodies, aura tracking), the
-    mini-map button re-reads its saved table, and every open options panel,
-    the menu and the button's icon redraw through ns.RefreshSettings. The
-    Restock List in use is the character's own choice, not the profile's, so
-    a switch leaves it alone.
+    Settings read live update themselves; each feature re-applies what it set
+    imperatively (macro bodies, aura tracking). The Restock List in use is the
+    character's own choice, not the profile's, so a switch leaves it alone.
 ]]
 function ns:ApplyProfile()
 	if ns.ApplyConsumableMacrosProfile then
@@ -568,12 +533,8 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    PLAYER_LOGIN is the only place the database initializes: the earliest safe
-    point (SavedVariables are loaded) and before the first
-    PLAYER_ENTERING_WORLD, which refires on every loading screen. The panels
-    register right after, since the Profiles panel binds to ns.db, and only
-    then does each module hear PLAYER_LOGIN. None of this touches a protected
-    function, so it runs even when the player logs in mid-combat.
+    The database initializes only at PLAYER_LOGIN, before any module hears it.
+    Nothing here is protected, so it runs on a mid-combat login too.
 ]]
 eventFrame:SetScript("OnEvent", function(_, event, ...)
 	-- Diagnostics event-log tap; the boolean is read first so logging-off is free.
@@ -585,7 +546,7 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
 		ns.TurnOffReplacedAddons()
 		InitializeDatabase()
 		ns.RegisterOptionsPanels()
-		-- The one mini-map button every feature shares; LibDBIcon reads its saved position from ns.db.
+		-- After ns.db: LibDBIcon reads its saved position from it.
 		ns.RegisterMinimapIcon()
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		ns:PrintWelcome()

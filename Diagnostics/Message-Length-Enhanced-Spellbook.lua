@@ -8,13 +8,9 @@ local ShownText = ns.DiagnosticShownText
 --------------------------------------------------------------------------------
 
 --[[
-	Every macro the page lists for this class, built through the add-on's own builder with every option it
-	offers turned on and every equipped Use: item ticked, the longest each can get, and its byte length
-	against the macro limit. The builder reads the options through ns.IsOptionOn and ns.UseItemSlots, so the
-	report stands in for those two (and for ns.WarnOnce, so a macro too long to write prints nothing, and for
-	ns.HandOverMacro, which would otherwise move a replaced spell's saved settings and rename its WoW macro)
-	for one build, then puts them and the page's list back as they were. Nothing is written to the saved
-	settings or to any WoW macro.
+	The report stands in for ns.IsOptionOn and ns.UseItemSlots for one build (every option on, every Use: item
+	ticked), and for ns.WarnOnce and ns.HandOverMacro, which would otherwise warn, move a replaced spell's saved
+	settings and rename its WoW macro; then puts them and the page's list back. Nothing is written.
 ]]
 local function OfferedOption(macro, key)
 	return ns.OffersOption(macro, key)

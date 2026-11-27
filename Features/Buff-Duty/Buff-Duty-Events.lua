@@ -1,11 +1,7 @@
 local _, ns = ...
 local Data = ns.Data
 
---[[
-    Buff-Duty-Events -- Buff Duty's own module in Core's dispatcher. Each Buff
-    Duty file attaches its handler with ns.SetBuffDutyEventHandler; attaching
-    the same event twice replaces the earlier handler -- one owner per event.
-]]
+-- One handler per event: attaching the same event twice replaces the earlier handler.
 
 local MODULE = "BuffDuty"
 local eventHandlers = {}
@@ -21,13 +17,7 @@ ns.RegisterEventModule(MODULE, function(event, ...)
 	end
 end)
 
---[[
-    On while Buff Duty is on for your class. UNIT_AURA is unfiltered, since the
-    window reads the whole group; UNIT_SPELLCAST_SUCCEEDED, the player's only,
-    carries the Buff Key's casts and the resurrects. The combat log, which Forever's add-ons can't register,
-    says when anyone's resurrect lands and which strangers buff you (Return the Favor), which Forever reads off
-    your own UNIT_AURA instead; it is subscribed apart (SyncCombatLog), only while one of those two is in use.
-]]
+-- On while Buff Duty tracks your class. UNIT_AURA is unfiltered, since the window reads the whole group.
 local WINDOW_EVENTS = {
 	"GROUP_ROSTER_UPDATE",
 	"UNIT_PET",
@@ -53,11 +43,7 @@ local EVENT_UNITS = {
 	UNIT_POWER_UPDATE = { "player" },
 }
 
---[[
-    On regardless: login setup, a loading screen's In Instance refresh, and
-    combat starting and ending, since a change made to the window in combat,
-    switching it off included, waits for combat to end.
-]]
+-- Always on: a change made to the window in combat, switching it off included, waits for combat to end.
 for _, event in ipairs({
 	"PLAYER_LOGIN",
 	"PLAYER_ENTERING_WORLD",
@@ -68,10 +54,9 @@ for _, event in ipairs({
 end
 
 --[[
-    Login and every loading screen replay the auras already on you as if they
-    had just landed, so Return the Favor and the resurrect waits ignore the
-    combat log for a moment after each. A token voids earlier timers, so only
-    the latest loading screen's pause can end it.
+    Login and every loading screen replay the auras already on you as new, so
+    Return the Favor and the resurrect waits pause after each. A token voids
+    earlier timers, so only the latest pause can end it.
 ]]
 local isReady = false
 local safetyToken = 0
@@ -92,9 +77,9 @@ function ns.IsBuffDutyReady()
 end
 
 --[[
-    The combat log runs a line for every hit in a raid, so it is heard only while Buff Duty tracks your class
-    and either Return the Favor is on or you have a resurrection to hold back (BuffDuty.resurrection).
-    Re-checked whenever the window's events are, and when your spells change (a resurrection learned).
+    The combat log runs a line for every hit in a raid, so it is heard only
+    while Return the Favor is on or you know a resurrection. A new consumer
+    must widen this.
 ]]
 local function SyncCombatLog(on)
 	if not READS_COMBAT_LOG then
@@ -110,14 +95,10 @@ function ns.SyncBuffDutyCombatLog()
 	end
 end
 
--- Whether the window's events were on at the last check, so turning them on can catch up on the group you're in.
+-- So turning the events on can catch up on the group you're in.
 local windowEventsOn = false
 
---[[
-    Subscribes the window's events while Buff Duty tracks your class and
-    releases them while it doesn't. A closed window keeps them, so the Buff
-    Key still reads fresh auras.
-]]
+-- A closed window keeps its events, so the Buff Key still reads fresh auras.
 function ns.UpdateBuffDutyEvents()
 	if not (ns.db and ns.db.global) then
 		return
@@ -125,7 +106,7 @@ function ns.UpdateBuffDutyEvents()
 	local on = ns.IsBuffDutyTrackingForClass()
 	for _, event in ipairs(WINDOW_EVENTS) do
 		local wanted = on
-		-- Rage is only read for a warrior's Bloodrage (Buff-Duty-Self.lua); anyone else's mana ticks are left unheard.
+		-- Rage is only read for a warrior's Bloodrage (Buff-Duty-Rage.lua); anyone else's mana ticks are left unheard.
 		if event == "UNIT_POWER_UPDATE" then
 			wanted = on and select(2, UnitClass("player")) == "WARRIOR"
 		end
@@ -139,7 +120,6 @@ function ns.UpdateBuffDutyEvents()
 	windowEventsOn = on
 end
 
--- The player's own casts: the Buff Key hears its casts go off, and the resurrect waits hear theirs.
 local function OnUnitSpellcastSucceeded(unitTarget, _, spellID)
 	ns.OnBuffKeyCastSucceeded(unitTarget, spellID)
 	ns.OnResurrectCastSucceeded(unitTarget, spellID)
@@ -147,7 +127,6 @@ local function OnUnitSpellcastSucceeded(unitTarget, _, spellID)
 end
 ns.SetBuffDutyEventHandler("UNIT_SPELLCAST_SUCCEEDED", OnUnitSpellcastSucceeded)
 
--- Your rage: Battle Shout's icon swaps Bloodrage in or out as it crosses the cost (Buff-Duty-Self.lua).
 local function OnUnitPowerUpdate(_, powerType)
 	if powerType == "RAGE" then
 		ns.BuffDuty.CheckRageFirst()
@@ -156,8 +135,6 @@ end
 ns.SetBuffDutyEventHandler("UNIT_POWER_UPDATE", OnUnitPowerUpdate)
 
 --[[
-    A PvP flag going up or down, yours or anyone the window could buff:
-    their icons hold back or cast again (ns.BuffDuty.PvPFlaggedTarget).
     UNIT_FLAGS fires for every flag, combat's included, and for nameplates,
     so only a change to a watched unit's PvP flag redraws.
 ]]
@@ -191,10 +168,6 @@ local function OnUnitAura(unit, updateInfo)
 end
 ns.SetBuffDutyEventHandler("UNIT_AURA", OnUnitAura)
 
---[[
-    A dead player's resurrect icon hides while anyone's offer waits on them,
-    and a stranger's buff on you lists them under Return the Favor.
-]]
 local function OnCombatLogEventUnfiltered()
 	if not isReady then
 		return

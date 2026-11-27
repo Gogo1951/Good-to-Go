@@ -45,11 +45,7 @@ end
 -- API Checks
 --------------------------------------------------------------------------------
 
---[[
-    The Restocker's and the Inventory Report's own routes; the container,
-    merchant, bank and tooltip calls they share with the Consumable Macros sit in
-    Manifests-Macros-for-Consumables.lua.
-]]
+-- Calls shared with the Consumable Macros sit in Manifests-Macros-for-Consumables.lua.
 ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 	-- { label, testFunction }
 	-- ns.AddItemTooltipPostCall takes the post-call route only with this enum too (Features/Utilities.lua).
@@ -76,11 +72,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(Enum) == "table" and type(Enum.BankType) == "table" and Enum.BankType.Character ~= nil
 		end,
 	},
-	--[[
-	    Only WoW Forever has a reagent bag; where it does, the Restocker counts
-	    and stashes from it and the Inventory Report records it
-	    (ns.GetReagentBagID in Features/Utilities.lua).
-	]]
+	-- Only Forever has a reagent bag; the Restocker and the Inventory Report read it there.
 	{
 		"NUM_REAGENTBAG_SLOTS (WoW Forever)",
 		function()
@@ -123,12 +115,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(fontString) == "table" and type(fontString.GetUnboundedStringWidth) == "function"
 		end,
 	},
-	--[[
-	    The Restock and staples windows' title and portrait, each guarded
-	    (ns.CreateRestockerPortraitFrame). The window is built the first time
-	    it opens, so until then the check asks for the template that brings
-	    both; it creates nothing.
-	]]
+	-- The window is built on first open, so until then this asks for the template; it creates nothing.
 	{
 		"Restock window SetTitle and SetPortraitToAsset (guarded)",
 		function()
@@ -152,12 +139,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 -- Name Lookups
 --------------------------------------------------------------------------------
 
---[[
-    The Inventory Report panel's Example names its item through ns.GetItemLabel,
-    a Hearthstone when the bags hold no consumable. That label always has text,
-    so the lookup reads the name it is built from (ns.GetItemData), which is
-    nil until the client has the item.
-]]
+-- ns.GetItemLabel always has text, so this reads ns.GetItemData, nil until the client has the item.
 ns.AppendDiagnosticRows(ns.DIAGNOSTIC_NAME_LOOKUPS, {
 	{
 		constant = "HEARTHSTONE_ITEM_ID",
@@ -177,16 +159,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_NAME_LOOKUPS, {
 -- Restocker Context
 --------------------------------------------------------------------------------
 
---[[
-    The probe for "the Restocker did nothing" and "the tooltip shows no counts"
-    reports: the switches, the list this character shops from, the gold and
-    bag space a purchase needs, the windows open now, the open vendor's
-    standing, the reagents the list's crafts need, the staples offer's gates,
-    what a merchant would buy now, what an open bank could move and what the
-    cursor holds, the reminders, their gates and the sound settings, who
-    claims /restock, and the Inventory Report's hook, records and the block it
-    would add for an item in the bags. Read-only.
-]]
+-- For "the Restocker did nothing" and "the tooltip shows no counts" reports. Read-only.
 local function MoneyText(copper)
 	copper = copper or 0
 	return string.format("%dg %ds %dc", math.floor(copper / 10000), math.floor(copper / 100) % 100, copper % 100)
@@ -205,12 +178,8 @@ local function FreeBagSlots()
 end
 
 --[[
-    Slots holding a list item whose link the client has not resolved yet. The
-    counts read them by item ID, but the bank run's moves pick their slots
-    through ns.GetRestockContainerItemInfo (Restocker-Bags.lua), which skips a
-    slot without a link, so the run can't move those stacks yet, and a
-    merchant run counts no room in their partial stacks
-    (Restocker-Purchase-Space.lua).
+    Counts read these by item ID, but the bank run skips a slot without a link,
+    and a merchant run counts no room in their partial stacks.
 ]]
 local function UnlinkedListSlots(bagIDs, list)
 	local count = 0
@@ -230,12 +199,7 @@ local function FrameShown(name)
 	return type(frame) == "table" and type(frame.IsShown) == "function" and frame:IsShown() and true or false
 end
 
---[[
-    Every row short of its Keep, by the feature's own test
-    (ns.IsRestockItemShort), with what the bags hold. Built here rather than
-    through ns.BuildRestockShortfallList, which writes the client's item name
-    onto each row as it goes.
-]]
+-- Not through ns.BuildRestockShortfallList, which writes the item name onto each row.
 local function ShortRows(list)
 	local rows = {}
 	for _, row in pairs(list or {}) do
@@ -254,11 +218,7 @@ local function ShortRows(list)
 	return rows
 end
 
---[[
-    The rows a catch-up would move now (ns.UpgradeRestockList): Upgrade on, on
-    a ladder, and with a higher-ranked tier at or below the level. A tier's
-    fields are { level, itemID, rank }.
-]]
+-- A tier is { level, itemID, rank }.
 local function RowsDueUpgrade(list, level)
 	local index = {}
 	for _, chain in ipairs(ns.CONSUMABLE_UPGRADE_CHAINS or {}) do
@@ -303,7 +263,7 @@ function ns:BuildRestockerContextReport()
 		OnOff(global.restockerEnabled),
 		YesNo(ns.restockerLoaded)
 	)
-	-- The feature reads its settings through ns.restockSettings, an empty table until login binds it (Restocker-Core.lua).
+	-- ns.restockSettings is an empty table until login binds it.
 	lines[#lines + 1] = string.format(
 		"Settings bound to the saved table: %s // window built: %s",
 		YesNo(ns.restockSettings == settings),
@@ -326,16 +286,10 @@ function ns:BuildRestockerContextReport()
 		MoneyText(math.max(0, GetMoney() - reserve))
 	)
 
-	--[[
-	    The row switches each step skips on (Restocker-Merchant.lua,
-	    Restocker-Bank-Visit.lua, Restocker-Upgrade.lua): Buy, Take and Store,
-	    and Upgrade default on when unset; a row without an item ID can never
-	    match a vendor slot; a row needing a standing waits for a vendor who
-	    grants it.
-	]]
+	-- A row without an item ID never matches a vendor slot; one needing a standing waits for a vendor who grants it.
 	local buyOff, noID, takeOn, storeOn, upgradeOff, onLadder, unnamed, keepNone = 0, 0, 0, 0, 0, 0, 0, 0
 	local extraOn, notCached = 0, 0
-	-- A row whose item is not cached has no stack size or bag family to go on (Restocker-Merchant.lua, Restocker-Bags.lua).
+	-- An uncached item has no stack size or bag family to go on.
 	local IsCached = type(C_Item.IsItemDataCachedByID) == "function" and C_Item.IsItemDataCachedByID
 	local needsStanding = {}
 	for id, row in pairs(list or {}) do
@@ -343,7 +297,7 @@ function ns:BuildRestockerContextReport()
 			if row.buyFromMerchant == false then
 				buyOff = buyOff + 1
 			end
-			-- A Keep of 0 orders nothing unless Extra is on (Restocker-Merchant.lua).
+			-- A Keep of 0 orders nothing unless Extra is on.
 			if (row.amount or 0) <= 0 then
 				keepNone = keepNone + 1
 			end
@@ -410,11 +364,7 @@ function ns:BuildRestockerContextReport()
 		IsCached and tostring(notCached) or "(no API)"
 	)
 
-	--[[
-	    Plain bags take anything; a specialty bag takes only its own kind
-	    (Restocker-Purchase-Space.lua). The reagent bag is counted but never
-	    bought into (Restocker-Bags.lua).
-	]]
+	-- A specialty bag takes only its own kind; the reagent bag is counted but never bought into.
 	lines[#lines + 1] = string.format(
 		"Free bag slots: %d // bags the buy loop reads: %d // bags counted: %d // reagent bag: %s // list items in the bags without a link yet: %d",
 		FreeBagSlots(),
@@ -431,11 +381,7 @@ function ns:BuildRestockerContextReport()
 		end
 	end
 	lines[#lines + 1] = "Bags: " .. table.concat(bagLines, " // ")
-	--[[
-	    A flag that disagrees with the game's window: a stale merchant flag
-	    stops the bank run (Restocker-Bank-Visit.lua), and a flag never set
-	    skips the closing reminder.
-	]]
+	-- A stale merchant flag stops the bank run; a flag never set skips the closing reminder.
 	lines[#lines + 1] = string.format(
 		"Merchant open: %s (game's window shown: %s) // buying skipped (Shift held): %s // Bank open: %s (game's window shown: %s)",
 		YesNo(ns.merchantIsOpen),
@@ -445,11 +391,7 @@ function ns:BuildRestockerContextReport()
 		YesNo(FrameShown("BankFrame"))
 	)
 
-	--[[
-	    What the vendor itself decides (Restocker-Merchant.lua): a row needing a
-	    better standing than this vendor's is skipped in silence, and a vendor
-	    missing any reagent a craft needs sells none of them.
-	]]
+	-- A row needing better standing is skipped in silence; a vendor missing any reagent of a craft sells none.
 	if ns.merchantIsOpen then
 		local reaction = UnitReaction("npc", "player") or UnitReaction("target", "player") or 0
 		local plainReaction = ns.IsPlain(reaction)
@@ -475,12 +417,7 @@ function ns:BuildRestockerContextReport()
 		#reagents > 0 and table.concat(reagents, ", ") or "(none)"
 	)
 
-	--[[
-	    Each slot of the open vendor that holds a list item or a needed
-	    reagent, as the buy loop reads it: a slot sold out, not purchasable, or
-	    costing more than gold is passed over, and the reagents sell all or
-	    none.
-	]]
+	-- The buy loop passes over a slot sold out, not purchasable, or costing more than gold.
 	if ns.merchantIsOpen then
 		local sold, stocked = {}, {}
 		for index = 1, GetMerchantNumItems() or 0 do
@@ -517,12 +454,7 @@ function ns:BuildRestockerContextReport()
 		)
 	end
 
-	--[[
-	    What the bank visit reads, while the bank is open (Restocker-Bags.lua):
-	    the containers this client names now, and how many the run loaded for
-	    itself. Forever's tab list can still be empty when the bank opens, so
-	    a run holding none asks for them again at every step.
-	]]
+	-- Forever's tab list can be empty as the bank opens, so a run holding none asks again every step.
 	if ns.bankIsOpen and list then
 		local bankBags = ns.BankBagIDs()
 		lines[#lines + 1] = string.format(
@@ -535,12 +467,6 @@ function ns:BuildRestockerContextReport()
 		)
 		lines[#lines + 1] =
 			string.format("List items in the bank without a link yet: %d", UnlinkedListSlots(bankBags, list))
-		--[[
-		    The work a run finds, read with its own container scans
-		    (RestockState:RemainingWork in Restocker-Bank-State.lua): a Take row
-		    pulls only while the bags hold less than Keep and the bank holds
-		    some, and a Store row stores only above Keep.
-		]]
 		local function OnList(itemID)
 			return list[itemID] ~= nil
 		end
@@ -558,7 +484,7 @@ function ns:BuildRestockerContextReport()
 				end
 			end
 		end
-		-- A run waits out an item on the cursor that is not on the list (RestockState:ClearCursorForScan).
+		-- A run waits out an item on the cursor that is not on the list.
 		local cursorType, cursorID = GetCursorInfo()
 		lines[#lines + 1] = string.format(
 			"Take rows the bank can fill now: %d // Store rows above Keep now: %d // on the cursor: %s",
@@ -567,7 +493,7 @@ function ns:BuildRestockerContextReport()
 			CursorHasItem() and string.format("%s %s", tostring(cursorType), tostring(cursorID)) or "(nothing)"
 		)
 	end
-	-- A bank run makes one move per step, every three round trips of the slower connection and never under 0.14s (Restocker-Bank-Visit.lua).
+	-- One move per step: three round trips of the slower connection, never under 0.14s.
 	local _, _, latencyHome, latencyWorld = GetNetStats()
 	lines[#lines + 1] = string.format(
 		"Bank trace in the Event Log: %s // latency home %s ms, world %s ms // a bank step every %.2fs",
@@ -585,11 +511,7 @@ function ns:BuildRestockerContextReport()
 		YesNo(IsResting()),
 		YesNo(UnitOnTaxi("player"))
 	)
-	--[[
-	    Restocker-Town-Reminder.lua is new this release, so after a /reload
-	    from an update it and its handlers are absent until a restart, and no
-	    arrival reminds (Restocker-Events.lua).
-	]]
+	-- A file added to the TOC loads only after a restart, not a /reload.
 	local handlers = ns.restockerEventHandlers or {}
 	lines[#lines + 1] = string.format(
 		"Town reminder file loaded: %s // handlers for walking in: %s, landing: %s, loading screens: %s",
@@ -598,7 +520,7 @@ function ns:BuildRestockerContextReport()
 		YesNo(handlers.PLAYER_CONTROL_GAINED),
 		YesNo(handlers.PLAYER_ENTERING_WORLD)
 	)
-	-- The reminder sound plays on the Master channel (Restocker-Town-Reminder.lua).
+	-- The reminder sound plays on the Master channel.
 	lines[#lines + 1] = string.format(
 		"Sound CVars: Sound_EnableAllSound %s, Sound_MasterVolume %s, Sound_EnableSoundWhenGameIsInBG %s // alert sound file set: %s",
 		tostring(GetCVar("Sound_EnableAllSound")),
@@ -623,10 +545,7 @@ function ns:BuildRestockerContextReport()
 		tostring(settings.restockLowThreshold),
 		YesNo(settings.remindersMovedOntoSimple)
 	)
-	--[[
-	    What a reminder would report now, split as ns.BuildRestockReminderLists
-	    splits it; with both counts 0 none prints.
-	]]
+	-- With both counts 0 no reminder prints.
 	local shortRows = ShortRows(list)
 	local out, low = ns.SplitRestockShortfall(shortRows, settings.restockLowThreshold)
 	lines[#lines + 1] = string.format(
@@ -641,7 +560,7 @@ function ns:BuildRestockerContextReport()
 		YesNo(ns.restockWindowOpenedByVisit),
 		UnitLevel("player") or 0
 	)
-	-- A filter or a picked group can hide every row (Restocker-Window-Filter.lua, Restocker-Window-Categories.lua).
+	-- A filter or a picked group can hide every row.
 	lines[#lines + 1] = string.format(
 		"Filter: %q // group: %s // rows shown: %d",
 		tostring(ns.restockListFilter or ""),
@@ -669,13 +588,7 @@ function ns:BuildRestockerContextReport()
 		lines[#lines + 1] = "Characters on this list: " .. (#names > 0 and table.concat(names, ", ") or "(none)")
 	end
 
-	--[[
-	    The staples offer opens once, on a fresh login (never a /reload), only
-	    when every gate below passes (Restocker-Starter-List.lua): the
-	    Restocker on and started, no pending legacy import, level 6 or above, a
-	    list that exists and is empty, a staple offered for the class, and out
-	    of combat.
-	]]
+	-- The staples offer opens once, on a fresh login (never a /reload), only when every gate below passes.
 	local classToken = select(2, UnitClass("player"))
 	local offered, preTicked = 0, 0
 	if ns.restockerLoaded then
@@ -699,7 +612,7 @@ function ns:BuildRestockerContextReport()
 		offered,
 		YesNo(InCombatLockdown())
 	)
-	-- A staple whose ladder this client's folder lacks is dropped at load (Restocker-Starter-List.lua).
+	-- A staple whose ladder this client's folder lacks is dropped at load.
 	lines[#lines + 1] = string.format(
 		"Staples on this client: %d of %d // pre-ticked for this class: %d",
 		#ns.GetStarterCategories(),
@@ -719,7 +632,7 @@ function ns:BuildRestockerContextReport()
 	end
 	table.sort(listNames)
 	lines[#lines + 1] = "List names: " .. (#listNames > 0 and table.concat(listNames, ", ") or "(none)")
-	-- Another add-on registering /restock can take the command over (Options/Options.lua).
+	-- Another add-on registering /restock can take the command over.
 	local claimants = {}
 	for key, value in pairs(_G) do
 		if
@@ -733,10 +646,7 @@ function ns:BuildRestockerContextReport()
 		end
 	end
 	table.sort(claimants)
-	--[[
-	    The chat box runs whichever handler its command cache holds for
-	    /RESTOCK, filled the first time a slash command is typed.
-	]]
+	-- The chat box runs whatever its command cache holds, filled the first time a slash command is typed.
 	local slashCache = _G.hash_SlashCmdList
 	local cached = type(slashCache) == "table" and slashCache["/RESTOCK"] or nil
 	lines[#lines + 1] = string.format(
@@ -746,10 +656,6 @@ function ns:BuildRestockerContextReport()
 		cached == nil and "(not cached yet)" or YesNo(cached == SlashCmdList.GOODTOGORESTOCK)
 	)
 
-	--[[
-	    What a merchant visit would buy now (ns.BuildGroceryList: the rows short
-	    of their Keep amount with Buy on), with what the bags hold.
-	]]
 	local short = {}
 	for _, entry in ipairs(shortRows) do
 		if entry.buys then
@@ -759,11 +665,6 @@ function ns:BuildRestockerContextReport()
 	lines[#lines + 1] =
 		string.format("Short now (a merchant would buy): %s", #short > 0 and table.concat(short, ", ") or "(nothing)")
 
-	--[[
-	    The Inventory Report's files (Features/Inventory-Report/) are new in a
-	    TOC, so a client updated while running reads them only after a restart:
-	    until then the feature is absent.
-	]]
 	local inventory = global.inventory or {}
 	lines[#lines + 1] = ""
 	lines[#lines + 1] = "-- Inventory Report --"
@@ -772,11 +673,7 @@ function ns:BuildRestockerContextReport()
 		OnOff(global.inventoryReport),
 		YesNo(ns.InitializeInventoryReport)
 	)
-	--[[
-	    The route ns.AddItemTooltipPostCall picks (Features/Utilities.lua), the
-	    same test it makes. The hooks go on a few seconds after login, and only
-	    the game's own tooltip and the chat-link tooltip get the counts.
-	]]
+	-- The same test ns.AddItemTooltipPostCall makes. The hooks go on a few seconds after login.
 	lines[#lines + 1] = string.format(
 		"Tooltip route: %s (GameTooltip and ItemRefTooltip only) // GameTooltip forbidden now: %s",
 		(TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum.TooltipDataType)
@@ -789,7 +686,6 @@ function ns:BuildRestockerContextReport()
 		YesNo(ns.GetInventoryRecord and ns.GetInventoryRecord()),
 		CountKeys(ns.GetInventoryBankCounts and ns.GetInventoryBankCounts() or nil)
 	)
-	-- The block the hook would add for the first item in the bags, through its own builder: nil adds nothing.
 	local sampleID
 	for bag = BACKPACK_CONTAINER, NUM_BAG_SLOTS do
 		for slot = 1, C_Container.GetContainerNumSlots(bag) do
@@ -809,10 +705,7 @@ function ns:BuildRestockerContextReport()
 		ItemText(sampleID),
 		sampleLines and string.format("%d lines", #sampleLines) or "none"
 	)
-	--[[
-	    Only characters on this realm are listed, and a bank never opened yet
-	    counts as 0 (Inventory-Report-Recording.lua).
-	]]
+	-- Only this realm's characters are listed; a bank never opened counts as 0.
 	local realm = GetRealmName()
 	local onRealm = 0
 	for _, entry in pairs(inventory) do
@@ -829,11 +722,7 @@ function ns:BuildRestockerContextReport()
 		YesNo(own and own.bank)
 	)
 	lines[#lines + 1] = string.format("Characters recorded: %d // on this realm: %d", CountKeys(inventory), onRealm)
-	--[[
-	    Login drops another record holding this GUID (a rename) and clears this
-	    record's bags and bank when it held another GUID (a deleted namesake);
-	    a secret GUID skips both (Inventory-Report-Recording.lua).
-	]]
+	-- A secret GUID skips both login checks (rename, deleted namesake).
 	local guid = UnitGUID("player")
 	local guidReadable = guid ~= nil and ns.IsPlain(guid)
 	local sharing = 0

@@ -4,12 +4,6 @@ local L = ns.L
 local GetColor = ns.GetColor
 local HideTooltip = ns.HideTooltip
 
---[[
-	One macro's tile on the spellbook page: its icon, its name with its note under it (the rank and the options
-	that are on, worded by Features/Enhanced-Spellbook/Macro-Button-Notes.lua), the glow while it isn't on the bars, its tooltip, and the click, drag and right-click that
-	place it or open its menu (Features/Enhanced-Spellbook/Macro-Menu.lua). Features/Enhanced-Spellbook/Spellbook-Page.lua lays the tiles out.
-]]
-
 local TILE_WIDTH, TILE_HEIGHT, ICON_SIZE = 224, 32, 32
 ns.TILE_WIDTH, ns.TILE_HEIGHT = TILE_WIDTH, TILE_HEIGHT
 
@@ -20,8 +14,8 @@ local PICK_DIMMED_ALPHA = 0.35 -- a tile pick mode can't take
 local FADED_INK_COLOR = ns.FADED_INK_COLOR
 
 --[[
-	The native spell item's atlases (Camelot's SpellBookItemTemplate, read in game), whose anchors are offsets
-	from its icon. Each falls back to an old file texture, sized from the icon, if this build lacks the atlas.
+	Camelot's SpellBookItemTemplate atlases, anchored as offsets from the icon; each falls back to an old file
+	texture where this build lacks it.
 ]]
 local ATLAS_FRAME = "spellbook-item-iconframe"
 local ATLAS_FRAME_INACTIVE = "spellbook-item-iconframe-inactive"
@@ -33,7 +27,6 @@ local function HasAtlas(atlas)
 	return C_Texture.GetAtlasInfo(atlas) ~= nil
 end
 
--- Stretches texture over the icon, grown by the given insets (left, top, right, bottom).
 local function SetAroundIcon(texture, icon, left, top, right, bottom)
 	texture:ClearAllPoints()
 	texture:SetPoint("TOPLEFT", icon, "TOPLEFT", -left, top)
@@ -55,10 +48,8 @@ local function SetAtlasOr(texture, atlas, file, scale, icon)
 end
 
 --[[
-	The spell whose own tooltip heads the macro's: the rank a macro is fixed to (ns.FixedRankID: a rank's own
-	macro, or one set to a rank in its options), else a learned spell by name, so its highest known rank, an
-	unlearned one by its ID. Nil when there's none, as for a consumable, which leads with its item's. The ranks
-	the tooltip lists (ns.AddSpellRanksTooltip) mark this one.
+	A fixed rank first, else a learned spell by name, so its highest known rank shows; an unlearned one by ID.
+	nil for a consumable, which leads with its item's tooltip.
 ]]
 local function TooltipSpellID(macro)
 	if macro.consumable then
@@ -78,15 +69,11 @@ local function TooltipSpellID(macro)
 	return info and info.spellID or macro.spellID
 end
 
--- Whether a macro's options menu (on Menu-Kit's panels) or any of the game's menus is open.
 local function MenuOpen()
 	return ns.IsMacroMenuPanelsShown() or (Menu ~= nil and Menu.GetManager ~= nil and Menu.GetManager():IsAnyMenuOpen())
 end
 
---[[
-	Middle-click, asked first: the macro's own options dropped, the page redrawn and its WoW macro rewritten
-	to match. data is the macro.
-]]
+-- Middle-click's reset; data is the macro.
 StaticPopupDialogs.GOODTOGO_RESET_MACRO = {
 	text = L["MENU_RESET_MACRO_CONFIRM"],
 	button1 = L["POPUP_RESET"],
@@ -133,11 +120,7 @@ local function CreateMacroButton(parent)
 		button.glow:SetVertexColor(1, 0.82, 0) -- the texture is white; Blizzard tints it per use
 	end
 	button.glow:Hide()
-	--[[
-		the outline and wash on the tile the Conditionals or Cast Sequence panel is open for
-		(Features/Enhanced-Spellbook/Macro-Builder/Conditionals-Panel.lua, Features/Enhanced-Spellbook/Macro-Builder/Cast-Sequence-Panel.lua), as textures of the
-		tile's own, so the wash sits under its icon and name
-	]]
+	-- the open docked panel's outline and wash, as the tile's own textures so the wash sits under icon and name
 	button.editing = {}
 	local wash = button:CreateTexture(nil, "BACKGROUND", nil, -8)
 	wash:SetColorTexture(INFO.r, INFO.g, INFO.b, EDITING_FILL_ALPHA)
@@ -175,8 +158,8 @@ local function CreateMacroButton(parent)
 	SetAroundIcon(highlight, button.icon, 2, 2, 2, 2)
 
 	--[[
-		the name in dark ink, without the font's shadow, which reads as a smudge on parchment; always high by the
-		icon, so it sits in the same place with a note under it or none
+		no font shadow, which reads as a smudge on parchment; always high by the icon, so it sits in the same place
+		with a note under it or none
 	]]
 	button.name = button:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	button.name:SetShadowOffset(0, 0)
@@ -184,10 +167,7 @@ local function CreateMacroButton(parent)
 	button.name:SetPoint("TOPRIGHT", button, "TOPRIGHT", 0, -3)
 	button.name:SetJustifyH("LEFT")
 	button.name:SetWordWrap(false)
-	--[[
-		the note under it, in faded ink on the parchment, its letters' foot level with the icon's bottom: the
-		line's box drops a unit below the icon, the room it keeps under the letters for descenders
-	]]
+	-- the line's box drops a unit below the icon, its descender room, so the letters' foot meets the icon's bottom
 	button.subText = button:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	button.subText:SetShadowOffset(0, 0)
 	button.subText:SetPoint("BOTTOMLEFT", button.icon, "BOTTOMRIGHT", 8, -1)
@@ -201,10 +181,7 @@ local function CreateMacroButton(parent)
 	end)
 	button:RegisterForClicks("LeftButtonUp", "RightButtonUp", "MiddleButtonUp")
 	button:SetScript("OnClick", function(self, mouseButton)
-		--[[
-			while the Conditionals or Cast Sequence panel waits for a spell (Features/Enhanced-Spellbook/Macro-Builder/Spell-Pick.lua),
-			a click gives it this one and any other button cancels; a drag still places the macro
-		]]
+		-- in pick mode a click gives the panel this spell and any other button cancels; a drag still places the macro
 		if ns.IsPickingSpell() then
 			HideTooltip(self)
 			if mouseButton == "LeftButton" then
@@ -232,16 +209,11 @@ local function CreateMacroButton(parent)
 			return
 		end
 		ns.SetTooltipOwner(self)
-		--[[
-			the spell's own tooltip (a consumable's item's) comes first, then its ranks and the level each needs
-			("Immolate Ranks … GtG", Features/Enhanced-Spellbook/Spell-Ranks-Tooltip.lua), then the macro as a block of our own
-			("Immolate Macro … GtG")
-		]]
 		local spellID = TooltipSpellID(self.macro)
 		if self.macro.itemLink then
 			GameTooltip:SetHyperlink(self.macro.itemLink)
 		elseif spellID then
-			-- the tile adds its own ranks, marking the rank it casts, so the tooltip hook (Spell-Ranks-Tooltip.lua) stays out
+			-- the tile adds its own ranks, marking the one it casts, so the tooltip hook stays out
 			ns.spellTooltipHasOwnRanks = true
 			GameTooltip:SetSpellByID(spellID)
 			if GameTooltip:NumLines() == 0 then
@@ -302,7 +274,6 @@ local function CreateMacroButton(parent)
 			GameTooltip:Show()
 			return
 		end
-		-- each click on a line of its own
 		ns.AddSpellbookClickLine(L["TOOLTIP_ACTION_PLACE_ON_BAR"], L["TOOLTIP_KEY_CLICK_DRAG"])
 		if ns.HasOptions(self.macro) then
 			ns.AddSpellbookClickLine(L["TOOLTIP_ACTION_MACRO_OPTIONS"], L["TOOLTIP_KEY_RIGHT_CLICK"])
@@ -315,10 +286,7 @@ local function CreateMacroButton(parent)
 	return button
 end
 
---[[
-	Whether a macro glows: learned but not on the bars (from ns.ScanActionBars). The stance bar's forms
-	(noGlow) and macros marked placed never glow.
-]]
+-- The stance bar's forms (noGlow) and macros marked placed never glow.
 function ns.MacroGlows(macro, bars)
 	return not macro.noGlow
 		and not macro.unlearned
@@ -326,7 +294,7 @@ function ns.MacroGlows(macro, bars)
 		and not ns.IsOnActionBars(macro, bars)
 end
 
--- Whether any macro the page can list glows, on any page, which is when Mark All Spells as Placed has work to do.
+-- On any page: when Mark All Spells as Placed has work to do.
 function ns.AnyMacroGlows(bars)
 	for _, macro in ipairs(ns.macros) do
 		if ns.MacroGlows(macro, bars) then
@@ -351,21 +319,13 @@ local function UpdateGlow(button, bars)
 	end
 end
 
---[[
-	The note under the name, or nil for none: why the page can't place the macro, in red; else a consumable's
-	Dynamic Item (and Dynamic Rank, when the class also casts it),
-	the rank and the options that are on (ns.MacroOptionSubText in Macro-Button-Notes.lua), when an unlearned spell can be learned, or the spell's own subtext as the game's spellbook shows it ("Racial").
-]]
 local function NoteText(button, macro)
 	if button.blockReason then
 		return GetColor("OFF") .. L["SUBTEXT_TOO_LONG"] .. "|r"
 	elseif macro.consumable then
 		return L[macro.dynamicRank and "SUBTEXT_DYNAMIC_RANK_ITEM" or "SUBTEXT_DYNAMIC_ITEM"]
 	end
-	--[[
-		a learned spell with ranks ("Rank 4") leads with "Max Rank", since the macro casts the highest rank known,
-		unless it is set to a fixed or dynamic rank, which names its own
-	]]
+	-- "Max Rank", since the macro casts the highest rank known, unless a fixed or dynamic rank names its own
 	local spellID = TooltipSpellID(macro)
 	local spellSubText = spellID and C_Spell.GetSpellSubtext(spellID) or ""
 	local maxRank = not macro.unlearned
@@ -385,10 +345,7 @@ local function NoteText(button, macro)
 	return nil
 end
 
---[[
-	bars is a ns.ScanActionBars() result, read here when nil. A spell's rank macros share its name, told
-	apart by their notes ("Rank 3").
-]]
+-- bars is a ns.ScanActionBars() result, read here when nil.
 local function SetMacro(button, macro, bars)
 	-- Consumable Macros rewrites a consumable's macro as the bags change, so its item is read again at each draw
 	if macro.consumable then

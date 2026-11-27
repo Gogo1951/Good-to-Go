@@ -4,10 +4,6 @@ local _, ns = ...
 -- Target Helpers
 --------------------------------------------------------------------------------
 
---[[
-    Single source of truth for "is the current target a friendly player",
-    which GetSmartSpell reads to downrank a conjure for that player.
-]]
 local function HasFriendlyPlayerTarget()
 	return UnitExists("target") and UnitIsFriend("player", "target") and UnitIsPlayer("target")
 end
@@ -18,48 +14,21 @@ ns.HasFriendlyPlayerTarget = HasFriendlyPlayerTarget
 --------------------------------------------------------------------------------
 
 --[[
-    PLAYER_TARGET_CHANGED fires on every tab, and a rebuild is a full bag
-    rescan, so an unconditional request there costs one of those per mob
-    targeted. Only four things about a target reach a macro body:
-
-      is it a friendly player  -- the conjure downrank (ns.HasFriendlyPlayerTarget)
-      is it the player         -- plain-food mode (targetingSelf in ns.ScanBags)
-      its level, when it is a  -- the conjure downrank cap (ns.GetSmartSpell),
-      friendly player             which reads no other target's level
-      is it Humanoid or        -- the Cannibalize line (ns.TargetIsCannibalizable),
-      Undead, for the Forsaken    read only while a Cannibalize switch is on
-
-    Those four ARE the whole of what a target contributes to a written body,
-    so anything new that reads the target MUST join this signature or its macro
-    goes stale. Same diff-before-requesting shape ns.OnUnitAura uses on
-    UNIT_AURA, and the group signature and ns.PetFoodQuestsChanged use on the
-    other firehoses.
-
-    GROUP_ROSTER_UPDATE fires on every raid roster change, yet the only group
-    state a written body reads is the group context (ns.GetGroupContext, behind
-    every When to Use's checkboxes in ns.IsUseWhenActive). Hunters'
-    QUEST_LOG_UPDATE fires on every objective tick and is diffed by
-    ns.PetFoodQuestsChanged in Tools-Hunters-Pet-Food.lua.
-
-    Left nil until the first firing, so the first reading always counts as a
-    change rather than being compared against a state nobody has read yet.
-
-    PLAYER_TARGET_CHANGED runs in combat, where the client can restrict unit
-    comparisons (Forever): UnitIsUnit then returns a secret value, and testing
-    it errors. While C_Secrets says the comparison is off, the self reading
-    keeps its last value, so a restricted read counts as unchanged, never as a
-    flip. The creature-type reading does the same when the client hides it.
-    When the whole target identity is hidden (Forever, in combat), nothing is
-    read and the readings are owed: ns.RereadTargetIfPending takes them once
-    combat ends, so a target changed mid-fight still counts after it.
+    Busy events rescan only on a real change. Anything new that reads the
+    target MUST join this signature (friendly player, self, friendly level,
+    cannibalizable) or its macro goes stale. Nil until the first firing, so the
+    first reading always counts as a change.
 ]]
 local lastTargetFriendly, lastTargetIsSelf, lastTargetLevel, lastTargetCannibalizable
 local lastGroupContext
 local targetReadPending = false
 
--- Records this firing's target readings and reports whether any of the four moved.
+--[[
+    A restricted comparison (Forever, in combat) returns a secret that errors
+    when tested, so a hidden reading keeps its last value: unchanged, never a
+    flip. A hidden identity owes the whole reading until combat ends.
+]]
 function ns.TargetSignatureChanged()
-	-- Forever hides a target's identity in combat; the last readings stand until it can be read again.
 	if ns.IsUnitIdentitySecret("target") then
 		targetReadPending = true
 		return false
@@ -88,7 +57,6 @@ function ns.TargetSignatureChanged()
 	return changed
 end
 
--- The target readings a hidden identity put off, taken now; true when they moved meanwhile.
 function ns.RereadTargetIfPending()
 	if not targetReadPending then
 		return false
@@ -96,7 +64,6 @@ function ns.RereadTargetIfPending()
 	return ns.TargetSignatureChanged()
 end
 
--- Records this firing's group context and reports whether it moved.
 function ns.GroupSignatureChanged()
 	local context = ns.GetGroupContext()
 	local changed = context ~= lastGroupContext

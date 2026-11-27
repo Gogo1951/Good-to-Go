@@ -5,26 +5,7 @@ local Kit = ns.OptionsKit
 
 local GetColor = ns.GetColor
 
---[[
-    "Buff Duty" panel -- the click-to-cast list of group members missing a buff
-    you can give (Features/Buff-Duty/Buff-Duty.lua, data in this client's
-    Data/{Game}/Buff-Duty-Spells-{Game}.lua). The enable switch at the top,
-    twinned in the root panel's Features section, is the master; everything
-    below it hides while it is off. Each optional row of the window has its
-    switch here, Self Buffs and Weapon Buffs included. The Cast Next Buff key's
-    binding is on the root panel, with every other key binding. What each buff
-    is offered to lives in sub-panels of this one: Group Buffs
-    (Options-Buff-Duty-Buffs.lua), Self-Buffs
-    (Options-Buff-Duty-Self-Buffs.lua), Weapon Buffs
-    (Options-Buff-Duty-Weapon-Buffs.lua), and Well Fed, Scrolls, Flasks or
-    Elixirs and Other Buffs (Options-Buff-Duty-Consumables.lua). The ask whispered to other classes
-    is the player's to word, in the whisper composer under Ask for Buffs
-    (Options/Options-Message-Composer.lua), and so is the ask to
-    your target, in the one under Ask Your Target for Buffs.
-
-    Every window setting's setter ends in ns.RefreshBuffDuty, which rebuilds
-    the castable list and redraws the window.
-]]
+-- Every window setting's setter ends in ns.RefreshBuffDuty, which rebuilds the castable list and redraws.
 
 function ns.BuildBuffDutyOptions()
 	local function Settings()
@@ -52,11 +33,7 @@ function ns.BuildBuffDutyOptions()
 		}
 	end
 
-	--[[
-	    The asks' sample buff: the Mage's raid buff where this client has one,
-	    else the first raid buff in its data, linked at its top rank the way
-	    the window links it. Nil where the client has no raid buff.
-	]]
+	-- Nil where the client has no raid buff.
 	local function SampleAskLink()
 		local pick
 		for _, entry in ipairs(ns.BuffDuty.entries) do
@@ -75,12 +52,10 @@ function ns.BuildBuffDutyOptions()
 		return ns.GetSpellLink(id) or C_Spell.GetSpellName(id) or ""
 	end
 
-	-- Two of the sample names, missing the sample buff.
 	local function SampleAskNames()
 		return { ns.SAMPLE_NAMES.PRIEST, ns.SAMPLE_NAMES.SHAMAN }
 	end
 
-	-- The Example line for the ask the Party-Buffs hover menu's Ask row sends, as the group reads it.
 	local function AskExample()
 		local names = SampleAskNames()
 		return Kit.SentLine("PARTY", ns:BuildBuffRequestMessage(names, #names, SampleAskLink() or ""))
@@ -90,12 +65,10 @@ function ns.BuildBuffDutyOptions()
 		return Hidden() or not Settings().askOtherClasses
 	end
 
-	-- Ask Your Target for Buffs sits under Your Target, and its composer with it.
 	local function AskTargetHidden()
 		return Hidden() or not Settings().targetEnabled or not Settings().askTarget
 	end
 
-	-- The sample ask to a target: a priest's two buffs, where this client has them; else the asks' sample buff.
 	local function SampleTargetSpells()
 		local spells = {}
 		for _, entry in ipairs(ns.BuffDuty.entries) do
@@ -110,19 +83,11 @@ function ns.BuildBuffDutyOptions()
 		return spells
 	end
 
-	-- No Example where the client has no raid buff to ask for.
 	local function AskExampleHidden()
 		return AskHidden() or not SampleAskLink()
 	end
 
-	--[[
-	    When to Show's rows: the shared group context checkboxes
-	    (ns.OptionsGroupContextToggle), one to a row. Solo, Party and Raid each
-	    take a where dropdown on their row (Kit.ToggleRow), Anywhere or In
-	    Instance, shown only while the box beside it is ticked, like Return the
-	    Favor's. Battleground has none: a battleground or arena is always an
-	    instance.
-	]]
+	-- Battleground takes no where dropdown: a battleground or arena is always an instance.
 	local function ShowIn()
 		return Settings().showIn
 	end
@@ -148,7 +113,6 @@ function ns.BuildBuffDutyOptions()
 		return Kit.ToggleRow(order, toggle, { control = where, hidden = Hidden })
 	end
 
-	-- How long a stranger who buffed you stays listed: Return the Favor's setting.
 	local function FavorSeconds()
 		return {
 			type = "select",
@@ -171,11 +135,7 @@ function ns.BuildBuffDutyOptions()
 		}
 	end
 
-	--[[
-	    Well Fed, Scrolls, Flasks or Elixirs and Other Buffs: each category's
-	    Show in Buff Duty, as its page and its menu in the window have it,
-	    named as its page is. Hidden where this client has nothing for it.
-	]]
+	-- Hidden where this client has nothing for the category.
 	local function CategoryToggle(row, name, order)
 		return {
 			type = "toggle",
@@ -203,10 +163,7 @@ function ns.BuildBuffDutyOptions()
 			descIntro = Kit.Desc(L["BUFF_DUTY_DESCRIPTION"], 1),
 			space0 = Kit.Spacer(2),
 			enable = Kit.FeatureSwitch("buffWindow.enabled", 3),
-			--[[
-			    A status line, shown only on a class with nothing on the list: the
-			    switch above is on, and the window will still never appear.
-			]]
+			-- The switch is on, yet on a class with nothing to list the window never appears.
 			noBuffs = Kit.StatusLine(function()
 				if Hidden() or ns.BuffDutyHasClassRows() then
 					return nil
@@ -215,10 +172,6 @@ function ns.BuildBuffDutyOptions()
 			end, 4),
 			space1 = Kit.Spacer(5, Hidden),
 
-			--[[
-			    When the window may show at all: in which group contexts, and on
-			    which classes. The class toggles are added to `classes` below.
-			]]
 			headerWhen = Kit.Header(L["BUFF_DUTY_WHEN_HEADER"], 5.1, Hidden),
 			spaceWhen0 = Kit.Spacer(5.11, Hidden),
 			descWhen = Kit.Desc(L["BUFF_DUTY_WHEN_DESCRIPTION"], 5.12, Hidden),
@@ -251,13 +204,7 @@ function ns.BuildBuffDutyOptions()
 			},
 			spaceClasses1 = Kit.Spacer(5.4, Hidden),
 
-			--[[
-			    The window's optional rows, in the order it shows them and under
-			    the window's Options' own headers: your categories (Self-Buffs,
-			    Well Fed, Weapon Buffs, Scrolls, Flasks or Elixirs, Other Buffs),
-			    then, under Other Players, Ask for Buffs, Your Target, Return the
-			    Favor and Buff PvP-Flagged Players.
-			]]
+			-- In the window's order and under its Options menu's own headers.
 			headerShow = Kit.Header(L["BUFF_DUTY_SHOW_HEADER"], 6, Hidden),
 			space2 = Kit.Spacer(7, Hidden),
 			descShow = Kit.Desc(L["BUFF_DUTY_SHOW_DESCRIPTION"], 7.3, Hidden),
@@ -309,12 +256,7 @@ function ns.BuildBuffDutyOptions()
 			-- 12.2 through 12.39 belong to the ask-your-target whisper composer, added below.
 			askTargetComposerSpace = Kit.Spacer(12.15, AskTargetHidden),
 			spaceFavor = Kit.Spacer(12.4, Hidden),
-			--[[
-			    The toggle and how long a stranger stays listed, on one row
-			    (Kit.ToggleRow); the dropdown appears only while the toggle is on.
-			    Labeled with the client's own duration strings, so "1 Minute" reads
-			    right in every locale without a string of ours.
-			]]
+			-- The client's own duration strings, so "1 Minute" reads right in every locale.
 			favorEnabled = Kit.ToggleRow(
 				12.5,
 				Toggle("favorEnabled", L["BUFF_DUTY_FAVOR_ENABLE"], L["BUFF_DUTY_FAVOR_ENABLE_DESCRIPTION"]),
@@ -357,13 +299,7 @@ function ns.BuildBuffDutyOptions()
 		},
 	}
 
-	--[[
-	    The ask to your target's composer, under Ask Your Target for Buffs: the
-	    whisper an ask icon's click or the Buff Key sends, with the panel's
-	    sample name and buffs. Send Messages In shows on whichever of the two
-	    composers comes first: the one under Ask for Buffs while it's showing,
-	    else this one.
-	]]
+	-- Send Messages In shows on whichever of the two composers comes first.
 	ns.DefineWhisperComposer(options.args, {
 		prefix = "askTargetWhisper",
 		hidden = AskTargetHidden,
@@ -389,11 +325,6 @@ function ns.BuildBuffDutyOptions()
 		},
 	}, 12.2)
 
-	--[[
-	    The whispered ask's composer, following the ask toggle: the ask a
-	    Party-Buffs icon's right-click whispers, with the panel's sample buff
-	    and names.
-	]]
 	ns.DefineWhisperComposer(options.args, {
 		prefix = "askWhisper",
 		hidden = AskHidden,
@@ -418,12 +349,7 @@ function ns.BuildBuffDutyOptions()
 		},
 	}, 10.3)
 
-	--[[
-	    One toggle per class this client has, each with the game's class icon
-	    beside its name, flowing three to a row in an unnamed inline group.
-	    Unset reads as ticked, so a class the account-wide settings have never
-	    seen shows the window.
-	]]
+	-- Unset reads as ticked, so a class the account-wide settings have never seen shows the window.
 	for index, class in ipairs(ns.OptionsClassList()) do
 		options.args.classes.args[class] = {
 			type = "toggle",

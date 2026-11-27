@@ -18,28 +18,19 @@ ns.SAVED_VARIABLES_NAME = "GoodToGoDB"
 --[[
     MIGRATION (remove after 2026-12-03): the table's name before the rename to
     Good to Go, listed second on every TOC's ## SavedVariables line.
-    Features/Core.lua (MoveRenamedSettings) moves it over at login and empties it.
 ]]
 ns.OLD_SAVED_VARIABLES_NAME = "BagsBuffsButtonsDB"
 
 --[[
-    The add-ons Good to Go replaces that rewrite its macros, or report every
-    low rank twice, if both run, by installed folder (Rank Sentinel under
-    either folder name it has shipped with, Data.RANK_WATCH.STANDALONE_FOLDERS).
-    Features/Replaced-Addons.lua turns any of them that is
-    running off at login and offers a reload. This is no migration and has no end date: a
-    player can install Good to Go, or turn the old add-on back on, long after
-    the settings import below is gone.
+    Add-ons that rewrite the same macros, or report every low rank twice, if
+    both run. No migration and no end date: a player can turn the old add-on
+    back on long after the settings import below is gone.
 ]]
 ns.REPLACED_ADDONS = { "Consumable-Connoisseur", "Rank-Sentinel", "RankSentinel" }
 
 --[[
     MIGRATION (remove after 2026-12-08): the add-ons Good to Go
-    replaces, by installed folder. Features/Legacy-Migration.lua copies the settings of the
-    ones with a saved-variables table here from their own table, which the
-    client loads only while that add-on is enabled, then turns every one of
-    them off itself and offers a reload. The ones also in ns.REPLACED_ADDONS
-    are turned off by that, which stays when this goes.
+    replaces whose settings Legacy-Migration.lua copies in, by folder.
 ]]
 ns.LEGACY_ADDONS = {
 	{ folder = "Consumable-Connoisseur", savedVariables = "ConnoisseurDB" },
@@ -53,10 +44,7 @@ ns.LEGACY_ADDONS = {
 -- Brand Colors
 --------------------------------------------------------------------------------
 
---[[
-    Raw hex palette. Features/Utilities.lua derives the |cff-prefixed COLORS
-    table and the ns.GetColor accessor from this, keeping Data files logic-free.
-]]
+-- Raw hex; Utilities.lua derives the escapes, keeping Data files logic-free.
 ns.PALETTE = {
 	TITLE = "FFD100", -- Gold: Titles, Headers, Section Names, Field Titles
 	INFO = "00BBFF", -- Blue: Interactions, Toggles, Links, Keybinds, Slash Commands
@@ -94,7 +82,7 @@ ns.CLASS_COLORS = {
 -- Sample Names
 --------------------------------------------------------------------------------
 
--- The house roster the Example lines name, by class; proper names, the same in every locale.
+-- Proper names, the same in every locale.
 ns.SAMPLE_NAMES = {
 	DRUID = "Aero",
 	HUNTER = "Spek",
@@ -107,11 +95,7 @@ ns.SAMPLE_NAMES = {
 	WARRIOR = "Prima",
 }
 
---[[
-    The pets the Example lines name: a hunter's pet by its own name, a proper
-    name the same in every locale, and a warlock's demon by its kind, the
-    client's name for its creature family (ns.IMP_CREATURE_FAMILY_ID).
-]]
+-- A hunter's pet by a proper name; a warlock's demon by the client's name for its family.
 ns.SAMPLE_PET_NAME = "Fluffy"
 
 --------------------------------------------------------------------------------
@@ -142,12 +126,9 @@ ns.CHAT_MESSAGE_MAX_LENGTH = 255
 ns.TARGET_MARKER = "{rt1}" -- Star
 
 --[[
-    The ceiling every macro body is trimmed against. The unit is unconfirmed:
-    Blizzard's macro edit box caps with letters="255" while the chat box uses
-    SetMaxBytes, so the two may not agree. Every guard therefore measures #body
-    in BYTES, which is never smaller than a character count and so holds under
-    either reading -- never convert one to a character count. ruRU is the
-    overflow canary.
+    The unit is unconfirmed (the macro box caps letters, chat caps bytes), so
+    every guard measures #body in bytes, which holds under either reading.
+    Never convert one to a character count. ruRU is the overflow canary.
 ]]
 ns.MACRO_BODY_MAX_LENGTH = 255
 
@@ -155,16 +136,10 @@ ns.MACRO_BODY_MAX_LENGTH = 255
 -- AceConfig Registry Names
 --------------------------------------------------------------------------------
 
---[[
-    Stable AceConfig appName per options panel, derived from ADDON_NAME. Read by
-    Options/*.lua for RegisterOptionsTable / AddToBlizOptions. Never localized,
-    never built inline. Listed in the order the panels appear in Blizzard's
-    tree (see ns.RegisterOptionsPanels).
-]]
+-- Never localized, never built inline.
 ns.OPTIONS_REGISTRY = {
 	General = ADDON_NAME .. "_General",
 
-	-- Each feature's panel, then its sub-panels, in the root panel's Features order
 	BuffDuty = ADDON_NAME .. "_BuffDuty",
 	BuffDutyBuffs = ADDON_NAME .. "_BuffDutyBuffs",
 	BuffDutySelfBuffs = ADDON_NAME .. "_BuffDutySelfBuffs",
@@ -182,6 +157,7 @@ ns.OPTIONS_REGISTRY = {
 	Bandages = ADDON_NAME .. "_Bandages",
 	Healthstone = ADDON_NAME .. "_Healthstone",
 	Explosives = ADDON_NAME .. "_Explosives",
+	FishingLure = ADDON_NAME .. "_FishingLure",
 	ClassMacros = ADDON_NAME .. "_ClassMacros",
 	IgnoreList = ADDON_NAME .. "_IgnoreList",
 	RankWatch = ADDON_NAME .. "_RankWatch",
@@ -189,6 +165,7 @@ ns.OPTIONS_REGISTRY = {
 	RankWatchIgnored = ADDON_NAME .. "_RankWatchIgnored",
 	InventoryReport = ADDON_NAME .. "_InventoryReport",
 	ReadinessReport = ADDON_NAME .. "_ReadinessReport",
+	CurrencyReplenish = ADDON_NAME .. "_CurrencyReplenish",
 
 	Profiles = ADDON_NAME .. "_Profiles",
 	FeedbackSupport = ADDON_NAME .. "_FeedbackSupport",
@@ -199,15 +176,7 @@ ns.OPTIONS_REGISTRY = {
 -- Options Widgets
 --------------------------------------------------------------------------------
 
---[[
-    dialogControl names for the add-on's own AceGUI widgets, each registered in
-    Options/Options-Widgets.lua, which builds them. Derived from ADDON_NAME so none
-    can collide with another add-on's widget of the same shape.
-
-      ICON_CHECKBOX_WIDGET_TYPE  The stock checkbox with a gap between its icon
-                                 and its label, cleared again where there is no
-                                 stock checkbox to build on.
-]]
+-- Derived from ADDON_NAME so it can't collide with another add-on's widget.
 ns.ICON_CHECKBOX_WIDGET_TYPE = ADDON_NAME .. "_IconCheckBox"
 
 --------------------------------------------------------------------------------
@@ -217,17 +186,13 @@ ns.ICON_CHECKBOX_WIDGET_TYPE = ADDON_NAME .. "_IconCheckBox"
 -- Interface\Icons\INV_Misc_QuestionMark
 ns.QUESTION_MARK_ICON = 134400
 
---[[
-    The Spellbook's own textures: the gold book on the window portrait and
-    spellbook tab, and the category and settings buttons. The glyphs are white, tinted where they're used.
-]]
+-- The glyphs are white, tinted where they're used.
 ns.ICON_ADDON = "Interface\\AddOns\\" .. ADDON_NAME .. "\\Includes\\Images\\Spellbook"
 ns.TEXTURE_GEAR = "Interface\\AddOns\\" .. ADDON_NAME .. "\\Includes\\Images\\Gear"
 
--- The arrow before the hovered rank in a spell tooltip's ranks; white, tinted where it's used.
+-- White, tinted where it's used.
 ns.TEXTURE_RANK_ARROW = "Interface\\AddOns\\" .. ADDON_NAME .. "\\Includes\\Images\\Rank-Arrow"
 
--- The gold bag the Restock List and Staples windows wear in their portrait.
 ns.ICON_RESTOCKER = "Interface\\AddOns\\" .. ADDON_NAME .. "\\Includes\\Images\\Restocker"
 
 --------------------------------------------------------------------------------
@@ -241,14 +206,9 @@ ns.ICON_RESTOCKER = "Interface\\AddOns\\" .. ADDON_NAME .. "\\Includes\\Images\\
 --------------------------------------------------------------------------------
 
 --[[
-    The Restock window's own UI states, which no brand color names. Raw hex like
-    ns.PALETTE; the window's files convert them with ns.HexToRGB.
-
-    Red is kept for errors. An add that did not go through is one. A Keep
-    amount the bags are short of is not, so that mark is yellow, and the orders
-    count under the list wears the same yellow, which is what tells a player
-    what the mark means. It is the brand gold's hex, held as a role of its own
-    so the mark can change without the headings following it.
+    Red is kept for errors. A Keep amount the bags are short of is not one,
+    so it is yellow: the brand gold's hex, held as a role of its own so the
+    mark can change without the headings following it.
 ]]
 ns.RESTOCKER_WINDOW_COLORS = {
 	DASH_OFF = "7A7A7A", -- Gray: Settings That Are Off
@@ -269,11 +229,9 @@ ns.RESTOCKER_WINDOW_COLORS = {
 --------------------------------------------------------------------------------
 
 --[[
-    The Ignore List panel names one scope per list on the account. Every scope
-    but one is an AceDB profile name (a character's, or one the player typed),
-    so the Global list needs a key that no profile can collide with -- hence
-    the asterisks, which no character's name can hold and nobody types as a
-    profile name. Read by ns.GetIgnoreListForScope in Features/Macros-for-Consumables/Ignore-List.lua.
+    Every other scope is an AceDB profile name, so the asterisks keep the
+    Global list's key from colliding with one: no character's name can hold
+    them.
 ]]
 ns.IGNORE_SCOPE_GLOBAL = "**global**"
 
@@ -294,14 +252,14 @@ ns.MACRO_CONFIG = {
 	["Water"] = { macro = ns.L["MACRO_WATER"], label = ns.L["LABEL_WATER"] },
 	["Feed Pet"] = { macro = ns.L["MACRO_FEED_PET"], label = ns.L["LABEL_PET_FOOD"] },
 	["Poisons"] = { macro = ns.L["MACRO_POISONS"], label = ns.L["LABEL_POISON"] },
+	-- No label: it skips a step it has nothing for, so it never prints MESSAGE_NO_ITEM.
+	["Fishing Lure"] = { macro = ns.L["MACRO_FISHING_LURE"] },
 }
 
 --[[
-    Macro types whose macros stack up to MULTI_USE_MAX_ITEMS ranked /use
-    lines, best item first. Once the best item runs out mid-combat — where
-    macros cannot be rewritten — the press falls through to the next-best
-    item. Only safe for categories whose items all share an item cooldown,
-    so a single press still consumes exactly one item.
+    Ranked /use lines, so a press falls through to the next-best item once
+    the best runs out mid-combat, where macros can't be rewritten. Only safe
+    for categories whose items share one cooldown, so a press uses one item.
 ]]
 ns.MULTI_USE_MAX_ITEMS = 3
 
@@ -312,20 +270,13 @@ ns.MULTI_USE_MACRO_TYPES = {
 	["Mana Potion"] = true,
 }
 
---[[
-    Number of free General macro slots Consumable Macros leaves untouched for the
-    player. At 0 nothing is reserved, so macro creation pauses only when the
-    General macro book is completely full. When it pauses, a once-per-session
-    chat message fires and creation resumes automatically once a slot frees
-    up. See ns.TryCreateMacro in Macros/Writer.lua.
-]]
+-- Free General macro slots left untouched for the player.
 ns.MACRO_SLOT_CUSHION = 0
 
 --------------------------------------------------------------------------------
 -- DruidMacroHelper Integration
 --------------------------------------------------------------------------------
 
--- Which macro types are eligible for DMH wrapping when the druid toggle is on.
 ns.DRUID_MACRO_HELPER_TYPES = {
 	["Health Potion"] = true,
 	["Mana Potion"] = true,
@@ -333,11 +284,8 @@ ns.DRUID_MACRO_HELPER_TYPES = {
 }
 
 --[[
-    The /dmh guard prefix lines prepended to each DMH-wrapped macro body.
-    Copied from the DruidMacroHelper add-on's own example macros:
-      HP / HS  → "/dmh start" (stun + GCD + mana) plus a "/dmh cd <token>" line
-      MP       → "/dmh stun gcd cd pot" (skips the mana check, since the
-                 whole point of a mana pot is that the druid is OOM)
+    From DruidMacroHelper's own example macros. MP skips the mana check: the
+    whole point of a mana pot is that the druid is OOM.
 ]]
 ns.DRUID_MACRO_HELPER_GUARDS = {
 	["Health Potion"] = { "/dmh start", "/dmh cd pot" },
@@ -350,17 +298,10 @@ ns.DRUID_MACRO_HELPER_GUARDS = {
 --------------------------------------------------------------------------------
 
 --[[
-    Canned chat messages the macro bodies can fire via `/run GtGTip("key")`.
-    GtGTip (in Features/Macros-for-Consumables/Macros/Runtime.lua) consults two tables:
-      ns.TIP_MESSAGES        → static message text
-      ns.MISSING_SPELL_MESSAGE_IDS → spell IDs (the flavor folder's Conjure-Spells file) that
-                                   GtGTip resolves at print time
-                                   via C_Spell.GetSpellName, producing "You don't
-                                   currently know <Localized Spell Name>."
-    A key the flavor folder leaves out, or a spell ID the current client
-    doesn't know, resolves to nil, so GtGTip silently skips the print
-    rather than naming a spell the player will never see. The noPetSkills tip
-    names four pet spells, so Runtime.lua builds it at print time too.
+    Fired from macro bodies by `/run GtGTip("key")`, beside
+    ns.MISSING_SPELL_MESSAGE_IDS, resolved at print time. A key or spell the
+    client lacks resolves to nil and the print is skipped, never naming a
+    spell the player will never see.
 ]]
 ns.TIP_MESSAGES = {
 	noPetFood = ns.L["TIP_PET_NO_FOOD"],
@@ -371,19 +312,10 @@ ns.TIP_MESSAGES = {
 -- Group Contexts and Level Filters
 --------------------------------------------------------------------------------
 
---[[
-    The four places a group setting can tick, in the order every panel draws
-    them: Solo, Party, Raid, Battleground (ns.GetGroupContext says which one
-    the player is in). A setting saves one boolean per context under these
-    keys, and its labels are GROUP_CONTEXT_<KEY> in the locale.
-]]
+-- In the order every panel draws them; labels are GROUP_CONTEXT_<KEY>.
 ns.GROUP_CONTEXTS = { "solo", "party", "raid", "battleground" }
 
---[[
-    The level filter a consumable's When to Use adds beneath its checkboxes:
-    any level, below the client's max level, or at it. It can only switch off
-    a context the checkboxes leave on (ns.IsUseWhenActive).
-]]
+-- It can only switch off a context the checkboxes leave on.
 ns.LEVEL_FILTER_ORDER = { "any", "leveling", "maxlevel" }
 
 --------------------------------------------------------------------------------
@@ -391,46 +323,30 @@ ns.LEVEL_FILTER_ORDER = { "any", "leveling", "maxlevel" }
 --------------------------------------------------------------------------------
 
 --[[
-    Every restock reminder is either a headline on its own or a headline plus one
-    line per item it counts as low or out. Stored as a mode rather than a boolean so the
-    option reads as a choice ("Simple" or "Verbose") instead of an unlabeled
-    switch, and so a third level could be added without another setting.
+    A mode rather than a boolean, so the option reads as a choice and a third
+    level could be added without another setting.
 ]]
 ns.REMINDER_SIMPLE = "simple"
 ns.REMINDER_VERBOSE = "verbose"
 
 --[[
-    What "low" means to the reminders, as a percentage of a row's Keep amount:
-    an item counts as low while the bags hold less than this share of it, and
-    as out at none. Anything at or above the line is left out of the reminders
-    entirely, so a list that is merely topped-off-short stays quiet. 100 counts
-    any shortfall at all. The merchant restock ignores it and still buys every
-    row up to its full amount. Ships at 80 (Data/Default-Settings.lua).
+    Percent of a row's Keep amount below which the reminders call it low; at
+    or above it a row stays quiet. The merchant restock ignores it and buys
+    every row to its full amount.
 ]]
 ns.RESTOCK_LOW_THRESHOLDS = { 50, 60, 70, 80, 90, 100 }
 
---[[
-    Alert played when you reach an inn or city with something left to restock.
-    Built from ADDON_NAME so renaming the add-on folder cannot break the path.
-]]
+-- Built from ADDON_NAME so renaming the add-on folder cannot break the path.
 ns.RESTOCK_ALERT_SOUND = "Interface\\AddOns\\" .. ADDON_NAME .. "\\Includes\\Sounds\\Low-Battery.ogg"
 
 --------------------------------------------------------------------------------
 -- Gold Reserve
 --------------------------------------------------------------------------------
 
---[[
-    The amounts, in whole gold, the Restocker panel's Gold Reserve dropdown
-    offers: the Fibonacci run, so the steps widen as a purse does, from the
-    1 gold the setting ships on to 55. The merchant restock never spends below
-    the one chosen (Features/Restocker/Restocker-Merchant.lua).
-]]
+-- Whole gold, Fibonacci, so the steps widen as a purse does.
 ns.GOLD_RESERVE_AMOUNTS = { 1, 2, 3, 5, 8, 13, 21, 34, 55 }
 
---[[
-    The gold coin, written after an amount the way the game writes money, so
-    the reserve reads the same in the dropdown and in chat, in every locale.
-]]
+-- Written after an amount the way the game writes money, in every locale.
 ns.GOLD_ICON = "|TInterface\\MoneyFrame\\UI-GoldIcon:0:0:2:0|t"
 
 --------------------------------------------------------------------------------
@@ -438,13 +354,9 @@ ns.GOLD_ICON = "|TInterface\\MoneyFrame\\UI-GoldIcon:0:0:2:0|t"
 --------------------------------------------------------------------------------
 
 --[[
-    Required-reputation choices for the per-row dropdown. `value` is the item.reaction
-    code the merchant logic compares against UnitReaction(vendor) -- 0 means "no
-    requirement". `discount` is the standard Classic faction-vendor price saving for
-    that standing, shown for reference (it is informational, not enforced here).
-    "Neutral" is omitted: requiring Neutral is the same as no requirement ("Any"), since
-    you can already buy from any vendor you're at least Neutral with. Labels come from
-    ns.GetStandingLabel, which reads the client's own standing names.
+    `value` is compared against UnitReaction(vendor), 0 for no requirement;
+    `discount` is informational only. Neutral is left out: it is the same as
+    no requirement.
 ]]
 ns.REPUTATION_STANDINGS = {
 	{ value = 0, discount = 0 },
@@ -459,12 +371,9 @@ ns.REPUTATION_STANDINGS = {
 --------------------------------------------------------------------------------
 
 --[[
-    Maps diet names from GetPetFoodTypes() to internal diet IDs. The API
-    returns LOCALIZED names ("Fleisch" on deDE), so the localized names from
-    the L["DIET_*"] locale keys are layered on top of the English baseline.
-    The English rows add no match of their own, since an untranslated DIET_*
-    key already falls back to English; they stay because the Starter List
-    categories look diet IDs up by English name.
+    GetPetFoodTypes() returns localized names, so the L["DIET_*"] names sit
+    on top of the English rows. The English rows stay because the Starter
+    List looks diet IDs up by English name.
 ]]
 ns.PET_DIET_MAP = {
 	["Meat"] = 1,
@@ -486,11 +395,7 @@ ns.PET_DIET_MAP[ns.L["DIET_FUNGUS"]] = 6
 -- Rogue Poison Groups
 --------------------------------------------------------------------------------
 
---[[
-    The canonical group numbering, keyed off by the poison tables and by the
-    Starter List. A group's name is the client's own name for its first item
-    (ns.GetPoisonGroupName), so no string here names one.
-]]
+-- A group's name is the client's own name for its first item, so no string here names one.
 ns.POISON_GROUPS = {
 	ANESTHETIC = 1,
 	CRIPPLING = 2,
@@ -527,40 +432,28 @@ ns.SCROLL_CHECK_ORDER = {
 -- Macro Names
 --------------------------------------------------------------------------------
 
-ns.MACRO_NAME_PREFIX = "-" -- starts every WoW macro's name, so the add-on's macros sort together in /macro
--- a page macro's name; with the prefix it fills WoW's 16 bytes, past which CreateMacro truncates and a lookup by name would miss it
+ns.MACRO_NAME_PREFIX = "-" -- so the add-on's macros sort together in /macro
+-- With the prefix it fills WoW's 16 bytes, past which CreateMacro truncates and a lookup by name would miss it.
 ns.MACRO_NAME_MAX_LENGTH = 16 - #ns.MACRO_NAME_PREFIX
 
 --------------------------------------------------------------------------------
 -- Parchment Colors
 --------------------------------------------------------------------------------
 
--- parchment ink: spell names and category headers, near black so they read on the light parchment
+-- Near black, so it reads on the light parchment.
 ns.INK_COLOR = { 0.169, 0.106, 0.043 }
---[[
-    faded ink for secondary text on the parchment (a tile's options note, rank and source text, page numbers):
-    dark ink at 75% over the parchment, about 5:1 against it so it reads while staying lighter than the main
-    ink; opaque so it also works as a |c code
-]]
+-- Secondary text: about 5:1 on the parchment, lighter than the main ink; opaque so it also works as a |c code.
 ns.FADED_INK_COLOR = { 0.34, 0.27, 0.18 }
 --[[
-    header ink for category and section headers and a form's label over its tiles (BATTLE STANCE): a deep
-    oxblood, a manuscript's red heading ink. Forever's page art darkens to orange-brown along its top and outer
-    edges, where the first header of each page sits, and any mid-tone ink (a darkened gold read 1.05:1 there)
-    disappears into it; this stays nearly as dark as the spell ink (about 2:1 on that band, 6:1 mid-page) and
-    sets headers apart from the near-black spell names by hue.
+    Forever's page art darkens to orange-brown along the top and outer edges,
+    where each page's first header sits, and swallows any mid-tone ink (a
+    darkened gold read 1.05:1). A deep oxblood stays nearly as dark as the
+    spell ink and sets headers apart by hue.
 ]]
 ns.HEADER_INK_COLOR = { 0.30, 0.06, 0.03 }
 ns.LABEL_INK_COLOR = ns.HEADER_INK_COLOR
 
---[[
-    The What's Next? tabs' status inks, by status (ns.WHATS_NEXT_STATUSES and
-    ns.WHATS_NEXT_PET_STATUSES): the game's green, blue, red and orange
-    darkened until they read on the parchment, a muted purple for talents not
-    taken, teal for a pet ability ready to teach, and Known and another pet
-    family's abilities in faded ink. The Pet Spell Book's abilities are in
-    plain ink and its passives faded (ns.PET_SPELLBOOK_STATUSES).
-]]
+-- The game's status colors darkened until they read on the parchment.
 ns.WHATS_NEXT_INKS = {
 	AVAILABLE = { 0.05, 0.42, 0.05 },
 	SOON = { 0.08, 0.28, 0.6 },
@@ -574,7 +467,7 @@ ns.WHATS_NEXT_INKS = {
 	KNOWN = ns.FADED_INK_COLOR,
 }
 
--- The same statuses at full brightness, for the tooltip and the footer's counts on the dark frame.
+-- Full brightness, for the dark frame.
 ns.WHATS_NEXT_BRIGHT = {
 	AVAILABLE = "1EFF00",
 	SOON = "71C4FF",
@@ -589,28 +482,15 @@ ns.WHATS_NEXT_BRIGHT = {
 }
 
 --[[
-    A spell's ranks wherever they're listed: the ranks section of a spell's
-    tooltip ("GtG // Fear Ranks"), the macro menu's Rank and Grouped Spells
-    submenus, and the Spell Book tile's note. White (TEXT) once known; green
-    (ON) for one the character could have now and doesn't, the one thing to
-    go and fix, green like What's Next?'s Available Now; gray (MUTED) for one it can't learn yet, like a disabled
-    entry, since a level still to come isn't an error. The note beside each
-    (its level, or where to learn it) is silver (HELP) for a known rank and
-    takes the rank's own color otherwise. Keys are ns.RankState's. The
-    tooltip's hovered rank and its arrow are blue (INFO) instead, reading
-    as "selected"; its note keeps the state color, so its state still shows.
+    Green for a rank the character could have now and doesn't, the one thing
+    to go and fix; gray for one not yet learnable, since a level still to
+    come isn't an error. Keys are ns.RankState's.
 ]]
 ns.SPELL_RANK_COLORS = { KNOWN = "TEXT", LEARNABLE = "ON", NOT_YET = "MUTED" }
 ns.SPELL_RANK_SELECTED_COLOR = "INFO"
 ns.SPELL_RANK_NOTE_COLORS = { KNOWN = "HELP", LEARNABLE = "ON", NOT_YET = "MUTED" }
 
---[[
-    The Conditionals panel's own dark leather beside the parchment, so it reads
-    as part of the window: its fill and edge, each row's, each dropdown's and
-    spell slot's field, the footer's edge, the muted and arrow inks, and the
-    length meter's track. Raw hex like ns.PALETTE, converted with ns.HexToRGB
-    for both docked panels in Features/Enhanced-Spellbook/Macro-Builder/Panel-Widgets.lua.
-]]
+-- Dark leather beside the parchment, so the docked panels read as part of the window.
 ns.CONDITIONALS_COLORS = {
 	PANEL_FILL = "2A241C",
 	PANEL_EDGE = "4D4232",
@@ -634,11 +514,7 @@ ns.CONDITIONALS_COLORS = {
 -- Buff Duty Audiences
 --------------------------------------------------------------------------------
 
---[[
-    Who a Buff Duty buff is offered to, one choice per buff.
-    BUFF_AUDIENCE_ORDER is the dropdown's order; the labels come from the locale
-    (BUFF_DUTY_AUDIENCE_*).
-]]
+-- Labels are BUFF_DUTY_AUDIENCE_*.
 Data.BUFF_AUDIENCE = {
 	OFF = "OFF",
 	TANK = "TANK",
@@ -647,17 +523,13 @@ Data.BUFF_AUDIENCE = {
 }
 Data.BUFF_AUDIENCE_ORDER = { "OFF", "TANK", "HEALER", "ALL" }
 
---[[
-    Classes with nothing to gain from melee attack power, so a Buff Duty window row
-    marked noCasters (Blessing of Might) skips them.
-]]
+-- Nothing to gain from melee attack power (rows marked noCasters, like Blessing of Might).
 Data.CASTER_CLASSES = {
 	MAGE = true,
 	PRIEST = true,
 	WARLOCK = true,
 }
 
--- Classes with no mana, so a Buff Duty window row marked manaOnly skips them.
 Data.NO_MANA_CLASSES = {
 	DEATHKNIGHT = true,
 	ROGUE = true,
@@ -672,16 +544,14 @@ Data.NO_MANA_CLASSES = {
 Data.SAFETY_PAUSE = 3
 
 --[[
-    Rank Watch (Features/Rank-Watch/), the standalone Rank Sentinel add-on brought home.
+    COMM_PREFIX stays Rank Sentinel's own, so Good to Go and anyone still
+    running it elect one whisperer between them. COMM_RELEASE 999 reads to
+    Rank Sentinel as a development build equal to its own, so it never tells
+    its players to update.
 
-    COMM_PREFIX stays the standalone Rank Sentinel add-on's own prefix, string.upper of its name, so Good to Go
-    and anyone still running Rank Sentinel elect one whisperer between them and never both whisper.
-    COMM_RELEASE is the version number sent with LEAD and JOIN: Rank Sentinel reads 999 as a development build
-    equal to its own, so it never tells its players to update.
-
-    TARGET_LEVEL_RANGE is the game's own rule for a buff cast on someone else: a rank lands only on a target no
-    more than 10 levels below the rank's learn level, and the game picks the highest rank that fits by itself.
-    A low rank on a low-level player is the game's choice, not the caster's, so it is never reported.
+    TARGET_LEVEL_RANGE is the game's rule for a buff on someone else: it
+    picks the highest rank that lands, so a low rank on a low-level player is
+    never the caster's choice, and never reported.
 ]]
 Data.RANK_WATCH = {
 	COMM_PREFIX = "RANKSENTINEL",
@@ -695,13 +565,7 @@ Data.RANK_WATCH = {
 	STANDALONE_FOLDERS = { "Rank-Sentinel", "RankSentinel" },
 }
 
---[[
-    When a class, or pets, count as tanks on the Buff Duty window ("Count as
-    Tanks"): NEVER, SOLO while you're not in a party or raid, or ALWAYS. Only
-    for a player with no role of their own. TANK_WHEN_ORDER is the dropdown's
-    order; the labels come from the locale (BUFF_DUTY_TANKS_*). Pets are
-    stored under TANK_WHEN_PET beside the class tokens.
-]]
+-- Only for a player with no role of their own. Pets are stored under TANK_WHEN_PET beside the class tokens.
 Data.TANK_WHEN = {
 	NEVER = "NEVER",
 	SOLO = "SOLO",
@@ -710,36 +574,19 @@ Data.TANK_WHEN = {
 Data.TANK_WHEN_ORDER = { "NEVER", "SOLO", "ALWAYS" }
 Data.TANK_WHEN_PET = "PET"
 
---[[
-    Where the Buff Duty window shows while Solo, In Party or In Raid lets it
-    show at all ("When to Show"): ALWAYS, or INSTANCE for inside a dungeon,
-    raid, battleground or arena only. BUFF_DUTY_WHERE_ORDER is the dropdown's
-    order; the labels come from the locale (BUFF_DUTY_WHERE_*).
-]]
+-- INSTANCE covers a dungeon, raid, battleground or arena.
 Data.BUFF_DUTY_WHERE = {
 	ALWAYS = "ALWAYS",
 	INSTANCE = "INSTANCE",
 }
 Data.BUFF_DUTY_WHERE_ORDER = { "ALWAYS", "INSTANCE" }
 
---[[
-    Whether a self buff, the Soulstone or a consumable with a switch of its
-    own shows on the Buff Duty window: any saved value but OFF (MISSING or a
-    minutes count) reads as on, and the category's Show timing
-    (BUFF_DUTY_ROW_SHOW_CHOICES) decides when it shows.
-]]
+-- Any saved value but OFF reads as on; the category's Show timing decides when it shows.
 Data.SELF_REFRESH_OFF = "OFF"
 Data.SELF_REFRESH_MISSING = 0
 Data.SELF_REFRESH_CHOICES = { "OFF", 0, 10, 5, 3 }
 
---[[
-    The Buff Duty window's categories for you, each a section of its own and a
-    page under Buff Duty, in the order the window draws them: Self-Buffs, Well
-    Fed, Weapon Buffs, Scrolls, Flasks or Elixirs, and Other Buffs. Each has its own When to Use (one of
-    BUFF_DUTY_ROW_WHEN_ORDER: always, while you're in a party or raid, or only
-    in a raid) and its own say in whether the Cast Next Buff key uses its
-    icons. The labels come from the locale (BUFF_DUTY_ROW_WHEN_*).
-]]
+-- In the order the window draws them.
 Data.BUFF_DUTY_ROWS = { "self", "food", "weapons", "scrolls", "elixirs", "other" }
 Data.BUFF_DUTY_ROW_WHEN = {
 	ALWAYS = "ALWAYS",
@@ -748,59 +595,39 @@ Data.BUFF_DUTY_ROW_WHEN = {
 }
 Data.BUFF_DUTY_ROW_WHEN_ORDER = { "ALWAYS", "GROUP", "RAID" }
 
---[[
-    The weapon hands a poison or imbue can go on, by the inventory slot each
-    names. Which hands a class is offered is the data folder's call
-    (BUFF_DUTY_WEAPON_HANDS): a Classic Era shaman can't dual wield.
-]]
+-- Which hands a class is offered is the data folder's call: a Classic Era shaman can't dual wield.
 Data.WEAPON_HAND_SLOTS = { MAIN = 16, OFF = 17 }
 Data.WEAPON_HAND_ORDER = { "MAIN", "OFF" }
 
 --[[
-    Each Buff Duty category's one Show timing, for everything in it: When
-    Missing (0), or minutes left. No Off: the category has its own Show in
-    Buff Duty switch, and each item its own On and Off. 3 minutes is about
-    the length of a boss fight.
+    When Missing (0), or minutes left. No Off: the category has its own
+    switch. 3 minutes is about the length of a boss fight.
 ]]
 Data.BUFF_DUTY_ROW_SHOW_CHOICES = { 0, 10, 5, 3 }
 Data.BUFF_DUTY_ROW_SHOW_DEFAULT = 3
 
--- The Weapon Buffs panel's boxes for the items any class can use, in order (BUFF_DUTY_WEAPON_ITEMS' kind).
+-- The items any class can use, in panel order.
 Data.WEAPON_ITEM_KINDS = { "OIL", "STONE", "LURE" }
--- A kind that only one hand can carry: a fishing pole is always two-handed, so a lure is main hand only.
+-- A fishing pole is always two-handed, so a lure is main hand only.
 Data.WEAPON_ITEM_KIND_HANDS = { LURE = { "MAIN" } }
 
 --[[
-    The temporary enchants a weapon holds side by side, each asked about on
-    its own. On WoW Forever (ns.WEAPON_ENCHANTS_STACK) an IMBUE (a poison, a
-    shaman imbue, a Firestone) sits beside a TEMPORARY oil or stone. Every
-    other client has the one slot, and everything goes in TEMPORARY.
+    On WoW Forever an IMBUE (a poison, a shaman imbue, a Firestone) sits
+    beside a TEMPORARY oil or stone. Every other client has the one slot, and
+    everything goes in TEMPORARY.
 ]]
 Data.WEAPON_LAYERS = { IMBUE = "IMBUE", TEMPORARY = "TEMPORARY" }
 
---[[
-    Buff Duty's "Refresh Under" choices, in minutes: a buff with
-    less than this left is offered again.
-]]
+-- Minutes.
 Data.BUFF_DUTY_REFRESH_CHOICES = { 3, 5, 10 }
 
--- The Buff Duty window's Window Opacity choices, in percent of a solid background.
+-- Percent of a solid background.
 Data.BUFF_DUTY_OPACITY_CHOICES = { 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 }
 
---[[
-    How long a stranger who buffed you can stay on the Buff Duty window's Return the
-    Favor list, in seconds (the player picks one), and how many of them it
-    holds at once. Short on purpose: past a few seconds
-    they have usually walked on.
-]]
+-- Seconds. Short on purpose: past a few seconds a stranger who buffed you has usually walked on.
 Data.BUFF_DUTY_FAVOR_CHOICES = { 20, 40, 60 }
 Data.BUFF_DUTY_FAVOR_MAX = 5
 
--- The Buff Duty window's buff buttons.
 Data.BUFF_DUTY_ICON_SIZE = 20
---[[
-    The small icons inside its names, sized to the text rather than the
-    buttons: the role icon in front of each name, a pet's family, a weapon
-    hand's item, and a raid group's fold plus or minus.
-]]
+-- Sized to the text rather than the buttons.
 Data.BUFF_DUTY_LABEL_ICON_SIZE = 16

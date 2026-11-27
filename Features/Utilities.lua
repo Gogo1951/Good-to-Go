@@ -1,25 +1,10 @@
 local _, ns = ...
 
---[[
-    Utilities -- stateless, cross-cutting helpers used by multiple files: the
-    color accessor, cross-client API shims, the secret-value checks, and the
-    spell link, GUID, unit and buff-duration helpers several features share,
-    the duration wording, and the side a tooltip opens on. No
-    module state beyond the hidden tooltip Era and TBC read tooltip text
-    through; the one saved-data read is ns.GetClassesByProfileName's, of
-    ns.db.global.inventory. A feature's own helpers live in its folder, in
-    a <Feature>-Utilities.lua where it has one.
-]]
-
 --------------------------------------------------------------------------------
 -- Colors
 --------------------------------------------------------------------------------
 
---[[
-    Derived color table and accessor. The raw hex palette lives in
-    Data/Data.lua (ns.PALETTE); this file prefixes each entry with the
-    |cff escape and exposes ns.GetColor. Append |r at the point of use.
-]]
+-- Append |r at the point of use.
 local COLOR_PREFIX = "|cff"
 
 local COLORS = {}
@@ -33,12 +18,7 @@ function ns.GetColor(key)
 	return COLORS[key] or COLORS.TEXT
 end
 
---[[
-    "RRGGBB" to the {r, g, b} 0-1 triple the frame APIs take. Exposed rather than
-    kept private to the palette loop below because the Restock window converts
-    its own colors (ns.RESTOCKER_WINDOW_COLORS in Data/Data.lua) with it too, so
-    every color is kept as the hex it was chosen as, never as hand-divided decimals.
-]]
+-- Exposed so every color stays the hex it was chosen as, never hand-divided decimals.
 function ns.HexToRGB(hex)
 	return {
 		r = tonumber(hex:sub(1, 2), 16) / 255,
@@ -47,23 +27,12 @@ function ns.HexToRGB(hex)
 	}
 end
 
---[[
-    The same palette as numbers, for the APIs that take components rather than
-    an escape string -- SetTextColor, SetColorTexture, SetVertexColor. Derived
-    from ns.PALETTE at load rather than written out again, so a palette edit
-    reaches the drawn frames and the colored text together instead of moving
-    one and leaving the other behind.
-]]
+-- Derived at load, so a palette edit reaches drawn frames and colored text together.
 ns.COLORS_RGB = {}
 for key, hex in pairs(ns.PALETTE) do
 	ns.COLORS_RGB[key] = ns.HexToRGB(hex)
 end
 
---[[
-    A line in the middle of the screen, where the game puts its own "can't do
-    that" messages: ns.ShowUIError in OFF red for something refused, and
-    ns.ShowUINotice in TITLE gold for a plain status.
-]]
 local function ShowUIMessage(text, key)
 	local color = ns.COLORS_RGB[key]
 	UIErrorsFrame:AddMessage(text, color.r, color.g, color.b)
@@ -77,10 +46,7 @@ function ns.ShowUINotice(text)
 	ShowUIMessage(text, "TITLE")
 end
 
---[[
-    GameTooltip owned by owner, opened away from the screen's edges by the halves Menu-Kit opens its menus by:
-    left of owner when its center is on the right half of the screen, below it when on the top half.
-]]
+-- Away from the screen's edges, by the same halves Menu-Kit opens its menus by.
 local TOOLTIP_ANCHORS = {
 	up = { left = "ANCHOR_LEFT", right = "ANCHOR_RIGHT" },
 	down = { left = "ANCHOR_BOTTOMLEFT", right = "ANCHOR_BOTTOMRIGHT" },
@@ -94,27 +60,19 @@ function ns.SetTooltipOwner(owner)
 	GameTooltip:SetOwner(owner, TOOLTIP_ANCHORS[openDown and "down" or "up"][openLeft and "left" or "right"])
 end
 
---[[
-    A class's color as an escape, for a character's name: the hex from
-    ns.CLASS_COLORS (Data/Data.lua) behind the same prefix. nil for no class
-    and for one the table does not hold, so each caller says what a name of
-    unknown class falls back to. Append |r at the point of use.
-]]
+-- nil for an unknown class, so each caller picks its own fallback. Append |r at the point of use.
 function ns.GetClassColor(classToken)
 	local hex = classToken and ns.CLASS_COLORS[classToken]
 	return hex and (COLOR_PREFIX .. hex) or nil
 end
 
---[[
-	A player's name in their class color, for a chat line drawn in the TEXT color (ns.BuildPrintLine): the line's
-	color picks up again after it. Plain where the class is unknown.
-]]
+-- For a line drawn in the TEXT color, which picks up again after the name.
 function ns.ClassColoredName(name, classToken)
 	local color = ns.GetClassColor(classToken)
 	return color and (color .. name .. "|r" .. ns.GetColor("TEXT")) or name
 end
 
--- A class's name in the client's language, in its class color, white for a class the table does not hold.
+-- White for a class the table does not hold.
 function ns.ClassName(classToken)
 	return (ns.GetClassColor(classToken) or ns.GetColor("TEXT"))
 		.. (LOCALIZED_CLASS_NAMES_MALE[classToken] or classToken)
@@ -126,12 +84,9 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    On Forever the IsSpellKnown and IsPlayerSpell globals exist only in
-    Blizzard's deprecation layer, which the loadDeprecationFallbacks CVar
-    switches off. C_SpellBook ships on all three clients, so these read it
-    directly: ns.IsSpellKnown is exactly the deprecated IsSpellKnown (in the
-    spellbook, overrides excluded) and ns.IsPlayerSpell is IsPlayerSpell.
-    Callers wanting "does the player know it" test both.
+    On Forever IsSpellKnown and IsPlayerSpell exist only in the deprecation
+    layer, which the loadDeprecationFallbacks CVar switches off, so these read
+    C_SpellBook. Callers wanting "does the player know it" test both.
 ]]
 function ns.IsSpellKnown(spellID)
 	return C_SpellBook.IsSpellInSpellBook(spellID, Enum.SpellBookSpellBank.Player, false)
@@ -202,12 +157,9 @@ end
 local BANK_BAG_COUNT = 7
 
 --[[
-    The character bank's layout is chosen once, by whether the client has bank
-    tabs at all, never by what the tab list answers: Forever's is the C_Bank
-    tabs the player has bought, which can change at any visit, and none (an
-    empty list) while that answer isn't in yet; Era and TBC have BANK_CONTAINER
-    and seven bank bag IDs, TBC's count, whose seventh holds no slots on Era and
-    so reads as empty.
+    Chosen by whether the client has bank tabs at all, never by what the tab
+    list answers: the bought tabs change at any visit and read empty until the
+    answer is in. Era's seventh bank bag holds no slots, so it reads as empty.
 ]]
 if C_Bank and C_Bank.FetchPurchasedBankTabIDs then
 	function ns.FetchPurchasedBankTabIDs()
@@ -231,12 +183,7 @@ else
 	end
 end
 
---[[
-    The equipped reagent bag's container ID, or nil on a client without the slot.
-    Only Forever defines NUM_REAGENTBAG_SLOTS; on Era, TBC and Mists the container
-    after the player's bags is a bank bag, so it must never be read as one of
-    theirs.
-]]
+-- Elsewhere the container after the player's bags is a bank bag, so it must never be read as theirs.
 if (NUM_REAGENTBAG_SLOTS or 0) > 0 then
 	local reagentBagID = Enum.BagIndex and Enum.BagIndex.ReagentBag or (NUM_BAG_SLOTS + 1)
 	function ns.GetReagentBagID()
@@ -287,23 +234,13 @@ else
 end
 
 --[[
-    A Forever character has a first name and a surname, unique together across
-    the region, and the client hands them back as two values. Only a client
-    with that system has RegionalUniqueNamesEnabled, and what it writes between
-    the two is a constant of its own. On Era and TBC a name's second value is a
-    realm, which for the player is nil.
+    Wherever the add-on saves or names a Forever character, it is this whole
+    name, never the first name alone.
 
-    UnitNameUnmodified rather than UnitName, as AceDB keys its own records:
-    this is the name a character is saved under, so it must not follow
-    anything that restyles names for display.
-
-    The surname is added only to a first value that does not already end with
-    it. An earlier beta build's UnitName gave the whole name first, and saved
-    files from it hold keys in that shape.
-
-    Wherever the add-on saves or names a character -- a Restock List's
-    characters, the Inventory Report, the character's own profile -- a Forever
-    character is this whole name, never its first name alone.
+    UnitNameUnmodified, as AceDB keys its records: a saved name must not follow
+    display restyling. The surname is added only when the first value doesn't
+    already end with it: an earlier beta gave the whole name there, and saved
+    files hold keys in that shape.
 ]]
 if RegionalUniqueNamesEnabled then
 	local separatorConstants = Constants.CharacterNameSeparatorConsts
@@ -365,15 +302,11 @@ else
 end
 
 --[[
-    Each hand's temporary and imbue enchants, as { main = list, off = list },
-    each entry { timeLeft (milliseconds), enchantID (nil where the client
-    names none), enchantType (nil on the older call) }. WoW Forever's
-    C_Item.GetWeaponEnchantInfo(weaponSlot) lists every enchant per hand,
-    permanent ones included, so only temporary and imbue ones are kept. The
-    older GetWeaponEnchantInfo holds one per hand and has returned three
-    values per hand on some clients and four (with the enchant id) on others,
-    so the off hand is found by counting. A secret field skips its entry, as
-    if bare.
+    { main = list, off = list }, each entry { timeLeft (ms), enchantID?,
+    enchantType? }. Forever's call lists permanent enchants too, so only
+    temporary and imbue ones are kept. The older call has returned three or
+    four values per hand by client, so the off hand is found by counting. A
+    secret field skips its entry.
 ]]
 if C_Item.GetWeaponEnchantInfo and Enum.ItemEnchantType and Enum.WeaponSlot then
 	function ns.GetWeaponEnchants()
@@ -420,7 +353,6 @@ else
 	end
 end
 
--- Opening and closing a skill list header by its index; nil where the client has neither call.
 ns.ExpandSkillHeader = (C_SkillInfo and C_SkillInfo.ExpandSkillHeader) or ExpandSkillHeader
 ns.CollapseSkillHeader = (C_SkillInfo and C_SkillInfo.CollapseSkillHeader) or CollapseSkillHeader
 
@@ -467,10 +399,8 @@ ns.UnitHasIncomingResurrection = UnitHasIncomingResurrection or Missing
 local MASK_SPELL_ID = 0xFFFFFF -- the old API packs a pet spellbook entry's flags above its spell ID
 
 --[[
-    A pet spellbook slot as { id, name, subtext, icon, passive, autocastAllowed,
-    autocastOn }, or nil for a command or an empty slot: through C_SpellBook
-    where the client has its item calls, else the old globals. With how many
-    slots the pet has, and the pickup that puts a slot's spell on the cursor.
+    A slot as { id, name, subtext, icon, passive, autocastAllowed, autocastOn },
+    or nil for a command or an empty slot.
 ]]
 if C_SpellBook.GetSpellBookItemInfo then
 	function ns.GetPetSpellBookSlot(slot)
@@ -528,12 +458,7 @@ else
 	end
 end
 
---[[
-    Dual spec: how many talent groups the character has and which is active,
-    nil where the client can't say. GetNumSpecGroups comes before
-    GetNumTalentGroups because MoP Classic still defines the old name but
-    throws "API unsupported" when it's called.
-]]
+-- GetNumSpecGroups first: MoP Classic still defines GetNumTalentGroups but throws "API unsupported" on a call.
 ns.GetNumSpecGroups = C_SpecializationInfo and C_SpecializationInfo.GetNumSpecGroups
 	or GetNumSpecGroups
 	or GetNumTalentGroups
@@ -567,12 +492,9 @@ else
 end
 
 --[[
-    The same for spell tooltips: func(tooltip, spellID) after the game fills
-    any tooltip with a spell. A client with neither route hooks nothing.
-    On the Retail client an action bar slot holding a macro (every Spell Book
-    macro) fills a Macro tooltip, not a Spell one; the spell the macro shows
-    is its first line's tooltipID, so those count too. A macro showing an
-    item, or none, is skipped.
+    On the Retail client a bar slot holding a macro (every Spell Book macro)
+    fills a Macro tooltip, not a Spell one; its first line's tooltipID is the
+    spell it shows, so those count too.
 ]]
 if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum.TooltipDataType then
 	function ns.AddSpellTooltipPostCall(func)
@@ -616,11 +538,7 @@ function ns.IsPlain(value)
 	return not (issecretvalue and issecretvalue(value))
 end
 
---[[
-    True only for a readable true. WoW Forever answers some unit questions about
-    other players (charmed, enemy, attackable) with a secret boolean, which
-    errors when tested; a secret answer counts as false, as RankSentinel reads it.
-]]
+-- Forever answers some unit questions (charmed, enemy, attackable) with a secret boolean; it counts as false.
 function ns.IsPlainTrue(value)
 	return ns.IsPlain(value) and value == true
 end
@@ -651,7 +569,7 @@ function ns.IsSpellCooldownSecret(spellID)
 	return ns.FLAVOR == "Camelot" and C_Secrets.ShouldSpellCooldownBeSecret(spellID)
 end
 
--- Whether two unit tokens can be compared (UnitIsUnit) without a secret answer; always on the other flavors.
+-- Always true on the other flavors.
 function ns.CanCompareUnitTokens(unit, otherUnit)
 	return ns.FLAVOR ~= "Camelot" or C_Secrets.CanCompareUnitTokens(unit, otherUnit)
 end
@@ -660,12 +578,6 @@ end
 -- Item Stats
 --------------------------------------------------------------------------------
 
---[[
-    An item's stat table from its link. WoW Forever ships C_Item.GetItemStats;
-    Classic Era and TBC Anniversary have only the legacy global GetItemStats,
-    which returns the same table. Resolved once at load, modern first; both are
-    rows in the Diagnostic Tools API report.
-]]
 ns.GetItemStats = C_Item.GetItemStats or GetItemStats
 
 --------------------------------------------------------------------------------
@@ -673,13 +585,9 @@ ns.GetItemStats = C_Item.GetItemStats or GetItemStats
 --------------------------------------------------------------------------------
 
 --[[
-    An item's or spell's tooltip as plain lines, a right-hand column kept after
-    " >> ". kind is "item" or "spell". C_TooltipInfo hands the lines over as
-    data where the client ships its GetItemByID and GetSpellByID getters (WoW
-    Forever); elsewhere they are read off a hidden tooltip that is never shown
-    (Classic Era and TBC Anniversary). Color escapes are stripped so each line
-    reads as its words. Resolved once at load. A read can throw on an odd id, so
-    callers protect it.
+    Plain lines, a right-hand column kept after " >> ", color escapes
+    stripped: C_TooltipInfo where it ships, else a hidden tooltip. A read can
+    throw on an odd id, so callers protect it.
 ]]
 local SCAN_TOOLTIP_NAME = "GoodToGoScanTooltip"
 local TOOLTIP_DATA_GETTERS = C_TooltipInfo
@@ -713,10 +621,7 @@ local function ReadTooltipData(kind, id)
 	return lines
 end
 
---[[
-    The add-on's one hidden tooltip, made on first use, and its global name, which its line font strings are
-    named from. Every read through it is synchronous, so readers share it.
-]]
+-- Every read through it is synchronous, so readers share one.
 function ns.GetScanTooltip()
 	if not scanTooltip then
 		scanTooltip = CreateFrame("GameTooltip", SCAN_TOOLTIP_NAME, nil, "GameTooltipTemplate")
@@ -724,7 +629,6 @@ function ns.GetScanTooltip()
 	return scanTooltip, SCAN_TOOLTIP_NAME
 end
 
--- The hidden tooltip's lines once setter (a GameTooltip method) has filled it with the rest.
 local function ReadScanTooltipWith(setter, ...)
 	ns.GetScanTooltip()
 	scanTooltip:SetOwner(WorldFrame, "ANCHOR_NONE")
@@ -746,11 +650,7 @@ end
 
 ns.GetTooltipLines = TOOLTIP_DATA_GETTERS and ReadTooltipData or ReadScanTooltip
 
---[[
-	The same lines for any tooltip: getter is the C_TooltipInfo function and setter the GameTooltip method that
-	fill it (e.g. "GetInventoryItem" and "SetInventoryItem"), both called with the rest. The getter is used
-	where the client ships it, the hidden tooltip elsewhere.
-]]
+-- getter and setter name the same fill, e.g. "GetInventoryItem" and "SetInventoryItem".
 function ns.ReadTooltipLines(getter, setter, ...)
 	if not (C_TooltipInfo and C_TooltipInfo[getter]) then
 		return ReadScanTooltipWith(setter, ...)
@@ -763,11 +663,7 @@ function ns.ReadTooltipLines(getter, setter, ...)
 	return lines
 end
 
---[[
-	The spell ID of a trainer window's service. Forever and Retail hand it over through
-	C_TooltipInfo.GetTrainerService; the Classic engine shows the service on the hidden tooltip and reads
-	the spell back with GetSpell.
-]]
+-- The Classic engine has no GetTrainerService, so the hidden tooltip shows the service and GetSpell reads it.
 if C_TooltipInfo and C_TooltipInfo.GetTrainerService then
 	function ns.GetTrainerServiceSpellId(index)
 		local data = C_TooltipInfo.GetTrainerService(index)
@@ -789,29 +685,18 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    AceDB keeps each character's profile choice in the saved file's
-    profileKeys, under a name it builds for the character, and a new character
-    gets a profile of that same name. On Era and TBC it is "Name - Realm". On
-    WoW Forever, where a whole name is unique across the region, it is the
-    first name and surname with a space between and no realm (AceDB-3.0 from
-    minor 39, which is the copy in Includes/Libraries). These three are the
-    only places that spell the format out:
+    The name AceDB keys a character's profile by: "Name - Realm" on realm
+    clients, "First Last" on Forever (AceDB-3.0 minor 39 on). These three are
+    the only places that spell the format out:
 
       ns.GetCharacterProfileName()
-          This character's. nil while the client has not named the character,
-          when it answers with its "Unknown" placeholder.
+          nil while the client still answers with its "Unknown" placeholder.
       ns.ProfileNameForCharacter(name, realm)
-          Any character's, from its whole name and its realm as the client
-          writes them.
       ns.SplitCharacterProfileName(profileKey)
-          The name and realm back out of one; no realm on Forever. nil for a
-          key that names no character: one written while the client had not
-          named the character, or on Forever the first name and rule set an
-          AceDB older than minor 39 wrote ("Name - PvE").
+          nil for a key that names no character: the placeholder's, or on
+          Forever an older AceDB's first name and rule set ("Name - PvE").
 
-    This is not the add-on's own character key (ns.GetCharacterKey,
-    "Name-Realm" with the realm's spaces closed up), which everything the
-    add-on saves by character is keyed by.
+    Not the add-on's own character key (ns.GetCharacterKey).
 ]]
 local function HasRegionalNames()
 	return RegionalUniqueNamesEnabled ~= nil and RegionalUniqueNamesEnabled()
@@ -824,14 +709,7 @@ function ns.ProfileNameForCharacter(name, realm)
 	return name .. " - " .. realm
 end
 
---[[
-    Every recorded character's class token, by the name AceDB keys the
-    character under (ns.ProfileNameForCharacter). Read off the records the
-    Inventory Report keeps (ns.db.global.inventory, refreshed at every login
-    by Features/Inventory-Report/Inventory-Report-Recording.lua), so a character's class is known from its
-    first login on a build that keeps that record. The Restock List and the
-    Ignore List color their character names by it.
-]]
+-- Read off the Inventory Report's records, refreshed at every login, so a class is known from a first login.
 function ns.GetClassesByProfileName()
 	local classes = {}
 	for _, record in pairs(ns.db.global.inventory) do
@@ -879,12 +757,7 @@ local function RealmSuffix()
 	return "-" .. realm
 end
 
---[[
-    Stable per-character identity, which the Inventory Report's records, the
-    Diagnostics reports and the two Consumable Macros key migrations key on. The
-    character's whole name, which on Forever is its first name and surname
-    (ns.GetPlayerFullName above), then its realm.
-]]
+-- The whole name (first name and surname on Forever), then the realm.
 function ns.GetCharacterKey()
 	return (ns.GetPlayerFullName() or "Unknown") .. RealmSuffix()
 end
@@ -894,19 +767,10 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Chat-safe spell link, built by hand the way Control Freak does. We deliberately
-    do NOT prefer the native GetSpellLink: on Classic it returns a link WITHOUT the
-    trailing ":0" glyph field, which renders fine in a local tooltip or print, but
-    SendChatMessage's hyperlink validator strips a link without it and leaves only
-    the bare spell name. Building "Hspell:<id>:0"
-    ourselves passes that validator and works in both chat and local prints.
-
-    Native is only a last resort, for the rare spell whose name won't resolve (so we
-    can't build the link text ourselves) -- at least it gives something on screen.
-
-    The link's color is ns.SPELL_LINK_COLOR (Data/Data.lua), lowercased as the
-    client writes it, since this string is handed to SendChatMessage's
-    hyperlink validator.
+    Trap: Classic's native GetSpellLink drops the trailing ":0", and the chat
+    validator strips such a link to the bare name. So the link is built by
+    hand, color lowercased as the client writes it; native is the fallback
+    only when the name won't resolve.
 ]]
 local C_SPELL_LINK = ns.SPELL_LINK_COLOR:lower()
 
@@ -927,12 +791,9 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Is this GUID a player character? The client stamps every GUID with its own
-    type -- "Player-<realm>-<hex>" for characters, "Pet-...", "Creature-...",
-    "Vehicle-..." for everything else -- which makes this the authoritative test,
-    independent of the combat log's TYPE_PLAYER flag. It guards the whisper
-    paths: a whisper addressed to a pet bounces back as "No player named 'X' is
-    currently playing", so a pet name must never reach SendChatMessage.
+    The GUID's own type is authoritative, unlike the combat log's TYPE_PLAYER
+    flag. Guards the whisper paths: a whisper to a pet bounces as "No player
+    named".
 ]]
 function ns.IsPlayerGUID(guid)
 	return type(guid) == "string" and guid:sub(1, 7) == "Player-"
@@ -942,7 +803,6 @@ end
 -- Instance Type
 --------------------------------------------------------------------------------
 
--- Whether the player is in a battleground or an arena.
 function ns.IsInPvPInstance()
 	local _, instanceType = IsInInstance()
 	return instanceType == "pvp" or instanceType == "arena"
@@ -959,10 +819,8 @@ end
       raid          in a raid group, home or instance (LFR included)
       party         in any other group (group finder dungeons included)
       solo          in no group
-    A battleground's raid is a Battleground, never a Raid. A feature asks
-    ns.IsGroupContextOn rather than reading IsInGroup or IsInRaid to decide
-    when it acts; plumbing that only picks a chat channel or a unit prefix
-    (raid1 or party1) still reads them itself.
+    A feature asks ns.IsGroupContextOn, not IsInGroup or IsInRaid, to decide
+    when it acts; picking a chat channel or unit prefix still reads them.
 ]]
 function ns.GetGroupContext()
 	if ns.IsInPvPInstance() then
@@ -977,11 +835,7 @@ function ns.GetGroupContext()
 	return "solo"
 end
 
---[[
-    Whether a setting's { solo, party, raid, battleground } table is ticked for
-    `context`, or for where the player is now. A missing table or entry reads
-    as ticked, the way every such setting starts.
-]]
+-- A missing table or entry reads as ticked, the way every such setting starts.
 function ns.IsGroupContextOn(showIn, context)
 	if type(showIn) ~= "table" then
 		return true
@@ -994,13 +848,9 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The unit token we hold for a GUID: the player, a group member, or the
-    current target / focus / mouseover, or nil when none matches. A
-    combat-log name is no substitute -- cross-realm sources arrive as
-    "Name-Realm" and never resolve to a unit.
-
-    On Forever a unit's GUID can be secret, and comparing a secret value
-    errors, so a unit whose GUID can't be read simply doesn't match.
+    By GUID, not combat-log name: cross-realm names arrive as "Name-Realm" and
+    never resolve to a unit. A secret GUID errors on compare, so it simply
+    doesn't match.
 ]]
 local POINTED_UNITS = { "target", "focus", "mouseover" }
 
@@ -1039,19 +889,10 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Resolve the client's plural escape to plain text.
-
-    Trap: WoW's own duration strings (D_MINUTES == "%d |4minute:minutes;") carry
-    a |4 escape that the UI expands only at render time. It looks right in a
-    print, but SendChatMessage rejects any message still holding one -- "Invalid
-    escape code in chat message" -- and silently drops the whole line, so
-    resolve before anything goes to SendChatMessage. Resolving it here is what
-    lets the units come from the client's own localization in
-    every language it ships, instead of the add-on carrying its own copies.
-
-    Slavic locales list a third form (one/few/many) and get their rule; two-form
-    languages take a simple count check; languages that don't inflect (zhCN,
-    koKR) carry no escape at all, so the gsub finds nothing to do.
+    Trap: the client's duration strings (D_MINUTES) carry a |4 plural escape
+    the UI expands only at render time; SendChatMessage silently drops a line
+    still holding one. Resolving it lets the units come from the client's own
+    localization. Slavic locales list a third form and get their rule.
 ]]
 local function ResolvePlurals(text)
 	return (
@@ -1084,11 +925,9 @@ local function ResolvePlurals(text)
 end
 
 --[[
-    Durations run to round numbers, so the largest whole unit states one exactly.
-    Return the Favor's 60-second choice reads as a minute. The hour
-    rung stays because this formats whatever duration it is handed, and a later
-    caller re-deriving the ladder would walk back into the plural-escape trap
-    that ResolvePlurals exists to solve.
+    The largest whole unit, since durations run to round numbers. The hour
+    rung stays for any caller: re-deriving the ladder elsewhere walks back into
+    the plural-escape trap.
 ]]
 local function FormatDuration(seconds)
 	seconds = math.floor((seconds or 0) + 0.5)
@@ -1109,12 +948,8 @@ ns.FormatDuration = FormatDuration
 --------------------------------------------------------------------------------
 
 --[[
-    The game's own DropdownButton (WowStyle1DropdownTemplate) with its list on
-    Menu-Kit's plate, as the kit dresses the game's right-click menus
-    (Kit.OpenContextMenu): each time the list opens, whatever background it
-    carries (the game's, or a skin's backdrop) goes clear and the plate goes
-    under it; both come back when the game pools the frame again. setup is the
-    dropdown's own menu generator.
+    Each time the list opens its background (the game's, or a skin's) goes
+    clear with the plate under it; both come back when the game pools the frame.
 ]]
 local function UndressDropdownList(frame)
 	if frame.menuKitPlate then

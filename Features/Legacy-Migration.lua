@@ -7,10 +7,7 @@ local JoinTitles = ns.JoinAddOnTitles
 
 --[[
     MIGRATION (remove after 2026-12-08)
-    The import from the add-ons Good to Go replaces (ns.LEGACY_ADDONS), with
-    its chat notices and its login questions, and the retirement of Automated
-    Appreciation's settings and Thank You macros. Features/Core.lua calls
-    these at login and once the player is in the world.
+    The import from ns.LEGACY_ADDONS, and Automated Appreciation's retirement.
 ]]
 
 --------------------------------------------------------------------------------
@@ -19,48 +16,25 @@ local JoinTitles = ns.JoinAddOnTitles
 
 --[[
     MIGRATION (remove after 2026-12-08)
-    Bringing players over from the add-ons this one replaces (ns.LEGACY_ADDONS).
-    The client loads an add-on's saved variables only while that add-on is
-    turned on, so the import can read them only in a session where it runs:
+    The client loads an add-on's saved variables only while it is on, so:
 
-      turned on   Its settings are copied in at login, before AceDB opens the
-                  table, once per add-on. They win key by key over what is
-                  here, and keys only this add-on has (the Spellbook's, say)
-                  are kept, since the copy can land on a profile that has been
-                  played. Restock Lists merge by name. Then every old add-on
-                  still running is turned off for all characters, and the
-                  player is offered a reload so the old copy stops rewriting
-                  the same macros. Those in ns.REPLACED_ADDONS are turned off
-                  by ns.TurnOffReplacedAddons (Features/Replaced-Addons.lua),
-                  which stays when this goes; the rest are turned off here.
-      turned off  The player is asked whether to bring its settings over.
-                  Yes turns it on for this character and reloads, which lands
-                  in the case above; No is remembered and never asked again;
-                  Escape puts the question off to the next login.
-                  While the question is open, the Staples window stays shut
-                  (ns.IsLegacyImportPending): an import may be about to fill
-                  the Restock List.
+      turned on   Copied in at login before AceDB opens, once per add-on.
+                  Legacy wins key by key; keys only Good to Go has are kept,
+                  since the copy can land on a played profile. Restock Lists
+                  merge by name.
+      turned off  The player is asked. Yes turns it on for this character and
+                  reloads; No is remembered; Escape asks again next login.
+                  While pending, Staples stays shut: an import may be about
+                  to fill the Restock List.
 
-    Connoisseur & Restocker's table has this one's shape, profile for profile.
-    Macro Spellbook's settings are not brought over; it is only turned off.
-    Rank Sentinel is only turned off here too: Rank Watch copies its settings
-    itself at login (Features/Rank-Watch/Rank-Watch-Core.lua), in the same
-    session, since turning it off takes hold only after a reload.
-    Thanks for the Buff is not on the list: it is its own add-on, so it is
-    never imported or turned off.
+    Macro Spellbook and Rank Sentinel are only turned off here; Rank Watch
+    copies Rank Sentinel's settings itself in the same session.
 ]]
 local legacyNotices = {}
 local legacyToTurnOn = {}
--- Titles of the old add-ons whose settings were copied in this session.
 local legacyCopied = {}
 
---[[
-    What an add-on's entry in ns.db.global.legacyImported holds once its
-    settings are in: this number, or "declined" for a player who said no. An
-    entry from an earlier import rule (true, from the first version, which
-    copied only what was missing and so left a fresh install's starter list in
-    place of the player's own) runs the import again under this one.
-]]
+-- legacyImported[sv] holds this or "declined"; any other value (the first rule's true) imports again.
 local LEGACY_IMPORT_VERSION = 2
 
 local function IsSettled(entry)
@@ -78,7 +52,7 @@ local function CopyTable(source)
 	return copy
 end
 
--- Every key of source onto target, the source winning; except is a set of keys to leave alone.
+-- The source wins; except is a set of keys to leave alone.
 local function CopyOver(target, source, except)
 	for key, value in pairs(source or {}) do
 		if not (except and except[key]) then
@@ -130,7 +104,6 @@ local function IsReplacedAddon(folder)
 	return false
 end
 
--- Whether the player switched the old add-on off, so turning it back on lets this session read its settings.
 local function IsInstalledButOff(legacy)
 	if C_AddOns.IsAddOnLoaded(legacy.folder) then
 		return false
@@ -169,7 +142,6 @@ function ns.ImportLegacySettings()
 	end
 end
 
--- The notices of settings copied in this session, printed after the welcome line.
 function ns.PrintLegacyNotices()
 	for _, notice in ipairs(legacyNotices) do
 		ns:PrintMessage(notice)
@@ -205,10 +177,9 @@ StaticPopupDialogs.GOODTOGO_LEGACY_IMPORT = {
 }
 
 --[[
-    Asked once the player is in the world, after the welcome line, in place of
-    OfferReplacedReload. Returns whether it asked anything: when it didn't,
-    OfferReplacedReload offers the plain reload. A reload for an add-on just
-    turned off comes before the import question, which waits for the next login.
+    Returns whether it asked; when not, OfferReplacedReload offers the plain
+    reload. A reload for an add-on just turned off comes first; the import
+    question waits for the next login.
 ]]
 function ns.OfferLegacySteps()
 	if #legacyCopied > 0 then
@@ -236,16 +207,10 @@ end
 
 --[[
     MIGRATION (remove after 2026-12-08)
-    Automated Appreciation (Stranger Buffs, Sharing Good News, Combat Buffs,
-    Group Service Alerts and the Thank You buttons) is gone: thanking is
-    Thanks for the Buff's job, which is its own add-on again. Its settings go,
-    and so does the record of an import from it that no longer happens.
-
-    The Thank You macros this add-on made go too, since their commands no
-    longer answer: only one whose body is still exactly its button's command,
-    and only while no other add-on has taken that command, so a macro the
-    player rewrote, or one Thanks for the Buff still answers, stays. Macros
-    can't be deleted in combat; a login mid-fight leaves them for the next.
+    Automated Appreciation's settings and import record go. A Thank You macro
+    goes only while its body is still exactly its command and no other add-on
+    has taken that command, so one the player rewrote, or one Thanks for the
+    Buff still answers, stays. Never in combat: a login mid-fight waits.
 ]]
 local RETIRED_SETTINGS = {
 	"strangers",

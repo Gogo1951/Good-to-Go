@@ -8,12 +8,6 @@ local Box, ShowTip = Widgets.Box, Widgets.ShowTip
 local UI = ns.ConditionalsUI
 local CurrentMacro, Change, RedrawPage, Update = UI.CurrentMacro, UI.Change, UI.RedrawPage, UI.Update
 
---[[
-	The Conditionals panel's rows (Features/Enhanced-Spellbook/Macro-Builder/Conditionals-Panel.lua): a grip to drag a row up or down,
-	one or two condition dropdowns joined by "and", the spell the row casts and its remove button, built from the
-	controls in Features/Enhanced-Spellbook/Macro-Builder/Panel-Widgets.lua.
-]]
-
 local INNER_WIDTH = ns.DockedPanel.INNER_WIDTH
 local ROW_HEIGHT, ROW_GAP = UI.ROW_HEIGHT, UI.ROW_GAP
 local SLOT_ICON, TEXTURE_ARROW = Widgets.SLOT_ICON, UI.TEXTURE_ARROW
@@ -25,7 +19,7 @@ local ROW_FILL, ROW_EDGE = COLORS.ROW_FILL, COLORS.ROW_EDGE
 local ARROW_INK = COLORS.ARROW_INK
 local SKIPPED_ALPHA = 0.5 -- a row the macro text leaves out (ns.ConditionalSkipReason)
 
--- The Conditionals panel as pick mode's owner (Features/Enhanced-Spellbook/Macro-Builder/Spell-Pick.lua): a row's spell slot, filled by ns.SetConditionalSpell.
+-- pick mode's owner
 local conditionals = {
 	actionKey = "CONDITIONALS_ACTION_USE",
 	cannotPickKey = "CONDITIONALS_CANNOT_PICK",
@@ -45,16 +39,12 @@ local conditionals = {
 	end,
 }
 
---[[
-	The owner reads the panel when pick mode starts: Conditionals-Panel.lua loads first, but builds its frame
-	(UI.panel) only when the panel first opens.
-]]
+-- Read when pick mode starts: the panel's frame is built only when it first opens.
 local function Conditionals()
 	conditionals.panel = UI.panel
 	return conditionals
 end
 
--- Whether pick mode is on for the Conditionals row at index.
 function UI.IsPicking(index)
 	return ns.IsPickingSpellFor(conditionals, index)
 end
@@ -64,32 +54,22 @@ UI.SetPicking = function(index)
 end
 UI.PickOwner = Conditionals
 
--- A condition's label, or a question mark for a key this client doesn't know.
 local function ConditionLabel(key)
 	local condition = ns.ConditionRow(key)
 	return condition and L[condition.labelKey] or "?"
 end
 
--- The macro and the row at index, or nil for either once they are gone.
 local function RowAt(index)
 	local macro = CurrentMacro()
 	return macro, macro and ns.Conditionals(macro)[index]
 end
 
---[[
-	A condition dropdown's menu, for the condition at place in the row: every condition offered, less the one
-	the row's other place holds and the one that can never match beside it, each explaining itself, a condition
-	the macro can't use (ns.ConditionBlockReason) grayed with why. The first dropdown also offers And, a second
-	condition, while the row has one; the second offers dropping itself.
-]]
+-- Leaves out the row's other condition and the one that can never match beside it.
 local function OpenConditionMenu(owner, index, place)
 	if not select(2, RowAt(index)) then
 		return
 	end
-	--[[
-		on the add-on's own panels (Macro-Menu-Panels.lua), off the field's corner; a pick redraws it in place,
-		the row read afresh each time it draws
-	]]
+	-- the row is read afresh each time it draws, since a pick redraws it in place
 	ns.OpenMacroMenuPanels(owner, function(_, root)
 		local macro, row = RowAt(index)
 		if not row then
@@ -138,10 +118,7 @@ local function OpenConditionMenu(owner, index, place)
 	end, true)
 end
 
---[[
-	A condition dropdown in a row: a dark field with the condition's name and a caret, as wide as its name needs,
-	so "Out Of Combat" reads whole and the spell slot keeps the rest of the row.
-]]
+-- As wide as its name needs, so "Out Of Combat" reads whole and the spell slot keeps the rest of the row.
 local function CreateDropdown(row, place)
 	local dropdown = Widgets.CreateDropdown(row, function(width)
 		return math.max(DROPDOWN_MIN_WIDTH, width)
@@ -161,13 +138,8 @@ local function CreateDropdown(row, place)
 	return dropdown
 end
 
--- A row's spell slot: the spell's icon and name, or what to do to give it one.
 local function CreateSlot(row)
 	local slot = Widgets.CreateSlot(row, SLOT_HEIGHT, SLOT_ICON, 8, UI.PickOwner)
-	--[[
-		the spell's own tooltip, as a tile shows it, or what to do while the slot is empty; then why the row never
-		casts, if it doesn't, and the clicks
-	]]
 	slot:SetScript("OnEnter", function(self)
 		local macro, conditional = RowAt(row.index)
 		if not conditional then
@@ -226,11 +198,6 @@ local function CreateRow(parent, index)
 	return row
 end
 
---[[
-	Draws a row: its conditions, the "and" and second dropdown only when it has two, and its spell, or the slot
-	waiting in pick mode, or the slot asking for one. A row the macro text leaves out (ns.ConditionalSkipReason)
-	is drawn faded; its tooltips say why.
-]]
 local function UpdateRow(row, macro, conditional)
 	row:SetAlpha(ns.ConditionalSkipReason(macro, row.index) and SKIPPED_ALPHA or 1)
 	local when = conditional.when or {}

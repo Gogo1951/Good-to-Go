@@ -5,14 +5,7 @@ local TITLE, BODY, INFO = ns.COLORS_RGB.TITLE, ns.COLORS_RGB.BODY, ns.COLORS_RGB
 local HideTooltip = ns.HideTooltip
 local PixelInset = ns.PixelInset
 
---[[
-	The controls the panels docked beside the Spell Book share (Features/Enhanced-Spellbook/Macro-Builder/Docked-Panel.lua):
-	the Conditionals panel and its rows (Features/Enhanced-Spellbook/Macro-Builder/Conditionals-Panel.lua,
-	Conditionals-Rows.lua) and the Cast Sequence panel (Features/Enhanced-Spellbook/Macro-Builder/Cast-Sequence-Panel.lua).
-	Their colors, a box, a tooltip, a dropdown, the grip a row is dragged by and the wash on the row it will land
-	on, a spell slot and how it draws, and a row's remove button. They load before the panels, which read them as
-	they load.
-]]
+-- Loads before the panels, which read it as they load.
 
 local SLOT_ICON = 16
 local DROPDOWN_HEIGHT = 32
@@ -29,10 +22,7 @@ local TEXTURE_REMOVE = "Interface\\Buttons\\UI-GroupLoot-Pass-Up"
 local TEXTURE_REMOVE_DOWN = "Interface\\Buttons\\UI-GroupLoot-Pass-Down"
 local TEXTURE_REMOVE_HIGHLIGHT = "Interface\\Buttons\\UI-GroupLoot-Pass-Highlight"
 
---[[
-	The panels' own dark leather (Data/Data.lua), so they read as part of the window rather than the parchment, as
-	the {r, g, b} lists the texture calls unpack.
-]]
+-- Dark leather, so the panels read as part of the window rather than the parchment.
 local COLORS = {}
 for key, hex in pairs(ns.CONDITIONALS_COLORS) do
 	COLORS[key] = ns.HexToColorList(hex)
@@ -49,7 +39,6 @@ Widgets.ROW_EDGE, Widgets.GRIP_WIDTH = ROW_EDGE, GRIP_WIDTH
 -- Drawing
 --------------------------------------------------------------------------------
 
--- A box on frame: a one-pixel edge in one color around a fill in another.
 local function Box(frame, fill, edge)
 	local edgeTexture = frame:CreateTexture(nil, "BACKGROUND")
 	edgeTexture:SetAllPoints()
@@ -60,7 +49,6 @@ local function Box(frame, fill, edge)
 	return edgeTexture, fillTexture
 end
 
--- A tooltip on owner, its title gold and its lines white, then, if given, why it does nothing, in red.
 local function ShowTip(owner, title, body, reason)
 	ns.SetTooltipOwner(owner)
 	GameTooltip:SetText(title, TITLE.r, TITLE.g, TITLE.b, 1, true)
@@ -74,14 +62,12 @@ local function ShowTip(owner, title, body, reason)
 	GameTooltip:Show()
 end
 
--- The faint wash a box's button shows under the cursor.
 local function AddHighlight(button)
 	local highlight = button:CreateTexture(nil, "HIGHLIGHT")
 	highlight:SetColorTexture(1, 1, 1, HIGHLIGHT_ALPHA)
 	PixelInset(highlight, button, 1)
 end
 
--- A keybind and what it does, both in the interaction blue, as a pair across the tooltip, as a tile's are.
 local function AddHint(keybind, action)
 	GameTooltip:AddDoubleLine(GetColor("INFO") .. keybind .. "|r", GetColor("INFO") .. action .. "|r")
 end
@@ -92,10 +78,7 @@ Widgets.Box, Widgets.ShowTip = Box, ShowTip
 -- Controls
 --------------------------------------------------------------------------------
 
---[[
-	A dark field with a value and a caret, as wide as its value needs, passed through fit(width), opening a menu
-	on a click (openMenu(dropdown)). Returns the dropdown and its caret.
-]]
+-- As wide as its value needs, passed through fit(width).
 local function CreateDropdown(parent, fit, openMenu)
 	local dropdown = CreateFrame("Button", nil, parent)
 	dropdown:SetHeight(DROPDOWN_HEIGHT)
@@ -121,7 +104,6 @@ local function CreateDropdown(parent, fit, openMenu)
 	return dropdown, caret
 end
 
--- The wash on a row a dragged row will land on, hidden until then.
 local function CreateDropWash(row)
 	local drop = row:CreateTexture(nil, "ARTWORK")
 	drop:SetColorTexture(INFO.r, INFO.g, INFO.b, DROP_ALPHA)
@@ -130,10 +112,7 @@ local function CreateDropWash(row)
 	return drop
 end
 
---[[
-	The grip at a row's left: six dots, dragged to move the row to the row of panel.rows it is let go over, by
-	move(from, to); let go anywhere else, update() draws the panel again. descKey is its tooltip's line.
-]]
+-- Let go anywhere but over another row, update() draws the panel again.
 local function CreateGrip(row, panel, descKey, move, update)
 	local grip = CreateFrame("Button", nil, row)
 	grip:SetSize(GRIP_WIDTH, GRIP_HEIGHT)
@@ -146,7 +125,6 @@ local function CreateGrip(row, panel, descKey, move, update)
 			dot:SetPoint("TOPLEFT", 1 + column * 4, -(3 + line * 4))
 		end
 	end
-	-- the row under the cursor, other than the one dragged, or nil
 	local function Target()
 		for i, other in ipairs(panel.rows) do
 			if i ~= row.index and other:IsShown() and other:IsMouseOver() then
@@ -160,7 +138,6 @@ local function CreateGrip(row, panel, descKey, move, update)
 		HideTooltip(grip)
 		panel.dragFrom = row.index
 		row:SetAlpha(0.6)
-		-- the row it would land on shows a wash while the drag goes on
 		panel:SetScript("OnUpdate", function()
 			local to = Target()
 			for i, other in ipairs(panel.rows) do
@@ -189,11 +166,7 @@ local function CreateGrip(row, panel, descKey, move, update)
 	return grip
 end
 
---[[
-	A row's spell slot: the spell's icon and name, or what to do to give it one. A click starts or ends pick mode
-	for it, or drops the spell on the cursor, as does a drag let go on it, for the owner ownerOf() returns
-	(Features/Enhanced-Spellbook/Macro-Builder/Spell-Pick.lua). Its panel sets its tooltip.
-]]
+-- Its panel sets its tooltip.
 local function CreateSlot(row, height, iconSize, iconLeft, ownerOf)
 	local slot = CreateFrame("Button", nil, row)
 	slot:SetHeight(height)
@@ -227,7 +200,6 @@ local function CreateSlot(row, height, iconSize, iconLeft, ownerOf)
 	return slot
 end
 
--- A slot's tooltip ends with its clicks, in pick mode or not, and what a drop does (dropKey).
 local function AddSlotHints(picking, dropKey)
 	GameTooltip:AddLine(" ")
 	if picking then
@@ -240,7 +212,6 @@ local function AddSlotHints(picking, dropKey)
 	GameTooltip:Show()
 end
 
--- Draws a slot waiting in pick mode.
 local function DrawPickingSlot(slot)
 	slot.edge:SetColorTexture(INFO.r, INFO.g, INFO.b)
 	slot.icon:SetTexture(ns.QUESTION_MARK_ICON)
@@ -248,7 +219,6 @@ local function DrawPickingSlot(slot)
 	slot.text:SetText(GetColor("INFO") .. L["CONDITIONALS_PICKING"] .. "|r")
 end
 
--- Draws a slot's spell: spellID's icon, or a question mark without one, and its name and rank.
 local function DrawSpellSlot(slot, spellID, name, rank)
 	slot.edge:SetColorTexture(unpack(FIELD_EDGE))
 	slot.icon:SetTexture(spellID and C_Spell.GetSpellTexture(spellID) or ns.QUESTION_MARK_ICON)
@@ -258,7 +228,6 @@ local function DrawSpellSlot(slot, spellID, name, rank)
 	)
 end
 
--- Draws a slot asking for a spell.
 local function DrawEmptySlot(slot)
 	slot.edge:SetColorTexture(unpack(FIELD_EDGE))
 	slot.icon:SetTexture(ns.QUESTION_MARK_ICON)
@@ -266,7 +235,6 @@ local function DrawEmptySlot(slot)
 	slot.text:SetText(GetColor("MUTED") .. L["CONDITIONALS_PICK_SPELL"] .. "|r")
 end
 
--- A row's remove button at its right; a click ends pick mode and calls remove(). descKey is its tooltip's line.
 local function CreateRemove(row, descKey, remove)
 	local button = CreateFrame("Button", nil, row)
 	button:SetSize(REMOVE_SIZE, REMOVE_SIZE)

@@ -6,19 +6,13 @@ local L = ns.L
 --------------------------------------------------------------------------------
 
 --[[
-    Keeps staple consumables on the Restock List current with the player's
-    level, walking the ladders in Data/{Game}/Consumable-Upgrade-Paths-{Game}.lua.
-
-    Only ever forward. An item ABOVE the player's level is left alone -- someone
-    who stocked Morning Glory Dew at 30 meant to, and gets moved on only once
-    they outgrow it -- so the rule is "a strictly later tier", never "the tier
-    matching my level".
+    Only ever forward, to a strictly later tier: an item above the player's
+    level was stocked on purpose and moves only once outgrown.
 ]]
 
 --[[
-    A tier's third field is its rank, and the higher rank is the better tier;
-    row order carries no meaning. Each chain is sorted by rank once here, so
-    every other walker of chain.tiers sees them lowest to highest.
+    A tier's third field is its rank; row order means nothing. Each chain is
+    sorted by rank once here, so every walker of chain.tiers sees them in order.
 ]]
 local function ByRank(a, b)
 	return a[3] < b[3]
@@ -33,23 +27,13 @@ for _, chain in ipairs(ns.CONSUMABLE_UPGRADE_CHAINS) do
 	end
 end
 
---[[
-    Is this item on a ladder with somewhere to go? Everything else shows a
-    disabled Upgrade cell: an item on no ladder, and an item on a ladder of one
-    tier (the Hearthstone, Arcane Powder, the mage runes), which the Starter List
-    offers but which has no later tier to move to. A live tick there would be a
-    switch that can never do anything.
-]]
+-- A ladder of one tier (the Hearthstone) has nowhere to go, so its tick would never do anything.
 function ns.CanUpgradeRestockItem(itemID)
 	local entry = itemID ~= nil and UPGRADE_INDEX[itemID]
 	return (entry and #entry.chain.tiers > 1) or false
 end
 
---[[
-    The best tier this character can reach right now: the highest-ranked tier at
-    or below the level. Rank, not level, settles tiers that share a level (the
-    Wrath folder's level-65 food and water), so the Northrend item wins there.
-]]
+-- Rank, not level, settles tiers that share a level (Wrath's level-65 food and water).
 local function BestTier(chain, level)
 	local best
 	for _, tier in ipairs(chain.tiers) do
@@ -60,25 +44,15 @@ local function BestTier(chain, level)
 	return best
 end
 
---[[
-    The item a ladder yields for this character right now: the furthest tier at
-    or below the level, on this client. The Starter List popup (Restocker-Starter-List.lua)
-    adds through this, so a ticked staple starts on the same tier the upgrader
-    would otherwise move it to.
-]]
+-- Staples adds through this, so a tick starts on the tier the upgrader would pick.
 function ns.BestChainItemID(chain, level)
 	local tier = BestTier(chain, level)
 	return tier and tier[2]
 end
 
 --[[
-    Move one list entry onto a later tier, keeping everything the player set on
-    it -- amount, the three toggles, required reputation, and the Upgrade flag
-    itself. Lists are keyed by itemID, so this is a delete plus an insert.
-
-    When the target tier is ALREADY on the list the two entries merge: the
-    amounts add up and the old row goes. Anything else would either drop what
-    the player asked for or leave two rows for the same shopping trip.
+    Keeps everything the player set on the row. A target already on the list
+    merges: the amounts add and the old row goes, so nothing asked for is lost.
 ]]
 local function MoveToTier(list, fromID, toID)
 	local item = list[fromID]
@@ -96,11 +70,7 @@ local function MoveToTier(list, fromID, toID)
 	list[fromID] = nil
 end
 
---[[
-    True when an upgrade was deferred because the client had not resolved the
-    target item yet. C_Item.GetItemInfo asks the server on a miss, so the retry rides
-    on GET_ITEM_INFO_RECEIVED (Restocker-List.lua) rather than a timer.
-]]
+-- A cold target defers the upgrade; the retry rides on GET_ITEM_INFO_RECEIVED, not a timer.
 local pendingUpgrade = false
 
 -- Upgrade targets the server said it has no item for; never waited on again this session.
@@ -110,10 +80,7 @@ function ns.DropFailedUpgradeTarget(itemID)
 	failedTargets[itemID] = true
 end
 
---[[
-    An upgrade's prints: the headline, then a line per swap, each
-    { fromLink, fromAmount, toLink, toAmount }.
-]]
+-- Each swap is { fromLink, fromAmount, toLink, toAmount }.
 local function BuildRestockUpgradeLines(swaps)
 	local lines = { L["RESTOCKER_UPGRADED"] }
 	for _, swap in ipairs(swaps) do
@@ -124,15 +91,8 @@ local function BuildRestockUpgradeLines(swaps)
 end
 
 --[[
-    Bring every eligible entry on the current Restock List up to date.
-    Safe to call repeatedly: it is a no-op once nothing is behind.
-
-    PLAYER_LEVEL_UP passes its new level straight through, because
-    UnitLevel("player") still reads the OLD level while that event is being
-    handled -- the unit field updates a moment later -- and planning against
-    it would miss any tier that opens at the new level. Callers that run clear
-    of the ding -- the deferred retry, the login catch-up -- pass nothing and
-    read the level themselves.
+    PLAYER_LEVEL_UP passes its level through: UnitLevel still reads the old one
+    inside that event. Callers clear of the ding pass nothing.
 ]]
 function ns.UpgradeRestockList(newLevel)
 	local settings = ns.restockSettings
@@ -144,13 +104,10 @@ function ns.UpgradeRestockList(newLevel)
 	local level = newLevel or UnitLevel("player") or 1
 	pendingUpgrade = false
 
-	--[[
-	    Collected before anything moves: MoveToTier both inserts and deletes
-	    keys, and mutating a table while pairs() walks it is undefined.
-	]]
+	-- Collected before anything moves: MoveToTier adds and deletes keys, undefined under pairs().
 	local planned = {}
 	for itemID, item in pairs(list) do
-		-- nil means on, matching how buyFromMerchant reads its default
+		-- Nil means on.
 		if item.upgrade ~= false then
 			local entry = UPGRADE_INDEX[itemID]
 			if entry then
@@ -160,13 +117,7 @@ function ns.UpgradeRestockList(newLevel)
 					if ns.GetItemData(targetID) then
 						planned[#planned + 1] = { from = itemID, to = targetID }
 					elseif not failedTargets[targetID] and C_Item.DoesItemExistByID(targetID) then
-						--[[
-						    Target not cached. Skipping now and retrying on
-						    GET_ITEM_INFO_RECEIVED keeps a half-named row out of
-						    the list entirely -- the alternative is writing the
-						    old item's name against the new item's ID. A target
-						    this client has no item for is never waited on.
-						]]
+						-- Waits for the target's data, so no row ever pairs the old name with the new ID.
 						pendingUpgrade = true
 						ns.SyncRestockItemInfoSubscription()
 					end
@@ -179,18 +130,7 @@ function ns.UpgradeRestockList(newLevel)
 		return
 	end
 
-	--[[
-	    Headline first, then one line per swap naming both tiers and their
-	    amounts. Naming what changed beats counting it: the add-on just rewrote
-	    a shopping list, and "2 items upgraded" does not say which two. The
-	    headline makes the Restock List the subject, so there is no item plural
-	    to agree with and one string covers any number of swaps.
-
-	    The outgoing amount is read BEFORE MoveToTier and the incoming one
-	    after, because the two differ whenever the target tier was already on
-	    the list: that path merges the rows and sums the amounts rather than
-	    carrying the old one across.
-	]]
+	-- The amounts are read either side of MoveToTier: they differ when a merge summed them.
 	local swaps = {}
 	for _, move in ipairs(planned) do
 		local from = list[move.from]

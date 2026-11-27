@@ -1,20 +1,11 @@
 local _, ns = ...
 
---[[
-    Buff-Duty-Icon-State -- what the Buff Duty window's icons show between
-    redraws: the cooldown swipe and the range fade. Both only touch alpha and
-    the cooldown frames, which the client lets change on a protected button
-    mid-fight, so neither waits for combat to end.
-]]
+-- Swipe and range fade touch only alpha and cooldown frames, which may change on a protected button in combat.
 
 local OUT_OF_RANGE_ALPHA = 0.35
 local RANGE_INTERVAL = 0.5
 
---[[
-    The list's icon pool, filled by Buff-Duty-Icons.lua: `buttons` holds every
-    icon made, the first `used` of them in use, and `content` is the frame they
-    sit in, set once the window is built (Buff-Duty-Frame.lua).
-]]
+-- Filled by Buff-Duty-Icons.lua: the first `used` of `buttons` are in use.
 local pool = { buttons = {}, used = 0 }
 ns.buffDutyIconPool = pool
 
@@ -26,12 +17,9 @@ local rangeTicker
 
 local GetItemCooldown = C_Container.GetItemCooldown
 
--- Each spell's cooldown, read once per pass of ns.UpdateBuffDutyCooldowns: false where the client had none.
 local cooldownsThisPass = {}
 
--- An item icon (a poison, a Soulstone) shows the item's own cooldown; a spell icon its spell's.
 local function GetCooldown(spec)
-	-- An ask (Buff-Duty-Asks.lua) shows the wait before that player can be asked for it again.
 	if spec.ask then
 		local BuffDuty = ns.BuffDuty
 		local at = BuffDuty.AskedAt(spec.ask.guid, spec.askKey)
@@ -56,19 +44,10 @@ local function GetCooldown(spec)
 end
 
 --[[
-    Draws each icon's cooldown the way an action button does, global cooldown
-    included. Every rank shares one cooldown, so the spec's own id is enough. A
-    value the client keeps secret leaves the swipe as it was rather than
-    erroring; the next update after combat corrects it.
-
-    With no cooldown running, an icon for a buff that is running low (not gone)
-    shows how much of it is left as a sliver: reversed, so the bright part is
-    the time remaining and the dark part the time spent. No countdown, ours or
-    a cooldown-count add-on's (noCooldownCount): the sliver alone reads at a
-    glance. It ends whole once the buff runs out.
-
-    Not while Forever keeps cooldowns secret: each read would come back
-    unreadable.
+    Every rank shares one cooldown, so the spec's own id is enough. A secret
+    value leaves the swipe as it was; the next update after combat corrects
+    it. The time-left sliver is reversed and hides countdown add-ons
+    (noCooldownCount), so it reads at a glance.
 ]]
 function ns.UpdateBuffDutyCooldowns()
 	local content = pool.content
@@ -105,7 +84,6 @@ end
 
 local function OnSpellUpdateCooldown()
 	ns.UpdateBuffDutyCooldowns()
-	-- Bloodrage coming off its cooldown puts it back ahead of Battle Shout.
 	ns.BuffDuty.CheckRageFirst()
 end
 
@@ -117,11 +95,7 @@ ns.SetBuffDutyEventHandler("SPELL_UPDATE_COOLDOWN", OnSpellUpdateCooldown)
 
 local IsItemInRange = C_Item.IsItemInRange
 
---[[
-    An item used on someone (a Soulstone) asks the item's own range out of
-    combat only, and falls back on the buffs' check in combat or when the
-    client has no answer. The Buff Key asks it too.
-]]
+-- An item's own range is asked out of combat only; in combat or with no answer, the buffs' check stands in.
 local function InRange(spec)
 	if spec.itemId and spec.unit and not InCombatLockdown() then
 		local isPlayer = UnitIsUnit(spec.unit, "player")
@@ -137,10 +111,9 @@ end
 ns.IsBuffSpecInRange = InRange
 
 --[[
-    Set when the group or the target changes mid-fight. The icons can't be
-    rebuilt until combat ends, so the ones still showing may name someone who
-    left, moved party or is no longer targeted; they stay dimmed until Buff-Duty-Frame.lua next draws or hides the
-    list, which clears it.
+    Set when the group or target changes mid-fight: the icons can't be rebuilt
+    until combat ends and may name someone gone, so they stay dimmed until the
+    next draw or hide.
 ]]
 pool.rosterStale = false
 

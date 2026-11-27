@@ -5,18 +5,10 @@ local _, ns = ...
 --------------------------------------------------------------------------------
 
 --[[
-    The client shows macro-name text on action buttons. Many players who never
-    asked for it assume this add-on turned it on, so we default to hiding it and
-    expose an "Enable Macro Names on Buttons" toggle.
-
-    The name is a font string per button; setting its alpha to 0 hides it and
-    survives the SetText calls that fire when an action changes, so a single
-    application holds until the UI is rebuilt. ApplyMacroNameVisibility is
-    therefore re-run on every PLAYER_ENTERING_WORLD (see Features/Macros-for-Consumables/Macros-for-Consumables-Core.lua) so a
-    /reload or relog re-hides the freshly created font strings.
-
-    Every prefix below is a bar all three target clients define. The lookup is
-    nil-guarded only for a bar add-on that removes a font string.
+    Hidden by default: players who see macro names on buttons blame this add-on.
+    Alpha survives the SetText calls on an action change, so one pass holds until
+    the font strings are rebuilt; PLAYER_ENTERING_WORLD re-applies it. The nil
+    guard is for bar add-ons that remove a font string.
 ]]
 local ACTION_BAR_PREFIXES = {
 	"ActionButton",
@@ -41,10 +33,6 @@ function ns.ApplyMacroNameVisibility()
 	end
 end
 
---[[
-    Options-panel toggle; reapplying immediately shows or hides the text
-    without waiting for a bar refresh.
-]]
 function ns.ToggleMacroNames(value)
 	ns.db.global.showMacroNames = value
 	ns.ApplyMacroNameVisibility()

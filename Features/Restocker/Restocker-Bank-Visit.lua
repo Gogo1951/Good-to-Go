@@ -5,49 +5,26 @@ local CountPartialStacks = ns.CountRestockPartialStacks
 local ConsolidateOne = ns.ConsolidateRestockStacks
 local MAX_STUCK_STEPS = ns.RESTOCK_MAX_STUCK_STEPS
 
---[[
-    Restocker-Bank-Visit -- the bank restock run itself: one stash or pull per
-    tick, the watchdogs that end it, the tidy phase once every item is at
-    target, and the OnUpdate timer that paces the moves to the connection.
-    What the run knows about the bags and bank, and the bank window's open and
-    close, are Restocker-Bank-State.lua.
-]]
-
 local currentlyRestocking = false
 local restockState = nil
--- The OnUpdate timer's frame, created below once OnBankRestockUpdate exists.
 local restockUpdateFrame
 local updateTimer = 0
---[[
-    Starts at the floor so the OnUpdate handler never compares against nil; the real
-    connection-paced value is seeded in ns.RestartBankRestock.
-]]
+-- The floor, so OnUpdate never compares against nil before ns.RestartBankRestock sets it.
 local updateInterval = 0.140
 
 --[[
-    A maintained item's bag+bank TOTAL can only drop while a move is in transit: the source
-    slot is already empty but the destination hasn't been credited yet, and NOTHING is locked
-    in that window, so the lock gate in OnBankRestockUpdate can't see it. A scan taken there
-    under-counts and must not be acted on. Wait at most this many steps for the total to
-    recover before accepting it as the new reality (item genuinely consumed or destroyed).
+    Steps to wait for a dropped bag-plus-bank total to recover before taking it
+    as real (the item was used or destroyed).
 ]]
 local MAX_INFLIGHT_STEPS = 3
 
---[[
-    The bank's contents can still be arriving when BANKFRAME_OPENED fires, and a
-    scan taken then reads an empty bank. A run may not finish this soon after it
-    starts, so a bank that reads empty on the first step is read again.
-]]
+-- The bank can read empty just after BANKFRAME_OPENED, so a run can't finish this soon.
 local BANK_SETTLE_DELAY = 0.5
 
 --------------------------------------------------------------------------------
 -- Restock Steps
 --------------------------------------------------------------------------------
 
---[[
-    Issue one stash move: find the first over-stocked item and send some to the bank. The
-    excess is computed fresh from this step's scan, not from a running tally.
-]]
 local function StashToBank()
 	local state = restockState
 
@@ -60,7 +37,7 @@ local function StashToBank()
 				ns.RestockerDebug("TRACE_TOO_MANY", eachItem.itemName, haveInBag, wanted)
 				if ns.MoveRestockItemToBank(state.bankInventory, itemID, excess) then
 					state.movedAny = true
-					return true -- issued one move; caller yields and re-scans next step
+					return true
 				end
 			end
 		end
@@ -69,10 +46,6 @@ local function StashToBank()
 	return false
 end
 
---[[
-    Issue one restock move: find the first under-stocked item the bank can supply and pull
-    some in. The shortfall is computed fresh from this step's scan.
-]]
 local function RestockFromBank()
 	local state = restockState
 
@@ -85,10 +58,8 @@ local function RestockFromBank()
 			if short > 0 and haveInBank > 0 then
 				ns.RestockerDebug("TRACE_TOO_FEW", eachItem.itemName, haveInBag, wanted)
 				--[[
-				    stuckSteps > 0 means the previous step's move never landed -- in practice the
-				    flaky exact split. Switch to whole-stack overshoot, which always lands; the
-				    watchdog would otherwise burn its retries on the same bounced split and give up
-				    short (the "couldn't move: 2x ..." stop).
+				    A stuck step means the last split bounced; a whole stack always lands,
+				    where retrying the split would spend the watchdog and stop short.
 				]]
 				local overshoot = state.stuckSteps > 0
 				if
@@ -96,13 +67,9 @@ local function RestockFromBank()
 				then
 					state.movedAny = true
 					if overshoot then
-						--[[
-						    The whole-stack pull may go past the target. That excess is the add-on's
-						    doing, not the player's stock -- trim it back even without stashToBank.
-						]]
 						state.overshotItems[itemID] = true
 					end
-					return true -- issued one move; caller yields and re-scans next step
+					return true
 				end
 			end
 		end
@@ -111,7 +78,6 @@ local function RestockFromBank()
 	return false
 end
 
--- The finished run's line itself.
 local function BuildBankRestockCompleteLine()
 	return string.format(
 		L["RESTOCKER_COMPLETE"],
@@ -120,9 +86,8 @@ local function BuildBankRestockCompleteLine()
 end
 
 --[[
-    The line a finished run prints, or nil for a visit that took nothing out
-    and stored nothing: the same three sentences at every bank visit would turn
-    into noise and stop being read. Merging partial stacks alone does not count.
+    Nil for a visit that took and stored nothing (merges don't count): the same
+    lines at every bank visit would stop being read.
 ]]
 local function CompletionMessage()
 	if not restockState.movedAny then
@@ -139,29 +104,17 @@ local function FinishRestocking(message)
 	end
 end
 
---[[
-    The bank window closing, from outside this file. The run is abandoned rather
-    than finished, so it says nothing: the closing handler reports the shortfall.
-]]
+-- Silent: the closing handler reports the shortfall.
 function ns.StopBankRestock()
 	FinishRestocking(nil)
 end
 
---[[
-    Run a single restock step: re-scan reality, then issue at most one move. The coroutine
-    calls this once per eligible tick (only after the previous move has settled -- see the
-    lock gate in OnBankRestockUpdate) and yields between calls.
-]]
 local function RunRestockLogic()
 	local state = restockState
 
 	--[[
-	    HARD SAFETY INVARIANT: never sell at a merchant. The moves below use
-	    C_Container.UseContainerItem to shift whole stacks, and that call SELLS the item when a
-	    merchant window is open (it only moves to the bank when a BANK is open). A bank and a
-	    merchant can't normally both be open, but if the merchant flag is set -- a stale flag, or
-	    an odd BANKFRAME/MERCHANT event order -- issuing a stash here would vendor the player's
-	    "too many" excess. Refuse to act: bail cleanly, and the next real bank visit restarts.
+	    Never at a merchant: UseContainerItem sells there, so a stale merchant flag
+	    or an odd event order would vendor the excess.
 	]]
 	if ns.merchantIsOpen then
 		ns.RestockerDebug("TRACE_MERCHANT_OPEN")
@@ -170,17 +123,9 @@ local function RunRestockLogic()
 	end
 
 	--[[
-	    Reconcile against reality every step: re-derive the outstanding work from what's
-	    actually in the bags/bank right now. A move that was rejected or only partially placed
-	    simply reappears as remaining work and gets retried; a move that worked shrinks the
-	    work for real.
-
-	    A declined rescan (the player is holding something of their own) is a skipped tick,
-	    not a stalled run: nothing below has read this step's inventories yet, and the step
-	    is deliberately not counted against the watchdog, since no move was attempted.
-
-	    Forever's bank tab list can still be empty when the bank opens (ns.BankBagIDs), so
-	    while it is, every step asks for it again.
+	    Forever's bank tab list can be empty when the bank opens, so it is asked
+	    again each step. A declined rescan skips the tick without counting against
+	    the watchdog.
 	]]
 	if #ns.GetRestockBankBags() == 0 then
 		ns.LoadRestockBankBags()
@@ -190,15 +135,9 @@ local function RunRestockLogic()
 	end
 
 	--[[
-	    In-flight gate: a maintained item's bag+bank total can only DROP while a move is in
-	    transit (source slot already empty, destination not yet credited -- and nothing is
-	    locked in that window, so the lock gate in OnBankRestockUpdate can't hold us back). A scan
-	    taken there under-counts: acting on it pulls a duplicate stack, and when the
-	    in-transit stack is the bank's LAST one, prints "Finished restocking" with the pull
-	    still in the air -- skipping the stash-back. Don't move and don't finish
-	    off a scan like that; wait for the total to recover. If it stays down past
-	    MAX_INFLIGHT_STEPS, the item really left (consumed/destroyed) -- accept the new
-	    baseline and continue.
+	    In-flight gate: mid-move the source is empty, the destination not yet
+	    credited and nothing locked, so the lock gate misses it. Acting on that scan
+	    pulls a duplicate stack, or finishes before the stash-back.
 	]]
 	local totals = state:ComputeTotals()
 	if state.lastTotals ~= nil and state.suspectSteps < MAX_INFLIGHT_STEPS then
@@ -222,17 +161,12 @@ local function RunRestockLogic()
 	local remaining = state:RemainingWork()
 
 	if remaining > 0 then
-		state.consolidating = false -- still moving; tidy phase (below) hasn't started
+		state.consolidating = false
 
 		--[[
-		    Watchdog. We normally get here with locks already settled (OnBankRestockUpdate gates on
-		    that, until one of ours has stayed locked for MAX_STUCK_STEPS ticks), so if the
-		    outstanding work is UNCHANGED since last step, the last move genuinely didn't land --
-		    a rejected split, an item stuck locked, or something we can't place. Work that grew
-		    changed rather than stalled: the bank's contents arriving a beat late, or a whole
-		    stack overshooting into stash work. Retry a few times to absorb
-		    transient races, then give up with a clear message. With it the run neither spins
-		    forever on a move that never lands nor reports success while still short.
+		    Watchdog: locks have settled by now, so unchanged work means the last move
+		    didn't land. Grown work is change: the bank arriving late, or an overshoot
+		    turning into stash work.
 		]]
 		if remaining ~= state.lastRemainingWork then
 			state.stuckSteps = 0
@@ -246,14 +180,10 @@ local function RunRestockLogic()
 		state.lastRemainingWork = remaining
 
 		--[[
-		    ONE move per tick: stash an over-stocked item or pull an under-stocked one. Doing
-		    only one keeps a stash and a restock from firing in the same tick and fighting over
-		    the cursor. ALWAYS keep going (return false) even if nothing was issued -- a slot may
-		    still be locked from the previous move; the watchdog above is what stops us if we're
-		    genuinely stuck. Stashing runs first so it can free a bag slot for restocking, except
-		    while the bank has no free general-purpose slot: a stash cannot land then, and retrying it would
-		    starve every pull, so restocking runs first, and a whole stack taken out frees the
-		    slot the stash needs.
+		    One move per tick, so a stash and a pull never fight over the cursor; the
+		    watchdog, not this, ends the run. Stash first to free bag room, unless the
+		    bank is full: then a failing stash would starve every pull, and a pulled
+		    whole stack frees the slot the stash needs.
 		]]
 		local bankHasSpace = ns.BankHasRestockSpace()
 		if bankHasSpace then
@@ -270,24 +200,15 @@ local function RunRestockLogic()
 		return false
 	end
 
-	--[[
-	    All items are at target. TIDY PHASE (best-effort): merge the partial stacks that
-	    free-slot-first placement and exact splits leave behind, in the bags and then the bank. This can never leave an item short (totals are
-	    already correct) -- the worst case is that a merge doesn't take and we simply stop.
-	]]
+	-- Tidy phase: totals are already right, so a merge that fails can't leave anything short.
 	-- Tidies every item on the list, whatever its Take and Store settings: the maintainer's choice.
 	if not state.consolidating then
-		state.consolidating = true -- entering tidy phase; start its watchdog fresh
+		state.consolidating = true
 		state.lastStackCount = math.huge
 		state.tidySteps = 0
 	end
 
-	--[[
-	    Tidy watchdog: each successful merge leaves one fewer partial stack, so the partial
-	    stack count strictly drops while we're making progress. If it stops dropping (fully
-	    consolidated, or a merge got bounced), finish cleanly -- restocking already succeeded,
-	    so this is a normal "Finished", not a problem to report.
-	]]
+	-- Each merge drops the partial-stack count; when it stops dropping, the run finishes normally.
 	local stacks = CountPartialStacks(state.playerInventory, state.bankInventory)
 	if stacks < state.lastStackCount then
 		state.tidySteps = 0
@@ -301,10 +222,9 @@ local function RunRestockLogic()
 	state.lastStackCount = stacks
 
 	if ConsolidateOne(state.playerInventory) or ConsolidateOne(state.bankInventory) then
-		return false -- merged a pair; re-scan next tick and keep tidying
+		return false
 	end
 
-	-- Nothing left to merge: genuinely done.
 	FinishRestocking(CompletionMessage())
 	return true
 end
@@ -315,7 +235,6 @@ local function RunRestockCoroutine()
 	end
 end
 
--- Created fresh by ns.RestartBankRestock at every run's start.
 local restockCoroutine
 
 local function MaintainAndResumeCoroutine()
@@ -327,11 +246,7 @@ local function MaintainAndResumeCoroutine()
 	local ok, errorMessage = coroutine.resume(restockCoroutine)
 
 	if not ok then
-		--[[
-		    Surface the error to the user instead of letting it vanish, then stop so we don't
-		    respawn the coroutine and re-trigger the same error every tick. Reopening the bank
-		    (ns.RestartBankRestock) creates a fresh coroutine and retries.
-		]]
+		-- Stops rather than respawning the same error every tick; reopening the bank retries.
 		ns:PrintMessage(string.format(L["RESTOCKER_STOPPED_ERROR"], tostring(errorMessage)))
 		FinishRestocking(nil)
 		restockCoroutine = nil
@@ -342,12 +257,7 @@ end
 -- Move Timer
 --------------------------------------------------------------------------------
 
---[[
-    One move is issued per tick. Pace ticks to the connection so a move has time to be
-    confirmed by the server before the next one: wait ~3x the round-trip, but never faster
-    than 0.140s. GetNetStats only refreshes its figures every ~30s, so this is called once
-    per tick (and once at restock start) rather than on every OnUpdate frame.
-]]
+-- Three round trips, so the server confirms a move before the next; read once per tick, not per frame.
 local function ComputeUpdateInterval()
 	local _, _, pingHome, pingWorld = GetNetStats()
 	local maxPing = math.max(pingHome, pingWorld)
@@ -364,20 +274,14 @@ local function OnBankRestockUpdate(_frame, elapsed)
 
 	if updateTimer >= updateInterval then
 		updateTimer = 0
-		updateInterval = ComputeUpdateInterval() -- pace the NEXT tick
+		updateInterval = ComputeUpdateInterval()
 
 		if currentlyRestocking then
 			--[[
-			    Wait until the previous move has FULLY settled (no slot still locked) before
-			    issuing the next one. Firing a split while the server is still consolidating the
-			    item from a move ~140ms ago is what gets rejected with "Couldn't split those
-			    items". The fixed tick interval alone isn't enough on a laggy connection. Only wait
-			    on OUR items -- an unrelated locked slot must not stall the restock forever.
-
-			    One of ours can stay locked too (held on the cursor, or a lock the server never
-			    clears). After MAX_STUCK_STEPS locked ticks the gate stops waiting and resumes, so
-			    ClearCursorForScan can clear our own stray and the watchdog can count the steps
-			    that land nothing and stop with StuckMessage.
+			    A split while the last move is still locked fails with "Couldn't split
+			    those items", and the tick alone isn't enough on a laggy connection. Only
+			    list items count; after MAX_STUCK_STEPS locked ticks it resumes so the
+			    cursor clear and the watchdog can act.
 			]]
 			if restockState and ns.IsRestockItemLocked(restockState.currentList) then
 				restockState.lockedTicks = restockState.lockedTicks + 1
@@ -393,9 +297,8 @@ local function OnBankRestockUpdate(_frame, elapsed)
 end
 
 --[[
-    A restart within the same visit (Enter in a Keep box, a list change) keeps
-    what the run before it did: the whole stacks it overshot with still owe a
-    stash-back, and having moved anything still earns the completion line.
+    A restart within the visit carries over the overshoots still owed a
+    stash-back, and whether anything moved, which earns the completion line.
 ]]
 function ns.RestartBankRestock()
 	local previous = currentlyRestocking and ns.bankIsOpen and restockState or nil
@@ -406,21 +309,17 @@ function ns.RestartBankRestock()
 		restockState.movedAny = previous.movedAny
 	end
 	currentlyRestocking = true
-	updateInterval = ComputeUpdateInterval() -- pace the first tick off a fresh reading
-	restockCoroutine = coroutine.create(RunRestockCoroutine) -- fresh run for this bank visit
+	updateInterval = ComputeUpdateInterval()
+	restockCoroutine = coroutine.create(RunRestockCoroutine)
 	restockUpdateFrame:Show()
 end
 
 restockUpdateFrame = CreateFrame("Frame")
 restockUpdateFrame:SetScript("OnUpdate", OnBankRestockUpdate)
--- A new frame starts shown; the timer runs only between ns.RestartBankRestock and the bank closing.
+-- A new frame starts shown.
 restockUpdateFrame:Hide()
 
 --[[
-    There is no manual re-trigger for a restock, and there must not be one on the
-    Diagnostic Tools panel: that panel is read-only by rule, and a restock moves
-    the player's items. Closing and reopening the bank, editing a Keep or
-    switching lists restarts a run (ns.StartRestockBankRun), and the
-    step-by-step trace behind ns.RestockerDebug is what actually explains a stuck
-    one.
+    No manual restock trigger, and none on the Diagnostic Tools panel: that panel
+    is read-only, and a restock moves items.
 ]]

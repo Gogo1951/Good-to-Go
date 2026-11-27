@@ -3,22 +3,11 @@ local GetSetting = ns.GetMacroSetting
 local StoreSetting = ns.StoreMacroSetting
 local NO_SLOTS = ns.NO_SLOTS
 
---[[
-	A macro's target priority, one of its options. The rest of them are Features/Enhanced-Spellbook/Macro-Options.lua,
-	and the per-spell settings this reads and writes Features/Enhanced-Spellbook/Macro-Settings.lua; both load first.
-]]
-
 --------------------------------------------------------------------------------
 -- Target Priority
 --------------------------------------------------------------------------------
 
---[[
-	Who a macro casts on, in turn: a list of up to TARGET_PRIORITY_SLOTS units ("targetPriority"), each tried
-	only when it can take the spell, then a plain cast. Each unit is { unit, menu label key }, in the order the
-	Target submenu lists them. A macro follows its kind's list (kindDefaults[kind].targetPriority) until it is
-	given its own. A list nobody set is the target alone, or for a helpful spell (a heal, a buff, a
-	resurrection) the mouseover, then the target, then the player.
-]]
+-- In Target submenu order. Each unit in a list is tried only when it can take the spell, then a plain cast.
 ns.TARGET_UNITS = {
 	{ "target", "MENU_UNIT_TARGET" },
 	{ "player", "MENU_UNIT_SELF" },
@@ -30,33 +19,22 @@ ns.TARGET_UNITS = {
 ns.TARGET_PRIORITY_SLOTS = 3
 
 local DEFAULT_PRIORITY = { "target" }
---[[
-	A helpful kind's list until one is set: "[@mouseover,help,nodead][help,nodead][@player]", so a heal lands on
-	whoever is under the cursor, else the friendly target, else the player. A resurrection leaves the player
-	out (LEFT_OUT_UNITS), so it tries the mouseover, then the target.
-]]
+-- A heal lands on whoever is under the cursor, else the friendly target, else the player.
 local HELPFUL_PRIORITY = { "mouseover", "target", "player" }
 local HELPFUL_KINDS = { friendly = true, buff = true, resurrect = true }
---[[
-	The units a kind can't pick: an enemy spell can't go on the player or the pet, nor a resurrection, which
-	can't raise the player casting it or a pet, nor reach the target's target of a dead target
-]]
+-- A resurrection can't raise the player casting it or a pet, nor reach a dead target's target.
 local LEFT_OUT_UNITS = {
 	enemy = { player = true, pet = true },
 	resurrect = { player = true, pet = true, targettarget = true },
 }
 
---[[
-	Whether a kind's macros cast on someone, so take a target priority: a spell cast on an enemy, a friend,
-	a dead friend or either. Ground spells, forms and the rest have no one to pick.
-]]
 local PRIORITY_KINDS = { enemy = true, friendly = true, buff = true, resurrect = true, anyone = true }
 
 function ns.KindOffersTargetPriority(kind)
 	return PRIORITY_KINDS[kind] == true
 end
 
--- Whether a unit can be picked for a kind (see LEFT_OUT_UNITS), and never the focus without one.
+-- Classic Era has no focus.
 function ns.KindOffersUnit(kind, unit)
 	if unit == "focus" and ns.FLAVOR == "Vanilla" then
 		return false
@@ -64,12 +42,11 @@ function ns.KindOffersUnit(kind, unit)
 	return not (LEFT_OUT_UNITS[kind] and LEFT_OUT_UNITS[kind][unit])
 end
 
--- A macro's own list.
 function ns.OffersTargetPriority(macro)
 	return ns.KindOffersTargetPriority(macro.kind)
 end
 
--- A list with the units a kind can't pick, and any unit a second time, left out; the target alone when that leaves none.
+-- The target alone when nothing is left.
 local function Usable(list, kind)
 	local usable, seen = {}, {}
 	for _, unit in ipairs(list) do
@@ -81,7 +58,6 @@ local function Usable(list, kind)
 	return #usable > 0 and usable or DEFAULT_PRIORITY
 end
 
--- A kind's list: the one set as its default from a macro's menu, else the helpful list or the target alone.
 function ns.KindTargetPriority(kind)
 	local list = ns.db.profile.kindDefaults[kind].targetPriority
 	if type(list) ~= "table" then
@@ -94,7 +70,7 @@ function ns.SetKindTargetPriority(kind, list)
 	ns.db.profile.kindDefaults[kind].targetPriority = list
 end
 
--- The macro's list, in order. Don't modify it.
+-- Don't modify it.
 function ns.TargetPriority(macro)
 	if not ns.OffersTargetPriority(macro) then
 		return NO_SLOTS
@@ -106,7 +82,6 @@ function ns.TargetPriority(macro)
 	return ns.KindTargetPriority(macro.kind)
 end
 
--- Whether the macro tries a unit, such as the mouseover, which rewrites its Dynamic Rank as that unit changes.
 function ns.TriesUnit(macro, unit)
 	for _, tried in ipairs(ns.TargetPriority(macro)) do
 		if tried == unit then
@@ -116,13 +91,12 @@ function ns.TriesUnit(macro, unit)
 	return false
 end
 
--- Whether the macro's list is anything but the target alone, which is just the plain cast.
+-- The target alone is just the plain cast.
 function ns.HasTargetPriority(macro)
 	local list = ns.TargetPriority(macro)
 	return #list > 1 or (list[1] ~= nil and list[1] ~= "target")
 end
 
--- Whether two lists hold the same units in the same order.
 local function SameList(a, b)
 	if #a ~= #b then
 		return false
@@ -136,9 +110,8 @@ local function SameList(a, b)
 end
 
 --[[
-	A list with unit picked at a place in it, from 1: a unit taken lower down moves up to this place, the one
-	it replaces and those after it move down a place (the last drops off past three), and nil (None, never
-	for the first) ends the list here.
+	A unit taken lower down moves up to place; the rest shift down, the last dropping off past the slots. nil
+	(None) ends the list here.
 ]]
 local function PlaceUnit(current, place, unit)
 	local list = {}
@@ -158,10 +131,7 @@ local function PlaceUnit(current, place, unit)
 	return list
 end
 
---[[
-	Picks the unit at a place in the macro's list (see PlaceUnit). Stored only where it differs from the kind's
-	list.
-]]
+-- Stored only where it differs from the kind's list.
 function ns.SetTargetPriorityUnit(macro, place, unit)
 	local list = PlaceUnit(ns.TargetPriority(macro), place, unit)
 	StoreSetting(macro, "targetPriority", not SameList(list, ns.KindTargetPriority(macro.kind)) and list or nil)

@@ -1,20 +1,7 @@
 local _, ns = ...
 local L = ns.L
 
---[[
-    The Restock window's header: the bar itself, the filter box it opens with,
-    Pick Staples at its right end, and the adders chained leftward from Pick
-    Staples (the bag menu, then the add box and its Add button), with the
-    notices the add box shows in place of its hint. Restocker-Window.lua
-    builds the window and places these in it; the footer's list controls are
-    Restocker-Window-List-Bar.lua's.
-]]
-
---[[
-    The header bar and the footer's list controls share a height and a right
-    inset, so both are set here and Restocker-Window-List-Bar.lua reads them
-    off ns.
-]]
+-- Shared with the footer's list controls.
 local BAR_HEIGHT = 22
 local BAR_INSET_LEFT = 16 -- past the portrait's clearance
 local BAR_INSET_RIGHT = 16
@@ -22,10 +9,8 @@ ns.RESTOCK_BAR_HEIGHT = BAR_HEIGHT
 ns.RESTOCK_BAR_INSET_RIGHT = BAR_INSET_RIGHT
 
 --[[
-    A text box takes a dropped item too, though it reports no click: on the
-    mouse-up of the click that brought the item, or a drag let go over it. That
-    click also focused the box, so once the drop is taken the keyboard goes back
-    to the game.
+    A text box reports no click, so a drop is taken on mouse-up or drag release.
+    That click focused the box, so focus goes back to the game after.
 ]]
 local function SetBoxTakesDrops(box)
 	local function TakeDroppedItem(self)
@@ -43,41 +28,22 @@ end
 
 local EDIT_BOX_HEIGHT = 16 -- all three fields, shorter than the header's buttons so they center beside them
 --[[
-    Each field is only as wide as its job takes, since all of them share the
-    header with its buttons and must fit at the window's narrowest. The filter
-    holds a word or two of an item's name. The bag menu holds its caption and
-    its arrow. The add box holds its hint, the longest text in the header, and
-    an add notice is written in that same space; both are kept to a phrase (see
-    their locale keys), because the header cannot pay for a field the width of
-    a sentence.
-
-    None of them absorbs a wider window: the filter holds the left end, the
-    adders chain leftward from Pick Staples, and the slack collects between.
-
-    A placeholder is a FontString rather than editbox content, so nothing clips
-    it for you: with only a left anchor, the add hint runs out over the Add
-    button. Each is anchored on both sides, so a hint that outgrows its field
-    truncates inside it instead of over its neighbor.
+    Each field is only as wide as its job, so the header fits at the narrowest
+    window; the add hint and its notices are kept to a phrase for that reason.
+    Slack collects between the filter and the adders.
 ]]
 local FILTER_BOX_WIDTH = 160
 local BAG_MENU_WIDTH = 160
 local ADD_BOX_WIDTH = 160
---[[
-    Between the bag menu and the add box, on the Spacing Scale. An
-    InputBoxTemplate field draws its border some 4px left of its own edge
-    (measured in the Forever client), which eats into the gap it draws as.
-]]
+-- An InputBoxTemplate border draws about 4px left of its edge (measured on Forever), eating into this.
 local CONTROL_ITEM_GAP = 16
 local ADD_BUTTON_WIDTH = 64
 local STAPLES_GAP = 8 -- between the header's buttons, and between the add box and Add
 
 --[[
-    Where SearchBoxTemplate is missing, the filter is a plain field with the
-    pieces the template would have drawn: the magnifying glass beside it, and a
-    clear button inside its right edge, shown only while there is text to
-    clear. The glass takes no mouse, so there is no dead click target beside a
-    box you type into. The clear mark is the group-loot pass the item rows
-    already use for "get rid of this", so removal looks the same everywhere.
+    Without SearchBoxTemplate, the plain filter draws its pieces itself. The
+    clear mark is the group-loot pass the rows use for removal, so removal looks
+    the same everywhere.
 ]]
 local ROW_ICON_SIZE = 16
 local ROW_ICON_GAP = 8
@@ -87,26 +53,9 @@ local CLEAR_BUTTON_INSET = 4
 local CLEAR_ICON = "Interface\\Buttons\\UI-GroupLoot-Pass-Up"
 local CLEAR_ICON_DOWN = "Interface\\Buttons\\UI-GroupLoot-Pass-Down"
 
---[[
-    Every way of typing or picking an item onto the list sits in the header,
-    chained leftward from Pick Staples: the bag menu, then the add box with its
-    Add button. Add is bolted to the add box so that pair reads as one control
-    rather than one more field. Left to right the adders run from the least
-    typing to the most: pick what is already in the bags, then drop or type
-    anything else, then Pick Staples, which opens a window of its own.
-]]
+-- The adders run left to right from least typing to most: bags, add box, then Pick Staples.
 
---[[
-    A text filter opening the header, as the Spell Book's does. Once 2+
-    characters are typed, the list shows only items whose name, type or item ID
-    contains the text; clearing it shows everything. It narrows the whole view
-    under it: the category pane's counts answer to it as well as the item rows.
-
-    SearchBoxTemplate draws the magnifying glass, the hint and the clear button
-    itself, as the Spell Book's filter does; its hint is white, readable on the
-    dark box ElvUI or the default art gives it. Built in the header bar, first
-    of its controls (ns.CreateRestockHeader, below).
-]]
+-- The category pane's counts answer to the filter too, not just the rows.
 local function ApplyFilter(text)
 	ns.restockListFilter = text
 	ns.UpdateRestockList()
@@ -118,6 +67,7 @@ local function CreateSearchFilterBox(bar)
 	box:SetPoint("LEFT", bar, "LEFT", 0, 0)
 	box:SetAutoFocus(false)
 	local hint = box.Instructions
+	-- White reads on the dark box ElvUI and the default art both give it.
 	if hint then
 		hint:SetText(L["RESTOCKER_FILTER_PLACEHOLDER"])
 		local white = ns.COLORS_RGB.TEXT
@@ -142,11 +92,7 @@ local function CreatePlainFilterBox(bar)
 	-- Keep typed text off the clear button below; the placeholder never meets it.
 	box:SetTextInsets(0, CLEAR_BUTTON_SIZE + CLEAR_BUTTON_INSET, 0, 0)
 
-	--[[
-	    Clearing the box fires OnTextChanged below, which is what empties the
-	    filter and repaints the list -- so this handler only has to blank the
-	    text, and the two paths out of a filter cannot drift apart.
-	]]
+	-- Only blanks the text: OnTextChanged empties the filter, so the two ways out can't drift.
 	local clearButton = CreateFrame("Button", nil, box)
 	clearButton:SetSize(CLEAR_BUTTON_SIZE, CLEAR_BUTTON_SIZE)
 	clearButton:SetPoint("RIGHT", box, "RIGHT", -CLEAR_BUTTON_INSET, 0)
@@ -160,7 +106,10 @@ local function CreatePlainFilterBox(bar)
 	end)
 	ns.SetupRestockerTooltip(clearButton, L["RESTOCKER_FILTER_CLEAR_TOOLTIP"])
 
-	-- Anchored on both sides with no wrap, so a hint longer than the field truncates inside it.
+	--[[
+	    A placeholder is a FontString, so nothing clips it: anchored on both sides,
+	    a long hint truncates inside the field instead of running over its neighbor.
+	]]
 	local placeholder = box:CreateFontString(nil, "OVERLAY")
 	placeholder:SetFontObject("GameFontDisable")
 	placeholder:SetPoint("LEFT", box, "LEFT", 4, 0)
@@ -192,15 +141,7 @@ local function CreateFilterBox(addonFrame, bar)
 	return box
 end
 
---[[
-    Pick Staples, the same staples window a fresh character is offered at login
-    (Features/Restocker/Restocker-Starter-Window.lua). Reachable from here as
-    well so it is a tool the player can come back to rather than a one-off
-    greeting they either caught or missed.
-
-    It opens over this window, which stays open: each staple checked lands in
-    the New group behind it, and closing it leaves the player where they were.
-]]
+-- Here too, so Staples is a tool to come back to rather than a greeting caught or missed.
 local function CreateStaplesButton(header)
 	local button = ns.CreateRestockerHeaderButton(header, L["RESTOCKER_PICK_STAPLES_BUTTON"])
 	button:SetPoint("RIGHT", header, "RIGHT", 0, 0)
@@ -211,15 +152,7 @@ local function CreateStaplesButton(header)
 	header.staplesButton = button
 end
 
---[[
-    The header bar, on the dark frame under the title like the Spell Book's
-    controls row, with the filter at its left end and Pick Staples at its
-    right. Returns the bar; the adders are placed in it afterward
-    (ns.CreateRestockAddButton and the two after it), chained off Pick Staples.
-
-    Every control is a child of the bar, never of the window: a control
-    anchored to the window lands at its middle and disappears behind the list.
-]]
+-- Controls are children of the bar: one on the window lands mid-window, behind the list.
 function ns.CreateRestockHeader(addonFrame)
 	local bands = ns.RESTOCK_WINDOW_BANDS
 	local top = ns.RESTOCK_HEADER_CENTER_Y + BAR_HEIGHT / 2
@@ -238,11 +171,7 @@ local function CreateAddButton(addonFrame, header)
 	local addButton = ns.CreateRestockerHeaderButton(header, L["RESTOCKER_ADD_BUTTON"])
 	addButton:SetPoint("RIGHT", header.staplesButton, "LEFT", -STAPLES_GAP, 0)
 	addButton:SetWidth(math.max(ADD_BUTTON_WIDTH, addButton:GetWidth()))
-	--[[
-	    The add box is captured, never resolved through GetParent: this button is
-	    parented to the header and the box is not its child, so walking the chain
-	    is both fragile and exactly the trap the row controls warn about.
-	]]
+	-- Captured, never found through GetParent: the box isn't this button's child.
 	ns.SetRestockControlClick(addButton, function()
 		local editBox = addonFrame.editBox
 		local text = editBox:GetText()
@@ -252,10 +181,7 @@ local function CreateAddButton(addonFrame, header)
 		editBox:SetText("")
 		editBox:ClearFocus()
 	end)
-	--[[
-	    The same tooltip the edit box shows: the button and the box are two
-	    halves of one control, and either is a fair place to hover.
-	]]
+	-- The box's tooltip: the two are halves of one control.
 	ns.SetupRestockerTooltip(addButton, L["RESTOCKER_ADD_TOOLTIP_TITLE"], L["RESTOCKER_ADD_TOOLTIP_BODY"])
 
 	addonFrame.addButton = addButton
@@ -264,30 +190,20 @@ end
 
 ns.CreateRestockAddButton = CreateAddButton
 
---[[
-    The add box's placeholder doubles as its notice line (see Add Notices
-    below): these are the tone a notice takes, and the placeholder's own, read
-    back from its font when the box is built.
-]]
+-- The placeholder doubles as the notice line; its own tone is read back from its font.
 local NOTICE_TONE = ns.HexToRGB(ns.RESTOCKER_WINDOW_COLORS.ADD_NOTICE)
 local placeholderTone
 
 local function CreateEditBox(addonFrame, header)
 	local editBox = CreateFrame("EditBox", nil, header, "InputBoxTemplate")
-	--[[
-	    Left of the Add button, spaced as the header's buttons are: flush, the
-	    box's border art meets the button's and the pair reads as a clash rather
-	    than as one control.
-	]]
+	-- Spaced, not flush: the border arts would clash.
 	editBox:SetPoint("RIGHT", addonFrame.addButton, "LEFT", -STAPLES_GAP, 0)
 	editBox:SetWidth(ADD_BOX_WIDTH)
 	editBox:SetAutoFocus(false)
 	editBox:SetHeight(EDIT_BOX_HEIGHT)
 	--[[
-	    A typed item ID, or an item dragged onto the box or anywhere else on
-	    the window. Never a Shift + Click: every client routes it through
-	    ChatFrameUtil.InsertLink, which an add-on cannot claim without
-	    overwriting a Blizzard function.
+	    No Shift + Click insert: it routes through ChatFrameUtil.InsertLink, which
+	    can't be claimed without overwriting a Blizzard function.
 	]]
 	editBox:SetScript("OnEnterPressed", function(self)
 		local text = self:GetText()
@@ -297,13 +213,7 @@ local function CreateEditBox(addonFrame, header)
 	end)
 	SetBoxTakesDrops(editBox)
 
-	--[[
-	    Grayed-out placeholder, shown only while the box is empty -- the same
-	    arrangement as the filter box, both ends anchored and no wrap included.
-	    This is the longest hint on the row and the one ADD_BOX_WIDTH is sized
-	    to; with only a left anchor it overruns the field and draws under the
-	    Add button.
-	]]
+	-- Anchored on both sides like the filter's: the longest hint here, and what ADD_BOX_WIDTH fits.
 	local placeholder = editBox:CreateFontString(nil, "OVERLAY")
 	placeholder:SetFontObject("GameFontDisable")
 	placeholder:SetPoint("LEFT", editBox, "LEFT", 4, 0)
@@ -312,14 +222,10 @@ local function CreateEditBox(addonFrame, header)
 	placeholder:SetWordWrap(false)
 	placeholder:SetText(L["RESTOCKER_ADD_PLACEHOLDER"])
 	addonFrame.addPlaceholder = placeholder
-	-- The gray its font object draws in, kept for ns.ClearRestockAddNotice to put back.
 	placeholderTone = { placeholder:GetTextColor() }
 	editBox:SetScript("OnTextChanged", function(self)
 		local isEmpty = (self:GetText() or "") == ""
-		--[[
-		    Typing again answers a notice, so it goes. Emptying the box does not:
-		    both add paths clear the box right after the add that raised it.
-		]]
+		-- Not on emptying: both add paths empty the box right after raising a notice.
 		if not isEmpty then
 			ns.ClearRestockAddNotice()
 		end
@@ -334,7 +240,6 @@ end
 
 ns.CreateRestockAddBox = CreateEditBox
 
--- The Add Item From Bags menu (Restocker-Window-Bag-Menu.lua builds it), the chain's left end.
 local function PlaceBagMenu(addonFrame, header)
 	local bagMenu = ns.CreateRestockBagMenu(addonFrame, header)
 	bagMenu:SetPoint("RIGHT", addonFrame.editBox, "LEFT", -CONTROL_ITEM_GAP, 0)
@@ -350,13 +255,8 @@ ns.PlaceRestockBagMenu = PlaceBagMenu
 --------------------------------------------------------------------------------
 
 --[[
-    An add that did not go through says why in the add box itself, in place of
-    its placeholder: the box has just been emptied, it is where the player is
-    looking, and a chat line is easy to miss behind the window. The notice stays
-    until the player types again or the window closes.
-
-    With the window shut there is no box to write in, so the same line goes to
-    chat instead.
+    Said in the add box, where the player is looking; a chat line is easy to
+    miss behind the window. Chat only while the window is shut.
 ]]
 local addNoticeShown = false
 

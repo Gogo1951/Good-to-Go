@@ -1,15 +1,6 @@
 local _, ns = ...
 local Data = ns.Data
 
---[[
-    Buff Duty's unit reads: whether a unit can take a buff, the role and
-    class it is buffed as, how far away it is, a player's row label, and the
-    icons that cast at it. What it has on is Buff-Duty-Auras.lua's; a dead
-    player's resurrection is Buff-Duty-Resurrections.lua's, a pet's row
-    Buff-Duty-Pets.lua's and a friendly NPC's Buff-Duty-NPCs.lua's. Shared
-    with the other Buff Duty files through ns.BuffDuty.
-]]
-
 local BuffDuty = ns.BuffDuty
 local RankFor = BuffDuty.RankFor
 
@@ -23,11 +14,7 @@ end
 
 local heldMembers
 
---[[
-    Your group as { unit, subgroup, isPlayer }: the raid by roster order, or you and your party. isPlayer marks
-    your own entry; a raid token the client won't compare plainly counts as someone else. Read only; see
-    HoldGroupMembers.
-]]
+-- A raid token the client won't compare plainly counts as someone else.
 function BuffDuty.GroupMembers()
 	if heldMembers then
 		return heldMembers
@@ -55,9 +42,8 @@ function BuffDuty.GroupMembers()
 end
 
 --[[
-    While held, BuffDuty.GroupMembers hands every caller one reading of the roster, so a redraw, whose sections
-    each walk the group, reads it once. Held only around one redraw, inside a single frame, where the roster
-    can't change.
+    While held, GroupMembers hands every caller one roster read. Hold only
+    around one synchronous redraw, where the roster can't change.
 ]]
 function BuffDuty.HoldGroupMembers(hold)
 	heldMembers = nil
@@ -66,7 +52,7 @@ function BuffDuty.HoldGroupMembers(hold)
 	end
 end
 
--- Whether a Count as Tanks entry (a class token, or Data.TANK_WHEN_PET) applies right now; SOLO is the Solo group context.
+-- SOLO is the Solo group context.
 local function CountsAsTank(key)
 	local when = key and ns.db.global.buffWindow.tankWhen[key]
 	return when == Data.TANK_WHEN.ALWAYS or (when == Data.TANK_WHEN.SOLO and ns.GetGroupContext() == "solo")
@@ -74,21 +60,10 @@ end
 BuffDuty.CountsAsTank = CountsAsTank
 
 --[[
-    The role a player is buffed as, for a buff offered to Tanks or Healers: the
-    raid's Main Tank mark, then the role assigned in the group finder (damage
-    included, so an assigned role always beats a ticked box). For you alone,
-    with no role assigned, the roles ticked in the group finder's own listing (Era's solo
-    Tank / Healer / DPS boxes, which never assign a role), the first ticked of
-    Tank, then Healer -- a tank's buffs matter most. Anyone with none of these -- a
-    low-level player who can't pick a role yet, a group that never set one, or
-    a stranger (`unit` nil when out of sight) -- counts as a tank when the
-    player's Count as Tanks setting says their `class` does right now, and
-    otherwise as damage. An actual role always wins over the class setting.
-    In a raid only the Main Tank mark makes a tank: a Tank role or box there is
-    one a player ticked for themselves in the group finder, not the raid's
-    call. The mark is asked for exactly -- without that, GetPartyAssignment
-    also says yes to anyone whose role is Tank. A client without one of the
-    group calls answers nil from its accessor, so it simply skips to the next.
+    An actual role always wins over Count as Tanks. In a raid only the Main
+    Tank mark makes a tank: a Tank role there is self-ticked, not the raid's
+    call. The mark is asked for exactly, or GetPartyAssignment also says yes
+    to anyone whose role is Tank.
 ]]
 function BuffDuty.RoleOf(unit, class)
 	if unit then
@@ -115,7 +90,6 @@ function BuffDuty.RoleOf(unit, class)
 	return "DAMAGER"
 end
 
--- Is this player someone the buff is offered to at all, whatever they have on?
 function BuffDuty.Wants(buff, class, role)
 	if buff.manaOnly and Data.NO_MANA_CLASSES[class] then
 		return false
@@ -131,11 +105,7 @@ function BuffDuty.Wants(buff, class, role)
 	return true
 end
 
---[[
-    Duration of a HELPFUL aura on `unit` for `spellId`, or nil when absent. A live
-    buff can legitimately report 0 (no timer), so callers must nil-check the result,
-    not test it for truthiness. 40 is the aura cap the client exposes.
-]]
+-- A live buff can report 0 (no timer), so nil-check the result rather than test it for truthiness.
 local function GetBuffDuration(unit, spellId)
 	for i = 1, 40 do
 		local data = C_UnitAuras.GetBuffDataByIndex(unit, i, "HELPFUL")
@@ -150,11 +120,8 @@ local function GetBuffDuration(unit, spellId)
 end
 
 --[[
-    A pet in Phase Shift (a warlock's imp) can't be targeted, so no buff
-    reaches it until it phases back in, however close it stands. Secret auras
-    on WoW Forever read as not shifted. Each unit's answer is kept for the
-    frame it was read in: the range ticker asks once per icon, and one pet can
-    have several.
+    A Phase Shifted imp can't be targeted however close it stands. Kept per
+    frame: the range ticker asks once per icon, and one pet can have several.
 ]]
 local phaseShifted, phaseShiftedAt = {}, nil
 
@@ -183,7 +150,6 @@ BuffDuty.IsPhaseShifted = IsPhaseShifted
 -- PvP Flags
 --------------------------------------------------------------------------------
 
--- `unit`'s name when it is someone else with their PvP flag up; nil for you, anyone unflagged, or an answer we can't read.
 local function FlaggedName(unit)
 	if not unit or not UnitExists(unit) then
 		return nil
@@ -201,13 +167,9 @@ local function FlaggedName(unit)
 end
 
 --[[
-    Buffing a PvP-flagged player flags you too. While you aren't flagged, the
-    name of a flagged player a cast would reach: who it's aimed at; for a
-    group buff anyone in that party, since it lands on all of them; and for a
-    self-buff that reaches your party (Battle Shout), anyone in yours. Nil
-    when you're flagged already, the Buff PvP-Flagged Players setting is on,
-    or the cast reaches no one flagged. A stranger buffed by name with no unit
-    token (a favor out of sight) can't be asked.
+    Buffing a PvP-flagged player flags you too. A group buff lands on the
+    whole party, and a party self-buff (Battle Shout) on yours. A favor out of
+    sight has no unit token to ask.
 ]]
 function BuffDuty.PvPFlaggedTarget(spec)
 	if not spec or spec.ask or ns.db.global.buffWindow.buffPvPFlagged then
@@ -239,13 +201,9 @@ function BuffDuty.PvPFlaggedTarget(spec)
 end
 
 --[[
-    Is `unit` close enough to take `spellName`? A phase-shifted pet never is.
-    Otherwise the spell's own range check first; when it has no answer, a unit
-    out of sight (UnitIsVisible) reads as out of range, and one in sight takes
-    UnitInRange's group-wide ~40 yards, which only knows about group members.
-    A unit we can't ask about reads as in range, and so does any secret answer
-    (WoW Forever's for a stranger): the fade is a hint, and a wrong "out of
-    range" would hide a buff the player could have cast.
+    An unknown or secret answer reads as in range: the fade is a hint, and a
+    wrong "out of range" would hide a buff the player could have cast.
+    UnitInRange only knows group members.
 ]]
 function ns.IsBuffInRange(unit, spellName)
 	if not unit or not ns.CanCompareUnitTokens(unit, "player") then
@@ -282,10 +240,7 @@ end
 -- Labels
 --------------------------------------------------------------------------------
 
---[[
-    The group finder's round role icons, cut from its 64-pixel sheet (as pixels,
-    the way the |T escape wants them): left, right, top, bottom.
-]]
+-- Cut from the 64-pixel sheet in pixels, as the |T escape wants: left, right, top, bottom.
 local ROLE_ICON_SHEET = "Interface/LFGFrame/UI-LFG-ICON-PORTRAITROLES"
 local ROLE_ICON_COORDS = {
 	TANK = "0:19:22:41",
@@ -302,11 +257,7 @@ local function RoleIcon(role)
 	)
 end
 
---[[
-    A player's row label: role icon, then the name in its class color -- the
-    color already says the class, so the icon says the role. `unit` is nil for
-    a stranger out of sight, who is shown as damage.
-]]
+-- The color already says the class, so the icon says the role. A stranger out of sight shows as damage.
 function BuffDuty.PlayerLabel(name, class, unit)
 	return RoleIcon(BuffDuty.RoleOf(unit, class)) .. (ns.GetClassColor(class) or ns.GetColor("TEXT")) .. name .. "|r"
 end
@@ -316,24 +267,19 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    /targetexact finds a nearby player by name with no unit token, and a miss
-    leaves the old target in place. Clearing first means a miss leaves nothing
-    targeted, so [help] stops the cast instead of falling through to whoever
-    you had targeted or to yourself. Leaving the found player targeted is
-    deliberate: it is how the window sees the buff land and drops the icon.
+    A /targetexact miss leaves the old target, so clearing first lets [help]
+    stop the cast rather than fall through to them or you. The found player is
+    left targeted on purpose: that is how the window sees the buff land.
 ]]
 local function TargetMacro(name, castText)
 	return "/cleartarget\n/targetexact " .. name .. "\n/cast [help] " .. castText
 end
 
 --[[
-    One single-target icon, sized to the target: `unit` is who it is for (nil
-    when out of sight), `castUnit` the token the button casts at. Without a
-    castUnit the button targets `fullName` by macro instead. The button casts
-    the chosen rank by its rank text, "Power Word: Fortitude(Rank 2)": a bare
-    name casts your highest rank and fails on anyone too low for it, and a
-    spell ID did nothing at all on Classic Era. Nil when the target is too low
-    for any rank, or Shadowform shuts the spell out (BuffDuty.ShutOut).
+    Cast by rank text, "Power Word: Fortitude(Rank 2)": a bare name casts your
+    highest rank and fails on anyone too low for it, and a spell ID casts
+    nothing on Classic Era. Without castUnit the button targets `fullName` by
+    macro.
 ]]
 local function SingleIcon(buff, unit, castUnit, targetName, fullName, favorGUID)
 	if BuffDuty.ShutOut(buff) then
@@ -357,11 +303,6 @@ local function SingleIcon(buff, unit, castUnit, targetName, fullName, favorGUID)
 end
 BuffDuty.SingleIcon = SingleIcon
 
---[[
-    Stamps an icon with the version running low that Has reported, so the
-    window draws how much of it is left; an icon for a buff that is gone
-    entirely carries none and draws whole. Returns the icon.
-]]
 function BuffDuty.WithTimeLeft(icon, expires, duration)
 	if icon and expires and duration and duration > 0 then
 		icon.buffExpires, icon.buffDuration = expires, duration

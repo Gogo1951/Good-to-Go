@@ -1,20 +1,12 @@
 local _, ns = ...
 
---[[
-    Buff-Duty-Key-Picker -- which icon the Buff Key casts next: every icon it
-    could cast, in order (Candidates), weighed for readiness, cooldowns, mana
-    and reach, and the first that will go off (BuffDuty.PickBuffKeySpec).
-    Buff-Duty-Keys.lua owns the button that casts it and the memory of what a
-    press just cast, which it lends this file as BuffDuty.BuffKeySkipped.
-]]
-
 local BuffDuty = ns.BuffDuty
 
 local GetItemCooldown = C_Container.GetItemCooldown
 local IsSpellUsable = C_Spell.IsSpellUsable
 local GetSpellPowerCost = C_Spell.GetSpellPowerCost
 
--- Whether a press a moment ago already cast this (Buff-Duty-Keys.lua), looked up when asked.
+-- Looked up at call time: Buff-Duty-Keys.lua loads after this file.
 local function Skipped(spec, now)
 	return BuffDuty.BuffKeySkipped(spec, now)
 end
@@ -23,7 +15,6 @@ end
 -- Readiness
 --------------------------------------------------------------------------------
 
--- Whether the global cooldown holds a spell up and nothing else does: no cooldown of its own.
 local function OnlyGlobalCooldown(spellId)
 	if not GetSpellBaseCooldown then
 		return false
@@ -35,16 +26,12 @@ local function OnlyGlobalCooldown(spellId)
 	return cooldown == 0 and (globalCooldown or 0) > 0
 end
 
--- The spell found last time to read the global cooldown from, kept while the player still knows it.
 local globalCooldownReference
 
 --[[
-    The spell whose cooldown is the global one: ns.GLOBAL_COOLDOWN_SPELL_ID
-    where this client's data folder carries it (the clients with spell 61304).
-    Classic Era, Season of Discovery and TBC have no such spell, so there it is
-    the first of the player's own Buff Duty spells, buffs and self buffs, that
-    the global cooldown holds up and nothing else does. nil when the player
-    knows none.
+    Classic Era, Season of Discovery and TBC have no GCD spell (61304), so
+    there it is the first of your own Buff Duty spells whose only cooldown is
+    the global one.
 ]]
 local function GlobalCooldownSpell()
 	local fixed = ns.GLOBAL_COOLDOWN_SPELL_ID
@@ -72,7 +59,7 @@ local function GlobalCooldownSpell()
 	return nil
 end
 
--- When the running global cooldown ends, or 0 when none is running or the client won't say. Buff-Duty-Self.lua reads it too.
+-- 0 when none is running or the client won't say.
 function BuffDuty.GlobalCooldownEnd()
 	local spellId = GlobalCooldownSpell()
 	local info = spellId and C_Spell.GetSpellCooldown(spellId)
@@ -84,9 +71,9 @@ function BuffDuty.GlobalCooldownEnd()
 end
 
 --[[
-    A spell or item on the global cooldown reports it as a short cooldown of its
-    own, so a real cooldown is one that runs past the global one's end. Haste
-    shortens the global cooldown, so it is read, never assumed.
+    A spell on the global cooldown reports it as its own, so a real cooldown
+    runs past the GCD's end. Haste shortens the GCD, so it is read, never
+    assumed.
 ]]
 local function OnCooldown(start, duration)
 	if not (ns.IsPlain(start) and ns.IsPlain(duration) and start and duration and duration > 0) then
@@ -96,12 +83,7 @@ local function OnCooldown(start, duration)
 	return ends > GetTime() and ends > BuffDuty.GlobalCooldownEnd()
 end
 
---[[
-    "cooldown" for a spell or item that can't go off for a while yet (a used
-    Soulstone, Fear Ward), "unusable" for one the client refuses for any
-    reason but mana (no reagent, no Soul Shard), otherwise "ready". Short on
-    mana still counts as ready: the cast's own error says so.
-]]
+-- Short on mana still counts as ready: the cast's own error says so.
 local function Readiness(spec)
 	if spec.itemId then
 		if OnCooldown(GetItemCooldown(spec.itemId)) then
@@ -121,12 +103,10 @@ local function Readiness(spec)
 end
 
 --[[
-    Whether a spell has a cooldown of its own beyond the global one (Fear
-    Ward), ready or not. The key is for buffs you can cast again and again,
-    so one with a cooldown is left to its icon. An item's cooldown is the
-    item's, not its spell's, so an item says so itself (a Soulstone's
-    hasCooldown). GetSpellBaseCooldown's first return already leaves the
-    global cooldown out, so anything above zero is the spell's own.
+    The key is for buffs you can cast again and again, so one with its own
+    cooldown (Fear Ward) is left to its icon. An item's cooldown is the
+    item's, so it says so itself (hasCooldown). GetSpellBaseCooldown already
+    leaves the GCD out.
 ]]
 local function HasCooldown(spec)
 	if spec.itemId then
@@ -139,7 +119,6 @@ local function HasCooldown(spec)
 	return ns.IsPlain(milliseconds) and milliseconds and milliseconds > 0 or false
 end
 
--- The mana a spell costs, or nil when the client doesn't say.
 local function ManaCost(spellId)
 	local costs = spellId and GetSpellPowerCost(spellId)
 	if type(costs) ~= "table" then
@@ -157,10 +136,7 @@ end
 -- Candidates
 --------------------------------------------------------------------------------
 
---[[
-    Your target, if they're a friendly dead player you can bring back -- in
-    your group or not. BuffDuty.ResurrectionIcon says who can take one.
-]]
+-- In your group or not, even with the Target list off.
 local function ResurrectionSpec()
 	if not UnitExists("target") or not ns.IsPlainYes(UnitIsFriend("player", "target")) then
 		return nil
@@ -168,7 +144,6 @@ local function ResurrectionSpec()
 	return BuffDuty.ResurrectionIcon("target", "target", GetUnitName("target", false) or "")
 end
 
--- Your target's party, or nil when your target isn't in your group.
 local function TargetSubgroup()
 	if not UnitExists("target") then
 		return nil
@@ -182,24 +157,11 @@ local function TargetSubgroup()
 end
 
 --[[
-    The group buffs worth casting on a party, and the buff columns they
-    cover. For each buff it is missing: the members who'd take it, less any
-    just given the single version. Range doesn't thin them out: a group buff
-    waits for its whole party (Reachable), so it is weighed against buffing
-    all of them one at a time. The group version goes out
-    when it costs less mana than their single casts together, or when one of
-    them is too low for any single rank you know; a client that names no
-    costs counts the group version as cheaper once it reaches two. Otherwise,
-    or with no reagent for it, the members keep their single icons. A group
-    version with no single one to fall back on is always kept, so the key
-    can say who it waits on. A group buff a press just cast covers its
-    column until the aura shows, so its members aren't given singles over
-    it. Pets take singles all the same: the group versions are cast to be
-    sure of the players.
-
-    The window asks too, with no `now` (BuffDuty.AddGroupSections): in a
-    raid it shows only the casts chosen here, so it skips the press memory
-    and weighs only mana and reagents.
+    Range doesn't thin the members out: a group buff waits for its whole
+    party (Reachable), so it is weighed against singles for all of them. One
+    with no single to fall back on is always kept, so the key can say who it
+    waits on. The window passes no `now`, so its raid headers skip the press
+    memory.
 ]]
 local function GroupChoices(section, now)
 	local chosen, covered = {}, {}
@@ -253,31 +215,10 @@ end
 
 BuffDuty.GroupChoices = GroupChoices
 
---[[
-    Every icon the key could cast, in the order it should:
-      1. Resurrections: your dead target, then your group's dead.
-      2. Asking your target for their buffs (a whisper, so it costs no cast,
-         and goes out with the same press's cast: PickNext).
-      3. Your own casts: the buffs you can give your target, Return the
-         Favor, your self-buffs, then each party -- your target's first --
-         with its group buffs (GroupChoices) and then its members' single
-         ones, less those a group buff covers. Shadowform comes last of
-         all (castLast).
-      4. Scrolls.
-      5. Weapon buffs: main hand's row, then off hand's, best first.
-      6. Elixirs, then Other Buffs (Winterfall Firewater).
-      7. Buff food for Well Fed.
-      8. A targeted friendly NPC.
-    A category whose Use with Cast Next Buff is off (BuffDuty.RowOnKey;
-    Flasks or Elixirs and Other Buffs start off) gives none of its icons,
-    which stay a click on the window.
-]]
+-- A category whose Use with Cast Next Buff is off gives none of its icons; they stay a click on the window.
 local function Candidates(sections, now)
 	local list, added = {}, {}
-	--[[
-	    The Self Buffs consumables and weapon buffs are each added in their
-	    own place below, never with the casts.
-	]]
+	-- Consumables and weapon buffs are each added in their own place below, never with the casts.
 	local function Add(spec, allowItem)
 		if
 			spec
@@ -303,7 +244,6 @@ local function Candidates(sections, now)
 			end
 		end
 	end
-	-- Every icon in your own sections (Self-Buffs, Well Fed, Weapon Buffs, Scrolls, Flasks or Elixirs, Other Buffs).
 	local function EachSelfIcon(test)
 		Each("self", function(section)
 			for _, spec in ipairs(section.icons) do
@@ -333,7 +273,7 @@ local function Candidates(sections, now)
 		end
 	end)
 
-	-- 2. Asking your target for their buffs (Buff-Duty-Asks.lua): a whisper, sent with the press's cast.
+	-- 2. Asking your target: a whisper, sent with the same press's cast.
 	Each("target", function(section)
 		for _, row in ipairs(section.rows) do
 			for _, spec in ipairs(row.icons) do
@@ -345,9 +285,8 @@ local function Candidates(sections, now)
 	end)
 
 	--[[
-	    3. Your own casts, your target first. A targeted player's icons leave
-	    once their buffs land, so the key then moves on. Return the Favor comes
-	    after them: its macro clears your target to find the stranger by name.
+	    3. Your own casts, your target first. Return the Favor comes after:
+	    its macro clears your target to find the stranger by name.
 	]]
 	Each("target", function(section)
 		for _, row in ipairs(section.rows) do
@@ -408,11 +347,7 @@ local function Candidates(sections, now)
 		return spec.scroll
 	end)
 
-	--[[
-	    5. Weapon buffs: each hand's row, its best icon first. The game's
-	    "replace your enchant?" question is answered for the key as for a
-	    click (Buff-Duty-Keys.lua).
-	]]
+	-- 5. Weapon buffs: each hand's row, its best icon first.
 	Each("self", function(section)
 		for _, row in ipairs(section.rows) do
 			for _, spec in ipairs(row.icons) do
@@ -431,20 +366,12 @@ local function Candidates(sections, now)
 		return spec.dutyRow == "other"
 	end)
 
-	--[[
-	    7. Well Fed after the casts: eating sits you down, and the next cast
-	    would stand you back up. Its icon leaves while you eat
-	    (Buff-Duty-Self.lua), so another press doesn't take a second bite.
-	]]
+	-- 7. Well Fed after the casts: eating sits you down, and the next cast would stand you back up.
 	EachSelfIcon(function(spec)
 		return spec.wellFed
 	end)
 
-	--[[
-	    8. A targeted NPC's row cycles forever (BuffDuty.NPCRow), so it waits
-	    until the very end: any sooner, it would keep the key from ever
-	    reaching what comes after it.
-	]]
+	-- 8. A targeted NPC's row cycles forever, so any sooner it would keep the key from reaching what follows.
 	Each("target", function(section)
 		for _, row in ipairs(section.rows) do
 			if row.npc then
@@ -457,11 +384,7 @@ local function Candidates(sections, now)
 	return list
 end
 
---[[
-    The key's order, for the window: Buff-Duty-Frame.lua lines up the icons on
-    Self-Buffs, Target and Return the Favor in it, the next cast leftmost. No
-    `now`, as the window's own GroupChoices call, so no press memory.
-]]
+-- For the window's packed lines; no `now`, so no press memory.
 function BuffDuty.CastOrder(sections)
 	return Candidates(sections)
 end
@@ -470,24 +393,15 @@ end
 -- Picking
 --------------------------------------------------------------------------------
 
---[[
-    Pally Power's test for a member a group buff would miss: out of sight,
-    yet neither AFK nor offline (an offline member never gets this far:
-    BuffDuty.CanBuff leaves them off the list). One the client won't say
-    about doesn't hold anything up.
-]]
+-- Pally Power's test: out of sight yet not AFK. One the client won't say about holds nothing up.
 local function OutOfSight(unit)
 	local visible, afk = UnitIsVisible(unit), UnitIsAFK(unit)
 	return ns.IsPlain(visible) and ns.IsPlain(afk) and not visible and not afk or false
 end
 
 --[[
-    Whether the cast can reach anyone it's for, and if not, the name of
-    someone it's waiting on. A group buff waits, as Pally Power's Greater
-    Blessings do, until every member missing it is in sight -- it reaches
-    the whole party, so going out early would leave whoever's away to be
-    buffed again by hand -- and then needs one of them in range to cast it
-    on.
+    A group buff waits until every member missing it is in sight: going out
+    early would leave whoever's away to be buffed again by hand.
 ]]
 local function Reachable(spec)
 	if spec.members then
@@ -510,14 +424,9 @@ local function Reachable(spec)
 end
 
 --[[
-    The first candidate that is ready and in reach. With none, the first one
-    the client refuses, so its own error ("Missing reagent") says why the key
-    did nothing; failing that, nil and whoever the list is waiting on. A cast
-    that would flag you for PvP (BuffDuty.PvPFlaggedTarget) is passed over,
-    and the flagged player's name comes back third. Fourth, the ask icon
-    whose whisper goes out with the same press, if one can be asked. A buff
-    with a cooldown of its own (HasCooldown) is never a candidate, ready or
-    not.
+    With nothing ready, the first refused one, so its own error ("Missing
+    reagent") says why. An ask comes back fourth, beside the pick, so one
+    press both whispers and casts.
 ]]
 local function PickNext()
 	local db = ns.db and ns.db.global.buffWindow
@@ -536,18 +445,13 @@ local function PickNext()
 	local refused, waitingOn, flagged, askSpec
 	for _, spec in ipairs(candidates) do
 		local flaggedName = not spec.ask and BuffDuty.PvPFlaggedTarget(spec)
-		--[[
-		    An ask (Buff-Duty-Asks.lua) is a whisper, not a cast: no range,
-		    mana or cooldown of yours to wait on, only that player's own wait
-		    since they were last asked for it. It rides along with the press's
-		    cast, so one press both asks and buffs.
-		]]
+		-- An ask waits only on that player's ask cooldown, not your range, mana or cooldowns.
 		if spec.ask then
 			if not askSpec and BuffDuty.CanAskTarget(spec) then
 				askSpec = spec
 			end
 		elseif flaggedName then
-			-- Passed over, so it can't hold up the rest; the press names them if nothing else is left.
+			-- Passed over so it can't hold up the rest; the press names them if nothing else is left.
 			flagged = flagged or flaggedName
 		elseif not Skipped(spec, now) and not HasCooldown(spec) then
 			local readiness = Readiness(spec)

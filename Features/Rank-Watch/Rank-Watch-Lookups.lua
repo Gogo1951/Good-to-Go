@@ -5,15 +5,9 @@ local _, ns = ...
 --------------------------------------------------------------------------------
 
 --[[
-    ns.RANK_WATCH_ABILITIES as ladders: one per ability, its ranks in learn-level order, each rank knowing its
-    place. Built once at login from the flavor's table.
-
-    A spell that replaces another as the player trains (Demon Skin, then Demon Armor; Frost Armor, then Ice
-    Armor) is one ladder, the same groups the Enhanced Spellbook's Grouped Spells uses (ns.SPELL_GROUPS): casting
-    Demon Skin once Demon Armor is learned is a low rank like any other. Where the data already lists a group as
-    one ability (TBC's sheet joins several), there is nothing to join.
-
-    Each ladder is keyed by its first rank's spell ID, which the Reported Ranks panel reads.
+    A spell that replaces another as the player trains (Demon Skin, then Demon Armor) joins one ladder by
+    ns.SPELL_GROUPS: casting Demon Skin once Demon Armor is learned is a low rank like any other. Each ladder
+    is keyed by its first rank's spell ID, which the Reported Ranks panel reads.
 ]]
 local ladders = {} -- class token -> { ladder, ... }
 local petLadders = {} -- owner's class token -> { ladder, ... }, each with isPet
@@ -28,7 +22,7 @@ local function LadderHas(ladder, spellID)
 	return false
 end
 
--- Joins the ladders holding each spell of one ns.SPELL_GROUPS group into the first, ordered by learn level.
+-- Into the first ladder, ordered by learn level.
 local function JoinGroup(list, group)
 	local members, seen = {}, {}
 	for _, memberID in ipairs(group) do
@@ -68,17 +62,13 @@ local function SortRows(rows)
 end
 
 --[[
-    A rank this client has no such spell for is left off its ladder. WoW Forever gave some abilities new spell
-    IDs (Curse of the Elements is 440892, not 1490), and the Classic IDs its table was built from don't exist
-    there: listed, they show as "Spell #1490" on the Reported Ranks panel and can never be cast. A ladder
-    left with one rank stays: the Reported Ranks panel lists every ability, and a single rank is never reported,
-    having nothing above it.
+    WoW Forever gave some abilities new spell IDs, and the Classic IDs its table was built from would show as
+    "Spell #1490" and never be cast. A ladder left with one rank stays for the panel; it is never reported.
 ]]
 local function OnClient(spellID)
 	return C_Spell.DoesSpellExist(spellID)
 end
 
--- One table's abilities as ladders, each rank this client has, keeping every ability with a rank on this client.
 local function ReadLadders(class, abilities, isPet)
 	local list = {}
 	for _, ranks in ipairs(abilities) do
@@ -95,10 +85,7 @@ local function ReadLadders(class, abilities, isPet)
 	return list
 end
 
---[[
-    Hunter pets' and warlock demons' abilities (ns.RANK_WATCH_PET_ABILITIES), under the owner's class: a pet's
-    low rank is its owner's to fix, so the owner hears about it. Nothing joins them; each is its own ladder.
-]]
+-- Under the owner's class: a pet's low rank is its owner's to fix. Never joined.
 local function BuildPetLadders()
 	for class, abilities in pairs(ns.RANK_WATCH_PET_ABILITIES or {}) do
 		local list = ReadLadders(class, abilities, true)
@@ -138,14 +125,13 @@ function ns.BuildRankWatchLookups()
 	end
 end
 
--- The ladder and place of a tracked spell, or nil for any spell Rank Watch doesn't watch.
 function ns.RankWatchLookup(spellID)
 	return bySpell[spellID]
 end
 
 --[[
-    The lookup of a tracked rank with a rank above it, the only casts that can ever be low, else nil. Detection
-    asks this first: in a raid nearly every cast is a top rank, and turning those away here skips the unit scans.
+    Detection asks this first: in a raid nearly every cast is a top rank, and turning those away here skips
+    the unit scans.
 ]]
 function ns.RankWatchReportableLookup(spellID)
 	local lookup = bySpell[spellID]
@@ -158,11 +144,7 @@ function ns.RankWatchReportableLookup(spellID)
 	return lookup
 end
 
---[[
-    Whether a rank is reported. untracked holds only the player's own choices: true unticked, false ticked. A rank
-    they never touched follows the data, where off marks the ranks players lower on purpose so often that they
-    start unchecked (Rank 1 Scorch, Frostbolt, Entangling Roots and the like), Rank Sentinel's own default skips.
-]]
+-- An untouched rank follows the data's off flag: ranks players lower on purpose (Rank 1 Scorch and the like).
 function ns.IsRankWatchRankTracked(row)
 	local choice = ns.RankWatchSettings().untracked[row.id]
 	if choice == nil then
@@ -171,7 +153,7 @@ function ns.IsRankWatchRankTracked(row)
 	return not choice
 end
 
--- Records the player's choice, or clears it when it matches the data's default, so the default can still move.
+-- Cleared when it matches the data's default, so the default can still move.
 function ns.SetRankWatchRankTracked(row, tracked)
 	local untracked = ns.RankWatchSettings().untracked
 	if tracked == not row.off then
@@ -181,21 +163,15 @@ function ns.SetRankWatchRankTracked(row, tracked)
 	end
 end
 
--- Every class's ladders, by class token.
 function ns.RankWatchLadders()
 	return ladders
 end
 
--- The pet ladders, by the owner's class token: HUNTER and WARLOCK where the flavor's pets have ranks.
 function ns.RankWatchPetLadders()
 	return petLadders
 end
 
---[[
-    The place of the highest rank on a ladder learned by `level`, or nil when none is. Rows are in learn-level
-    order, so the last one at or under the level wins. A rank with no level in the data (a talent the spellbook's
-    tables give none) is never the better rank.
-]]
+-- A rank with no level in the data (a talent the tables give none) is never the better rank.
 function ns.RankWatchBestIndex(ladder, level)
 	local best
 	for index, row in ipairs(ladder.rows) do
@@ -210,7 +186,7 @@ function ns.RankWatchBestIndex(ladder, level)
 	return best
 end
 
--- The client's own rank text for a row ("Rank 3"), or nil while it hasn't described the spell yet.
+-- Nil while the client hasn't described the spell yet.
 local function ClientRankText(row)
 	local subtext = C_Spell.GetSpellSubtext(row.id)
 	if ns.IsPlain(subtext) and subtext and subtext ~= "" then
@@ -221,16 +197,14 @@ local function ClientRankText(row)
 end
 
 --[[
-    A rank as players read it: the client's own rank text ("Rank 3"), and the data's rank where the client
-    hasn't described the spell yet. TBC's sheet numbers a joined group's ranks through the whole group, so the
-    client's text is preferred, and the data's number is only ever printed, never whispered
-    (ns.RankWatchHasRankText).
+    TBC's sheet numbers a joined group's ranks through the whole group, so the client's text is preferred and
+    the data's number is only ever printed, never whispered.
 ]]
 function ns.RankWatchRankText(row)
 	return ClientRankText(row) or ns.L["RANK_WATCH_RANK"]:format(row.rank)
 end
 
--- Whether the client's own rank text for a row is in, asking for it when it isn't.
+-- Asks for it when it isn't in.
 function ns.RankWatchHasRankText(row)
 	return ClientRankText(row) ~= nil
 end

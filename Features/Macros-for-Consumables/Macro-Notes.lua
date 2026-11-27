@@ -4,26 +4,11 @@ local L = ns.L
 
 local KnowsAny = ns.KnowsAny
 
---[[
-    The class notes for the consumable macros: for a hunter, mage, rogue or
-    warlock, the items their class's macros will use and what each click on
-    those macros does. The mini-map menu reads them whole
-    (ns.GetClassMacroNotes, for its [Class] Macros row, its item rows and its
-    flyout, in Features/Minimap-Menu.lua), and the Spellbook page draws one
-    macro's worth under a consumable macro's tooltip
-    (ns.AddConsumableMacroNotes).
-]]
-
 --------------------------------------------------------------------------------
 -- Class Notes
 --------------------------------------------------------------------------------
 
---[[
-    One macro's notes in a tooltip: its name, a row per click (the click on
-    the left, what it does on the right), then an optional closing line. HELP
-    rather than INFO: these are clicks on a macro, and blue marks a click on
-    the mini-map button.
-]]
+-- HELP rather than INFO: these are clicks on a macro, and blue marks a click on the mini-map button.
 local function AddMacroNotes(tooltip, macroName, rows, closingNote)
 	tooltip:AddLine(GetColor("TITLE") .. macroName .. "|r")
 	for _, row in ipairs(rows) do
@@ -34,7 +19,6 @@ local function AddMacroNotes(tooltip, macroName, rows, closingNote)
 	end
 end
 
--- The client's own name for the first spell on the list the player knows; nil when they know none.
 local function KnownSpellName(spellList)
 	for _, data in ipairs(spellList) do
 		if ns.IsSpellKnown(data[1]) or ns.IsPlayerSpell(data[1]) then
@@ -45,13 +29,9 @@ local function KnownSpellName(spellList)
 end
 
 --[[
-    Each builder returns its class's blocks in order, or nothing while the
-    character has none: an item block ({ itemID, itemLink, slot }) for each
-    item the class's own macro will use, slot saying what it is for (a hand,
-    or pet food), then a notes block ({ title, rows, note, types }) per macro,
-    types naming the consumable macros it is about. A row is { click, job },
-    the job a verb or what it fills, and is listed only for a spell the
-    character knows.
+    Each builder returns item blocks { itemID, itemLink, slot }, then a notes
+    block { title, rows, note, types } per macro, types naming the consumable
+    macros it covers. A row { click, job } is listed only for a known spell.
 ]]
 local function HunterNotes()
 	if not ns.feedPetSpellName then
@@ -185,13 +165,7 @@ local CLASS_NOTES = {
 	WARLOCK = WarlockNotes,
 }
 
---[[
-    The player's class, by the client's name and its token, and its blocks in
-    order, for the mini-map menu; nil when the class has no notes or the
-    character knows none of the spells they are about, so a warrior gets no
-    [Class] Macros row at all. The blocks are built fresh on every call, since
-    the items and the known spells change as the player plays.
-]]
+-- Built fresh every call: the items and known spells change as the player plays.
 function ns.GetClassMacroNotes()
 	local className, playerClass = UnitClass("player")
 	local buildNotes = CLASS_NOTES[playerClass]
@@ -202,12 +176,6 @@ function ns.GetClassMacroNotes()
 	return className, playerClass, blocks
 end
 
---[[
-    The class-colored header and the notes block for one consumable macro
-    type, as the mini-map menu's flyout lists them, for the Spellbook page's tooltip
-    under the macro's text. False, drawing nothing, when the player's class
-    has no notes for that macro.
-]]
 function ns.AddConsumableMacroNotes(tooltip, macroType)
 	local className, playerClass = UnitClass("player")
 	local buildNotes = CLASS_NOTES[playerClass]

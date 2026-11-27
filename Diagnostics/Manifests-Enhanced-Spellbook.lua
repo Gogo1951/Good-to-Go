@@ -35,14 +35,8 @@ local function Template(name)
 end
 
 --[[
-	Existence and shape checks only: read-only, no side effects. One row per API the Spellbook calls or
-	guards. Every pair the add-on picks between at load is listed as both halves, and a FAIL on one half is
-	the report working: it says which branch this client took. The spellbook read (C_SpellBook's skill lines,
-	or the spell tab globals) picks ns.ForEachClassSpell; the tooltip reads (C_TooltipInfo's getters, or the
-	hidden scan tooltip's Set methods) pick ns.ReadTooltipLines and ns.GetTrainerServiceSpellId; the macro
-	slot limits come from Constants.MacroConsts or the MAX_*_MACROS globals; the spellbook itself is
-	Blizzard_PlayerSpells with Features/Enhanced-Spellbook/Spellbook-Tabs.lua on the Retail engine, SpellBookFrame on the Classic engine;
-	the page's header, settings cog and paging arrows each fall back without their template.
+	Existence and shape checks only. Every pair the add-on picks between at load is listed as both halves, and a
+	FAIL on one half is the report working: it says which branch this client took.
 ]]
 ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 	-- { label, testFunction }
@@ -243,13 +237,8 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 		end,
 	},
 	--[[
-		The Conditionals (Features/Enhanced-Spellbook/Macro-Builder/Conditionals.lua and Features/Enhanced-Spellbook/Macro-Builder/Conditionals-Panel.lua,
-		with the shared Docked-Panel.lua and Panel-Widgets.lua): the
-		Spec conditions are offered only where a talent group count says the character has two specs, read from
-		the first of C_SpecializationInfo.GetNumSpecGroups, GetNumSpecGroups and GetNumTalentGroups the client
-		has, and the menu marks the spec active now, the Retail-engine read first, then the Classic-engine one;
-		a spell dropped on a slot is read off the cursor;
-		the panel docks with its own close and Add Condition buttons.
+		The Conditionals: the spec group count is read from the first of these three the client has; the active
+		spec Retail-engine first, then Classic-engine.
 	]]
 	Method("C_SpecializationInfo", "GetNumSpecGroups", "C_SpecializationInfo.GetNumSpecGroups (guarded)"),
 	Global("GetNumSpecGroups"),
@@ -262,9 +251,8 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 	Template("UIPanelCloseButton"),
 	Template("UIPanelButtonTemplate"),
 	--[[
-		The What's Next? tab (Features/Enhanced-Spellbook/Whats-Next/Whats-Next.lua and Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Page.lua): a
-		talent's level is read off its tier in the Classic-engine talent tree; shift-click links a row's spell
-		in chat; the window's tabs under its bottom edge, the Classic tab first, then the shared panel tab.
+		The What's Next? tab: talent tiers, chat links, and the window's tabs (the Classic tab template first, then
+		the shared panel tab).
 	]]
 	{
 		"GetNumTalentTabs (guarded, ns.GetNumTalentTabs)",
@@ -282,13 +270,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 	Global("PanelTemplates_SelectTab"),
 	Global("PanelTemplates_DeselectTab"),
 	Global("PanelTemplates_TabResize"),
-	--[[
-		The Pet What's Next? tab (Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Pet.lua): the hunter's pet out, its family's ID
-		(UnitCreatureFamily's second return, read where the client gives it), the abilities the pet knows from
-		its spellbook (C_SpellBook.IsSpellKnown, listed above), its training points where the client has them,
-		whether a warlock's grimoire is in the bags, and the zones the tooltip names for the beasts that teach
-		an ability.
-	]]
+	-- The Pet What's Next? tab; UnitCreatureFamily's second return is read only where the client gives it.
 	{
 		"HasPetUI (guarded)",
 		function()
@@ -315,10 +297,8 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 	},
 	Method("C_Map", "GetAreaInfo"),
 	--[[
-		The Pet Spell Book tab (Features/Enhanced-Spellbook/Whats-Next/Pet-Spellbook.lua): how many spells the pet's book holds, then
-		each slot read, its autocast read and the slot picked up through C_SpellBook where the client has its
-		item calls (the Retail engine), else through the older globals (Era and TBC). One route passing whole is
-		enough; the report says which one this client has.
+		The Pet Spell Book tab: C_SpellBook's item calls on the Retail engine, else the older globals (Era and TBC).
+		One route passing whole is enough; the report says which one this client has.
 	]]
 	{
 		"C_SpellBook.HasPetSpells or HasPetSpells",
@@ -346,10 +326,8 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 
 	Method("Settings", "OpenToCategory"),
 	--[[
-		The key binding: its toggle (GoodToGo_ToggleSpellbook) opens the add-on's own page, and the
-		General panel's Key Bindings row shows the bound key. Then the three routes ns:OpenKeyBindings tries for the
-		Set Key button, in its order; one route passing whole is enough, and the report says which one this
-		client has.
+		The key binding, then the three routes ns:OpenKeyBindings tries for Set Key, in its order; one route
+		passing whole is enough, and the report says which one this client has.
 	]]
 	Global("GetBindingKey"),
 	{
@@ -573,11 +551,8 @@ local PER_SPELL_OPTIONS = {
 --------------------------------------------------------------------------------
 
 --[[
-	The spells the page gates options on for the player's class: the ranged attack the after-cast option
-	starts, the Warrior stances a stance option switches to, each summon spell with the pet ability it
-	casts while that pet is out, and the ranged weapon attacks the Shoot macro folds when more than one is
-	known. Built from the flavor's data, so it follows the data folder this client loaded. Each row is
-	{ spellID, label }, the shape of the shared ns.DIAGNOSTIC_SPELLS, which lists them too.
+	The spells the page gates options on for the player's class, built from the flavor's data so it follows
+	the data folder this client loaded. Rows are { spellID, label }, the shape of ns.DIAGNOSTIC_SPELLS.
 ]]
 local SPELLBOOK_SPELLS = {}
 do
@@ -613,11 +588,7 @@ end
 -- Page Context
 --------------------------------------------------------------------------------
 
---[[
-	The Retail-engine tab hides whenever the book isn't visible, the gamepad UI is on or the Spellbook is off
-	(SpellbookTabs:Sync in Features/Enhanced-Spellbook/Spellbook-Tabs.lua), and steps around other add-ons' launchers,
-	each watched for showing.
-]]
+-- The Retail-engine tab hides while the book isn't visible, the gamepad UI is on or the Spellbook is off.
 local function RetailBookLine(lines, spellbookTabs, tab)
 	local book = spellbookTabs.book
 	if not book then
@@ -643,10 +614,6 @@ local function RetailBookLine(lines, spellbookTabs, tab)
 	)
 end
 
---[[
-	The Classic-engine tab lines up under the class's last skill line tab, falling back to the last one shown,
-	and hides over the pet book or another of the book's tabs (Features/Enhanced-Spellbook/Spellbook-Host-Classic.lua).
-]]
 -- The Classic-engine tab has no name and no ns handle: it is the UIParent button whose click opens the window.
 local function FindClassicTab()
 	local toggle = ns.ToggleSpellbookWindow
@@ -782,9 +749,8 @@ local function ClassListLines(lines)
 end
 
 --[[
-	The one option the class lists still decide, read off ns.ClassConfig, which resolves them on first use: a
-	ranged attack named on this client offers its Start option. The focus copy is the one option a flavor
-	decides, asked of ns.OffersOption with an enemy spell. Every other option is offered to every class.
+	The ranged attack's Start option is the one the class lists decide, and the focus copy the one a flavor
+	decides; every other option is offered to every class.
 ]]
 local function ClassGateLines(lines)
 	local config = ns.ClassConfig()
@@ -815,10 +781,7 @@ local function TrainerRowsForPlayer()
 	return count
 end
 
---[[
-	Right-Click For Group Version is offered on a spell only when this client names both halves of its
-	GROUP_VERSIONS pair and the spellbook holds the group version, both read by name as the page reads them.
-]]
+-- Offered only when this client names both halves of the pair and the spellbook holds the group version.
 local function GroupVersionLines(lines)
 	local learned = {}
 	pcall(ns.ForEachClassSpell, function(name)
@@ -876,10 +839,8 @@ local function SpellbookLines(lines)
 end
 
 --[[
-	What ns.ForEachClassSpell (Features/Enhanced-Spellbook/Class-Spells.lua) leaves out of the book, read the same way
-	it reads it: passives, other entry types, hidden or off-spec skill lines and entries, and, on Classic Era
-	outside Season of Discovery, the season's rune abilities its book can list (ID ns.SOD_FIRST_SPELL_ID and
-	up). A spell in none of these that is still missing from the page is one the client gave no name.
+	Read the same way ns.ForEachClassSpell reads the book. A spell in none of these that is still missing from
+	the page is one the client gave no name.
 ]]
 local function BookSkipLines(lines)
 	local hidesOtherSeason = ns.FLAVOR == "Vanilla" and not ns.IS_DISCOVERY
@@ -942,9 +903,8 @@ local function BookSkipLines(lines)
 end
 
 --[[
-	The Call Pet flyout (flyout 9, as Data/Game-IDs names it), which the Classic-engine read lists as
-	one macro under its book name, cast as the first of its spells the player knows, and leaves its spells
-	out; with none known, the flyout is left out too. MoP Classic's book holds it; Era and TBC have none.
+	The Call Pet flyout: one macro casting the first of its spells the player knows; with none known it is left
+	out. MoP Classic's book holds it; Era and TBC have none.
 ]]
 
 local function CallPetFlyoutLines(lines)
@@ -1054,10 +1014,7 @@ local function PageListLines(lines)
 		byKind[#byKind + 1] = kind.key .. "=" .. count
 	end
 	lines[#lines + 1] = "  by kind: " .. table.concat(byKind, ", ")
-	--[[
-		A rank choice is offered only on a spell with more than one rank whose learn level is known (the trainer
-		data, this character's trainers, then the client's own C_Spell.GetSpellLevelLearned)
-	]]
+	-- a rank choice needs more than one rank and a known learn level
 	local fixed, dynamic = 0, 0
 	for _, macro in ipairs(ns.macros or {}) do
 		fixed = fixed + (ns.OffersFixedRank(macro) and 1 or 0)
@@ -1089,9 +1046,8 @@ local function CountBy(rows, field, order)
 end
 
 --[[
-	The filter box text and the filter each open page holds: the Spell Book page's (ns.spellbookPages), with
-	the page of its strip it shows, and, found among the window's children by the rows they carry, the What's
-	Next? pages'. A row a filter leaves out, or on another page of the strip, is missing only from that page.
+	The What's Next? pages are found among the window's children by the rows they carry. A row a filter leaves
+	out, or on another page of the strip, is missing only from that page.
 ]]
 local function PageFilterLines(lines)
 	local filters = {}
@@ -1138,12 +1094,8 @@ local function WhatsNextSourceIds()
 end
 
 --[[
-	The pet's spells that sit among this class's own rows, where What's Next? and Ability Alerts While Leveling
-	would list them as the player's and never see them as learned (the player's spellbook doesn't hold them).
-	A spell counts as the pet's when the pet data has it (PET_ABILITIES' id, Rank Watch's pet ladders) or the
-	pet out has a spell of its name. Read from the bundled trainer rows and the raw recorded table, so the probe
-	writes nothing. Empty when there are none. Without a pet out, only the pet data marks a spell; a pet out also
-	catches the ones the data misses.
+	Pet spells among the class rows would list as the player's and never read as learned. Read from the bundled
+	rows and the raw recorded table, so the probe writes nothing; a pet out also catches what the pet data misses.
 ]]
 local PET_SPELL_EXAMPLES = 8
 
@@ -1208,10 +1160,6 @@ local function PetSpellsInClassRows()
 	return found, bookOk and #bookRows or 0
 end
 
---[[
-	One line for the pet's spells among the class rows: "none", or how many from the bundled data and the
-	recorded trainer spells, with the first few named and what marked each as the pet's.
-]]
 function ns.PetSpellsInClassRowsLine()
 	local ok, found, bookCount = pcall(PetSpellsInClassRows)
 	if not ok then
@@ -1248,12 +1196,7 @@ function ns.PetSpellsInClassRowsLine()
 	)
 end
 
---[[
-	What's Next? (Features/Enhanced-Spellbook/Whats-Next/Whats-Next.lua): its settings, the talent tree its talent
-	levels come from (none on the Retail engine), and the rows it builds now by status and source. A spell
-	whose name isn't loaded yet is skipped until it arrives, and counted here; Known and talent rows show only
-	with their settings on.
-]]
+-- A spell whose name isn't loaded yet is skipped until it arrives, and counted here.
 local function WhatsNextLines(lines, profile)
 	if not ns.WhatsNextRows then
 		lines[#lines + 1] = "What's Next?: not loaded"
@@ -1283,9 +1226,8 @@ local function WhatsNextLines(lines, profile)
 	)
 	lines[#lines + 1] = ns.PetSpellsInClassRowsLine()
 	--[[
-		The rank lines under the game's own spell tooltips (Spell-Ranks-Tooltip.lua), skipped in combat, while a
-		page's own tooltip holds the flag that says it adds its ranks itself, and for a spell with fewer than two
-		rows of its name.
+		skipped in combat, while a page's tooltip adds its own ranks, and for a spell with fewer than two rows of
+		its name
 	]]
 	local hook = (TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum.TooltipDataType)
 			and "TooltipDataProcessor post-call"
@@ -1309,12 +1251,7 @@ local function WhatsNextLines(lines, profile)
 	)
 end
 
---[[
-	The pet tabs (Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Pet.lua and Pet-Spellbook.lua): the pet out as they
-	read it, its spellbook's size and the rows the Pet Spell Book lists from it, and the Pet What's Next?
-	settings and rows by status, with the abilities skipped while their names aren't loaded. With no pet out, a
-	hunter's statuses are its own Beast Training, and nothing reads as known for a warlock.
-]]
+-- With no pet out, a hunter's statuses are its own Beast Training, and nothing reads as known for a warlock.
 local function PetLines(lines, profile)
 	if not ns.WhatsNextPet then
 		return
@@ -1374,17 +1311,8 @@ local function DockedPanelLine(lines)
 end
 
 --[[
-	The state most likely to explain a "the tab isn't there", "a spell is missing" or "an option isn't offered"
-	report: who the player is and which data folder and spellbook this client gave them, whether the page's tab
-	and page exist, what hides the Retail-engine tab and where it sits, what the Classic-engine tab lines up
-	under and whether it was made, shown and placed, which window tabs this character gets and whether they were made, how much of the class lists this
-	client could name (an ID it can't name never matches, so that spell loses its options), the spells,
-	stance bar forms and class and flavor gates the options depend on, the group versions on offer, what the
-	spellbook holds by skill line, what the page leaves out of it and its Call Pet flyout, every page setting
-	and filter and the page of the strip it shows, which class options apply, the unlearned-spells sources and
-	how many still wait on spell data, the What's Next? and pet tabs' settings and rows, the options panel and
-	key binding routes, the docked panels, and what the page last listed, with the macros kept off it and the
-	rank choices it offers. Existence/value reads only.
+	For "the tab isn't there", "a spell is missing" or "an option isn't offered". An ID the client can't name
+	never matches, so that spell loses its options. Existence/value reads only.
 ]]
 function ns:BuildPageContextReport()
 	local lines = { ns.GetDiagnosticClientHeader(), "" }
@@ -1549,14 +1477,9 @@ end
 local DYNAMIC_RANK_MACROS_SHOWN = 12
 
 --[[
-	Dynamic Rank (Features/Enhanced-Spellbook/Dynamic-Rank.lua): a macro counts as placed when its WoW macro exists and a
-	bar holds it by the tag its body carries (or by name when the bar's macro has none), as the rewrite reads it; with none placed a new target
-	rewrites nothing, and a new mouseover, focus, pet or target's target rewrites only when a placed macro tries
-	that unit. A focus copy tries its focus, then the target, but no focus change rewrites it. A macro names a
-	lower rank only for a unit that is there, can be helped and shows its level, and that WoW Forever doesn't
-	keep secret in combat, and only when it casts its own spell (not a grouped one), not at the cursor and with
-	no fixed rank set. The text it would write for the units now, against its WoW macro's, says whether a
-	rewrite is still due.
+	Placed means a bar holds the WoW macro by its tag (or by name when the bar's macro has none). A focus copy
+	tries its focus, then the target, but no focus change rewrites it. The text it would write now, against its
+	WoW macro's, says whether a rewrite is still due.
 ]]
 local DYNAMIC_RANK_UNITS = { "target", "mouseover", "focus", "pet", "targettarget" }
 
@@ -1665,10 +1588,7 @@ local function CountsAsClassTrainer()
 	return true
 end
 
---[[
-	A trainer's window, while it is open: a tradeskill or pet trainer is never recorded, and only the services
-	its filters list are.
-]]
+-- A tradeskill or pet trainer is never recorded, and only the services its filters list are.
 local function TrainerWindowLine(lines)
 	local frame = _G.ClassTrainerFrame
 	if not (frame and frame:IsShown()) then
@@ -1715,18 +1635,8 @@ local function TrainerWindowLine(lines)
 end
 
 --[[
-	The state behind "clicking a macro does nothing", "my own macro was left alone" or "the macro didn't
-	update": the Spellbook's switch and combat, free macro slots (character macros spill into general ones once
-	full) and whether a new one can be created, the game's macro window, which holds every write back while it
-	is open, which macros the add-on recorded as its own and for whom, each
-	page macro as ns.FindMacroIndex finds it (by its tag line, or by name for a macro from before the tags,
-	which the next sync tags), page macros too long to write or out of step with their WoW macro, tags two WoW
-	macros share, untagged macros sharing a page macro's name that the page leaves alone, a replaced spell's
-	macro waiting to be taken over, the Conditionals rows, Cast Sequence steps and Cast Sequences left out of
-	the text, the Dynamic Rank macros, where they are placed and the units they rank for, what is on the
-	action bars, what the Delete Macros buttons would count, the equipped items with a Use: effect, the Mute
-	Errors sound settings, and the trainer recording, with an open trainer's services as it would record them.
-	Existence/value reads only.
+	For "clicking a macro does nothing", "my own macro was left alone" or "the macro didn't update". The game's
+	macro window holds every write back while it is open. Existence/value reads only.
 ]]
 function ns:BuildMacroContextReport()
 	local lines = { ns.GetDiagnosticClientHeader(), "" }
@@ -1830,10 +1740,8 @@ function ns:BuildMacroContextReport()
 		.. (leftAlone[1] and table.concat(leftAlone, ", ") or "none")
 
 	--[[
-		A Conditionals row without a spell or a condition this client knows, or one the panel shows faded (a
-		condition the macro can't use, or shadowed by an earlier row), is left out of the macro text, and so is
-		a row whose spell isn't loaded yet or a ranged row with no ranged attack known. A Cast Sequence step
-		whose spell isn't loaded is left out, and a Cast Sequence a pet summon blocks writes nothing.
+		A row whose spell isn't loaded yet, or a ranged row with no ranged attack known, is left out too; a Cast
+		Sequence a pet summon blocks writes nothing.
 	]]
 	local withRows, rowsWritten, rowsSkipped, rowsUnloaded = 0, 0, 0, 0
 	local sequences, sequencesBlocked, stepsUnloaded = 0, 0, 0
@@ -1938,18 +1846,9 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-	Every game record the Spellbook names by ID, for the Localization tab's Game Names report: the client
-	strings it reads or matches, the slot names its Use Items options show, every spell and creature family
-	in the player's class lists and the forms that head a run under Sort By Category, every GROUP_VERSIONS
-	spell and the class's SPELL_GROUPS spells, the shared page spells and profession specializations it
-	files and folds by name, the basic attacks, the ranged attack the after-cast option starts, the Shoot
-	macro's ranged attacks with the weapon type each [worn:] condition names, every trainer spell the
-	Unlearned section and What's Next? can list with the spells a rank waits on, and the pet abilities,
-	grimoires and beast zones the Pet What's Next? tab shows, each read as the features read it. The rank
-	text a fixed or Dynamic Rank macro writes ("Rank 3") is the spell's subtext, so every trainer rank above
-	the first (a row that requires an earlier one) has a rank row too. The class-list, trainer and pet rows
-	are the player's class only, the class whose page this character sees. A spell or item loads late, so
-	its rows ask for it.
+	The rank text a fixed or Dynamic Rank macro writes ("Rank 3") is the spell's subtext, so every trainer rank
+	above the first has a rank row too. Class-list, trainer and pet rows are the player's class only. A spell or
+	item loads late, so its rows ask for it.
 ]]
 
 local function UiLabel(constant)
@@ -2170,10 +2069,8 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-	One entry per data file, and one report row per entry on the Data tab. The class lists and trainer spells
-	are keyed by class token, so their collectors walk every class and answer once per spell ID, keeping the
-	class and where the ID sits as its DATA_* values; a class list entry with several rank IDs answers once
-	per rank. The group versions answer once per half of each pair, naming the other half.
+	The class lists and trainer spells are keyed by class token, so their collectors walk every class and answer
+	once per spell ID (once per rank for a multi-rank entry).
 ]]
 local function KeyValue(key)
 	return key

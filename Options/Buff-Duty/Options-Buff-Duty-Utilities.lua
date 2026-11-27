@@ -5,23 +5,13 @@ local Kit = ns.OptionsKit
 
 local GetSpellTexture = C_Spell.GetSpellTexture
 
---[[
-    The builders only the Buff Duty panels (Options/Buff-Duty/) use: the
-    classes this client has, the refresh choices' labels, a spell's
-    caption-and-dropdown row, and the ability labels, tooltip links and sorted
-    entries those rows are built from.
-]]
-
 --------------------------------------------------------------------------------
 -- Ability Rows
 --------------------------------------------------------------------------------
 
 --[[
-    A row label naming an ability, which shows the game's own tooltip for it
-    on hover, the same one an action bar shows. `hyperlink` returns
-    "spell:<id>" or "item:<id>". A plain Label takes no mouse, so this one is
-    an InteractiveLabel, which AceConfigDialog gives the same hover handler as
-    any control, and that handler shows `tooltipHyperlink` when there is one.
+    An InteractiveLabel, since a plain Label takes no mouse; AceConfigDialog's
+    hover handler shows its `tooltipHyperlink`.
 ]]
 function ns.OptionsAbilityLabel(text, order, width, hyperlink)
 	local label = Kit.Label(text, order, width)
@@ -31,14 +21,10 @@ function ns.OptionsAbilityLabel(text, order, width, hyperlink)
 end
 
 --[[
-    The spell an ability's tooltip quotes: the HIGHEST id in its rank group
-    that the client describes, so it reads the rank you actually cast, not rank
-    1. Ids are sorted rather than trusted in data order -- rows are not
-    reliably rank-ordered (Combustion is { 29977, 11129 }, Vanish
-    { 1856, 1857, 27617, 26889, 44290 }). Classic holds tooltip data only for
-    spells the character has known, and these panels list every class, so each
-    id is requested once here and the pick is made again at every hover, when
-    the text has had time to land.
+    The highest described id, so the tooltip reads the rank you cast. Ids are
+    sorted, since data rows aren't reliably rank-ordered. Classic holds tooltip
+    data only for spells the character has known, so each id is requested once
+    and the pick is made again at every hover, once the text has landed.
 ]]
 function ns.SpellTooltipLink(ids)
 	local ranked = {}
@@ -58,12 +44,11 @@ function ns.SpellTooltipLink(ids)
 	end
 end
 
--- The lowercased spell name an entry sorts by.
 local function EntrySortKey(entry)
 	return (entry.spellName or ""):lower()
 end
 
--- A copy of `entries` ordered alphabetically by spell name, with the watched id breaking ties for a stable result.
+-- The watched id breaks ties, for a stable order.
 function ns.SortedEntries(entries)
 	local sorted = {}
 	for i = 1, #entries do
@@ -83,11 +68,7 @@ end
 -- Classes
 --------------------------------------------------------------------------------
 
---[[
-    Every class this client's data names, sorted by token: the classes this
-    game version has. Count as Tanks and Buff Duty's Classes list draw from it.
-    CLASS_SPELL_LISTS is keyed by every class the flavor has.
-]]
+-- CLASS_SPELL_LISTS is keyed by every class the flavor has.
 function ns.OptionsClassList()
 	local classes = {}
 	for class in pairs(ns.CLASS_SPELL_LISTS) do
@@ -116,11 +97,7 @@ end
 -- Spell Dropdown Rows
 --------------------------------------------------------------------------------
 
---[[
-    The Off / When Missing / Under labels for a list of choices, as each
-    category's Show offers them, "Under 5 Minutes" built from the client's
-    own duration string.
-]]
+-- "Under 5 Minutes" is built from the client's own duration string.
 function ns.BuffDutyRefreshValues(choices)
 	local values = {}
 	for _, choice in ipairs(choices) do
@@ -135,18 +112,7 @@ function ns.BuffDutyRefreshValues(choices)
 	return values
 end
 
---[[
-    One spell's row: its icon and name as the caption, and a dropdown beside
-    it. The Buff Duty panels build their lists from these, so every dropdown on
-    a page shares one x and one width -- the page's label and control columns
-    (Kit.LABEL_WIDTH, Kit.CONTROL_WIDTH), or a tree pane's narrower ones.
-
-    Hovering the caption shows the spell's own game tooltip (ns.SpellTooltipLink),
-    and hovering the dropdown says what it sets (`desc`).
-
-    `select` carries the dropdown's values, sorting, get and set, and
-    optionally labelWidth and width, for a row in a tree's narrower pane.
-]]
+-- `select` may carry labelWidth and width, for a row in a tree's narrower pane.
 function ns.DefineSpellSelectRow(args, entry, order, desc, select)
 	local primary = entry.ids[1]
 	local texture = GetSpellTexture(primary)
@@ -167,13 +133,7 @@ function ns.DefineSpellSelectRow(args, entry, order, desc, select)
 	}
 end
 
---[[
-    One spell's or consumable's On and Off, laid out as DefineSpellSelectRow
-    lays out a dropdown: its icon and name as the caption, whose hover shows
-    the game's own tooltip, and a checkbox in the control column. `toggle`
-    carries get and set, and optionally labelWidth, for a row in a tree's
-    narrower pane. The category's Show has the timing.
-]]
+-- `toggle` may carry labelWidth, for a row in a tree's narrower pane.
 function ns.DefineSpellToggleRow(args, entry, order, desc, toggle)
 	local primary = entry.ids[1]
 	local texture = GetSpellTexture(primary)
@@ -197,14 +157,9 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The settings at the top of every category's page (Self-Buffs, Well
-    Fed, Weapon Buffs, Scrolls, Flasks or Elixirs, Other Buffs), as its
-    menu in the window has them: Show in Buff Duty; When to Use (Always, In
-    Party or Raid, In Raid) and Show (When Missing, or Under 10, 5 or 3
-    Minutes), the category's one timing; Use with Cast Next Buff, whether
-    the key uses the category's icons; and Show Missing Inventory, but not
-    on Self-Buffs, whose spells need no bags. `row` is one of
-    Data.BUFF_DUTY_ROWS. Takes the orders `order` to `order` + 0.4.
+    The same settings as the category's menu in the window. Show Missing
+    Inventory is left off Self-Buffs, whose spells need no bags. Takes the
+    orders `order` to `order` + 0.4.
 ]]
 function ns.AddBuffDutyRowControls(args, row, order)
 	local BuffDuty = ns.BuffDuty

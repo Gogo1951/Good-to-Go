@@ -1,19 +1,10 @@
 local _, ns = ...
 
---[[
-    The secure attributes a Buff Duty window icon or the Buff Key casts with:
-    one spec, written onto a SecureActionButtonTemplate button out of combat.
-]]
-
 --------------------------------------------------------------------------------
 -- Attributes
 --------------------------------------------------------------------------------
 
---[[
-    What a Self Buffs item is used by: its name, which uses it at "player"
-    where "item:<id>" didn't on WoW Forever. The item is in your bags, so its
-    name is known; "item:<id>" if it somehow isn't.
-]]
+-- Aimed at "player", "item:<id>" used nothing on WoW Forever; the item's name works.
 local function ItemUseName(spec)
 	local name = spec.itemId and C_Item.GetItemNameByID(spec.itemId)
 	if ns.IsPlain(name) and name and name ~= "" then
@@ -23,14 +14,10 @@ local function ItemUseName(spec)
 end
 
 --[[
-    Left button only ("type1"): a right-click finds no "type2" and no bare
-    "type" to fall back on, so it casts nothing and is free for dismissing a
+    Only "type1", so a right-click casts nothing and is free for dismissing a
     favor. Every attribute is written on every use, nil included, because a
-    pooled button still carries whatever its last spec set; a nil spec clears
-    them all, and so does an ask (Buff-Duty-Asks.lua), whose click whispers
-    from PreClick and casts nothing, and so does a cast held back from a
-    PvP-flagged player (spec.pvpFlagged), whose click says so instead.
-    Shared with the Buff Key, which writes the same attributes.
+    pooled button keeps whatever its last spec set. An ask or a PvP hold
+    clears them all: its click only whispers or warns from PreClick.
 ]]
 function ns.SetBuffButtonAttributes(button, spec)
 	if not spec or spec.ask or spec.pvpFlagged then
@@ -39,21 +26,12 @@ function ns.SetBuffButtonAttributes(button, spec)
 		end
 		return
 	end
-	--[[
-	    The weapon a poison, oil, stone or lure goes on: the template uses this
-	    slot once the item leaves the cursor waiting on one.
-	]]
 	button:SetAttribute("target-slot", spec.targetSlot)
 	--[[
-	    A Self Buffs item (buff food, a scroll, an elixir, Winterfall Firewater)
-	    uses the template's item action aimed at "player", naming the item by
-	    its name: aimed at "player" by "item:<id>" it used nothing on WoW
-	    Forever. Not a /use line: on the Buff Key, a macro line never went off
-	    in game (a /use from a macro's /click GtGBuffKey, and a "/target" +
-	    "/cast" line from the key itself). Why isn't known. By name, food and
-	    scrolls were used from a /click.
-	    A weapon item keeps "item:<id>" and target-slot, which already applied
-	    from a click, the key and a macro's /click alike.
+	    Trap: on WoW Forever a Buff Key macro line never went off (a /use from
+	    /click GtGBuffKey, a /target + /cast from the key), and why isn't
+	    known. So self items use the item action by name, never a /use line;
+	    weapon items keep "item:<id>" + target-slot, which apply everywhere.
 	]]
 	local macrotext = spec.macrotext
 	if macrotext then
@@ -63,7 +41,6 @@ function ns.SetBuffButtonAttributes(button, spec)
 		button:SetAttribute("unit", nil)
 		button:SetAttribute("macrotext", macrotext)
 	elseif spec.item then
-		-- "item:12345", or a Self Buffs item's name, resolved by the template the way /use resolves it.
 		button:SetAttribute("type1", "item")
 		button:SetAttribute("spell", nil)
 		button:SetAttribute("item", spec.selfItem and ItemUseName(spec) or spec.item)
@@ -72,11 +49,8 @@ function ns.SetBuffButtonAttributes(button, spec)
 	else
 		button:SetAttribute("type1", "spell")
 		--[[
-		    Rank text ("Name(Rank 2)") casts that exact rank through the secure
-		    template's CastSpellByName; a bare name casts your highest. Not a spell
-		    ID: the template hands a number to CastSpellByID, and on Classic Era a
-		    lower rank's ID cast nothing. Group buffs pass their highest rank's
-		    text too: Prayer of Fortitude's bare name cast Rank 1.
+		    Rank text ("Name(Rank 2)"), never a spell ID: on Classic Era a lower
+		    rank's ID casts nothing, and a group buff's bare name casts Rank 1.
 		]]
 		button:SetAttribute("spell", spec.castSpell or spec.spellName)
 		button:SetAttribute("item", nil)

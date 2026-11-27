@@ -6,14 +6,6 @@ local SettingsKey = ns.SettingsKey
 local Widgets = ns.PanelWidgets
 local Box = Widgets.Box
 
---[[
-	The shell the Conditionals and Cast Sequence panels share (Features/Enhanced-Spellbook/Macro-Builder/Conditionals-Panel.lua,
-	Cast-Sequence-Panel.lua), docked against the Spell Book window's right edge (ns.DockSpellbookPanel, in
-	Features/Enhanced-Spellbook/Spellbook-Window.lua), one at a time: the frame, dragged to move the window, with its
-	heading, close button and hint; the footer with the macro text; and the panel's macro, found again by its
-	settings key after each refresh. Their controls are Features/Enhanced-Spellbook/Macro-Builder/Panel-Widgets.lua.
-]]
-
 local PANEL_WIDTH = 464
 local DOCK_INSET = 2 -- tucked under the window's border, top and bottom
 local PADDING = 16
@@ -45,9 +37,8 @@ Docked.PADDING, Docked.INNER_WIDTH = PADDING, INNER_WIDTH
 --------------------------------------------------------------------------------
 
 --[[
-	The page macro a panel is open for, found again by its settings key, or nil once it has left the page,
-	hidden ones included (a grouped spell's once a later one is learned). offers(macro) says whether a macro
-	has the panel's feature.
+	Hidden macros count (a grouped spell's once a later one is learned). offers(macro) says whether a macro has
+	the panel's feature.
 ]]
 local function CurrentMacro(panel, offers)
 	if not panel or not panel.key then
@@ -61,10 +52,6 @@ local function CurrentMacro(panel, offers)
 	return nil
 end
 
---[[
-	Runs a setter on a panel's macro, set(macro), and rebuilds the page, which rewrites the macro and redraws the
-	panel (its ns.OnSpellbookPageRefreshed).
-]]
 local function Change(panel, offers, set)
 	local macro = CurrentMacro(panel, offers)
 	if not macro then
@@ -74,7 +61,7 @@ local function Change(panel, offers, set)
 	ns.RefreshSpellbookPage(panel.page)
 end
 
--- Redraws the page's tiles, for their outline and pick-mode dimming, without rebuilding its macros.
+-- Without rebuilding its macros.
 local function RedrawPage(panel)
 	if panel.page:IsVisible() then
 		ns.LayoutSpellbookPage(panel.page)
@@ -87,7 +74,6 @@ Docked.CurrentMacro, Docked.Change, Docked.RedrawPage = CurrentMacro, Change, Re
 -- Heading and footer
 --------------------------------------------------------------------------------
 
--- The heading: the macro's icon, its name, and the panel's title (titleKey).
 local function SetHeading(panel, macro, titleKey)
 	panel.icon:SetTexture(macro.icon or ns.QUESTION_MARK_ICON)
 	-- a rank's own macro shares its spell's name, so its heading names the rank too
@@ -104,7 +90,6 @@ local function SetHeading(panel, macro, titleKey)
 	)
 end
 
--- The footer: "Macro Text", a meter of its length against what a macro holds, the count, and the text itself.
 local function CreateFooter(parent)
 	local footer = CreateFrame("Frame", nil, parent)
 	footer:SetPoint("BOTTOMLEFT", PADDING, PADDING)
@@ -134,11 +119,7 @@ local function CreateFooter(parent)
 	return footer
 end
 
---[[
-	Shows the macro text, its tag line left out though the length counts it, as the menu's Macro Text does. The
-	meter is blue, gold once it nears what a macro holds, and red past it, where a line under the text gives the
-	length and says to turn an option off to shorten it (TOOLTIP_TOO_LONG), as the tile's tooltip does.
-]]
+-- The tag line is left out, though the length counts it.
 local function UpdateFooter(footer, macro)
 	local length, max = #macro.body, ns.MACRO_BODY_MAX_LENGTH
 	local over = length > max
@@ -159,7 +140,7 @@ end
 
 Docked.SetHeading, Docked.CreateFooter, Docked.UpdateFooter = SetHeading, CreateFooter, UpdateFooter
 
--- Pins region's top left y below the top of the panel's rows, ROWS_GAP under its hint however many lines that takes.
+-- ROWS_GAP under the hint however many lines it wraps to.
 function Docked.SetRowPoint(panel, region, y)
 	region:SetPoint("TOPLEFT", panel.hint, "BOTTOMLEFT", 0, -(ROWS_GAP + y))
 end
@@ -168,11 +149,6 @@ end
 -- Panel
 --------------------------------------------------------------------------------
 
---[[
-	Builds a panel, hidden, named name, docked beside page's window: its heading (panel.icon, panel.title), close
-	button and hint (hintKey, panel.hint). It docks while shown, takes the keyboard only in pick mode, and
-	closes with the window.
-]]
 local function Create(page, name, hintKey)
 	local window = page:GetParent()
 	local panel = CreateFrame("Frame", name, window)
@@ -215,8 +191,8 @@ local function Create(page, name, hintKey)
 	panel.hint = hint
 
 	--[[
-		the panel takes the keyboard only in pick mode, where Escape ends it and every other key goes on to the
-		game; each key sets its own passing on, since that can't be set in combat, which ends pick mode anyway
+		only in pick mode; each key sets its own passing on, since that can't be set in combat, which ends pick
+		mode anyway
 	]]
 	panel:SetScript("OnKeyDown", function(self, key)
 		if InCombatLockdown() then
@@ -237,7 +213,7 @@ local function Create(page, name, hintKey)
 		ns.DockSpellbookPanel(0)
 		RedrawPage(panel)
 	end)
-	-- closing the window closes the panel, so it opens again only from a macro's menu
+	-- so it opens again only from a macro's menu
 	window:HookScript("OnHide", function()
 		panel:Hide()
 	end)

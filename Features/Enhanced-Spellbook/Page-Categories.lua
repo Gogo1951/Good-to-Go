@@ -1,14 +1,7 @@
 local _, ns = ...
 
 --[[
-	The page's sections under Sort By Category: the category a spell macro files under (ns.PageCategory), and
-	the run it goes in within that category (ns.PageSubCategory). The rest of a macro's options are
-	Features/Enhanced-Spellbook/Macro-Options.lua.
-]]
-
---[[
-	What a spell macro is for, which the page sorts by under Sort By Category, in the order the page shows them.
-	Unlike its kind, which says who the spell is cast on and so builds its macro, this is only the page's
+	In page order. Unlike its kind (who the spell is cast on, which builds its macro), this is only the page's
 	heading for it.
 ]]
 ns.PAGE_CATEGORIES = {
@@ -41,7 +34,7 @@ ns.PAGE_CATEGORIES = {
 	{ key = "profession", labelKey = "CATEGORY_PROFESSIONS" },
 }
 
--- The category each page tag (see PageTags in Features/Enhanced-Spellbook/Class-Config.lua) files a spell under, whatever its kind.
+-- A page tag files a spell whatever its kind.
 local TAG_CATEGORIES = {
 	racials = "racial",
 	professions = "profession",
@@ -74,11 +67,8 @@ local KIND_CATEGORIES = {
 }
 
 --[[
-	The section a class's forms go under, by what the class calls them: warriors' and monks' stance bar spells
-	and death knights' presences are stances, paladins' auras, hunters' aspects, and the rest (druid forms,
-	Shadowform, Stealth, Ghost Wolf, Metamorphosis) forms. A stealth spell goes with them even off the stance
-	bar, as Prowl is in Classic. A Mists paladin's stance bar holds its seals, which the class lists' seals file
-	under Seals first.
+	By what the class calls them. A stealth spell goes with them even off the stance bar, as Prowl is in Classic.
+	A Mists paladin's stance bar holds its seals, which the class lists' seals file under Seals first.
 ]]
 local FORM_CATEGORIES = {
 	WARRIOR = "stance",
@@ -97,13 +87,9 @@ local function HasLongCooldown(id)
 end
 
 --[[
-	A spell macro's page category (a ns.PAGE_CATEGORIES key), or nil for a macro with no kind, which goes
-	under its own section after the categories. A resurrection is
-	one whatever it's tagged; then the spell's page tag decides (Polymorph is crowd control, Barkskin a
-	defensive cooldown, Inner Fire a buff, Fishing a profession). Otherwise a ground or self spell is an attack
-	when it hurts (Blizzard, Arcane Explosion), even utility-tagged. A utility-tagged spell, or a ground or self spell that doesn't
-	hurt, is an offensive cooldown when its base cooldown is a minute or longer (Arcane Power),
-	else Utility (Cure Poison, Conjure Water). The rest follow their kind.
+	nil for a macro with no kind, which goes under its own section after the categories. A resurrection wins over
+	its tag; a ground or self spell that hurts is an attack even utility-tagged; a utility-tagged or harmless
+	ground or self spell is an offensive cooldown at a minute's base cooldown (Arcane Power), else Utility.
 ]]
 function ns.PageCategory(macro)
 	local kind = macro.kind
@@ -136,10 +122,8 @@ end
 local NO_FORMS = {}
 
 --[[
-	The forms a spell needs, as the names of the forms' own spells ("Bear Form", "Dire Bear Form"), from the
-	class lists' forms by spell ID. Never the tooltip's Requires line: it names each form as a form, which some
-	locales name apart from the form's spell (zhCN Cat Form, esES Battle Stance), so it can't be matched
-	against the stance bar's spell names in ns.KnownForms.
+	Never the tooltip's Requires line: it names each form as a form, which some locales name apart from the
+	form's spell (zhCN Cat Form, esES Battle Stance), so it can't match the stance bar's spell names.
 ]]
 local function RequiredForms(spellID)
 	local names = {}
@@ -152,7 +136,6 @@ local function RequiredForms(spellID)
 	return names
 end
 
--- The names of the forms and stances the player can be in: the stance bar's, and the class lists' stances.
 function ns.KnownForms()
 	local names = {}
 	for i = 1, GetNumShapeshiftForms() do
@@ -168,11 +151,7 @@ function ns.KnownForms()
 	return names
 end
 
---[[
-	The auto attacks, by spell ID: Attack, Auto Shot, Shoot (a wand), Shoot Bow, Shoot Gun, Shoot Crossbow and
-	Throw. They always go under Attacks, in a Basic Attacks run of their own at its end. Their names are this
-	client's, read once.
-]]
+-- Always under Attacks, in a Basic Attacks run at its end; names read once.
 local basicAttacks
 
 function ns.IsBasicAttack(macro)
@@ -199,11 +178,8 @@ local function FormSub(form)
 end
 
 --[[
-	The run a spell macro goes in within its page category, as its heading and its place (SUB_OWN, SUB_FORM or
-	SUB_BASIC): no heading for the category's own spells, a form's name ("Cat Form", "Berserker Stance"), or
-	Basic Attacks. A Warrior's spell takes its stance from the class lists' stances, any other spell needing a
-	form from the class lists' forms, counting only forms in knownForms (ns.KnownForms). A druid's spell goes under the first form it lists (Maul under Bear Form, though Dire Bear Form takes
-	it too); anyone else's under its form only when it needs just the one.
+	Only forms in knownForms count. A druid's spell goes under the first form it lists (Maul under Bear Form,
+	though Dire Bear Form takes it too); anyone else's under its form only when it needs just the one.
 ]]
 function ns.PageSubCategory(macro, knownForms)
 	if ns.IsBasicAttack(macro) then

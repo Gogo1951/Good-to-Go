@@ -1,11 +1,5 @@
 local _, ns = ...
 
---[[
-    Buff-Duty-Groups -- your group's sections of the Buff Duty window, one per
-    party with something missing; Buff-Duty.lua's BuffDuty.BuildSections adds
-    them after your own and the outsiders'.
-]]
-
 local BuffDuty = ns.BuffDuty
 local buffs = BuffDuty.buffs
 local GroupMembers = BuffDuty.GroupMembers
@@ -24,10 +18,7 @@ local PetUnitOf = BuffDuty.PetUnitOf
 -- Group Sections
 --------------------------------------------------------------------------------
 
---[[
-    A group buff lands on its target's party, so any member who needs it will
-    do; one in range is the one worth clicking.
-]]
+-- A group buff lands on its target's party, so any member in range will do.
 local function PickGroupTarget(units, spellName)
 	for _, unit in ipairs(units) do
 		if ns.IsBuffInRange(unit, spellName) then
@@ -41,14 +32,7 @@ end
 -- Folding
 --------------------------------------------------------------------------------
 
---[[
-    In a raid every group starts folded to its header: only the group-level
-    buffs it still needs, each with a count of who needs it. Clicking the
-    header (Buff-Duty-Layout.lua's fold buttons) unfolds it to its members.
-    Kept for the session until you leave the raid (BuffDuty.ResetGroupFolds,
-    from Buff-Duty.lua's roster handler), so a raid's roster churn or the
-    window hiding doesn't fold a group you opened.
-]]
+-- Kept until you leave the raid, so roster churn or the window hiding doesn't fold a group you opened.
 local unfolded = {}
 
 function BuffDuty.ToggleGroupFold(subgroup)
@@ -63,7 +47,7 @@ function BuffDuty.ResetGroupFolds()
 	wipe(unfolded)
 end
 
--- A dead member's resurrection row, which stays on a folded group: bringing them back comes first.
+-- Stays on a folded group: bringing them back comes first.
 local function ResurrectionRows(rows)
 	local kept = {}
 	for _, row in ipairs(rows) do
@@ -76,11 +60,9 @@ local function ResurrectionRows(rows)
 end
 
 --[[
-    A folded group's header: the group icons the Buff Key would choose, then
-    one icon for each other buff a member still needs (Thorns, or a group
-    buff not worth casting), counted like them. That icon is one member's own single cast, in range if any is, so
-    each click buffs the next one and the count drops. Sorted by column, so
-    the Buff Key weighs them in the window's order.
+    Each other buff's icon is one member's own single cast, in range if any
+    is, so each click buffs the next one and the count drops. Sorted by
+    column, so the Buff Key weighs them in the window's order.
 ]]
 local function FoldedIcons(icons, rows)
 	local grouped, singles, order = {}, {}, {}
@@ -129,11 +111,7 @@ local function FoldedIcons(icons, rows)
 	return folded
 end
 
---[[
-    An unfolded raid group's rows less the single icons the group casts it
-    shows cover (BuffDuty.GroupChoices). A member left with nothing drops off,
-    unless their pet's row follows: it keeps them listed.
-]]
+-- A member left with nothing drops off, unless their pet's row follows: it keeps them listed.
 local function UncoveredRows(rows, covered)
 	local kept = {}
 	for index, row in ipairs(rows) do
@@ -156,29 +134,10 @@ local function UncoveredRows(rows, covered)
 end
 
 --[[
-    One section per party with something missing: the party's group-buff icons
-    on its header, then a row per member with their single-target icons. Every
-    party gets its own group icon once any of its members is missing the buff
-    -- a raid buffs party by party, so a party of one in a raid still needs its
-    own. Only solo, outside any group, is there none: the single version does
-    the same for no reagent.
-
-    A member's pet sits on its own row under them, and keeps the member listed
-    -- with no icons of their own, if they need nothing -- until the pet is
-    buffed too. Pets don't count toward a group icon: the group versions are
-    cast to be sure of the players.
-
-    A dead member you can resurrect gets a row with that one icon, in its own
-    column on the left, and drops off once they're back up (or a resurrection
-    is waiting on them to accept).
-
-    You are left out: your own buffs show under Self Buffs (Buff-Duty-Self.lua).
-
-    A raid is drawn smaller: each group icon carries a count of the members
-    who need it. Both kinds show only the group casts the Buff Key would
-    choose: a folded group (Folding, above) adds one counted icon per other
-    buff (FoldedIcons), and an unfolded one takes the singles they cover off
-    its rows.
+    A raid buffs party by party, so a party of one still gets its own group
+    icon; solo there is none, since the single does the same for no reagent.
+    Pets don't count toward a group icon: the group versions are cast to be
+    sure of the players.
 ]]
 function BuffDuty.AddGroupSections(sections)
 	local grouped = IsInGroup()
@@ -196,11 +155,7 @@ function BuffDuty.AddGroupSections(sections)
 		local _, class = UnitClass(unit)
 		local name = GetUnitName(unit, false) or ""
 		local row
-		--[[
-		    Your own buffs are the Self Buffs section's, by the Self-Buffs
-		    panel's timing (BuffDuty.BuildBuffs), so your row here only holds
-		    your pet's place, and you never count toward a group icon.
-		]]
+		-- Your own buffs are Self Buffs': your row only holds your pet's place, and never counts toward a group icon.
 		if member.isPlayer then
 			row = nil
 		elseif CanBuff(unit) then
@@ -215,11 +170,7 @@ function BuffDuty.AddGroupSections(sections)
 					local missing = party.missing[buff] or {}
 					party.missing[buff] = missing
 					missing[#missing + 1] = unit
-					--[[
-					    The group icon shows time left only while every member it
-					    is for has some: the soonest of theirs. One with none
-					    makes it whole.
-					]]
+					-- Time left only while every member it is for has some: the soonest of theirs.
 					local low = party.low[buff] or { count = 0 }
 					party.low[buff] = low
 					if expires then
@@ -274,10 +225,7 @@ function BuffDuty.AddGroupSections(sections)
 						targetName = GetUnitName(target, false) or "",
 						isGroup = true,
 						buffKey = buff.key,
-						--[[
-						    For the Buff Key, which weighs this against the
-						    members' single casts (GroupChoices).
-						]]
+						-- For GroupChoices, which weighs this against the members' singles.
 						subgroup = subgroup,
 						members = missing,
 					}, partial and low.expires, partial and low.duration)
@@ -290,7 +238,6 @@ function BuffDuty.AddGroupSections(sections)
 					label = raid and GROUP_NUMBER:format(subgroup) or GROUP,
 					icons = icons,
 					rows = party.rows,
-					-- The frame lays parties out two to a row.
 					party = true,
 				}
 				if raid then

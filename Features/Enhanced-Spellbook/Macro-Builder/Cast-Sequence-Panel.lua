@@ -8,21 +8,6 @@ local Docked = ns.DockedPanel
 local Widgets = ns.PanelWidgets
 local Box, ShowTip = Widgets.Box, Widgets.ShowTip
 
---[[
-	The Cast Sequence panel, docked against the Spellbook window's right edge where the Conditionals panel docks
-	(one at a time), and opened from a macro's menu (Features/Enhanced-Spellbook/Macro-Menu.lua). It lists the sequence
-	(Features/Enhanced-Spellbook/Macro-Builder/Cast-Sequence.lua) top to bottom: the macro's own spell, fixed as the first step, then
-	each step added, with a grip to drag it up or down, its spell and its remove button. Under them the Add Step
-	button, what happens after the last step (Start Over, or Stop on NULL), when the sequence starts over, and
-	the macro text with its length against what a macro holds, which follow every change.
-
-	A step's spell slot takes a spell as a Conditionals row's does, by pick mode or a drag
-	(Features/Enhanced-Spellbook/Macro-Builder/Spell-Pick.lua). Every change rebuilds the page (ns.RefreshSpellbookPage), which
-	rewrites the macro; the panel holds its macro's settings key and finds it again after each refresh.
-	The frame, its heading and footer are Features/Enhanced-Spellbook/Macro-Builder/Docked-Panel.lua, shared with the
-	Conditionals panel, as are the controls in Features/Enhanced-Spellbook/Macro-Builder/Panel-Widgets.lua.
-]]
-
 local INNER_WIDTH = Docked.INNER_WIDTH
 local SLOT_ICON = Widgets.SLOT_ICON
 local ROW_HEIGHT, ROW_GAP = 32, 4 -- a tighter gap than a Conditionals row's, so eight steps leave the footer room
@@ -42,29 +27,25 @@ local panel
 -- Changes
 --------------------------------------------------------------------------------
 
--- The page macro the panel is open for, found again by its settings key, or nil once it has left the page.
 local function CurrentMacro()
 	return Docked.CurrentMacro(panel, ns.OffersCastSequence)
 end
 
--- Runs a setter on the macro, set(macro), and rebuilds the page, which rewrites the macro and redraws the panel.
 local function Change(set)
 	Docked.Change(panel, ns.OffersCastSequence, set)
 end
 
--- Whether the panel is open for a page macro, so its tile is outlined on the page.
 function ns.IsCastSequencePanelFor(macro)
 	return panel ~= nil and panel:IsShown() and ns.OffersCastSequence(macro) and SettingsKey(macro) == panel.key
 end
 
--- Redraws the page's tiles, for their outline and pick-mode dimming, without rebuilding its macros.
 local function RedrawPage()
 	Docked.RedrawPage(panel)
 end
 
 local Update -- below; the rows and pick mode call it
 
--- The panel as pick mode's owner (Features/Enhanced-Spellbook/Macro-Builder/Spell-Pick.lua): a step's spell slot.
+-- pick mode's owner
 local owner = {
 	actionKey = "CAST_SEQUENCE_ACTION_USE",
 	cannotPickKey = "CAST_SEQUENCE_CANNOT_PICK",
@@ -88,7 +69,6 @@ local owner = {
 -- Pieces
 --------------------------------------------------------------------------------
 
--- A step's number at a row's left, in the muted ink.
 local function NumberText(row, number)
 	local text = row:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
 	text:SetTextColor(unpack(MUTED_INK))
@@ -98,7 +78,6 @@ local function NumberText(row, number)
 	return text
 end
 
--- A setting's line under the steps: its label on the left and its dropdown after it.
 local function CreateSetting(parent, labelKey, openMenu)
 	local setting = CreateFrame("Frame", nil, parent)
 	setting:SetSize(INNER_WIDTH, SETTING_HEIGHT)
@@ -121,7 +100,6 @@ end
 -- Menus
 --------------------------------------------------------------------------------
 
--- After The Last Step: Start Over, or Stop on NULL.
 local function OpenEndMenu(menuOwner)
 	local macro = CurrentMacro()
 	if not macro then
@@ -147,7 +125,6 @@ local function OpenEndMenu(menuOwner)
 	end, true)
 end
 
--- Start Over When: each reset key, ticked on or off, then the seconds idle, a choice of one.
 local function OpenResetMenu(menuOwner)
 	local macro = CurrentMacro()
 	if not macro then
@@ -196,13 +173,11 @@ end
 -- Steps
 --------------------------------------------------------------------------------
 
--- The macro and the step at index, or nil for either once they are gone.
 local function StepAt(index)
 	local macro = CurrentMacro()
 	return macro, macro and ns.CastSequenceSteps(macro)[index]
 end
 
--- The first step, the macro's own spell: drawn muted, with no controls.
 local function CreateFirst(parent)
 	local row = CreateFrame("Frame", nil, parent)
 	row:SetSize(INNER_WIDTH, ROW_HEIGHT)
@@ -231,12 +206,10 @@ local function CreateFirst(parent)
 	return row
 end
 
--- A step's spell slot: the spell's icon and name, or what to do to give it one.
 local function CreateSlot(row)
 	local slot = Widgets.CreateSlot(row, SLOT_HEIGHT, SLOT_ICON, 8, function()
 		return owner
 	end)
-	-- the spell's own tooltip, or what to do while the slot is empty; then the clicks
 	slot:SetScript("OnEnter", function(self)
 		local _, step = StepAt(row.index)
 		if not step then
@@ -278,7 +251,6 @@ local function CreateStep(parent, index)
 	return row
 end
 
--- Draws a step: its spell, or the slot waiting in pick mode, or the slot asking for one.
 local function UpdateStep(row, step, blocked)
 	row:SetAlpha(blocked and BLOCKED_ALPHA or 1)
 	local slot = row.slot
@@ -296,11 +268,7 @@ end
 -- Panel
 --------------------------------------------------------------------------------
 
---[[
-	Redraws the panel for its macro: the heading, the first step and the steps after it, the Add Step button
-	under the last, the end and reset settings, a red line where the sequence stops for good or can't write, and
-	the footer. Closes it once its macro has left the page.
-]]
+-- Closes the panel once its macro has left the page.
 Update = function()
 	if not panel or not panel:IsShown() then
 		return
@@ -385,7 +353,6 @@ local function CreatePanel(page)
 	panel.footer = Docked.CreateFooter(panel)
 end
 
--- Opens the panel for a page macro (from its menu), or moves it to that macro when it is open for another.
 function ns.ShowCastSequencePanel(macro, page)
 	if not ns.OffersCastSequence(macro) then
 		return
@@ -402,14 +369,13 @@ function ns.ShowCastSequencePanel(macro, page)
 	Update()
 end
 
--- Closes the panel, for the window's switch to another tab and the Conditionals panel opening.
 function ns.HideCastSequencePanel()
 	if panel then
 		panel:Hide()
 	end
 end
 
--- The page rebuilt its macros: draw the panel again from the new ones.
+-- The rebuild makes the page's macros afresh.
 ns.OnSpellbookPageRefreshed(function(page)
 	if panel and panel.page == page then
 		Update()

@@ -2,27 +2,10 @@ local _, ns = ...
 local L = ns.L
 
 --[[
-    Items added during this viewing of the window, keyed by itemID.
-
-    A long Restock List buries a just-added item in whatever type group it
-    belongs to, so newly added items are pulled into a "New" group at the top
-    where their Withdraw/Deposit/Buy/reputation controls can be set straight
-    away.
-
-    "New" is a note about THIS list, THIS sitting -- so it clears the moment
-    either becomes untrue: when the Restocker window closes (Restocker-Window.lua's
-    OnHide), when the Starter List popup closes (its host's OnHide in
-    Restocker-Starter-Window.lua), and on every list event -- create,
-    switch, clone, copy, delete -- via ns.UseRestockList plus the two direct sites
-    in ns.DeleteRestockList and ns.CopyIntoCurrentRestockList that never pass through it.
-
-    Deliberately a plain field on ns rather than anything under settings: this is
-    view state for one sitting and must never reach SavedVariables. A selected
-    New category goes with the items, or the window would show an empty list.
-
-    The last removal, kept in its row for an Undo (ns.restockLastRemoved,
-    below), is the same kind of note and ends at the same moments, so it is
-    dropped here with the flags.
+    The "New" group: items added this sitting, on this list. Never saved. Cleared,
+    with the Undo row and a selected New group, when the window or Staples closes
+    and on every list event, including the delete and copy that skip
+    ns.UseRestockList.
 ]]
 ns.restockNewItems = {}
 
@@ -38,29 +21,15 @@ end
 -- Item Lookups
 --------------------------------------------------------------------------------
 
---[[
-    Adds parked on a cold item cache, keyed by itemID. Drained by
-    ns.OnRestockerItemInfoReceived below when the client answers.
-]]
+-- Adds parked on a cold item, keyed by itemID.
 ns.restockItemWait = {}
 
---[[
-    Rows the open Restock List window drew before the client had their item,
-    keyed by itemID. Filled by ns.UpdateRestockList, each repainted as its answer
-    arrives, and emptied when the window hides.
-]]
+-- Rows the open window drew before their item resolved, keyed by itemID; emptied when it hides.
 ns.restockColdRows = {}
 
 --[[
-    Four things here can be waiting on the client to resolve an item: a pending
-    add, a deferred upgrade, a deferred Starter List tick and a row the open
-    window drew without its item.
-    The client answers GET_ITEM_INFO_RECEIVED once per item it resolves, which
-    during a login is a flood, so Core is asked to listen only while at least one
-    of the four is outstanding, and released the moment they all drain.
-
-    Called after anything that adds to those queues, and at the end of the handler
-    that drains them.
+    GET_ITEM_INFO_RECEIVED floods during login, so it is heard only while one of
+    the four queues waits. Call after adding to any of them.
 ]]
 function ns.SyncRestockItemInfoSubscription()
 	local waiting = next(ns.restockItemWait) ~= nil
@@ -80,18 +49,10 @@ function ns.OnRestockerItemInfoReceived(itemID, success)
 		return
 	end
 
-	--[[
-	    This event IS the answer, so the remembered miss has to go first: every
-	    retry below asks ns.GetItemData again and would otherwise still be told
-	    the item is missing.
-	]]
+	-- First, or every retry below is still told the item is missing.
 	ns.ForgetItemDataMiss(itemID)
 
-	--[[
-	    An item the server has none of: the deferred upgrade and Staples tick
-	    waiting on it stop waiting, and a parked add is told so rather than
-	    retried, since a retry would only park it again.
-	]]
+	-- A parked add is told rather than retried, which would only park it again.
 	if success == false then
 		ns.DropFailedUpgradeTarget(itemID)
 		ns.DropPendingStarterAdd(itemID)
@@ -111,19 +72,10 @@ function ns.OnRestockerItemInfoReceived(itemID, success)
 		ns.AddRestockItem(itemID)
 	end
 
-	--[[
-	    An upgrade deferred because its target had not resolved yet. C_Item.GetItemInfo
-	    asked the server on that miss, so this event is the answer arriving; the
-	    retry is free once nothing is pending.
-	]]
 	if ns.HasPendingUpgrade() then
 		ns.UpgradeRestockList()
 	end
 
-	--[[
-	    A Starter List tick deferred the same way (Restocker-Starter-List.lua): its item had
-	    not resolved when the box was ticked, and this event is the answer arriving.
-	]]
 	if ns.HasPendingStarterAdds() then
 		ns.RetryPendingStarterAdds()
 	end
@@ -147,11 +99,7 @@ function ns.AddRestockItem(text)
 		text = tonumber(text)
 	end
 
-	--[[
-	    A typed ID with no item behind it is never answered, so parking it below
-	    would hold the event all session. Said in the add box while the window is
-	    open, and in chat otherwise (ns.ShowRestockAddNotice).
-	]]
+	-- An ID with no item is never answered, so parking it would hold the event all session.
 	if type(text) == "number" and not C_Item.DoesItemExistByID(text) then
 		ns.ShowRestockAddNotice(string.format(L["RESTOCKER_UNKNOWN_ITEM"], text))
 		return
@@ -160,15 +108,9 @@ function ns.AddRestockItem(text)
 	local itemInfo = ns.GetItemData(text)
 	if itemInfo == nil then
 		--[[
-		    Park the pending add under its itemID: the retry in
-		    ns.OnRestockerItemInfoReceived looks up by the numeric itemID the event
-		    hands it, so an add keyed by a raw item link (what a drag from the bags
-		    hands in) would never be found again and the item would silently never
-		    arrive. Input carrying no itemID is dropped rather than parked: no answer
-		    can ever clear its key, and a parked key would hold GET_ITEM_INFO_RECEIVED
-		    registered for the rest of the session. It is answered, though: a typed
-		    name the client cannot place gets a notice, or the box would read as
-		    broken.
+		    Parked under the numeric itemID the event hands back, never a raw link.
+		    Input with no itemID can never be answered, so it gets a notice instead
+		    of holding the event all session.
 		]]
 		local waitKey = text
 		if type(text) == "string" then
@@ -185,7 +127,7 @@ function ns.AddRestockItem(text)
 
 	local itemID = itemInfo.itemID
 
-	-- Lists are keyed by itemID, so a duplicate is a simple lookup. Said, since the dropped item has already left the cursor.
+	-- Said, since a dropped item has already left the cursor.
 	if currentList[itemID] ~= nil then
 		ns.ShowRestockAddNotice(L["RESTOCKER_ADD_DUPLICATE"])
 		return
@@ -195,12 +137,7 @@ function ns.AddRestockItem(text)
 
 	buyItem.itemName = itemInfo.itemName
 	buyItem.itemID = itemID
-	--[[
-	    One stack of the item, not one unit: a fresh row asking for a single
-	    juice reads as a typo, and a stack is the amount everything actually
-	    trades in. Items that do not stack report a max of 1, so gear and tools
-	    land at exactly one with no special case.
-	]]
+	-- One stack, not one unit: a single juice reads as a typo. Non-stacking items land at 1.
 	buyItem.amount = math.max(1, itemInfo.itemStackCount or 1)
 	buyItem.buyFromMerchant = true
 	buyItem.stashToBank = true
@@ -208,19 +145,10 @@ function ns.AddRestockItem(text)
 
 	currentList[itemID] = buyItem
 
-	--[[
-	    Flag it for the "New" group and jump the list back to the top, so the row
-	    you just created is on screen rather than filed away in its type group
-	    somewhere down a long list. Its toggles are already visible on the row, so
-	    there is nothing left to open.
-	]]
 	ns.restockNewItems[itemID] = true
 	--[[
-	    Select New, which the row above just joined. Whatever category the pane
-	    was showing, the item is not in it -- and a row that vanishes the moment
-	    it is added is the one way this pane can lie about what is on the list.
-	    Selecting the group the item IS in beats falling back to All: it puts the
-	    new row on screen alone rather than somewhere in a list of thirty-seven.
+	    New is selected, not All: a row that vanished from the shown category on
+	    adding would look lost, and New shows it alone at the top.
 	]]
 	ns.restockSelectedGroup = ns.RESTOCK_GROUP_NEW
 
@@ -237,18 +165,12 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The row a remove click just took off the list, kept in its place on the
-    list, grayed, with an Undo button where its remove button was
-    (ns.UndoRestockRemove); a row's Keep amount and flags go back with it. One
-    step deep -- a second removal replaces it. The render
-    (Restocker-Window-Render.lua) drops it on the next change to the list, the
-    filter or the category, and it goes with the "New" flags whenever the
-    window closes or the list in use changes (ns.ClearRestockNewItems), and
-    when Staples opens (ns.ForgetRestockRemoval).
+    The removed row, drawn grayed in place with Undo. One step deep; dropped on
+    the next change to the list, filter or category, with the New flags, and when
+    Staples opens.
 ]]
 ns.restockLastRemoved = nil
 
--- Takes a row's item off the list in use, keeping it for the undo; returns whether there was one to take.
 function ns.RemoveRestockItem(item)
 	if not (item and item.itemID) then
 		return false
@@ -260,7 +182,6 @@ function ns.RemoveRestockItem(item)
 	return true
 end
 
--- Drops the removed row, if one waits, and redraws so it goes.
 function ns.ForgetRestockRemoval()
 	if not ns.restockLastRemoved then
 		return
@@ -272,9 +193,8 @@ function ns.ForgetRestockRemoval()
 end
 
 --[[
-    Put the last removed row back exactly as it was. Refused quietly when the
-    list it came from is gone or already holds that item again -- added back by
-    hand, which is the newer intent -- and either way the offer is spent.
+    Quietly refused when the list is gone or holds the item again (added back by
+    hand, the newer intent). Either way the offer is spent.
 ]]
 function ns.UndoRestockRemove()
 	local removed = ns.restockLastRemoved

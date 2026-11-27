@@ -13,13 +13,14 @@ ns.MACRO_DEFAULT_ITEM_IDS = {
 	["Water"] = 5350, -- Conjured Water
 	["Feed Pet"] = 117, -- Tough Jerky
 	["Poisons"] = 6947, -- Instant Poison
+	["Fishing Lure"] = 6529, -- Shiny Bauble
 }
 
 --[[
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, TBC Anniversary 2.5.6.70577
+	2026-11-26, wago.tools, TBC Anniversary 2.5.6.70577
 
 Notes
 	- The item each macro shows (#showtooltip) while the bags hold nothing it can use, keyed by ns.MACRO_CONFIG's macro type (Data/Data.lua). Read by the macro body builder, the mini-map tooltip, the rogue tools and the Macros options panel.

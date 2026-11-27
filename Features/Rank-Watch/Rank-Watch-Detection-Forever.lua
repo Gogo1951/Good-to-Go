@@ -8,21 +8,10 @@ local RANK_WATCH = Data.RANK_WATCH
 --------------------------------------------------------------------------------
 
 --[[
-    Casts on WoW Forever, listed by its TOC alone: it keeps the combat log from add-ons and hides other players'
-    cast spell IDs (Rank-Watch-Detection-Combat-Log.lua reads casts everywhere else), so here:
-      - the player's own casts come from UNIT_SPELLCAST_SENT, which names the recipient, and
-        UNIT_SPELLCAST_SUCCEEDED, which confirms the cast went off;
-      - the player's own pet's casts come from UNIT_SPELLCAST_SUCCEEDED on "pet";
-      - other players' buffs come from UNIT_AURA on the group, whose aura IDs and casters stay readable, and
-        whose bearer is the recipient;
-      - other players' damage and healing spells come from Blizzard's damage meter, read every
-        Data.RANK_WATCH.METER_POLL seconds out of combat and once after it, counting a spell only when its total
-        changed. Their pets' spells come the same way, folded into the owner's list, and are checked as that
-        owner's pet while it is still out.
-
-    Every cast ends in ns.CheckRankWatchCast, with the recipient's level when it landed on another friendly
-    player, none when it landed on the caster, an enemy or nobody, and dropped when that friendly player's level
-    can't be read, since a rank the game lowered for a lowbie can't be told from one the caster chose.
+    WoW Forever keeps the combat log from add-ons and hides other players' cast spell IDs, so casts come from
+    the player's own SENT/SUCCEEDED pair, the pet's SUCCEEDED, the group's UNIT_AURA (whose aura IDs and
+    casters stay readable), and the damage meter. A friendly recipient whose level can't be read drops the
+    cast, since a rank the game lowered for a lowbie can't be told from one the caster chose.
 ]]
 
 local Check = ns.CheckRankWatchCast
@@ -34,10 +23,9 @@ local Check = ns.CheckRankWatchCast
 local pending = {} -- castGUID -> { target name, time }
 
 --[[
-    UNIT_SPELLCAST_SENT names the recipient but gives neither unit nor GUID, so
-    the name is mapped back to a unit we hold, in the order people cast: the
-    player themself, their own pet, at the target, a mouseover or focus macro,
-    then a group member.
+    UNIT_SPELLCAST_SENT names the recipient but gives neither unit nor GUID,
+    so the name is mapped back to a unit, in the order people cast, then the
+    group.
 ]]
 local CAST_AT_UNITS = { "player", "pet", "target", "mouseover", "focus" }
 
@@ -220,10 +208,8 @@ local function LowestGroupLevel()
 end
 
 --[[
-    The player's own pet: its casts fire UNIT_SPELLCAST_SUCCEEDED on "pet", with no SENT to name a recipient.
-    Most of a pet's ranks land on an enemy or itself; a helpful one (Fire Shield on a party member, Blood Pact)
-    may land on a lower-level friend, whose rank the game lowers, so it is capped by the lowest level in the group,
-    as the meter's heals are. Checked as the player's cast, with the pet's level as the ceiling.
+    No SENT names a pet's recipient. A helpful one (Fire Shield, Blood Pact) may land on a lower-level friend,
+    whose rank the game lowers, so it is capped by the lowest level in the group, as the meter's heals are.
 ]]
 local IsSpellHelpful = C_Spell and C_Spell.IsSpellHelpful
 
@@ -257,9 +243,8 @@ CheckPetCast = function(spellID)
 end
 
 --[[
-    The meter folds a pet's spells into its owner's list (each carrying the pet's creatureName), so a pet ladder's
-    spell under a group member is their pet's cast. Its unit is the owner's pet token, partypet2 for party2; nil
-    when the pet is gone by the time the meter is read, or its GUID can't be read, and the cast is dropped.
+    The meter folds a pet's spells into its owner's list. Nil when the pet is gone by the time the meter is
+    read, or its GUID can't be read, and the cast is dropped.
 ]]
 local function PetOf(ownerUnit)
 	local petUnit = ownerUnit:gsub("^party(%d)$", "partypet%1"):gsub("^raid(%d+)$", "raidpet%1")
@@ -352,8 +337,8 @@ local function SyncMeter(active)
 end
 
 --[[
-    After a fight, read the meter once more before its session moves on, then send what combat held. This file
-    loads after Rank-Watch-Check.lua and replaces its handler for the event, so it sends the held whispers too.
+    Trap: this replaces Rank-Watch-Check.lua's handler for the event (it loads after), so it must send the
+    held whispers too. Reads the meter once more before its session moves on.
 ]]
 local function OnPlayerRegenEnabled()
 	PollMeter()

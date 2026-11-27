@@ -36,6 +36,7 @@ L["OPTIONS_LEVEL_UP_THANKS"] = "Спасибо, что выбрали Good to Go
 L["MACRO_BANDAGE"] = "- Бинты"
 L["MACRO_EXPLOSIVES"] = "- Взрывчатка"
 L["MACRO_FEED_PET"] = "- Корм. питомца"
+L["MACRO_FISHING_LURE"] = "- Рыб. приманка"
 L["MACRO_FOOD"] = "- Еда"
 L["MACRO_HEALTH_POTION"] = "- Леч. зелье"
 L["MACRO_HEALTHSTONE"] = "- Кам. здоровья"
@@ -283,7 +284,7 @@ L["MENU_RESTOCKER_OPEN_OFF_DESCRIPTION"] =
 -- Buff Duty's block in the menu while its close button has hidden it: the word on its right, and the note under it.
 L["MENU_BUFF_DUTY_PAUSED"] = "Приостановлено"
 L["MENU_BUFF_DUTY_PAUSED_NOTE"] =
-	"Скрыто, пока вы не вступите в группу, не войдёте в игру снова или не перезагрузите интерфейс."
+	"Отдыхает, пока вы не вступите в группу, не войдёте в игру снова или не перезагрузите интерфейс."
 
 --------------------------------------------------------------------------------
 -- Class Notes
@@ -313,6 +314,7 @@ L["NOTE_MACRO_HEALTHSTONE"] = 'Макрос "Кам. здоровья"'
 L["NOTE_MACRO_SOULSTONE"] = 'Макрос "Кам. души"'
 L["NOTE_MACRO_POISONS"] = 'Макрос "Яды"'
 L["NOTE_MACRO_EXPLOSIVES"] = 'Макрос "Взрывчатка"'
+L["NOTE_MACRO_FISHING_LURE"] = 'Макрос "Рыб. приманка"'
 
 -- Hunter. NOTE_PET_MEND_CLICK is the click that casts Mend Pet: a Right-Click, or any click during combat.
 L["NOTE_PET_CALL_FEED_REVIVE"] = "Призвать, накормить или воскресить"
@@ -767,6 +769,39 @@ L["EXPLOSIVES_MODE_ATPLAYER"] = "ЛКМ @player"
 L["EXPLOSIVES_MODE_TOSS"] = "ЛКМ Бросок"
 
 --[[
+    Fishing Lure (Options-Fishing-Lure.lua): TAB_FISHING_LURE is its label in the settings tree and the end of
+    its title.
+]]
+L["TAB_FISHING_LURE"] = "Рыболовная приманка"
+L["OPTIONS_FISHING_LURE_DESCRIPTION"] = "Применяет приманки и еду, если их нет."
+-- The page's three section headers.
+L["OPTIONS_FISHING_HEADER_GEAR"] = "Снаряжение"
+L["OPTIONS_FISHING_HEADER_FOOD"] = "Еда"
+L["OPTIONS_FISHING_HEADER_LURES"] = "Приманки"
+L["OPTIONS_FISHING_EQUIP_POLE"] = "Экипировать удочку"
+L["OPTIONS_FISHING_EQUIP_POLE_DESCRIPTION"] =
+	"Экипирует лучшую удочку из сумок, доступную по навыку рыбной ловли, если она лучше той, что в руке."
+L["OPTIONS_FISHING_EQUIP_PANTS"] = "Экипировать штаны"
+L["OPTIONS_FISHING_EQUIP_PANTS_DESCRIPTION"] =
+	"Надевает лучшие рыболовные штаны из сумок, которые вы можете носить, если они лучше надетых."
+L["OPTIONS_FISHING_EQUIP_HAT"] = "Экипировать шляпу"
+L["OPTIONS_FISHING_EQUIP_HAT_DESCRIPTION"] =
+	"Надевает лучшую рыболовную шляпу из сумок, которую вы можете носить, если она лучше надетой."
+L["OPTIONS_FISHING_EQUIP_BOOTS"] = "Экипировать сапоги"
+L["OPTIONS_FISHING_EQUIP_BOOTS_DESCRIPTION"] =
+	"Надевает лучшие рыболовные сапоги из сумок, которые вы можете носить, если они лучше надетых."
+L["OPTIONS_FISHING_EQUIP_GLOVES"] = "Экипировать перчатки"
+L["OPTIONS_FISHING_EQUIP_GLOVES_DESCRIPTION"] =
+	"Экипирует перчатки из сумок с чарами на рыбную ловлю."
+L["OPTIONS_FISHING_USE_FOOD"] =
+	"Есть еду, если нет бонуса Сытости к рыбной ловле"
+L["OPTIONS_FISHING_USE_FOOD_DESCRIPTION"] =
+	"Съедает лучшую рыболовную еду из сумок, если у вас нет её бонуса Сытости к рыбной ловле."
+L["OPTIONS_FISHING_USE_LURE"] = "Использовать лучшую приманку"
+L["OPTIONS_FISHING_USE_LURE_DESCRIPTION"] =
+	"Применяет к удочке лучшую приманку, доступную по навыку рыбной ловли, если на ней нет приманки."
+
+--[[
     Class Macros panel (Options-Class-Macros.lua), nested under Consumable Macros. TAB_CLASS_MACROS
     is its label in the settings tree and the end of its title; OPTIONS_CLASS_MACROS_DESCRIPTION is the
     intro beneath it. The class and race headers below also head Food & Drinks' racial sections.
@@ -975,6 +1010,7 @@ L["INVENTORY_REPORT_FORGET_CHARACTER_CONFIRM"] =
 
 -- Readiness Report
 L["TAB_READINESS_REPORT"] = "Отчёт о готовности"
+L["TAB_CURRENCY_REPLENISH"] = "Пополнение золота"
 --[[
     Says what the report does AND that it stays quiet, because the quiet is the
     feature: a player who turns this on and sees nothing for three pulls has to
@@ -1377,7 +1413,7 @@ L["RESTOCKER_STILL_OUT_AND_LOW_MANY"] = "Всё ещё нет предметов
     sum rather than the old amount moved across.
 ]]
 L["RESTOCKER_UPGRADED"] = "Ваш список пополнения улучшен."
-L["RESTOCKER_UPGRADED_ITEM"] = "Было: %sx%d, стало: %sx%d."
+L["RESTOCKER_UPGRADED_ITEM"] = "Было: %s x%d, стало: %s x%d."
 
 --[[
     Verbose follow-up line, one per item the headline counted, out first and
@@ -1878,7 +1914,7 @@ L["BUFF_DUTY_WHEN_DESCRIPTION"] = "Выберите, когда может по�
 L["BUFF_DUTY_WHEN_NONE"] =
 	"Ничего не отмечено, поэтому окно никогда не появится."
 L["BUFF_DUTY_AURAS_HIDDEN"] =
-	"Дежурство по баффам здесь скрыто. Игра не показывает аддонам баффы в этой зоне, поэтому оно не может понять, кому их не хватает."
+	"Дежурство по баффам не видит баффы здесь. Игра скрывает их от аддонов в этой зоне."
 L["BUFF_DUTY_WHERE_DESCRIPTION"] =
 	"Определяет, где показывается окно: везде или только внутри инстанса, например подземелья или рейда."
 L["BUFF_DUTY_WHERE_ALWAYS"] = "Везде"
@@ -1906,7 +1942,7 @@ L["BUFF_DUTY_FAVOR_ENABLE_DESCRIPTION"] =
 	"Показывает незнакомцев, недавно наложивших на вас баффы, и баффы, которыми вы можете им ответить. ПКМ по значку, чтобы убрать игрока из списка."
 L["BUFF_DUTY_BUFF_PVP_FLAGGED"] = "Накладывать баффы на игроков с PvP"
 L["BUFF_DUTY_BUFF_PVP_FLAGGED_DESCRIPTION"] =
-	"Позволяет Дежурству по баффам накладывать баффы на игроков с включённым PvP, из-за чего PvP включится и у вас. Пока этот параметр выключен, а ваш PvP не включён, Дежурство по баффам пропускает их и любые групповые баффы, которые их заденут, и сообщает об этом в чате."
+	"Позволяет Дежурству по баффам накладывать баффы на игроков с включённым PvP, из-за чего PvP включится и у вас. Если выключено, пока ваш PvP не включён, оно пропускает их и любые групповые баффы, которые их заденут, и сообщает об этом в чате."
 L["BUFF_DUTY_FAVOR_SECONDS_DESCRIPTION"] =
 	"Задает, как долго незнакомец остается в списке после своего последнего баффа."
 L["BUFF_DUTY_TARGET_ENABLE"] = "Ваша цель"
@@ -1993,7 +2029,7 @@ L["BUFF_DUTY_SELF_REFRESH_UNDER"] = "Меньше, чем %s"
     client's name), Weapon Buffs and Scrolls: elixirs, then consumables with
     a setting of their own.
 ]]
-L["BUFF_DUTY_ROW_ELIXIRS"] = "Настои или эликсиры"
+L["BUFF_DUTY_ROW_ELIXIRS"] = "Настои и эликсиры"
 L["BUFF_DUTY_ROW_OTHER"] = "Другие баффы"
 -- Each category's page opens with When to Use, a dropdown of when the window shows that category.
 L["BUFF_DUTY_ROW_WHEN"] = "Когда использовать"
@@ -2005,7 +2041,7 @@ L["BUFF_DUTY_ROW_WHEN_RAID"] = "В рейде"
 -- Then a checkbox for whether the key uses the category's icons. %s is the key's name, BUFF_KEY.
 L["BUFF_DUTY_ROW_KEY"] = "Использовать с %s"
 L["BUFF_DUTY_ROW_KEY_DESCRIPTION"] =
-	"Клавиша %s тоже использует эти значки. Если выключено, они срабатывают только по щелчку в окне."
+	"Клавиша %s тоже их накладывает. Если выключено, они срабатывают только по щелчку в окне."
 -- The Well Fed page's description.
 L["BUFF_DUTY_FOOD_PAGE_DESCRIPTION"] =
 	"Еда с эффектом из ваших сумок, предлагаемая в окне, когда у вас нет её баффа."
@@ -2023,9 +2059,9 @@ L["BUFF_DUTY_SCROLLS_PAGE_DESCRIPTION"] =
 	"Свитки из ваших сумок, предлагаемые в окне, когда у вас нет их баффа."
 L["BUFF_DUTY_SCROLLS_DESCRIPTION"] =
 	"Показывает свиток для каждого недостающего баффа от свитка, пока этот свиток есть у вас в сумках. Нажмите на свиток в окне, чтобы прочитать его. Отслеживаются типы свитков, отмеченные ниже."
--- The Flasks or Elixirs page's description, and its Elixirs row: one icon per elixir in your bags whose buff you're missing.
+-- The Flasks & Elixirs page's description, and its Elixirs row: one icon per elixir in your bags whose buff you're missing.
 L["BUFF_DUTY_ELIXIRS_PAGE_DESCRIPTION"] =
-	'Эликсиры из ваших сумок, предлагаемые в окне, когда у вас нет их баффа. Чтобы убрать эликсир, выключите его в разделе "Настои или эликсиры" в параметрах окна.'
+	'Эликсиры из ваших сумок, предлагаемые в окне, когда у вас нет их баффа. Чтобы убрать эликсир, выключите его в разделе "Настои и эликсиры" в параметрах окна.'
 L["BUFF_DUTY_ELIXIRS"] = "Эликсиры"
 L["BUFF_DUTY_ELIXIRS_DESCRIPTION"] =
 	"Показывает каждый эликсир из ваших сумок, баффа которого у вас нет, если его место не занимает уже действующий бафф. Щёлкните по нему в окне, чтобы выпить."
@@ -2057,12 +2093,13 @@ L["BUFF_DUTY_WEAPON_ENABLE_DESCRIPTION"] =
 -- A buff icon's tooltip, a line per click: the job on the left, the click (TOOLTIP_KEY_CLICK, TOOLTIP_KEY_RIGHT_CLICK)
 -- on the right. %s is who the cast lands on; TAKE_OFF is a Return the Favor icon's right-click.
 L["BUFF_DUTY_TOOLTIP_CAST"] = "Применить к игроку %s"
-L["BUFF_DUTY_TOOLTIP_TAKE_OFF"] = "Убрать из этого списка"
+L["BUFF_DUTY_TOOLTIP_TAKE_OFF"] = "Убрать из списка"
 -- %s is the client's "Main Hand" or "Off Hand".
 L["BUFF_DUTY_TOOLTIP_WEAPON"] = "Наносит на оружие (%s)."
 L["BUFF_DUTY_TOOLTIP_USE"] =
-	"Ни у кого в группе нет камня души. Использует его на игроке %s."
-L["BUFF_DUTY_TOOLTIP_CREATE"] = "Ни у кого в группе нет камня души. Создаёт его."
+	"Ни у кого в группе пока нет камня души. Использует его на игроке %s."
+L["BUFF_DUTY_TOOLTIP_CREATE"] =
+	"Ни у кого в группе пока нет камня души. Создаёт его."
 -- A Firestone or Spellstone icon with none in the bags conjures one.
 L["BUFF_DUTY_TOOLTIP_CREATE_WEAPON"] = "В сумках нет ни одного. Создаёт его."
 -- A Self-Buffs consumable's icon (Winterfall Firewater).
@@ -2081,7 +2118,7 @@ L["BUFF_DUTY_MENU_ALL_SETTINGS_DESCRIPTION"] =
 -- The Options menu's Window Opacity row, and its flyout of 0% to 100%. %d is the percent.
 L["BUFF_DUTY_MENU_OPACITY"] = "Непрозрачность окна"
 L["BUFF_DUTY_MENU_OPACITY_DESCRIPTION"] =
-	"Задаёт, насколько непрозрачен фон окна Дежурства по баффам. Текст и значки не меняются."
+	"Задаёт, насколько непрозрачен фон окна. Текст и значки всегда остаются чёткими."
 L["BUFF_DUTY_MENU_OPACITY_PERCENT"] = "%d%%"
 --[[
     The window's category menus, each opened by its category line's arrow:
@@ -2098,7 +2135,7 @@ L["BUFF_DUTY_MENU_SHOW_IN_BUFF_DUTY_DESCRIPTION"] =
 	"Показывает эту категорию в окне Дежурства по баффам."
 L["BUFF_DUTY_MENU_SHOW"] = "Показывать"
 L["BUFF_DUTY_ROW_SHOW_DESCRIPTION"] =
-	"Задает, когда показываются эти баффы: когда бафф пропал или когда осталось меньше этого времени."
+	"Показывает эти баффы, когда они спадают или когда остаётся столько времени."
 L["BUFF_DUTY_MENU_SHOW_MISSING_INVENTORY"] = "Показывать нехватку в сумках"
 L["BUFF_DUTY_ROW_OUT_DESCRIPTION"] =
 	'Показывает "Нет в сумках!" в окне, когда баффа на вас нет и в сумках нет ничего, что его дает.'
@@ -2119,10 +2156,10 @@ L["BUFF_DUTY_TOOLTIP_GROUP"] = "Применяет к игроку %s и его 
 L["BUFF_DUTY_TOOLTIP_NEEDS"] = "Нужен: %s."
 -- The Ask row under Target: its label (%s is the target's name in their class color), and its icons' tooltip: who the whisper goes to, or, once asked, who and the whole minutes until they can be asked again.
 L["BUFF_DUTY_ASK_TARGET_ROW"] = "Попросить: %s"
-L["BUFF_DUTY_TOOLTIP_ASK_TARGET"] = "Шепчет игроку %s просьбу."
-L["BUFF_DUTY_TOOLTIP_ASKED"] = "Попросили: %s. Снова можно через %d мин."
+L["BUFF_DUTY_TOOLTIP_ASK_TARGET"] = "Вежливо шепчет игроку %s просьбу."
+L["BUFF_DUTY_TOOLTIP_ASKED"] = "Уже попросили: %s. Снова можно через %d мин."
 -- An Ask for Buffs icon's menu, its ask rows: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it: %s is one or two names (LIST_PAIR_FORMAT), or BUFF_DUTY_OTHERS_ASK_PEOPLE past two.
-L["BUFF_DUTY_OTHERS_HINT_ASK"] = "Попросить бафф (%s)"
+L["BUFF_DUTY_OTHERS_HINT_ASK"] = "Попросить (%s)"
 L["BUFF_DUTY_OTHERS_HINT_WHISPER"] = "Шепнуть: %s"
 L["BUFF_DUTY_OTHERS_SHORTCUT_LEFT"] = "Быстрый вызов: ЛКМ по значку баффа."
 L["BUFF_DUTY_OTHERS_SHORTCUT_RIGHT"] = "Быстрый вызов: ПКМ по значку баффа."
@@ -2130,14 +2167,14 @@ L["BUFF_DUTY_OTHERS_SHORTCUT_RIGHT"] = "Быстрый вызов: ПКМ по �
 L["BUFF_DUTY_OTHERS_MINUTES"] = "%d мин"
 L["BUFF_DUTY_OTHERS_MISSING"] = "Нет"
 --[[
-    The ask either click sends, signed off like every sent message ({star} ... // GtG), so it
-    ends as a statement, not a question. Up to five missing players are named (ONE for one,
+    The ask either click sends, signed off like every sent message ({star} ... // GtG), and it
+    asks, so it ends in a question mark. Up to five missing players are named (ONE for one,
     NAMES for two to five, joined with LIST_PAIR_FORMAT or LIST_LAST_FORMAT), then the buff's link;
     past five, COUNT gives how many, then the link.
 ]]
-L["BUFF_DUTY_OTHERS_ASK_ONE"] = "%s: нет %s."
-L["BUFF_DUTY_OTHERS_ASK_NAMES"] = "%s: нет %s."
-L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "%d чел. без %s."
+L["BUFF_DUTY_OTHERS_ASK_ONE"] = "%s: нужен %s. Кто-нибудь поможет, пожалуйста?"
+L["BUFF_DUTY_OTHERS_ASK_NAMES"] = "%s: нужен %s. Кто-нибудь поможет, пожалуйста?"
+L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "%d чел. без %s. Кто-нибудь поможет, пожалуйста?"
 -- The whispered ask's {names} past five missing players, when the player has written their own whisper, and the Ask for Buffs menu's whisper row past two players. %d is how many.
 L["BUFF_DUTY_OTHERS_ASK_PEOPLE"] = "%d чел."
 --[[
@@ -2145,16 +2182,16 @@ L["BUFF_DUTY_OTHERS_ASK_PEOPLE"] = "%d чел."
     checkbox, the When to Show header, then the options command.
 ]]
 L["BUFF_DUTY_CLOSED"] =
-	'Дежурство по баффам скрыто, пока вы не вступите в группу, до следующего входа в игру или перезагрузки интерфейса. Чтобы вернуть его сейчас, нажмите "Переключить" под "Дежурство по баффам" в меню у миникарты. Чтобы оставить его выключенным для класса %s, снимите отметку "%s" в разделе "%s" в настройках %s.'
+	'Дежурство по баффам отдыхает, пока вы не вступите в группу, не войдёте в игру снова или не перезагрузите интерфейс. Хотите вернуть раньше? Нажмите "Переключить" под "Дежурство по баффам" в меню у миникарты. Чтобы оставить его выключенным на ваших персонажах класса %s, снимите отметку "%s" в разделе "%s" в настройках %s.'
 
 -- The Cast Next Buff key: its name in the game's Key Bindings list and the root panel's Key Bindings section, then the notices a press shows.
 L["BUFF_KEY"] = "Наложить следующий бафф"
 -- %s is a player's name.
-L["BUFF_KEY_WAITING"] = "Ожидание, пока игрок %s окажется в радиусе действия."
-L["BUFF_KEY_DONE"] = "Больше нечего накладывать."
+L["BUFF_KEY_WAITING"] = "Ждём, пока игрок %s подойдёт ближе."
+L["BUFF_KEY_DONE"] = "Все с баффами. Good to Go!"
 -- Printed when Buff Duty or the key skips a PvP-flagged player. %s is the player's name.
 L["BUFF_DUTY_PVP_FLAGGED"] =
-	'У игрока %s включён PvP, поэтому Дежурство по баффам его пропустило. Включите "Накладывать баффы на игроков с PvP", чтобы всё равно наложить на него баффы.'
+	'Игрок %s пропущен: у него включён PvP. Чтобы всё равно наложить баффы, включите "Накладывать баффы на игроков с PvP".'
 L["BUFF_KEY_OFF"] = "Дежурство по баффам выключено."
 --[[
     The Buff Duty window's last line, under Options, while the Cast Next Buff key has none: the options
@@ -2162,7 +2199,7 @@ L["BUFF_KEY_OFF"] = "Дежурство по баффам выключено."
     narrowest, with the command near the start so a line never breaks inside it.
 ]]
 L["BUFF_DUTY_KEY_TIP"] =
-	'В %s назначьте клавишу для "%s", чтобы накладывать эти баффы одной клавишей.'
+	'Совет: в %s назначьте клавишу для "%s", чтобы накладывать всё это одной клавишей.'
 
 --------------------------------------------------------------------------------
 -- Spellbook
@@ -2828,3 +2865,57 @@ L["CHAT_MACRO_TOO_LONG"] =
 	'Макрос "%s" с включенными параметрами занимает %d байт, больше %d, которые вмещает макрос. Отключите параметр, чтобы сократить его.'
 L["CHAT_CONSUMABLE_MACRO_TOO_LONG"] =
 	'Макрос "%s" занимает %d байт, больше %d, которые вмещает макрос, поэтому его последняя строка обрезана.'
+
+--[[
+    Currency Replenish: the coins tab on the mailbox and its window
+    (Features/Currency-Replenish/). The tab's menu opens the window; the
+    window's title is CURRENCY_REPLENISH // ADDON_SHORT_NAME.
+]]
+L["CURRENCY_REPLENISH"] = "Пополнение золота"
+L["CURRENCY_REPLENISH_OPEN"] = "Открыть пополнение золота"
+L["CURRENCY_REPLENISH_OPTIONS"] = "Параметры"
+L["CURRENCY_REPLENISH_ALL_SETTINGS"] = "Все параметры пополнения золота"
+
+-- The window's Bank line and its column heads. RECORDED_AGO is Current Amount's tooltip; %s is how long ago.
+L["CURRENCY_REPLENISH_BANK"] = "Банк"
+L["CURRENCY_REPLENISH_NO_BANK"] = "Нет"
+L["CURRENCY_REPLENISH_CHARACTER"] = "Персонаж"
+L["CURRENCY_REPLENISH_GOLD_NOW"] = "Текущая сумма"
+L["CURRENCY_REPLENISH_KEEPS"] = "Целевая сумма"
+L["CURRENCY_REPLENISH_RECORDED_AGO"] = "Записано %s назад"
+
+-- The Target Amount list's last row, its popup (%s is the character's name), and the Skip Under 1g switch.
+L["CURRENCY_REPLENISH_OTHER_AMOUNT"] = "Другая сумма"
+L["CURRENCY_REPLENISH_REMOVE_CHARACTER"] = "Удалить персонажа"
+L["CURRENCY_REPLENISH_KEEPS_FOR"] = "Целевая сумма: %s"
+L["CURRENCY_REPLENISH_SKIP_SMALL"] = "Пропускать меньше 1з"
+L["CURRENCY_REPLENISH_SKIP_SMALL_DESCRIPTION"] =
+	"Пополнение пропускает персонажа, которому не хватает меньше 1з: это не стоит письма."
+
+-- The window's red button, Replenish on the bank and Send Excess to Bank anywhere else. The reasons show under it while it can't be pressed; in AT_KEEPS, %s is what the character keeps.
+L["CURRENCY_REPLENISH_REPLENISH"] = "Пополнить"
+L["CURRENCY_REPLENISH_SEND_EXCESS"] = "Отправить излишек в банк"
+L["CURRENCY_REPLENISH_REASON_SENDING"] = "Отправка..."
+L["CURRENCY_REPLENISH_REASON_NO_BANK"] = "Сначала выберите банк."
+L["CURRENCY_REPLENISH_REASON_NO_KEEPS"] = "Сначала задайте целевую сумму."
+L["CURRENCY_REPLENISH_REASON_AT_KEEPS"] = "%s или меньше."
+L["CURRENCY_REPLENISH_REASON_FULL"] = "Всем хватает."
+L["CURRENCY_REPLENISH_REASON_NO_GOLD"] = "Не хватает золота."
+
+-- Chat after a send. %s is gold and %s a character, except where %d counts characters. OUT_OF_GOLD's %s is a list of SHORT_BY lines.
+L["CURRENCY_REPLENISH_SENT"] = "Отправлено %s: %s."
+L["CURRENCY_REPLENISH_REPLENISHED"] = "Пополнено персонажей: %d, на %s."
+L["CURRENCY_REPLENISH_REPLENISHED_ONE"] = "Пополнено персонажей: %d, на %s."
+L["CURRENCY_REPLENISH_SHORT_BY"] = "%s не хватает %s"
+L["CURRENCY_REPLENISH_OUT_OF_GOLD"] = "Золото закончилось. %s."
+L["CURRENCY_REPLENISH_STOPPED_FAILED"] = "Остановлено на %s: письмо не ушло."
+L["CURRENCY_REPLENISH_STOPPED_MAILBOX"] = "Остановлено на %s: почтовый ящик закрыт."
+L["CURRENCY_REPLENISH_STOPPED_GOLD"] =
+	"Остановлено на %s: не хватает золота на письмо."
+
+-- The feature's switch, and the description at the top of its options page.
+L["SWITCH_CURRENCY_REPLENISH"] = "Включить пополнение золота"
+L["SWITCH_CURRENCY_REPLENISH_DESCRIPTION"] =
+	"Добавляет к почтовому ящику вкладку с монетами. Ваши персонажи отправляют банковскому персонажу золото сверх того, что оставляют, а банк пополняет их до этой суммы. Выкл. убирает вкладку; банк и целевые суммы сохраняются."
+L["OPTIONS_CURRENCY_REPLENISH_DESCRIPTION"] =
+	"Выберите банковского персонажа и сколько золота оставляет каждый персонаж на вкладке с монетами у почтового ящика. Остальные персонажи отправляют в банк то, что сверх их целевой суммы, а банк пополняет их до неё."

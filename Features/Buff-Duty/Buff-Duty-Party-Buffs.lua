@@ -4,52 +4,26 @@ local L = ns.L
 
 local Kit = ns.MenuKit
 
---[[
-    Buff-Duty-Party-Buffs -- the Buff Duty window's Party-Buffs icons: a raid
-    buff, any class's, numbered with how many in your group need it
-    (Buff-Duty-Other-Classes.lua counts). Clicking an icon asks the party or
-    raid for the buff; right-clicking whispers the players of that class who
-    can cast it, when anyone else can. Buff-Duty-Layout.lua places the icons on
-    the Party-Buffs header.
-
-    Hovering opens a menu on the mini-map menu's kit (Features/Menu-Kit.lua):
-    the buff, then who needs it party by party, each name in its class color
-    with the minutes left on the right, or Missing; then the two asks as rows,
-    each one's tooltip naming the click that does the same on the icon. It
-    opens MENU_GAP off the icon's corner, and stays open while
-    the cursor is over the icon or the menu and closes a moment after it
-    leaves both, so the mouse can reach its rows. The icon's own clicks still
-    work without it.
-]]
-
 local ICON_SIZE = Data.BUFF_DUTY_ICON_SIZE
 
--- How long the menu waits after the cursor leaves the icon and the menu: the Menu Kit's HOVER_CLOSE_DELAY.
+-- The Menu Kit's HOVER_CLOSE_DELAY, so the mouse can reach the menu's rows.
 local CLOSE_DELAY = 0.5
 
--- From the icon's corner to the menu's: the Menu Kit's MENU_GAP.
+-- The Menu Kit's MENU_GAP.
 local MENU_GAP = 2
 
---[[
-    How often an open menu redraws, so the minutes count down, a buff that runs
-    out turns to Missing, an ask greyed by its cooldown comes back, and a redraw
-    of the window (new count, icon gone) shows up while it's open.
-]]
+-- So minutes count down and a cooling ask comes back while the menu is open.
 local REFRESH_INTERVAL = 0.5
 
 local menu
 local state = { owner = nil, idle = 0, sinceRefresh = 0 }
--- The Party-Buffs icons: plain buttons, since a chat line isn't protected.
+-- Plain buttons, since a chat line isn't protected.
 local otherIcons, usedOtherIcons = {}, 0
 
 --------------------------------------------------------------------------------
 -- Menu
 --------------------------------------------------------------------------------
 
---[[
-    Where a click's ask goes, by name, for its row: the group chat
-    ns:GetGroupChatChannel picks.
-]]
 local function GroupChatName()
 	local channel = ns:GetGroupChatChannel()
 	if channel == "RAID" then
@@ -60,10 +34,9 @@ local function GroupChatName()
 	return PARTY
 end
 
--- Up to this many players are named on the whisper row; more are counted instead.
+-- More players than this are counted instead of named on the whisper row.
 local WHISPER_MAX_NAMES = 2
 
--- Who the whisper row reaches: one or two names, or how many past that.
 local function WhisperTargets(recipients)
 	if #recipients <= WHISPER_MAX_NAMES then
 		return ns.JoinNames(recipients)
@@ -71,7 +44,6 @@ local function WhisperTargets(recipients)
 	return L["BUFF_DUTY_OTHERS_ASK_PEOPLE"]:format(#recipients)
 end
 
--- What a name's row says on the right: the whole minutes left in light yellow, or Missing in gray once it has run out.
 local function TimeLeft(expires)
 	local now = GetTime()
 	if expires and expires > now then
@@ -82,12 +54,6 @@ end
 
 local Render
 
---[[
-    An ask as a row: blue, or gray and unclickable while that ask is still
-    cooling down. Its tooltip names the icon's click that does the same, in
-    the helper text's silver; clicking the row does what that click does, and
-    the menu closes, its job done.
-]]
 local function AskRow(text, shortcut, ready, run)
 	return {
 		kind = "action",
@@ -118,7 +84,6 @@ local function BuildEntries(spec)
 		for row, name in ipairs(group.names) do
 			local color = ns.GetClassColor(group.classes[row]) or ns.GetColor("TEXT")
 			local right, rightColor = TimeLeft(group.expires[row])
-			-- a value row, in from its heading like every option, its time left on the right
 			entries[#entries + 1] = {
 				kind = "value",
 				left = color .. name .. "|r",
@@ -138,7 +103,7 @@ local function BuildEntries(spec)
 			ns.AskGroupForBuff(spec)
 		end
 	)
-	-- Your own class's buff, with nobody else of it in the group, has no one to whisper, so that row is left out.
+	-- Your own class's buff, with nobody else of it in the group, has no one to whisper.
 	if spec.recipients[1] then
 		entries[#entries + 1] = AskRow(
 			L["BUFF_DUTY_OTHERS_HINT_WHISPER"]:format(WhisperTargets(spec.recipients)),
@@ -158,7 +123,6 @@ function ns.HideBuffDutyRoster()
 	end
 end
 
--- Redraws the open menu from its icon's current spec, or closes it once the icon is gone.
 function Render()
 	local owner = state.owner
 	if not menu or not menu:IsShown() then
@@ -195,7 +159,6 @@ end
 
 local function CreateMenu()
 	menu = Kit.CreatePanel("GoodToGoPartyBuffsMenu", UIParent)
-	-- Escape closes it, as it does any game menu.
 	table.insert(UISpecialFrames, menu:GetName())
 	menu:SetScript("OnUpdate", OnMenuUpdate)
 	menu:SetScript("OnHide", function()
@@ -217,7 +180,7 @@ local function OnOtherIconEnter(self)
 	state.idle = 0
 	if state.owner ~= self or not menu:IsShown() then
 		state.owner = self
-		-- MENU_GAP off the icon's corner, away from the screen's nearest edges, as the mini-map menu opens off its button.
+		-- Away from the screen's nearest edges, as the mini-map menu opens off its button.
 		local x, y = self:GetCenter()
 		local scale = self:GetEffectiveScale() / UIParent:GetEffectiveScale()
 		local openLeft = (x or 0) * scale > UIParent:GetWidth() / 2
@@ -236,7 +199,6 @@ local function OnOtherIconEnter(self)
 	Render()
 end
 
--- Click asks the group; right-click whispers the class. Each waits out its own cooldown.
 local function OnOtherIconClick(self, mouseButton)
 	local spec = self.spec
 	if not spec then
@@ -252,7 +214,6 @@ local function OnOtherIconClick(self, mouseButton)
 	end
 end
 
--- `parent` is the window's content frame (Buff-Duty-Frame.lua), which every icon sits in.
 function ns.AcquireBuffDutyOtherIcon(parent)
 	usedOtherIcons = usedOtherIcons + 1
 	local button = otherIcons[usedOtherIcons]
@@ -263,7 +224,7 @@ function ns.AcquireBuffDutyOtherIcon(parent)
 		button.icon = button:CreateTexture(nil, "ARTWORK")
 		button.icon:SetAllPoints()
 		button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-		-- The count sits in the middle, in the palette's red: it's a gap, not a stack.
+		-- Red and centered: the count is a gap, not a stack.
 		button.count = button:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
 		button.count:SetPoint("CENTER", button, "CENTER", 0, 0)
 		local red = ns.COLORS_RGB.OFF

@@ -2,24 +2,9 @@ local _, ns = ...
 local L = ns.L
 local Kit = ns.OptionsKit
 
---[[
-    The pages for the consumables any class keeps up, one per category (and
-    section of the Buff Duty window), under Buff Duty: Well Fed, Scrolls (with
-    the scroll types the window and the Readiness Report check), Flasks or
-    Elixirs, and Other Buffs (Winterfall Firewater). Each opens with the
-    category's own settings (ns.AddBuffDutyRowControls); Other Buffs then
-    has an On and Off per consumable. Which buff food, scrolls and elixirs
-    in your bags the window passes over is the window's menus' to say: each
-    category's line opens its own.
-]]
+-- Which buff food, scrolls and elixirs the window passes over is set only in its category menus (README-Notes).
 
---[[
-    A page: its title, intro, then the category's settings. While Buff Duty is
-    off, or it's on and the category's switch on the Buff Duty page is off, the
-    page opens with a line saying so (ns.AddFeatureOffLine). switchName is that
-    switch's name as the Buff Duty page has it: a locale key, or a function for
-    a name the client supplies (Well Fed).
-]]
+-- switchName is a locale key, or a function for a name the client supplies (Well Fed).
 local function BuildPage(title, intro, row, switchName)
 	local options = {
 		name = Kit.SubPanelTitle(L["TAB_BUFF_DUTY"], title),
@@ -44,12 +29,7 @@ function ns.BuildBuffDutyFoodOptions()
 	return BuildPage(ns.BuffDuty.WellFedLabel(), L["BUFF_DUTY_FOOD_PAGE_DESCRIPTION"], "food", ns.BuffDuty.WellFedLabel)
 end
 
---[[
-    The scroll types, one checkbox each, named as Buff Duty's Scrolls flyout
-    names them (ns.SCROLL_TYPE_LABELS). scrollTypes is on the AceDB profile:
-    which scrolls are worth offering differs from character to character (a
-    README-Notes exception).
-]]
+-- scrollTypes rides the profile, since scrolls worth offering differ per character (README-Notes).
 function ns.BuildBuffDutyScrollsOptions()
 	local options =
 		BuildPage(L["BUFF_DUTY_SCROLLS"], L["BUFF_DUTY_SCROLLS_PAGE_DESCRIPTION"], "scrolls", "BUFF_DUTY_SCROLLS")
@@ -91,7 +71,6 @@ function ns.BuildBuffDutyElixirsOptions()
 	)
 end
 
--- The consumables with a switch of their own (Winterfall Firewater), each On or Off.
 function ns.BuildBuffDutyOtherOptions()
 	local options =
 		BuildPage(L["BUFF_DUTY_ROW_OTHER"], L["BUFF_DUTY_OTHER_PAGE_DESCRIPTION"], "other", "BUFF_DUTY_ROW_OTHER")

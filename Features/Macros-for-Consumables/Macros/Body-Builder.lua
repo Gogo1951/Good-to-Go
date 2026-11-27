@@ -7,17 +7,9 @@ local L = ns.L
 --------------------------------------------------------------------------------
 
 --[[
-    Builds the line that records macro-fire context through the global
-    helper defined in Features/Macros-for-Consumables/Macros/Runtime.lua, whose
-    ns.OnMacroUiErrorMessage (the module's dispatcher in
-    Macros-for-Consumables-Core.lua routes UI_ERROR_MESSAGE to it) reads lastID
-    and lastTime to correlate a zone-restriction error with the item that
-    triggered it.
-
-    Using the global helper instead of an inline /run snippet keeps the line
-    short, and every standard body with an item in bags carries it, so the
-    saved bytes count against the 255 macro-body ceiling in every consumable
-    macro. The helper name carries the add-on's short GtG prefix.
+    Lets the zone-error handler tie an error to the item pressed. A global
+    helper, not inline /run code: every body carries this line, so its bytes
+    count against the 255-byte ceiling everywhere.
 ]]
 local function StateWriteLine(itemID, outOfCombatID)
 	if outOfCombatID then
@@ -27,22 +19,8 @@ local function StateWriteLine(itemID, outOfCombatID)
 end
 
 --[[
-    Food or water out of combat (the potion macros' outOfCombatTypeName, behind
-    potionsUseFoodAndWater): the body eats or drinks and stops there while the
-    player is out of combat, and only a press in combat reaches the lines
-    below. A /stopmacro costs fewer bytes than a [combat] guard on each of up
-    to six /use lines, and leaves those lines, and the trim that sheds them,
-    as they are without it.
-
-    stealthName is the stealth the food or water's own macro casts while
-    eating or drinking (its definition's stealthSpell: Stealth Eating or
-    Stealth Drinking), cast right after it the way that macro does, and only
-    out of combat, so a press in combat never stealths.
-
-    corpseName is that macro's Cannibalize (its definition's corpseSpell),
-    tried first while the target is dead. A press that cannot cast it, on a
-    corpse out of reach or one it does not work on, falls through to the
-    eating or drinking below it.
+    One /stopmacro costs fewer bytes than a [combat] guard on each of up to six
+    /use lines, and leaves those lines and their trim unchanged.
 ]]
 function ns.OutOfCombatBlock(outOfCombatID, stealthName, corpseName)
 	local block = ""
@@ -56,54 +34,32 @@ function ns.OutOfCombatBlock(outOfCombatID, stealthName, corpseName)
 	return block .. "/stopmacro [nocombat]\n"
 end
 
---[[
-    The Food and Water macros' Cannibalize (their definitions' corpseSpell),
-    tried first on a dead target. A press that cannot cast it falls through to
-    the eating or drinking below, as every press on a living target does.
-]]
+-- No /stopmacro: a press that cannot cast it falls through to eating or drinking.
 local function CorpseBlock(corpseName)
 	return "/cast [dead] " .. corpseName .. "\n"
 end
 
---[[
-    The Food macro's combat cast (its definition's combatSpell: Troll Rapid
-    Regeneration). Nobody eats in combat, so a press there casts the spell and
-    stops before the eating, or the no-item message, below it.
-]]
 local function CombatBlock(combatName)
 	return "/cast [combat] " .. combatName .. "\n/stopmacro [combat]\n"
 end
 
---[[
-    The Bandage macro's out-of-combat cast (its definition's leadSpell: Troll
-    Rapid Regeneration while it is off cooldown). A press out of combat casts
-    the spell and stops before the bandage, or the no-item message, below it;
-    a press in combat bandages as usual.
-]]
 local function LeadBlock(leadName)
 	return "/cast [nocombat] " .. leadName .. "\n/stopmacro [nocombat]\n"
 end
 
--- A press on a corpse with nothing in the bags cast the corpse spell, so it skips the no-item message.
+-- With nothing in bags, a press on a corpse already cast the corpse spell, so skip the no-item message.
 local function NoItemStop(corpseName)
 	return corpseName and "/stopmacro [dead]\n" or ""
 end
 
--- The tooltip line of a body with an out-of-combat item: the potion in combat, the food or water out of it.
 function ns.OutOfCombatTooltipLine(itemID, outOfCombatID)
 	return "#showtooltip [combat] item:" .. itemID .. "; item:" .. outOfCombatID
 end
 
 --[[
-    Builds the stacked /use block for a multi-use macro type
-    (ns.MULTI_USE_MACRO_TYPES): one line per ranked item, best first. Items
-    within each such category share an item cooldown, so a press consumes
-    exactly one item — the first /use whose item is in bags fires and its
-    cooldown blocks the rest. The extra lines exist for combat, where
-    macros cannot be rewritten: once the best item is depleted its line
-    becomes a silent no-op and the press falls through to the next-best
-    item. On presses where the first line fires, the blocked lines emit a
-    harmless "Item is not ready yet" UI error.
+    Fallback lines for combat, where the macro can't be rewritten: safe only
+    because each multi-use type's items share one cooldown, so a press uses
+    exactly one. The blocked lines raise a harmless "not ready yet" error.
 ]]
 local function BuildUseBlock(useIDs)
 	local lines = {}
@@ -117,15 +73,7 @@ end
 -- Conjure Block Builder
 --------------------------------------------------------------------------------
 
---[[
-    Composes the conjure portion of a standard macro body. Handles both
-    learned and not-yet-learned spells: known spells emit /cast lines, and
-    not-yet-learned spells emit /run GtGTipIf calls that print a "you'll get
-    this later" tip when the user actually presses the click that would
-    have used the spell.
-
-    Returns the block string (may be empty).
-]]
+-- An unlearned spell's click prints a "you'll get this later" tip instead of casting.
 local function BuildConjureBlock(info)
 	if not info then
 		return ""
@@ -140,11 +88,7 @@ local function BuildConjureBlock(info)
 
 	local lines = {}
 
-	--[[
-	    Miss prints come first so an early /stopmacro can halt before the
-	    /cast line, avoiding a wasted cast attempt on a button the user
-	    expected to do something else.
-	]]
+	-- Miss tips first, so their /stopmacro halts before the /cast line.
 	if rightMiss then
 		lines[#lines + 1] = '/run GtGTipIf("[btn:2]","' .. rightMiss .. '")'
 	end
@@ -186,59 +130,10 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Assembles a standard macro body — the single answer to "what does a
-    Consumable Macros macro body look like." The canonical emitted macro is:
-
-      #showtooltip item:13446
-      /run GtGFire(13446)
-      /use item:13446
-
-    Every other line is contributed by a definition hook:
-
-      #showtooltip item:<id>  -- always first; ns.MACRO_DEFAULT_ITEM_IDS when no item;
-                                 [dead] <spell>; item:<id> with a corpse cast
-      <conjure block>         -- definition.conjure, via BuildConjureBlock: /run GtGTipIf
-                                 miss tips with their /stopmacro guard, then the
-                                 /cast [btn:3]/[btn:2] line and its /stopmacro
-      /cast [dead] <spell>    -- definition.corpseSpell (Forsaken Cannibalize), below the
-                                 conjure clicks so they still work; a press that
-                                 cannot cast it falls through to the action
-      /cast [combat] <spell>  -- definition.combatSpell (Food's Troll Rapid Regeneration),
-      /stopmacro [combat]        with its stop, so a press in combat casts it and
-                                 eats nothing; the tooltip line then shows the
-                                 spell in combat and the item out of it
-      /cast [nocombat] <spell>  -- definition.leadSpell (Bandage's Troll Rapid
-      /stopmacro [nocombat]      Regeneration while it is off cooldown), with its
-                                 stop, so a press out of combat casts it and uses
-                                 nothing; the tooltip line then shows the spell
-                                 out of combat and the item in it
-      /run GtGFire(<id>)     -- StateWriteLine (macro-fire context for the
-                                 zone-error handler); only when an item exists
-      /cast [nocombat,dead] <spell>  -- definition.outOfCombatTypeName's best item,
-      /use [nocombat] item:<id>  after its macro's Cannibalize and before its
-      /cast [nocombat,nostealth] <spell>  stealth when those are on, then its
-      /stopmacro [nocombat]      stop, above the action (the potion macros'
-                                 food or water, behind potionsUseFoodAndWater);
-                                 the tooltip line then shows it out of combat
-                                 and GtGFire takes it as a second id
-      /use item:<id>          -- the action: definition.buildUseLine's custom line(s)
-                                 (Explosive's click layout, Food's [@pet] line),
-                                 else one line per ranked id for multi-use
-                                 types, else this plain single /use
-      /use item:<stackID>     -- definition.getStackIDs ids appended below the main
-                                 block (Health Potion's healthstone stacking)
-      <appended block>        -- definition.appendBlock text (Water's Shadowmeld line)
-
-    With no item in bags the action line becomes /run GtGTip("<noItemMiss>")
-    when the class can learn the conjure, /run GtGNoItem("<typeName>",1)
-    when it already knows it, else /run GtGNoItem("<typeName>");
-    an out-of-combat item still goes above it, so that line is only reached in
-    combat.
-    Ends with the macro-length trim, which sheds the Cannibalize lines first,
-    the one extra that is a convenience rather than a consumable, then stacked
-    healthstone lines, then ranked fallback /use lines from the bottom up,
-    then the stealth line and the out-of-combat block, then the appended
-    Stealth or Shadowmeld line, and last the combat and lead casts.
+    The one body layout every standard macro shares: tooltip, conjure clicks,
+    corpse/combat/lead casts, GtGFire, the out-of-combat block, the /use lines,
+    stacked lines, then the appended line. Over the byte limit it rebuilds with
+    one extra dropped at a time, conveniences before consumables.
 ]]
 function ns.BuildStandardBody(
 	definition,
@@ -283,18 +178,11 @@ function ns.BuildStandardBody(
 			actionBlock = actionBlock .. "\n" .. BuildUseBlock(stackIDs)
 		end
 	elseif conjureInfo and conjureInfo.noItemMiss then
-		--[[
-		    The player's class can conjure this category but hasn't learned
-		    the spell yet. Replace the generic "no item in bags" message
-		    with the more useful "you don't know X" message so the player
-		    understands the macro will gain functionality at the right
-		    level.
-		]]
 		tooltipLine = "#showtooltip item:" .. ns.MACRO_DEFAULT_ITEM_IDS[definition.typeName] .. "\n"
 		actionBlock = actionHead .. NoItemStop(corpseCast) .. '/run GtGTip("' .. conjureInfo.noItemMiss .. '")'
 	else
 		tooltipLine = "#showtooltip item:" .. ns.MACRO_DEFAULT_ITEM_IDS[definition.typeName] .. "\n"
-		-- A class that knows the spell that makes this item is told to Right-Click for more (the ",1").
+		-- The ",1" tells a class that knows the conjure to Right-Click for more.
 		local canMake = conjureInfo and conjureInfo.rightName and ",1" or ""
 		actionBlock = actionHead
 			.. NoItemStop(corpseCast)
@@ -309,21 +197,18 @@ function ns.BuildStandardBody(
 		tooltipLine = ns.OutOfCombatTooltipLine(itemID or ns.MACRO_DEFAULT_ITEM_IDS[definition.typeName], outOfCombatID)
 			.. "\n"
 	elseif leadCast then
-		-- The spell's icon out of combat, so the button shows what a press will do.
 		tooltipLine = "#showtooltip [nocombat] "
 			.. leadCast
 			.. "; item:"
 			.. (itemID or ns.MACRO_DEFAULT_ITEM_IDS[definition.typeName])
 			.. "\n"
 	elseif combatCast then
-		-- The spell's icon in combat, so the button shows what a press will do.
 		tooltipLine = "#showtooltip [combat] "
 			.. combatCast
 			.. "; item:"
 			.. (itemID or ns.MACRO_DEFAULT_ITEM_IDS[definition.typeName])
 			.. "\n"
 	elseif corpseCast then
-		-- The spell's icon while the target is dead, so the button shows what a press will do.
 		tooltipLine = "#showtooltip [dead] "
 			.. corpseCast
 			.. "; item:"
@@ -349,11 +234,7 @@ function ns.BuildStandardBody(
 
 	local body = tooltipLine .. conjureBlock .. actionBlock .. appendedBlock
 
-	--[[
-	    Too long: the Cannibalize lines go first, before any consumable line, so
-	    build again without them. The rebuilt body then sheds its own stones
-	    and fallbacks below if it is still too long.
-	]]
+	-- Cannibalize goes first: a convenience, not a consumable.
 	if #body > ns.MACRO_BODY_MAX_LENGTH and (corpseCast or outOfCombatCorpse) then
 		return ns.BuildStandardBody(
 			definition,
@@ -372,15 +253,9 @@ function ns.BuildStandardBody(
 	end
 
 	--[[
-	    Measured in bytes against ns.MACRO_BODY_MAX_LENGTH (Data/Data.lua),
-	    which carries the reason the unit is bytes.
-
-	    Overflow corrupts the last /use line: the warlock Healthstone conjure
-	    block plus three /use lines can overflow in multibyte locales (e.g.
-	    ruRU spell names), and Health Potion stacking adds the Healthstone
-	    lines on top. Shed the stacked Healthstone lines from the bottom
-	    first, then potion fallback lines; the rank-1 potion line is never
-	    dropped.
+	    Overflow cuts off the last /use line, easily reached in multibyte locales
+	    (ruRU spell names). Stacked healthstones go first, then fallbacks from
+	    the bottom; rank 1 is never dropped.
 	]]
 	if useIDs then
 		local keepUse = #useIDs
@@ -407,10 +282,6 @@ function ns.BuildStandardBody(
 		end
 	end
 
-	--[[
-	    Still too long with every fallback shed: the stealth line goes, then
-	    the out-of-combat food or water, each by building again without it.
-	]]
 	if #body > ns.MACRO_BODY_MAX_LENGTH and outOfCombatStealth then
 		return ns.BuildStandardBody(
 			definition,
@@ -444,12 +315,6 @@ function ns.BuildStandardBody(
 		)
 	end
 
-	--[[
-	    Then the appended line (Water's Shadowmeld, Food's Stealth Eating).
-	    Past that only the tooltip, conjure and first /use lines are left,
-	    which nothing can shorten: the body is written as it is, the game
-	    cuts off its end, and the player is told once per macro.
-	]]
 	if #body > ns.MACRO_BODY_MAX_LENGTH and appendText and appendText ~= "" then
 		return ns.BuildStandardBody(
 			definition,
@@ -466,10 +331,10 @@ function ns.BuildStandardBody(
 			combatCast
 		)
 	end
-	-- Then the combat and lead casts, the last lines that are not the consumable itself.
 	if #body > ns.MACRO_BODY_MAX_LENGTH and (combatCast or leadCast) then
 		return ns.BuildStandardBody(definition, itemID, useIDs, stackIDs, conjureInfo, nil, nil, nil)
 	end
+	-- Nothing left to shed: write it anyway, and tell the player once.
 	if #body > ns.MACRO_BODY_MAX_LENGTH then
 		local macroName = ns.MACRO_CONFIG[definition.typeName].macro
 		ns.WarnOnce(
@@ -486,25 +351,16 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    State encoding — captures every input that affects the written body.
-    Format:
+    Every input that affects the body MUST appear in the key, or macros go stale.
       ITEMIDS(+HS:stackIDs)?(_C(_M:mid)?(_R:rid)?(_MR:key)?(_MM:key)?(_NI:key)?)?(_EX:mode)?(_SM|_SE)?(_OOC:id(:S)?(:CN)?)?(_CN)?(_RR)?(_RC)?
-    where ITEMIDS is the single itemID, or a comma-joined ranked list for
-    multi-use types so a change in any fallback rank also triggers a
-    rewrite. +HS: carries the stacked Healthstone ids (Health Potion's
-    getStackIDs hook). _EX:mode comes from Explosive's stateExtras hook (its
-    click layout), so flipping the dropdown rewrites the macro; _SM and _SE
-    are the append-block flags (Water's Shadowmeld line and Food's Stealth
-    Eating line). _OOC:id is the food or water a potion macro uses out of
-    combat, with :S added while it stealths as it does and :CN while it
-    cannibalizes on a dead target. _CN marks the Food or Water macro's own
-    Cannibalize lines, _RR the Bandage macro's out-of-combat Rapid
-    Regeneration line, and _RC the Food macro's combat one. Class overrides use their own prefix
-    ("DMH:...") instead, so the key spaces never collide and a
-    transition between them always triggers a rewrite. Every input that
-    affects the body MUST appear in the key — a lossy key causes stale
-    macros.
+    ITEMIDS is the whole ranked list for multi-use types, so any fallback change
+    rewrites. +HS stacked healthstones; _EX Explosive's click layout; _SM/_SE
+    the Shadowmeld/Stealth Eating append; _OOC the potion's out-of-combat food
+    or water (:S stealth, :CN Cannibalize); _CN own Cannibalize; _RR Bandage's
+    lead cast; _RC Food's combat cast. Overrides use their own prefix ("DMH:"),
+    so a switch between them always rewrites.
 ]]
+
 function ns.BuildStateKey(
 	definition,
 	itemID,

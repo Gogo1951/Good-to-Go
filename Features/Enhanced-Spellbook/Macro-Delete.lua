@@ -1,17 +1,10 @@
 local _, ns = ...
 local L = ns.L
 
---[[
-	Deleting the add-on's WoW macros: a whole list from the options panel, or one page macro from its menu.
-]]
-
 local MaxAccountMacros = ns.MaxAccountMacros
 local OwnedList = ns.OwnedMacroList
 
---[[
-	The index range of one macro list and its ownership records: the General one (general true), which every
-	character on the account shares, or this character's. Another character's own list can't be read from here.
-]]
+-- Another character's own list can't be read from here.
 local function MacroList(general)
 	local numAccount, numCharacter = GetNumMacros()
 	if general then
@@ -21,11 +14,7 @@ local function MacroList(general)
 	return first, first + numCharacter - 1, ns.db.char.ownedMacros
 end
 
---[[
-	The add-on's WoW macros in one list, highest index first: those carrying a tag the register handed out,
-	under a name the add-on recorded creating. Both are asked, so a player's own macro whose last line happens
-	to read like a tag ("#end") is never taken for one.
-]]
+-- Needs a handed-out tag and an ownership record both, so a player's macro ending "#end" is never taken.
 local function AddonMacroIndexes(general)
 	local first, last, owned = MacroList(general)
 	local handedOut = {}
@@ -43,19 +32,13 @@ local function AddonMacroIndexes(general)
 	return found, owned
 end
 
--- How many of the add-on's WoW macros one list holds.
 function ns.CountAddonMacros(general)
 	return #AddonMacroIndexes(general)
 end
 
 --[[
-	Deletes the add-on's WoW macros from one list, which takes them off the action bars too; a player's own
-	macro is never touched. While the Spellbook is on, a sync first tags the page's macros from before the tags,
-	so they go as well; while it is off, nothing is rewritten, and only the macros already tagged go.
-	Indexes shift down as macros go, so they are deleted highest first. The deleted names' ownership records
-	go too, so a player's own macro later given one of those names is never taken for the add-on's. The page
-	macros keep their tags, so one placed again gets its old tag back. Macros can't be deleted in combat or
-	while the Blizzard Macro UI is open.
+	While the Spellbook is on, a sync first tags older page macros so they go too. Ownership records go with
+	the names, so a player's macro later given one isn't taken; the page macros keep their tags.
 ]]
 function ns.DeleteAddonMacros(general)
 	if InCombatLockdown() then
@@ -78,7 +61,6 @@ function ns.DeleteAddonMacros(general)
 	ns:RefreshOpenPages()
 end
 
--- Deletes a page macro's WoW macro, if it has one, with its ownership record.
 local function DeleteWowMacro(page)
 	local index = ns.FindMacroIndex(page)
 	if index ~= 0 then
@@ -87,12 +69,7 @@ local function DeleteWowMacro(page)
 	end
 end
 
---[[
-	The menu's Delete: deletes the page macro's WoW macro, which takes it off the action bars, with its
-	ownership record, and puts the macro back as it started: a spell's options all reset, and a
-	Duplicate copy taken off the page. A spell's macro keeps its tag, so one
-	placed again gets it back. Macros can't be deleted in combat or while the Blizzard Macro UI is open.
-]]
+-- A spell's macro keeps its tag, so one placed again gets it back.
 function ns.DeletePageMacro(macro)
 	if InCombatLockdown() then
 		ns:PrintMessage(L["ERROR_MACRO_COMBAT"])
@@ -123,10 +100,7 @@ StaticPopupDialogs.GOODTOGO_DELETE_MACRO = {
 	preferredIndex = 3,
 }
 
---[[
-	Asks before deleting a macro, by name; delete runs on Delete. unused words the ask for a macro on none of
-	the bars, which has nothing to take off them.
-]]
+-- unused words the ask for a macro on no bar, which has nothing to take off them.
 function ns.ConfirmDelete(name, delete, unused)
 	StaticPopupDialogs.GOODTOGO_DELETE_MACRO.text = L[unused and "MENU_DELETE_CONFIRM_UNUSED" or "MENU_DELETE_CONFIRM"]
 	StaticPopup_Show("GOODTOGO_DELETE_MACRO", name, nil, delete)

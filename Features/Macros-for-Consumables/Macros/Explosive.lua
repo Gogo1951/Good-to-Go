@@ -4,14 +4,7 @@ local _, ns = ...
 -- Explosive Macro
 --------------------------------------------------------------------------------
 
---[[
-    The Explosive macro fires in one of two click layouts (the
-    explosivesClickMode setting): one button self-targets via [@player],
-    setting the charge off at the player's feet with no targeting reticle
-    (the melee case), and the other performs the standard toss with the
-    normal reticle. Keybind presses register as left-click, so "atplayer"
-    also makes keybinds drop at the player's feet.
-]]
+-- Keybind presses register as left-click, so "atplayer" also drops keybound charges at the player's feet.
 local function GetExplosiveClickMode()
 	local settings = ns.db and ns.db.profile
 	if settings and settings.explosivesClickMode == "toss" then
@@ -30,7 +23,6 @@ end
 ns.RegisterMacroType({
 	typeName = "Explosive",
 
-	-- Selection: best by minimum damage; ties fall to the standard ladder.
 	itemTypes = { explosive = true },
 	score = function(data)
 		return data.damageValue
@@ -38,10 +30,7 @@ ns.RegisterMacroType({
 
 	buildUseLine = BuildExplosiveUseLine,
 
-	--[[
-	    The click layout shapes the body, so it must live in the state key:
-	    flipping the dropdown rewrites the macro.
-	]]
+	-- The click layout shapes the body, so it must be in the state key or a dropdown flip won't rewrite it.
 	stateExtras = function(parts, itemID)
 		if itemID then
 			parts[#parts + 1] = "EX:" .. GetExplosiveClickMode()

@@ -1,13 +1,7 @@
 local _, ns = ...
 local L = ns.L
 
---[[
-	Which of the game's macro lists a page macro's WoW macro is kept in: the character's own (the default,
-	"character"), or the General list every character on the account shares ("general"), chosen per macro from
-	its menu's Macro Storage (Features/Enhanced-Spellbook/Macro-Menu.lua). The choice is stored in the "macroTab"
-	setting (Features/Enhanced-Spellbook/Macro-Settings.lua) under the macro's settings key. A General macro still belongs to the character that made it:
-	its tag is that character's (ns.MacroTag), so no other character finds or rewrites it.
-]]
+-- A General macro still belongs to the character that made it: its tag is that character's, so no other finds it.
 
 local MaxAccountMacros, MaxCharacterMacros = ns.MaxAccountMacros, ns.MaxCharacterMacros
 local OwnedList, OwnerRecord = ns.OwnedMacroList, ns.MacroOwnerRecord
@@ -16,12 +10,11 @@ local SettingsKey = ns.SettingsKey
 local GENERAL, CHARACTER = "general", "character"
 ns.MACRO_TAB_GENERAL, ns.MACRO_TAB_CHARACTER = GENERAL, CHARACTER
 
--- The list a page macro's WoW macro is kept in: GENERAL or CHARACTER.
 function ns.MacroTab(macro)
 	return ns.GetMacroSetting(macro, "macroTab") == GENERAL and GENERAL or CHARACTER
 end
 
--- The list the WoW macro at index is in: indexes run General first, then the character's.
+-- Indexes run General first, then the character's.
 local function TabOf(index)
 	return index <= MaxAccountMacros() and GENERAL or CHARACTER
 end
@@ -34,10 +27,7 @@ local function FreeSlots(tab)
 	return MaxCharacterMacros() - numCharacter
 end
 
---[[
-	CreateMacro's perCharacter argument, a real boolean, for a new WoW macro for the page macro: its own list
-	while that has a free slot, else the other one; nil when both are full.
-]]
+-- CreateMacro's perCharacter, a real boolean: the macro's own list while it has room, else the other; nil when full.
 function ns.MacroCreatePerCharacter(macro)
 	local first = ns.MacroTab(macro)
 	local second = first == GENERAL and CHARACTER or GENERAL
@@ -49,7 +39,7 @@ function ns.MacroCreatePerCharacter(macro)
 	return nil
 end
 
--- The page macros that share the macro's settings key, so its choice.
+-- They share one settings key, so one choice.
 local function SharingMacros(macro)
 	local key, list = SettingsKey(macro), {}
 	for _, other in ipairs(ns.macros) do
@@ -64,11 +54,9 @@ local function SharingMacros(macro)
 end
 
 --[[
-	Moves the WoW macro at index into the other list: a new macro with the same name and text there, put back
-	in every action slot that held the old one, which is then deleted with its ownership record. The icon is the
-	add-on's (ns.WowMacroIcon), since GetMacroInfo gives the spell's icon for a question-mark macro, which would
-	stop it following the spell. Creating a macro in one list never shifts the other list's indexes, so index
-	still points at the old macro once the new one exists.
+	The icon is the add-on's: GetMacroInfo gives the spell's icon for a question-mark macro, which would stop it
+	following the spell. Creating in one list never shifts the other's indexes, so index still points at the old
+	macro once the new one exists.
 ]]
 local function MoveTo(page, index, tab)
 	local name, _, body = GetMacroInfo(index)
@@ -90,10 +78,8 @@ local function MoveTo(page, index, tab)
 end
 
 --[[
-	The menu's Macro Storage: stores the choice and moves the macro's WoW macro into that list now,
-	keeping it on the action bars. A macro not made yet just goes there when it is placed. Refused,
-	with the choice left as it was, in combat, while the Blizzard Macro UI is open, or when the list has too few
-	free slots for the macros to move.
+	Refused, with the choice left as it was, in combat, while the Macro UI is open, or when the list lacks free
+	slots for every macro that moves.
 ]]
 function ns.SetMacroTab(macro, tab)
 	if ns.MacroTab(macro) == tab then

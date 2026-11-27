@@ -3,11 +3,8 @@ local ByLevel = ns.SpellRankByLevel
 local AddRankLinesFor = ns.AddSpellRankLines
 
 --[[
-	A spell's ranks and the level each needs, "Firebolt Ranks … GtG" and a line for each (ns.AddSpellRanksTooltip;
-	the What's Next? rows, Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Page.lua, use ns.SpellRankRows and ns.AddSpellRankLines),
-	under every spell tooltip the game shows: action bars, the game's own spell book, other add-ons. Tooltips that
-	add the ranks themselves (the Spell Book page's tiles, the What's Next? rows) set ns.spellTooltipHasOwnRanks
-	around their SetSpellByID so the lines aren't doubled. The rank lines themselves are Spell-Rank-Lines.lua.
+	Tooltips that add the ranks themselves set ns.spellTooltipHasOwnRanks around their SetSpellByID, so the
+	lines aren't doubled.
 ]]
 
 --------------------------------------------------------------------------------
@@ -15,13 +12,9 @@ local AddRankLinesFor = ns.AddSpellRankLines
 --------------------------------------------------------------------------------
 
 --[[
-	An action bar's tooltip refreshes several times a second, so the What's Next? rows behind it are built once
-	and kept, with each spell's row by ID and each spell's ranks by name, until something they read changes.
-	Spellbook-Events.lua, Trainer-Recording.lua and Spellbook-Core.lua call ns.InvalidateSpellRankRows on those
-	changes: a spell learned, a spell's data loading, the pet changing, a trainer's list recorded, a profile
-	change, the Spellbook switched back on after its events went unheard. A level
-	gained is caught here instead, by the level each set was built at, since UnitLevel still reports the old
-	level while PLAYER_LEVEL_UP fires.
+	An action bar's tooltip refreshes several times a second, so the rows are kept until
+	ns.InvalidateSpellRankRows. A level gained is caught here, by the level each set was built at, since UnitLevel
+	still reports the old level while PLAYER_LEVEL_UP fires.
 ]]
 local cache = {}
 
@@ -63,13 +56,7 @@ local function CachedIndex(pet)
 	return entry
 end
 
---[[
-	Adds the ranks of spellID's spell to GameTooltip, for a tooltip outside the What's Next? tabs: mostly the
-	game's own spell tooltips (AddRanks, below, hooked onto every one), and also the Spell Book page's tiles
-	(Features/Enhanced-Spellbook/Macro-Button.lua) and the Pet Spell Book's rows. pet reads the pet's
-	abilities (ns.WhatsNextPetRows) rather than the class's (ns.WhatsNextRows); blankFirst puts a blank line
-	above them. Returns whether it added any: nothing for a spell the rows don't hold or with one rank.
-]]
+-- pet reads the pet's abilities. Returns whether it added any: none for a spell with one rank or no rows.
 function ns.AddSpellRanksTooltip(spellID, pet, blankFirst)
 	local index = CachedIndex(pet)
 	local row = index.byId[spellID]
@@ -89,11 +76,7 @@ function ns.AddSpellRanksTooltip(spellID, pet, blankFirst)
 	return true
 end
 
---[[
-	The class's What's Next? row for spellID, else the lowest-level row named name, or nil: what gives a macro
-	menu's ranks and grouped spells (Features/Enhanced-Spellbook/Macro-Menu-Sections.lua) the same status and source as the
-	tooltip's.
-]]
+-- Gives a macro menu's ranks and grouped spells the same status and source as the tooltip's.
 function ns.ClassRankRow(spellID, name)
 	local index = CachedIndex(false)
 	if spellID and index.byId[spellID] then

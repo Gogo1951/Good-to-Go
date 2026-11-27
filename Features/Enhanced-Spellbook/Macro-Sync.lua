@@ -1,8 +1,6 @@
 local _, ns = ...
 local L = ns.L
 
--- Keeps the WoW macros the page creates in step with it, found through Features/Enhanced-Spellbook/Macro-Lookup.lua.
-
 local OwnedList, OwnerRecord = ns.OwnedMacroList, ns.MacroOwnerRecord
 local ReadMacroIndexes = ns.ReadMacroIndexes
 -- MIGRATION (remove after 2026-11-26)
@@ -11,9 +9,8 @@ local OldPrefixName, OLD_PREFIX = ns.OldPrefixName, ns.OLD_MACRO_PREFIX
 local NO_INDEXES = {}
 
 --[[
-	Whether the macro's body fits the game's limit, measured in bytes, which a translated name reaches sooner.
-	A longer body would be cut off, so it is never written, and the player is told once per macro, however its
-	length changes.
+	Measured in bytes, which a translated name reaches sooner. A longer body would be cut off, so it is never
+	written, and the player is told once per macro however its length changes.
 ]]
 local function Fits(macro)
 	if #macro.body <= ns.MACRO_BODY_MAX_LENGTH then
@@ -27,9 +24,8 @@ local function Fits(macro)
 end
 
 --[[
-	Why the page can't place a macro, or nil when it can: "long", with the body's length in bytes, when the
-	body is over what a macro holds. ns.PickupMacro asks the same, so the page's warnings and a click never
-	disagree. A macro of the same name never blocks one: the page's macros are told apart by their tags.
+	ns.PickupMacro asks the same, so the page's warnings and a click never disagree. A same-named macro never
+	blocks one: tags tell them apart.
 ]]
 function ns.MacroBlockReason(macro)
 	if #macro.body > ns.MACRO_BODY_MAX_LENGTH then
@@ -38,10 +34,7 @@ function ns.MacroBlockReason(macro)
 	return nil
 end
 
---[[
-	Whether name is one the add-on gave the same kind of WoW macro (the spell's own or a Duplicate) of a spell this macro replaced in its group, which it took over (see ns.HandOverMacro in
-	Features/Enhanced-Spellbook/Group-Handover.lua).
-]]
+-- A name the add-on gave the same kind of macro (own or Duplicate) of a spell this one replaced and took over.
 local function IsReplacedSpellsName(macro, name)
 	if macro.rank then
 		return false
@@ -96,10 +89,8 @@ local function SyncAt(macro, index, shared)
 end
 
 --[[
-	The Blizzard Macro UI saves its edit box back over the selected macro when the selection changes and when it
-	hides, which would revert a rewrite made while it is open. So nothing is written while it is shown: a sync
-	waits for it to close, and the one-time OnHide hook then rewrites every macro. The frame is load-on-demand,
-	so the hook goes in the first time a sync finds it.
+	The Macro UI saves its edit box back over the selected macro on selection change and hide, reverting a
+	rewrite, so nothing is written while it is shown. It loads on demand, so the OnHide hook goes in on first sight.
 ]]
 local macroUIHooked = false
 
@@ -120,10 +111,8 @@ end
 ns.IsMacroUIOpen = IsMacroUIOpen
 
 --[[
-	Rewrites this character's WoW macro for a page macro if its body has changed, and returns its index. One
-	found by name gets its tag line here, and is recorded as the add-on's; indexes, when given, then lists it
-	under its tag, so a second page macro of the same name in the same pass doesn't take it too. A rename
-	moves macros about, so indexes is then read again.
+	One found by name gets its tag here, and indexes then lists it under the tag, so a same-named page macro in
+	the same pass doesn't take it too. A rename moves macros about, so indexes is then read again.
 ]]
 function ns.SyncMacro(macro, indexes)
 	local index, found, shared = ns.FindMacroIndex(macro, indexes)
@@ -152,12 +141,7 @@ function ns.SyncMacro(macro, indexes)
 	return moved
 end
 
---[[
-	Creates the macro on first use, in the list its Macro Storage names (ns.MacroTab: character specific by default),
-	or the other once that one is full, then puts
-	it on the cursor so it can be dropped on an action bar. A macro of the same name the add-on didn't make is
-	left alone, and the new one sits beside it under the same name.
-]]
+-- A same-named macro the add-on didn't make is left alone, and the new one sits beside it.
 function ns.PickupMacro(macro)
 	if InCombatLockdown() then
 		ns:PrintMessage(L["ERROR_MACRO_COMBAT"])
@@ -219,10 +203,6 @@ function ns:OnPlayerRegenEnabled()
 	ns.QueueRankRewriteAll()
 end
 
---[[
-	Rewrites the existing WoW macros whose body no longer matches the page (a setting or config changed). In
-	combat it waits for combat to end; while the Blizzard Macro UI is open, for it to close (IsMacroUIOpen).
-]]
 function ns.SyncAllMacros()
 	if InCombatLockdown() then
 		ns.QueueMacroSync()

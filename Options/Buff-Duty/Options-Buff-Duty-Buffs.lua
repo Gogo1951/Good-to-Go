@@ -3,13 +3,7 @@ local Data = ns.Data
 local L = ns.L
 local Kit = ns.OptionsKit
 
---[[
-    "Group Buffs" panel, under Buff Duty: who each buff you can give to others is
-    offered to, and when a buff counts as missing. Lists every class, because
-    these settings are account-wide. Not hidden behind the Buff Duty switch:
-    these are choices worth making before turning the window on, and the
-    page opens with a line saying so while it's off (ns.AddFeatureOffLine).
-]]
+-- Not hidden behind the Buff Duty switch: these are choices worth making before turning the window on.
 function ns.BuildBuffDutyBuffsOptions()
 	local function Settings()
 		return ns.db.global.buffWindow
@@ -19,11 +13,7 @@ function ns.BuildBuffDutyBuffsOptions()
 		name = Kit.SubPanelTitle(L["TAB_BUFF_DUTY"], L["BUFF_DUTY_TRACKED_HEADER"]),
 		type = "group",
 		args = {
-			--[[
-			    "Tanks" and "Healers" need saying once for every dropdown below,
-			    rather than in each one's tooltip. The raid's Main Tank mark is
-			    named in the client's own words.
-			]]
+			-- Says "Tanks" and "Healers" once for every dropdown below, rather than in each tooltip.
 			descBuffs = Kit.Desc(L["BUFF_DUTY_BUFFS_DESCRIPTION"]:format(MAINTANK), 1),
 			space0 = Kit.Spacer(2),
 		},
@@ -35,11 +25,7 @@ function ns.BuildBuffDutyBuffsOptions()
 		return LOCALIZED_CLASS_NAMES_MALE[class] or class
 	end
 
-	--[[
-	    Refresh: when a buff counts as missing, under a section of its own.
-	    Labeled with the client's own duration string, so "5 Minutes" reads
-	    right in every locale without a string of ours.
-	]]
+	-- The client's own duration string, so "5 Minutes" reads right in every locale.
 	local refreshValues = {}
 	for _, minutes in ipairs(Data.BUFF_DUTY_REFRESH_CHOICES) do
 		refreshValues[minutes] = D_MINUTES:format(minutes)
@@ -58,13 +44,7 @@ function ns.BuildBuffDutyBuffsOptions()
 			ns.RefreshBuffDuty()
 		end,
 	})
-	--[[
-	    Count as Tanks: one row per class this client's data carries, then Pets,
-	    each a white caption beside a Never / When Solo / Always dropdown, on
-	    the page's label and control columns like every row below it.
-	    It decides only for a player with no role of their own (RoleOf), so it
-	    sits apart from the role note above rather than inside it.
-	]]
+	-- Count as Tanks decides only for a player with no role of their own (RoleOf), so it sits apart from the role note.
 	Kit.Section(options.args, "tanks", 28, L["BUFF_DUTY_TANKS_HEADER"], L["BUFF_DUTY_TANKS_DESCRIPTION"])
 
 	local tankValues = {}
@@ -99,12 +79,7 @@ function ns.BuildBuffDutyBuffsOptions()
 		audienceValues[value] = L["BUFF_DUTY_AUDIENCE_" .. value]
 	end
 
-	--[[
-	    After Count as Tanks, which takes up to one order number per class. Each
-	    class opens with a gold header, as every section on a page does, and its
-	    spells follow on the page's own label and control columns, with no box,
-	    so every dropdown on the page lines up.
-	]]
+	-- After Count as Tanks, which takes up to one order number per class.
 	local categoryOrder = 60
 	for _, category in ipairs(ns.buffDutyCategories or {}) do
 		local groupKey = "cat_" .. category.id

@@ -1,13 +1,6 @@
 local _, ns = ...
 local Data = ns.Data
 
---[[
-    Buff-Duty-Pets -- a pet's row on Buff Duty's list: which buffs it takes,
-    whether it can take any (not a borrowed mob, not phase-shifted), the
-    owner's class read off it, and its label. Shared with the other Buff Duty
-    files through ns.BuffDuty.
-]]
-
 local BuffDuty = ns.BuffDuty
 local buffs = BuffDuty.buffs
 local Has = BuffDuty.Has
@@ -19,24 +12,17 @@ local IsPhaseShifted = BuffDuty.IsPhaseShifted
 -- Labels
 --------------------------------------------------------------------------------
 
--- A pet's inline icon in front of its name, the window's icon size.
 local LABEL_ICON_SIZE = Data.BUFF_DUTY_LABEL_ICON_SIZE
 
---[[
-    A pet's row label: its summoning spell's icon, then the name in its owner's
-    class color. A warlock's demon is told apart by the creature ID in its GUID
-    ("Pet-0-server-instance-zone-npc-spawn"); every other pet wears Call Pet.
-]]
+-- A warlock's demon is told apart by the creature ID in its GUID ("Pet-0-server-instance-zone-npc-spawn").
 local function PetNPCID(unit)
 	local guid = UnitGUID(unit)
 	return ns.IsPlain(guid) and guid and tonumber(guid:match("^%a+%-%d+%-%d+%-%d+%-%d+%-(%d+)%-")) or nil
 end
 
 --[[
-    The class of a pet's owner, read off the pet: a known demon is a warlock's,
-    and a pet that runs on Focus is a hunter's beast. The tooltip's "'s Pet" or
-    "'s Minion" (`guessed`) is the last resort only -- on Classic Era it named
-    the owner without matching the wording that gives the class away.
+    The tooltip's guess is the last resort only: on Classic Era it names the
+    owner without the wording that gives the class away.
 ]]
 function BuffDuty.PetOwnerClass(unit, guessed)
 	local npcID = PetNPCID(unit)
@@ -55,7 +41,6 @@ local function PetLabel(unit, name, ownerClass)
 	local npcID = PetNPCID(unit)
 	local spell = (npcID and icons.demons[npcID]) or icons.beast
 	local texture = spell and C_Spell.GetSpellTexture(spell)
-	-- The same 5-pixel trim the window's buttons give every spell icon's border.
 	local icon = texture
 			and ("|T" .. texture .. ":" .. LABEL_ICON_SIZE .. ":" .. LABEL_ICON_SIZE .. ":0:0:64:64:5:59:5:59|t ")
 		or ""
@@ -67,16 +52,8 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    A pet takes the buffs offered to Everyone, and those offered to Tanks while
-    Count as Tanks says pets do (by default only while you're not grouped:
-    solo, a pet is usually what holds aggro) -- never those for Healers. It has
-    no role of its own, and its "class" is the creature's, not a player class.
-    Whether it has mana is read off its power bar instead, so a warlock's demon
-    gets Intellect and a hunter's beast doesn't.
-
-    On WoW Forever a pet takes no stat buffs (ns.BUFF_DUTY_PETS_FLAGGED_ONLY),
-    so it is offered only the buffs its data marks pets = true: Thorns, not
-    Mark of the Wild.
+    A pet's "class" is the creature's, so mana is read off its power bar. On
+    WoW Forever a pet takes no stat buffs, so only rows marked pets = true.
 ]]
 local function PetWants(buff, unit)
 	if ns.BUFF_DUTY_PETS_FLAGGED_ONLY and not buff.pets then
@@ -97,12 +74,9 @@ local function PetWants(buff, unit)
 end
 
 --[[
-    A mob that only borrows the pet slot -- a priest's Mind Control, a warlock's
-    Enslave Demon -- until it breaks free. UnitIsCharmed alone misses a mind-
-    controlled mob on Classic Era, so a pet that is neither a known demon nor a
-    Focus beast (PetOwnerClass) and has no pet family is taken for one too: a
-    humanoid has none, while a real pet's family names it ("Imp", "Cat").
-    A secret answer to either question keeps the pet on.
+    UnitIsCharmed alone misses a mind-controlled mob on Classic Era, so a pet
+    with no owner class and no creature family counts too: a humanoid has
+    none, a real pet's family names it. A secret answer keeps the pet on.
 ]]
 local function IsCharmedPet(unit)
 	if ns.IsPlainTrue(UnitIsCharmed(unit)) then
@@ -113,15 +87,8 @@ local function IsCharmedPet(unit)
 end
 
 --[[
-    A pet the window can't do anything for drops off the list rather than hold
-    its owner's row, and the window, up: one out of sight (another zone, or
-    past the client's view -- its buffs aren't sent and no cast reaches it),
-    one the game won't let you help (UnitCanAssist), and on WoW Forever one
-    whose identity is kept secret. A secret or missing answer to either
-    question keeps the pet on: only a readable "no" drops it.
-
-    A phase-shifted imp drops off too: nothing can reach it until it phases
-    back in.
+    A pet the window can't help drops off rather than hold its owner's row,
+    and the window, up. Only a readable "no" drops it.
 ]]
 local function CanBuffPet(unit)
 	if not UnitExists(unit) or UnitIsPlayer(unit) or UnitIsDeadOrGhost(unit) then
@@ -147,24 +114,14 @@ BuffDuty.CanBuffPet = CanBuffPet
 --------------------------------------------------------------------------------
 
 --[[
-    GUID -> buff key -> GetTime() until which the pet isn't offered that buff
-    even though it reads as missing.
-
-    A pet's buffs reach the client less reliably than a player's, so a cast
-    that went off on it (BuffDuty.NotePetCast) is taken at its word: the buff
-    is held for as long as your cast of it lasts, less the Refresh Under time,
-    whether or not the aura ever shows. If it does show, Has sees it first
-    and the hold never matters.
-
-    A cast the game refused outright -- not a valid target (BuffDuty.NotePetRefused)
-    -- holds that buff for as long as the pet stays around: clicking again
-    would only fail again.
+    GUID -> buff key -> GetTime() the hold ends. A pet's buffs reach the client
+    less reliably than a player's, so a cast that went off is taken at its
+    word; a refused one holds while the pet stays around.
 ]]
 local holds = {}
 
--- How long a cast on a pet is trusted when you haven't seen how long that buff lasts yet.
+-- Until you've seen how long the buff lasts.
 local PET_HOLD_FALLBACK = 600
--- The shortest a cast on a pet is trusted, however soon it would want a refresh.
 local PET_HOLD_MINIMUM = 60
 
 local function BuffByKey(key)
@@ -212,7 +169,6 @@ local function IsHeld(guid, key)
 end
 BuffDuty.IsHeld = IsHeld
 
--- Drops every hold but those on the GUIDs in `keep`, from BuffDuty.PruneAuraCache.
 function BuffDuty.PrunePetHolds(keep)
 	for guid in pairs(holds) do
 		if not keep[guid] then
@@ -221,7 +177,6 @@ function BuffDuty.PrunePetHolds(keep)
 	end
 end
 
--- The pet token that goes with a group member's token.
 function BuffDuty.PetUnitOf(unit)
 	if unit == "player" then
 		return "pet"
@@ -230,10 +185,6 @@ function BuffDuty.PetUnitOf(unit)
 	return prefix and (prefix .. "pet" .. index) or nil
 end
 
---[[
-    The missing-buff icons for a pet or an NPC, cast at `castUnit`: each buff
-    `wants(buff, unit)` offers it that it lacks and isn't held for.
-]]
 local function HeldIcons(unit, castUnit, name, wants)
 	local guid = UnitGUID(unit)
 	guid = ns.IsPlain(guid) and guid or nil
@@ -242,10 +193,8 @@ local function HeldIcons(unit, castUnit, name, wants)
 		if buff.singleName and wants(buff, unit) then
 			local has, expires, duration = Has(buff, unit)
 			--[[
-			    Once Has agrees the unit has the buff, a hold on it has done its
-			    job: from here on Has alone decides. One that is only seen (it
-			    reads as weaker, or running low, right after your cast landed)
-			    keeps its hold until that runs out, so a version Has misjudges
+			    Only Has agreeing clears a hold. One merely seen (weaker, or low,
+			    right after your cast) keeps its hold, so a version Has misjudges
 			    on a pet can't bring the row straight back.
 			]]
 			if has and guid and holds[guid] then
@@ -259,13 +208,7 @@ local function HeldIcons(unit, castUnit, name, wants)
 	return icons
 end
 
---[[
-    A pet's row: its missing buffs, cast at `castUnit` (the pet's own token in
-    the party list, "target" or "targetpet" in the Target list). Nil when it
-    needs nothing. Under its owner it is indented and named alone; standing on
-    its own (a targeted stranger's pet) it carries `ownerName` in brackets
-    instead, "Valko (Kiib)", since the owner has no row of their own above it.
-]]
+-- Standing alone (a targeted stranger's pet) it carries `ownerName`, "Valko (Kiib)", since no owner row is above it.
 function BuffDuty.PetRow(unit, castUnit, ownerClass, ownerName)
 	if not unit or not CanBuffPet(unit) then
 		return nil

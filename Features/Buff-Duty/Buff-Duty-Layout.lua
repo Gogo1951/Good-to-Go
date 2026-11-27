@@ -6,49 +6,30 @@ local SetIcon = ns.SetBuffDutyIcon
 local AcquireOtherIcon = ns.AcquireBuffDutyOtherIcon
 local SetOtherIcon = ns.SetBuffDutyOtherIcon
 
---[[
-    Buff-Duty-Layout -- the Buff Duty window's layout math, shared on
-    ns.buffDutyLayout: the redraw signature, the icon grid's columns, and
-    placing a run of lines with their icons. Buff-Duty-Frame.lua measures the
-    names, sizes the window and calls these, out of combat only.
-]]
-
 local Layout = {}
 ns.buffDutyLayout = Layout
 
 local ICON_SIZE = Data.BUFF_DUTY_ICON_SIZE
 local LABEL_ICON_SIZE = Data.BUFF_DUTY_LABEL_ICON_SIZE
 local ICON_GAP = 4
--- An icon plus the same 4-pixel gap between rows as between icons.
 local ROW_HEIGHT = ICON_SIZE + ICON_GAP
---[[
-    The space between sections (Self-Buffs, Ask for Buffs, Target, Return
-    the Favor, each party), edge to edge: the Spacing Scale's 16, four times
-    the gap between rows, so a section's last row never reads as the next
-    one's first.
-]]
+-- Four times the row gap, so a section's last row never reads as the next one's first.
 local SECTION_SPACE = 16
--- Room between the end of the longest name and the first icon.
 local NAME_GAP = 8
 
 --[[
-    What the window holds on to while it stays up for the same group, so it
-    keeps its width as buffs are cast: every grid's columns any icon has used
-    (a buff cast on everyone leaves its column empty rather than pulling the
-    icons left under the cursor), the widest name column, and the most
-    Party-Buffs icons. Let go when the window hides (everything's buffed), the
-    group's size changes, or a setting changes (ns.ApplyBuffDutySettings).
+    Held while the window stays up for the same group, so it keeps its width
+    as buffs are cast: a buffed column stays empty rather than pulling the
+    icons left under the cursor.
 ]]
 local held = { columns = {}, nameWidth = 0, partyBuffs = 0 }
 
--- The list's icons and the frame they sit in (Buff-Duty-Icon-State.lua).
 local pool = ns.buffDutyIconPool
 
 --[[
-    Everything a redraw would write, as one string, so an unchanged list (the
-    usual result of a raid's constant aura traffic) skips the redraw entirely.
-    That includes whether an icon is held back for a PvP-flagged target, so a
-    flag change alone redraws the icons it touches.
+    Everything a redraw would write, so an unchanged list (a raid's usual aura
+    traffic) skips the redraw. A field left out keeps stale attributes or
+    names on screen.
 ]]
 local function Signature(sections, otherBuffs)
 	local parts = {}
@@ -96,13 +77,7 @@ local function Signature(sections, otherBuffs)
 	return table.concat(parts, "|")
 end
 
---[[
-    A raid group's header is a button over its label: a plus before the name
-    while the group is folded, a minus while it's open, and a click toggles it
-    (BuffDuty.ToggleGroupFold). Plain buttons, not secure ones: they only ask
-    for a redraw, and a click in combat is ignored. Pooled like the
-    icons, and released with them (ReleaseFoldButtons).
-]]
+-- Fold buttons are plain, not secure: they only ask for a redraw, and a click in combat is ignored.
 local FOLD_TEXTURES = {
 	[true] = "Interface/Buttons/UI-PlusButton-Up",
 	[false] = "Interface/Buttons/UI-MinusButton-Up",
@@ -135,7 +110,6 @@ local function AcquireFoldButton()
 		button.glyph = button:CreateTexture(nil, "ARTWORK")
 		button.glyph:SetSize(LABEL_ICON_SIZE, LABEL_ICON_SIZE)
 		button.glyph:SetPoint("LEFT")
-		-- The quest log's own header highlight, so a mouse or controller cursor shows where it is.
 		button:SetHighlightTexture("Interface/QuestFrame/UI-QuestTitleHighlight", "ADD")
 		button:SetScript("OnClick", OnFoldClick)
 		button:SetScript("OnDragStart", OnFoldDragStart)
@@ -153,13 +127,9 @@ local function ReleaseFoldButtons()
 end
 
 --[[
-    A category's line ends in the menu kit's arrow, in a column of its own
-    at the window's right edge: hovering or clicking it opens that
-    category's menu beside the window (Buff-Duty-Options-Menu.lua), as the
-    Options line opens its own. A click on the line's name opens it too.
-    Plain buttons, so they work in combat. Kept by the menu they open
-    rather than pooled by place, so an open menu stays on its line across
-    a redraw; released with the icons (ReleaseMenuButtons).
+    Menu buttons are plain, so they work in combat, and kept by the menu they
+    open rather than pooled by place, so an open menu stays on its line
+    across a redraw.
 ]]
 local ARROW_WIDTH = 12
 local ARROW_GAP = 4
@@ -190,7 +160,7 @@ local function AcquireArrowButton(key)
 		button:SetScript("OnClick", OpenLineMenu)
 		button:SetScript("OnDragStart", OnFoldDragStart)
 		button:SetScript("OnDragStop", OnFoldDragStop)
-		-- The window it sits in, so the menu overlaps the window's edge rather than the arrow (Menu Kit's "line").
+		-- So the menu overlaps the window's edge rather than the arrow (Menu Kit's "line").
 		button.window = pool.content
 		button.menuKey = key
 		arrowButtons[key] = button
@@ -224,15 +194,10 @@ local function ReleaseMenuButtons()
 end
 
 --[[
-    `offsets` maps a buff's column to how far its icon sits from the grid's
-    first, in pixels, and `gridWidth` is the grid's whole width. `x` and
-    `right` are the left and right edges of the window column the row sits
-    in, `y` the row's middle. The icons sit against the right edge, under the
-    close button, rather than floating wherever the names end; a grid keeps
-    its columns, so a buff still lines up down the window. A packed line
-    (Self-Buffs, Target, Return the Favor) skips the columns: its icons stand
-    side by side in the order given, ending at the right edge, so a cast
-    leaves no gap.
+    `offsets` maps a buff's column to pixels from the grid's first icon; `x`
+    and `right` are the window column's edges, `y` the row's middle. A packed
+    line skips the columns, its icons side by side against the right edge, so
+    a cast leaves no gap.
 ]]
 local function PlaceRow(line, x, right, y, nameWidth, offsets, gridWidth, arrowRight)
 	local content = pool.content
@@ -283,7 +248,6 @@ local function PlaceRow(line, x, right, y, nameWidth, offsets, gridWidth, arrowR
 		button:SetPoint("LEFT", content, "TOPLEFT", iconX, y)
 		SetIcon(button, spec)
 	end
-	-- The Ask for Buffs header's icons: plain buttons, side by side, ending at the right edge too.
 	local partyBuffs = line.partyBuffs or {}
 	left = right - (#partyBuffs * (ICON_SIZE + ICON_GAP) - ICON_GAP)
 	for index, spec in ipairs(partyBuffs) do
@@ -295,19 +259,9 @@ local function PlaceRow(line, x, right, y, nameWidth, offsets, gridWidth, arrowR
 end
 
 --[[
-    The icons sit in a grid: one column per buff, so a buff lines up down the
-    whole window and a party's group buff sits over the single one it
-    replaces. A member who doesn't need a buff leaves its cell empty. Only the
-    columns some icon uses are kept, in buff order, so a buff nobody needs
-    leaves no gap.
-
-    A section can name its own grid (Self Buffs does): its columns are other
-    buffs than the parties', so lining them up with the parties' would only
-    push them right. A row can name one too (each weapon hand does), so its
-    icons start at the left whatever the header's hold. Returns grid ->
-    (column -> pixels from the first icon), and grid -> the icons' whole
-    width. The party columns share one grid, so a buff sits at the same place
-    in each. The columns the window holds (held.columns) are kept too.
+    One column per buff, so a party's group buff sits over the single it
+    replaces; only used columns are kept. A section or row can name its own
+    grid, so columns unlike the parties' aren't pushed right by them.
 ]]
 local MAIN_GRID = "main"
 
@@ -347,11 +301,7 @@ local function GridSlots(sections)
 	return offsetsByGrid, widths
 end
 
---[[
-    Places a run of lines down from `y`, the first one's middle. Returns where
-    the next run's first middle goes, and the lowest edge this run drew.
-    `arrowRight` is where a category line's arrow ends, nil for lines with none.
-]]
+-- Returns the next run's first middle and this run's lowest edge.
 local function PlaceLines(lines, x, right, y, nameWidth, offsetsByGrid, widths, arrowRight)
 	local bottom = y
 	for _, line in ipairs(lines) do
@@ -367,7 +317,6 @@ end
 
 Layout.ICON_GAP = ICON_GAP
 Layout.SECTION_SPACE = SECTION_SPACE
--- How far a raid group's name sits in, past its fold glyph: the Spacing Scale's 16, the glyph's own width.
 Layout.FOLD_INDENT = LABEL_ICON_SIZE
 Layout.ROW_HEIGHT = ROW_HEIGHT
 Layout.NAME_GAP = NAME_GAP
@@ -378,5 +327,4 @@ Layout.GridSlots = GridSlots
 Layout.PlaceLines = PlaceLines
 Layout.ReleaseFoldButtons = ReleaseFoldButtons
 Layout.ReleaseMenuButtons = ReleaseMenuButtons
--- The arrow column a category's menu takes at the right edge, gap included, while any line has one.
 Layout.ARROW_SPACE = ARROW_WIDTH + ARROW_GAP

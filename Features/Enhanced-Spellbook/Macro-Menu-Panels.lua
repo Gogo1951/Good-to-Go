@@ -1,23 +1,11 @@
 local _, ns = ...
 
 --[[
-	A page macro's right-click menu drawn on Menu-Kit's own panels (Features/Menu-Kit.lua), as Style Guide → MENUS
-	asks of every menu: Pretty Wide Quest Log's plate, the kit's row kinds, sub-menus overlapping the menu they open
-	from, no skin add-on touching any of it.
-
-	The menu is described the way the game's menus are, so the sections that fill it read as before: a root takes
-	CreateButton, CreateCheckbox, CreateRadio, CreateTitle, CreateDivider and CreateSpacer, and an element takes
-	SetTooltip and SetEnabled. Four more say what the game's menus drew with an initializer: SetValue (a button's
-	right side, already colored), SetNote (an option's gray note), SetLabel (a label read each time the menu draws)
-	and, on a root or sub-menu, CreateText (a block of lines) and CreateHeader (the header row).
-
-	A button with children opens a sub-menu, the arrow, on hover or click: one that sets something (SetSetting) reads
-	as the kit's value row, its label white and its value light yellow; any other keeps a gold label. A button
-	without is an action, blue, its value light yellow, and closes the menu unless its callback answers
-	MenuResponse.Refresh. A checkbox is a toggle and a radio a choice; either redraws in place unless its callback
-	answers MenuResponse.CloseAll. A checkbox with a value shows the value on the right in place of On. A disabled
-	element is gray on both sides and can't be clicked, whatever colors its label carries. Every change builds the
-	menu afresh and draws it again where it is, its open sub-menus kept open.
+	Drawn on Menu-Kit's panels, as Style Guide → MENUS asks of every menu, but described the way the game's menus
+	are (CreateButton, CreateCheckbox, SetTooltip, ...), so the sections that fill it read the same. Added:
+	SetValue, SetNote, SetLabel, CreateText and CreateHeader. An action closes the menu unless its callback answers
+	MenuResponse.Refresh; a checkbox or radio redraws in place unless it answers MenuResponse.CloseAll. Every change
+	builds the menu afresh and redraws it where it is, its open sub-menus kept open.
 ]]
 
 local L = ns.L
@@ -138,7 +126,6 @@ local panels = {}
 local state = { open = {}, idle = 0 }
 local Refresh, Close, OpenFlyout, CloseFrom
 
--- Runs a row's callback, then redraws or closes, as the game's menus would.
 local function Run(element)
 	local response = element.onClick and element.onClick()
 	local isAction = element.kind == "button" and #element.children == 0
@@ -167,7 +154,6 @@ local function Plain(note)
 	return (note:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
 end
 
--- The kit entries one element's children draw as, on the panel at level.
 local function Entries(element, level)
 	local entries = {}
 	for _, child in ipairs(element.children) do
@@ -207,17 +193,12 @@ local function Entries(element, level)
 			local note, selected = Read(child.note), child.isOn() and true or false
 			if note then
 				--[[
-					A choice with a note (a rank's level, the rank Max Rank casts) keeps the kit's choice look, the
-					pick light yellow and the rest white, with the note gray in the right column and the check mark
-					after it once picked.
+					A choice with a note (a rank's level, the rank Max Rank casts) is the kit's choice row: the check
+					on the left with every row keeping its room, the pick light yellow and the rest white, and the
+					note gray in the right column.
 				]]
-				entry = {
-					kind = "value",
-					left = label,
-					leftColor = selected and "VALUE" or "BODY",
-					right = Plain(note) .. (selected and " " .. Kit.CHECK_MARK or ""),
-					rightColor = "MUTED",
-				}
+				entry =
+					{ kind = "choice", left = label, right = Plain(note), rightColor = "MUTED", selected = selected }
 			else
 				entry = { kind = "choice", left = label, selected = selected }
 			end
@@ -370,7 +351,6 @@ function OpenFlyout(level, row, key)
 	end
 end
 
--- Builds the menu afresh and draws every open panel again where it is.
 function Refresh()
 	if not state.generator or not panels[1] or not panels[1]:IsShown() then
 		return
@@ -402,10 +382,8 @@ function Close()
 end
 
 --[[
-	Opens the menu over owner (the button clicked), which keeps it open while the cursor is on it.
-	generator(owner, root) fills the root. A right-click menu opens at the cursor, as the game opens its own;
-	with beside, a gear's or a field's menu opens off owner's corner, MENU_GAP from it, as the kit's own menus
-	open from their buttons, toward the roomier side of the screen.
+	The owner keeps the menu open while the cursor is on it. A right-click menu opens at the cursor, as the game
+	opens its own; with beside, it opens off owner's corner, toward the roomier side of the screen.
 ]]
 function ns.OpenMacroMenuPanels(owner, generator, beside)
 	Close()

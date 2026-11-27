@@ -15,22 +15,15 @@ local _, ns = ...
     The remindersMovedOntoSimple marker it leaves in saved data is harmless
     once the shim is gone.
 
-    The reminders became one line each -- low and out counts -- with Verbose
-    the opt-in, and every reminder ships Simple. The in-town reminder used to
-    ship Verbose, and a player could have picked Verbose on any of the three,
-    so each of the three modes goes back to its default once, for everyone.
-    A player who wants Verbose again picks it, and the marker keeps this from
-    undoing that on the next login.
+    Every reminder ships Simple, so each of the three modes goes back to
+    Simple once, for everyone; the marker keeps a later Verbose pick from
+    being undone on the next login.
 
-    The Restocker's settings are account-wide (ns.db.global.restocker), so
-    there is one table to fix, not one per profile. AceDB has already copied
-    the defaults into the active table, so each mode is written as Simple
-    rather than cleared -- a cleared key would read as nil until the next
-    login -- and AceDB drops it from saved data on logout, since it now
-    matches the default.
-
-    Called from InitializeDatabase in Features/Core.lua, right after AceDB
-    loads.
+    The settings are account-wide (ns.db.global.restocker): one table, not one
+    per profile. AceDB has already copied the defaults into the active table,
+    so each mode is written as Simple rather than cleared (a cleared key reads
+    nil until the next login); AceDB drops it on logout as it matches the
+    default.
 ]]
 
 local MODE_KEYS = { "restockReminderMode", "merchantReminderMode", "bankReminderMode" }

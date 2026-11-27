@@ -1,7 +1,5 @@
 local _, ns = ...
 
--- The equipped items with a "Use:" effect, which a spell macro's Use Items options can use before its cast.
-
 -- Each inventory slot's GlobalStrings constant, the name the menus show for it.
 local SLOTS = {
 	[1] = "HEADSLOT",
@@ -25,17 +23,13 @@ local SLOTS = {
 	[19] = "TABARDSLOT",
 }
 
--- The client's name for an inventory slot.
 local function SlotName(slot)
 	return _G[SLOTS[slot]]
 end
 
 ns.SlotName = SlotName
 
---[[
-	Whether the item in an equipment slot has a "Use:" effect. The tooltip check catches effects added to the
-	item, such as engineering tinkers, which GetItemSpell on the item itself may not see.
-]]
+-- The tooltip check catches effects added to the item, such as tinkers, which GetItemSpell may not see.
 local function HasUseEffect(slot, link)
 	if C_Item.GetItemSpell(link) then
 		return true
@@ -50,9 +44,8 @@ local function HasUseEffect(slot, link)
 end
 
 --[[
-	The equipped items with a "Use:" effect, in slot order, as {slot = 13, link = ...}. Cached until the gear
-	worn changes (ns:InvalidateUsableSlots, on PLAYER_EQUIPMENT_CHANGED), and each item's answer is kept by its
-	link, so the menus don't rescan nineteen tooltips on every redraw. Don't modify it.
+	{ slot, link } in slot order, cached until the gear changes, each answer kept by link, so the menus don't
+	rescan nineteen tooltips on every redraw. Don't modify it.
 ]]
 local usableSlots
 local useEffectByLink = {}

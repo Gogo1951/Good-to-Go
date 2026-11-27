@@ -1,15 +1,9 @@
 local _, ns = ...
 local L = ns.L
--- Shared with the macro's own menu (Features/Enhanced-Spellbook/Menu-Utilities.lua, loaded before both).
+-- From Menu-Utilities.lua, which loads first.
 local SetTip, OptionTip = ns.MenuSetTip, ns.MenuOptionTip
 local DESCRIPTIONS, NOTES = ns.MENU_DESCRIPTIONS, ns.MENU_NOTES
 local COMBAT, REPEAT, FIRST, ERRORS = ns.MENU_COMBAT, ns.MENU_REPEAT, ns.MENU_FIRST, ns.MENU_ERRORS
-
---[[
-	A category's options menu, from the gear on its header, and the confirm its reset asks first. The tooltips,
-	the submenu layout and the option tables it shares with a macro's own right-click menu live in
-	Features/Enhanced-Spellbook/Menu-Utilities.lua.
-]]
 
 -- A category's name for its gear's tooltip and its menu's header: "All 6 Heals", or This Spell for one.
 function ns.CategoryMenuTitle(name, count)
@@ -19,7 +13,7 @@ function ns.CategoryMenuTitle(name, count)
 	return L["MENU_CATEGORY_TITLE"]:format(count, name)
 end
 
--- The category menu's reset, asked first; data is the reset itself, run on Reset.
+-- data is the reset to run.
 StaticPopupDialogs.GOODTOGO_RESET_CATEGORY = {
 	text = L["MENU_RESET_CATEGORY_CONFIRM"],
 	button1 = L["POPUP_RESET"],
@@ -34,12 +28,8 @@ StaticPopupDialogs.GOODTOGO_RESET_CATEGORY = {
 }
 
 --[[
-	A category's menu, from the gear on its header (Features/Enhanced-Spellbook/Spellbook-Page.lua): the right-click menu's
-	options, each applied to every macro in the category that offers it, so Hide Errors can go on all of them at
-	once. A checkbox is ticked, or a choice picked, only when every one of those macros has it. The spells'
-	own choices (a fixed rank, the grouped spells, the pet ability, the stance) and the actions
-	stay on each macro's own menu. A macro not on the bars yet only has its settings stored; its WoW macro is
-	made with them when it is first placed. onChange runs after each change, to redraw the page.
+	Each option applies to every macro here that offers it, ticked only when all have it. Each spell's own
+	choices (fixed rank, grouped spells, pet ability, stance) and the actions stay on its own menu.
 ]]
 function ns.ShowCategoryMenu(owner, name, macros, onChange)
 	local list = {}
@@ -51,7 +41,6 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 	if #list == 0 then
 		return
 	end
-	-- the category's macros that pass test
 	local function offering(test)
 		local found = {}
 		for _, macro in ipairs(list) do
@@ -74,10 +63,7 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 		end
 		return true
 	end
-	--[[
-		runs set on each macro, then redraws the page once; the redraw rebuilds every macro and rewrites the ones
-		already made, so no macro is rewritten on its own first
-	]]
+	-- one redraw for all: it rewrites every macro already made, so none is rewritten on its own first
 	local function apply(targets, set)
 		for _, macro in ipairs(targets) do
 			set(macro)
@@ -85,7 +71,6 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 		onChange()
 	end
 
-	-- on the add-on's own panels (Macro-Menu-Panels.lua), off the gear's corner
 	ns.OpenMacroMenuPanels(owner, function(_, root)
 		root:CreateHeader(ns.CategoryMenuTitle(name, #macros), L["ADDON_SHORT_NAME"])
 		-- groups of rows sit apart by a gap, as the mini-map menu's do; the reset sits under a line as well
@@ -93,10 +78,7 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 			root:CreateSpacer()
 		end
 
-		--[[
-			what each submenu holds that is ticked or picked on every macro, by label, so its button can show them
-			on the right as the single-spell menu does (ns.MacroMenuGroupValue: the one label, or a count)
-		]]
+		-- what each submenu has on for every macro, by label, for its button's value as the single-spell menu shows
 		local picked = {}
 		local function track(menu, label, isOn)
 			picked[menu] = picked[menu] or {}
@@ -112,10 +94,7 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 			return labels
 		end
 
-		--[[
-			a submenu button: its label, and what's on in it gray against the arrow, read each time the menu
-			redraws; labelsOf lists those labels, its own picks unless given
-		]]
+		-- labelsOf lists the labels its value shows, its own picks unless given
 		local function submenu(parent, label, labelsOf)
 			local button = parent:CreateButton(label)
 			button:SetValue(function()
@@ -124,10 +103,7 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 			return button
 		end
 
-		--[[
-			an option on every macro offering it, or on targets when given, or nothing when there are none; returns
-			whether it was added
-		]]
+		-- on every macro offering it, or on targets when given; returns whether it was added
 		local function checkbox(menu, key, label, targets)
 			targets = targets or offeringOption(key)
 			if #targets == 0 then
@@ -160,7 +136,6 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 			SetTip(element, label, tip, note)
 			track(menu, label, isPicked)
 		end
-		-- whether any of these options is offered here, before a submenu for them is drawn
 		local function anyOffered(options)
 			for _, option in ipairs(options) do
 				if option[2] and #offeringOption(option[1]) > 0 then
@@ -183,11 +158,10 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 			above, opened = true, true
 		end
 
-		-- Target: the unit at each place in the target priority, on every macro whose kind can pick it
+		-- Target
 		local prioritized = offering(ns.OffersTargetPriority)
 		if #prioritized > 0 then
 			section()
-			-- its value: each place's unit, in turn, as the single-spell menu shows them
 			local slotMenus = {}
 			local targetMenu = submenu(root, L["MENU_GROUP_TARGET"], function()
 				local units = {}
@@ -227,10 +201,7 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 			end
 		end
 
-		--[[
-			Grouped: the right-click for each spell's group or single version, on every macro but those with a
-			Conditional on Right-Click, which the single-spell menu won't turn it on for either
-		]]
+		-- Grouped: skips macros with a Right-Click Conditional, as the single-spell menu does
 		local rightClick = offering(function(macro)
 			return ns.OffersOption(macro, "groupVersion") and not ns.ConditionalsUseRightClick(macro)
 		end)
@@ -240,7 +211,7 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 			checkbox(groupedMenu, "groupVersion", L["MENU_RIGHT_CLICK_GROUP"], rightClick)
 		end
 
-		-- Rank: the highest each spell knows, or Dynamic where the spell takes it
+		-- Rank: Highest or Dynamic only
 		local ranked = offering(function(macro)
 			return ns.OffersFixedRank(macro) or ns.OffersTargetRank(macro)
 		end)
@@ -265,7 +236,7 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 			gap()
 		end
 
-		-- When: the combat check, how often it casts, and when it does nothing
+		-- When
 		local whenMenu = submenu(root, L["MENU_GROUP_WHEN"])
 		local checked = offeringOption("combatOnly")
 		for _, choice in ipairs(COMBAT) do
@@ -292,7 +263,7 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 		checkbox(whenMenu, "stopIfChanneling", L["MENU_STOP_IF_CHANNELING"])
 		checkbox(whenMenu, "stopIfStealthed", L["MENU_STOP_IF_STEALTHED"])
 
-		-- First: what runs before the cast, then the equipped on-use items, a group apart from When
+		-- First, a group apart from When
 		local itemUsers = offering(ns.OffersUseItems)
 		local slots = #itemUsers > 0 and ns.UsableSlots() or {}
 		if anyOffered(FIRST) or #slots > 0 then
@@ -327,7 +298,7 @@ function ns.ShowCategoryMenu(owner, name, macros, onChange)
 			end
 		end
 
-		-- Then: what runs after the cast
+		-- Then
 		local THEN = ns.MenuThenOptions()
 		if anyOffered(THEN) then
 			local thenMenu = submenu(root, L["MENU_GROUP_THEN"])
