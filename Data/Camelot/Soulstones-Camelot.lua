@@ -22,7 +22,7 @@ ns.SOULSTONE_BUFF_SPELL_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-11-25, wago.tools, WoW Forever 1.60.1.71139
+	2026-11-27, wago.tools, WoW Forever 1.60.1.71139
 
 Notes
 	- ns.SOULSTONES holds the warlock's soulstones, read by the item cache and the Readiness Report. Rank Value is the stone's resurrection health, used as a sortable preference score (Minor < Lesser < Soulstone < Greater < Major).

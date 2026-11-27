@@ -36,7 +36,7 @@ ns.WELL_FED_ICON_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, TBC Anniversary 2.5.6.70577
+	2026-11-27, wago.tools, TBC Anniversary 2.5.6.70577
 
 Notes
 	- ns.WELL_FED_BUFF_IDS lists food buffs Features/Macros-for-Consumables/Scanner/Scanner-Auras.lua must count as Well Fed although they aren't named "Well Fed" or show another icon, so the buff-food check doesn't nag a player who already has one.
@@ -56,6 +56,10 @@ wago.tools
 	https://wago.tools/db2/SpellEffect?build=2.5.6.70006
 	https://wago.tools/db2/ItemEffect?build=2.5.6.70006
 	https://wago.tools/db2/SpellName?build=2.5.6.70577
+	https://wago.tools/db2/SpellMisc?build=2.5.6.70577
+	https://wago.tools/db2/SpellEffect?build=2.5.6.70577
+	https://wago.tools/db2/ItemEffect?build=2.5.6.70577
+	https://wago.tools/db2/SpellDuration?build=2.5.6.70577
 
 QuestieDB
 	None.

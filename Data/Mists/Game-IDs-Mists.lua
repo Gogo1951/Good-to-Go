@@ -100,7 +100,7 @@ ns.DRINK_SPELL_ID = 430
 How We Got the Data
 
 Last Validated
-	2026-11-26, wago.tools, Mists of Pandaria Classic 5.5.4.71089
+	2026-11-27, wago.tools, Mists of Pandaria Classic 5.5.4.71089
 
 Notes
 	- Single spell, item, race and skill-line IDs the feature code reads by name, grouped by use. The client supplies every name the player sees from these IDs.
@@ -113,7 +113,7 @@ Notes
 	- SOD_FIRST_SPELL_ID is read only where the Vanilla client hides Season of Discovery spells; it is declared here so every folder holds the same constants.
 	- Well Fed (19705) is read for the buff's name, which is Well Fed in every locale on every client. The two mana runes are read for the names the Mana Gem panel shows; both items are still on this client.
 	- ns.PET_BUFF_FOODS is empty: Kibler's Bits (33874) now only makes a pet bigger (65247), and Sporeling Snack (27656) has no use.
-	- The profession skill lines are the ones the usability gates read ranks from; each is found in the skill list by the name the client gives its ID. All three are on this client. The Goblin Engineer specialization is what Diagnostics checks the player for.
+	- The profession skill lines are the ones the usability gates read ranks from; each is found in the skill list by the name the client gives its ID. All four are on this client. The Goblin Engineer specialization is what Diagnostics checks the player for.
 	- Buff Duty: PHASE_SHIFT_SPELL_ID is left out: the imp's abilities on this client (skill line 188) have no Phase Shift, and the Buff Window reads a missing ID as never shifted.
 	- Buff Duty: BLOODRAGE_SPELL_ID is left out: Bloodrage (2687) isn't in this client's spell tables (SpellName, build 5.5.4.71060), and Buff Duty reads a missing ID as never known, so a warrior's Battle Shout never casts it first.
 
@@ -150,6 +150,11 @@ wago.tools
 	https://wago.tools/db2/ItemSparse?build=5.5.4.71089
 	https://wago.tools/db2/SpellName?build=5.5.4.71089
 	https://wago.tools/db2/SkillLine?build=5.5.4.71089
+	https://wago.tools/db2/ChrRaces?build=5.5.4.71089
+	https://wago.tools/db2/CreatureFamily?build=5.5.4.71089
+	https://wago.tools/db2/CreatureType?build=5.5.4.71089
+	https://wago.tools/db2/SpellFlyoutItem?build=5.5.4.71089
+	https://wago.tools/db2/SpellEffect?build=5.5.4.71089
 
 QuestieDB
 	None.

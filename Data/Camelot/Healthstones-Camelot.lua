@@ -18,7 +18,7 @@ ns.HEALTHSTONES = {
 How We Got the Data
 
 Last Validated
-	2026-11-25, wago.tools, WoW Forever 1.60.1.71139
+	2026-11-27, wago.tools, WoW Forever 1.60.1.71139
 
 Notes
 	- Every item that heals instantly on the healthstone cooldown, keyed by the cooldown category Charged Crystal Focus (32578) uses, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Healthstone and Health Potion macros. Healthstone Amount is the low end of the heal; Required Level is the level the tooltip requires (0 for none).

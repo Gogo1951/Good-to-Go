@@ -519,7 +519,7 @@ ns.BUFF_DUTY_RESURRECTIONS = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Classic Era 1.15.9.70576
+	2026-11-27, wago.tools, Classic Era 1.15.9.70576
 
 Notes
 	- Every buff one player can put on another that lasts more than two minutes: the ones worth keeping up on a group, and the ones a player may want to hand out on request. Only the rows for the player's own class are read, and only the ranks the player knows are cast.
@@ -580,7 +580,7 @@ wago.tools
 	https://wago.tools/db2/ItemSparse?build=1.15.9.70576
 	https://wago.tools/db2/SpellEquippedItems?build=1.15.9.70576
 	https://wago.tools/db2/Item?build=1.15.9.70576
-	https://wago.tools/db2/Talent?build=1.15.9.70003
+	https://wago.tools/db2/Talent?build=1.15.9.70576
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Classic/classicItemDB.lua

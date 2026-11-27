@@ -17,7 +17,7 @@ ns.MANA_RUNES = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Mists of Pandaria Classic 5.5.4.71089
+	2026-11-27, wago.tools, Mists of Pandaria Classic 5.5.4.71089
 
 Notes
 	- ns.MANA_GEMS holds the mage's mana gems, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Mana Gem macro and by the Readiness Report. Mana Gem (36799) is what Conjure Mana Gem (759) makes; Brilliant Mana Gem (81901) is what Conjure Mana Gem 119316 makes. Both restore through a scripted effect whose base points are 1 (5405 and 119313), so the column holds the low end their text states, 42,750 each (Validate Data, build 5.5.4.70631), and neither outranks the other. A mage holds only one of the two.
@@ -47,6 +47,7 @@ wago.tools
 	https://wago.tools/db2/SpellEffect?build=5.5.4.71060
 	https://wago.tools/db2/Item?build=5.5.4.71089
 	https://wago.tools/db2/ItemSparse?build=5.5.4.71089
+	https://wago.tools/db2/ItemEffect?build=5.5.4.71089
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/MoP/mopItemDB.lua

@@ -274,17 +274,20 @@ ns.FOOD_AND_WATER = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Season of Discovery 1.15.9.70576
+	2026-11-27, wago.tools, Season of Discovery 1.15.9.70576
 
 Notes
 	- Every food and drink this client knows that restores health or mana while seated, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Food and Water macros and the buff-food choices.
 	- Buff Food is 1 when eating gives a Well Fed buff (the text says "well fed", "also increases" or the like). Food % and Water % are percent of health or mana per second (100% over 20 sec is 5). Food Amount and Water Amount are the whole restore over the meal.
+	- Festival Dumplings (21537) and Refreshing Red Apple (23172): the tooltip says 4% of health and mana, while the mana effect's own value is 3%. The rows keep the tooltip's 4; the item cache only reads that a percent value is there, never its size.
 	- Allowed Zones are uiMapIDs: 1460 Warsong Gulch and 1461 Arathi Basin. Each zone-locked ration's text says where it works.
 	- Arena (column 7) is a fixed per-item property: 1 = offered only inside a PvP Arena. 2 = a conjured item, so it also works inside an arena. Harvest Bread and Winter Veil Loaf say Conjured Item but carry no arena value, as on TBC, whose client doesn't flag them usable in arenas. Whether an item is actually offered is gated live on IsInInstance() at scan time (ns.CacheItemData and ns.ScanBags); no arena zone IDs are kept.
 	- Left out on purpose: Scorpid Surprise (5473) and Green Tea Leaf (1401), oddballs that share the food cooldown, and items that share it but restore nothing (alcohol, Deviate fish, holiday novelties, feasts that place a table).
 	- Green Garden Tea (17405) and Lapidis Tankard of Tidesippe (4696) are Classic Era foods the Classic Era report confirms, copied in. Season of Discovery's own foods (Pine Nut Butter, Jungle Durian, Drinkable Stratholme Holy Water, Darkclaw Bisque, Smoked Redgill, Prowler Steak, Filet o' Flank, Sunrise Omelette, Slice of Carrie's Apple Pie) came from the Classic Era tables on wago.tools (build 1.15.9.70003: the regen value times the duration over 5, rounded down), and the Season of Discovery report's tooltips confirm their amounts.
 	- Blessed Sunfruit Juice (13813) and Bottled Alterac Spring Water (19318) are left out; their Well Fed buffs are still recognized through ns.WELL_FED_BUFF_IDS.
-	- Tasty Summer Treat (23175, an iCoke promotion) is left out: nothing drops, sells or rewards it in QuestieDB's Classic items or its Season of Discovery item base, and no spell makes it. So are the placeholders the client names Deprecated (761, 1321, 4418).
+	- Tasty Summer Treat (23175, an iCoke promotion) is left out: nothing drops, sells or rewards it in QuestieDB's Classic items or its Season of Discovery item base, and no spell makes it. So are the placeholders the client names Deprecated (761, 1267, 1268, 1321, 1649, 2071, 3773, 4418), Test Food (1165) and Winter Veil Cookie UNUSED (21238).
+	- Two items share the food cooldown but have no ItemSparse row, so no name, on this client: 19063 (its spell is the Enriched Manna Biscuit's) and 238640 (its spell has no effects). Neither is in QuestieDB's Classic items or its Season of Discovery item base. 19063 is likely unobtainable; 238640 is a Season of Discovery ID, whose source QuestieDB can't confirm either way, but its spell restores nothing. Both are left out.
+	- The family is every item whose use spell is in the food (11) or drink (59) cooldown category or restores health or mana while seated (auras 84 and 85); what that finds beyond these rows is named above, plus the stat brews and alcohol, Dragonbreath Chili, Toasted Smorc, the feasts, and flasks, elixirs and scrolls that restore mana over time but aren't eaten.
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query
@@ -307,6 +310,9 @@ wago.tools
 	https://wago.tools/db2/Item?build=1.15.9.70576
 	https://wago.tools/db2/ItemEffect?build=1.15.9.70576
 	https://wago.tools/db2/SpellEffect?build=1.15.9.70576
+	https://wago.tools/db2/Spell?build=1.15.9.70576
+	https://wago.tools/db2/SpellMisc?build=1.15.9.70576
+	https://wago.tools/db2/SpellDuration?build=1.15.9.70576
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Classic/classicItemDB.lua

@@ -50,7 +50,7 @@ ns.POTIONS = {
 How We Got the Data
 
 Last Validated
-	2026-11-25, wago.tools, WoW Forever 1.60.1.71139
+	2026-11-27, wago.tools, WoW Forever 1.60.1.71139
 
 Notes
 	- Every potion this client knows that restores health or mana instantly on the potion cooldown, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Health Potion and Mana Potion macros. Healing Amount and Mana Amount are each effect's low end; requiredAlchemy is the Alchemy rank the tooltip requires.
@@ -60,6 +60,7 @@ Notes
 	- Minor and Lesser Healing, Minor and Lesser Mana, and Greater Healing (287966-287969, 287977) are WoW Forever's level-1 copies of the originals, with the same use spells and the originals' values, which Validate Data confirmed on build 1.60.1.70450.
 	- Superior Healing Potion (288896) and Superior Mana Potion (288897) are WoW Forever level-1 copies like the ones above, but no spell on this client creates them and QuestieDB's Forever item base lists no drop, vendor or quest for them, so they are left out as likely unobtainable. (It lists none for the copies above either; those rows predate this test.)
 	- Season of Discovery items are left out even though this client knows many of their IDs (any ID of 200000 or more that the Classic Era tables also hold): they live only in Data/Discovery/. Where a table would otherwise pick one up, a deliberately-absent line in the table says so.
+	- 17350, a nameless item that restores mana on the potion cooldown, is left out as likely unobtainable: it has no ItemSparse row on this build, no spell makes it, and QuestieDB lists no source.
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query

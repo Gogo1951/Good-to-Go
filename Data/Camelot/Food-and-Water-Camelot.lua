@@ -335,7 +335,7 @@ ns.FOOD_AND_WATER = {
 How We Got the Data
 
 Last Validated
-	2026-11-25, wago.tools, WoW Forever 1.60.1.71139
+	2026-11-27, wago.tools, WoW Forever 1.60.1.71139
 
 Notes
 	- Every food and drink this client knows that restores health or mana while seated, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Food and Water macros and the buff-food choices.
@@ -351,6 +351,7 @@ Notes
 	- Deprecated Creeper Cakes (4418) and Scooby Snack (8243) are left out: this client's tables give them a restore, but nothing drops, sells or rewards either one (QuestieDB). Thistle Tea (7676) is left out too; it restores energy, not health or mana.
 	- Season of Discovery items are left out even though this client knows many of their IDs (any ID of 200000 or more that the Classic Era tables also hold): they live only in Data/Discovery/. Where a table would otherwise pick one up, a deliberately-absent line in the table says so.
 	- Cleansing Stew (252683) is left out though a Cooking recipe in this client's tables makes it (1255241): the item has no ItemSparse row on this build, and the recipe needs 252948, a quest item with neither an ItemSparse row nor a QuestieDB source, so it looks unreleased.
+	- Two nameless items whose use spell restores health are left out as likely unobtainable: 249804 (Food) and 277313 (Nutritious Food). Neither has an ItemSparse row on this build, no spell makes either, and QuestieDB lists no source.
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query
@@ -409,4 +410,5 @@ wago.tools
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Forever/foreverItemDB.lua
+	https://raw.githubusercontent.com/Questie/QuestieDB/master/src/corrections/Forever/generated/foreverBaseItem.lua
 ]]

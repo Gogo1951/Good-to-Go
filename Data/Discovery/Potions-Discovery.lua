@@ -42,12 +42,13 @@ ns.POTIONS = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Season of Discovery 1.15.9.70576
+	2026-11-27, wago.tools, Season of Discovery 1.15.9.70576
 
 Notes
 	- Every potion this client knows that restores health or mana instantly on the potion cooldown, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Health Potion and Mana Potion macros. Healing Amount and Mana Amount are each effect's low end; requiredAlchemy is the Alchemy rank the tooltip requires.
 	- Allowed Zones are uiMapIDs. The draughts' text says they work only in PvP battlegrounds: 1459 Alterac Valley, 1460 Warsong Gulch, 1461 Arathi Basin.
 	- Holy Spring Water (737) is left out on purpose, an oddball on the potion cooldown. Potions that do something else (rage, speed, protection, invisibility) are not in this table.
+	- The family is every item whose use spell is on the potion cooldown (category 4) and heals or restores mana. Beyond these rows that finds Holy Spring Water, the rage potions, Deprecated Potion of Lesser Invulnerability (Fix) (2462), and 17350, a mana potion with no ItemSparse row (no name) and no source in QuestieDB's Classic items or Season of Discovery item base, so likely unobtainable; none is added.
 	- Eye of the Storm (1956) is not a zone here: this client has none, and the draughts' text says only PvP battlegrounds.
 	- Wildvine Potion (9144) is a Classic Era item the Classic Era report confirms, copied in; its 0 to 1,500 health and mana is entered as 1 and 1 so it ranks below every other potion. Season of Discovery's Greater and Major Healing Potions (223914, 223913) and Major Discolored Healing Potion (241650) came from the Classic Era tables on wago.tools (build 1.15.9.70003), and the Season of Discovery report's tooltips confirm their amounts.
 
@@ -72,7 +73,9 @@ wago.tools
 	https://wago.tools/db2/Item?build=1.15.9.70576
 	https://wago.tools/db2/ItemEffect?build=1.15.9.70576
 	https://wago.tools/db2/SpellEffect?build=1.15.9.70576
+	https://wago.tools/db2/Spell?build=1.15.9.70576
 
 QuestieDB
-	None.
+	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Classic/classicItemDB.lua
+	https://raw.githubusercontent.com/Questie/QuestieDB/master/src/corrections/Sod/sodBaseItems.lua
 ]]

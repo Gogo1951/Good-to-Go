@@ -39,12 +39,13 @@ ns.POTIONS = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Classic Era 1.15.9.70576
+	2026-11-27, wago.tools, Classic Era 1.15.9.70576
 
 Notes
 	- Every potion this client knows that restores health or mana instantly on the potion cooldown, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Health Potion and Mana Potion macros. Healing Amount and Mana Amount are each effect's low end; requiredAlchemy is the Alchemy rank the tooltip requires.
 	- Allowed Zones are uiMapIDs. The draughts' text says they work only in PvP battlegrounds: 1459 Alterac Valley, 1460 Warsong Gulch, 1461 Arathi Basin.
 	- Holy Spring Water (737) is left out on purpose, an oddball on the potion cooldown. Potions that do something else (rage, speed, protection, invisibility) are not in this table. Deprecated Potion of Lesser Invulnerability (Fix) (2462) is a placeholder nothing drops, sells or makes.
+	- 17350 has an Item row and a mana effect on the potion cooldown but no ItemSparse row or name, so it's left out.
 	- Wildvine Potion's 0 to 1,500 health and mana is entered as 1 and 1, so it ranks below every other potion.
 	- Season of Discovery items are left out even though this client knows their IDs: they live only in Data/Discovery/. Where a table would otherwise pick one up, a deliberately-absent line in the table says so.
 
@@ -58,13 +59,13 @@ wago.tools
 	https://wago.tools/db2/Item?build=1.15.9.70576
 	https://wago.tools/db2/ItemSparse?build=1.15.9.70576
 	https://wago.tools/db2/ItemEffect?build=1.15.9.70576
-	https://wago.tools/db2/Spell?build=1.15.9.70003
+	https://wago.tools/db2/Spell?build=1.15.9.70576
 	https://wago.tools/db2/SpellEffect?build=1.15.9.70576
-	https://wago.tools/db2/SpellMisc?build=1.15.9.70003
-	https://wago.tools/db2/SpellDuration?build=1.15.9.70003
-	https://wago.tools/db2/SpellCastingRequirements?build=1.15.9.70003
-	https://wago.tools/db2/AreaGroupMember?build=1.15.9.70003
-	https://wago.tools/db2/UiMapAssignment?build=1.15.9.70003
+	https://wago.tools/db2/SpellMisc?build=1.15.9.70576
+	https://wago.tools/db2/SpellDuration?build=1.15.9.70576
+	https://wago.tools/db2/SpellCastingRequirements?build=1.15.9.70576
+	https://wago.tools/db2/AreaGroupMember?build=1.15.9.70576
+	https://wago.tools/db2/UiMapAssignment?build=1.15.9.70576
 	https://wago.tools/db2/SpellName?build=1.15.9.70576
 
 QuestieDB

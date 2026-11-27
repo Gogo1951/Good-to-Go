@@ -223,7 +223,7 @@ Notes
 	- Passive abilities and abilities with one rank are left out. Each demon's summon-time rank (Firebolt Rank 1, Torment Rank 1, Lash of Pain Rank 1, Devour Magic Rank 1) is added, since no grimoire teaches it.
 
 SQL (CMaNGOS)
-	None.
+	TODO: Add SQL Query
 
 Wowhead
 	None.
@@ -246,7 +246,7 @@ Notes
 	- Empty: this flavor's pets learn their abilities as they level, with no ranks to train, or no TOC lists this folder.
 
 SQL (CMaNGOS)
-	None.
+	TODO: Add SQL Query
 
 Wowhead
 	None.
@@ -274,7 +274,7 @@ Notes
 	- Passive abilities (the resistances, Great Stamina, Natural Armor), Beast Training's old pet talents, Devour Magic Effect, Lava Breath and abilities with one rank are left out. A rank this client lacks is dropped at login (Rank-Watch-Lookups.lua OnClient).
 
 SQL (CMaNGOS)
-	None.
+	TODO: Add SQL Query
 
 Wowhead
 	None.

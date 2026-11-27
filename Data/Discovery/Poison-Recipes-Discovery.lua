@@ -48,14 +48,14 @@ ns.POISON_RECIPES = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Season of Discovery 1.15.9.70576
+	2026-11-27, wago.tools, Season of Discovery 1.15.9.70576
 
 Notes
 	- What a rogue poison costs to craft, read by Features/Restocker/Restocker-Crafting-Reagents.lua: when the Restock List is short of a poison, the shortfall becomes an order for these reagents, and the vendor has to stock every one of them before any is bought.
 	- Blizzard rebalanced most of these counts in TBC, so each folder carries its own client's counts: the Classic Era folders the original ones, TBC and later the rebalanced ones. Every recipe matches its crafting spell's reagents in this client's tables.
 	- Vials are listed like any other reagent rather than special-cased: a recipe needs one, the vendor has to sell it, and the all-or-nothing gate treats it as it treats the rest.
 	- Reagents by ID: 2928 Dust of Decay, 8924 Dust of Deterioration, 2930 Essence of Pain, 8923 Essence of Agony, 2931 Maiden's Anguish, 5173 Deathweed, 3371 Empty Vial, 3372 Leaded Vial, 8925 Crystal Vial.
-	- Season of Discovery's own poisons (Sebacious, Numbing, Atrophic, Occult I and II) take their reagents from their crafting spells in the Classic Era tables on wago.tools (build 1.15.9.70003, SpellReagents); the Season of Discovery report confirms every item, though no report states reagent counts.
+	- Season of Discovery's own poisons (Sebacious, Numbing, Atrophic, Occult I and II) take their reagents from their crafting spells in the Classic Era tables on wago.tools (build 1.15.9.70003, SpellReagents); the Season of Discovery report confirms every item, and this client's SpellReagents at 1.15.9.70576 confirms every count.
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query
@@ -69,6 +69,9 @@ wago.tools
 	https://wago.tools/db2/SpellReagents?build=1.15.9.70003
 	https://wago.tools/db2/Item?build=1.15.9.70576
 	https://wago.tools/db2/ItemSparse?build=1.15.9.70576
+	https://wago.tools/db2/SpellReagents?build=1.15.9.70576
+	https://wago.tools/db2/SkillLineAbility?build=1.15.9.70576
+	https://wago.tools/db2/SpellEffect?build=1.15.9.70576
 
 QuestieDB
 	None.

@@ -83,7 +83,7 @@ ns.POTIONS = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Mists of Pandaria Classic 5.5.4.71089
+	2026-11-27, wago.tools, Mists of Pandaria Classic 5.5.4.71089
 
 Notes
 	- Every potion this client knows that restores health or mana instantly on the potion cooldown (category 4), read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Health Potion and Mana Potion macros. requiredAlchemy is the Alchemy rank the item requires (the Endless potions and the Alchemist's potions).
@@ -93,7 +93,7 @@ Notes
 	- The Ogre Brews say only the Blade's Edge Plateaus, which have no map of their own on this client (Classic's 1949 is gone and 105 is all of Blade's Edge Mountains), so they keep only Gruul's Lair (330), where they also work. Outside it the macro never offers them.
 	- Left out: Holy Spring Water (737), an oddball on the potion cooldown, and potions that do something else (rage, speed, protection, invisibility). Items named Deprecated, DEPCREATED or PLACEHOLDER are left out.
 	- Mysterious Potion (57099) is crafted, but both the heal and the mana effect of its spell (78778) hold 0 in this client's tables, so it has no amount to rank by and is left out.
-	- Every row has a source: a drop, vendor or quest reward in QuestieDB's MoP item table, or a spell that creates it. Left out for having neither: Full Moonshine (1072), Diet McWeaksauce (23578), The McWeaksauce Classic (23579), the first Healing and Mana Potion Injectors (23822, 23823; the 33092 and 33093 copies are kept), Rulkster's Brain Juice and Secret Sauce (32762, 32763), Runic Battle Potion (39971), Argent Healing and Mana Potion (43531, 43530), Jillian's Genius Juice and Savior Sauce (45276, 45277), Mythical Battle Draught (67416), Adrenaline Shot (88416) and Brawler's Healing Potion (92954).
+	- Every row has a source: a drop, vendor or quest reward in QuestieDB's MoP item table, or a spell that creates it. Left out for having neither: Full Moonshine (1072), Diet McWeaksauce (23578), The McWeaksauce Classic (23579), the first Healing and Mana Potion Injectors (23822, 23823; the 33092 and 33093 copies are kept), Rulkster's Brain Juice and Secret Sauce (32762, 32763), Runic Battle Potion (39971), Argent Healing and Mana Potion (43531, 43530), Jillian's Genius Juice and Savior Sauce (45276, 45277), Mythical Battle Draught (67416), Adrenaline Shot (88416), Brawler's Healing Potion (92954) and the Healing Potion that restores 25% of maximum health (93742).
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query
@@ -123,6 +123,12 @@ wago.tools
 	https://wago.tools/db2/SpellEffect?build=5.5.4.71060
 	https://wago.tools/db2/Item?build=5.5.4.71089
 	https://wago.tools/db2/ItemSparse?build=5.5.4.71089
+	https://wago.tools/db2/ItemEffect?build=5.5.4.71089
+	https://wago.tools/db2/SpellEffect?build=5.5.4.71089
+	https://wago.tools/db2/Spell?build=5.5.4.71089
+	https://wago.tools/db2/SpellCastingRequirements?build=5.5.4.71089
+	https://wago.tools/db2/AreaGroupMember?build=5.5.4.71089
+	https://wago.tools/db2/UiMapAssignment?build=5.5.4.71089
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/MoP/mopItemDB.lua

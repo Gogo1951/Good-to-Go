@@ -214,7 +214,7 @@ ns.SCROLL_DATA = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Mists of Pandaria Classic 5.5.4.71089
+	2026-11-27, wago.tools, Mists of Pandaria Classic 5.5.4.71089
 
 Notes
 	- The stat scrolls, read by Features/Macros-for-Consumables/Scanner/Scanner-Auras.lua and Scanner-Scrolls.lua (FindBestScroll) to pick a scroll whose buff the player lacks. Each type lists its scrolls as { itemID, buffID, requiredLevel, amount }: the buff is the aura the scroll leaves, requiredLevel the level the item requires, amount the stat it grants. This client keeps the scrolls through rank IX (Inscription).
@@ -251,6 +251,7 @@ wago.tools
 	https://wago.tools/db2/Item?build=5.5.4.71089
 	https://wago.tools/db2/ItemSparse?build=5.5.4.71089
 	https://wago.tools/db2/SpellName?build=5.5.4.71089
+	https://wago.tools/db2/ItemEffect?build=5.5.4.71089
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/MoP/mopItemDB.lua

@@ -75,7 +75,7 @@ ns.MISSING_SPELL_MESSAGE_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Season of Discovery 1.15.9.70576
+	2026-11-27, wago.tools, Season of Discovery 1.15.9.70576
 
 Notes
 	- The mage and warlock conjure spells the macros cast, one list per conjure, read by Features/Macros-for-Consumables/Macros/Smart-Spell.lua (GetSmartSpell), the Food and Water macros, the class tools, the Readiness Report and the mini-map tooltip. Smart-Spell sorts each list by its level column, highest first, at load, so row order carries no meaning.
@@ -85,6 +85,7 @@ Notes
 	- Soulstone rows name their max target level in the trailing comment: a soulstone can't be used on a player above that level. It needs no selection logic, since the caps rise with rank and casting the best known rank always satisfies the cap. The Soulstone resolver passes ignoreTarget, which is why that list's level column is the learn level.
 	- ns.MISSING_SPELL_MESSAGE_IDS holds the spells GtGTip names at print time (Features/Macros-for-Consumables/Macros/Runtime.lua): one per conjure list that has rows, taken from its rank-1 entry, plus the rogue's Poisons skill, which is not a conjure.
 	- Conjure Water rank 8 (468766) makes Mountain Spring Water (231778), usable at 55 like Conjured Crystal Water; Smart-Spell breaks the tie by spell ID, so rank 8 is cast first. It came from the Classic Era tables on wago.tools (build 1.15.9.70003, SkillLineAbility and SpellEffect), and the Season of Discovery report confirms the spell, and the water at level 55.
+	- Conjure Ocean Water (443635) also makes Conjured Spring Water, but no skill line teaches it to a mage (SkillLineAbility), so it's left out. Every other conjure that makes food, water, a mana gem or a stone is a row here.
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query
@@ -99,6 +100,11 @@ wago.tools
 	https://wago.tools/db2/SpellLevels?build=1.15.9.70003
 	https://wago.tools/db2/SkillLineAbility?build=1.15.9.70003
 	https://wago.tools/db2/SpellName?build=1.15.9.70576
+	https://wago.tools/db2/Spell?build=1.15.9.70576
+	https://wago.tools/db2/SpellEffect?build=1.15.9.70576
+	https://wago.tools/db2/SpellLevels?build=1.15.9.70576
+	https://wago.tools/db2/SkillLineAbility?build=1.15.9.70576
+	https://wago.tools/db2/ItemSparse?build=1.15.9.70576
 
 QuestieDB
 	None.

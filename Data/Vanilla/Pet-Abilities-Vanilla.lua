@@ -631,7 +631,7 @@ ns.DEMON_ABILITIES = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Classic Era 1.15.9.70576
+	2026-11-27, wago.tools, Classic Era 1.15.9.70576
 
 Notes
 	- Every hunter pet ability rank this client's pets can learn, for the Pet What's Next? tab (Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Pet.lua): one row per rank, with the beasts that teach the ranks learned by taming.
@@ -643,7 +643,7 @@ Notes
 	- Screech rank 3 (24578) needs pet level 40 here; Tamed says 48. The client's level stands.
 	- ns.PET_ABILITY_BEASTS and ns.TAMEABLE_BEASTS are Tamed's tameable NPCs, their level ranges and zones (AreaTable IDs, which C_Map.GetAreaInfo names), and the ranks each knows. The client can't name an NPC from its ID until it has seen one, so the names are Tamed's enUS ones.
 	- ns.DEMON_ABILITIES is the warlock's side, for the same tab: each demon spell a grimoire teaches (a spell whose Learn Spell effect targets the pet, SpellEffect effect 36 target 5, off the Beast Training skill line), the grimoire (ItemEffect), the grimoire's RequiredLevel (ItemSparse) and the demons whose skill line has the spell (CreatureFamily; Succubus and Incubus share one). All 59 grimoires are on the demon trainers' lists (CMaNGOS classic-db npc_vendor of the creatures titled Demon Trainer). The rank 1 of each demon's first spells comes with the demon, so it has no grimoire and no row.
-	- Tamed (https://github.com/moody/Tamed) is MIT licensed; its notice is in Data/LICENSE-Pet-Data.
+	- Tamed (https://github.com/moody/Tamed) is MIT licensed; its notice is in Data/LICENSE-Pet-Data. The rows came from Tamed 2.0.1, src/data/TameableAbilities-Vanilla.lua and src/data/TameableNPCs-Vanilla.lua.
 	- Made by script from the tables below; the rows are regenerated, not edited by hand.
 
 SQL (CMaNGOS)
@@ -666,7 +666,4 @@ wago.tools
 
 QuestieDB
 	None.
-
-Tamed
-	Tamed 2.0.1, src/data/TameableAbilities-Vanilla.lua and src/data/TameableNPCs-Vanilla.lua
 ]]

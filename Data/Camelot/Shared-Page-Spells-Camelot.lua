@@ -8,14 +8,20 @@ ns.SHARED_PAGE_SPELLS = {
 		20594, -- Stoneform
 		2481, -- Find Treasure
 		20580, -- Shadowmeld
+		1259799, -- Elune's Light
 		20589, -- Escape Artist
 		1259812, -- Eureka!
 		20572, -- Blood Fury
+		1299026, -- Shatter Curse
 		7744, -- Will of the Forsaken
 		20577, -- Cannibalize
 		20549, -- War Stomp
+		20552, -- Cultivation
 		20554, -- Berserking
 		1260270, -- Rapid Regeneration
+		1259705, -- Read Leyline
+		1259416, -- Walk on Air
+		1259686, -- Skysight
 	},
 	professions = {
 		2259, -- Alchemy
@@ -76,14 +82,14 @@ ns.PROFESSION_SPECIALIZATIONS = {
 How We Got the Data
 
 Last Validated
-	2026-11-25, wago.tools, WoW Forever 1.60.1.71139
+	2026-11-27, wago.tools, WoW Forever 1.60.1.71139
 
 Notes
 	- SHARED_PAGE_SPELLS holds the spells every class shares, which the Spell Book page files under its own headings whatever their spellbook tab: each race's spells (racials, which Sort By Category gives a Racials section), the profession and tracking spells the General tab lists (professions, tracking), and its Attack (attacks). ns.PageCategory and the page-tag lookup in Features/Enhanced-Spellbook/Macro-Builder/Macro-Builder.lua read it.
 	- An entry is a spell ID, or a list of the IDs one spell has across clients. Each is matched by name, so an ID this client doesn't have is skipped.
 	- PROFESSION_SPECIALIZATIONS lists each profession's spell, then its specializations: passives the spellbook lists beside the profession that do nothing when cast. When one is learned, the page shows the profession's macro under the specialization's name and icon ("Goblin Engineer", still opening Engineering) and leaves the specialization's own off. A later one in the row wins, so a Master Swordsmith beats the Weaponsmith it builds on. FoldSpecializations in Features/Enhanced-Spellbook/Macro-Builder/Macro-Builder.lua reads it.
 	- The rows began as one shared table copied to every folder. This client's Validate Data report pruned the IDs it doesn't have: the later expansions' racials, professions and profession spells, and the Alchemy and Tailoring specializations, which leaves those two professions out of PROFESSION_SPECIALIZATIONS.
-	- WoW Forever's own racials, from the racial skill lines in this client's SkillLineAbility on wago.tools: Will to Survive (Human), Eureka! (Gnome) and Rapid Regeneration (Troll). Eureka! has one spell per power type (1259812, 1259813, 1259817, 1259821, 1259823), all named alike, so one ID matches them all.
+	- WoW Forever's own racials, from the racial skill lines in this client's SkillLineAbility on wago.tools: Will to Survive (Human), Eureka! (Gnome) and Rapid Regeneration (Troll), and on 2026-11-27 Elune's Light (Night Elf), Shatter Curse (Orc), Cultivation (Tauren, an active cast here) and the Skyborne's Read Leyline, Walk on Air and Skysight. Each is a cast with a cooldown that its race's skill line grants. Eureka! has one spell per power type (1259812, 1259813, 1259817, 1259821, 1259823), all named alike, so one ID matches them all.
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query
@@ -112,6 +118,7 @@ wago.tools
 	https://wago.tools/db2/SkillLine?build=1.60.1.71139
 	https://wago.tools/db2/SpellEffect?build=1.60.1.71139
 	https://wago.tools/db2/SpellLevels?build=1.60.1.71139
+	https://wago.tools/db2/ChrRaces?build=1.60.1.71139
 
 QuestieDB
 	None.

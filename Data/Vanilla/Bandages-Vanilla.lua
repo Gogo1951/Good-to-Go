@@ -31,14 +31,14 @@ ns.BANDAGES = {
 	[19066] = { 2000, 225, 100, { 1460 }, 45, 100, 20, 1 }, -- Warsong Gulch Runecloth Bandage
 	[19068] = { 640, 125, 50, { 1460 }, 25, 50, 20, 1 }, -- Warsong Gulch Silk Bandage
 	[3530] = { 161, 50, 28, nil, 0, 28, 20, 0 }, -- Wool Bandage
-	-- Dense Frostweave Bandage (38640) and Dalaran Bandage (44646) are deliberately absent; the query above excludes them too, so a regeneration will not bring them back.
+	-- Dense Frostweave Bandage (38640) and Dalaran Bandage (44646) are deliberately absent; the query below excludes them too, so a regeneration will not bring them back.
 }
 
 --[[
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Classic Era 1.15.9.70576
+	2026-11-27, wago.tools, Classic Era 1.15.9.70576
 
 Notes
 	- Every First Aid bandage on this client, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) to rank the Bandage macro's picks.
@@ -95,13 +95,13 @@ wago.tools
 	https://wago.tools/db2/Item?build=1.15.9.70576
 	https://wago.tools/db2/ItemSparse?build=1.15.9.70576
 	https://wago.tools/db2/ItemEffect?build=1.15.9.70576
-	https://wago.tools/db2/Spell?build=1.15.9.70003
+	https://wago.tools/db2/Spell?build=1.15.9.70576
 	https://wago.tools/db2/SpellEffect?build=1.15.9.70576
 	https://wago.tools/db2/SpellMisc?build=1.15.9.70576
 	https://wago.tools/db2/SpellDuration?build=1.15.9.70576
-	https://wago.tools/db2/SpellCastingRequirements?build=1.15.9.70003
-	https://wago.tools/db2/AreaGroupMember?build=1.15.9.70003
-	https://wago.tools/db2/UiMapAssignment?build=1.15.9.70003
+	https://wago.tools/db2/SpellCastingRequirements?build=1.15.9.70576
+	https://wago.tools/db2/AreaGroupMember?build=1.15.9.70576
+	https://wago.tools/db2/UiMapAssignment?build=1.15.9.70576
 	https://wago.tools/db2/SpellName?build=1.15.9.70576
 
 QuestieDB

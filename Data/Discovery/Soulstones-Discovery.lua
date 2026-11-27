@@ -26,7 +26,7 @@ ns.SOULSTONE_BUFF_SPELL_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Season of Discovery 1.15.9.70576
+	2026-11-27, wago.tools, Season of Discovery 1.15.9.70576
 
 Notes
 	- ns.SOULSTONES holds the warlock's soulstones, read by the item cache and the Readiness Report. Rank Value is the stone's resurrection health, used as a sortable preference score (Minor < Lesser < Soulstone < Greater < Major).
@@ -50,6 +50,8 @@ wago.tools
 	https://wago.tools/db2/Item?build=1.15.9.70576
 	https://wago.tools/db2/SpellName?build=1.15.9.70576
 	https://wago.tools/db2/ItemSparse?build=1.15.9.70576
+	https://wago.tools/db2/ItemEffect?build=1.15.9.70576
+	https://wago.tools/db2/SpellEffect?build=1.15.9.70576
 
 QuestieDB
 	None.

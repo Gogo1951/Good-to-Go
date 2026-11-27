@@ -105,7 +105,7 @@ ns.ELIXIR_BUFF_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-11-25, wago.tools, WoW Forever 1.60.1.71139
+	2026-11-27, wago.tools, WoW Forever 1.60.1.71139
 
 Notes
 	- What counts as being flasked, for the Readiness Report's Flask or 2x Elixirs check (Features/Readiness-Report/Readiness-Report-Probes.lua): a flask, OR two different elixirs. Two different elixirs is the whole test, and it is enough because the client enforces the rest: from TBC on, a character may carry one battle and one guardian elixir at a time, so any two elixir auras up together are already one of each. The report reads only whether a buff is listed, never its group.
@@ -119,6 +119,7 @@ Notes
 	- The buffs of WoW Forever's own elixirs and flasks (IDs above 1240000) are each item's use spell in this client's tables on wago.tools. Flask of Petrification (17624) is here because this client's text for it says only one flask works at a time. Elixir of Greater Firepower became Elixir of Holy Power (buff 1310077) on this client.
 	- Lesser Arcane Elixir (217398) is left out: it is a Season of Discovery item this client also knows.
 	- Season of Discovery items are left out even though this client knows many of their IDs (any ID of 200000 or more that the Classic Era tables also hold): they live only in Data/Discovery/. Where a table would otherwise pick one up, a deliberately-absent line in the table says so.
+	- The Elixirs of Endless Power, Healing, Intellect, Rapidity, Opportunity, Mana, Experience and Growth (289083, 289084, 289082, 289086, 289087, 289321, 289334, 289329) and the second Noggenfogger Elixir (289081) are left out as likely unobtainable: no spell makes them and QuestieDB lists no source.
 
 SQL (CMaNGOS)
 	Database not recorded.
@@ -176,4 +177,5 @@ wago.tools
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Forever/foreverItemDB.lua
+	https://raw.githubusercontent.com/Questie/QuestieDB/master/src/corrections/Forever/generated/foreverBaseItem.lua
 ]]

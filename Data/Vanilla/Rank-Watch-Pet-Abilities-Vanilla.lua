@@ -189,7 +189,7 @@ ns.RANK_WATCH_PET_ABILITIES = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Classic Era 1.15.9.70576
+	2026-11-27, wago.tools, Classic Era 1.15.9.70576
 
 Notes
 	- Built by Tools/Build-Rank-Watch-Pet-Abilities.py from Pet-Abilities-Vanilla.lua: PET_ABILITIES under HUNTER, DEMON_ABILITIES under WARLOCK, grouped by each row's comment.
@@ -197,7 +197,7 @@ Notes
 	- Passive abilities and abilities with one rank are left out. Each demon's summon-time rank (Firebolt Rank 1, Torment Rank 1, Lash of Pain Rank 1, Devour Magic Rank 1) is added, since no grimoire teaches it.
 
 SQL (CMaNGOS)
-	None.
+	TODO: Add SQL Query
 
 Wowhead
 	None.

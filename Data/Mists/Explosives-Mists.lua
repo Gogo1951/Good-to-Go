@@ -36,7 +36,7 @@ ns.EXPLOSIVES = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Mists of Pandaria Classic 5.5.4.71089
+	2026-11-27, wago.tools, Mists of Pandaria Classic 5.5.4.71089
 
 Notes
 	- Every Engineering explosive this client knows that deals damage, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Explosive macro. The family is the items sharing Coarse Dynamite's (4365) use category (24) and its class and subclass (Trade Goods, Explosives).
@@ -75,6 +75,7 @@ wago.tools
 	https://wago.tools/db2/Item?build=5.5.4.71089
 	https://wago.tools/db2/ItemSparse?build=5.5.4.71089
 	https://wago.tools/db2/SpellName?build=5.5.4.71089
+	https://wago.tools/db2/ItemEffect?build=5.5.4.71089
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/MoP/mopItemDB.lua

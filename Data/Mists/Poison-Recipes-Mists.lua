@@ -7,7 +7,7 @@ ns.POISON_RECIPES = {}
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Mists of Pandaria Classic 5.5.4.71089
+	2026-11-27, wago.tools, Mists of Pandaria Classic 5.5.4.71089
 
 Notes
 	- Empty: this client has no poison crafting. The Poisons skill line (40) has no abilities, the TBC crafting spells are gone, and the poisons are spells rather than items (Poisons-Mists.lua).
@@ -22,6 +22,7 @@ Wowhead
 wago.tools
 	https://wago.tools/db2/SkillLineAbility?build=5.5.4.70631
 	https://wago.tools/db2/SpellName?build=5.5.4.70631
+	https://wago.tools/db2/SkillLineAbility?build=5.5.4.71089
 
 QuestieDB
 	None.

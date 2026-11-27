@@ -769,7 +769,7 @@ ns.DEMON_ABILITIES = {
 How We Got the Data
 
 Last Validated
-	2026-11-25, wago.tools, WoW Forever 1.60.1.71139
+	2026-11-27, wago.tools, WoW Forever 1.60.1.71139
 
 Notes
 	- The hunter pet ability ranks for the Pet What's Next? tab (Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Pet.lua), which shows only where this table has rows, and for Ability Alerts While Leveling's pet lines (Features/Rank-Watch/Rank-Watch-Level-Up.lua), which take only the HUNTER_TRAINER rows.

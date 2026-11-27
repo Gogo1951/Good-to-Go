@@ -7,13 +7,13 @@ ns.RANK_WATCH_PET_ABILITIES = {}
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Mists of Pandaria Classic 5.5.4.71089
+	2026-11-27, wago.tools, Mists of Pandaria Classic 5.5.4.71089
 
 Notes
 	- Empty: this flavor's pets learn their abilities as they level, with no ranks to train, or no TOC lists this folder.
 
 SQL (CMaNGOS)
-	None.
+	TODO: Add SQL Query
 
 Wowhead
 	None.

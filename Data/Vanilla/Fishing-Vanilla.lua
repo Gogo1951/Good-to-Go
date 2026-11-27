@@ -48,7 +48,7 @@ ns.FISHING_WELL_FED_BUFF_IDS = {}
 How We Got the Data
 
 Last Validated
-	2026-11-26, wago.tools, Classic Era 1.15.9.70576
+	2026-11-27, wago.tools, Classic Era 1.15.9.70576
 
 Notes
 	- What the Fishing Lure macro (Features/Macros-for-Consumables/Macros/Fishing-Lure.lua) puts on and applies, each table ranked by its Fishing Bonus.
