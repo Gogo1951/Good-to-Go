@@ -14,7 +14,7 @@ ns.BUFF_DUTY_PETS_FLAGGED_ONLY = true
 -- Whether Well Fed and Scrolls show on the Self-Buffs list When Missing by default (else Off).
 ns.BUFF_DUTY_ITEM_BUFFS_SHOWN = true
 
--- { class, single = { { spell id, level learned } }, group = { spell ids }, greater = { spell ids }, exclusive, manaOnly, noCasters, pets, talent, noAsk, noShadowform, default, selfDefault }, -- Name
+-- { class, single = { { spell id, level learned } }, group = { spell ids }, greater = { spell ids }, exclusive, manaOnly, noCasters, pets, yieldsToImp, talent, noAsk, noShadowform, default, selfDefault }, -- Name
 ns.BUFF_DUTY_SPELLS = {
 	-- Druid ---------------------------------------------------------------------
 	{
@@ -27,6 +27,7 @@ ns.BUFF_DUTY_SPELLS = {
 		class = "DRUID",
 		single = { { 467, 6 }, { 782, 14 }, { 1075, 24 }, { 8914, 34 }, { 9756, 44 }, { 9910, 54 } },
 		pets = true,
+		yieldsToImp = true,
 		default = TANK,
 		selfDefault = MISSING,
 	}, -- Thorns
@@ -541,6 +542,7 @@ Notes
 	- greater lists every rank of a blessing's Greater version. It only counts toward "already has it" -- a Greater Blessing covers a class across the raid, not a party, so it is never offered as a party's group icon.
 	- noCasters drops the buff for the classes in Data.CASTER_CLASSES, who get nothing from melee attack power (Blessing of Might).
 	- pets marks the buffs a hunter's or warlock's pet can take here. Blizzard's Hunter and Druid deep dive for WoW Forever says pets "can no longer receive player buffs that increase their stats" (they draw stats from their owner instead), so with BUFF_DUTY_PETS_FLAGGED_ONLY set a pet is offered only these. Thorns is the one marked: it adds no stats, and a player reported casting it on hunter and warlock pets (issue #43). Mark of the Wild, Intellect, Spirit, Fortitude and the Blessings stay off pets. Pets take Tanks buffs per Count as Tanks > Pets, as on the other clients.
+	- yieldsToImp marks Thorns, which can't sit on a player beside the Imp's Fire Shield, and the Imp casts its shield again on its own, so with an Imp out anywhere in the group Thorns isn't offered to anyone, with or without a Fire Shield up at the moment. A player reported a Thorns cast replaced by Fire Shield, then offered again the moment the shield faded after combat.
 	- Left out for lasting two minutes or less: Power Infusion, Innervate, Levitate, Slow Fall. Battle Shout lasts three minutes on this client, but it's shouted for the whole party rather than cast on one target, so a warrior keeps it up as a self buff instead, below. Left out for being item uses rather than spells: the stat scrolls. The Soulstone has a table of its own, below.
 	- single is every rank of the single-target buff, and group every rank of its party-wide version. A player counts as buffed by any rank of either, because each rank's aura carries its own ID.
 	- Each single-target rank carries the level it is learned at, because Classic doesn't pick a rank for the target: casting a rank on a player more than 10 levels below its learn level fails with "Target is too low level". The button casts the highest known rank the target can take, by its rank text ("Name(Rank 2)"), and offers nothing when even rank 1 is too high. Group versions always cast their highest rank, by name.

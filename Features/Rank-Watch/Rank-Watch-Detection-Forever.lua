@@ -192,6 +192,17 @@ local meterTotals = {}
 local needsBaseline = true
 local ticker
 
+--[[
+    A buff that hits back (Thorns, Retribution Aura, the Imp's Fire Shield) books its damage to whoever wears
+    it, under the buff's own spell ID, so the meter would blame the wearer. The real caster is caught by
+    UNIT_AURA above. Keyed by each ladder's first rank.
+]]
+local WORN_DAMAGE = {
+	[467] = true, -- Thorns
+	[7294] = true, -- Retribution Aura
+	[2947] = true, -- Fire Shield
+}
+
 local function LowestGroupLevel()
 	local lowest = ns.RankWatchUnitLevel("player")
 	local prefix, count = "party", GetNumSubgroupMembers()
@@ -279,7 +290,7 @@ local function ReadMeterType(meterType, baseline, recipientLevel)
 					local spellID = ns.IsPlain(spell) and type(spell) == "table" and spell.spellID
 					local total = ns.IsPlain(spellID) and spellID and spell.totalAmount
 					local lookup = ns.IsPlain(total) and total and ns.RankWatchReportableLookup(spellID)
-					if lookup then
+					if lookup and not WORN_DAMAGE[lookup.ladder.id] then
 						local key = guid .. "-" .. spellID
 						local moved = meterTotals[key] ~= total
 						meterTotals[key] = total

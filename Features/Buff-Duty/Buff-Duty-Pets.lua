@@ -20,6 +20,24 @@ local function PetNPCID(unit)
 	return ns.IsPlain(guid) and guid and tonumber(guid:match("^%a+%-%d+%-%d+%-%d+%-%d+%-(%d+)%-")) or nil
 end
 
+local IMP_NPC_ID = 416
+
+-- Yours or any group member's, alive.
+function BuffDuty.ImpOut()
+	local function IsImp(unit)
+		return unit and UnitExists(unit) and not UnitIsDeadOrGhost(unit) and PetNPCID(unit) == IMP_NPC_ID
+	end
+	if IsImp("pet") then
+		return true
+	end
+	for _, member in ipairs(BuffDuty.GroupMembers()) do
+		if not member.isPlayer and IsImp(BuffDuty.PetUnitOf(member.unit)) then
+			return true
+		end
+	end
+	return false
+end
+
 --[[
     The tooltip's guess is the last resort only: on Classic Era it names the
     owner without the wording that gives the class away.
