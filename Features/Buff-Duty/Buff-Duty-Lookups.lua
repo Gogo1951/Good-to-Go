@@ -63,6 +63,11 @@ local function RankIds(ranks)
 	return ids
 end
 
+-- The Self-Buffs type a row sits under: its own selfType, else its family's, else `fallback`.
+local function SelfType(row, fallback)
+	return row.selfType or Data.BUFF_DUTY_EXCLUSIVE_SELF_TYPES[row.exclusive or ""] or fallback
+end
+
 function BuffDuty.BuildLookup()
 	wipe(entries)
 	wipe(lookup)
@@ -103,6 +108,7 @@ function BuffDuty.BuildLookup()
 				rankLevels = rankLevels,
 				groupIds = groupIds,
 				auraIds = auraIds,
+				selfType = SelfType(row, "buffs"),
 			}
 			entries[#entries + 1] = entry
 			lookup[entry.key] = entry
@@ -135,7 +141,15 @@ function BuffDuty.BuildLookup()
 					exclusiveIds[row.exclusive][id] = true
 				end
 			end
-			local entry = { key = key, row = row, ids = ids, ranks = ranks, rankLevels = rankLevels, auraIds = auraIds }
+			local entry = {
+				key = key,
+				row = row,
+				ids = ids,
+				ranks = ranks,
+				rankLevels = rankLevels,
+				auraIds = auraIds,
+				selfType = SelfType(row, "self"),
+			}
 			selfEntries[#selfEntries + 1] = entry
 			selfLookup[entry.key] = entry
 		end
@@ -338,6 +352,8 @@ function BuffDuty.BuildLookup()
 			ranks = SortByLevel(ranks, RankLevel),
 			auraIds = auraIds,
 			items = RankIds(SortByLevel(stones, RankLevel)),
+			-- The spellbook files Soulstone under Utility.
+			selfType = "utility",
 		}
 	end
 
@@ -371,6 +387,8 @@ function BuffDuty.BuildCategories(list)
 			ids = entry.ids,
 			spellName = C_Spell.GetSpellName(entry.ids[1]) or L["TRACKED_SPELL_PENDING"]:format(entry.ids[1]),
 			exclusive = entry.row.exclusive,
+			selfType = entry.selfType,
+			pickOne = entry.row.pickOne,
 		}
 	end
 
@@ -386,6 +404,63 @@ function BuffDuty.BuildCategories(list)
 		categories[#categories + 1] = { id = class, name = label, entries = buckets[class] }
 	end
 	return categories
+end
+
+--------------------------------------------------------------------------------
+-- Self-Buffs Types
+--------------------------------------------------------------------------------
+
+function BuffDuty.SelfTypeName(id)
+	return L[Data.BUFF_DUTY_SELF_TYPE_LABELS[id] or "CATEGORY_SELF_BUFFS"]
+end
+
+--[[
+    Where a type keeps Show in Buff Duty, When to Use, Show and Use with Cast
+    Next Buff: per class, since these settings are account-wide and a mage's
+    Buffs aren't a priest's.
+]]
+function BuffDuty.SelfTypeRow(id, class)
+	return "self_" .. (class or select(2, UnitClass("player"))) .. "_" .. id
+end
+
+function BuffDuty.IsSelfTypeRow(row)
+	return row:find("^self_") ~= nil
+end
+
+local function ByTypeName(a, b)
+	local left, right = a.name:lower(), b.name:lower()
+	if left ~= right then
+		return left < right
+	end
+	return a.id < b.id
+end
+BuffDuty.ByTypeName = ByTypeName
+
+-- A class category's entries by type, A to Z by the type's name: { { id, name, entries } }.
+function BuffDuty.SelfTypes(category)
+	local byType, list = {}, {}
+	for _, entry in ipairs(category.entries) do
+		local id = entry.selfType or "self"
+		if not byType[id] then
+			byType[id] = { id = id, name = BuffDuty.SelfTypeName(id), entries = {} }
+			list[#list + 1] = byType[id]
+		end
+		local bucket = byType[id].entries
+		bucket[#bucket + 1] = entry
+	end
+	table.sort(list, ByTypeName)
+	return list
+end
+
+-- The player's class's Self-Buffs category, or nil.
+function BuffDuty.PlayerSelfCategory()
+	local _, playerClass = UnitClass("player")
+	for _, category in ipairs(ns.buffDutySelfCategories or {}) do
+		if category.id == playerClass then
+			return category
+		end
+	end
+	return nil
 end
 
 function ns.BuffDutyHasClassRows()

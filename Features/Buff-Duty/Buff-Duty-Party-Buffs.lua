@@ -219,6 +219,8 @@ function ns.AcquireBuffDutyOtherIcon(parent)
 	local button = otherIcons[usedOtherIcons]
 	if not button then
 		button = CreateFrame("Button", nil, parent)
+		-- Over a line's menu row, as the cast icons are.
+		button:SetFrameLevel(parent:GetFrameLevel() + ns.buffDutyLayout.ABOVE_ROWS)
 		button:SetSize(ICON_SIZE, ICON_SIZE)
 		button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 		button.icon = button:CreateTexture(nil, "ARTWORK")

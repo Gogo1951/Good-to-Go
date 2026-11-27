@@ -1999,9 +1999,14 @@ L["BUFF_DUTY_MENU_SHOW_MISSING_INVENTORY"] = "Show Missing Inventory"
 L["BUFF_DUTY_ROW_OUT_DESCRIPTION"] =
 	'Shows "Missing Inventory!" in the window when the buff isn\'t on you and nothing in your bags gives it.'
 L["BUFF_DUTY_MENU_IN_YOUR_BAGS"] = "In Your Bags"
-L["BUFF_DUTY_MENU_YOUR_SPELLS"] = "Your Spells"
 L["BUFF_DUTY_MENU_NONE_IN_BAGS"] = "None in your bags."
 L["BUFF_DUTY_MENU_NO_SPELLS"] = "No buffs for your class."
+-- A pick-one family's choice of none of them: no druid form, under Forms.
+L["BUFF_DUTY_MENU_PICK_NONE"] = "None"
+-- The druid form dropdown on the Self-Buffs settings page: its caption and tooltip.
+L["BUFF_DUTY_SELF_FORM_PICK"] = "Form"
+L["BUFF_DUTY_SELF_FORM_PICK_DESCRIPTION"] =
+	"Picks the form the window offers you while you're not in it. None never shifts you."
 L["BUFF_DUTY_MENU_OTHER_PLAYERS"] = "Other Players"
 L["BUFF_DUTY_MENU_ITEM_DESCRIPTION_FORMAT"] = "Offers %s in the window when you're missing its buff. Off skips it."
 -- The Well Fed category's name while the client hasn't named the Well Fed buff yet.
@@ -2666,11 +2671,11 @@ L["CURRENCY_REPLENISH_GOLD_NOW"] = "Current Amount"
 L["CURRENCY_REPLENISH_KEEPS"] = "Target Amount"
 L["CURRENCY_REPLENISH_RECORDED_AGO"] = "Recorded %s ago"
 
--- The Target Amount list's last row, its popup (%s is the character's name), and the Skip Under 1g switch.
+-- The Target Amount list's last row, its popup (%s is the character's name), and the Skip Top-Ups Under 1g switch.
 L["CURRENCY_REPLENISH_OTHER_AMOUNT"] = "Other Amount"
 L["CURRENCY_REPLENISH_REMOVE_CHARACTER"] = "Remove Character"
 L["CURRENCY_REPLENISH_KEEPS_FOR"] = "Target Amount for %s"
-L["CURRENCY_REPLENISH_SKIP_SMALL"] = "Skip Under 1g"
+L["CURRENCY_REPLENISH_SKIP_SMALL"] = "Skip Top-Ups Under 1g"
 L["CURRENCY_REPLENISH_SKIP_SMALL_DESCRIPTION"] =
 	"Replenish leaves out a character short by less than 1g, which isn't worth a mail."
 

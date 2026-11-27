@@ -150,6 +150,29 @@ local function TagRow(list, row)
 end
 
 --[[
+    Self-Buffs keeps a line per type under its heading, as Weapon Buffs keeps
+    one per hand, each type with its own settings (BuffDuty.SelfTypeRow).
+]]
+local function SelfTypeRows(byType)
+	local rows = {}
+	for selfType, icons in pairs(byType) do
+		local row = BuffDuty.SelfTypeRow(selfType)
+		rows[#rows + 1] = {
+			id = selfType,
+			name = BuffDuty.SelfTypeName(selfType),
+			label = BuffDuty.SelfTypeName(selfType),
+			icons = TagRow(icons, row),
+			grid = "self_type_" .. selfType,
+			indent = 0,
+			menu = "self:" .. selfType,
+			selfType = selfType,
+		}
+	end
+	table.sort(rows, BuffDuty.ByTypeName)
+	return rows
+end
+
+--[[
     Every category is a "self" section, so the window packs its icons in the
     Buff Key's order. A family you keep one of (an armor, an aspect) asks for
     nothing while any one of yours is up: Has handles that.
@@ -158,14 +181,20 @@ function BuffDuty.AddSelfSection(sections)
 	if UnitIsDeadOrGhost("player") then
 		return
 	end
-	local selfEnabled = ns.db.global.buffWindow.selfEnabled and BuffDuty.RowShows("self")
-	local icons = {}
+	local selfEnabled = BuffDuty.RowOn("self")
+	local byType = {}
+	local function Place(selfType, icon)
+		if icon and BuffDuty.RowShows(BuffDuty.SelfTypeRow(selfType)) then
+			byType[selfType] = byType[selfType] or {}
+			table.insert(byType[selfType], icon)
+		end
+	end
 
 	ReadAuras("player")
 	BuffDuty.ForgetRageFirst()
 	local name = GetUnitName("player", false) or ""
 	for _, buff in ipairs(selfEnabled and selfBuffs or {}) do
-		if HasPet() or not buff.needsPet then
+		if (HasPet() or not buff.needsPet) and BuffDuty.RowShows(BuffDuty.SelfTypeRow(buff.selfType)) then
 			local has, expires, duration = Has(buff, "player")
 			if not has then
 				local icon = BuffDuty.WithTimeLeft(
@@ -177,12 +206,13 @@ function BuffDuty.AddSelfSection(sections)
 					icon.castLast = buff.castLast
 					icon.party = buff.party
 				end
-				icons[#icons + 1] = icon
+				Place(buff.selfType, icon)
 			end
 		end
 	end
-	if selfEnabled then
-		icons[#icons + 1] = SoulstoneIcon()
+	local stone = BuffDuty.soulstoneBuff
+	if selfEnabled and stone and BuffDuty.RowShows(BuffDuty.SelfTypeRow(stone.selfType)) then
+		Place(stone.selfType, SoulstoneIcon())
 		-- SoulstoneIcon reads the group's auras: read yours again.
 		ReadAuras("player")
 	end
@@ -230,7 +260,7 @@ function BuffDuty.AddSelfSection(sections)
 			}
 		end
 	end
-	AddSection(L["BUFF_DUTY_SELF_HEADER"], icons, "self")
+	AddSection(L["BUFF_DUTY_SELF_HEADER"], {}, "self", SelfTypeRows(byType))
 	AddSection(BuffDuty.WellFedLabel(), food, "food")
 	for _, hand in ipairs(weapons) do
 		TagRow(hand.icons, "weapons")

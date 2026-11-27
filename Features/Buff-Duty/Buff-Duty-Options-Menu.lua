@@ -100,31 +100,91 @@ local function NoneInBags(entries)
 	entries[#entries + 1] = { kind = "note", left = L["BUFF_DUTY_MENU_NONE_IN_BAGS"] }
 end
 
-local function AddSpellRows(entries)
-	SectionHeader(entries, L["BUFF_DUTY_MENU_YOUR_SPELLS"])
-	local _, playerClass = UnitClass("player")
+-- A pick-one family (the druid forms): None, then each of them, one picked at a time.
+local function AddPickRows(entries, picks)
+	local family = picks[1].pickOne
 	local any = false
-	for _, category in ipairs(ns.buffDutySelfCategories or {}) do
-		if category.id == playerClass then
-			for _, entry in ipairs(ns.SortedEntries(category.entries)) do
-				local key = entry.key
-				local desc = entry.desc or L["BUFF_DUTY_MENU_ITEM_DESCRIPTION_FORMAT"]:format(entry.spellName)
-				entries[#entries + 1] = IconToggle(
-					C_Spell.GetSpellTexture(entry.ids[1]),
-					entry.spellName,
-					desc,
-					BuffDuty.SelfItemOn(key),
-					function(value)
-						BuffDuty.SetSelfItemOn(key, value)
-					end
-				)
-				any = true
-			end
+	for _, entry in ipairs(picks) do
+		any = any or BuffDuty.SelfItemOn(entry.key)
+	end
+	entries[#entries + 1] = {
+		kind = "choice",
+		left = L["BUFF_DUTY_MENU_PICK_NONE"],
+		selected = not any,
+		onClick = function()
+			BuffDuty.PickSelfItem(picks, family, nil)
+		end,
+	}
+	for _, entry in ipairs(picks) do
+		local key = entry.key
+		entries[#entries + 1] = {
+			kind = "choice",
+			left = (" |T%s:0|t %s"):format(
+				C_Spell.GetSpellTexture(entry.ids[1]) or ns.QUESTION_MARK_ICON,
+				entry.spellName
+			),
+			selected = BuffDuty.SelfItemOn(key),
+			tooltip = Tooltip(entry.spellName, L["BUFF_DUTY_MENU_ITEM_DESCRIPTION_FORMAT"]:format(entry.spellName)),
+			onClick = function()
+				BuffDuty.PickSelfItem(picks, family, key)
+			end,
+		}
+	end
+end
+
+-- Your class's spells of one Self-Buffs type, under the type's name.
+local function AddSpellRows(entries, selfType)
+	SectionHeader(entries, BuffDuty.SelfTypeName(selfType))
+	local category = BuffDuty.PlayerSelfCategory()
+	local any = false
+	local picks = {}
+	for _, entry in ipairs(category and ns.SortedEntries(category.entries) or {}) do
+		if entry.selfType == selfType and entry.pickOne then
+			picks[#picks + 1] = entry
+		elseif entry.selfType == selfType then
+			local key = entry.key
+			local desc = entry.desc or L["BUFF_DUTY_MENU_ITEM_DESCRIPTION_FORMAT"]:format(entry.spellName)
+			entries[#entries + 1] = IconToggle(
+				C_Spell.GetSpellTexture(entry.ids[1]),
+				entry.spellName,
+				desc,
+				BuffDuty.SelfItemOn(key),
+				function(value)
+					BuffDuty.SetSelfItemOn(key, value)
+				end
+			)
+			any = true
 		end
+	end
+	if picks[1] then
+		AddPickRows(entries, picks)
+		any = true
 	end
 	if not any then
 		entries[#entries + 1] = { kind = "note", left = L["BUFF_DUTY_MENU_NO_SPELLS"] }
 	end
+end
+
+-- Off Options' Self-Buffs line: each of your class's types, A to Z, opening its own menu.
+local function SelfTypeEntries()
+	local entries = {}
+	local category = BuffDuty.PlayerSelfCategory()
+	for _, selfType in ipairs(category and BuffDuty.SelfTypes(category) or {}) do
+		local row = BuffDuty.SelfTypeRow(selfType.id)
+		entries[#entries + 1] = Toggle(
+			selfType.name,
+			L["BUFF_DUTY_MENU_SHOW_IN_BUFF_DUTY_DESCRIPTION"],
+			BuffDuty.RowOn(row),
+			function(value)
+				BuffDuty.SetRowOn(row, value)
+			end,
+			"cat:self:" .. selfType.id
+		)
+	end
+	if not entries[1] then
+		entries[1] = { kind = "note", left = L["BUFF_DUTY_MENU_NO_SPELLS"] }
+	end
+	return entries
 end
 
 -- The window offers the best food left on, so turning one off hands its place to the next.
@@ -354,14 +414,20 @@ end
 --------------------------------------------------------------------------------
 
 local ITEM_ROWS = {
-	self = AddSpellRows,
 	food = AddFoodRows,
 	scrolls = AddScrollRows,
 	elixirs = AddElixirRows,
 	other = AddOtherRows,
 }
 
-local function CategoryEntries(row, hand)
+-- `sub` is a hand for Weapon Buffs, a type for Self-Buffs; a type keeps its own settings, under its own key.
+local function CategoryEntries(row, sub)
+	local hand = row == "weapons" and sub or nil
+	local selfType = row == "self" and sub or nil
+	local items = row
+	if selfType then
+		row = BuffDuty.SelfTypeRow(selfType)
+	end
 	local settings = Settings()
 	local entries = {}
 	entries[#entries + 1] = Toggle(
@@ -399,7 +465,7 @@ local function CategoryEntries(row, hand)
 		end
 	)
 	-- Self-Buffs are spells: nothing to run out of.
-	if row ~= "self" then
+	if items ~= "self" then
 		entries[#entries + 1] = Toggle(
 			L["BUFF_DUTY_MENU_SHOW_MISSING_INVENTORY"],
 			L["BUFF_DUTY_ROW_OUT_DESCRIPTION"],
@@ -410,10 +476,12 @@ local function CategoryEntries(row, hand)
 		)
 	end
 	entries[#entries + 1] = { kind = "spacer" }
-	if row == "weapons" then
+	if items == "weapons" then
 		AddWeaponRows(entries, hand)
+	elseif items == "self" then
+		AddSpellRows(entries, selfType)
 	else
-		ITEM_ROWS[row](entries)
+		ITEM_ROWS[items](entries)
 	end
 	return entries
 end
@@ -509,7 +577,7 @@ local function OptionsEntries()
 				function(value)
 					BuffDuty.SetRowOn(row, value)
 				end,
-				"cat:" .. row
+				row == "self" and "selftypes" or "cat:" .. row
 			)
 		end
 	end
@@ -545,10 +613,12 @@ end
 -- Menu
 --------------------------------------------------------------------------------
 
--- Keys: "options", "cat:<row>", "cat:weapons:<hand>", "when:<row>", "show:<row>", "target", "opacity".
+-- Keys: "options", "selftypes", "cat:<row>", "cat:weapons:<hand>", "cat:self:<type>", "when:<row>", "show:<row>", "target", "opacity".
 local function EntriesFor(key)
 	if key == "options" then
 		return OptionsEntries()
+	elseif key == "selftypes" then
+		return SelfTypeEntries()
 	elseif key == "target" then
 		return TargetEntries()
 	elseif key == "opacity" then
@@ -575,7 +645,7 @@ local flyouts = setmetatable({}, {
 	end,
 })
 
-local lit, previewPanel
+local previewPanel
 
 local function EndPreview()
 	if previewPanel then
@@ -624,28 +694,20 @@ menu.frame:HookScript("OnUpdate", function()
 	end
 end)
 
-menu.frame:HookScript("OnHide", function()
-	EndPreview()
-	if lit then
-		lit:UnlockHighlight()
-		lit = nil
-	end
-end)
+menu.frame:HookScript("OnHide", EndPreview)
+
+-- Shared by the window's lines, its Options line and the mini-map menu; it keeps the line it opened from lit.
+ns.buffDutyOptionsMenu = menu
 
 local function Open(owner, key)
 	if not ns.db or not owner then
 		return
 	end
 	rootKey = key
-	if lit and lit ~= owner then
-		lit:UnlockHighlight()
-	end
-	lit = owner
-	menu:Show(owner, "line")
-	owner:LockHighlight()
+	Kit.OpenRowMenu(owner, menu)
 end
 
--- key is a Data.BUFF_DUTY_ROWS row, or "weapons:<hand>".
+-- key is a Data.BUFF_DUTY_ROWS row, "weapons:<hand>" or "self:<type>".
 function ns.ShowBuffDutyMenu(owner, key)
 	Open(owner, "cat:" .. key)
 end

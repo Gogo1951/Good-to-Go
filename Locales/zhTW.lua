@@ -2005,9 +2005,11 @@ L["BUFF_DUTY_MENU_SHOW_MISSING_INVENTORY"] = "顯示缺少物品"
 L["BUFF_DUTY_ROW_OUT_DESCRIPTION"] =
 	'當你沒有該增益且背包中沒有能提供它的物品時，在視窗中顯示"缺少物品！"。'
 L["BUFF_DUTY_MENU_IN_YOUR_BAGS"] = "背包中"
-L["BUFF_DUTY_MENU_YOUR_SPELLS"] = "你的法術"
 L["BUFF_DUTY_MENU_NONE_IN_BAGS"] = "背包中沒有。"
 L["BUFF_DUTY_MENU_NO_SPELLS"] = "你的職業沒有增益。"
+L["BUFF_DUTY_MENU_PICK_NONE"] = "無"
+L["BUFF_DUTY_SELF_FORM_PICK"] = "形態"
+L["BUFF_DUTY_SELF_FORM_PICK_DESCRIPTION"] = "選擇你不在該形態時視窗提供的形態。無則永不變形。"
 L["BUFF_DUTY_MENU_OTHER_PLAYERS"] = "其他玩家"
 L["BUFF_DUTY_MENU_ITEM_DESCRIPTION_FORMAT"] = "缺少其增益時在視窗中提供%s。關閉則略過。"
 -- The Well Fed category's name while the client hasn't named the Well Fed buff yet.
@@ -2674,11 +2676,11 @@ L["CURRENCY_REPLENISH_GOLD_NOW"] = "目前金額"
 L["CURRENCY_REPLENISH_KEEPS"] = "目標金額"
 L["CURRENCY_REPLENISH_RECORDED_AGO"] = "%s前記錄"
 
--- The Target Amount list's last row, its popup (%s is the character's name), and the Skip Under 1g switch.
+-- The Target Amount list's last row, its popup (%s is the character's name), and the Skip Top-Ups Under 1g switch.
 L["CURRENCY_REPLENISH_OTHER_AMOUNT"] = "其他金額"
 L["CURRENCY_REPLENISH_REMOVE_CHARACTER"] = "移除角色"
 L["CURRENCY_REPLENISH_KEEPS_FOR"] = "%s的目標金額"
-L["CURRENCY_REPLENISH_SKIP_SMALL"] = "略過不足1金"
+L["CURRENCY_REPLENISH_SKIP_SMALL"] = "略過不足1金的補充"
 L["CURRENCY_REPLENISH_SKIP_SMALL_DESCRIPTION"] =
 	"補充時略過缺口不足1金的角色，不值得為此寄一封信。"
 

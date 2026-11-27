@@ -145,13 +145,41 @@ ns.BUFF_DUTY_PET_ICONS = {
 	},
 }
 
--- { class, ranks = { { spell id, level learned } }, auras, exclusive, needsPet, castLast, noShadowform, party (it lands on your party too), default (minutes left, MISSING or OFF) }, -- Name
+-- { class, ranks = { { spell id, level learned } }, auras, exclusive, needsPet, castLast, noShadowform, party (it lands on your party too), pickOne, selfType, default (minutes left, MISSING or OFF) }, -- Name
+-- selfType: the window's type for a buff its exclusive family doesn't name, as the spellbook heads it (Features/Buff-Duty/Buff-Duty-Lookups.lua).
+-- pickOne: a family the player picks one of, or none (the druid forms you stay in), and only that one is offered.
 ns.BUFF_DUTY_SELF_SPELLS = {
+	-- Druid ---------------------------------------------------------------------
+	{
+		class = "DRUID",
+		ranks = { { 5487, 10 }, { 9634, 40 } },
+		castLast = true,
+		pickOne = "DRUID_FORM",
+		selfType = "forms",
+		default = OFF,
+	}, -- Bear Form, Dire Bear Form
+	{
+		class = "DRUID",
+		ranks = { { 768, 20 } },
+		castLast = true,
+		pickOne = "DRUID_FORM",
+		selfType = "forms",
+		default = OFF,
+	}, -- Cat Form
+	{
+		class = "DRUID",
+		ranks = { { 24858, 40 } },
+		castLast = true,
+		pickOne = "DRUID_FORM",
+		selfType = "forms",
+		default = OFF,
+	}, -- Moonkin Form
 	-- Hunter --------------------------------------------------------------------
 	{
 		class = "HUNTER",
 		ranks = { { 19506, 40 }, { 20905, 50 }, { 20906, 60 }, { 1299346, 25 }, { 1299348, 32 } },
 		default = 3,
+		selfType = "buffs",
 	}, -- Trueshot Aura
 	{
 		class = "HUNTER",
@@ -257,6 +285,7 @@ ns.BUFF_DUTY_SELF_SPELLS = {
 		class = "PALADIN",
 		ranks = { { 25780, 10 } },
 		default = OFF,
+		selfType = "threat",
 	}, -- Righteous Fury
 	-- Priest --------------------------------------------------------------------
 	{
@@ -280,6 +309,7 @@ ns.BUFF_DUTY_SELF_SPELLS = {
 		ranks = { { 15473, 40 } },
 		default = MISSING,
 		castLast = true,
+		selfType = "forms",
 	}, -- Shadowform
 	-- Shaman --------------------------------------------------------------------
 	{
@@ -307,6 +337,7 @@ ns.BUFF_DUTY_SELF_SPELLS = {
 		auras = { 18789, 18790, 18791, 18792 },
 		exclusive = WARLOCK_DEMON,
 		default = MISSING,
+		selfType = "pets",
 	}, -- Demonic Sacrifice
 	{
 		class = "WARLOCK",
@@ -322,6 +353,7 @@ ns.BUFF_DUTY_SELF_SPELLS = {
 		ranks = { { 6673, 1 }, { 5242, 12 }, { 6192, 22 }, { 11549, 32 }, { 11550, 42 }, { 11551, 52 }, { 25289, 60 } },
 		party = true,
 		default = MISSING,
+		selfType = "buffs",
 	}, -- Battle Shout
 }
 

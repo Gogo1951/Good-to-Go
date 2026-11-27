@@ -26,7 +26,6 @@ local PlaceLines = Layout.PlaceLines
 -- Layout
 --------------------------------------------------------------------------------
 
--- Also every line's height, a bare header included, so the window holds still as icons come and go.
 local ICON_SIZE = Data.BUFF_DUTY_ICON_SIZE
 local ICON_GAP = Layout.ICON_GAP
 -- The max keeps a long title-and-realm name from pushing the icons across the screen.
@@ -36,31 +35,20 @@ local MAX_NAME_WIDTH = 256
 local NAME_STEP = 16
 local NAME_GAP = Layout.NAME_GAP
 local MAIN_GRID = Layout.MAIN_GRID
-local SECTION_SPACE = Layout.SECTION_SPACE
 local FOLD_INDENT = Layout.FOLD_INDENT
 local MEMBER_INDENT = 0
 local PARTIES_PER_ROW = 2
 local COLUMN_GAP = 16
 local PET_INDENT = 16
--- The one margin on every side, so nothing crowds the angled corners.
-local PADDING = 16
--- TITLE_GAP keeps the title from reading as one of the sections.
-local CLOSE_SIZE = Kit.WINDOW_HEADER_HEIGHT
-local TITLE_HEIGHT = Kit.WINDOW_HEADER_HEIGHT
-local TITLE_GAP = 16
 --[[
-    The Spacing Scale rounds anything bigger than 128 to this. The height's
-    extra goes above the Options divider, so the foot keeps its PADDING.
+    The window is laid out by Menu-Kit's numbers (Style Guide → WINDOWS):
+    Kit.WINDOW_EDGE from the plate to the text on every side, the body from
+    Kit.WINDOW_BODY_TOP, every line a Kit.ROW_HEIGHT row, a Kit.WINDOW_SPACER
+    between groups, and the Options line as Kit.PlaceOptionsLine sets it.
 ]]
-local WINDOW_STEP = 16
--- Solo, party and weapon windows share one width, so the window holds still as its contents change.
-local MIN_WINDOW_WIDTH = 208
+local EDGE = Kit.WINDOW_EDGE
+local CLOSE_SIZE = Kit.WINDOW_HEADER_HEIGHT
 local TITLE_CLOSE_GAP = 8
--- The Options row reaches FOOTER_INSET past its text, so its text and arrow line up with PADDING.
-local FOOTER_HEIGHT = Kit.ROW_HEIGHT
-local FOOTER_INSET = Kit.WINDOW_EDGE - Kit.FLYOUT_OVERLAP
-local DIVIDER_ABOVE = 16
-local DIVIDER_BELOW = 8
 
 --------------------------------------------------------------------------------
 -- State
@@ -205,7 +193,7 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 		local top, partyRows = {}, {}
 		local parties = 0
 		local nameWidth = MIN_NAME_WIDTH
-		-- Once any line has a menu, every line leaves room for the arrow column.
+		-- Once any line has a menu, every line's icons end before the arrow's column.
 		local anyMenu = false
 		local partyBuffsPlaced = #otherBuffs == 0
 		local castRanks
@@ -326,7 +314,7 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 		end
 
 		-- Never narrower than the title plus the close button; a large font widens the name column to fit.
-		local arrowSpace = anyMenu and Layout.ARROW_SPACE or 0
+		local arrowSpace = anyMenu and math.ceil(footer.arrow:GetStringWidth()) + ICON_GAP or 0
 		local minWidth = math.ceil(title:GetStringWidth()) + TITLE_CLOSE_GAP + CLOSE_SIZE - arrowSpace
 		local width = ContentWidth()
 		if width < minWidth then
@@ -339,23 +327,22 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 		    party. held.nameWidth is set before this, so rounding never builds on
 		    itself.
 		]]
-		local windowWidth = math.max(SnapUp(PADDING * 2 + width + arrowSpace, WINDOW_STEP), MIN_WINDOW_WIDTH)
+		local windowWidth = Kit.WindowWidth(width + arrowSpace)
 		if math.min(parties, PARTIES_PER_ROW) <= 1 then
-			nameWidth = nameWidth + (windowWidth - PADDING * 2 - arrowSpace - width)
+			nameWidth = nameWidth + (windowWidth - EDGE * 2 - arrowSpace - width)
 			width = ContentWidth()
 		end
 
-		local firstMiddle = -(PADDING + TITLE_HEIGHT + TITLE_GAP + ICON_SIZE / 2)
 		-- Every line's icons end before the arrow column, so they line up and each arrow ends where Options' does.
-		local right = windowWidth - PADDING - arrowSpace
-		local arrowRight = anyMenu and windowWidth - PADDING or nil
-		local y, bottom = PlaceLines(top, PADDING, right, firstMiddle, nameWidth, offsetsByGrid, iconWidths, arrowRight)
+		local right = windowWidth - EDGE - arrowSpace
+		local y, bottom =
+			PlaceLines(top, EDGE, right, -Kit.WINDOW_BODY_TOP, nameWidth, offsetsByGrid, iconWidths, anyMenu)
 		local partyWidth = ColumnWidth(MAIN_GRID)
 		for _, partyRow in ipairs(partyRows) do
 			local nextY = y
 			for index, lines in ipairs(partyRow) do
 				-- The rounding's extra width widens the gap, so the last party's icons end at the right edge too.
-				local x = PADDING + (index - 1) * (partyWidth + COLUMN_GAP + right - PADDING - width)
+				local x = EDGE + (index - 1) * (partyWidth + COLUMN_GAP + right - EDGE - width)
 				local partyY, partyBottom =
 					PlaceLines(lines, x, x + partyWidth, y, nameWidth, offsetsByGrid, iconWidths)
 				nextY = math.min(nextY, partyY)
@@ -364,31 +351,21 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 			y = nextY
 		end
 
-		-- The footer is measured first, so the height's rounding widens the gap above it, not the foot.
-		local footerHeight = FOOTER_HEIGHT
-		local footerWidth = width + arrowSpace
+		-- The foot: a spacer, the separator and the Options line, then the key hint a spacer under it.
+		y = Kit.PlaceOptionsLine(footer, footerDivider, bottom)
 		if showKeyHint then
-			keyHint:SetWidth(footerWidth)
+			y = y - Kit.WINDOW_SPACER
+			keyHint:SetWidth(windowWidth - EDGE * 2)
 			keyHint:SetText(KeyHintText())
-			footerHeight = footerHeight + SECTION_SPACE + math.ceil(keyHint:GetStringHeight())
-		end
-		local rawHeight = -bottom + DIVIDER_ABOVE + 1 + DIVIDER_BELOW + footerHeight + PADDING
-		local windowHeight = SnapUp(rawHeight, WINDOW_STEP)
-		local dividerTop = bottom - DIVIDER_ABOVE - (windowHeight - rawHeight)
-		footerDivider:ClearAllPoints()
-		footerDivider:SetPoint("TOPLEFT", content, "TOPLEFT", PADDING, dividerTop)
-		footerDivider:SetWidth(footerWidth)
-		local footerTop = dividerTop - 1 - DIVIDER_BELOW
-		footer:ClearAllPoints()
-		footer:SetPoint("TOPLEFT", content, "TOPLEFT", PADDING - FOOTER_INSET, footerTop)
-		footer:SetSize(footerWidth + 2 * FOOTER_INSET, FOOTER_HEIGHT)
-		if showKeyHint then
 			keyHint:ClearAllPoints()
-			keyHint:SetPoint("TOPLEFT", content, "TOPLEFT", PADDING, footerTop - FOOTER_HEIGHT - SECTION_SPACE)
+			keyHint:SetPoint("TOPLEFT", content, "TOPLEFT", EDGE, y)
 			keyHint:Show()
+			y = y - math.ceil(keyHint:GetStringHeight())
 		else
 			keyHint:Hide()
 		end
+		-- 16 under the last text, the hint's or the Options line's, never rounded.
+		local windowHeight = Kit.WindowHeight(y, showKeyHint)
 
 		anchor:SetSize(windowWidth, windowHeight)
 		-- MIGRATION (remove after 2026-11-29)

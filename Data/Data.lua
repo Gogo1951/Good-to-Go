@@ -595,6 +595,27 @@ Data.BUFF_DUTY_ROW_WHEN = {
 }
 Data.BUFF_DUTY_ROW_WHEN_ORDER = { "ALWAYS", "GROUP", "RAID" }
 
+--[[
+    The Self-Buffs types, each by its name's locale key: the Enhanced
+    Spellbook's headings, and Poisons, which it has none for. The window and
+    the menus list them by name, A to Z.
+]]
+Data.BUFF_DUTY_SELF_TYPE_LABELS = {
+	aspects = "CATEGORY_ASPECTS",
+	auras = "CATEGORY_AURAS",
+	blessings = "CATEGORY_BLESSINGS",
+	buffs = "CATEGORY_BUFFS",
+	forms = "CATEGORY_FORMS",
+	pets = "CATEGORY_PETS",
+	poisons = "STARTER_POPUP_POISONS_HEADER",
+	seals = "CATEGORY_SEALS",
+	self = "CATEGORY_SELF_BUFFS",
+	threat = "CATEGORY_THREAT",
+	utility = "CATEGORY_UTILITY",
+}
+-- A buff whose data names no selfType goes by its exclusive family, when the family is one of these.
+Data.BUFF_DUTY_EXCLUSIVE_SELF_TYPES = { BLESSING = "blessings", PALADIN_AURA = "auras", ASPECT = "aspects" }
+
 -- Which hands a class is offered is the data folder's call: a Classic Era shaman can't dual wield.
 Data.WEAPON_HAND_SLOTS = { MAIN = 16, OFF = 17 }
 Data.WEAPON_HAND_ORDER = { "MAIN", "OFF" }

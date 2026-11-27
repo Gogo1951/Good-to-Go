@@ -98,6 +98,8 @@ function ns.AcquireBuffDutyIcon()
 	local button = icons[pool.used]
 	if not button then
 		button = CreateFrame("Button", nil, pool.content, "SecureActionButtonTemplate")
+		-- Over a line's menu row, so a click on the icon casts; set before its own children are made.
+		button:SetFrameLevel(pool.content:GetFrameLevel() + ns.buffDutyLayout.ABOVE_ROWS)
 		button:SetSize(ICON_SIZE, ICON_SIZE)
 		--[[
 		    Both halves: the template acts on the one ActionButtonUseKeyDown names,

@@ -74,26 +74,29 @@ function CR.KeepsEntries()
 			CR.SetKeeps(key, gold)
 		end
 	end
-	local amounts = {}
-	local listed = keeps == nil
-	for _, gold in ipairs(KEEPS_CHOICES) do
-		amounts[#amounts + 1] = gold
-		listed = listed or keeps == gold
-	end
-	if not listed then
-		amounts[#amounts + 1] = keeps
-	end
-	table.sort(amounts, function(a, b)
-		return a > b
-	end)
 	local entries = {}
-	for _, gold in ipairs(amounts) do
-		entries[#entries + 1] = Row(CR.Gold(gold), keeps == gold, nil, Pick(gold))
+	-- The bank's only Target Amount is Off.
+	if key ~= CR.BankKey() then
+		local amounts = {}
+		local listed = keeps == nil
+		for _, gold in ipairs(KEEPS_CHOICES) do
+			amounts[#amounts + 1] = gold
+			listed = listed or keeps == gold
+		end
+		if not listed then
+			amounts[#amounts + 1] = keeps
+		end
+		table.sort(amounts, function(a, b)
+			return a > b
+		end)
+		for _, gold in ipairs(amounts) do
+			entries[#entries + 1] = Row(CR.Gold(gold), keeps == gold, nil, Pick(gold))
+		end
+		entries[#entries + 1] = { kind = "spacer" }
+		entries[#entries + 1] = Row(L["CURRENCY_REPLENISH_OTHER_AMOUNT"], false, nil, function()
+			AskOtherAmount(key)
+		end)
 	end
-	entries[#entries + 1] = { kind = "spacer" }
-	entries[#entries + 1] = Row(L["CURRENCY_REPLENISH_OTHER_AMOUNT"], false, nil, function()
-		AskOtherAmount(key)
-	end)
 	entries[#entries + 1] = Row(L["MENU_OFF"], keeps == nil, "MUTED", Pick(nil))
 	-- Not on the character being played: it would be recorded again the next time its gold changed.
 	if key ~= CR.OwnKey() then

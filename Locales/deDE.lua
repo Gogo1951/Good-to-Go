@@ -2052,9 +2052,12 @@ L["BUFF_DUTY_MENU_SHOW_MISSING_INVENTORY"] = "Fehlendes Inventar anzeigen"
 L["BUFF_DUTY_ROW_OUT_DESCRIPTION"] =
 	'Zeigt "Inventar fehlt!" im Fenster, wenn du den Buff nicht hast und nichts in deinen Taschen ihn gibt.'
 L["BUFF_DUTY_MENU_IN_YOUR_BAGS"] = "In deinen Taschen"
-L["BUFF_DUTY_MENU_YOUR_SPELLS"] = "Deine Zauber"
 L["BUFF_DUTY_MENU_NONE_IN_BAGS"] = "Nichts in deinen Taschen."
 L["BUFF_DUTY_MENU_NO_SPELLS"] = "Keine Buffs für deine Klasse."
+L["BUFF_DUTY_MENU_PICK_NONE"] = "Keine"
+L["BUFF_DUTY_SELF_FORM_PICK"] = "Gestalt"
+L["BUFF_DUTY_SELF_FORM_PICK_DESCRIPTION"] =
+	"Wählt die Gestalt, die das Fenster dir anbietet, solange du nicht in ihr bist. Keine verwandelt dich nie."
 L["BUFF_DUTY_MENU_OTHER_PLAYERS"] = "Andere Spieler"
 L["BUFF_DUTY_MENU_ITEM_DESCRIPTION_FORMAT"] = "Bietet %s im Fenster an, wenn dir sein Buff fehlt. Aus überspringt es."
 -- The Well Fed category's name while the client hasn't named the Well Fed buff yet.
@@ -2738,11 +2741,11 @@ L["CURRENCY_REPLENISH_GOLD_NOW"] = "Aktueller Betrag"
 L["CURRENCY_REPLENISH_KEEPS"] = "Zielbetrag"
 L["CURRENCY_REPLENISH_RECORDED_AGO"] = "Vor %s erfasst"
 
--- The Target Amount list's last row, its popup (%s is the character's name), and the Skip Under 1g switch.
+-- The Target Amount list's last row, its popup (%s is the character's name), and the Skip Top-Ups Under 1g switch.
 L["CURRENCY_REPLENISH_OTHER_AMOUNT"] = "Anderer Betrag"
 L["CURRENCY_REPLENISH_REMOVE_CHARACTER"] = "Charakter entfernen"
 L["CURRENCY_REPLENISH_KEEPS_FOR"] = "Zielbetrag für %s"
-L["CURRENCY_REPLENISH_SKIP_SMALL"] = "Unter 1g überspringen"
+L["CURRENCY_REPLENISH_SKIP_SMALL"] = "Aufstockungen unter 1g überspringen"
 L["CURRENCY_REPLENISH_SKIP_SMALL_DESCRIPTION"] =
 	"Auffüllen lässt einen Charakter aus, dem weniger als 1g fehlt; das ist keinen Brief wert."
 

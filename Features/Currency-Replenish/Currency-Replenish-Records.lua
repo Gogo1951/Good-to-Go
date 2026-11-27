@@ -164,8 +164,14 @@ function CR.IsBank()
 	return CR.BankKey() == CR.OwnKey()
 end
 
+-- The bank's own Target Amount is Off: it is the one sending.
 function CR.SetBank(key)
-	CR.Settings().banks[OwnFactionKey()] = key
+	local settings = CR.Settings()
+	settings.banks[OwnFactionKey()] = key
+	local record = settings.characters[key]
+	if record then
+		record.keeps = nil
+	end
 	CR.Changed()
 end
 

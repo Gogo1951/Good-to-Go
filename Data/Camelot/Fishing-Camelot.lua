@@ -68,7 +68,8 @@ Notes
 	- Ravaged Fishing Pole (285094) and Spearfisher's Waders (287031) have an Item row but no ItemSparse row on 71139, so their name, bonus and requirements are from Wowhead. Darkwood Fishing Pole (6366) is gone on this client (no ItemSparse row; Wowhead Forever doesn't know it).
 	- Lures are the items whose use spell puts a temporary enchant (SpellEffect 54) on the weapon carrying a Fishing skill spell (aura 30, misc 356). Camper's Lure and "Secret" Bait are this client's own. Wide-Brimmed Fishing Hat (259846) is left out: its lure works only while the hat is worn.
 	- Shiny Silver Coin (286732) is left out: it buffs the player (+30 Fishing), not the pole.
-	- Worn Fishing Hat (7996, level 15) is left out: QuestieDB's Classic table names no drop, vendor or quest for it and no spell makes it, so it's likely unobtainable here.
+	- Worn Fishing Hat (7996, level 15) is left out: its only source is quest 8226 (Rare Fish - Pale Ghoulfish), which has no quest giver on Wowhead and isn't in QuestieDB, so it's unobtainable here.
+	- Nat Pagle's Extreme Angler FC-5000 binds on pickup and comes only from Snapjaws, Mon! (7815), a Horde quest (QuestieDB required races 178), so only Horde characters carry it.
 	- The glove enchant is what Enchant Gloves - Fishing (13620) puts on. Enchant 2603 (the Eternium line) goes on the pole, not the gloves.
 	- Fishing foods are the foods whose Well Fed carries a Fishing skill bonus. All six give the one aura, 1249521 (aura 30, misc 356, icon 133943), triggered by each food's own "Nutritious Food" spell, whose base points set the amount. Required Level is ItemSparse's. Food spell 1249517 (+25) has no item on this build, so no row.
 

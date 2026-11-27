@@ -45,13 +45,16 @@ end
 
 --[[
     The sign-off ends the line, so the body drops a closing "!" or "." (an ask
-    keeps its "?"). Marks are matched as whole UTF-8 sequences, never a byte
-    class, so a multi-byte character is never cut in half.
+    keeps its "?"). A leading "¡" goes only when a closing "!" did, so
+    "¡Hola! ¿Me podrías...?" keeps it. Marks are matched as whole UTF-8
+    sequences, never a byte class, so a multi-byte character is never cut in half.
 ]]
 local CLOSING_MARKS = { "!", ".", "\239\188\129", "\227\128\130" } -- ! . and full-width ！ 。
+local EXCLAMATION_MARKS = { ["!"] = true, ["\239\188\129"] = true } -- ! and full-width ！
 local OPENING_MARKS = { "\194\161" } -- ¡
 
 local function TrimSentBody(body)
+	local droppedExclamation = false
 	local trimmed = true
 	while trimmed do
 		trimmed = false
@@ -60,12 +63,17 @@ local function TrimSentBody(body)
 			if body:sub(-#mark) == mark then
 				body = body:sub(1, -#mark - 1)
 				trimmed = true
+				if EXCLAMATION_MARKS[mark] then
+					droppedExclamation = true
+				end
 			end
 		end
 	end
-	for _, mark in ipairs(OPENING_MARKS) do
-		if body:sub(1, #mark) == mark then
-			body = body:sub(#mark + 1)
+	if droppedExclamation then
+		for _, mark in ipairs(OPENING_MARKS) do
+			if body:sub(1, #mark) == mark then
+				body = body:sub(#mark + 1)
+			end
 		end
 	end
 	return body

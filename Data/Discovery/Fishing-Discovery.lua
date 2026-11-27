@@ -55,7 +55,8 @@ Notes
 	- Season of Discovery shares the Classic Era client, and its tables hold no season item (ID 200000 or more) with a Fishing skill spell, a lure enchant or a Fishing requirement, so these lists match Data/Vanilla/Fishing-Vanilla.lua. A season item the server sends without a client row can't be seen this way.
 	- A pole's or gear piece's bonus is its equip spell's Fishing skill value (aura 30, misc 356); this client stores it as EffectBasePoints + 1. Required Fishing is ItemSparse's RequiredSkillRank for skill 356.
 	- Spearfisher's Waders are WoW Forever's alone, so this client has no legs row.
-	- Worn Fishing Hat (7996, +5 Fishing, level 15) is left out: QuestieDB's Classic table and sodBaseItems name no drop, vendor or quest for it and no spell makes it, so it's likely unobtainable here.
+	- Worn Fishing Hat (7996, +5 Fishing, level 15) is left out: its only source is quest 8226 (Rare Fish - Pale Ghoulfish), which has no quest giver on Wowhead and isn't in QuestieDB, so it's unobtainable here.
+	- Nat Pagle's Extreme Angler FC-5000 binds on pickup and comes only from Snapjaws, Mon! (7815), a Horde quest (QuestieDB required races 178), so only Horde characters carry it.
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query

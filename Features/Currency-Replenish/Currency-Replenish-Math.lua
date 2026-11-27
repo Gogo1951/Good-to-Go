@@ -17,7 +17,7 @@ ns.GoldMath = GoldMath
 local COPPER_PER_GOLD = 10000
 GoldMath.COPPER_PER_GOLD = COPPER_PER_GOLD
 
--- The Skip Under 1g switch's line: a top-up smaller than this waits.
+-- The Skip Top-Ups Under 1g switch's line: a top-up smaller than this waits.
 GoldMath.SMALLEST_TOP_UP = COPPER_PER_GOLD
 
 function GoldMath.Excess(money, keeps, postage)

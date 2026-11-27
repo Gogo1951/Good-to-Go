@@ -298,11 +298,28 @@ local function Candidates(sections, now)
 		end
 	end)
 	Each("favor", AddRows)
+	-- Self-Buffs' type lines in the order the buffs were built, as when they shared one line.
 	Each("self", function(section)
 		for _, spec in ipairs(section.icons) do
 			if not spec.castLast then
 				Add(spec)
 			end
+		end
+		local typed = {}
+		for _, row in ipairs(section.rows) do
+			if row.selfType then
+				for _, spec in ipairs(row.icons) do
+					if not spec.castLast then
+						typed[#typed + 1] = spec
+					end
+				end
+			end
+		end
+		table.sort(typed, function(a, b)
+			return a.column < b.column
+		end)
+		for _, spec in ipairs(typed) do
+			Add(spec)
 		end
 	end)
 

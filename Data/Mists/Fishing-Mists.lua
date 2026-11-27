@@ -43,6 +43,7 @@ ns.FISHING_GEAR = {
 		[7996] = { 5, 1, 15 }, -- Worn Fishing Hat
 		[33820] = { 5, 0, 0 }, -- Weather-Beaten Fishing Hat
 		[88710] = { 5, 0, 0 }, -- Nat's Hat
+		[93732] = { 5, 0, 0 }, -- Darkmoon Fishing Cap
 	},
 	feet = {
 		[50287] = { 15, 200, 0 }, -- Boots of the Bay
@@ -72,7 +73,8 @@ Notes
 	- Lures are the items whose use spell puts a temporary enchant (SpellEffect 54) on the weapon carrying a Fishing skill spell. Left out: Corpse Worm (69907, a quest item), Ninja Hook [PH] (35713), the Ancient Pandaren Fishing Charm (85973, a toy with no skill bonus), the hat lures that work only while worn (33820, 88710), and Reinforced Fishing Line (68796, permanent).
 	- The glove enchants differ from the older clients: Enchant Gloves - Fishing (13620) puts on 2603 and Enchant Gloves - Angler (71692) puts on 4732. Here 846 is High Test Eternium Fishing Line's pole enchant.
 	- Spearfisher's Waders are WoW Forever's alone, so this client has no legs row.
-	- Gear rows are the hats and boots with a Fishing equip bonus that QuestieDB's MoP table gives a source: Lucky Fishing Hat and Nat Pagle's boots (quests), Worn Fishing Hat (quest 8226), Weather-Beaten Fishing Hat (drops), Nat's Hat (vendor), Boots of the Bay (quest 24803). Darkmoon Fishing Cap (93732, +5) is left out: that table names no drop, vendor or quest for it and no spell makes it, so it's likely unobtainable here.
+	- Gear rows are the hats and boots with a Fishing equip bonus that QuestieDB's MoP table gives a source: Lucky Fishing Hat and Nat Pagle's boots (quests), Worn Fishing Hat (quest 8226), Weather-Beaten Fishing Hat (drops), Nat's Hat (vendor), Boots of the Bay (quest 24803). Darkmoon Fishing Cap (93732, +5, no requirements) has no source in that table, but Wowhead MoP Classic shows it fished up on Darkmoon Island.
+	- Nat Pagle's Extreme Angler FC-5000 is a quest reward for both factions here: Snapjaws, Mon! (26211, Horde) and Snapjaws, Lad! (26485, Alliance).
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query
@@ -80,6 +82,7 @@ SQL (CMaNGOS)
 Wowhead
 	https://nether.wowhead.com/mop-classic/tooltip/item/19022
 	https://nether.wowhead.com/mop-classic/tooltip/item/19970
+	https://www.wowhead.com/mop-classic/item=93732
 
 wago.tools
 	https://wago.tools/db2/ItemSparse?build=5.5.4.71089
