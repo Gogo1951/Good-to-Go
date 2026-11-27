@@ -5,7 +5,7 @@ ns.PET_FOOD_DATA = {
 	-- Meat
 	[5051] = { 1, 1, 1, { 862 } }, -- Dig Rat
 	[117] = { 5, 1, 1, nil }, -- Tough Jerky
-	[769] = { 5, 1, 3, { 86, 317 } }, -- Chunk of Boar Meat
+	[769] = { 5, 1, 3, { 86, 317, 95162 } }, -- Chunk of Boar Meat
 	[2672] = { 5, 1, 4, nil }, -- Stringy Wolf Meat
 	[252022] = { 5, 1, 1, nil }, -- Galestrider Jerky
 	[2679] = { 10, 1, 5, nil }, -- Charred Wolf Meat
@@ -16,7 +16,7 @@ ns.PET_FOOD_DATA = {
 	[729] = { 10, 1, 17, { 38 } }, -- Stringy Vulture Meat
 	[2673] = { 10, 1, 10, nil }, -- Coyote Meat
 	[5467] = { 10, 1, 7, nil }, -- Kodo Meat
-	[5469] = { 10, 1, 9, { 2178 } }, -- Strider Meat
+	[5469] = { 10, 1, 9, { 2178, 92553 } }, -- Strider Meat
 	[5473] = { 10, 1, 10, nil }, -- Scorpid Surprise
 	[3173] = { 11, 1, 15, { 418 } }, -- Bear Meat
 	[723] = { 12, 1, 15, { 22 } }, -- Goretusk Liver
@@ -92,7 +92,7 @@ ns.PET_FOOD_DATA = {
 	[4603] = { 45, 2, 4, nil }, -- Raw Spotted Yellowtail
 	[7974] = { 45, 2, 50, { 6610 } }, -- Zesty Clam Meat
 	[13754] = { 45, 2, 6, nil }, -- Raw Glossy Mightfish
-	[13755] = { 45, 2, 7, nil }, -- Raw Winter Squid
+	[13755] = { 45, 2, 7, { 89228, 91610 } }, -- Raw Winter Squid
 	[13756] = { 45, 2, 9, nil }, -- Raw Summer Bass
 	[13758] = { 45, 2, 4, nil }, -- Raw Redgill
 	[13759] = { 45, 2, 10, nil }, -- Raw Nightfin Snapper
@@ -144,7 +144,7 @@ ns.PET_FOOD_DATA = {
 	[3927] = { 45, 4, 150, nil }, -- Fine Aged Cheddar
 	[8932] = { 55, 4, 200, { 6610 } }, -- Alterac Swiss
 	-- Fruit
-	[4536] = { 5, 5, 1, nil }, -- Shiny Red Apple
+	[4536] = { 5, 5, 1, { 91736 } }, -- Shiny Red Apple
 	[4656] = { 5, 5, 1, nil }, -- Small Pumpkin
 	[5057] = { 5, 5, 1, nil }, -- Ripe Watermelon
 	[251917] = { 5, 5, 1, nil }, -- Falorne's Homemade Tart
@@ -187,17 +187,18 @@ ns.PET_FOOD_DATA = {
 How We Got the Data
 
 Last Validated
-	2026-11-25, wago.tools, WoW Forever 1.60.1.71139
+	2026-11-27, wago.tools, WoW Forever 1.60.1.71139
 
 Notes
 	- The foods a hunter's pet eats, for Feed Pet support (Features/Macros-for-Consumables/Macros/Tools-Hunters-Pet-Food.lua). Diet IDs follow ns.PET_DIET_MAP in Data/Data.lua: 1 Meat, 2 Fish, 3 Bread, 4 Cheese, 5 Fruit, 6 Fungus.
 	- itemLevel is the item level, which decides how happy the food keeps a pet of a given level: Feed Pet takes the lowest-level food that still gives full happiness, then the cheapest, then the one with the fewest in the bags. sellPrice is the vendor sell value per unit in copper. questIDs lists the quests that take the item as an objective, or nil.
 	- Left out on purpose: foods Feed Pet would waste, even where the client gives them a pet diet. That is special foods that sell for nothing (Whipper Root Tuber, Essence Mango, holiday foods) and battleground or zone rations (including the Darkspear Islands rations). Feed Pet feeds the cheapest food first, so it would spend those before ordinary food.
 	- Foods that give the player a Well Fed buff are left out on purpose, on every client: they are cooked or bought for the player, and Feed Pet must never eat them. Raw meat and fish and plain food feed the pet. Pet buff foods (Sporeling Snack, Kibler's Bits) are a separate list, ns.PET_BUFF_FOODS in Game-IDs-Camelot.lua; no client capped at level 60 has any. WoW Forever's rework turned these into Well Fed foods, so they left this table on 2026-10-16: Roasted Boar Meat (2681), Westfall Stew (733), Smoked Bear Meat (6890), Succulent Pork Ribs (2685), Slitherskin Mackerel (787), Brilliant Smallfish (6290), Cooked Crab Claw (2682), Longjaw Mud Snapper (4592), Rainbow Fin Albacore (5095), Loch Frenzy Delight (6316), Bristle Whisker Catfish (4593), Rockscale Cod (4594), Mithril Head Trout (8364), Spotted Yellowtail (6887), Filet of Redgill (13930), Spinefin Halibut (8957), Lobster Stew (13933), Baked Salmon (13935).
-	- Diets on this client come from ItemPetFoodID in its own tables, numbered 1 Meat, 2 Fish, 3 Cheese, 4 Bread, 5 Fungus, 6 Fruit, so 3 and 4 and 5 and 6 swap on the way in. Those tables hold no quest objectives, so every row's questIDs were checked against QuestieDB's Forever quest table.
+	- Diets on this client come from ItemPetFoodID in its own tables, numbered 1 Meat, 2 Fish, 3 Cheese, 4 Bread, 5 Fungus, 6 Fruit, so 3 and 4 and 5 and 6 swap on the way in. Those tables hold no quest objectives, so every row's questIDs were checked against QuestieDB's Classic quest table and its Forever quest base. On 2026-11-27 that added WoW Forever's own quests: Paletusk Harvesting (95162) to Chunk of Boar Meat, Restocking the Larders (92553) to Strider Meat, the two Winter Frontier Fishery quests (89228, 91610) to Raw Winter Squid, and Applejack Still (91736) to Shiny Red Apple.
 	- Roasted Quail's level-1 copy (287963) carries the original's row, which Validate Data confirmed on build 1.60.1.70450.
 	- Season of Discovery items are left out even though this client knows many of their IDs (any ID of 200000 or more that the Classic Era tables also hold): they live only in Data/Discovery/. Where a table would otherwise pick one up, a deliberately-absent line in the table says so.
 	- Deviate Fish (6522) and Scorpid Surprise (5473) carry a pet diet on this client and have a source (fished from Deviate pools; cooked), so they are rows here. Savory Deviate Delight (6657) and Dragonbreath Chili (12217) are left out: they are cooked for what they do to the player, so Feed Pet would waste them. Items with ItemPetFoodID 7 (Pound of Flesh, Chunk of Flesh, Rabbit's Foot and the like) are left out because no pet family's PetFoodMask on this client eats that diet.
+	- Items this client gives a pet diet that are neither food nor meat are not rows: the fishing reagents Oily Blackmouth (6358), Firefin Snapper (6359) and Stonescale Eel (13422), and vendor junk such as Bear Flank (11409), Savage Bear Claw (11410), Grizzled Mane (11414), Threshadon Ambergris (2608) and Seaweed (5569). Feed Pet takes the cheapest food first, so it would spend the reagents before ordinary food; the junk isn't settled either way. Truskis' Cheesecake Slice (287416) is left out: no spell makes it and QuestieDB lists no source for it.
 
 SQL (CMaNGOS)
 	Database not recorded.
@@ -247,4 +248,7 @@ wago.tools
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Forever/foreverQuestDB.lua
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Forever/foreverItemDB.lua
+	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Classic/classicQuestDB.lua
+	https://raw.githubusercontent.com/Questie/QuestieDB/master/src/corrections/Forever/generated/foreverBaseQuest.lua
+	https://raw.githubusercontent.com/Questie/QuestieDB/master/src/corrections/Forever/generated/foreverBaseItem.lua
 ]]

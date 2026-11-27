@@ -65,7 +65,7 @@ ns.FISHING_WELL_FED_BUFF_IDS = {}
 How We Got the Data
 
 Last Validated
-	2026-11-26, wago.tools, Mists of Pandaria Classic 5.5.4.71089
+	2026-11-27, wago.tools, Mists of Pandaria Classic 5.5.4.71089
 
 Notes
 	- What the Fishing Lure macro (Features/Macros-for-Consumables/Macros/Fishing-Lure.lua) puts on and applies, each table ranked by its Fishing Bonus.

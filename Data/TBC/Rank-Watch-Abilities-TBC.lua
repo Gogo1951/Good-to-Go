@@ -2788,7 +2788,7 @@ ns.RANK_WATCH_ABILITIES = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, TBC Anniversary 2.5.6.70577
+	2026-11-27, wago.tools, TBC Anniversary 2.5.6.70577
 
 Notes
 	- Built by Tools/Build-Rank-Watch-Abilities.py from Rank Sentinel's AbilityData/TBC.lua (MIT, Copyright (c) 2021 Gogo1951), the abilities its "Include" column keeps: heals and other spells players lower on purpose are left out there, not here.
@@ -2797,13 +2797,15 @@ Notes
 	- Features/Rank-Watch/Rank-Watch-Lookups.lua joins abilities that ns.SPELL_GROUPS lists as one group (Demon Skin, then Demon Armor) into one ladder, ordered by learn level.
 
 SQL (CMaNGOS)
-	None.
+	TODO: Add SQL Query
 
 Wowhead
 	None.
 
 wago.tools
 	https://wago.tools/db2/SpellName?build=2.5.6.70577
+	https://wago.tools/db2/SpellLevels?build=2.5.6.70577
+	https://wago.tools/db2/Spell?build=2.5.6.70577
 
 QuestieDB
 	None.

@@ -1112,7 +1112,7 @@ ns.CLASS_SPELL_LISTS = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Season of Discovery 1.15.9.70576
+	2026-11-27, wago.tools, Season of Discovery 1.15.9.70576
 
 Notes
 	- Each class's lists for the spellbook page: the spells whose macros get the mouseover, cursor, channeled and stealth options; the stance bar order and the stances each spell needs; the ability each demon or pet summon's macro can cast; the spells listed until learned that no trainer row covers (extraSpells: quest-learned spells and talents without trainer ranks). Features/Enhanced-Spellbook/Macro-Builder/Macro-Builder.lua reads them.
@@ -1132,6 +1132,7 @@ Wowhead
 wago.tools
 	https://wago.tools/db2/SpellName?build=1.15.9.70003
 	https://wago.tools/db2/SpellName?build=1.15.9.70576
+	https://wago.tools/db2/CreatureFamily?build=1.15.9.70576
 
 QuestieDB
 	None.

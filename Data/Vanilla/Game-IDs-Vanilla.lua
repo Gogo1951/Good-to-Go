@@ -108,7 +108,7 @@ ns.BLOODRAGE_SPELL_ID = 2687
 How We Got the Data
 
 Last Validated
-	2026-11-26, wago.tools, Classic Era 1.15.9.70576
+	2026-11-27, wago.tools, Classic Era 1.15.9.70576
 
 Notes
 	- Single spell, item, race and skill-line IDs the feature code reads by name, grouped by use. The client supplies every name the player sees from these IDs.
@@ -129,7 +129,7 @@ Wowhead
 wago.tools
 	https://wago.tools/db2/SpellName?build=1.15.9.70576
 	https://wago.tools/db2/ItemSparse?build=1.15.9.70576
-	https://wago.tools/db2/ManifestInterfaceData?build=1.15.9.70003
+	https://wago.tools/db2/ManifestInterfaceData?build=1.15.9.70576
 	https://wago.tools/db2/SkillLine?build=1.15.9.70576
 	https://wago.tools/db2/Item?build=1.15.9.70576
 	https://wago.tools/db2/CreatureFamily?build=1.15.9.70576

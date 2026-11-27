@@ -32,12 +32,12 @@ ns.HEALTHSTONES = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Season of Discovery 1.15.9.70576
+	2026-11-27, wago.tools, Season of Discovery 1.15.9.70576
 
 Notes
-	- Every item that heals instantly on the healthstone cooldown, keyed by the cooldown category Charged Crystal Focus (32578) uses, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Healthstone and Health Potion macros. Healthstone Amount is the low end of the heal; Required Level is the level the tooltip requires (0 for none).
+	- Every item that heals instantly on the healthstone cooldown, keyed by the cooldown category every healthstone shares (SpellCategory 1153, Item - Combat Consumable (Non-Aggressive); the query's reference item, Charged Crystal Focus (32578), is a TBC item this client lacks), read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Healthstone and Health Potion macros. Healthstone Amount is the low end of the heal; Required Level is the level the tooltip requires (0 for none).
 	- Alexander's Test Healthstone (30347) and Royal Guide of Escape Routes (43657) are left out, as the query below shows.
-	- Mana gems and runes share the category but restore mana; they live in Mana-Gems-Discovery.lua. The Minor and Major Recombobulators restore health as a side effect of dispelling Polymorph and are reusable devices, so they are left out.
+	- Mana gems and runes share the category but restore mana; they live in Mana-Gems-Discovery.lua. The Minor and Major Recombobulators restore health as a side effect of dispelling Polymorph and are reusable devices, so they are left out. The rest of the category heals over time, restores something other than health, or places an object (Target Dummies, Battle Standards), so it is left out too.
 	- Night Dragon's Breath (11952) is left out on purpose, an oddball that shares the cooldown.
 	- Sprouted Frond's heal scales with the player's level; its row holds the heal at the spell's base level, so the client's text for a higher character reads more.
 	- Crystal Flake Throat Lozenge (23683) is a Classic Era item the Classic Era report confirms, copied in.
@@ -90,6 +90,7 @@ wago.tools
 	https://wago.tools/db2/Item?build=1.15.9.70576
 	https://wago.tools/db2/ItemEffect?build=1.15.9.70576
 	https://wago.tools/db2/SpellEffect?build=1.15.9.70576
+	https://wago.tools/db2/SpellCategory?build=1.15.9.70576
 
 QuestieDB
 	None.

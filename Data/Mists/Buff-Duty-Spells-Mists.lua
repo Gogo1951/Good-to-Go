@@ -143,7 +143,7 @@ ns.BUFF_DUTY_SELF_SPELLS = {
 	}, -- Cat Form
 	{
 		class = "DRUID",
-		ranks = { { 24858, 10 } },
+		ranks = { { 24858, 16 } },
 		castLast = true,
 		pickOne = "DRUID_FORM",
 		selfType = "forms",
@@ -323,13 +323,6 @@ ns.BUFF_DUTY_WEAPON_HANDS = {
 	SHAMAN = { MAIN, OFF_HAND },
 }
 
---[[
-    Every other temporary weapon enchant, for any class: oils, sharpening
-    stones, weightstones, fishing lures. weapon types is the item spell's
-    weapon-subclass mask (0 for any weapon but a fishing pole); kind is the
-    Weapon Buffs panel group it's listed under, and item level ranks it there
-    and in the window, strongest first.
-]]
 local OIL, STONE, LURE = "OIL", "STONE", "LURE"
 local ON_QUEL_DANAS = { instances = { 585, 580 }, uiMaps = { 122 } } -- Magisters' Terrace, Sunwell Plateau; Isle of Quel'Danas
 
@@ -411,7 +404,7 @@ ns.BUFF_DUTY_RESURRECTIONS = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Mists of Pandaria Classic 5.5.4.71089
+	2026-11-27, wago.tools, Mists of Pandaria Classic 5.5.4.71089
 
 Notes
 	- Built offline from this client's game tables, not yet checked against a Validate Data run from a Mists client. Every ID below is in this build's SpellName or ItemSparse, under the name its comment gives.
@@ -428,14 +421,14 @@ Notes
 	- BUFF_DUTY_PET_ICONS: a demon wears its own summoning spell's icon, matched by creature ID, which is the SUMMON_PET effect's misc value in SpellEffect. The Grimoire of Supremacy demons (Fel Imp, Voidlord, Shivarra, Observer, Wrathguard) and the Incubus are added. The Grimoire of Service demons, the Infernal and the Doomguard are temporary and left out, as on TBC.
 	- BUFF_DUTY_SELF_SPELLS: the long self buffs. Aspect of the Iron Hawk shares Hawk's row, since the talent replaces it (Talent.OverridesSpellID 13165) and lands in tier 3, level 45 (CLASS_TALENT_LEVELS in the client's FrameXML Constants.lua). Mage armors, Inner Fire, Inner Will, Shadowform, the seals and the aspects have no timer here (SpellDuration -1), so they default to MISSING or OFF; Lightning Shield, Water Shield and the poisons last an hour.
 	- selfType names the type a self buff sits under in the window, the Enhanced Spellbook's own heading for it (threat for Righteous Fury, forms for Shadowform, pets for Demonic Sacrifice, buffs for the party auras and shouts, seals, and poisons, which the spellbook has no heading for). Unset, a blessing, a paladin aura or an aspect goes by its exclusive family, any other group buff under Buffs and any other self buff under Self-Buffs (Features/Buff-Duty/Buff-Duty-Lookups.lua).
-	- The druid forms you stay in (Bear Form, Cat Form, Moonkin Form) share pickOne = "DRUID_FORM": the druid picks one of them, or none, and only that one is offered. Each starts OFF, so no druid is shifted without choosing, and castLast casts it after every other buff, since a form shuts out the rest. Their learn levels here haven't been checked against this client. Travel, Aquatic and Flight Form are left out, and so is Incarnation: Tree of Life, which is a cooldown.
+	- The druid forms you stay in (Bear Form, Cat Form, Moonkin Form) share pickOne = "DRUID_FORM": the druid picks one of them, or none, and only that one is offered. Each starts OFF, so no druid is shifted without choosing, and castLast casts it after every other buff, since a form shuts out the rest. Their learn levels are SpellLevels.BaseLevel: Cat Form 6, Bear Form 8, Moonkin Form 16 (a Balance spell, SpecializationSpells). Travel, Aquatic and Flight Form are left out, and so is Incarnation: Tree of Life, which is a cooldown.
 	- castLast puts a self buff after every other cast of yours on the Buff Key: Shadowform shuts out Holy spells, so it waits until your other casts are out.
 	- A rogue's poisons are self buffs on this client: each one's cast puts an hour-long aura on the rogue (APPLY_AURA, PROC_TRIGGER_SPELL), not a weapon enchant. Leeching Poison (tier 3, level 45) and Paralytic Poison (tier 5, level 75) are talents.
 	- The seals, Inner Fire and Inner Will, and the lethal and non-lethal poisons each allow only one up at a time, but they carry no exclusive family: the Self-Buffs panel names a family of two or more by L["BUFF_DUTY_SELF_NOTE_<family>"], and this locale has no such entry for them yet, so a new family would raise a missing-entry error. Instead one of each starts on (Seal of Truth, Inner Fire, Deadly Poison, Crippling Poison) and the rest start OFF. Seal of Command shares Seal of Truth's row: Truth replaces it at 24 (SkillLineAbility.SupercedesSpell).
-	- Left out of the self buffs: stances, presences (Death Knight) and Monk stances, as Warrior stances are on TBC; Omen of Clarity, now passive; forms, tracking and mounts; Grimoire of Sacrifice and Soul Link, which have cooldowns; Battle Shout, which now has a cooldown. Druid, Death Knight, Monk, Warlock and Warrior have no rows here.
+	- Left out of the self buffs: stances, presences (Death Knight) and Monk stances, as Warrior stances are on TBC; Omen of Clarity, now passive; forms, tracking and mounts; Grimoire of Sacrifice and Soul Link, which have cooldowns; Battle Shout, which now has a cooldown. Death Knight, Monk, Warlock and Warrior have no rows here.
 	- BUFF_DUTY_WEAPON_ENCHANTS: the shaman imbues, one spell each, with the enchant ID from SpellEffect's ENCHANT_ITEM_TEMPORARY misc value and their 60-minute duration from each spell's description ("Lasts 60 minutes"). Rockbiter names one enchant (3021) here, where TBC's named one per weapon speed. Earthliving (Restoration) and Windfury (Enhancement) are Specialization spells.
 	- BUFF_DUTY_WEAPON_HANDS: shamans only, both hands (Enhancement dual wields). Rogues have no weapon row: their poisons are self buffs.
-	- BUFF_DUTY_WEAPON_ITEMS: every item this client's tables say puts a temporary enchant on a hand weapon or fishing pole (ItemEffect to a spell with ENCHANT_ITEM_TEMPORARY), with SpellEquippedItems' subclass mask, ItemSparse's required level and item level, and the same kinds as TBC. Changed from TBC: Blessed Wizard Oil's enchant (3592), Consecrated Sharpening Stone's (3593), Elemental Sharpening Stone's weapon types (41411), and Isle of Quel'Danas, UiMap 122 here. Added: Exceptional Mana Oil, Feathered Lure, Glass Fishing Bobber (a drop in QuestieDB's MoP item table), Glow Worm and Heat-Treated Spinning Lure. Left out: Weather-Beaten Fishing Hat and Nat's Hat (worn lures), Ninja Hook [PH] and Test Sharpening Stone (placeholders), armor items (Comfortable Insoles, Runes of Warding), and Corpse Worm (69907), a quest bait that only catches Corpse-Fed Pike in Brightwater Lake. Whether the older items still drop or sell on this client isn't checked: those with a crafting spell on a profession skill line are craftable here.
+	- BUFF_DUTY_WEAPON_ITEMS: every item this client's tables say puts a temporary enchant on a hand weapon or fishing pole (ItemEffect to a spell with ENCHANT_ITEM_TEMPORARY), for any class: oils, sharpening stones, weightstones and fishing lures. Each carries SpellEquippedItems' subclass mask as its weapon types (0 for any weapon but a fishing pole), ItemSparse's required level and item level, and the same kinds as TBC. kind is the Weapon Buffs panel group it's listed under, and item level ranks it there and in the window, strongest first. Changed from TBC: Blessed Wizard Oil's enchant (3592), Consecrated Sharpening Stone's (3593), Elemental Sharpening Stone's weapon types (41411), and Isle of Quel'Danas, UiMap 122 here. Added: Exceptional Mana Oil, Feathered Lure, Glass Fishing Bobber (a drop in QuestieDB's MoP item table), Glow Worm and Heat-Treated Spinning Lure. Left out: Weather-Beaten Fishing Hat and Nat's Hat (worn lures), Ninja Hook [PH] and Test Sharpening Stone (placeholders), armor items (Comfortable Insoles, Runes of Warding), and Corpse Worm (69907), a quest bait that only catches Corpse-Fed Pike in Brightwater Lake. Whether the older items still drop or sell on this client isn't checked: those with a crafting spell on a profession skill line are craftable here.
 	- BUFF_DUTY_SOULSTONE is declared with no spells: on this client Soulstone (20707) is cast straight on a party member, with no stone item and a 10-minute cooldown, which the Soulstone reminder (Features/Buff-Duty/Buff-Duty-Self.lua) doesn't handle. Its fields are empty lists so every reader skips it.
 	- BUFF_DUTY_SELF_ITEMS are the consumables any class keeps up on itself, offered under Self Buffs while one is in your bags and its buff is missing (issue #40): each item id, the aura ids its use leaves, and when it shows by default. Winterfall Firewater (item 12820) leaves Winterfall Firewater (17038), +35 melee attack power for 20 minutes, the same aura the Elixirs table lists. Its default is When Missing, since the request was to show it once the buff is gone.
 	- BUFF_DUTY_RESURRECTIONS: one spell per class, now with Druid (Revive) and Monk (Resuscitate). Rebirth and Raise Ally stay out (combat resurrections on a cooldown), as does Mass Resurrection (83968, a 10-minute cooldown).
@@ -483,6 +476,14 @@ wago.tools
 	https://wago.tools/db2/Item?build=5.5.4.71089
 	https://wago.tools/db2/ItemSparse?build=5.5.4.71089
 	https://wago.tools/db2/SpellName?build=5.5.4.71089
+	https://wago.tools/db2/SpellLevels?build=5.5.4.71089
+	https://wago.tools/db2/SpellEffect?build=5.5.4.71089
+	https://wago.tools/db2/SpellEquippedItems?build=5.5.4.71089
+	https://wago.tools/db2/ItemEffect?build=5.5.4.71089
+	https://wago.tools/db2/SpellCastingRequirements?build=5.5.4.71089
+	https://wago.tools/db2/SpecializationSpells?build=5.5.4.71089
+	https://wago.tools/db2/Map?build=5.5.4.71089
+	https://wago.tools/db2/UiMap?build=5.5.4.71089
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/MoP/mopItemDB.lua

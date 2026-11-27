@@ -2419,22 +2419,25 @@ ns.RANK_WATCH_ABILITIES = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Season of Discovery 1.15.9.70576
+	2026-11-27, wago.tools, Season of Discovery 1.15.9.70576
 
 Notes
 	- Built by Tools/Build-Rank-Watch-Abilities.py from Rank Sentinel's AbilityData/Classic.lua (MIT, Copyright (c) 2021 Gogo1951), the abilities its "Include" column keeps: heals and other spells players lower on purpose are left out there, not here.
 	- Each ability sits under the class whose Trainer-Spells-Discovery.lua row teaches it, named by that row's comment, and takes the trainer row's learn level where the two disagree.
 	- rank is the spell's own rank number, so an ability whose first ranks Rank Sentinel leaves out starts above 1.
+	- The Ahn'Qiraj book ranks (Starfire rank 7, Shadow Bolt rank 10, Heroic Strike rank 9 and the like) aren't in Rank Sentinel's list, so they aren't here; the later raid-book ranks it keeps (Eviscerate rank 9, Ferocious Bite rank 5, Flame Shock rank 6) are. Every ID, rank number and learn level was checked against this client's SpellName, Spell and SpellLevels and the trainer rows.
 	- Features/Rank-Watch/Rank-Watch-Lookups.lua joins abilities that ns.SPELL_GROUPS lists as one group (Demon Skin, then Demon Armor) into one ladder, ordered by learn level.
 
 SQL (CMaNGOS)
-	None.
+	TODO: Add SQL Query
 
 Wowhead
 	None.
 
 wago.tools
 	https://wago.tools/db2/SpellName?build=1.15.9.70576
+	https://wago.tools/db2/Spell?build=1.15.9.70576
+	https://wago.tools/db2/SpellLevels?build=1.15.9.70576
 
 QuestieDB
 	None.

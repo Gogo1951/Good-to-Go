@@ -595,7 +595,7 @@ ns.BUFF_DUTY_RESURRECTIONS = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Season of Discovery 1.15.9.70576
+	2026-11-27, wago.tools, Season of Discovery 1.15.9.70576
 
 Notes
 	- Every buff one player can put on another that lasts more than two minutes: the ones worth keeping up on a group, and the ones a player may want to hand out on request. Only the rows for the player's own class are read, and only the ranks the player knows are cast.
@@ -634,11 +634,12 @@ Notes
 	- BUFF_DUTY_SOULSTONE is the Soulstone reminder: create is every Create Soulstone rank (cast by its bare name), auras the Soulstone Resurrection buff each stone leaves, and items the stones, lowest first, the same lists as Consumable Connoisseur's Soulstones-Discovery.lua and Conjure-Spells-Discovery.lua.
 	- BUFF_DUTY_SELF_ITEMS are the consumables any class keeps up on itself, offered under Self Buffs while one is in your bags and its buff is missing (issue #40): each item id, the aura ids its use leaves, and when it shows by default. Winterfall Firewater (item 12820) leaves Winterfall Firewater (17038), +35 melee attack power for 20 minutes, the same aura the Elixirs table lists. Its default is When Missing, since the request was to show it once the buff is gone.
 	- BUFF_DUTY_RESURRECTIONS is what the Buff Key casts first, on a dead target: every rank of each class's resurrection, cast by its bare name, which resolves to the highest known. Druids, paladins, priests and shamans are listed. The druid's is Revive (437138), Season of Discovery's out-of-combat resurrection, added on 2026-10-22 from this client's SpellEffect and SkillLineAbility tables; the Validate Data run that day confirmed it on 1.15.9.70003 as one rank, learned at level 1. Rebirth stays out: it's a combat resurrection on a 30-minute cooldown.
-	- Molten Armor (428741) is Season of Discovery's bracer rune, at learn level 1 like the other runes, and shares MAGE_ARMOR with the other armors. Its ID comes from warcraft.wiki.gg; check it against a Validate Data run.
+	- Molten Armor (428741) is Season of Discovery's bracer rune, at learn level 1 like the other runes, and shares MAGE_ARMOR with the other armors. Its ID came from warcraft.wiki.gg; this client's SpellName and SpellLevels confirm it, at learn level 1.
 	- Beacon of Light, Earth Shield and Spirit of the Alpha are Season of Discovery's rune buffs. Each holds on one target per caster, so like Earth Shield on TBC they start OFF rather than being offered to every tank. Runes have no trainer level, so each carries learn level 1, from SpellLevels.
 	- Water Shield, Fel Armor, Aspect of the Viper, Aspect of the Falcon, Heart of the Lion and the second Righteous Fury (407627) are Season of Discovery's own self buffs. Their learn levels come from SpellLevels: 1 for the runes, 60 for Aspect of the Falcon. Heart of the Lion has no timer and isn't an aspect, so it starts MISSING and shares no exclusive group.
 	- Commanding Shout is left out: it has no single-target version, and the window builds every row from one.
 	- BUFF_DUTY_WEAPON_ITEMS is every other temporary weapon enchant, offered to any class: each item with the level it requires, the enchant id it puts on (SpellEffect's ENCHANT_ITEM_TEMPORARY misc value, through ItemEffect), and the weapon types its spell takes (SpellEquippedItems' EquippedItemSubclass mask, 0 for any weapon). kind files it under Oils, Stones or Lures on the Weapon Buffs panel: LURE for a fishing pole's, STONE for a sharpening stone or weightstone, OIL for the rest (oils, coatings, Bloodboil Poison, Scourgebane, the Weapon Cleaning Cloth). item level (ItemSparse) ranks them, strongest first: it orders a line Rough to Dense where the required level can't (every lure needs level 0). Fishing lures take only a fishing pole, a sharpening stone only a bladed weapon, a weightstone only a blunt one. Picked from the IDs supplied on 2026-10-19, keeping only items whose spell enchants a hand weapon or fishing pole. Left out: rogue-only poisons (the rogue rows above), armor runes and other enchants that go on armor, shield coatings, and test or placeholder items. zones, on an item whose tooltip says it only works in certain places, names those places: instances by the map ID GetInstanceInfo reports and outdoor zones by the UiMap ID C_Map.GetBestMapForUnit reports, both from this client's Map and UiMap tables. The window offers such an item only there (Features/Buff-Duty/Buff-Duty-Self.lua); an item without zones, anywhere. Here the Blackfathom Mana Oil and Blackfathom Sharpening Stone carry one: Blackfathom Deeps (Map 48).
+	- Rechecked against every item whose use spell puts a temporary enchant on (ItemEffect to SpellEffect's ENCHANT_ITEM_TEMPORARY): beyond the rows here, only the rogue poisons above, test items (Test Sharpening Stone, Runecarving Test - Crippling Poison), the shield coatings (Conductive Shield Coating, Magnificent Trollshine) and the shoulder Soul imbues remain, all left out.
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query
@@ -667,6 +668,8 @@ wago.tools
 	https://wago.tools/db2/ItemEffect?build=1.15.9.70576
 	https://wago.tools/db2/SpellEffect?build=1.15.9.70576
 	https://wago.tools/db2/SpellLevels?build=1.15.9.70576
+	https://wago.tools/db2/Spell?build=1.15.9.70576
+	https://wago.tools/db2/SpellEquippedItems?build=1.15.9.70576
 
 QuestieDB
 	None.

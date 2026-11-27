@@ -5,17 +5,20 @@ if not ns.IS_DISCOVERY then
 end
 
 -- [itemID] = true, -- Item Name
-ns.QUESTIONABLE_EQUIPMENT = {}
+ns.QUESTIONABLE_EQUIPMENT = {
+	[11122] = true, -- Carrot on a Stick
+}
 
 --[[
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Season of Discovery 1.15.9.70576
+	2026-11-27, wago.tools, Season of Discovery 1.15.9.70576
 
 Notes
 	- Items that are fine to own and wrong to be wearing when a pull starts, read by the Non-combat Gear Equipped check in Features/Readiness-Report/Readiness-Report-Probes.lua.
 	- This table is the exceptions, not the list. Nearly everything worth catching is a whole weapon subclass (every fishing pole, mining pick and skinning knife, the tournament lances), and the check answers those from the equipped item's own class and subclass, so they need no rows here and a pole added later is covered the day it ships. What is left is the handful that share a subclass with real gear: trinkets. No property tells a mount-speed trinket from a raid trinket, so those are named.
+	- The family is every trinket whose equip spell raises mounted speed (aura 130). On this client that is Carrot on a Stick (11122) alone, a reward from Gahz'rilla (quest 2770), which QuestieDB's Season of Discovery fixes leave unchanged; added 2026-11-27.
 
 SQL (CMaNGOS)
 	TODO: Add SQL Query
@@ -27,7 +30,11 @@ wago.tools
 	https://wago.tools/db2/ItemSparse?build=1.15.9.70003
 	https://wago.tools/db2/Item?build=1.15.9.70576
 	https://wago.tools/db2/ItemSparse?build=1.15.9.70576
+	https://wago.tools/db2/ItemEffect?build=1.15.9.70576
+	https://wago.tools/db2/SpellEffect?build=1.15.9.70576
 
 QuestieDB
-	None.
+	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/Classic/classicItemDB.lua
+	https://raw.githubusercontent.com/Questie/QuestieDB/master/src/corrections/Sod/sodBaseItems.lua
+	https://raw.githubusercontent.com/Questie/QuestieDB/master/src/corrections/Sod/sodQuestFixes.lua
 ]]

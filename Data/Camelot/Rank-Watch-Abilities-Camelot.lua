@@ -2414,7 +2414,7 @@ ns.RANK_WATCH_ABILITIES = {
 How We Got the Data
 
 Last Validated
-	2026-11-25, wago.tools, WoW Forever 1.60.1.71139
+	2026-11-27, wago.tools, WoW Forever 1.60.1.71139
 
 Notes
 	- Built by Tools/Build-Rank-Watch-Abilities.py from Rank Sentinel's AbilityData/Classic.lua (MIT, Copyright (c) 2021 Gogo1951), the abilities its "Include" column keeps: heals and other spells players lower on purpose are left out there, not here.
@@ -2425,7 +2425,7 @@ Notes
 	- Shred (5221), Righteous Fury (25780) and Seal of Fury rank 3 (20163) follow their trainer rows' corrected levels, 20, 10 and 26, which Validate Data's SPELL_LEVEL_LEARNED also states.
 
 SQL (CMaNGOS)
-	None.
+	TODO: Add SQL Query
 
 Wowhead
 	None.

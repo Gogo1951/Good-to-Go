@@ -277,7 +277,7 @@ Notes
 	- Features/Rank-Watch/Rank-Watch-Lookups.lua joins abilities that ns.SPELL_GROUPS lists as one group (Demon Skin, then Demon Armor) into one ladder, ordered by learn level.
 
 SQL (CMaNGOS)
-	None.
+	TODO: Add SQL Query
 
 Wowhead
 	None.
@@ -300,7 +300,7 @@ Notes
 	- Empty: Rank Watch reports a rank lower than the caster could have, and this flavor has no ranks to compare, or no TOC lists this folder.
 
 SQL (CMaNGOS)
-	None.
+	TODO: Add SQL Query
 
 Wowhead
 	None.

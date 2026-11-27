@@ -7,19 +7,20 @@ ns.RANK_WATCH_ABILITIES = {}
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Mists of Pandaria Classic 5.5.4.71089
+	2026-11-27, wago.tools, Mists of Pandaria Classic 5.5.4.71089
 
 Notes
 	- Empty: Rank Watch reports a rank lower than the caster could have, and this flavor has no ranks to compare, or no TOC lists this folder.
 
 SQL (CMaNGOS)
-	None.
+	TODO: Add SQL Query
 
 Wowhead
 	None.
 
 wago.tools
-	None.
+	https://wago.tools/db2/Spell?build=5.5.4.71089
+	https://wago.tools/db2/SkillLineAbility?build=5.5.4.71089
 
 QuestieDB
 	None.

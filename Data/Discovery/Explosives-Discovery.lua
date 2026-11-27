@@ -35,7 +35,7 @@ ns.EXPLOSIVES = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Season of Discovery 1.15.9.70576
+	2026-11-27, wago.tools, Season of Discovery 1.15.9.70576
 
 Notes
 	- Every Engineering explosive this client knows that deals damage, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Explosive macro. The family is the items sharing Coarse Dynamite's (4365) use category and its class and subclass (Trade Goods, Explosives).
@@ -44,6 +44,8 @@ Notes
 	- The Fumigator (233985) and Obsidian Bomb (233986) came from the Classic Era tables on wago.tools (build 1.15.9.70003), and the Season of Discovery report confirms them. The Fumigator also hurts its user and deals extra damage to Silithid in Silithus; neither requires Engineering.
 	- High-Yield Radiation Bomb (215127) and Ez-Thro Radiation Bomb (215168) are Season of Discovery's Gnomeregan bombs, made by the Engineering spells 435964 and 435966 from schematics a vendor sells (QuestieDB). Their damage, class, subclass and use category came from this client's tables on wago.tools (build 1.15.9.70576), and the Season of Discovery Validate Data run confirms them: High-Yield requires level 35 and Engineering 200, Ez-Thro level 40 and no Engineering.
 	- Arcane Megabomb (233984) shares the family's use category, class and subclass, but its spell drains mana instead of dealing damage, so it is left out, as Arcane Bomb (16040) is.
+	- Explosive Sheep (4384), Goblin Land Mine (4395) and Flash Bomb (4852) share the family's use category, class and subclass too, but their own spells deal no damage (they summon a creature or stun), so they are left out, as is Test Sapper Charge (23418).
+	- The two radiation bombs have no ItemSparse row on this client, so their sell price and stack size come from the Validate Data run; their required levels are in the Item table.
 
 SQL (CMaNGOS)
 	Database not recorded.
@@ -97,6 +99,7 @@ wago.tools
 	https://wago.tools/db2/ItemEffect?build=1.15.9.70576
 	https://wago.tools/db2/SpellEffect?build=1.15.9.70576
 	https://wago.tools/db2/SkillLineAbility?build=1.15.9.70576
+	https://wago.tools/db2/Spell?build=1.15.9.70576
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/src/corrections/Sod/sodBaseItems.lua

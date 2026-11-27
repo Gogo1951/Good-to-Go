@@ -92,7 +92,7 @@ ns.ELIXIR_BUFF_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Season of Discovery 1.15.9.70576
+	2026-11-27, wago.tools, Season of Discovery 1.15.9.70576
 
 Notes
 	- What counts as being flasked, for the Readiness Report's Flask or 2x Elixirs check (Features/Readiness-Report/Readiness-Report-Probes.lua): a flask, OR two different elixirs. Two different elixirs is the whole test, and it is enough because the client enforces the rest: from TBC on, a character may carry one battle and one guardian elixir at a time, so any two elixir auras up together are already one of each. The report reads only whether a buff is listed, never its group.
@@ -105,8 +105,9 @@ Notes
 	- Keyed by the BUFF's spell ID, not the item's: the report reads the player's auras, and several items share one buff while a few grant a buff whose ID doesn't match the item. That is also why the source query is deduped by spell on the way in. Each row's comment names the item that grants the buff.
 	- The source is the server's spell_elixir table, not the item tables: its mask is the only thing that separates a battle or guardian elixir (masks 1 and 2, both collected) from a utility one. Water Breathing and Noggenfogger are elixirs by item subclass but appear in no mask, which is right: they occupy no elixir slot, and counting them would call a player with water breathing and Noggenfogger fully flasked.
 	- Flasks are masks 3, 7 and 11 (plain, Unstable, Shattrath), unioned with the flask items the item pass found. The union errs toward silence on purpose: an ID here that isn't really a flask only keeps the report quiet, while a missing one nags a player who IS flasked, the failure that gets a switch turned off for good.
-	- Season of Discovery's own flasks and elixirs (the Nightmare and Old Gods flasks, the Atal'ai Mojos, the Honey Badger, Mage-Lord and Ironside elixirs, Lesser Arcane Elixir), plus Flask of Petrification and the three Permanent Zanza buffs, came from the Classic Era tables on wago.tools (build 1.15.9.70003): each is the use spell of an item in the elixir spell category (79). They await the next Season of Discovery Validate Data run. The Mojos, like the Zanza buffs, allow one of their kind at a time.
+	- Season of Discovery's own flasks and elixirs (the Nightmare and Old Gods flasks, the Atal'ai Mojos, the Honey Badger, Mage-Lord and Ironside elixirs, Lesser Arcane Elixir), plus Flask of Petrification and the three Permanent Zanza buffs, came from the Classic Era tables on wago.tools (build 1.15.9.70003): each is the use spell of an item in the elixir spell category (79). This client's tables at 1.15.9.70576 hold every one. The Mojos, like the Zanza buffs, allow one of their kind at a time.
 	- Elixir of Alacrity (1213922, run speed only) and the two Draughts of the Sands (1217084, 1218485, damage against creatures in four zones) share that category but are left out: neither is a stat elixir the Flask or 2x Elixirs check is about.
+	- The rest of category 79 is left out the same way: detection and water-breathing elixirs, Elixir of Dream Vision, Catseye Elixir, Oil of Immolation, Elixir of Poison Resistance, the Hallow's End treat, Elixir of Coalesced Regret, a deprecated resistance potion and a recipe, and a run of quest and placeholder items (the Rune of Teleportation, Orb of Corruption and other 191xxx items). None is a stat elixir.
 
 SQL (CMaNGOS)
 	Database not recorded.

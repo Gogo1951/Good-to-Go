@@ -136,8 +136,9 @@ end
     Rows are plain, so they work in combat, and kept by the menu they open
     rather than pooled by place, so an open menu stays on its line across a
     redraw. The line's name is Buff Duty's own label, so the row's sides stay
-    empty; its icons sit over it at a higher frame level, so a click on one
-    still casts.
+    empty. Nothing clickable sits on it: its icons go on a plain row under it,
+    starting where its name starts, so reaching for one never opens the menu
+    (Style Guide → MENUS → Sub-menus).
 ]]
 local menuRows = {}
 
@@ -166,17 +167,24 @@ local function ReleaseMenuButtons()
 	end
 end
 
+-- A line that opens the menu and has icons takes a second row for them.
+local function IconsUnder(line)
+	return line.menu ~= nil and line.specs[1] ~= nil
+end
+
 --[[
     `offsets` maps a buff's column to pixels from the grid's first icon; `x`
     and `right` are the window column's edges, `top` the row's top. Every
     line is a Kit.ROW_HEIGHT row, its name and icons centered on it. A packed
     line skips the columns, its icons side by side against the right edge, so
-    a cast leaves no gap. withMenus places a line's menu row across the window.
+    a cast leaves no gap. withMenus places a line's menu row across the window,
+    and moves its icons to the row under it. Returns the rows the line takes.
 ]]
 local function PlaceRow(line, x, right, top, nameWidth, offsets, gridWidth, withMenus)
 	local content = pool.content
 	local y = top - Kit.ROW_HEIGHT / 2
 	local label, indent = line.label, line.indent
+	local under = withMenus and IconsUnder(line)
 	label:ClearAllPoints()
 	label:SetPoint("LEFT", content, "TOPLEFT", x + indent, y)
 	label:SetWidth(nameWidth - indent)
@@ -208,13 +216,19 @@ local function PlaceRow(line, x, right, top, nameWidth, offsets, gridWidth, with
 	end
 
 	local specs = line.specs
+	local iconY = y
 	local left = right - (gridWidth or 0)
 	local packedLeft = right - (#specs * (ICON_SIZE + ICON_GAP) - ICON_GAP)
+	if under then
+		iconY = y - Kit.ROW_HEIGHT
+		left = x + indent
+		packedLeft = left
+	end
 	for index, spec in ipairs(specs) do
 		local button = AcquireIcon()
 		button:ClearAllPoints()
 		local iconX = line.packed and packedLeft + (index - 1) * (ICON_SIZE + ICON_GAP) or left + offsets[spec.column]
-		button:SetPoint("LEFT", content, "TOPLEFT", iconX, y)
+		button:SetPoint("LEFT", content, "TOPLEFT", iconX, iconY)
 		SetIcon(button, spec)
 	end
 	local partyBuffs = line.partyBuffs or {}
@@ -225,6 +239,7 @@ local function PlaceRow(line, x, right, top, nameWidth, offsets, gridWidth, with
 		button:SetPoint("LEFT", content, "TOPLEFT", left + (index - 1) * (ICON_SIZE + ICON_GAP), y)
 		SetOtherIcon(button, spec)
 	end
+	return under and 2 or 1
 end
 
 --[[
@@ -274,8 +289,8 @@ end
 local function PlaceLines(lines, x, right, top, nameWidth, offsetsByGrid, widths, withMenus)
 	local bottom = top
 	for _, line in ipairs(lines) do
-		PlaceRow(line, x, right, top, nameWidth, offsetsByGrid[line.grid], widths[line.grid], withMenus)
-		bottom = top - Kit.ROW_HEIGHT
+		local rows = PlaceRow(line, x, right, top, nameWidth, offsetsByGrid[line.grid], widths[line.grid], withMenus)
+		bottom = top - rows * Kit.ROW_HEIGHT
 		top = bottom
 		if line.sectionEnd then
 			top = top - Kit.WINDOW_SPACER
@@ -290,6 +305,7 @@ Layout.NAME_GAP = NAME_GAP
 Layout.MAIN_GRID = MAIN_GRID
 Layout.held = held
 Layout.Signature = Signature
+Layout.IconsUnder = IconsUnder
 Layout.GridSlots = GridSlots
 Layout.PlaceLines = PlaceLines
 Layout.ReleaseFoldButtons = ReleaseFoldButtons

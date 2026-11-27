@@ -11,6 +11,7 @@ local Layout = ns.buffDutyLayout
 local Signature = Layout.Signature
 local GridSlots = Layout.GridSlots
 local PlaceLines = Layout.PlaceLines
+local IconsUnder = Layout.IconsUnder
 
 --[[
     Every list icon is a secure button, so nothing here lays the window out
@@ -298,12 +299,25 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 		local function ColumnWidth(grid)
 			return nameWidth + NAME_GAP + math.max(iconWidths[grid] or 0, ICON_SIZE)
 		end
-		-- A line's Missing Inventory! sits after its icons and widens the line.
+		--[[
+		    A line's Missing Inventory! sits after its icons and widens the line.
+		    A line whose icons sit on the row under it needs its name or its
+		    icons, whichever is wider.
+		]]
+		local function LineWidth(line)
+			local missing = line.missingWidth and line.missingWidth + ICON_GAP or 0
+			if anyMenu and IconsUnder(line) then
+				return math.max(
+					nameWidth + (missing > 0 and NAME_GAP + missing or 0),
+					line.indent + (iconWidths[line.grid] or 0)
+				)
+			end
+			return ColumnWidth(line.grid) + missing
+		end
 		local function ContentWidth()
 			local width = 0
 			for _, line in ipairs(top) do
-				width =
-					math.max(width, ColumnWidth(line.grid) + (line.missingWidth and line.missingWidth + ICON_GAP or 0))
+				width = math.max(width, LineWidth(line))
 			end
 			local partyWidth = ColumnWidth(MAIN_GRID)
 			local partyColumns = math.min(parties, PARTIES_PER_ROW)

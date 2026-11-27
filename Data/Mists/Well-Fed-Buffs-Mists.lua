@@ -39,7 +39,7 @@ ns.WELL_FED_ICON_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Mists of Pandaria Classic 5.5.4.71089
+	2026-11-27, wago.tools, Mists of Pandaria Classic 5.5.4.71089
 
 Notes
 	- ns.WELL_FED_BUFF_IDS lists food buffs Features/Macros-for-Consumables/Scanner/Scanner-Auras.lua must count as Well Fed although they show another icon, so the buff-food check doesn't nag a player who already has one.
@@ -66,6 +66,9 @@ wago.tools
 	https://wago.tools/db2/SpellLevels?build=5.5.4.70960
 	https://wago.tools/db2/SpellName?build=5.5.4.71060
 	https://wago.tools/db2/SpellName?build=5.5.4.71089
+	https://wago.tools/db2/SpellEffect?build=5.5.4.71089
+	https://wago.tools/db2/SpellMisc?build=5.5.4.71089
+	https://wago.tools/db2/ItemEffect?build=5.5.4.71089
 
 QuestieDB
 	None.

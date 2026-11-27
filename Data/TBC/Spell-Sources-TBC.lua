@@ -75,7 +75,7 @@ ns.EXTRA_SPELL_SOURCES = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, TBC Anniversary 2.5.6.70577
+	2026-11-27, wago.tools, TBC Anniversary 2.5.6.70577
 
 Notes
 	- Where each class list's extraSpells entry (Data/TBC/Class-Spell-Lists-TBC.lua) is learned, and at what level, for the What's Next? tab (Features/Enhanced-Spellbook/Whats-Next/Whats-Next.lua). The trainer rows (Data/TBC/Trainer-Spells-TBC.lua) say their own source: a plain row is the trainer, book marks a book and talent a talent. extraSpells entries carry no source, so this table gives one.
@@ -95,6 +95,10 @@ Wowhead
 
 wago.tools
 	https://wago.tools/db2/SpellName?build=2.5.6.70577
+	https://wago.tools/db2/SpellLevels?build=2.5.6.70577
+	https://wago.tools/db2/ItemSparse?build=2.5.6.70577
+	https://wago.tools/db2/ItemEffect?build=2.5.6.70577
+	https://wago.tools/db2/SpellEffect?build=2.5.6.70577
 
 QuestieDB
 	None.

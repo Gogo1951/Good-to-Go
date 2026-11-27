@@ -74,7 +74,7 @@ ns.EXTRA_SPELL_SOURCES = {
 How We Got the Data
 
 Last Validated
-	2026-11-25, wago.tools, WoW Forever 1.60.1.71139
+	2026-11-27, wago.tools, WoW Forever 1.60.1.71139
 
 Notes
 	- Where each class list's extraSpells entry (Data/Camelot/Class-Spell-Lists-Camelot.lua) is learned, and at what level, for the What's Next? tab (Features/Enhanced-Spellbook/Whats-Next/Whats-Next.lua). The trainer rows (Data/Camelot/Trainer-Spells-Camelot.lua) say their own source: a plain row is the trainer, book marks a book and talent a talent. extraSpells entries carry no source, so this table gives one.

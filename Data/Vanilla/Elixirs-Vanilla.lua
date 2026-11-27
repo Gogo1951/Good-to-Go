@@ -79,7 +79,7 @@ ns.ELIXIR_BUFF_IDS = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Classic Era 1.15.9.70576
+	2026-11-27, wago.tools, Classic Era 1.15.9.70576
 
 Notes
 	- What counts as being flasked, for the Readiness Report's Flask or 2x Elixirs check (Features/Readiness-Report/Readiness-Report-Probes.lua): a flask, OR two different elixirs. Two different elixirs is the whole test, and it is enough because the client enforces the rest: from TBC on, a character may carry one battle and one guardian elixir at a time, so any two elixir auras up together are already one of each. The report reads only whether a buff is listed, never its group.
@@ -120,15 +120,13 @@ wago.tools
 	https://wago.tools/db2/Item?build=1.15.9.70576
 	https://wago.tools/db2/ItemSparse?build=1.15.9.70576
 	https://wago.tools/db2/ItemEffect?build=1.15.9.70576
-	https://wago.tools/db2/Spell?build=1.15.9.70003
+	https://wago.tools/db2/Spell?build=1.15.9.70576
 	https://wago.tools/db2/SpellEffect?build=1.15.9.70576
 	https://wago.tools/db2/SpellMisc?build=1.15.9.70576
 	https://wago.tools/db2/SpellDuration?build=1.15.9.70576
-	https://wago.tools/db2/SpellCategories?build=1.15.9.70003
-	https://wago.tools/db2/SpellName?build=1.15.9.70576
-	https://wago.tools/db2/Spell?build=1.15.9.70576
-	https://wago.tools/db2/SpellCategory?build=1.15.9.70576
 	https://wago.tools/db2/SpellCategories?build=1.15.9.70576
+	https://wago.tools/db2/SpellName?build=1.15.9.70576
+	https://wago.tools/db2/SpellCategory?build=1.15.9.70576
 
 QuestieDB
 	None.

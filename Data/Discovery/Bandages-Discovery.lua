@@ -31,21 +31,21 @@ ns.BANDAGES = {
 	[19066] = { 2000, 225, 100, { 1460 }, 45, 100, 20, 1 }, -- Warsong Gulch Runecloth Bandage
 	[19068] = { 640, 125, 50, { 1460 }, 25, 50, 20, 1 }, -- Warsong Gulch Silk Bandage
 	[3530] = { 161, 50, 28, nil, 0, 28, 20, 0 }, -- Wool Bandage
-	-- Dense Frostweave Bandage (38640) and Dalaran Bandage (44646) are deliberately absent; the query above excludes them too, so a regeneration will not bring them back.
 }
 
 --[[
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Season of Discovery 1.15.9.70576
+	2026-11-27, wago.tools, Season of Discovery 1.15.9.70576
 
 Notes
 	- Every First Aid bandage on this client, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) to rank the Bandage macro's picks.
 	- Bandage Amount is the whole heal over the channel, the per-tick heal times the ticks. First Aid Skill is the rank the tooltip requires (0 when it names none). Vendor Value is the sell price in copper.
 	- Allowed Zones are uiMapIDs: 1459 Alterac Valley, 1460 Warsong Gulch, 1461 Arathi Basin. Each battleground bandage's tooltip says where it works ("Usable only inside Arathi Basin"; Alterac's says "May only be used in Alterac Valley"), and the item is offered nowhere else.
-	- Dense Frostweave Bandage (38640) and Dalaran Bandage (44646) are Wrath items, left out; the query below excludes them too.
-	- Crystal Infused Bandage (23684) came from the Classic Era tables on wago.tools (build 1.15.9.70003), where the Classic Era report confirms it; the next Season of Discovery run confirms it here.
+	- Dense Frostweave Bandage (38640) and Dalaran Bandage (44646) are Wrath items, left out; the query below excludes them too, so a regeneration will not bring them back.
+	- Crystal Infused Bandage (23684) came from the Classic Era tables on wago.tools (build 1.15.9.70003); this client's tables at 1.15.9.70576 hold it with the same heal, skill and price.
+	- The family is every item whose use spell is First Aid, which is also every First Aid item that isn't a manual, recipe, anti-venom or smelling salts.
 
 SQL (CMaNGOS)
 	Database not recorded.
@@ -105,6 +105,9 @@ wago.tools
 	https://wago.tools/db2/Item?build=1.15.9.70576
 	https://wago.tools/db2/ItemEffect?build=1.15.9.70576
 	https://wago.tools/db2/SpellEffect?build=1.15.9.70576
+	https://wago.tools/db2/Spell?build=1.15.9.70576
+	https://wago.tools/db2/SpellMisc?build=1.15.9.70576
+	https://wago.tools/db2/SpellDuration?build=1.15.9.70576
 
 QuestieDB
 	None.

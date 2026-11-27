@@ -189,6 +189,7 @@ ns.TRAINER_SPELLS = {
 		{ level = 60, id = 31018, requires = { 22829 }, book = true }, -- Ferocious Bite
 		{ level = 60, id = 25297, requires = { 9889 }, book = true }, -- Healing Touch
 		{ level = 60, id = 25299, requires = { 9841 }, book = true }, -- Rejuvenation
+		{ level = 60, id = 25298, requires = { 9876 }, book = true }, -- Starfire
 	},
 	HUNTER = {
 		{ level = 1, id = 1494 }, -- Track Beasts
@@ -1299,7 +1300,7 @@ ns.TRAINER_SPELLS = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Classic Era 1.15.9.70576
+	2026-11-27, wago.tools, Classic Era 1.15.9.70576
 
 Notes
 	- Every class spell this client's class trainers teach, and the ranks only a book teaches, one row per rank, so the spellbook page can list the spells a character hasn't learned yet. Features/Enhanced-Spellbook/Unlearned-Spells.lua shows only each spell's rank 1; the higher ranks keep the list in level order and let it tell rank 1 apart.
@@ -1313,7 +1314,7 @@ Notes
 	- How the added rows were found: a spell on one of the class's own skill lines, learned at the trainer (SkillLineAbility), at level 1 to 60, taught by a teaching spell that no item uses (SpellEffect, ItemEffect). 1,191 of the 1,201 hand-made rows pass that test. Passive, hidden and fired-by-another-spell spells, talents and their ranks, and extraSpells entries were then removed.
 	- book marks a rank or spell only a book teaches on this client: the Ahn'Qiraj ranks (Heroic Strike rank 9, Greater Heal rank 5 and the like), the later raid ranks (Eviscerate rank 9, Ferocious Bite rank 5, Flame Shock rank 6, Conjure Food rank 7, Frost Ward rank 5, Shadow Ward rank 4), the Dire Maul group buffs (Arcane Brilliance, Gift of the Wild and Prayer of Fortitude ranks 1 and 2, Prayer of Shadow Protection) and Tranquilizing Shot. level is the book's required level; requires is the same spell's previous rank.
 	- How the book rows were found: a spell on one of the class's own skill lines (SkillLineAbility) taught by a teaching spell an item uses (SpellEffect, ItemEffect), not already a row or an extraSpells entry. Left out of those: Summon Imp (a starting spell), Deadly Poison V (a poison recipe), and the mage's Polymorph: Turtle and Polymorph: Cow (Turtle shares Polymorph's name, so the page can't tell it apart, and Cow's tome is likely unobtainable).
-	- A later check against the same tables added Tranquil Air Totem (25908), which passes that test but was missing from the rows.
+	- A later check against the same tables added Tranquil Air Totem (25908), which passes that test but was missing from the rows, and Starfire rank 7 (25298, Book of Starfire VII, required level 60), the druid's Ahn'Qiraj rank beside Healing Touch rank 11 and Rejuvenation rank 11.
 	- Ruled out by hand: Seal of Righteousness rank 1 and Summon Imp (starting spells), Summon Dreadsteed (a quest, so it's in the warlock's extraSpells), Poisons and Mind-numbing Poison I to III (the rows hold no poison skill or recipes), and pet Growl rank 1 (every pet starts with it).
 	- Likely unobtainable, so not added: Curse of Idiocy (1010) and Black Arrow (3674, 14296), pre-release spells no trainer here teaches, and Mangle (22570), the leftover of TBC's Maim.
 	- Season of Discovery's spells are left out, though this client knows them: they live in Data/Discovery/. These are the IDs in SoD's range (300000 and up) that the TBC Anniversary client doesn't have.
@@ -1341,8 +1342,8 @@ wago.tools
 	https://wago.tools/db2/SpellMisc?build=1.15.9.70576
 	https://wago.tools/db2/SpellEffect?build=1.15.9.70576
 	https://wago.tools/db2/ItemEffect?build=1.15.9.70576
-	https://wago.tools/db2/Talent?build=1.15.9.70003
-	https://wago.tools/db2/ItemSparse?build=1.15.9.70003
+	https://wago.tools/db2/Talent?build=1.15.9.70576
+	https://wago.tools/db2/ItemSparse?build=1.15.9.70576
 	https://wago.tools/db2/SpellName?build=2.5.6.70006
 
 QuestieDB

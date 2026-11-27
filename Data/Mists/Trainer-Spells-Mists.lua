@@ -7,7 +7,7 @@ ns.TRAINER_SPELLS = {}
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Mists of Pandaria Classic 5.5.4.71089
+	2026-11-27, wago.tools, Mists of Pandaria Classic 5.5.4.71089
 
 Notes
 	- Empty on purpose. On this client every class spell is learned on reaching its level, and class trainers teach none, so there are no trainer rows to list.
@@ -21,6 +21,7 @@ Wowhead
 
 wago.tools
 	https://wago.tools/db2/SkillLineAbility?build=5.5.4.70579
+	https://wago.tools/db2/SkillLineAbility?build=5.5.4.71089
 
 QuestieDB
 	None.

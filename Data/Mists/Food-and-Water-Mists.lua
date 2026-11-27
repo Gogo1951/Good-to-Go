@@ -666,7 +666,7 @@ ns.FOOD_AND_WATER = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Mists of Pandaria Classic 5.5.4.71089
+	2026-11-27, wago.tools, Mists of Pandaria Classic 5.5.4.71089
 
 Notes
 	- Every food and drink this client knows that restores health or mana while seated, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Food and Water macros and the buff-food choices. The family is the items whose use spell is on the food (11) or drink (59) cooldown category, plus the few on no category whose spell says "Must remain seated".
@@ -709,6 +709,12 @@ wago.tools
 	https://wago.tools/db2/SpellEffect?build=5.5.4.71060
 	https://wago.tools/db2/Item?build=5.5.4.71089
 	https://wago.tools/db2/ItemSparse?build=5.5.4.71089
+	https://wago.tools/db2/Spell?build=5.5.4.71089
+	https://wago.tools/db2/SpellCastingRequirements?build=5.5.4.71089
+	https://wago.tools/db2/AreaGroupMember?build=5.5.4.71089
+	https://wago.tools/db2/UiMapAssignment?build=5.5.4.71089
+	https://wago.tools/db2/ItemEffect?build=5.5.4.71089
+	https://wago.tools/db2/SpellEffect?build=5.5.4.71089
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/MoP/mopItemDB.lua

@@ -58,7 +58,7 @@ ns.SPELL_GROUPS = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, TBC Anniversary 2.5.6.70577
+	2026-11-27, wago.tools, TBC Anniversary 2.5.6.70577
 
 Notes
 	- Each row pairs a single-target spell with its group version, as [singleSpellId] = groupSpellId: Mark of the Wild with Gift of the Wild, Arcane Intellect with Arcane Brilliance, each mage Teleport with its Portal, each paladin Blessing with its Greater Blessing, and the priest buffs with their Prayers.
@@ -77,6 +77,7 @@ wago.tools
 	https://wago.tools/db2/SkillLineAbility?build=2.5.6.70006
 	https://wago.tools/db2/SpellName?build=2.5.6.70006
 	https://wago.tools/db2/SpellName?build=2.5.6.70577
+	https://wago.tools/db2/SkillLineAbility?build=2.5.6.70577
 
 QuestieDB
 	None.

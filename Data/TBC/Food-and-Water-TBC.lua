@@ -387,7 +387,7 @@ ns.FOOD_AND_WATER = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, TBC Anniversary 2.5.6.70577
+	2026-11-27, wago.tools, TBC Anniversary 2.5.6.70577
 
 Notes
 	- Every food and drink this client knows that restores health or mana while seated, read by the item cache (Features/Macros-for-Consumables/Item-Cache.lua) for the Food and Water macros and the buff-food choices.
@@ -398,7 +398,7 @@ Notes
 	- Blessed Sunfruit Juice (13813) and Bottled Alterac Spring Water (19318) are left out; their Well Fed buffs are still recognized through ns.WELL_FED_BUFF_IDS.
 	- Skullfish Soup (33825) is left out, an oddity of a buff drink.
 	- Tasty Summer Treat (23175, an iCoke promotion) and Filled Yellow Brewfest Stein (32915) are left out: nothing drops, sells or rewards them, and no spell makes them. So are the placeholders the client names Deprecated or UNUSED (761, 1321, 2071, 3773, 4418, 21238).
-	- Grilled Picnic Treat (32563) shares the food cooldown but its use spell restores nothing (a zero-point aura). Four IDs on the food cooldown (22323, 28036, 32669, 33822) have an Item row but no ItemSparse row on this client, placeholders the client never names, and are left out.
+	- Grilled Picnic Treat (32563) shares the food cooldown but its use spell restores nothing (a zero-point aura). Five IDs on the food cooldown (19063, 22323, 28036, 32669, 33822) appear only in ItemEffect, with no Item or ItemSparse row on this client, so the client doesn't know them as items, and are left out.
 	- Season of Discovery items are left out; this client doesn't know them. They live only in Data/Discovery/.
 
 SQL (CMaNGOS)
@@ -422,6 +422,11 @@ wago.tools
 	https://wago.tools/db2/Item?build=2.5.6.70577
 	https://wago.tools/db2/ItemEffect?build=2.5.6.70577
 	https://wago.tools/db2/SpellEffect?build=2.5.6.70577
+	https://wago.tools/db2/Spell?build=2.5.6.70577
+	https://wago.tools/db2/SpellMisc?build=2.5.6.70577
+	https://wago.tools/db2/SpellDuration?build=2.5.6.70577
+	https://wago.tools/db2/SpellCastingRequirements?build=2.5.6.70577
+	https://wago.tools/db2/AreaGroupMember?build=2.5.6.70577
 
 QuestieDB
 	https://raw.githubusercontent.com/Questie/QuestieDB/master/data/TBC/tbcItemDB.lua

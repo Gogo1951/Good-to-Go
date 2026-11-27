@@ -148,7 +148,7 @@ ns.SCROLL_DATA = {
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Classic Era 1.15.9.70576
+	2026-11-27, wago.tools, Classic Era 1.15.9.70576
 
 Notes
 	- The stat scrolls, read by Features/Macros-for-Consumables/Scanner/Scanner-Auras.lua (FindBestScroll) to pick a scroll whose buff the player lacks. Each type lists its scrolls as { itemID, buffID, requiredLevel, amount }: the buff is the aura the scroll leaves, requiredLevel the level the tooltip requires, amount the stat it grants.
@@ -167,10 +167,10 @@ wago.tools
 	https://wago.tools/db2/Item?build=1.15.9.70576
 	https://wago.tools/db2/ItemSparse?build=1.15.9.70576
 	https://wago.tools/db2/ItemEffect?build=1.15.9.70576
-	https://wago.tools/db2/Spell?build=1.15.9.70003
+	https://wago.tools/db2/Spell?build=1.15.9.70576
 	https://wago.tools/db2/SpellEffect?build=1.15.9.70576
-	https://wago.tools/db2/SpellMisc?build=1.15.9.70003
-	https://wago.tools/db2/SpellDuration?build=1.15.9.70003
+	https://wago.tools/db2/SpellMisc?build=1.15.9.70576
+	https://wago.tools/db2/SpellDuration?build=1.15.9.70576
 	https://wago.tools/db2/SpellName?build=1.15.9.70576
 
 QuestieDB

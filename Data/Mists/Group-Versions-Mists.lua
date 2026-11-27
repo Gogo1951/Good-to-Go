@@ -30,7 +30,7 @@ ns.SPELL_GROUPS = {}
 How We Got the Data
 
 Last Validated
-	2026-11-24, wago.tools, Mists of Pandaria Classic 5.5.4.71089
+	2026-11-27, wago.tools, Mists of Pandaria Classic 5.5.4.71089
 
 Notes
 	- Each row pairs a single-target spell with its group version, as [singleSpellId] = groupSpellId. On this client that is only each mage Teleport with its Portal: Mark of the Wild, Arcane Brilliance, the paladin Blessings and Power Word: Fortitude already reach the whole group, and Gift of the Wild, Arcane Intellect, the Greater Blessings and the priest Prayers are gone.
@@ -56,6 +56,7 @@ wago.tools
 	https://wago.tools/db2/SpellLevels?build=5.5.4.70960
 	https://wago.tools/db2/SpellName?build=5.5.4.71060
 	https://wago.tools/db2/SpellName?build=5.5.4.71089
+	https://wago.tools/db2/SkillLineAbility?build=5.5.4.71089
 
 QuestieDB
 	None.
