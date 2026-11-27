@@ -829,6 +829,7 @@ A coins tab on the mailbox opens a window: pick a bank character, set what each 
   3. `ns.RenderBuffDuty(sections, otherBuffs)`. Party-Buffs alone keeps the window up.
 - Build and render each run under `xpcall(…, geterrorhandler())`: an error hides the window rather than leave buttons that cast at whoever `target` names now.
 - `BuffDuty.ShutOut(buff)`: while in Shadowform (`SHADOWFORM_SPELL_ID`, read once per build) a `noShadowform` buff or resurrection gets no icon.
+- `yieldsToImp` (Camelot's Thorns row): `Has` counts it as had while `BuffDuty.ImpOut()` finds a live Imp (creature ID 416 in the pet GUID) on you or any group member, Fire Shield up or not. `UNIT_PET` redraws when one comes or goes.
 - **Target change** out of combat: `ns.DropBuffDutyTargetIcons` strips and hides every icon aimed at `target` / `targetpet` (ask icons included), then `Refresh` runs at once, skipping `REFRESH_DELAY`. In combat it only dims.
 - **Backstop** (`BACKSTOP_INTERVAL`): prunes the aura cache and requests a refresh, for expiries, deaths, disconnects and zone changes that send no event.
 - `BAG_UPDATE_DELAYED` / `UNIT_INVENTORY_CHANGED` request a redraw (self items, scrolls, elixirs, weapon items read the bags live). Buff food arrives separately: the consumables scanner (`Scanner-Inventory.lua`) calls `ns.RequestBuffDutyRefresh` when `ns.bestBuffFoodID` changes.

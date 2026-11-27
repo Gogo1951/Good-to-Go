@@ -199,9 +199,14 @@ end
     as missing the moment it landed. A stronger version counts as had however
     little is left (the game refuses to cast over it), a weaker one as missing
     however much is left. Another of your own exclusive family on the unit
-    counts as had: casting would replace yours, not add to it.
+    counts as had: casting would replace yours, not add to it. Thorns counts
+    as had while an Imp is out: its Fire Shield takes Thorns' place, shown or
+    not.
 ]]
 local function Has(buff, unit)
+	if buff.yieldsToImp and BuffDuty.ImpOut() then
+		return true
+	end
 	local now = GetTime()
 	-- A self buff carries its own time; every other buff uses the window's.
 	local threshold = buff.refreshSeconds or BuffDuty.refreshSeconds
