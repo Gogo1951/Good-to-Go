@@ -3,21 +3,11 @@ local TITLE = ns.COLORS_RGB.TITLE
 local L = ns.L
 local HideTooltip = ns.HideTooltip
 
---[[
-	The What's Next? pages' controls row and footer (Whats-Next-Page.lua): the settings gear, the filter box,
-	the source filter and the sort along the top, and the counts and the model's own text along the bottom.
-]]
-
--- The window's bands, as Features/Enhanced-Spellbook/Spellbook-Page.lua sets them.
 local TITLE_HEIGHT, CONTROLS_HEIGHT = ns.SPELLBOOK_TITLE_HEIGHT, ns.SPELLBOOK_CONTROLS_HEIGHT
 local FOOTER_HEIGHT, FRAME_BORDER = ns.SPELLBOOK_FOOTER_HEIGHT, ns.SPELLBOOK_FRAME_BORDER
 
 local function nop() end
 
---[[
-	Builds page's controls for model. Layout redraws the page's rows, and SourceLabel names a source, both the
-	page's own.
-]]
 function ns.BuildWhatsNextControls(page, model, Layout, SourceLabel)
 	local CreateDropdown, AddMenuTooltip = ns.CreateSpellbookDropdown, ns.AddSpellbookMenuTooltip
 	local rowY = -(TITLE_HEIGHT + CONTROLS_HEIGHT / 2)
@@ -28,7 +18,6 @@ function ns.BuildWhatsNextControls(page, model, Layout, SourceLabel)
 
 	local options
 	if model.toggles then
-		-- the settings gear at the row's right end: which rows besides the ones to learn it lists
 		options = ns.CreateSpellbookGearButton(page, 16)
 		page.options = options
 		options:SetPoint("RIGHT", page, "TOPRIGHT", -8, rowY)
@@ -57,7 +46,6 @@ function ns.BuildWhatsNextControls(page, model, Layout, SourceLabel)
 		end)
 	end
 
-	-- the filter box: only the rows whose names hold its text, as it is typed
 	page.filterBox = ns.CreateSpellbookFilterBox(page, L["PAGE_FILTER"], function(text)
 		if text ~= (page.filterText or "") then
 			page.filterText = text
@@ -66,10 +54,7 @@ function ns.BuildWhatsNextControls(page, model, Layout, SourceLabel)
 	end)
 
 	if model.sources then
-		--[[
-			The source filter: one source, or all of them (page.sourceFilter nil). It offers only the sources the
-			rows have, and forgets a pick no row has any more.
-		]]
+		-- Offers only the sources the rows have, and forgets a pick no row has any more.
 		local function SourceChoices()
 			local present = {}
 			for _, row in ipairs(page.rows or {}) do
@@ -131,7 +116,7 @@ function ns.BuildWhatsNextControls(page, model, Layout, SourceLabel)
 	end
 
 	if model.sortDescription then
-		-- the sort: Sort By Availability or Sort By Level (ns.WhatsNextSort), shared by the What's Next? tabs
+		-- shared by the What's Next? tabs
 		local SORTS = { { "availability", "WHATS_NEXT_SORT_AVAILABILITY" }, { "level", "WHATS_NEXT_SORT_LEVEL" } }
 		local function SortLabel()
 			for _, sort in ipairs(SORTS) do
@@ -180,7 +165,6 @@ function ns.BuildWhatsNextControls(page, model, Layout, SourceLabel)
 
 	ns.ApplySpellbookElvUISkin(page)
 
-	-- the footer: the counts at its left, the model's own text at its right
 	page.counts = page:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	page.counts:SetPoint("LEFT", page, "BOTTOMLEFT", 16, FRAME_BORDER + FOOTER_HEIGHT / 2)
 	page.footerText = page:CreateFontString(nil, "OVERLAY", "GameFontNormal")

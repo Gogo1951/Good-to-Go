@@ -1,11 +1,8 @@
 local _, ns = ...
 
--- Finds the WoW macros the page creates (Features/Enhanced-Spellbook/Macro-Sync.lua writes them). Reads only.
-
 --[[
-	The macro slot limits. The Retail engine has them in Constants.MacroConsts; the Classic engine's
-	UIParent sets the MAX_ACCOUNT_MACROS and MAX_CHARACTER_MACROS globals. Every flavor is 120 general
-	and 30 character today, the fallback if neither is there.
+	The Retail engine has the slot limits in Constants.MacroConsts, the Classic engine in MAX_ACCOUNT_MACROS and
+	MAX_CHARACTER_MACROS; every flavor is 120 and 30 today, the fallback.
 ]]
 local MACRO_CONSTS = Constants and Constants.MacroConsts or {}
 
@@ -24,28 +21,19 @@ function ns.MacroCounts()
 end
 
 --[[
-	The WoW macros the add-on writes carry a tag line (ns.MacroTag), which is how the page finds them. Macros
-	from before the tags are found by name instead, and only those the add-on created, by name: character
-	ones listed in ns.db.char (as true), general ones in ns.db.global as the key of the character that created
-	it, the only character that rewrites it. The next sync tags each one it finds, so a player's own macro that
-	happens to share a spell's name is never touched. Macro indexes run general first, then character, so the
-	index says which list a macro belongs to. New macros are still recorded, so one whose tag line the player
-	deletes is found by name again. The records are kept by WoW macro name, prefix and all.
+	Untagged macros are found by name, but only those the add-on recorded creating, so a player's macro sharing
+	a spell's name is never touched. New macros are still recorded, so one whose tag line the player deletes is
+	found by name again. Records are keyed by WoW macro name, prefix and all.
 ]]
 
---[[
-	The name the WoW macro for a page macro takes: the page macro's own behind ns.MACRO_NAME_PREFIX
-	("-Divine Spirit"), so the add-on's macros sort together in /macro. A consumable's is Consumable Macros' own
-	(Features/Enhanced-Spellbook/Consumable-Macros.lua).
-]]
+-- The prefix ("-Divine Spirit") sorts the add-on's macros together in /macro.
 function ns.WowMacroName(macro)
 	return macro.wowName or ns.MACRO_NAME_PREFIX .. macro.macroName
 end
 
 --[[
-	The icon a page macro's WoW macro is written with. Most keep the question mark, so #showtooltip shows the
-	spell's own icon; a profession's takes the icon its tile shows (a specialization's, once folded in), since
-	the game resolves a profession's name to the wrong icon (a gem or an anvil, on Forever).
+	The question mark lets #showtooltip show the spell's icon. A profession takes its tile's icon, since the game
+	resolves a profession's name to the wrong one (a gem or an anvil, on Forever).
 ]]
 function ns.WowMacroIcon(macro)
 	if macro.pageTag == "professions" and macro.icon and macro.icon ~= ns.QUESTION_MARK_ICON then
@@ -76,7 +64,6 @@ end
 ns.MaxAccountMacros, ns.MaxCharacterMacros = MaxAccountMacros, MaxCharacterMacros
 ns.OwnedMacroList = OwnedList
 
--- The record a macro the add-on creates at index takes in its OwnedList.
 local function OwnerRecord(index)
 	if IsGeneral(index) then
 		return ns.MacroOwnerKey()
@@ -84,11 +71,7 @@ local function OwnerRecord(index)
 	return true
 end
 
---[[
-	How the untagged WoW macro at index stands to the add-on: "owned" (recorded as the add-on's,
-	for this character) or nil (unrecorded: the player's own, whatever its text, or another character's).
-	Reads only.
-]]
+-- "owned", or nil for the player's own (whatever its text) or another character's.
 function ns.LegacyOwnership(index)
 	local name = GetMacroInfo(index)
 	local record = OwnedList(index)[name]
@@ -101,10 +84,8 @@ end
 local NO_INDEXES = {}
 
 --[[
-	Where the WoW macros are, read in one pass over them: tags maps each tag to every macro carrying it (more
-	than one when the player pasted an add-on macro's text into a macro of their own), and names each name to
-	the untagged macros of that name; both list character macros first, as the page's lookups have always
-	preferred them.
+	A tag can map to several macros when the player pasted an add-on macro's text into their own. Both lists put
+	character macros first.
 ]]
 local function ReadMacroIndexes()
 	local indexes = { tags = {}, names = {} }
@@ -132,7 +113,6 @@ end
 
 ns.ReadMacroIndexes = ReadMacroIndexes
 
--- The first untagged WoW macro called name that ns.LegacyOwnership says is the add-on's, and how.
 local function FindByName(indexes, name)
 	for _, named in ipairs(name and indexes.names[name] or NO_INDEXES) do
 		local ownership = ns.LegacyOwnership(named)
@@ -144,8 +124,8 @@ local function FindByName(indexes, name)
 end
 
 --[[
-	Of several WoW macros carrying one tag, the page macro's: the one under its name, else the one recorded as
-	this character's, else the first. The others are copies the player pasted, and stay theirs.
+	The one under its name, else the one recorded as this character's, else the first. The others are copies the
+	player pasted, and stay theirs.
 ]]
 local function PickTagged(macro, tagged)
 	local wowName = ns.WowMacroName(macro)
@@ -163,11 +143,8 @@ local function PickTagged(macro, tagged)
 end
 
 --[[
-	The WoW macro that is a page macro's: the one carrying its tag (see PickTagged when several do), else an
-	untagged one of its name the add-on created (see ns.LegacyOwnership), under its name or under the old "~"
-	prefix name. Returns the index, 0 for none, how it was found ("tag", or the ownership answer), and
-	for "tag" whether other macros carry the same tag. Reads only. indexes is a ReadMacroIndexes result, read
-	here when nil.
+	Returns the index (0 for none), how it was found ("tag", or the ownership answer), and for "tag" whether
+	other macros carry the same tag. indexes is a ReadMacroIndexes result, read here when nil.
 ]]
 function ns.FindMacroIndex(macro, indexes)
 	indexes = indexes or ReadMacroIndexes()

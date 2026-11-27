@@ -17,7 +17,7 @@ local PARAGRAPHS = {
 	"OPTIONS_LEVEL_UP_THANKS",
 }
 
--- { captionKey, linkKey }, in display order
+-- { captionKey, linkKey }
 local LINKS = {
 	{ "OPTIONS_DISCORD", "DISCORD" },
 	{ "OPTIONS_CURSEFORGE", "CURSEFORGE" },
@@ -25,7 +25,7 @@ local LINKS = {
 	{ "OPTIONS_GITHUB", "GITHUB" },
 }
 
--- The label is one short word and the box holds a full URL, so the label cell is narrower than a normal row's.
+-- Narrower than a normal row's label cell: the label is one short word and the box holds a full URL.
 local LINK_LABEL_WIDTH = 0.6
 
 function ns.BuildFeedbackSupportOptions()

@@ -7,11 +7,6 @@ local _, ns = ...
 ns.RegisterMacroType({
 	typeName = "Health Potion",
 
-	--[[
-	    Selection: every potion with a heal value competes (a hybrid potion
-	    also feeds Mana Potion), ranked by raw heal — then by the ladder's
-	    burn-first steps — into topIDs for the stacked /use fallback lines.
-	]]
 	itemTypes = { potion = true },
 	accepts = function(data)
 		return data.healthValue > 0
@@ -21,18 +16,12 @@ ns.RegisterMacroType({
 	end,
 	ranked = true,
 
-	-- Behind potionsUseFoodAndWater, the macro eats the Food macro's pick while out of combat.
 	outOfCombatTypeName = "Food",
 
 	--[[
-	    Healthstone stacking: when the player opts in, the Health Potion
-	    macro gets the best Healthstone's ranked /use lines appended below
-	    the potion lines — potions and healthstones live in separate cooldown
-	    categories, so one press fires one of each. The Healthstone topIDs
-	    come straight from the scan and are populated regardless of whether
-	    the standalone Healthstone macro is enabled. With no potion to stack
-	    onto, the engine makes these lines the whole body; with one, it sheds
-	    them first in the macro-length trim.
+	    Potions and healthstones have separate cooldowns, so one press fires one
+	    of each. The Healthstone topIDs are scanned whether or not its own macro
+	    is on.
 	]]
 	stackTypeName = "Healthstone",
 	getStackIDs = function(best)

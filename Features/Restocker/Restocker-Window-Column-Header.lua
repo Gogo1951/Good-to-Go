@@ -21,37 +21,15 @@ local CAPTION_HEIGHT = 16
 local HEADER_GAP = 16
 ns.RESTOCK_COLUMN_HEADER_GAP = HEADER_GAP
 
---[[
-    The header above the Restock List grid: the column captions, the Keep
-    heading and the group bands, laid out by the same walk as the rows.
-
-    The grid it is drawn on -- column definitions, widths and shared colors --
-    is Restocker-Window-Columns.lua, which loads first.
-]]
-
 --------------------------------------------------------------------------------
 -- Column Header
 --------------------------------------------------------------------------------
 
 --[[
-    Column headings are colored by the band they belong to, so the eye can see
-    where Bank stops and Merchant starts without a rule between them. The three
-    columns in no band -- Item, Keep, Upgrade -- take the brand gold every
-    other heading in the add-on already uses. Gold on the outside is what lets
-    the two colored bands read as a pair set into ordinary chrome rather than as
-    three groups competing with one another.
-
-    Each band carries TWO tones: the brighter `label` for the band's own name,
-    the softer `caption` for the column headings under it. That step down is what
-    makes the label read as the parent of the columns it spans instead of as one
-    more heading sitting in the same row as them.
-
-    Neither band uses a brand color. ns.COLORS_RGB.INFO and .ON already mean
-    something everywhere else -- interactive, and on -- and a static heading must
-    not borrow it; the brand green directly above a column of on/off ticks reads
-    as a state rather than as a label. They stay clear of the item-quality
-    colors the list draws names in (uncommon 1eff00, rare 0070dd) for the same
-    reason. These are chrome, and have to look like it.
+    Headings take their band's tone, so Bank and Merchant part without a rule; a
+    band's label is a step brighter than its captions, so it reads as their
+    parent. Never INFO or ON (they mean interactive and on) or an item-quality
+    color: these are chrome.
 ]]
 local HEADER_CAPTION_UNGROUPED = ns.COLORS_RGB.TITLE -- Item, Keep, Upgrade
 
@@ -70,19 +48,8 @@ local GROUP_TONE = {
 }
 
 --[[
-    Which tone each column's caption takes, and which its band label takes. A
-    column carrying `group` opens a band and every column after it inherits that
-    band's caption tone until the next boundary; `gapBefore` without a `group`
-    closes the band and falls back to the ungrouped gold, which is how Upgrade,
-    sitting alone after Merchant, gets its color.
-
-    BAND_LABEL_TONE is keyed by the column that OPENS each band, because that is
-    the key the band-drawing loop below already has in hand.
-
-    Both are derived from GROUP_TONE rather than declared per column, so the Bank
-    columns and the "Bank" label over them read from one entry and cannot drift
-    apart. A band added to COLUMNS with no tone comes out gold rather than
-    silently inheriting its neighbor's color.
+    Derived from GROUP_TONE, so a band's captions and label can't drift apart.
+    `gapBefore` without `group` closes a band, which is how Upgrade gets gold.
 ]]
 local COLUMN_TONE = {}
 local BAND_LABEL_TONE = {}
@@ -101,13 +68,9 @@ do
 end
 
 --[[
-    Anchored to the scroll frame's top corners so it inherits the same width and,
-    crucially, the same RIGHT edge as the rows inside it -- rows are sized to the
-    scroll frame, and both lay out from that edge. Nothing here knows an x
-    coordinate.
-
-    It sits outside the scroll frame rather than at the top of the list, so it
-    stays put while the list scrolls under it.
+    Anchored to the scroll frame's top corners, so it shares the rows' right
+    edge, which both lay out from; outside it, so it stays put while the list
+    scrolls.
 ]]
 function ns.CreateRestockColumnHeader(parent, scrollFrame)
 	local header = CreateFrame("Frame", nil, parent)
@@ -115,18 +78,12 @@ function ns.CreateRestockColumnHeader(parent, scrollFrame)
 	header:SetPoint("BOTTOMRIGHT", scrollFrame, "TOPRIGHT", 0, HEADER_GAP)
 	header:SetHeight(ns.restockColumnHeaderHeight)
 
-	--[[
-	    The lower tier is its own frame so everything in it centers vertically by
-	    itself, exactly the way a row does. The group bands then have the whole
-	    remaining height above it and never have to be positioned against a
-	    caption's baseline.
-	]]
+	-- Its own frame, so the captions center as a row's cells do and the bands get the height above.
 	local captionRow = CreateFrame("Frame", nil, header)
 	captionRow:SetPoint("BOTTOMLEFT", header, "BOTTOMLEFT", 0, 0)
 	captionRow:SetPoint("BOTTOMRIGHT", header, "BOTTOMRIGHT", 0, 0)
 	captionRow:SetHeight(CAPTION_HEIGHT)
 
-	-- The upper tier, the rest of the height: the group bands' line.
 	local bandRow = CreateFrame("Frame", nil, header)
 	bandRow:SetPoint("TOPLEFT", header, "TOPLEFT", 0, 0)
 	bandRow:SetPoint("BOTTOMRIGHT", captionRow, "TOPRIGHT", 0, 0)
@@ -144,26 +101,15 @@ function ns.CreateRestockColumnHeader(parent, scrollFrame)
 		return fontString
 	end
 
-	--[[
-	    A stand-in for the remove control, which has no caption but does take up the
-	    width the rows give it. Without it every heading would sit one icon too far
-	    right.
-	]]
+	-- Holds the remove control's width, or every heading would sit one icon too far right.
 	local removeSpacer = CreateFrame("Frame", nil, captionRow)
 	removeSpacer:SetSize(REMOVE_ICON_SIZE, 1)
 	removeSpacer:SetPoint("RIGHT", captionRow, "RIGHT", -ROW_INSET, 0)
 
 	--[[
-	    Captions ride on buttons of their column's width: a FontString takes no
-	    mouse, and hovering a heading has to give the same explanation as hovering a
-	    cell under it. That is what lets the cells be glyphs instead of repeating
-	    the words on every row.
-
-	    A toggle column's heading also acts: a click offers to switch that column
-	    on or off for every row shown (ns.OpenRestockColumnMenu in
-	    Restocker-Window-Menus.lua), so its tooltip ends with a line saying so and
-	    it lights on hover like the cells under it. Reputation names one of five
-	    standings rather than on or off, so its heading only explains.
+	    Buttons, since a FontString takes no mouse and a heading's hover explains
+	    its column, which lets the cells be glyphs. Reputation isn't on or off, so
+	    its heading only explains.
 	]]
 	local firstCell
 	header.cells, firstCell = LayoutColumns(removeSpacer, function(column)
@@ -197,10 +143,6 @@ function ns.CreateRestockColumnHeader(parent, scrollFrame)
 		return button
 	end)
 
-	--[[
-	    The Keep heading, over the box that leads the strip. A button for the same
-	    reason the column headings are: it carries the box's own tooltip.
-	]]
 	local amount = CreateFrame("Button", nil, captionRow)
 	amount:SetSize(ns.restockAmountWidth, CAPTION_HEIGHT)
 	amount:SetPoint("RIGHT", firstCell, "LEFT", -KEEP_GAP, 0)
@@ -209,25 +151,10 @@ function ns.CreateRestockColumnHeader(parent, scrollFrame)
 	ns.SetRestockControlClick(amount)
 	header.amountCaption = amount
 
-	--[[
-	    GROUP BANDS
-
-	    Each band anchors to the LEFT of its group's first column and the RIGHT of
-	    its last, so it centers itself over exactly the columns it covers and
-	    re-spans on its own whenever those columns are re-measured. No band is ever
-	    told a width.
-
-	    A column with no `group` (Upgrade) gets no band -- its own caption is
-	    already the whole word.
-	]]
+	-- Each band anchors to its first and last columns, so it re-spans whenever they're re-measured.
 	for i, column in ipairs(COLUMNS) do
 		if column.group then
-			--[[
-			    A band runs until the next column STARTS one. `gapBefore` is that signal
-			    as much as `group` is -- Upgrade opens its own band and carries no label,
-			    so stopping only at the next labeled column would swallow it into
-			    Merchant and draw "Merchant" over the Upgrade column.
-			]]
+			-- `gapBefore` ends a band too, or Merchant would swallow the unlabeled Upgrade column.
 			local last = column
 			for j = i + 1, #COLUMNS do
 				if COLUMNS[j].group or COLUMNS[j].gapBefore then
@@ -250,11 +177,7 @@ function ns.CreateRestockColumnHeader(parent, scrollFrame)
 	return header
 end
 
---[[
-    Re-sync the header to the current column widths, measuring first if the
-    font had not resolved when the window was built. Called from
-    ns.UpdateRestockList, which is where a late measurement first shows up.
-]]
+-- Measures first if the font hadn't loaded when the window was built.
 function ns.RefreshRestockColumnHeader()
 	ResolveColumns()
 	local header = ns.restockColumnHeader

@@ -1,17 +1,11 @@
 local _, ns = ...
 
---[[
-	The class's spell lists (ns.CLASS_SPELL_LISTS) resolved to this client's names.
-	Features/Enhanced-Spellbook/Macro-Builder/Macro-Builder.lua builds the page's macros from them.
-]]
-
 local NO_IDS = {}
 
 --[[
-	The data lists every class's spells (ns.CLASS_SPELL_LISTS) and trainer rows (ns.TRAINER_SPELLS), yet only
-	the player's class is ever read, so the rest are emptied as the add-on loads: some 400 KB on Classic Era.
-	Every class keeps its key, emptied rather than removed, so code listing the flavor's classes (Buff Duty's
-	class lists) still sees every class. Validate Data checks the player's class only as a result.
+	Only the player's class is ever read, so the others are emptied at load (some 400 KB on Classic Era). Each
+	keeps its key, so code listing the flavor's classes (Buff Duty) still sees every class. Validate Data checks
+	the player's class only as a result.
 ]]
 do
 	local class = select(2, UnitClass("player"))
@@ -24,10 +18,6 @@ do
 	end
 end
 
---[[
-	The menu label of the ranged attack the "autoShot" option starts after a cast, by class: Auto Shot, or
-	the wand's Shoot. The spell is the class lists' autoShot, which a flavor without one leaves out.
-]]
 local AUTO_SHOT_LABEL_KEYS = {
 	HUNTER = "MENU_START_AUTO_SHOT",
 	MAGE = "MENU_START_WAND",
@@ -38,8 +28,8 @@ local AUTO_SHOT_LABEL_KEYS = {
 local SpellName = ns.SpellName
 
 --[[
-	The client's names for a list of spells, as name -> position in the list. An entry is a spell ID, or a
-	table of every rank's ID where some locales name the ranks differently, so each rank's name matches.
+	name -> position. An entry is a spell ID, or every rank's ID where some locales name the ranks differently,
+	so each rank's name matches.
 ]]
 local function NameIndex(entries)
 	local index = {}
@@ -54,10 +44,7 @@ local function NameIndex(entries)
 	return index
 end
 
---[[
-	The page-only tags (see ns.PageCategory), the class lists' and ns.SHARED_PAGE_SPELLS', in the order a spell
-	on two of them takes the first.
-]]
+-- A spell on two of these takes the first.
 local PAGE_TAGS = {
 	"racials",
 	"professions",
@@ -83,7 +70,6 @@ local PAGE_TAGS = {
 	"utility",
 }
 
--- Each tagged spell's name -> its page tag, from the class's lists and the shared ones.
 local function PageTags(lists)
 	local tags = {}
 	for _, key in ipairs(PAGE_TAGS) do
@@ -98,7 +84,6 @@ end
 
 local config -- the player's class lists, resolved to this client's names by ns.CollectMacros
 
--- Resolves the player's class lists to the names this client gives their spells.
 local function ResolveClassConfig()
 	local class = select(2, UnitClass("player"))
 	local lists = ns.CLASS_SPELL_LISTS[class] or {}
@@ -175,9 +160,8 @@ local function ResolveClassConfig()
 		end
 	end
 	--[[
-		the stance bar's forms (stances, auras, Stealth) are placed there already, so their macros never glow.
-		They also cancel when cast again (Bear Form, Shadowform, Ghost Wolf), except the Warrior stances, which
-		never do, and stealth, which Stop Macro If Stealthed keeps on
+		the stance bar's forms are placed there already, so never glow; they cancel when cast again, except the
+		Warrior stances, which never do, and stealth, which Stop Macro If Stealthed keeps on
 	]]
 	for i = 1, GetNumShapeshiftForms() do
 		local spellID = select(4, GetShapeshiftFormInfo(i))
@@ -192,31 +176,24 @@ local function ResolveClassConfig()
 	return config
 end
 
--- The player's class lists, resolved to this client's names on first use and again by ns.CollectMacros.
+-- Resolved on first use, and again by each ns.CollectMacros.
 local function ClassConfig()
 	return config or ResolveClassConfig()
 end
 
 ns.ClassConfig = ClassConfig
 
--- The class lists' extraSpells: spells to list until learned that no trainer data covers.
+-- Spells to list until learned that no trainer data covers.
 function ns.ClassExtraSpells()
 	return ClassConfig().extraSpells
 end
 
---[[
-	Whether a spell is cast on an enemy unit: harmful and with a range. Self-centered AoE such as Arcane
-	Explosion or Hellfire has no range, so it is left out.
-]]
+-- Self-centered AoE (Arcane Explosion, Hellfire) has no range, so it is left out.
 local function TargetsEnemy(id)
 	return id ~= nil and C_Spell.IsSpellHarmful(id) == true and C_Spell.SpellHasRange(id) == true
 end
 
---[[
-	The spell's target, the help/harm/exists conditional its target priority casts with, or nil for spells
-	without one. Enemy spells are the mouseoverEnemy list plus every spell TargetsEnemy finds, except cursor
-	spells. A spell that is both an enemy and a friend spell casts on any unit.
-]]
+-- The conditional its target priority casts with; nil for spells without a target.
 local function TargetOf(name, id)
 	local c = ClassConfig()
 	local enemy = c.enemySpells[name] or (not c.cursorSpells[name] and TargetsEnemy(id))

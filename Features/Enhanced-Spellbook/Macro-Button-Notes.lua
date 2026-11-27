@@ -2,17 +2,7 @@ local _, ns = ...
 local L = ns.L
 local GetColor = ns.GetColor
 
---[[
-	The words a macro's tile shows for its options (Features/Enhanced-Spellbook/Macro-Button.lua draws the tile): the
-	note under its name (ns.MacroOptionSubText), the tooltip's Options On line (ns.MacroOptionsOnLine) and a
-	learned spell's "Learn Rank 5" (ns.LearnableRankNote).
-]]
-
---[[
-	The options a macro's note and tooltip can name, most telling first, as { key, note key, full label key }:
-	the note names up to MAX_NOTES that are on, or counts them when more are; the tooltip lists them all by their
-	full labels. A row without keys builds its text from the macro.
-]]
+-- Most telling first, as { key, note key, full label key }; a row without keys builds its text from the macro.
 local OPTION_SUBTEXTS = {
 	{ "conditionals" },
 	{ "castSequence" },
@@ -44,7 +34,6 @@ local OPTION_SUBTEXTS = {
 	{ "muteErrors", "SUBTEXT_MUTE_ERRORS", "MENU_MUTE_ERRORS" },
 }
 
--- Calls fn(entry) for each OPTION_SUBTEXTS row whose option is on for the macro, in order.
 local function ForEachOnOption(macro, fn)
 	for _, entry in ipairs(OPTION_SUBTEXTS) do
 		local key = entry[1]
@@ -70,7 +59,7 @@ local function ForEachOnOption(macro, fn)
 	end
 end
 
--- The autoShot note: Auto Shot's own name from the client, or "Wand" rather than the wand's "Shoot".
+-- "Wand" rather than the wand's "Shoot".
 local function AutoShotSubText()
 	if ns.AutoShotLabelKey() == "MENU_START_WAND" then
 		return L["SUBTEXT_WAND"]
@@ -78,7 +67,7 @@ local function AutoShotSubText()
 	return ns.AutoShotName()
 end
 
--- The target priority's note: the first unit it tries other than the target ("Mouseover", "Self").
+-- The first unit it tries other than the target ("Mouseover", "Self").
 local function TargetPrioritySubText(macro)
 	for _, unit in ipairs(ns.TargetPriority(macro)) do
 		for _, row in ipairs(ns.TARGET_UNITS) do
@@ -90,7 +79,6 @@ local function TargetPrioritySubText(macro)
 	return L["SUBTEXT_TARGET_PRIORITY"]
 end
 
--- The Conditionals' note and full label: "1 Conditional", "4 Conditionals".
 local function ConditionalsSubText(macro)
 	local count = ns.ConditionalCount(macro)
 	return count == 1 and L["SUBTEXT_CONDITIONALS_ONE"] or L["SUBTEXT_CONDITIONALS"]:format(count)
@@ -99,12 +87,7 @@ end
 -- MAX_NOTES names fit on a tile's note line ("Max Rank, Grouped, Hide Errors"); more are counted instead.
 local MAX_NOTES = 3
 
---[[
-	A spell macro's note: lead (a spell's "Max Rank"), if given, and the options that are on by
-	name ("Dynamic Rank, Grouped"), or "N Options" counting them when there are more than MAX_NOTES names, or
-	nil when there are none. Options with the same note (Right-Click for and the Grouped Spells ticked, both
-	"Grouped") count as one.
-]]
+-- Options sharing a note (Right-Click for and Grouped Spells, both "Grouped") count as one.
 local function OptionSubText(macro, lead)
 	local notes, count, seen = { lead }, 0, {}
 	ForEachOnOption(macro, function(entry)
@@ -135,7 +118,6 @@ local function OptionSubText(macro, lead)
 	return notes[1] and table.concat(notes, L["LIST_SEPARATOR"]) or nil
 end
 
--- An option's full label, as the tooltip's Options On line shows it.
 local function OptionLabel(macro, entry)
 	local key = entry[1]
 	if key == "useItems" then
@@ -177,7 +159,7 @@ local function OptionLabel(macro, entry)
 	return L[entry[3]]
 end
 
--- "Options On: Cast at Cursor, Stop Casting", every option that is on by its menu label, or nil for none.
+-- "Options On: Cast at Cursor, Stop Casting"
 local function OptionsOnLine(macro)
 	local labels = {}
 	ForEachOnOption(macro, function(entry)
@@ -192,10 +174,8 @@ local function OptionsOnLine(macro)
 end
 
 --[[
-	"Learn Rank 5" in the green of a rank to learn (ns.SPELL_RANK_COLORS.LEARNABLE), for a learned spell with a higher
-	rank at the player's level that isn't learned yet, so "Max Rank" never says a spell is done while it's a rank
-	behind; nil when it's caught up. unknownRanks are the trainer's ranks of a learned spell not learned yet
-	(Spell-Ranks.lua), highest first, so the first one reached is the best the character could cast.
+	So "Max Rank" never says a spell is done while it's a rank behind. unknownRanks are highest first, so the
+	first one reached is the best the character could cast.
 ]]
 function ns.LearnableRankNote(macro)
 	local level = UnitLevel("player")

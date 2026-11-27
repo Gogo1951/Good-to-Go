@@ -1,12 +1,6 @@
 local _, ns = ...
 
 --[[
-	Where the per-spell macro options are stored: each option's table on the character's profile, the key a
-	macro's own settings sit under (its spell's, a Duplicate's or a rank's), and reading, storing and dropping
-	one macro's setting for an option.
-]]
-
---[[
 	Per-spell settings, on the character's profile, each a table keyed by the macro's settings key
 	(SettingsKey, built from the spell's Rank 1 ID, so the same in every language): "cursor" (macro casts a ground-targeted
 	spell where the cursor points), "pet" (a summon macro casts the pet's ability while that pet is out), "stance" (the macro switches to a stance the spell can be cast in first), "petAttack"
@@ -41,10 +35,8 @@ end
 ns.SpellSettings = SpellSettings
 
 --[[
-	What a macro's saved data is keyed by, the same in every language and through every rank trained: its
-	spell's Rank 1 ID (macro.baseID, see BaseSpellID in Features/Enhanced-Spellbook/Macro-Builder/Macro-Builder.lua), as
-	a string, so it never reads as a list index. A consumable's macro casts no spell, so it goes by its macro
-	type ("consumable:Food").
+	The Rank 1 ID, the same in every language and through every rank trained, as a string so it never reads as
+	a list index.
 ]]
 local function MacroSpellKey(macro)
 	if macro.baseID then
@@ -55,16 +47,12 @@ end
 
 ns.MacroSpellKey = MacroSpellKey
 
--- A Duplicate's settings key: its spell's key and its number ("1120#2").
+-- "1120#2"
 function ns.CopySettingsKey(spellKey, number)
 	return spellKey .. "#" .. number
 end
 
---[[
-	The key a macro's own settings sit under: its spell's key (MacroSpellKey), or for a copy made with Duplicate
-	that key and its number ("1120#2"), and for a rank's macro (Show All Spell Ranks) that key and the rank's own
-	spell ID ("133@8400"), so a copy's settings are its own.
-]]
+-- A rank's macro (Show All Spell Ranks) adds its own spell ID ("133@8400"), so its settings are its own.
 local function SettingsKey(macro)
 	local key = MacroSpellKey(macro)
 	if macro.copy then
@@ -77,21 +65,18 @@ end
 
 ns.SettingsKey = SettingsKey
 
--- A macro's own setting for an option: true, false, or nil where it follows the default.
+-- true, false, or nil where it follows the default
 local function GetSetting(macro, key)
 	return SpellSettings(key)[SettingsKey(macro)]
 end
 
--- Stores a macro's own setting for an option; nil drops it.
 local function StoreSetting(macro, key, value)
 	SpellSettings(key)[SettingsKey(macro)] = value
 end
 
--- Both read by the target priority (Features/Enhanced-Spellbook/Target-Priority.lua), which stores a list the same way.
 ns.GetMacroSetting = GetSetting
 ns.StoreMacroSetting = StoreSetting
 
--- Drops a macro's own setting for an option, so it follows its kind's default.
 function ns.ClearOwnSetting(macro, key)
 	StoreSetting(macro, key, nil)
 end

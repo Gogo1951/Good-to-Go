@@ -2,24 +2,13 @@ local _, ns = ...
 local L = ns.L
 local GetColor = ns.GetColor
 
---[[
-    What the Staples window offers: the stack counts a staple's dropdown lists
-    and how each reads, and the sections this character is offered, each with
-    its categories in display order. Restocker-Starter-Window.lua draws them.
-]]
+-- What the Staples window offers; Restocker-Starter-Window.lua draws it.
 
 --------------------------------------------------------------------------------
 -- Choices
 --------------------------------------------------------------------------------
 
---[[
-    The counts a staple's dropdown offers, in offered order: every number up to
-    its cap, or the category's own choices where it lists them (Soul Shards
-    step in fours). A stack is whatever its item stacks to, so the label says
-    stacks and the tooltip says how many; a category that counts items
-    instead (countsItems) shows a bare number, since "1 Stack" of a thing that
-    cannot stack reads as a bug.
-]]
+-- A countsItems category shows a bare number: "1 Stack" of a thing that can't stack reads as a bug.
 local function StackChoices(category)
 	local offered = category.choices
 	if not offered then
@@ -42,16 +31,9 @@ local function StackLabel(category, stacks)
 end
 
 --[[
-    One section's categories in display order, holding only the ones this
-    class is offered right now -- Restocker-Starter-List.lua's class and
-    availability rules keep another class's reagents, a not-yet-trained
-    spell's reagent, and items this client's folder does not carry out.
-
-    Display order is computed, never authored: the staples with a stacks
-    dropdown lead, the fixed-amount singles follow, and each run sorts
-    alphabetically by the name it shows, so every locale reads A to Z. A row
-    whose name is still loading sorts after the named ones, by item ID, and
-    takes its place when the window repaints with the name.
+    Display order is computed, never authored, so every locale reads A to Z:
+    dropdown rows, then fixed-amount ones, each by shown name. A name still
+    loading sorts last, by item ID, until the repaint.
 ]]
 local function SectionCategories(section)
 	local categories = {}
@@ -87,14 +69,7 @@ local function SectionCategories(section)
 	return categories
 end
 
---[[
-    The sections this character is offered, top to bottom from what everyone
-    stocks to what one class does: food and water (water as the block's last
-    cell, under a heading naming both), the rogue's poisons with their note,
-    ammo, then the class reagents and tools, where the Hearthstone closes the
-    window as the one row that is nobody's consumable. A section with nothing
-    to offer is left out rather than drawn empty.
-]]
+-- From what everyone stocks to what one class does; an empty section is left out, never drawn empty.
 local function OfferedSections()
 	local sections = {}
 
@@ -115,12 +90,7 @@ local function OfferedSections()
 	if #poisons > 0 then
 		sections[#sections + 1] = {
 			title = L["STARTER_POPUP_POISONS_HEADER"],
-			--[[
-			    The crafting-reagent half of the Restocker already shops for a
-			    listed poison's makings, and a fresh rogue has no way to know
-			    that, so the section says so, opening with the class-colored
-			    class name the mini-map menu's notes open with.
-			]]
+			-- The Restocker already buys a listed poison's reagents, which a fresh rogue can't know.
 			note = string.format(
 				L["STARTER_POPUP_POISONS_NOTE"],
 				ns.GetClassColor("ROGUE") .. UnitClass("player") .. "|r" .. GetColor("BODY")

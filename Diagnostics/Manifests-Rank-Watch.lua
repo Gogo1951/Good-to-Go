@@ -23,13 +23,12 @@ end
 -- Rank Watch Context
 --------------------------------------------------------------------------------
 
--- A rank as the Reported Ranks panel shows it: the client's name and rank text, and its learn level.
+-- As the Reported Ranks panel shows it.
 local function RankText(row)
 	local name = C_Spell.GetSpellName(row.id) or ("spell #" .. row.id)
 	return string.format("%s (%s, %s, level %s)", name, ns.RankWatchRankText(row), row.id, tostring(row.level))
 end
 
--- How many ranks a Rank Watch data table holds, across every class.
 local function CountDataRanks(classes)
 	local count = 0
 	for _, abilities in pairs(classes or {}) do
@@ -40,7 +39,6 @@ local function CountDataRanks(classes)
 	return count
 end
 
--- Classes, abilities and ranks across a set of ladders keyed by class token.
 local function CountLadders(byClass)
 	local classes, abilities, ranks = 0, 0, 0
 	for _, list in pairs(byClass) do
@@ -53,7 +51,6 @@ local function CountLadders(byClass)
 	return classes, abilities, ranks
 end
 
--- The group as Rank Watch reads it: you, then party1-4 or raid1-40.
 local function GroupUnits()
 	local units = {}
 	if IsInRaid() then
@@ -69,11 +66,7 @@ local function GroupUnits()
 	return units
 end
 
---[[
-    One group member, with each thing ns.CheckRankWatchCast and the detection files drop a cast over: the level
-    Rank Watch reads, whether ignored, charmed or hostile, whether their GUID finds them again (ns.GetUnitByGUID,
-    which every detection path resolves a caster through), and whether in combat, which holds a whisper to them.
-]]
+-- Each thing ns.CheckRankWatchCast and the detection files drop a cast or hold a whisper over.
 local function MemberLine(settings, unit)
 	local guid = UnitGUID(unit)
 	local _, class = UnitClass(unit)
@@ -95,7 +88,7 @@ local function MemberLine(settings, unit)
 	)
 end
 
--- How many players the damage meter lists for one of its types right now, read as the Forever detection reads it.
+-- Read as the Forever detection reads it.
 local function MeterSourceCount(meterType)
 	if not (C_DamageMeter and C_DamageMeter.GetCombatSessionFromType and Enum.DamageMeterSessionType) then
 		return "no meter"
@@ -115,7 +108,6 @@ local function MeterSourceCount(meterType)
 	return tostring(#sources)
 end
 
--- One of your class's abilities: its ranks on this client, the best one your level allows, and how many are tracked.
 local function LadderLine(ladder, ceiling)
 	local tracked = 0
 	for _, row in ipairs(ladder.rows) do
@@ -135,10 +127,10 @@ local function LadderLine(ladder, ceiling)
 	)
 end
 
--- A hunter tames its first pet at 10, so no pet line prints before then (Rank-Watch-Level-Up.lua's HUNTER_PET_LEVEL).
+-- Rank-Watch-Level-Up.lua's HUNTER_PET_LEVEL: no pet line prints before a hunter's first tame.
 local HUNTER_PET_LEVEL = 10
 
--- What the next ding's pet lines would name, read as LevelUpLines reads ns.WhatsNextPetRows.
+-- Read as LevelUpLines reads ns.WhatsNextPetRows.
 local function NextPetLine(warlock, nextLevel)
 	if not warlock and nextLevel < HUNTER_PET_LEVEL then
 		return string.format("Next level's pet lines: none before level %d", HUNTER_PET_LEVEL)
@@ -174,13 +166,7 @@ local function NextPetLine(warlock, nextLevel)
 	)
 end
 
---[[
-    Answers "Rank Watch never says anything": every switch and gate that keeps it quiet (Rank-Watch-Core.lua,
-    Rank-Watch-Check.lua), who whispers for the group (Rank-Watch-Cluster.lua), how this flavor sees casts
-    (Rank-Watch-Detection-Combat-Log.lua, or Rank-Watch-Detection-Forever.lua on WoW Forever), what it watches,
-    who /gtg ignore would add, each group member's level and the other things a cast of theirs is dropped over,
-    and your own class's abilities with the rank your level allows.
-]]
+-- Answers "Rank Watch never says anything": every switch and gate that keeps it quiet.
 function ns:BuildRankWatchContextReport()
 	local lines = { GetClientHeader(), "" }
 	if not ns.RankWatchSettings then
@@ -210,7 +196,7 @@ function ns:BuildRankWatchContextReport()
 		tostring(settings.graceLeveling)
 	)
 	lines[#lines + 1] = string.format("Rank Sentinel's settings brought over: %s", YesNo(settings.importedStandalone))
-	-- Each whisper's own text: unset follows the Send Messages In language's default, empty sends nothing.
+	-- Unset follows the chosen language's default; empty sends nothing.
 	local function TextState(key)
 		local saved = settings[key]
 		return saved == nil and "default" or (saved == "" and "emptied" or "edited")
@@ -250,9 +236,8 @@ function ns:BuildRankWatchContextReport()
 		RANK_WATCH.AFTER_COMBAT
 	)
 	--[[
-	    Who whispers, worked out here as ns.RankWatchWhisperer answers it, since that call takes the lead back from a
-	    leader who has gone offline and tells the group (Rank-Watch-Cluster.lua): you, while you lead, aren't in a
-	    group, or the leader is offline, and then only with Whisper on; otherwise the leader.
+	    Worked out here, not by calling ns.RankWatchWhisperer, which takes the lead back from an offline leader
+	    and tells the group.
 	]]
 	local leadName, myName = ns.RankWatchLeadName(), UnitName("player")
 	local leaderOnline = "n/a"
@@ -313,7 +298,7 @@ function ns:BuildRankWatchContextReport()
 			"C_Spell.IsSpellHelpful present (without it your pet's helpful casts in a group go uncapped by the group's levels): %s",
 			YesNo(C_Spell and C_Spell.IsSpellHelpful)
 		)
-		-- The cap Rank-Watch-Detection-Forever.lua's LowestGroupLevel puts on meter heals and your pet's helpful casts.
+		-- LowestGroupLevel's cap on meter heals and your pet's helpful casts.
 		local lowest
 		for _, unit in ipairs(IsInGroup() and GroupUnits() or {}) do
 			local unitLevel = ns.RankWatchUnitLevel(unit)
@@ -357,7 +342,7 @@ function ns:BuildRankWatchContextReport()
 		unticked,
 		ticked
 	)
-	-- A whisper waits for the client's rank text of the rank it names, then is dropped (ns.ProcessRankWatchQueue).
+	-- A whisper waits for the client's rank text, then is dropped.
 	local reportable, noText = 0, 0
 	for _, byClass in ipairs({ ns.RankWatchLadders(), ns.RankWatchPetLadders() }) do
 		for _, list in pairs(byClass) do
@@ -392,7 +377,7 @@ function ns:BuildRankWatchContextReport()
 	table.sort(ignored)
 	lines[#lines + 1] =
 		string.format("Ignored Players: %d%s", #ignored, #ignored > 0 and (" // " .. table.concat(ignored, ", ")) or "")
-	-- What /gtg ignore with no name would add: the target, only when it's another player the client can name.
+	-- What /gtg ignore with no name would add.
 	local targetGUID, targetName = ns.RankWatchIgnorableUnit("target")
 	lines[#lines + 1] = string.format(
 		"/gtg ignore alone would add: %s",
@@ -412,10 +397,7 @@ function ns:BuildRankWatchContextReport()
 		lines[#lines + 1] = "Not in a group: only your own low ranks are reported."
 	end
 
-	--[[
-	    The ceiling a cast of yours is judged against (ns.CheckRankWatchCast), leaving out the level you were
-	    first seen at this session and the recipient's level, which only the cast itself knows.
-	]]
+	-- Leaves out the first-seen level and the recipient's, which only the cast itself knows.
 	lines[#lines + 1] = ""
 	lines[#lines + 1] = "-- Your Abilities --"
 	local grace = (level >= maxLevel) and settings.graceMaxLevel or settings.graceLeveling
@@ -434,10 +416,7 @@ function ns:BuildRankWatchContextReport()
 		lines[#lines + 1] = LadderLine(ladder, ceiling)
 	end
 
-	--[[
-	    Ability Alerts While Leveling (Features/Rank-Watch/Rank-Watch-Level-Up.lua): its switches, and the pet's
-	    spells among the class rows it reads, which its "you can also learn" line would name as the player's.
-	]]
+	-- Pet spells among the class rows would be named as the player's in its "you can also learn" line.
 	lines[#lines + 1] = ""
 	lines[#lines + 1] = "-- Ability Alerts While Leveling --"
 	lines[#lines + 1] = string.format(
@@ -451,7 +430,7 @@ function ns:BuildRankWatchContextReport()
 	if ns.PetSpellsInClassRowsLine then
 		lines[#lines + 1] = ns.PetSpellsInClassRowsLine()
 	end
-	-- What the next ding's first two lines would name, read as LevelUpLines reads them: class trainer spells ready to learn.
+	-- Read as LevelUpLines reads them.
 	if level >= maxLevel then
 		lines[#lines + 1] = "Next level: none, you are at the level cap, so no alert prints"
 	elseif ns.WhatsNextRows then
@@ -499,22 +478,18 @@ end
 
 -- Only where this flavor's TOC loads Rank Watch: Mists ships its empty data files alone.
 ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, not ns.RankWatchSettings and {} or {
-	-- One whisperer per group, agreed over add-on messages (Rank-Watch-Cluster.lua).
+	-- The whisperer election.
 	{ "C_ChatInfo.RegisterAddonMessagePrefix", HasFunction("C_ChatInfo", "RegisterAddonMessagePrefix") },
 	{ "C_ChatInfo.SendAddonMessage", HasFunction("C_ChatInfo", "SendAddonMessage") },
 	{ "C_ChatInfo.IsAddonMessagePrefixRegistered", HasFunction("C_ChatInfo", "IsAddonMessagePrefixRegistered") },
-	-- Every flavor but WoW Forever reads casts from the combat log (Rank-Watch-Detection-Combat-Log.lua).
+	-- Every flavor but WoW Forever reads casts from the combat log.
 	{
 		"CombatLogGetCurrentEventInfo (every flavor but WoW Forever)",
 		function()
 			return ns.FLAVOR == "Camelot" or type(CombatLogGetCurrentEventInfo) == "function"
 		end,
 	},
-	--[[
-	    WoW Forever reads other players' damage and healing from Blizzard's damage meter, and caps a pet's helpful
-	    cast by the group's lowest level (Rank-Watch-Detection-Forever.lua). Both are guarded, so a FAIL on Forever
-	    means those casts go unseen; elsewhere they aren't used.
-	]]
+	-- Guarded: a FAIL on Forever means those casts go unseen; elsewhere they aren't used.
 	{
 		"C_DamageMeter session reads (WoW Forever, guarded)",
 		function()
@@ -539,10 +514,8 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, not ns.RankWatchSettings and {
 --------------------------------------------------------------------------------
 
 --[[
-    Every rank Rank Watch can name for your class and its pets: the spell's name and the client's rank text,
-    each through the call the whispers and the Reported Ranks panel make (ns.RankWatchSpellText,
-    ClientRankText in Rank-Watch-Lookups.lua). Scoped to your class as the Spellbook's rows are; a non-English
-    tester on each class covers the rest. Then the demon kind the warlock's Example names.
+    Through the calls the whispers and the panel make. Scoped to your class; a non-English tester on each
+    class covers the rest.
 ]]
 local function RankWatchNameRows()
 	local rows, seen = {}, { spell = {}, spellRank = {} }
@@ -592,11 +565,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_NAME_LOOKUPS, not ns.RankWatchSettings and
 -- Validate Data Sources
 --------------------------------------------------------------------------------
 
---[[
-    Validate Data's reports for the two Rank Watch files: every rank of every ability, looked up on this client,
-    with its class, rank and learn level beside it, so a rank this client lacks or a level that drifted shows in
-    the Data Review. Pets' ranks sit under their owner's class.
-]]
+-- So a rank this client lacks, or a level that drifted, shows in the Data Review.
 local function CollectRanks(classes)
 	local found = {}
 	for class, abilities in pairs(classes) do

@@ -1,17 +1,11 @@
 local _, ns = ...
 local L = ns.L
 
---[[
-    Read by the bank restock as a hard gate: C_Container.UseContainerItem SELLS
-    while a merchant window is open, so anything that moves an item has to know.
-]]
+-- The bank run's hard gate: UseContainerItem sells while a merchant is open.
 ns.merchantIsOpen = false
 ns.merchantBuyingSkipped = false
 
---[[
-    Restock throttle: the client can fire MERCHANT_SHOW more than once per visit.
-    Closing the merchant resets it, so the next visit restocks however soon it opens.
-]]
+-- MERCHANT_SHOW can fire twice a visit. Closing resets it, so the next visit buys however soon.
 local lastTimeRestocked = -math.huge
 
 function ns.ResetMerchantRestockThrottle()
@@ -21,7 +15,6 @@ end
 local COPPER_PER_GOLD = 10000
 ns.COPPER_PER_GOLD = COPPER_PER_GOLD
 
--- Defined below, after PurchaseMerchantItem; forward-declared for the order builders that call it first.
 local NewPurchaseOrder
 
 local function CountTableItems(theTable)
@@ -36,58 +29,33 @@ local function CountTableItems(theTable)
 	return count
 end
 
---[[
-    NOTE: this add-on must NEVER sell at a merchant. Having too many of an item is fine and is
-    left untouched. There is no sell path at all: only BuildPurchaseOrder (buy when too few).
-]]
+-- Never sells: too many of an item is left alone, and there is no sell path.
 
 --------------------------------------------------------------------------------
 -- Buy Extra
 --------------------------------------------------------------------------------
 
 --[[
-    A normal order asks for the shortfall and stops there. An Extra row asks for
-    whatever a LIMITED vendor slot is holding, however much of it the player
-    already has: the scarce Classic consumables (Major Mana Potions and the like)
-    sit behind a few-at-a-time slot that trickles back, so the useful behavior is
-    to clear the slot every time you walk past rather than to top up to a number.
-
-    That means an Extra row needs an order even when the shortfall is zero, which
-    is why the amount gate below is skipped for it. The order still carries the
-    ordinary shortfall as its amount -- never a guess at what the vendor holds,
-    which is unknown until PurchaseMerchantItem reads the slot -- so partial-fill
-    reporting keeps working off the real target. An amount of 0 is a legitimate
-    Extra order: nothing is owed, so anything bought fills it.
-
-    Extra rides on top of Buy rather than beside it. ns.RestockFromMerchant already skips
-    records with buyFromMerchant off before calling this, so an Extra row with Buy
-    switched off never reaches here.
+    Extra clears a limited slot (scarce potions that trickle back) on every pass
+    instead of topping up to a number, so it gets an order even at zero owed. The
+    amount stays the real shortfall, never a guess at stock, so partial-fill
+    reports still work.
 ]]
 local function BuildPurchaseOrder(purchaseOrders, eachRestockRecord, vendorReaction)
-	-- Keyed by itemID, which the merchant slot's link carries too; a row with none cannot be matched.
 	local itemID = eachRestockRecord.itemID
 	if not itemID then
 		return
 	end
 
-	--[[
-	    Counted by itemID, the same key BuildGroceryList and the crafting order use,
-	    so all three agree on what the bags hold.
-	]]
+	-- By itemID, as BuildGroceryList and the crafting order count, so all three agree.
 	local haveInBag = C_Item.GetItemCount(itemID, false, false) or 0
 	local amount = eachRestockRecord.amount or 0
 	local requiredReaction = eachRestockRecord.reaction or 0
 	local buyExtra = eachRestockRecord.buyExtra == true
 
-	--[[
-	    A vendor below the item's required standing is skipped in silence:
-	    announcing every gated item at every vendor would flood chat.
-	]]
+	-- Skipped in silence below the standing: naming every gated item at every vendor would flood chat.
 	if requiredReaction <= vendorReaction and (amount > 0 or buyExtra) then
-		--[[
-		    Clamped at zero: an already over-stocked Extra row owes nothing, and a
-		    negative amount would shrink the order it merges into below.
-		]]
+		-- A negative amount would shrink the order it merges into.
 		local toBuy = math.max(0, amount - haveInBag)
 
 		if toBuy > 0 or buyExtra then
@@ -100,11 +68,7 @@ local function BuildPurchaseOrder(purchaseOrders, eachRestockRecord, vendorReact
 				purchaseOrder.remaining = purchaseOrder.remaining + toBuy
 			end
 
-			--[[
-			    Flagged on the ORDER, not re-read from the record later: a crafting
-			    reagent can merge into this same entry, so the buy loop needs the flag
-			    on the thing it actually holds.
-			]]
+			-- On the order, since a crafting reagent can merge into the same entry.
 			if buyExtra then
 				purchaseOrder.buyExtra = true
 			end
@@ -122,10 +86,7 @@ local function UpdatePurchaseOrdersWithCraftingReagents(purchaseOrders, reagentI
 	end
 end
 
---[[
-    The item a merchant slot sells, and its link. The ID is read straight off the slot where the client
-    can, since a slot's link is nil until the client has resolved its item; the link can still be nil.
-]]
+-- The ID comes off the slot where it can: a slot's link is nil until its item resolves.
 local function MerchantSlotItemID(index)
 	local link = GetMerchantItemLink(index)
 	local itemID = ns.GetMerchantItemID(index)
@@ -137,28 +98,10 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Crafting reagents (rogue poison ingredients) are bought only at a vendor
-    that stocks EVERY reagent the crafting order still needs. Half a recipe is
-    worse than none: a trade-goods vendor carrying Crystal Vials but no Dust of
-    Deterioration would fill the bags with vials that cannot become poisons until
-    some other vendor supplies the rest. A poison supplier carries the full set,
-    so this gate simply keeps the reagent buying at poison suppliers.
-
-    "Needs" means an amount still to buy after bags were counted -- a reagent
-    the bags already cover is not required of the vendor, so dust-only is fine
-    when the vials are in the bags. "Stocks" means the slot can be bought from
-    right now, for gold alone: unlimited (-1) or a limited count above zero,
-    and a slot PurchaseMerchantItem would not pass over. A sold-out limited
-    slot counts as NOT stocked -- buying the others would strand the player
-    exactly the way this rule forbids.
-
-    Quantity coverage is deliberately not required: a limited slot holding 4
-    of the 6 dust wanted still crafts 4 poisons, and the chunked buy loop
-    already caps to vendor stock. The rule is about missing reagent TYPES.
-
-    This gate covers the crafting order only. An item the player put on the
-    Restock List directly (vials included) is their explicit ask and is
-    bought whether or not the vendor stocks every reagent.
+    Reagents are bought only where every one still needed is buyable now for
+    gold: vials without dust craft nothing. A sold-out limited slot isn't
+    stocked; a short one is (4 of 6 dust still crafts 4). Listed items are
+    bought regardless.
 ]]
 local function VendorStocksAllReagents(craftingPurchaseOrder)
 	local needed = {}
@@ -170,7 +113,6 @@ local function VendorStocksAllReagents(craftingPurchaseOrder)
 		end
 	end
 
-	-- Nothing left to buy: the gate passes and no reagent line is at stake.
 	if neededCount == 0 then
 		return true, false
 	end
@@ -198,29 +140,10 @@ local function VendorStocksAllReagents(craftingPurchaseOrder)
 end
 
 --[[
-    Buys one merchant slot if it is on the purchase order, against what the
-    order still owes, and adds the UNITS it bought to the order. Count UNITS,
-    never BuyMerchantItem calls: forty juice bought in stacks of twenty is two
-    calls, and "2" is not a number any player can interpret.
-
-    A merchant can list one item in more than one slot, and orders are keyed by
-    itemID, so every such slot reads the same order. Each slot therefore
-    buys from remaining, not from the order's whole amount, or a second slot
-    would buy the order again. Whether an order was filled is decided once,
-    after the last slot (ns.RestockFromMerchant): the order is the only place
-    that knows what was asked for and what arrived, and bag counts cannot
-    settle it, since they do not update until BAG_UPDATE.
-
-    budget is the run's money and bag space (ns.RestockFromMerchant), spent down
-    chunk by chunk: a chunk the player cannot pay for or carry is never sent, so
-    the order stops there and counts only what was. A chunk refused for money
-    sets budget.outOfGold and one refused for room budget.outOfSpace, so the run
-    can say why it fell short.
-
-    A slot this character cannot buy from (a reputation item without the
-    standing) is passed over, since the server refuses every call, and so is
-    one that costs honor, tokens or items besides gold, which the run has no
-    business spending.
+    Counts units, never calls. Buys from remaining, since one item can sit in
+    several slots sharing one order. A chunk the budget can't pay for or carry
+    is never sent. Slots the server would refuse, or that cost more than gold,
+    are passed over.
 ]]
 local function PurchaseMerchantItem(i, purchaseOrders, budget)
 	local _, _, price, batchQuantity, merchantAvailable, isPurchasable, _, hasExtendedCost = ns.GetMerchantItemInfo(i)
@@ -234,10 +157,8 @@ local function PurchaseMerchantItem(i, purchaseOrders, budget)
 
 	if buyItem then
 		--[[
-		    The cached record can lag the link. Until it arrives, the merchant slot's own
-		    stack size stands in, with a bare record so bag space still counts room in
-		    partial stacks; failing both, single-unit buys, which BuyMerchantItem accepts
-		    for anything.
+		    Until the record arrives the slot's stack size stands in, with a bare
+		    record so bag space still counts partial stacks; failing both, single units.
 		]]
 		local itemInfo = ns.GetItemData(itemLink or itemID)
 		if not itemInfo then
@@ -247,7 +168,7 @@ local function PurchaseMerchantItem(i, purchaseOrders, budget)
 			end
 		end
 		local stackCount = itemInfo and itemInfo.itemStackCount or 1
-		-- One call buys at most what the slot itself allows, which can be less than the item's stack.
+		-- A slot's own cap can be below the item's stack.
 		local slotMaxStack = GetMerchantItemMaxStack(i)
 		if slotMaxStack and slotMaxStack > 0 then
 			stackCount = math.min(stackCount, slotMaxStack)
@@ -257,26 +178,10 @@ local function PurchaseMerchantItem(i, purchaseOrders, budget)
 		end
 
 		--[[
-		    HOW MUCH TO ASK FOR
-
-		    BuyMerchantItem will not sell more than one stack per call, which is what
-		    the stackCount loop below is for. Every purchase must go through that
-		    loop, capped ones included: a single call for a limited slot holding more
-		    than one stack -- a poison supplier's reagents, exactly the case this path
-		    exists for -- is rejected, yet would still credit the full amount and
-		    report an order filled that never arrived. Settling the target first lets
-		    one chunked loop serve every case.
-
-		    A positive numAvailable is a LIMITED slot: a fixed few units that trickle
-		    back over time. Unlimited stock reports -1 and sold out reports 0, so that
-		    is the only reading either rule below can act on.
-
-		    Ordinary orders ask for what they still owe, capped DOWN to what the slot
-		    holds. An Extra order takes the slot's whole count instead, up or down: that is the feature, buying past
-		    the target amount when the vendor holds more than is owed, and buying at
-		    all when nothing is owed. Unlimited slots fall through untouched by
-		    design -- "buy every one they have" has no end on a slot that never runs
-		    out, so Extra deliberately does nothing there.
+		    Everything goes through the chunked loop: one call for more than a stack
+		    is rejected yet would credit the full amount. Only a positive count is a
+		    limited slot (-1 unlimited, 0 sold out). Extra takes a limited slot's whole
+		    count and does nothing on an unlimited one, which never runs out.
 		]]
 		local wanted = buyItem.remaining
 		if merchantAvailable > 0 then
@@ -287,13 +192,7 @@ local function PurchaseMerchantItem(i, purchaseOrders, budget)
 			end
 		end
 
-		--[[
-		    A sold-out slot reports numAvailable 0; unlimited stock reports -1, which
-		    is why the cap above tests for a POSITIVE count. Nothing can be bought
-		    from an empty slot, so the loop is skipped rather than run into a server
-		    that rejects every call -- and skipping it adds nothing to the order, which
-		    is what stops a slot that gave us nothing from announcing a partial fill.
-		]]
+		-- A sold-out slot adds nothing, so it can't announce a partial fill.
 		if merchantAvailable ~= 0 then
 			-- The slot's price buys its batch quantity (arrows come by the 200).
 			local unitPrice = (price or 0) / math.max(batchQuantity or 1, 1)
@@ -319,13 +218,7 @@ local function PurchaseMerchantItem(i, purchaseOrders, budget)
 	end
 end
 
---[[
-    One vendor's worth of an item to buy. Transient: a purchase order lives for
-    the length of one merchant visit and is never saved. remaining is what it
-    still owes as its slots are bought, and bought is what the run sent for;
-    startCount is what the bags held before, so what actually arrived is read
-    against it once the server has answered (OrderDelivered).
-]]
+-- One visit, never saved. startCount is what arrivals are read against once the server answers.
 function NewPurchaseOrder(amount, itemID)
 	return {
 		amount = amount,
@@ -357,12 +250,7 @@ function ns.RestockFromMerchant()
 
 	local craftingPurchaseOrder = ns.BuildCraftingPurchaseOrder() or {}
 
-	--[[
-	    All-or-nothing (see VendorStocksAllReagents above): a vendor missing any
-	    needed reagent buys NO reagents. The print fires only when this vendor
-	    stocked some of them, which is the case worth reporting, and stays silent
-	    at vendors that stock none, where a skipped reagent order is not news.
-	]]
+	-- Said only where the vendor stocked some: at one with none, a skip isn't news.
 	local allReagentsStocked, anyReagentStocked = VendorStocksAllReagents(craftingPurchaseOrder)
 	if not allReagentsStocked then
 		if anyReagentStocked then
@@ -373,7 +261,7 @@ function ns.RestockFromMerchant()
 
 	local purchaseOrders = {}
 	local restockList = settings.lists[settings.currentList]
-	-- "npc" is the unit we are actually interacting with; the vendor is usually not targeted.
+	-- "npc" is the vendor being talked to; it is usually not targeted.
 	local vendorReaction = UnitReaction("npc", "player") or UnitReaction("target", "player") or 0
 
 	for _, eachRestockRecord in pairs(restockList) do
@@ -386,22 +274,11 @@ function ns.RestockFromMerchant()
 		UpdatePurchaseOrdersWithCraftingReagents(purchaseOrders, reagentID, toBuy)
 	end
 
-	--[[
-	    Neither the purse nor the bags change until the server answers, which is after this
-	    whole run has been sent, so both are read once here and spent down as purchases go
-	    out. That is what keeps the run from ordering what the player cannot pay for or
-	    carry, and then counting it as bought.
-	]]
+	-- Purse and bags don't change until the server answers, so both are read once and spent down here.
 	local startingMoney = GetMoney()
 	local budget = { money = startingMoney, space = ns.NewBagSpace(ns.restockPlayerBags) }
 
-	--[[
-	    The Gold Reserve comes off the top, so the run can spend only what sits
-	    above it, at every level. A purse already at or below the reserve leaves
-	    nothing, which pauses buying at every vendor until the player is richer, while the bank
-	    restock, which costs nothing, carries on. The out-of-gold line below names
-	    the reserve only in that case.
-	]]
+	-- A purse at or under the reserve pauses all buying; the bank run, which costs nothing, carries on.
 	if settings.goldReserve then
 		local reserve = settings.goldReserveAmount * COPPER_PER_GOLD
 		budget.money = math.max(0, budget.money - reserve)
@@ -439,12 +316,8 @@ function ns.OnRestockerMerchantShow()
 end
 
 --[[
-    The client fires MERCHANT_CLOSED and BANKFRAME_CLOSED on loading-screen
-    teardown (boat crossings included) with no matching open -- and can double-fire
-    them -- so each close handler keys the reminder, and closing the Restock
-    window, off its tracked open flag: a _CLOSED event alone does not mean a
-    window was ever open. The Restock window then closes only if that visit
-    opened it (ns.ShowRestockWindowForVisit).
+    Loading screens fire _CLOSED events with no open, sometimes twice, so the
+    reminder and the window close key off the tracked open flag.
 ]]
 function ns.OnRestockerMerchantClosed()
 	local merchantWasOpen = ns.merchantIsOpen

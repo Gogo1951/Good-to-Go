@@ -6,26 +6,7 @@ local AceGUI = LibStub("AceGUI-3.0")
 -- Add Item From Bags
 --------------------------------------------------------------------------------
 
---[[
-    [Add Item From Bags      v]
-
-    The control row's menu: everything in the character's bags that the list
-    does not hold yet, by name, and a click adds it. What a player is already
-    carrying is most of what a list starts from, and this puts it on the list
-    without dragging it out of a bag or looking up its item ID.
-
-    A pick lands like any other add (ns.AddRestockItem in Restocker-List.lua):
-    one stack to keep, every switch on except Extra, first in the New group. The menu closes
-    on the pick, as a menu does, and the item is not in it the next time.
-
-    Built on every open rather than kept, from the bags as they are then and
-    the list in use, so nothing has to be kept in step with either.
-
-    A field and a pullout: the field is the window's own
-    (ns.CreateRestockMenuField in Restocker-Window-Widgets.lua), and the
-    pullout is the window's one AceGUI pullout.
-    Restocker-Window-Header.lua places the field on the row and sizes it.
-]]
+-- Built on every open from the bags and the list in use, so nothing has to be kept in step with either.
 local ARROW_SIZE = 16 -- the height of the row's fields
 local MENU_WIDTH = 288 -- an icon and an item's whole name
 local MENU_MAX_HEIGHT = 352 -- about twenty items, and the pullout scrolls past that
@@ -35,7 +16,6 @@ local UNKNOWN_ICON = ns.QUESTION_MARK_ICON -- the list's own stand-in for an ico
 -- Items
 --------------------------------------------------------------------------------
 
--- What the menu lists: each item in the bags that is not on the list in use, in the order the list's own rows take.
 local function ItemsToAdd()
 	local settings = ns.restockSettings
 	local list = settings.lists[settings.currentList]
@@ -62,9 +42,8 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    One pullout, built on first use and reused: an Execute item closes its
-    own pullout from inside its OnClick, so items are cleared at the next
-    open, never at close.
+    Built once and reused: an Execute item closes its own pullout from inside
+    its OnClick, so items are cleared at the next open, never at close.
 ]]
 local bagPullout
 local bagPulloutOpen = false
@@ -89,22 +68,13 @@ local function OpenBagMenu(anchor)
 		ns.MenuKit.PlatePullout({ pullout = bagPullout })
 	end
 	bagPullout:Clear()
-	--[[
-	    A reused pullout keeps its scroll position, and this one opens on a
-	    different list of items every time, so each open starts at the top. The
-	    slider is what AceGUI itself scrolls a pullout through.
-	]]
+	-- A reused pullout keeps its scroll, and each open lists different items, so it starts at the top.
 	bagPullout.slider:SetValue(0)
 
 	local items = ItemsToAdd()
 	for _, item in ipairs(items) do
 		local entry = AceGUI:Create("Dropdown-Item-Execute")
-		--[[
-		    The kit's item row: the icon, the name in its quality color without
-		    the link's brackets, and how many the bags hold in white; hovering it
-		    shows the item's own tooltip. The pullout stays AceGUI's, which
-		    scrolls past MENU_MAX_HEIGHT where the kit's menu does not.
-		]]
+		-- The pullout stays AceGUI's: it scrolls past MENU_MAX_HEIGHT, where the kit's menu doesn't.
 		local name = ns.UnbracketItemLink(item.link)
 		local carried = C_Item.GetItemCount(item.itemID, false, false) or 0
 		local count = ns.MenuKit.Color("TEXT", string.format(L["ITEM_QUANTITY"], carried))
@@ -127,11 +97,7 @@ local function OpenBagMenu(anchor)
 		bagPullout:AddItem(entry)
 	end
 
-	--[[
-	    Empty bags, or bags holding nothing the list lacks. The menu still opens,
-	    on one line that cannot be picked, so the click is answered instead of
-	    looking like a control that did not work.
-	]]
+	-- Still opens, on one line that can't be picked, so the click doesn't look broken.
 	if #items == 0 then
 		local nothing = AceGUI:Create("Dropdown-Item-Execute")
 		nothing:SetText(L["RESTOCKER_ADD_FROM_BAGS_NONE"])
@@ -146,11 +112,6 @@ local function OpenBagMenu(anchor)
 	bagPullout:Open("TOPLEFT", anchor, "BOTTOMLEFT", 0, 0)
 end
 
---[[
-    The field and its arrow open the menu, and close it again when it is already
-    open. With an item in hand a click there is a drop instead, which the field
-    itself takes (ns.CreateRestockMenuField).
-]]
 local function ToggleBagMenu(anchor)
 	if bagPulloutOpen then
 		CloseBagMenu()
@@ -169,13 +130,9 @@ function ns.CreateRestockBagMenu(addonFrame, parent)
 	local field = ns.CreateRestockMenuField(parent, ARROW_SIZE, ToggleBagMenu)
 
 	--[[
-	    The caption is all the field ever shows: a pick is carried out, never
-	    held, so there is no chosen value for it to give way to. It is drawn in
-	    white, as the filter's hint is (the maintainer's ruling): a menu reads
-	    as something to open, where the add box's gray reads as somewhere to
-	    type. Anchored on both sides with no wrap, as the placeholders are, so a
-	    longer caption in another locale truncates inside the field instead of
-	    running under the arrow.
+	    White, as the filter's hint is (the maintainer's ruling): a menu reads as
+	    something to open, where the add box's gray reads as somewhere to type.
+	    No wrap, so a longer locale truncates before the arrow.
 	]]
 	local caption = field:CreateFontString(nil, "OVERLAY")
 	caption:SetFontObject("GameFontHighlight")

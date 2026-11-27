@@ -1,16 +1,8 @@
 local _, ns = ...
 
---[[
-    Restocker-Bank-Tidy -- the bank restock's tidy phase: once every item is at
-    target, merge the partial stacks of maintained items that a run leaves
-    behind. The run itself, and the watchdog that ends this phase, are
-    Restocker-Bank-Visit.lua.
-]]
+-- The bank run's tidy phase; its watchdog lives in Restocker-Bank-Visit.lua.
 
---[[
-    The largest stack an item allows, or nil when it doesn't stack (or isn't cached yet),
-    which the tidy phase reads as "leave it alone".
-]]
+-- Nil for an item that doesn't stack or isn't cached yet, which the tidy phase leaves alone.
 local function MaxStackOf(itemID)
 	local info = ns.GetItemData(itemID)
 	local maxStack = info and info.itemStackCount
@@ -21,12 +13,9 @@ local function MaxStackOf(itemID)
 end
 
 --[[
-    How many PARTIAL stacks of maintained items the bags and the bank hold, used as the
-    tidy-phase progress signal. Every tidy move leaves at least one fewer partial stack
-    behind -- a whole-stack merge empties one, a top-off fills one -- so this strictly
-    decreases while consolidation is making headway and plateaus when done (or if a merge
-    bounces), which the tidy watchdog uses to stop. Counting all stacks would miss a top-off,
-    which fills one stack without removing any.
+    The tidy watchdog's progress signal: every tidy move leaves one fewer partial
+    stack, so this falls while merging works and stops when done or bounced.
+    Counting all stacks would miss a top-off, which removes none.
 ]]
 function ns.CountRestockPartialStacks(playerInventory, bankInventory)
 	local partials = 0
@@ -46,23 +35,16 @@ function ns.CountRestockPartialStacks(playerInventory, bankInventory)
 end
 
 --[[
-    Merge one pair of partial stacks of a maintained item within one inventory (the player
-    bags or the bank, never across), to undo the fragmentation that free-slot-first placement
-    and exact splits leave behind -- in the bags 10 + 9 + 1 -> 20, and in the bank the
-    5 + 5 + 4 + 2 a run of small pulls carves out of full stacks.
-
-    The smallest partial stack is the source. A whole-stack merge comes first: pick it all up
-    and drop it onto the largest partial that has room for ALL of it, no split involved --
-    the reliable manual consolidation move. Only when no stack can take it whole (4 + 2 with
-    a stack size of 5) does it top off the largest partial with an exact split, which the
-    server can bounce; a bounce is caught by the tidy watchdog, and the cursor is never left
-    holding the split.
+    One merge of two partial stacks within one inventory, never across. The
+    smallest moves whole onto the largest that has room for all of it, since a
+    whole-stack merge needs no split. Only when none can does it top off the
+    largest with an exact split, which the server can bounce.
 ]]
 function ns.ConsolidateRestockStacks(inventory)
 	for itemID, slots in pairs(inventory.slots) do
 		local maxStack = MaxStackOf(itemID)
 		if maxStack then
-			-- slots are sorted smallest-first (SortSlots), so partials are too
+			-- Slots are sorted smallest first (SortSlots), so partials are too.
 			local partials = {}
 			for _, slot in ipairs(slots) do
 				if slot.count < maxStack then
@@ -84,8 +66,8 @@ function ns.ConsolidateRestockStacks(inventory)
 							destination.bag,
 							destination.slot
 						)
-						C_Container.PickupContainerItem(source.bag, source.slot) -- pick up whole stack
-						C_Container.PickupContainerItem(destination.bag, destination.slot) -- drop onto it -> merges
+						C_Container.PickupContainerItem(source.bag, source.slot)
+						C_Container.PickupContainerItem(destination.bag, destination.slot)
 						return true
 					end
 				end

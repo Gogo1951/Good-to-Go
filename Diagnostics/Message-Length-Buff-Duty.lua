@@ -7,12 +7,7 @@ local ShownText = ns.DiagnosticShownText
 -- Message Length
 --------------------------------------------------------------------------------
 
---[[
-    Every chat line and macro Buff Duty can send or write, built through the
-    add-on's own builders (ns.DIAGNOSTIC_MESSAGES), each with its byte length
-    against its ceiling, OVER past it. It builds strings only: nothing is sent
-    and no macro is written. Any notes the manifest returns follow the list.
-]]
+-- Builds strings only through the add-on's own builders: nothing is sent and no macro is written.
 function ns:BuildBuffDutyMessageLengthReport()
 	local rows, notes = ns.DIAGNOSTIC_MESSAGES()
 	local lines = { GetClientHeader(), "" }

@@ -7,11 +7,6 @@ local _, ns = ...
 ns.bestPetFoodID = nil
 ns.bestPetFoodLink = nil
 
---[[
-    Builds a set of quest IDs the player currently has in their quest log.
-    Used by ScanPetFood to skip foods that are objectives for active quests.
-]]
-
 local activeQuestIDs = {}
 
 local function BuildActiveQuestSet()
@@ -25,29 +20,12 @@ local function BuildActiveQuestSet()
 	end
 end
 
---[[
-    Every quest some pet food is an objective for, gathered from ns.PET_FOOD_DATA
-    on first use. Only those quests joining or leaving the log can change which
-    food the Feed Pet macro picks.
-]]
 local petFoodQuestIDs
 
---[[
-    The pet-food quests active at the last call and at this one, [questID] =
-    true, and the last call's count. Two tables swapped on every call, so the
-    comparison allocates nothing on QUEST_LOG_UPDATE's many firings. The last
-    set starts nil, so the first call counts as a change.
-]]
+-- Two tables swapped every call, so QUEST_LOG_UPDATE's many firings allocate nothing.
 local lastActiveFoodQuests, lastActiveFoodQuestCount
 local currentActiveFoodQuests = {}
 
---[[
-    Whether the active quests that matter to pet food changed since the last
-    call, so the dispatcher can skip the rebuild for QUEST_LOG_UPDATE's many
-    firings that change nothing. ns.ScanPetFood calls it too, discarding the
-    answer, whenever it reads the quest log, so the signature always matches
-    the quests the last food pick was made from.
-]]
 function ns.PetFoodQuestsChanged()
 	if not petFoodQuestIDs then
 		petFoodQuestIDs = {}
@@ -93,31 +71,10 @@ local function IsNeededForQuest(questIDs)
 end
 
 --[[
-    Selects the lowest-itemLevel food that still gives maximum happiness
-    (petLevel - foodItemLevel between 0 and 10). Ties broken by sell price
-    (lower wins), then total count in bags (fewer wins).
-
-    If no food sits in the max-happiness bracket, falls back to the food
-    closest to (but above) the pet's level. Pets eat above-level food, just
-    wastefully — better than letting the pet go hungry.
-
-    Note: there is no upper cap on how far above pet level the fallback can
-    reach. Confirmed empirically on Classic Era (1.15.x): a level-8 cat will
-    happily eat level-70 meat. The fallback ranks by lowest food level first,
-    so the *least* wasteful option still wins when multiple are available.
-
-    Every food's own facts (itemLevel, dietID, sellPrice, questIDs) come from
-    the stored ns.PET_FOOD_DATA table, and what is in the bags comes from
-    ns.scannedItemCounts / ns.scannedItemLinks -- the walk ns.ScanBags just
-    finished in this same update pass. Walking the containers again here would
-    cost a second full pass per rebuild on every Hunter with a pet out. No
-    server queries are needed.
-
-    Quest objective foods are skipped whenever the player has that quest in
-    their log (including completed-but-not-turned-in), since turn-in consumes
-    the items.
+    The lowest food level still giving full happiness (0-10 below the pet);
+    failing that, the closest food above it. Reads the same pass's ScanBags
+    snapshot rather than walking the bags again.
 ]]
-
 function ns.ScanPetFood()
 	ns.bestPetFoodID = nil
 	ns.bestPetFoodLink = nil
@@ -148,26 +105,17 @@ function ns.ScanPetFood()
 		end
 	end
 
-	--[[
-	    Empty bags, so there is nothing to pick from: this runs only inside the
-	    update pass, right after ns.ScanBags refilled the snapshot. Leave both
-	    published fields nil, exactly as the no-pet path above does, and skip the
-	    quest-log walk with them.
-	]]
 	if next(ns.scannedItemCounts) == nil then
 		return
 	end
 
 	--[[
-	    Snapshot the player's active quests once per scan, through
-	    ns.PetFoodQuestsChanged so the scan also records the signature the
-	    QUEST_LOG_UPDATE diff compares against. The dispatcher skips that diff in
-	    combat, so a quest change made mid-fight and undone after it would
-	    otherwise read as no change against a pre-fight signature.
+	    Re-records the signature too: the dispatcher skips the diff in combat, so
+	    a change undone after the fight would otherwise read as no change.
 	]]
 	ns.PetFoodQuestsChanged()
 
-	-- Both halves of the Ignore List hide an item from every macro's selection.
+	-- Raw bag counts skip the scanner's ignore filter, so check both lists here.
 	local characterIgnoreList = ns.GetIgnoreList() or {}
 	local globalIgnoreList = ns.GetGlobalIgnoreList() or {}
 
@@ -176,10 +124,6 @@ function ns.ScanPetFood()
 	local bestPrice = 999999
 	local bestCount = 999999
 
-	--[[
-	    Wasteful fallback: pets will eat food above their level when no in-bracket
-	    option is available. Prefer the food closest to pet level (lowest waste).
-	]]
 	local fallbackID, fallbackLink
 	local fallbackLevel = 999
 	local fallbackPrice = 999999
@@ -207,7 +151,6 @@ function ns.ScanPetFood()
 
 					if not skipQuest then
 						if inHappyBracket then
-							-- Prefer: lowest itemLevel, then lowest sell price, then fewest in bags
 							local isBetter
 							if not bestID then
 								isBetter = true
@@ -218,15 +161,7 @@ function ns.ScanPetFood()
 							elseif totalCount ~= bestCount then
 								isBetter = totalCount < bestCount
 							else
-								--[[
-								    Never-equal last resort. The scan snapshot is
-								    walked with pairs(), whose order is not stable
-								    between passes, so two foods matching on every
-								    field above would otherwise swap the pick from
-								    one rebuild to the next and churn a macro
-								    rewrite. Same reason RANKING_PRIORITY in
-								    Scanner-Ranking.lua ends on itemID.
-								]]
+								-- pairs() order isn't stable, so full ties would swap picks and churn rewrites.
 								isBetter = id < bestID
 							end
 
@@ -238,13 +173,7 @@ function ns.ScanPetFood()
 								bestCount = totalCount
 							end
 						else
-							--[[
-							    Fallback (food above pet level). No upper cap:
-							    pets will eat food at any level higher than their
-							    own (confirmed: lvl-8 cat eats lvl-70 meat). Prefer
-							    closest to pet level (lowest), then cheapest, then
-							    fewest in bags.
-							]]
+							-- No upper cap: a level-8 cat eats level-70 meat (verified on Classic Era).
 							local isBetter
 							if not fallbackID then
 								isBetter = true
@@ -255,7 +184,6 @@ function ns.ScanPetFood()
 							elseif totalCount ~= fallbackCount then
 								isBetter = totalCount < fallbackCount
 							else
-								-- Deterministic last resort; see the note on the bracket chain above.
 								isBetter = id < fallbackID
 							end
 
@@ -286,17 +214,9 @@ end
 -- Pet Buff Override
 --------------------------------------------------------------------------------
 
---[[
-    Written by ScanBags on every rescan (forced nil in a PvP Arena); Food.lua's
-    macro hooks read it to splice the pet-buff-food line into the Food macro.
-]]
 ns.petBuffOverrideID = nil
 
---[[
-    ns.PET_BUFF_FOODS best-first (highest rank), sorted once from the flavor
-    folder's Game-IDs file, which loads before this file, since row order there
-    carries no meaning.
-]]
+-- Sorted once at load, highest rank first.
 local PET_BUFF_FOODS_BY_RANK = {}
 for itemID, row in pairs(ns.PET_BUFF_FOODS) do
 	PET_BUFF_FOODS_BY_RANK[#PET_BUFF_FOODS_BY_RANK + 1] =
@@ -306,20 +226,8 @@ table.sort(PET_BUFF_FOODS_BY_RANK, function(a, b)
 	return a.rank > b.rank
 end)
 
---[[
-    Returns the item ID of the pet food buff that should be used, or nil.
-    Called by ScanBags with its per-scan bag item counts. The aura probe it
-    consults, ns.HasPetFoodBuff, stays in Scanner-Auras.lua: it shares
-    that file's private early-reapply helper (BuffCountsAsActive) with the
-    scroll probe.
-]]
 function ns.FindPetBuffOverride(bagItemCounts)
-	--[[
-	    A pet buff food on this flavor, the feature toggle, group restriction,
-	    level, and a live pet all live in ns.ShouldTrackPetFood
-	    (Scanner-Auras.lua) so the readiness report applies exactly the same
-	    gate.
-	]]
+	-- The Readiness Report shares this gate.
 	if not ns.ShouldTrackPetFood() then
 		return nil
 	end
@@ -330,10 +238,7 @@ function ns.FindPetBuffOverride(bagItemCounts)
 
 	local petTypes = ns.db.profile.petBuffTypes
 
-	--[[
-	    The pet-buff override path never passes the scanner's ignore filter
-	    (it reads the raw bag counts), so it honors the Ignore List itself.
-	]]
+	-- Raw bag counts skip the scanner's ignore filter, so check the Ignore List here.
 	local playerLevel = ns.cachedPlayerLevel or 1
 	for _, food in ipairs(PET_BUFF_FOODS_BY_RANK) do
 		local itemID = food.itemID

@@ -2,13 +2,6 @@ local _, ns = ...
 local Data = ns.Data
 local L = ns.L
 
---[[
-    Buff Duty's lookups: which of this client's ns.BUFF_DUTY_SPELLS,
-    self buff, self item, weapon enchant, weapon item and Soulstone rows have live ids,
-    filled into the tables Buff-Duty-Castable.lua keeps on ns.BuffDuty; and
-    the options panels' class categories.
-]]
-
 local BuffDuty = ns.BuffDuty
 local entries = BuffDuty.entries
 local lookup = BuffDuty.lookup
@@ -36,10 +29,8 @@ local function LiveIds(ids)
 end
 
 --[[
-    Row order in the data never says which rank is higher, so every list a
-    reader takes a rank from by position is sorted here, once, lowest level
-    first; rows on one level keep the data's order. levelOf reads an item's
-    level.
+    Data row order never says which rank is higher, so every list read by
+    position is sorted here once, lowest level first, stable within a level.
 ]]
 local function SortByLevel(list, levelOf)
 	local order = {}
@@ -60,12 +51,10 @@ local function RankLevel(rank)
 	return rank.level
 end
 
--- A spell id with no level in the data, by the level the client says it is learned at.
 local function LearnedLevel(id)
 	return C_Spell.GetSpellLevelLearned(id) or 0
 end
 
--- A rank list's ids, in the ranks' (sorted) order.
 local function RankIds(ranks)
 	local ids = {}
 	for index, rank in ipairs(ranks) do
@@ -93,11 +82,7 @@ function BuffDuty.BuildLookup()
 			SortByLevel(ranks, RankLevel)
 			ids = RankIds(ranks)
 			local groupIds = SortByLevel(LiveIds(row.group), LearnedLevel)
-			--[[
-			    Any version counts as buffed: each rank's aura carries its own id.
-			    Has drops a single-target rank below the one you'd cast. A Greater
-			    Blessing only ever counts, never casts.
-			]]
+			-- Each rank's aura carries its own id. A Greater Blessing only ever counts, never casts.
 			local auraIds = {}
 			for _, list in ipairs({ ids, groupIds, LiveIds(row.greater) }) do
 				for _, id in ipairs(list) do
@@ -157,13 +142,9 @@ function BuffDuty.BuildLookup()
 	end
 
 	--[[
-	    A poison is an item, kept best first by the level it needs; an imbue is
-	    a spell, kept like any self buff's ranks. Items aren't checked against
-	    the client: a poison it doesn't know is one no bag ever holds. Every
-	    rank's enchant id points back at its row (weaponByEnchant), for
-	    Diagnostics; the window reads each pick's own enchants. A rank may name
-	    several: TBC's Rockbiter lands a different enchant for each weapon
-	    speed.
+	    Items aren't checked against the client: a poison it doesn't know is one
+	    no bag ever holds. A rank may name several enchants: TBC's Rockbiter
+	    lands a different one per weapon speed.
 	]]
 	local function AddEnchants(enchants, value)
 		if type(value) == "table" then
@@ -174,12 +155,6 @@ function BuffDuty.BuildLookup()
 			enchants[value] = true
 		end
 	end
-	--[[
-	    Which layer each entry's enchant lands in (Data.WEAPON_LAYERS): on a
-	    client where two stack, a poison, an imbue and the data's imbue items
-	    in one, the oils, stones and lures in the other. Everywhere else the
-	    one slot.
-	]]
 	local IMBUE, TEMPORARY = Data.WEAPON_LAYERS.IMBUE, Data.WEAPON_LAYERS.TEMPORARY
 	local stack = ns.WEAPON_ENCHANTS_STACK == true
 	local imbueItems = {}
@@ -247,11 +222,7 @@ function BuffDuty.BuildLookup()
 		end
 	end
 
-	--[[
-	    Every other weapon item, one entry each: its enchant, the weapon types
-	    it takes (a subclass mask, 0 for any weapon), and the only places it
-	    works, for an item that has them.
-	]]
+	-- A subclass mask of 0 takes any weapon.
 	wipe(weaponItemEntries)
 	for _, row in ipairs(ns.BUFF_DUTY_WEAPON_ITEMS) do
 		local itemId = row[1]
@@ -271,12 +242,7 @@ function BuffDuty.BuildLookup()
 		weaponByEnchant[row[3]] = weaponByEnchant[row[3]] or entry
 	end
 
-	--[[
-	    A self item is counted by its auras and named on the panel by the
-	    first. Its key is "item:<id>", so it can't meet a spell id among the
-	    selfRefresh keys. Items aren't checked against the client, as with
-	    poisons: one it doesn't know is one no bag ever holds.
-	]]
+	-- Keyed "item:<id>", so it can't meet a spell id among the selfRefresh keys.
 	wipe(selfItemEntries)
 	for _, row in ipairs(ns.BUFF_DUTY_SELF_ITEMS or {}) do
 		local auras = LiveIds(row.auras)
@@ -291,13 +257,9 @@ function BuffDuty.BuildLookup()
 	end
 
 	--[[
-	    Well Fed, for any class, wherever the flavor knows the buff: offered
-	    with whatever buff food the Food macro would eat (ns.bestBuffFoodID),
-	    so it has no item of its own, and counted by every Well Fed aura, which
-	    the window reads itself (Buff-Duty-Self.lua). Named on the panel by
-	    the Well Fed spell. Shows When Missing by default where the flavor's
-	    data sets ns.BUFF_DUTY_ITEM_BUFFS_SHOWN (WoW Forever, where buff food is
-	    nearly all anyone carries), and is off elsewhere.
+	    No item of its own: it uses whatever ns.bestBuffFoodID picks. On by
+	    default only where ns.BUFF_DUTY_ITEM_BUFFS_SHOWN (WoW Forever, where buff
+	    food is nearly all anyone carries).
 	]]
 	if ns.WELL_FED_SPELL_ID and (next(ns.WELL_FED_BUFF_IDS or {}) or next(ns.WELL_FED_ICON_IDS or {})) then
 		local default = ns.BUFF_DUTY_ITEM_BUFFS_SHOWN and Data.SELF_REFRESH_MISSING or Data.SELF_REFRESH_OFF
@@ -311,13 +273,7 @@ function BuffDuty.BuildLookup()
 		}
 	end
 
-	--[[
-	    Scrolls, for any class, wherever the flavor has them: one entry for
-	    every scroll type, offered as an icon per type (Buff-Duty-Self.lua).
-	    Named on the panel as Scrolls, with the buff of the first type's scroll
-	    needing the lowest level for its icon. Shows When Missing by default where Well
-	    Fed does (ns.BUFF_DUTY_ITEM_BUFFS_SHOWN), and is off elsewhere.
-	]]
+	-- One entry for every scroll type; icon from the first type's lowest scroll buff.
 	local firstScroll = ns.SCROLL_DATA and ns.SCROLL_DATA[ns.SCROLL_CHECK_ORDER[1]]
 	local lowestScroll
 	for _, item in ipairs(firstScroll and firstScroll.items or {}) do
@@ -338,13 +294,7 @@ function BuffDuty.BuildLookup()
 		}
 	end
 
-	--[[
-	    Elixirs, for any class, wherever the flavor lists elixir buffs: one
-	    entry for every elixir, offered as an icon per elixir in your bags
-	    (Buff-Duty-Elixirs.lua). Named on the panel as Elixirs, with the lowest
-	    elixir buff id the client knows for its icon. Shows When Missing by
-	    default.
-	]]
+	-- One entry for every elixir; icon from the lowest elixir buff id the client knows.
 	local elixirIds = {}
 	for id in pairs(ns.ELIXIR_BUFF_IDS or {}) do
 		elixirIds[#elixirIds + 1] = id
@@ -363,11 +313,6 @@ function BuffDuty.BuildLookup()
 		}
 	end
 
-	--[[
-	    The Soulstone is offered by its Create Soulstone ranks, counted by its
-	    Soulstone Resurrection auras, and named on the panel by the aura. Its
-	    stones are kept as item ids, lowest level first.
-	]]
 	BuffDuty.soulstoneEntry = nil
 	local stone = ns.BUFF_DUTY_SOULSTONE
 	local ranks, auraIds = {}, {}
@@ -396,11 +341,7 @@ function BuffDuty.BuildLookup()
 		}
 	end
 
-	--[[
-	    Each class's resurrection, its live ranks lowest first by the level the
-	    client says each is learned at (the data carries none), for the Buff Key
-	    (BuffDuty.PickResurrection).
-	]]
+	-- Sorted by the level the client says each rank is learned at: the data carries none.
 	BuffDuty.resurrections = {}
 	for _, row in ipairs(ns.BUFF_DUTY_RESURRECTIONS) do
 		local live = SortByLevel(LiveIds(row.ranks), LearnedLevel)
@@ -415,11 +356,9 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    One class-colored category per class with live rows, each entry the
-    { key, ids, spellName } the panel's audience dropdown needs. Every class is
-    listed, not just yours, because these settings are account-wide.
-    Only the single-target ids are carried: the dropdown should show and
-    describe the buff, not its group version.
+    Every class is listed, since these settings are account-wide. Only the
+    single-target ids: the dropdown should describe the buff, not its group
+    version.
 ]]
 function BuffDuty.BuildCategories(list)
 	local buckets = {}
@@ -449,10 +388,6 @@ function BuffDuty.BuildCategories(list)
 	return categories
 end
 
---[[
-    The options panel reads this to say why the window never shows on a class
-    with nothing to give on this client.
-]]
 function ns.BuffDutyHasClassRows()
 	-- Any class can use an oil, a stone or a self item.
 	if weaponItemEntries[1] or selfItemEntries[1] then

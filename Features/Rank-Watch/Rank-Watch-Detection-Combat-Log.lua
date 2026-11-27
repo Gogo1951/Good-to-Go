@@ -5,11 +5,8 @@ local _, ns = ...
 --------------------------------------------------------------------------------
 
 --[[
-    Casts from the combat log, listed in the Vanilla and TBC TOCs; WoW Forever keeps the combat log from add-ons
-    (Rank-Watch-Detection-Forever.lua reads casts there). The log names the caster and the recipient of every
-    cast in the group, pets' casts included: a hunter pet's or demon's goes to its owner. Every cast ends in
-    ns.CheckRankWatchCast, with the recipient's level when it landed on another friendly player, none when it
-    landed on the caster, an enemy or nobody, and dropped when that friendly player's level can't be read.
+    A cast on another friendly player passes their level; one whose level can't be read is dropped, since a
+    rank the game lowered for a lowbie can't be told from one the caster chose.
 ]]
 
 local Check = ns.CheckRankWatchCast
@@ -18,10 +15,7 @@ local band = bit.band
 local GROUP_AFFILIATION = 0x00000007 -- COMBATLOG_OBJECT_AFFILIATION_MINE, _PARTY and _RAID
 local FRIENDLY_REACTION = 0x00000010 -- COMBATLOG_OBJECT_REACTION_FRIENDLY
 
---[[
-    A pet in the group and its owner, by the pet's GUID: the player's own "pet", then partypetN with partyN or
-    raidpetN with raidN. A pet whose owner isn't in the group (a stranger's, a charmed mob) finds nothing.
-]]
+-- A pet whose owner isn't in the group (a stranger's, a charmed mob) finds nothing.
 local function PetAndOwner(petGUID)
 	local guid = UnitGUID("pet")
 	if ns.IsPlain(guid) and guid == petGUID then
@@ -41,10 +35,7 @@ local function PetAndOwner(petGUID)
 	return nil
 end
 
---[[
-    The friendly player or group member's pet a cast landed on, when that was someone other than the caster:
-    their level, or false when it can't be read (the cast is dropped), or nil for no such recipient.
-]]
+-- False when the level can't be read (the cast is dropped), nil for no recipient other than the caster.
 local function RecipientLevel(destGUID, destFlags, ...)
 	if not destGUID or destGUID == "" or band(destFlags or 0, FRIENDLY_REACTION) == 0 then
 		return nil

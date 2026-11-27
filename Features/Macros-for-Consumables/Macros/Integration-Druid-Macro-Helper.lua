@@ -5,21 +5,9 @@ local _, ns = ...
 --------------------------------------------------------------------------------
 
 --[[
-    When the Druid toggle is on, HP/MP/HS macros are rewritten to use DMH
-    syntax so the druid powershifts out of form, /uses the consumable, and
-    shifts back into the form chosen by settings.druidReturnForm (bear or
-    cat). Hard-coded rather than auto-tracked: macros can't be edited
-    during combat, so a mid-combat form swap on an auto-tracking macro
-    could return the druid to the wrong form.
-
-    Eligible macro types and guard prefixes both live in Data.lua
-    (ns.DRUID_MACRO_HELPER_TYPES, ns.DRUID_MACRO_HELPER_GUARDS) so the data is shared and not buried
-    here.
-
-    The /dmh lines mean nothing without DruidMacroHelper itself, so with the
-    add-on not loaded the toggle is ignored and the standard body is written.
-    That body's state ID has no "DMH:" prefix, so loading or dropping the
-    add-on rewrites the macros on the next update.
+    The return form is a setting, not tracked: a macro can't be rewritten after
+    a mid-combat form change. Without DruidMacroHelper loaded the standard body
+    is written; the "DMH:" key prefix makes loading or dropping it rewrite.
 ]]
 
 local DRUID_MACRO_HELPER_FOLDER = "DruidMacroHelper"
@@ -38,17 +26,12 @@ local function ShouldUseDruidMacroHelper(typeName)
 	return settings and settings.enableDruidMacroHelper and true or false
 end
 
---[[
-    Best first. The client names every one of these spells whether or not the
-    druid has learned it, so the return form is picked from what the druid
-    knows each time a body is built.
-]]
+-- Best first. The client names these spells whether learned or not, so the pick tests what is known.
 local RETURN_FORM_SPELL_IDS = {
 	bear = { ns.DRUID_DIRE_BEAR_FORM_SPELL_ID, ns.DRUID_BEAR_FORM_SPELL_ID },
 	cat = { ns.DRUID_CAT_FORM_SPELL_ID },
 }
 
--- The chosen return form as (key, spellID, name), with no spell or name until the druid knows one.
 local function GetDruidReturnForm()
 	local settings = ns.db and ns.db.profile
 	local key = settings and settings.druidReturnForm
@@ -68,13 +51,7 @@ local function BuildDruidMacroHelperBody(typeName, useIDs, stackIDs, formName, o
 		"#showtooltip item:" .. useIDs[1],
 		"/run GtGFire(" .. useIDs[1] .. ")",
 	}
-	--[[
-	    Food or water out of combat (potionsUseFoodAndWater): the same lines
-	    the standard body carries, above the guards so an out-of-combat press
-	    never starts a powershift. A druid in a form has to leave it to eat,
-	    as with the Food and Water macros. A Night Elf druid's Shadowmeld,
-	    with Stealth Eating or Stealth Drinking on, comes along too.
-	]]
+	-- Above the guards, so an out-of-combat press never starts a powershift.
 	if outOfCombatID then
 		lines[1] = ns.OutOfCombatTooltipLine(useIDs[1], outOfCombatID)
 		lines[2] = "/run GtGFire(" .. useIDs[1] .. "," .. outOfCombatID .. ")"
@@ -87,22 +64,11 @@ local function BuildDruidMacroHelperBody(typeName, useIDs, stackIDs, formName, o
 	for _, guard in ipairs(ns.DRUID_MACRO_HELPER_GUARDS[typeName]) do
 		lines[#lines + 1] = guard
 	end
-	--[[
-	    Stacked ranked /use lines, best item first — combat fallback when
-	    the best item is depleted. See BuildUseBlock in
-	    Body-Builder.lua for the shared-cooldown reasoning.
-	]]
 	local firstUse = #lines + 1
 	for _, id in ipairs(useIDs) do
 		lines[#lines + 1] = "/use item:" .. id
 	end
-	--[[
-	    Healthstone stacking (Health Potion only): the best Healthstone's
-	    ranked /use lines go below the potion lines but still inside the
-	    powershift, before the return /cast — separate cooldown category, so
-	    the press fires a potion and a stone in one shift. nil for every
-	    other type.
-	]]
+	-- Inside the powershift, before the return /cast, so one shift fires a potion and a stone.
 	if stackIDs then
 		for _, id in ipairs(stackIDs) do
 			lines[#lines + 1] = "/use item:" .. id
@@ -112,16 +78,7 @@ local function BuildDruidMacroHelperBody(typeName, useIDs, stackIDs, formName, o
 	lines[#lines + 1] = "/dmh end"
 	local body = table.concat(lines, "\n") .. "\n"
 
-	--[[
-	    Measured in bytes against ns.MACRO_BODY_MAX_LENGTH (Data/Data.lua),
-	    which carries the reason the unit is bytes. Overflow here would chop
-	    the trailing /dmh end line and leave DMH guards dangling.
-	    Drop /use lines from the bottom until the body fits — stacked
-	    Healthstone lines go first since they sit lowest, then potion
-	    fallbacks; the rank-1 potion line is never dropped. Mirrors the
-	    trim in Body-Builder.lua. Still too long, it returns nil, and
-	    ns.BuildDruidMacroOverride tries again with less.
-	]]
+	-- Overflow would chop the trailing /dmh end and leave the guards dangling; rank 1 is never dropped.
 	while #body > ns.MACRO_BODY_MAX_LENGTH and #lines > firstUse + 2 do
 		table.remove(lines, #lines - 2)
 		body = table.concat(lines, "\n") .. "\n"
@@ -137,20 +94,10 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    ns.UpdateMacros consults this for every macro type/itemID pair it is
-    about to write, passing the ranked multi-use id list when one applies
-    (best item first; falls back to the single itemID). Returns
-    (body, stateID) when the DMH override applies; returns nil to mean
-    "use the standard macro body", which it also does when no DMH body fits.
-
-    A druid who hasn't learned the chosen return form yet also gets nil, so
-    the standard body wins rather than a "/cast !" line for a form they
-    cannot shift into.
-
-    The state ID carries the form's spell ID, so learning Dire Bear Form
-    rewrites a body that still returns to Bear Form.
+    Nil means the standard body: also when no DMH body fits, or the return form
+    isn't learned. The key carries the form's spell ID, so learning Dire Bear
+    Form rewrites a body that returns to Bear Form.
 ]]
-
 function ns.BuildDruidMacroOverride(typeName, itemID, rankedIDs, stackIDs, outOfCombatID, outOfCombatStealth)
 	if not itemID then
 		return nil
@@ -169,11 +116,6 @@ function ns.BuildDruidMacroOverride(typeName, itemID, rankedIDs, stackIDs, outOf
 		useIDs = { itemID }
 	end
 
-	--[[
-	    A body too long even after its /use lines are trimmed (a translated
-	    client's longer names) drops the stealth line, then the out-of-combat
-	    block, and failing that the standard body is written instead.
-	]]
 	local body = BuildDruidMacroHelperBody(typeName, useIDs, stackIDs, formName, outOfCombatID, outOfCombatStealth)
 	if not body and outOfCombatStealth then
 		outOfCombatStealth = nil

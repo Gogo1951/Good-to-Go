@@ -2,19 +2,16 @@ local _, ns = ...
 local L = ns.L
 
 --[[
-	Consumable Macros' macros on the page, in a Consumable Macros section after every other: the consumable macros
-	it keeps pointed at the best item in the bags. Consumable Macros writes and owns those WoW macros
-	(Features/Macros-for-Consumables/Macros); the page only shows the ones that exist and picks them up, so nothing here
-	creates, rewrites or tags one. A tile's icon is the item the macro uses now, read again whenever the tile is
-	drawn, as Consumable Macros rewrites the macro when the bags change; its note is Dynamic Item rather than the
-	item's name, which changes with the bags.
+	Consumable Macros writes and owns these WoW macros; the page only shows the ones that exist and picks them
+	up, never creating, rewriting or tagging one.
 ]]
 
--- In the order the Consumable Macros panel's Which Macros to Create toggles list them, keyed by ns.MACRO_CONFIG's type.
+-- In the Consumable Macros panel's order, keyed by ns.MACRO_CONFIG's type.
 local TYPES = {
 	"Bandage",
 	"Explosive",
 	"Feed Pet",
+	"Fishing Lure",
 	"Food",
 	"Health Potion",
 	"Healthstone",
@@ -25,10 +22,7 @@ local TYPES = {
 	"Water",
 }
 
---[[
-	The types whose macro can also cast a spell for the class that has it, at a rank of its own (Conjure Food,
-	Create Healthstone, Feed Pet): their note reads Dynamic Rank as well as Dynamic Item for that class.
-]]
+-- For these classes the macro also casts a ranked spell, so the note reads Dynamic Rank too.
 local SPELL_CLASSES = {
 	["Feed Pet"] = "HUNTER",
 	["Food"] = "MAGE",
@@ -38,10 +32,7 @@ local SPELL_CLASSES = {
 	["Water"] = "MAGE",
 }
 
---[[
-	Reads a consumable page macro's WoW macro again: its text, and the item it uses now and that item's icon,
-	or the type's default item's icon (ns.MACRO_DEFAULT_ITEM_IDS) while the bags hold nothing it can use.
-]]
+-- The type's default item's icon while the bags hold nothing it can use.
 function ns.ReadConsumableMacro(macro)
 	local index = GetMacroIndexByName(macro.wowName)
 	local body = index > 0 and GetMacroBody(index) or nil
@@ -57,12 +48,7 @@ function ns.ReadConsumableMacro(macro)
 		or ns.QUESTION_MARK_ICON
 end
 
---[[
-	The page macros for the Consumable Macros macros that exist, in TYPES' order. Each carries consumable = true, its
-	WoW macro's name as wowName (Consumable Macros' own, "- Food", in place of the page's prefix), and its name as
-	the Consumable Macros panel shows it, without the dash. dynamicRank marks a type the player's class can also cast
-	(SPELL_CLASSES).
-]]
+-- wowName is Consumable Macros' own ("- Food"), in place of the page's prefix.
 function ns.ConsumablePageMacros()
 	local macros = {}
 	local playerClass = select(2, UnitClass("player"))

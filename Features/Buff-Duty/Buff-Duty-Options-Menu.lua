@@ -2,42 +2,7 @@ local ADDON_NAME, ns = ...
 local Data = ns.Data
 local L = ns.L
 
---[[
-    Buff-Duty-Options-Menu -- the menus the Buff Duty window's lines open
-    (Buff-Duty-Frame.lua and Buff-Duty-Layout.lua draw the lines): one Menu
-    Kit menu, so each opens on hover beside its line, overlapping the
-    window's edge, and closes a moment after the cursor leaves.
-
-    A category's line ends in an arrow that opens that category's menu, the
-    same for every category, in blocks:
-
-      Show in Buff Duty
-      When to Use (Always, In Party or Raid, In Raid) and Show (When
-      Missing, or Under 10, 5 or 3 Minutes): the category's one timing
-      Use with Cast Next Buff, and Show Missing Inventory (not on Self-Buffs)
-      What it uses, each On or Off: Your Spells for Self-Buffs; for the
-      rest, In Your Bags. Scrolls first lists every kind of scroll, and a
-      rogue's or shaman's hand every one of the class's choices, carried or
-      not, since the window uses the best of each in your bags.
-      Well Fed then ends with Eat Buff Food When Already Well Fed.
-
-    A weapon hand's line opens Weapon Buffs for that hand alone. The Options
-    line at the window's foot (and the mini-map menu's Buff Duty row) opens
-    the window's own switches:
-
-      Show in Window   the six categories, each its Show in Buff Duty, its
-                       hover opening its menu (for both hands, on Weapon Buffs)
-      Other Players    Ask for Buffs, Your Target (Include NPCs, Ask Your
-                       Target for Buffs), Return the Favor, Buff PvP-Flagged
-                       Players
-      Window           Window Opacity, 0% to 100%: how solid the window's
-                       background is
-      All Buff Duty Settings
-
-    A row here is the same setting as on the settings pages, so each side
-    shows what the other set. Every change ends in ns.RefreshBuffDuty, as a
-    page's does, and redraws the menu.
-]]
+-- Each row is the same setting as on the settings pages, and every change ends in ns.RefreshBuffDuty as a page's does.
 
 local Kit = ns.MenuKit
 local BuffDuty = ns.BuffDuty
@@ -49,7 +14,6 @@ local function Settings()
 	return ns.db.global.buffWindow
 end
 
--- A row's hover: its name in gold, then what it does.
 local function Tooltip(title, body)
 	return function(tooltip)
 		tooltip:SetText(title, ns.COLORS_RGB.TITLE.r, ns.COLORS_RGB.TITLE.g, ns.COLORS_RGB.TITLE.b, 1, true)
@@ -57,7 +21,6 @@ local function Tooltip(title, body)
 	end
 end
 
--- A switch: flips the setting; the menu's afterChange redraws the window and the menu. submenu names the flyout its hover opens.
 local function Toggle(label, desc, on, set, submenu)
 	return {
 		kind = "toggle",
@@ -71,7 +34,6 @@ local function Toggle(label, desc, on, set, submenu)
 	}
 end
 
--- A switch for one thing a category uses, " [icon] Name": one space, its icon, then its name; the name alone atop the hover.
 local function IconToggle(icon, name, desc, on, set)
 	local entry = Toggle((" |T%s:0|t %s"):format(icon or ns.QUESTION_MARK_ICON, name), desc, on, set)
 	entry.tooltip = desc and Tooltip(name, desc) or nil
@@ -86,7 +48,7 @@ local function ItemName(itemId)
 	return C_Item.GetItemNameByID(itemId) or L["LOADING_ITEM"]:format(itemId)
 end
 
--- An item's switch: on unless off[itemId]. A change asks the macros for a bag scan when `rescan`, which redraws the window too.
+-- `rescan` asks the macros for a bag scan, which redraws the window too.
 local function ItemToggle(itemId, name, off, rescan)
 	local desc = L["BUFF_DUTY_MENU_ITEM_DESCRIPTION_FORMAT"]:format(name)
 	return IconToggle(ItemIcon(itemId), name, desc, not off[itemId], function(value)
@@ -108,7 +70,6 @@ end
 -- Categories
 --------------------------------------------------------------------------------
 
--- Each category's name, as its line and its page under Buff Duty name it.
 local function CategoryName(row)
 	if row == "self" then
 		return L["BUFF_DUTY_SELF_HEADER"]
@@ -124,7 +85,6 @@ local function CategoryName(row)
 	return L["BUFF_DUTY_ROW_OTHER"]
 end
 
--- "When Missing", or "Under 3 Minutes" from the client's own duration string.
 local function ShowText(minutes)
 	if minutes == 0 then
 		return L["BUFF_DUTY_SELF_REFRESH_MISSING"]
@@ -140,11 +100,6 @@ local function NoneInBags(entries)
 	entries[#entries + 1] = { kind = "note", left = L["BUFF_DUTY_MENU_NONE_IN_BAGS"] }
 end
 
---[[
-    Self-Buffs: your class's buffs, as its Self-Buffs page lists them --
-    the ones only you can put on yourself, your group buffs on you, and a
-    warlock's Soulstone.
-]]
 local function AddSpellRows(entries)
 	SectionHeader(entries, L["BUFF_DUTY_MENU_YOUR_SPELLS"])
 	local _, playerClass = UnitClass("player")
@@ -172,14 +127,7 @@ local function AddSpellRows(entries)
 	end
 end
 
---[[
-    Well Fed: every buff food in your bags the Food macro could eat
-    (ns.carriedBuffFoods), each on unless turned off (buffFoodOff). The
-    window offers the best one left on, so turning one off hands its place
-    to the next; a change asks the macros for a bag scan, which picks the
-    food again and redraws the window. Then the Food & Water page's Eat Buff
-    Food When Already Well Fed.
-]]
+-- The window offers the best food left on, so turning one off hands its place to the next.
 local function AddFoodRows(entries)
 	SectionHeader(entries, L["BUFF_DUTY_MENU_IN_YOUR_BAGS"])
 	local foods = {}
@@ -207,10 +155,8 @@ local function AddFoodRows(entries)
 end
 
 --[[
-    The kinds of scroll, named as the Scrolls page names them. scrollTypes
-    is on the AceDB profile: which scrolls are worth reading differs from
-    character to character (a README-Notes exception). The window and the
-    Readiness Report both keep to them.
+    scrollTypes is on the profile: which scrolls are worth reading differs
+    from character to character (a README-Notes exception).
 ]]
 local SCROLL_TYPES = {
 	{ "Agility", SPELL_STAT2_NAME },
@@ -222,12 +168,7 @@ local SCROLL_TYPES = {
 }
 ns.SCROLL_TYPE_LABELS = SCROLL_TYPES
 
---[[
-    Scrolls: every kind, carried or not, each On or Off, since the window
-    reads the best scroll of each kind left on in your bags; then the scrolls
-    in your bags, each on unless turned off here (scrollOff), whatever the
-    Ignore List says.
-]]
+-- Every kind, carried or not: the window reads the best of each kind in your bags. Then the carried scrolls, whatever the Ignore List says.
 local function AddScrollRows(entries)
 	SectionHeader(entries, L["BUFF_DUTY_SCROLL_TYPES"])
 	local types = ns.db.profile.scrollTypes
@@ -266,7 +207,7 @@ local function AddScrollRows(entries)
 	end
 end
 
--- Flasks or Elixirs: every elixir in your bags, whatever the Ignore List says, each on unless turned off here (elixirOff).
+-- Whatever the Ignore List says.
 local function AddElixirRows(entries)
 	SectionHeader(entries, L["BUFF_DUTY_MENU_IN_YOUR_BAGS"])
 	local off = Settings().elixirOff
@@ -279,7 +220,6 @@ local function AddElixirRows(entries)
 	end
 end
 
--- Other Buffs: the ones in your bags (Winterfall Firewater), each its own switch.
 local function AddOtherRows(entries)
 	SectionHeader(entries, L["BUFF_DUTY_MENU_IN_YOUR_BAGS"])
 	local any = false
@@ -308,7 +248,6 @@ end
 -- Weapon Buffs
 --------------------------------------------------------------------------------
 
--- Named as the Weapon Buffs page names it: a poison line or an item by its first item, an imbue by its spell.
 local function WeaponName(entry)
 	local id = entry.ids[1]
 	if entry.items then
@@ -333,11 +272,7 @@ local function Carried(entry)
 	return false
 end
 
---[[
-    A choice is ticked per hand on the page. From a hand's line it's that
-    hand's tick; from Options, one switch for every hand it can go on: on
-    while any hand has it, and a flip sets them all.
-]]
+-- From Options, one switch for every hand: on while any hand has it, and a flip sets them all.
 local function WeaponRow(entry, list, hands, handKey)
 	local name = WeaponName(entry)
 	local on = false
@@ -356,7 +291,6 @@ local function WeaponRow(entry, list, hands, handKey)
 	end)
 end
 
--- The hands of `hands` that `hand` allows: just it, when it's one of them, or all of them for no hand.
 local function HandsFor(hands, hand)
 	if not hand then
 		return hands
@@ -364,12 +298,7 @@ local function HandsFor(hands, hand)
 	return tContains(hands, hand) and { hand } or {}
 end
 
---[[
-    Your class's choices (a rogue's poisons, a shaman's imbues, a warlock's
-    stones on WoW Forever), every one whatever you carry, under the class's
-    name: the window uses the best rank of each in your bags. Then the oils,
-    stones and lures in your bags.
-]]
+-- Your class's choices whatever you carry: the window uses the best rank of each in your bags.
 local function AddWeaponRows(entries, hand)
 	local _, playerClass = UnitClass("player")
 	local classHands = HandsFor(ns.BUFF_DUTY_WEAPON_HANDS and ns.BUFF_DUTY_WEAPON_HANDS[playerClass] or {}, hand)
@@ -489,7 +418,6 @@ local function CategoryEntries(row, hand)
 	return entries
 end
 
--- When to Use's choices: Always, In Party or Raid, In Raid.
 local function WhenEntries(row)
 	local entries = {}
 	local current = Settings().rowWhen[row]
@@ -506,7 +434,6 @@ local function WhenEntries(row)
 	return entries
 end
 
--- Show's choices: When Missing, then Under 10, 5 or 3 Minutes.
 local function ShowEntries(row)
 	local entries = {}
 	local current = Settings().rowShow[row]
@@ -527,14 +454,12 @@ end
 -- Options
 --------------------------------------------------------------------------------
 
--- A switch on one of the window's own settings.
 local function SettingToggle(key, label, desc, submenu)
 	return Toggle(label, desc, Settings()[key], function(value)
 		Settings()[key] = value
 	end, submenu)
 end
 
--- Your Target's flyout.
 local function TargetEntries()
 	return {
 		SettingToggle("targetNPCs", L["BUFF_DUTY_TARGET_NPCS"], L["BUFF_DUTY_TARGET_NPCS_DESCRIPTION"]),
@@ -546,12 +471,7 @@ local function OpacityText(percent)
 	return L["BUFF_DUTY_MENU_OPACITY_PERCENT"]:format(percent)
 end
 
---[[
-    Window Opacity's flyout: 0% to 100%, the one picked checked. Only the
-    window's background changes. Hovering a choice shows it on the window
-    (preview) until the cursor leaves the flyout, which puts the saved one
-    back; a click keeps it.
-]]
+-- A hovered choice previews on the window until the cursor leaves the flyout; a click keeps it.
 local function OpacityEntries()
 	local entries = {}
 	local current = Settings().windowOpacity
@@ -569,7 +489,7 @@ local function OpacityEntries()
 	return entries
 end
 
--- { setting, label, description, submenu }: the Other Players block, in the Buff Duty page's order.
+-- { setting, label, description, submenu }, in the Buff Duty page's order.
 local OTHER_PLAYERS = {
 	{ "askOtherClasses", "BUFF_DUTY_ASK_OTHERS", "BUFF_DUTY_ASK_OTHERS_DESCRIPTION" },
 	{ "targetEnabled", "BUFF_DUTY_TARGET_ENABLE", "BUFF_DUTY_TARGET_ENABLE_DESCRIPTION", "target" },
@@ -625,11 +545,7 @@ end
 -- Menu
 --------------------------------------------------------------------------------
 
---[[
-    What a menu key opens: "options", "cat:<row>" or "cat:weapons:<hand>"
-    for a category, "when:<row>" and "show:<row>" for its When to Use and Show,
-    "target", or "opacity".
-]]
+-- Keys: "options", "cat:<row>", "cat:weapons:<hand>", "when:<row>", "show:<row>", "target", "opacity".
 local function EntriesFor(key)
 	if key == "options" then
 		return OptionsEntries()
@@ -649,10 +565,8 @@ local function EntriesFor(key)
 	return {}
 end
 
--- The open menu's own key, set as its line opens it.
 local rootKey = "options"
 
--- Every flyout by its key, built when asked for.
 local flyouts = setmetatable({}, {
 	__index = function(_, key)
 		return function()
@@ -661,7 +575,6 @@ local flyouts = setmetatable({}, {
 	end,
 })
 
--- The line whose highlight stays lit while its menu is open, and the panel showing a hovered opacity.
 local lit, previewPanel
 
 local function EndPreview()
@@ -671,7 +584,6 @@ local function EndPreview()
 	end
 end
 
--- A hovered opacity choice shows on the window; any other row, or leaving its panel, puts the saved one back.
 local function OnEnterRow(row, entry)
 	if entry and entry.preview then
 		previewPanel = row:GetParent()
@@ -682,7 +594,7 @@ local function OnEnterRow(row, entry)
 end
 
 menu = Kit.CreateMenu({
-	-- Named so Escape closes it, as every menu closes.
+	-- Named so Escape closes it.
 	name = ADDON_NAME .. "BuffDutyOptions",
 	publish = false,
 	build = function()
@@ -697,7 +609,7 @@ menu = Kit.CreateMenu({
 	end,
 })
 
--- Each panel, sub-menus included, takes the opacity preview as the kit makes it.
+-- Sub-menus included, so each panel takes the opacity preview as the kit makes it.
 local KitRender = menu.Render
 function menu:Render()
 	KitRender(self)
@@ -733,17 +645,16 @@ local function Open(owner, key)
 	owner:LockHighlight()
 end
 
--- A category line's menu, beside its arrow: key is a Data.BUFF_DUTY_ROWS row, or "weapons:<hand>".
+-- key is a Data.BUFF_DUTY_ROWS row, or "weapons:<hand>".
 function ns.ShowBuffDutyMenu(owner, key)
 	Open(owner, "cat:" .. key)
 end
 
--- The Options menu, beside the window's Options line or the mini-map menu's Buff Duty row.
 function ns.ShowBuffDutyOptions(owner)
 	Open(owner, "options")
 end
 
--- Closes the menu when it hangs off a line inside within (the mini-map menu), or any line when within is nil.
+-- within nil closes it from any line.
 function ns.HideBuffDutyOptions(within)
 	local owner = menu.state.anchor
 	if menu:IsShown() and (not within or (owner and Kit.IsInside(owner, within))) then
@@ -751,7 +662,7 @@ function ns.HideBuffDutyOptions(within)
 	end
 end
 
--- Whether the cursor is over the menu or a sub-menu, so a menu it opened from stays open while it's used.
+-- So a menu it opened from stays open while it's used.
 function ns.IsCursorOverBuffDutyOptions()
 	return menu:IsShown() and menu:IsCursorOver()
 end

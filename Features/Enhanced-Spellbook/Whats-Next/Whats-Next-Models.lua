@@ -5,15 +5,6 @@ local GetColor = ns.GetColor
 local MUTED = ns.COLORS_RGB.MUTED
 local BRIGHT = ns.WHATS_NEXT_BRIGHT
 
---[[
-	The models of the What's Next? tabs' pages (Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Page.lua), ns.WHATS_NEXT_MODELS:
-	the class spells this character can learn, is about to, or already has, from ns.WhatsNextRows
-	(Features/Enhanced-Spellbook/Whats-Next/Whats-Next.lua); for a hunter or warlock its pet's abilities, from ns.WhatsNextPetRows
-	(Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Pet.lua); and the pet's own spellbook, from ns.PetSpellbookRows
-	(Features/Enhanced-Spellbook/Whats-Next/Pet-Spellbook.lua). The three pages differ only in their model: the rows, statuses,
-	sources, settings and tooltip lines.
-]]
-
 -- the most tameable beasts a pet ability's tooltip names before "And N more"
 local MAX_BEASTS = 6
 
@@ -22,7 +13,6 @@ local function Bright(status, text)
 end
 ns.WhatsNextBright = Bright
 
--- A label and its value on one tooltip line, the label in the title color.
 local function AddPair(label, value)
 	GameTooltip:AddDoubleLine(label, value, TITLE.r, TITLE.g, TITLE.b, BODY.r, BODY.g, BODY.b)
 end
@@ -94,7 +84,6 @@ local CLASS_MODEL = {
 		},
 	},
 	sortDescription = "WHATS_NEXT_SORT_DESCRIPTION",
-	-- With known spells hidden, an empty page points at the toggle that lists them.
 	empty = function()
 		if ns.WhatsNextShowsKnown() then
 			return L["WHATS_NEXT_EMPTY"]
@@ -111,7 +100,6 @@ local CLASS_MODEL = {
 		if row.status == "KNOWN" then
 			return
 		end
-		-- how it's learned, then what it waits on
 		local how = row.source and L["WHATS_NEXT_TOOLTIP_HOW_" .. row.source]
 		if how then
 			AddBody(how)
@@ -129,11 +117,7 @@ local CLASS_MODEL = {
 	end,
 }
 
---[[
-	The beasts that teach a pet ability rank by taming, the ones the hunter can tame by now first (highest
-	first, so the nearest to its level lead), then the rest from the lowest: "Forest Spider (5-6)" with its
-	zone at the right, up to MAX_BEASTS of them and a count of the rest.
-]]
+-- Tameable now first, highest first so the nearest to the hunter's level lead; then the rest from the lowest.
 local function AddBeasts(beasts)
 	local level = UnitLevel("player")
 	local list = {}
@@ -172,11 +156,7 @@ local function AddBeasts(beasts)
 	end
 end
 
---[[
-	The footer of both pet tabs: the pet out, its level and family, and its training points left; or that there's
-	none out, and what the statuses read instead: the hunter's Beast Training, or nothing where there's none
-	(WoW Forever).
-]]
+-- With no pet out, the statuses read the hunter's Beast Training, or nothing where there's none (WoW Forever).
 local function PetFooter(pet)
 	if not pet then
 		return L[ns.WhatsNextPetUsesBeastTraining() and "WHATS_NEXT_PET_NO_PET" or "WHATS_NEXT_PET_NO_PET_SUMMON"]
@@ -191,11 +171,7 @@ end
 
 local PET_STATUSES = { TEACH = true, OTHER = true }
 
---[[
-	A grimoire whose name hasn't loaded reads as loading, and the item is asked for; when it arrives, the row
-	tooltip still showing it is drawn again. The shared GET_ITEM_INFO_RECEIVED subscription (Features/Item-Info.lua)
-	is held only while a grimoire is waited on.
-]]
+-- The shared GET_ITEM_INFO_RECEIVED subscription is held only while a grimoire is waited on.
 local GRIMOIRE_WAITER = "WhatsNextGrimoire"
 local waitingGrimoires = {}
 
@@ -224,10 +200,7 @@ function ns.OnWhatsNextItemInfoReceived(itemID)
 	end
 end
 
---[[
-	A rank is ready to teach only through a warlock's grimoire or a hunter's Beast Training; WoW Forever's hunter
-	trainer teaches the pet out directly, so there the footer has no Ready to Teach count.
-]]
+-- WoW Forever's hunter trainer teaches the pet out directly, so there's no Ready to Teach count.
 local PET_COUNTS = { "TEACH", "AVAILABLE", "SOON", "LATER" }
 local PET_COUNTS_NO_TEACH = { "AVAILABLE", "SOON", "LATER" }
 
@@ -298,14 +271,10 @@ local PET_MODEL = {
 			AddBody(L["WHATS_NEXT_PET_TOOLTIP_OTHER"])
 			return
 		end
-		-- what to do next: teach it, or get it first
 		if row.ready then
 			AddBody(L[row.item and "WHATS_NEXT_PET_TOOLTIP_GRIMOIRE_IN_BAGS" or "WHATS_NEXT_PET_TOOLTIP_HUNTER_KNOWS"])
 		else
-			--[[
-				WoW Forever has no Beast Training, so a taming rank comes only with the beast tamed, and no grimoires,
-				so the demon trainer teaches a demon's rank itself
-			]]
+			-- WoW Forever has no Beast Training and no grimoires
 			local how = "WHATS_NEXT_PET_TOOLTIP_HOW_" .. row.source
 			if row.source == "TAMING" and not ns.WhatsNextPetUsesBeastTraining() then
 				how = "WHATS_NEXT_PET_TOOLTIP_HOW_TAMING_NEW_PET"
@@ -326,7 +295,6 @@ local PET_MODEL = {
 	end,
 }
 
--- The pet's spellbook: no source filter, sort or settings, its abilities then its passives, each placeable on a bar.
 local PET_BOOK_MODEL = {
 	rows = function()
 		return ns.PetSpellbookRows()

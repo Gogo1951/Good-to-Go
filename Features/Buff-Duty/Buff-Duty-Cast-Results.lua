@@ -1,28 +1,18 @@
 local _, ns = ...
 
--- What became of the casts the Buff Duty window and its key make: a buff refused for a stronger one, and resurrections.
-
 local BuffDuty = ns.BuffDuty
 
 --------------------------------------------------------------------------------
 -- More Powerful Spell
 --------------------------------------------------------------------------------
 
---[[
-    How long after a click or Buff Key press a "more powerful spell" refusal
-    still belongs to that cast; the error comes back from the server.
-]]
+-- The "more powerful spell" refusal comes back from the server, a moment after the cast.
 local BOUNCE_WINDOW = 2
 local lastAttempt -- { guid, unit, key, at }: the last buff cast the window or key made
 -- The error type this client gives the refusal, learned from its text, for Diagnostics.
 local bounceErrorType
 
---[[
-    Registering the combat log is forbidden on Forever, so SPELL_RESURRECT never arrives to keep a
-    resurrected player's icon away while they decide to accept
-    (BuffDuty.NoteResurrect). There, a resurrection the window or key cast is
-    noted from the player's own cast going off instead.
-]]
+-- Forever forbids the combat log, so your own resurrection going off stands in for SPELL_RESURRECT.
 local RESURRECT_CAST_SECONDS = 15 -- a resurrection's cast time, with room for lag
 local lastResurrect -- { guid, ids, expires }: the last resurrection the window or key cast, on Forever
 
@@ -38,7 +28,6 @@ function ns.OnResurrectCastSucceeded(unit, spellID)
 	end
 end
 
--- Called from a window icon's PreClick and the Buff Key's, for every cast they make.
 function ns.NoteBuffCastAttempt(spec)
 	lastAttempt = nil
 	if ns.FLAVOR == "Camelot" and spec and spec.isResurrection and spec.unit then
@@ -56,12 +45,7 @@ function ns.NoteBuffCastAttempt(spec)
 	end
 	local guid = spec.favorGUID or (spec.unit and UnitGUID(spec.unit))
 	if ns.IsPlain(guid) and guid then
-		--[[
-		    A pet (anything not a player: a party pet's token, a targeted
-		    one, or a targeted friendly NPC) has its cast followed through
-		    below, since its buffs reach the client less reliably than a
-		    player's, and a refusal holds that buff off it.
-		]]
+		-- Anything not a player is followed through: its buffs reach the client less reliably than a player's.
 		local isPet, isNPC = false, false
 		if spec.unit and not spec.isGroup and not spec.favorGUID then
 			local isPlayer = UnitIsPlayer(spec.unit)
@@ -88,12 +72,7 @@ function ns.NoteBuffCastAttempt(spec)
 	end
 end
 
---[[
-    The player's cast going off. One the window or key just aimed at a pet is
-    taken at its word (BuffDuty.NotePetCast): the pet isn't offered that buff
-    again until it would need a refresh, whether or not its aura ever shows.
-    One aimed at a friendly NPC moves its cycle on to the next buff instead.
-]]
+-- A cast at a pet is taken at its word, whether or not its aura ever shows.
 function ns.OnBuffCastSucceeded(unit, spellID)
 	local attempt = lastAttempt
 	if not attempt or not attempt.isPet or not ns.IsPlain(unit) or unit ~= "player" or not ns.IsPlain(spellID) then
@@ -114,9 +93,9 @@ function ns.OnBuffCastSucceeded(unit, spellID)
 end
 
 --[[
-    The client's own words for a target the spell can never land on, so they
-    match in every locale. Only these mark a pet as refused: range, line of
-    sight, mana and cooldowns pass and are worth another click.
+    The client's own strings, so they match in every locale. Only these mark a
+    pet as refused: range, line of sight, mana and cooldowns are worth another
+    click.
 ]]
 local PET_REFUSALS = {}
 for _, message in ipairs({
@@ -131,25 +110,15 @@ for _, message in ipairs({
 	end
 end
 
--- Diagnostics' event-log filter asks whether an error type is the one this file acts on.
 function ns.IsBuffBounceError(errorType)
 	return bounceErrorType ~= nil and errorType == bounceErrorType
 end
 
---[[
-    The refusal names no target, so it is pinned on the cast the window or
-    the Buff Key just made. A favor's macro leaves them targeted, so a unit
-    is found for them by GUID. The text is the client's own
-    SPELL_FAILED_AURA_BOUNCED, so it matches in every locale.
-]]
+-- The refusal names no target, so it is pinned on the last cast; a favor's unit is found by GUID.
 local function OnUIErrorMessage(errorType, message)
 	if not lastAttempt or not ns.IsPlain(message) then
 		return
 	end
-	--[[
-	    A pet the game won't take the buff on at all: it isn't offered that
-	    buff again while it stays around (BuffDuty.NotePetRefused).
-	]]
 	if lastAttempt.isPet and PET_REFUSALS[message] then
 		local attempt = lastAttempt
 		lastAttempt = nil
@@ -175,10 +144,8 @@ local function OnUIErrorMessage(errorType, message)
 		return
 	end
 	--[[
-	    While Forever keeps auras secret the window is hidden, so there is no
-	    list to note the bounce on. A unit's GUID can come back secret on its
-	    own, one unit at a time, and comparing a secret value errors, so each
-	    GUID read is checked before it is compared.
+	    A GUID can come back secret on its own, one unit at a time, and
+	    comparing a secret value errors, so each is checked before comparing.
 	]]
 	if ns.AreAurasSecret() then
 		return

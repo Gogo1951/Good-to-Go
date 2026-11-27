@@ -2,22 +2,10 @@ local _, ns = ...
 local L = ns.L
 
 --[[
-    The two lists above the parties are players outside your group: strangers
-    who just buffed you (Return the Favor) and your target -- who may also be a
-    friendly NPC, for quests that ask you to buff one. Each player is
-    listed once, and Target claims them first, so the list you asked for by
-    targeting is never the one that loses them.
-
-    An outsider has no lasting unit token. Target does -- "target" stays theirs
-    for as long as they are targeted -- so its buttons cast at it. A favor is
-    only reachable now and then (as your mouseover or focus), so its buttons
-    find the player by name instead. The favors themselves are kept by
-    Buff-Duty-Favors.lua. Under a targeted player, a row of the buffs of
-    theirs you could ask them for (Buff-Duty-Asks.lua).
-
-    There is no Players in Range list on purpose: the game reveals players
-    around you to add-ons only through friendly nameplates, which are off for
-    most players, so a list built on them would almost always be empty.
+    Target claims a player before Return the Favor. A favor has no lasting
+    unit token, so its buttons find the player by name. No Players in Range
+    list on purpose: add-ons see nearby players only through friendly
+    nameplates, which most players keep off.
 ]]
 
 local BuffDuty = ns.BuffDuty
@@ -40,7 +28,6 @@ local Yes = ns.IsPlainYes
 -- Outsiders
 --------------------------------------------------------------------------------
 
--- A player outside your group that you could buff right now.
 local function IsOutsider(unit)
 	return CanBuff(unit)
 		and not Yes(UnitIsUnit(unit, "player"))
@@ -49,11 +36,6 @@ local function IsOutsider(unit)
 		and Yes(UnitCanAssist("player", unit))
 end
 
---[[
-    A friendly dead player outside your group. Whether they can take a
-    resurrection right now (lying there, connected, none already waiting) is
-    BuffDuty.ResurrectionIcon's call.
-]]
 local function IsDeadOutsider(unit)
 	return UnitExists(unit)
 		and UnitIsPlayer(unit)
@@ -65,10 +47,9 @@ local function IsDeadOutsider(unit)
 end
 
 --[[
-    The missing-buff icons for one outsider. `unit` reaches them right now, or
-    is nil for a favor out of sight, whose auras can't be read -- then `given`
-    alone says what they already have. `castUnit` is the token the buttons cast
-    at; without one they target `fullName` by macro.
+    `unit` is nil for a favor out of sight, whose auras can't be read: `given`
+    alone says what they have. Without `castUnit` the buttons target `fullName`
+    by macro.
 ]]
 local function OutsiderIcons(unit, class, short, fullName, castUnit, given, favorGUID)
 	if unit then
@@ -97,11 +78,7 @@ local function OutsiderIcons(unit, class, short, fullName, castUnit, given, favo
 	return icons
 end
 
---[[
-    A pet outside your group: targeting it lists it with its owner's name. Your own
-    pet and your group's pets are already under their owners in the party list,
-    so they never land here; your own counts even when you are solo.
-]]
+-- Your own pet counts as in your group even when you are solo.
 local function IsOutsiderPet(unit)
 	return CanBuffPet(unit)
 		and UnitPlayerControlled(unit)
@@ -112,14 +89,9 @@ local function IsOutsiderPet(unit)
 end
 
 --[[
-    The client's own wording for the line naming a pet's owner ("%s's Pet",
-    "%s's Minion", ...), turned into patterns that capture the name. Built on
-    first use from the client's globals, so it reads every locale's tooltips.
-    A format the client lacks is skipped.
-
-    Each with the owner's class the wording gives away, where it gives one: the
-    client says "%s's Pet" of a hunter's beast and "%s's Minion" of a warlock's
-    demon. Only a fallback for that class: PetOwnerClass reads the pet first.
+    The client's own owner-line formats, so every locale's tooltips match.
+    "%s's Pet" names a hunter's beast and "%s's Minion" a warlock's demon,
+    only a fallback: PetOwnerClass reads the pet first.
 ]]
 local OWNER_FORMATS = {
 	{ "UNITNAME_TITLE_PET", "HUNTER" },
@@ -137,10 +109,7 @@ local function OwnerPatterns()
 		for _, ownerFormat in ipairs(OWNER_FORMATS) do
 			local format = _G[ownerFormat[1]]
 			if type(format) == "string" then
-				--[[
-				    Placeholder out first ("%s" or a positional "%1$s"), so escaping
-				    the pattern characters can't mangle it.
-				]]
+				-- Placeholder out first ("%s" or "%1$s"), so escaping the pattern characters can't mangle it.
 				local text = format:gsub("%%%d?%$?s", "\001")
 				text = text:gsub("[%%%(%)%.%+%-%*%?%[%]%^%$]", "%%%0")
 				ownerPatterns[#ownerPatterns + 1] = { "^" .. text:gsub("\001", "(.+)") .. "$", ownerFormat[2] }
@@ -150,10 +119,6 @@ local function OwnerPatterns()
 	return ownerPatterns
 end
 
---[[
-    The pet's owner as the tooltip names them, and the class that wording gives
-    away (or nil); nil, nil when no line matches.
-]]
 local function PetOwnerName(unit)
 	-- Whose pet a pet is reaches add-ons only as tooltip text.
 	for _, line in ipairs(ns.ReadTooltipLines("GetUnit", "SetUnit", unit)) do
@@ -178,10 +143,7 @@ local function TargetSection(listed)
 		return nil
 	end
 
-	--[[
-	    A dead target is one row with the resurrection alone: no buff takes on
-	    a corpse. Listed, so a dead favor isn't offered buffs below it.
-	]]
+	-- A corpse takes the resurrection alone, and is claimed so a dead favor isn't offered buffs below it.
 	if IsDeadOutsider("target") then
 		local guid = UnitGUID("target")
 		local short = GetUnitName("target", false) or ""
@@ -196,7 +158,6 @@ local function TargetSection(listed)
 	end
 
 	local isPet = IsOutsiderPet("target")
-	-- A friendly NPC is listed only while Include NPCs (targetNPCs, under Your Target) is on.
 	local isNPC = not isPet and ns.db.global.buffWindow.targetNPCs and BuffDuty.CanBuffNPC("target")
 	if not isPet and not isNPC and not IsOutsider("target") then
 		return nil
@@ -207,7 +168,6 @@ local function TargetSection(listed)
 	end
 	listed[guid] = true
 
-	-- A friendly NPC (a quest's wounded soldier) is one row of its own, named plainly.
 	if isNPC then
 		local npcRow = BuffDuty.NPCRow("target", "target")
 		if not npcRow then
@@ -216,13 +176,7 @@ local function TargetSection(listed)
 		return { kind = "target", label = L["BUFF_DUTY_TARGET_ENABLE"], icons = {}, rows = { npcRow } }
 	end
 
-	--[[
-        A targeted pet is one row, named for its owner -- "Valko (Kiib)" -- with
-        the owner's class color and no buttons for the owner: offering to buff a
-        player who isn't targeted, and may not be in sight, read as clutter. A
-        targeted player has their pet ("targetpet") indented under them, the
-        way the party list pairs them.
-    ]]
+	-- No buttons for the pet's owner: offering to buff a player who isn't targeted read as clutter.
 	if isPet then
 		local owner, guessed = PetOwnerName("target")
 		local petRow = PetRow("target", "target", PetOwnerClass("target", guessed), owner and Ambiguate(owner, "short"))
@@ -240,7 +194,6 @@ local function TargetSection(listed)
 	local favor = BuffDuty.FavorOf(guid)
 	local icons = OutsiderIcons("target", class, short, nil, "target", favor and favor.given)
 	local petRow = PetRow("targetpet", "targetpet", class)
-	-- The buffs of theirs you could ask them for (Buff-Duty-Asks.lua), on a row of their own.
 	local askRow = BuffDuty.TargetAskRow(class, short)
 
 	-- The player is listed while they or their pet need something; the ask row needs no row above it.
@@ -300,10 +253,7 @@ function BuffDuty.AddOutsiderSections(sections)
 	-- Claimed in priority order, shown in reading order.
 	local target = TargetSection(listed)
 	local favor = FavorSection(listed)
-	--[[
-	    Not a loop over { target, favor }: ipairs stops at the first nil, so an
-	    empty Target would drop Return the Favor after it.
-	]]
+	-- Not a loop over { target, favor }: ipairs stops at the first nil, dropping Return the Favor after an empty Target.
 	sections[#sections + 1] = target
 	sections[#sections + 1] = favor
 end

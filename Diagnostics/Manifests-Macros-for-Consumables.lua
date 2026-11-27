@@ -8,13 +8,8 @@ local CountKeys = ns.CountDiagnosticKeys
 --------------------------------------------------------------------------------
 
 --[[
-    Existence and shape checks only: read-only, no side effects, no protected
-    calls. One row per WoW API the add-on depends on, scanned from across
-    Features/ and Options/. Every API the code guards for existence (e.g.
-    C_Bank.FetchPurchasedBankTabIDs) or reaches through a modern->legacy fallback gets a
-    row of its own — modern and legacy listed separately — so the manifest stays
-    one-to-one with the code's guards and the report shows exactly what each
-    client provides.
+    Read-only existence checks, no protected calls. Every guarded API and each
+    side of a modern/legacy fallback gets its own row, one-to-one with the code.
 ]]
 ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 	-- { label, testFunction }
@@ -56,7 +51,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(GetCursorPosition) == "function"
 		end,
 	},
-	-- The options' item lists and the Staples window ask whether an item is cached before naming it (Options/Options-Kit.lua, Features/Item-Info.lua).
+	-- Options item lists and the Staples window ask this before naming an item.
 	{
 		"C_Item.IsItemDataCachedByID",
 		function()
@@ -70,12 +65,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(C_Seasons) == "table" and type(C_Seasons.GetActiveSeason) == "function"
 		end,
 	},
-	--[[
-	    C_Container is the container surface on all three target clients, so both
-	    readers are probed there and nowhere else. Neither carries a legacy
-	    fallback nor may be given one, so there is no legacy row to pair with
-	    either.
-	]]
+	-- C_Container on every client, with no legacy fallback to pair.
 	{
 		"C_Container.GetContainerNumSlots",
 		function()
@@ -88,10 +78,14 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(C_Container) == "table" and type(C_Container.GetContainerItemInfo) == "function"
 		end,
 	},
-	--[[
-	    Every spell name the macros cast and the panels show, on every client:
-	    without it no /cast line can be written.
-	]]
+	-- The Fishing Lure macro finds gloves carrying a Fishing enchant by each bag slot's link (Macros/Fishing-Lure.lua).
+	{
+		"C_Container.GetContainerItemLink",
+		function()
+			return type(C_Container) == "table" and type(C_Container.GetContainerItemLink) == "function"
+		end,
+	},
+	-- Without it no /cast line can be written.
 	{
 		"C_Spell.GetSpellName",
 		function()
@@ -111,24 +105,14 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(C_Map) == "table" and type(C_Map.GetBestMapForUnit) == "function"
 		end,
 	},
-	--[[
-	    The route ns.OpenOptionsPanel docks the panel with
-	    (Options/Options-Kit.lua). A client that does not provide it falls through
-	    to AceConfigDialog, which opens a standalone floating window instead of
-	    docking -- so a report where this row FAILs is the one that explains a
-	    panel the player says opened in the wrong place.
-	]]
+	-- A FAIL means the options open as a floating AceConfigDialog window instead of docking.
 	{
 		"Settings.OpenToCategory",
 		function()
 			return type(Settings) == "table" and type(Settings.OpenToCategory) == "function"
 		end,
 	},
-	--[[
-	    A frame method, read off UIParent because every frame shares one
-	    metatable. The Restocker window calls SetResizeBounds unconditionally as
-	    it is built, so a FAIL here means that window errors when it opens.
-	]]
+	-- Read off UIParent (frames share one metatable); the Restocker window calls it unguarded.
 	{
 		"Frame:SetResizeBounds",
 		function()
@@ -141,12 +125,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(IsInInstance) == "function"
 		end,
 	},
-	--[[
-	    All three load-bearing for the Restocker's entering-town reminder:
-	    IsResting is the signal it keys off, UnitOnTaxi is what keeps a flight
-	    path over a town from counting as arriving in one, and PlaySoundFile
-	    plays the optional alert.
-	]]
+	-- The entering-town reminder: IsResting triggers it, UnitOnTaxi skips flight paths, PlaySoundFile alerts.
 	{
 		"IsResting",
 		function()
@@ -196,12 +175,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(C_Item) == "table" and type(C_Item.GetItemInfoInstant) == "function"
 		end,
 	},
-	--[[
-	    Called by Kit.WarmItems (Options/Options-Kit.lua) and ns.WarmItemCache
-	    (Features/Item-Info.lua): without it an options item list or the
-	    Staples window can only show ids the client already cached, so the
-	    rows sit on their loading text until something else pulls the data.
-	]]
+	-- Without it, item rows in options and the Staples window stay on their loading text.
 	{
 		"C_Item.RequestLoadItemDataByID",
 		function()
@@ -289,11 +263,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(MacroFrame_LoadUI) == "function"
 		end,
 	},
-	--[[
-	    The shims in Utilities that Forever needs: each client should PASS
-	    exactly one side of every pair -- the namespaced reader on Forever, the
-	    legacy global on Era and TBC.
-	]]
+	-- Each client should PASS exactly one side of each pair: namespaced on Forever, global on Era and TBC.
 	{
 		"C_PetInfo.GetPetFoodTypes",
 		function()
@@ -337,7 +307,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(GetSkillLineInfo) == "function"
 		end,
 	},
-	-- A collapsed profession header is opened to read its rank, then closed again (ns.ExpandSkillHeader); with neither route, a collapsed header's ranks go unread.
+	-- With neither route, a collapsed profession header's ranks go unread (ns.ExpandSkillHeader).
 	{
 		"C_SkillInfo.ExpandSkillHeader and CollapseSkillHeader, or the globals",
 		function()
@@ -390,11 +360,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(GetMerchantItemInfo) == "function"
 		end,
 	},
-	--[[
-	    The level cap behind the Leveling and Max Level modes (ns.GetMaxPlayerLevel
-	    in Utilities), the smaller of these two, which all three clients ship.
-	    Consumable Macros Context prints what each one answers.
-	]]
+	-- ns.GetMaxPlayerLevel takes the smaller of these two.
 	{
 		"GetMaxPlayerLevel",
 		function()
@@ -458,12 +424,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(issecretvalue) == "function"
 		end,
 	},
-	--[[
-	    Behind ns.GetPlayerFullName, which a character is saved and shown under.
-	    RegionalUniqueNamesEnabled is Forever's alone: where it FAILs (Era and
-	    TBC) a character has the one name and UnitNameUnmodified is never asked.
-	    A FAIL on Forever means characters are keyed by first name only again.
-	]]
+	-- ns.GetPlayerFullName: FAILs on Era and TBC as expected; a FAIL on Forever keys characters by first name only.
 	{
 		"RegionalUniqueNamesEnabled",
 		function()
@@ -477,14 +438,9 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 		end,
 	},
 	--[[
-	    The Readiness Report's surface. Every one of these is reached only when
-	    its own switch is on, and nothing isolates a probe, so a missing one
-	    stops the whole report -- and does it silently, since a client with
-	    scriptErrors off swallows the error. A FAIL here is the fastest
-	    explanation for "I turned that on and the report went quiet". The
-	    exceptions are GetNumTalentTabs and UnitCharacterPoints, which the
-	    probes reach through ns accessors that answer nil where the client lacks
-	    them: they FAIL on Forever as expected, and their lines never show there.
+	    The Readiness Report: nothing isolates a probe, so one missing silently
+	    stops the whole report. GetNumTalentTabs and UnitCharacterPoints go
+	    through nil-safe accessors and FAIL on Forever as expected.
 	]]
 	{
 		"GetWeaponEnchantInfo",
@@ -561,13 +517,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(C_Spell) == "table" and type(C_Spell.IsSpellDataCached) == "function"
 		end,
 	},
-	--[[
-	    Validate Data's tooltip text (ns.GetTooltipLines in Utilities): Forever
-	    reads the C_TooltipInfo pair, and Era and TBC a hidden scan tooltip,
-	    probed through the GameTooltip methods it inherits so the check creates
-	    nothing. Forever passes both, since its tooltips are built from that
-	    same data.
-	]]
+	-- ns.GetTooltipLines: C_TooltipInfo on Forever, a scan tooltip on Era and TBC (probed via GameTooltip; Forever passes both).
 	{
 		"C_TooltipInfo.GetItemByID",
 		function()
@@ -733,11 +683,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(C_Spell) == "table" and type(C_Spell.GetSpellSubtext) == "function"
 		end,
 	},
-	--[[
-	    The Forsaken Cannibalize line (Tools-Forsaken.lua): the target's creature
-	    type, and the two C_Secrets questions asked before the type and the
-	    cooldown are read. Where these FAIL, the line never shows.
-	]]
+	-- The Forsaken Cannibalize line never shows where these FAIL.
 	{
 		"UnitCreatureType",
 		function()
@@ -763,12 +709,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 			return type(C_CreatureInfo) == "table" and type(C_CreatureInfo.GetRaceInfo) == "function"
 		end,
 	},
-	--[[
-	    The Inventory Report's way into item tooltips (Inventory-Report-Tooltip.lua):
-	    Forever hands every item tooltip to a TooltipDataProcessor post-call,
-	    and Era and TBC fire OnTooltipSetItem instead. Each client should PASS
-	    one side; where both FAIL the tooltip block never shows.
-	]]
+	-- Inventory Report item tooltips: each client should PASS one side; both FAIL means no tooltip block.
 	{
 		"TooltipDataProcessor.AddTooltipPostCall",
 		function()
@@ -783,11 +724,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_API_CHECKS, {
 				and GameTooltip:HasScript("OnTooltipSetItem") == true
 		end,
 	},
-	--[[
-	    The same two ways into spell tooltips (ns.AddSpellTooltipPostCall in
-	    Features/Utilities.lua): the post-call above where the client has it,
-	    else OnTooltipSetSpell. Where both FAIL, no spell tooltip line shows.
-	]]
+	-- Spell tooltips the same way (ns.AddSpellTooltipPostCall); both FAIL means no spell tooltip line.
 	{
 		"GameTooltip OnTooltipSetSpell (legacy)",
 		function()
@@ -829,11 +766,7 @@ ns.DiagnosticsStrings.EVENT_LOG_EXAMPLES = "The best tool for 'my macro didn't u
 	.. " "
 	.. "Best for 'the page never fills in', 'a macro doesn't update' or 'the glow is wrong' reports."
 
---[[
-    The spells the add-on gates on, for Consumable Macros Context's spell knowledge
-    lines. A spell this client's data folder doesn't carry has a nil id and
-    gets no line.
-]]
+-- A spell this data folder doesn't carry has a nil id and gets no line.
 ns.AppendDiagnosticRows(ns.DIAGNOSTIC_SPELLS, {
 	-- { spellID, label }
 	{ ns.MISSING_SPELL_MESSAGE_IDS.noConjureFood, "Conjure Food (Rank 1)" },
@@ -859,17 +792,7 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_SPELLS, {
 	{ ns.GOBLIN_ENGINEER_SPELL_ID, "Goblin Engineer" },
 })
 
---[[
-    Existence/value reads only (same read-only contract as the API checks). The
-    probe for "my macro does nothing" reports: every reason a macro can sit
-    still, each with its current value -- a switch off, combat or the Macro
-    window holding writes back, a full macro book, a body at the length cap, a
-    class, race, level, group or target gate, a scroll buff already covered, a
-    spell not known, a pet diet the add-on can't read, an item not loaded --
-    then what the last scan picked, what the mini-map button's icon, rows and
-    clicks would show and do, and the spells the add-on gates on. Restocker Context covers the Restocker and the Inventory Report,
-    Readiness Report the ready check, and Display Context where the mini-map button sits.
-]]
+-- Read-only, like the API checks: every reason a macro can sit still, with its current value.
 
 local function OnOff(value)
 	return value and "on" or "off"
@@ -985,12 +908,7 @@ local function AppendCharacter(lines)
 		FriendlyTargetText()
 	)
 
-	--[[
-	    The profession ranks the scanner's usability gates read (0 = unlearned).
-	    Where they are read from the skill list by name, the read opens a
-	    collapsed header and closes it again, unless the client can't, and
-	    puts that off while the Skills tab is open.
-	]]
+	-- 0 = unlearned.
 	local byID = C_SkillInfo and C_SkillInfo.GetSkillLineInfoByID
 	local readBy = "by ID"
 	if not byID then
@@ -1010,18 +928,16 @@ local function AppendCharacter(lines)
 		)
 	end
 	lines[#lines + 1] = string.format(
-		"Skills: First Aid %s // Alchemy %s // Engineering %s // read %s",
+		"Skills: First Aid %s // Alchemy %s // Engineering %s // Fishing %s // read %s",
 		tostring(ns.currentFirstAidSkill),
 		tostring(ns.currentAlchemySkill),
 		tostring(ns.currentEngineeringSkill),
+		tostring(ns.currentFishingSkill),
 		readBy
 	)
 end
 
---[[
-    Every macro the add-on keeps, as it stands in the General tab. Feed Pet and
-    Poisons build only for their class, so their switch alone never makes them.
-]]
+-- Feed Pet and Poisons build only for their class, so their switch alone never makes them.
 local CLASS_ONLY_MACROS = {
 	["Feed Pet"] = " (Hunters only)",
 	["Poisons"] = " (Rogues only)",
@@ -1041,11 +957,7 @@ local function AppendMacroWriting(lines)
 	-- The writes held for the macro window resume when it closes, a hook set once its add-on loads (Engine.lua).
 	lines[#lines + 1] =
 		string.format("Macro window add-on loaded: %s", YesNo(C_AddOns.IsAddOnLoaded("Blizzard_MacroUI")))
-	--[[
-	    An old add-on this one replaces, still running, rewrites the same macros
-	    (ns.REPLACED_ADDONS). It is turned off at login, but runs on until the
-	    player reloads.
-	]]
+	-- A replaced add-on is turned off at login but keeps rewriting the same macros until a reload.
 	local replacedRunning = {}
 	for _, folder in ipairs(ns.REPLACED_ADDONS) do
 		if C_AddOns.IsAddOnLoaded(folder) then
@@ -1056,11 +968,7 @@ local function AppendMacroWriting(lines)
 		"Replaced add-ons still running: %s",
 		#replacedRunning > 0 and table.concat(replacedRunning, ", ") or "(none)"
 	)
-	--[[
-	    The globals a macro's /run lines call when it is pressed (Runtime.lua):
-	    one missing, or taken over by another add-on, makes that line error
-	    silently while scriptErrors is off.
-	]]
+	-- One missing or taken over by another add-on makes that /run line error silently.
 	local callbacks = {}
 	for _, name in ipairs({ "GtGFire", "GtGTip", "GtGTipIf", "GtGNoItem", "GtGReplace" }) do
 		callbacks[#callbacks + 1] = string.format("%s %s", name, YesNo(type(_G[name]) == "function"))
@@ -1094,11 +1002,7 @@ local function AppendMacroWriting(lines)
 		#imports > 0 and table.concat(imports, "; ") or "(none)",
 		YesNo(ns.IsLegacyImportPending and ns.IsLegacyImportPending())
 	)
-	--[[
-	    Macro names on action buttons are hidden by fading each button's name
-	    text (Action-Button-Text.lua); a bar add-on that removes those texts
-	    leaves nothing to fade.
-	]]
+	-- A bar add-on that removes the buttons' name texts leaves nothing to fade.
 	local nameTexts = 0
 	for _, prefix in ipairs({
 		"ActionButton",
@@ -1135,11 +1039,8 @@ local function AppendMacroWriting(lines)
 	)
 
 	--[[
-	    A body at the length cap has shed its optional lines (Body-Builder.lua's
-	    trim), and the items a body uses show whether it still matches the
-	    last scan's picks below. The writes go to whichever macro of that name
-	    is found first, which is in the character tab when its index is past
-	    the General cap.
+	    A body at the length cap has shed optional lines. Writes go to the first
+	    macro of that name, in the character tab when its index is past the General cap.
 	]]
 	local typeNames = {}
 	for typeName in pairs(ns.MACRO_CONFIG) do
@@ -1178,12 +1079,7 @@ local function AppendMacroWriting(lines)
 	end
 end
 
---[[
-    Whether this TOC's scroll file loaded: the scan-order types it has rows for,
-    the ones it lacks, and any gap Scanner-Auras.lua filled with an empty list
-    at load. Printed whatever the settings, so a flavor shipping no scroll
-    data shows it before anyone turns scrolls on.
-]]
+-- Printed whatever the settings, so a flavor shipping no scroll data shows before anyone turns scrolls on.
 local function AppendScrollData(lines)
 	local loaded, absent = {}, {}
 	local scrollData = type(ns.SCROLL_DATA) == "table" and ns.SCROLL_DATA or {}
@@ -1205,11 +1101,8 @@ local function AppendScrollData(lines)
 end
 
 --[[
-    Each ticked scroll type: the best scroll the last scan's bags hold for it,
-    by Scanner-Scrolls.lua's rules (class, Ignore List; never level), and the
-    snapshot readings that say whether its buff is already covered -- the
-    scroll's own buff, or a conflicting buff at least as large. While aura
-    data is restricted the snapshot holds its last reading.
+    A buff counts as covered by the scroll's own or a conflicting one at least as
+    large. While aura data is restricted the snapshot holds its last reading.
 ]]
 local function AppendScrollTypes(lines, profile)
 	local snapshot = ns.GetPlayerBuffSnapshot()
@@ -1288,11 +1181,7 @@ local function AppendChoices(lines)
 		missingScrolls and table.concat(missingScrolls, ", ") or "(none)"
 	)
 	AppendScrollTypes(lines, profile)
-	--[[
-	    Tracked means every gate passes: the switch, its mode, the level the
-	    food needs (the lowest of this client's pet buff foods, Scanner-Auras.lua),
-	    and a live pet of any class. A client with no pet buff foods never tracks.
-	]]
+	-- Tracked needs the switch, its mode, the lowest pet buff food's level and a live pet of any class.
 	local petBuffFoods, petBuffMinLevel = 0, nil
 	for _, row in pairs(ns.PET_BUFF_FOODS or {}) do
 		petBuffFoods = petBuffFoods + 1
@@ -1345,11 +1234,7 @@ local function AppendChoices(lines)
 		CountKeys(ns.scannedItemCounts)
 	)
 
-	--[[
-	    A consumable in the last scan's bags with no cached record waits on
-	    the server's item info: it competes in no macro until that arrives
-	    (Scanner-Inventory.lua, Item-Cache.lua).
-	]]
+	-- An uncached consumable competes in no macro until the server's item info arrives.
 	local waiting = {}
 	for itemID in pairs(ns.scannedItemCounts or {}) do
 		local isScroll = ns.SCROLL_ITEM_LOOKUP and ns.SCROLL_ITEM_LOOKUP[itemID]
@@ -1365,11 +1250,7 @@ local function AppendChoices(lines)
 	)
 end
 
---[[
-    A racial's cooldown as ns.RacialSpellReady reads it, read directly here,
-    since that function also times a rebuild: on cooldown, the macro leaves
-    the cast out.
-]]
+-- Read directly, since ns.RacialSpellReady also schedules a rebuild.
 local function RacialCooldownText(spellID)
 	if not spellID then
 		return "(no spell on this client)"
@@ -1396,11 +1277,7 @@ local function SlashCommandExists(command)
 	return false
 end
 
---[[
-    Pet diets arrive as names in the client's language, and Feed Pet reads them
-    through ns.PET_DIET_MAP, whose non-English rows come from the DIET_* locale
-    strings. An UNMAPPED diet is food Feed Pet never offers.
-]]
+-- Diets arrive in the client's language; an UNMAPPED one (no DIET_* match) is food Feed Pet never offers.
 local function PetDietText()
 	if not UnitExists("pet") then
 		return "(no pet out)"
@@ -1416,11 +1293,7 @@ local function PetDietText()
 	return #parts > 0 and table.concat(parts, ", ") or "(none)"
 end
 
---[[
-    Each pet food in the last scan's bags and the rule it meets in Feed Pet's
-    pick (Tools-Hunters-Pet-Food.lua): the Ignore List, the pet's diet, more
-    than 10 levels under the pet, or an objective of a quest in the log.
-]]
+-- Mirrors Feed Pet's pick rules (Tools-Hunters-Pet-Food.lua).
 local function AppendPetFoods(lines)
 	if not (ns.isHunter and UnitExists("pet")) then
 		return
@@ -1586,19 +1459,162 @@ local function AppendClassAndRace(lines)
 	)
 end
 
+-- Re-reads Fishing-Lure.lua's locals: best row is largest bonus, then the higher ID.
+local FISHING_MAIN_HAND_SLOT = 16
+local FISHING_HANDS_SLOT = 10
+local FISHING_GEAR_ROWS = {
+	{ setting = "fishingEquipPants", gearKey = "legs", slot = 7 },
+	{ setting = "fishingEquipHat", gearKey = "head", slot = 1 },
+	{ setting = "fishingEquipBoots", gearKey = "feet", slot = 8 },
+}
+
+local function IsFishingPole(itemID)
+	if not itemID then
+		return false
+	end
+	local _, _, _, _, _, classID, subclassID = C_Item.GetItemInfoInstant(itemID)
+	return classID == 2 and subclassID == 20
+end
+
+-- The best carried row of a fishing table, and every carried row the skill or level keeps out.
+local function BestFishingRow(source, skillColumn, levelColumn)
+	local skill, level = ns.currentFishingSkill or 0, ns.cachedPlayerLevel or UnitLevel("player")
+	local best, bestBonus, blocked = nil, nil, {}
+	for itemID, row in pairs(source or {}) do
+		if C_Item.GetItemCount(itemID) > 0 and not ns.IsIgnored(itemID) then
+			local needSkill = skillColumn and row[skillColumn] or 0
+			local needLevel = levelColumn and row[levelColumn] or 0
+			if needSkill > skill or needLevel > level then
+				blocked[#blocked + 1] = string.format("%d (skill %d, level %d)", itemID, needSkill, needLevel)
+			elseif not best or row[1] > bestBonus or (row[1] == bestBonus and itemID > best) then
+				best, bestBonus = itemID, row[1]
+			end
+		end
+	end
+	table.sort(blocked)
+	return best, bestBonus, #blocked > 0 and table.concat(blocked, ", ") or "(none)"
+end
+
+local function FishingEnchanted(itemLink)
+	local enchantID = tonumber(itemLink and itemLink:match("item:%-?%d+:(%-?%d*)"))
+	return enchantID ~= nil and ns.FISHING_GLOVE_ENCHANT_IDS[enchantID] == true
+end
+
+-- The bag and slot of gloves in the bags carrying a Fishing enchant, as the macro finds them.
+local function FishingGlovesInBags()
+	for _, bag in ipairs(ns.CARRIED_BAG_IDS) do
+		for slot = 1, C_Container.GetContainerNumSlots(bag) do
+			local itemLink = C_Container.GetContainerItemLink(bag, slot)
+			if itemLink and FishingEnchanted(itemLink) then
+				local _, _, _, equipLoc = C_Item.GetItemInfoInstant(itemLink)
+				if equipLoc == "INVTYPE_HAND" then
+					return bag, slot
+				end
+			end
+		end
+	end
+	return nil
+end
+
+local function AppendFishingLure(lines)
+	local profile = ns.db and ns.db.profile
+	if not profile or not ns.FISHING_POLES then
+		return
+	end
+	lines[#lines + 1] = "-- Fishing Lure --"
+	lines[#lines + 1] = string.format(
+		"Put on: pole %s, waders %s, hat %s, boots %s, gloves %s // eat fishing food %s // apply a lure %s",
+		OnOff(profile.fishingEquipPole),
+		OnOff(profile.fishingEquipPants),
+		OnOff(profile.fishingEquipHat),
+		OnOff(profile.fishingEquipBoots),
+		OnOff(profile.fishingEquipGloves),
+		OnOff(profile.fishingUseFood),
+		OnOff(profile.fishingUseLure)
+	)
+	local gearPieces = 0
+	for _, pieces in pairs(ns.FISHING_GEAR) do
+		gearPieces = gearPieces + CountKeys(pieces)
+	end
+	lines[#lines + 1] = string.format(
+		"Data rows: %d poles, %d lures, %d gear pieces, %d fishing foods (none outside WoW Forever skips the food step)",
+		CountKeys(ns.FISHING_POLES),
+		CountKeys(ns.FISHING_LURES),
+		gearPieces,
+		CountKeys(ns.FISHING_FOODS)
+	)
+
+	local wornPole = GetInventoryItemID("player", FISHING_MAIN_HAND_SLOT)
+	local isPole = IsFishingPole(wornPole)
+	local lure = ns.GetWeaponEnchants().main[1]
+	lines[#lines + 1] = string.format(
+		"Main hand: %s, a fishing pole %s, its bonus %s // lure on it: %s",
+		ItemText(wornPole),
+		YesNo(isPole),
+		tostring(isPole and ns.FISHING_POLES[wornPole] and ns.FISHING_POLES[wornPole][1] or nil),
+		lure and string.format("yes, %.0f s left", (lure.timeLeft or 0) / 1000) or "no"
+	)
+
+	local pole, poleBonus, poleBlocked = BestFishingRow(ns.FISHING_POLES, 2, 3)
+	lines[#lines + 1] = string.format(
+		"Best pole carried: %s, bonus %s // over your skill or level: %s",
+		ItemText(pole),
+		tostring(poleBonus),
+		poleBlocked
+	)
+	for _, row in ipairs(FISHING_GEAR_ROWS) do
+		local pieces = ns.FISHING_GEAR[row.gearKey]
+		if pieces then
+			local worn = GetInventoryItemID("player", row.slot)
+			local wornPiece = worn and pieces[worn]
+			local best, bestBonus, blocked = BestFishingRow(pieces, 2, 3)
+			lines[#lines + 1] = string.format(
+				"  %s: worn %s, its bonus %s // best carried %s, bonus %s // over your skill or level: %s",
+				row.gearKey,
+				ItemText(worn),
+				tostring(wornPiece and wornPiece[1] or nil),
+				ItemText(best),
+				tostring(bestBonus),
+				blocked
+			)
+		else
+			lines[#lines + 1] = string.format("  %s: (no row on this client)", row.gearKey)
+		end
+	end
+	local glovesBag, glovesSlot = FishingGlovesInBags()
+	lines[#lines + 1] = string.format(
+		"Gloves: worn pair has a Fishing enchant %s // enchanted pair in bags: %s",
+		YesNo(FishingEnchanted(GetInventoryItemLink("player", FISHING_HANDS_SLOT))),
+		glovesBag and string.format("bag %d slot %d", glovesBag, glovesSlot) or "(none)"
+	)
+
+	local food, foodBonus, foodBlocked = BestFishingRow(ns.FISHING_FOODS, nil, 2)
+	lines[#lines + 1] = string.format(
+		"Best fishing food carried: %s, bonus %s // over your level: %s // fishing Well Fed on: %s // watched: %s",
+		ItemText(food),
+		tostring(foodBonus),
+		foodBlocked,
+		YesNo(ns.HasFishingWellFed(ns.GetPlayerBuffSnapshot())),
+		YesNo(ns.watchFishingFed)
+	)
+	local bestLure, lureBonus, lureBlocked = BestFishingRow(ns.FISHING_LURES, 2, nil)
+	lines[#lines + 1] = string.format(
+		"Best lure carried: %s, bonus %s // over your skill: %s",
+		ItemText(bestLure),
+		tostring(lureBonus),
+		lureBlocked
+	)
+	local config = ns.MACRO_CONFIG["Fishing Lure"]
+	local body = config and (GetMacroIndexByName(config.macro) or 0) > 0 and GetMacroBody(config.macro)
+	lines[#lines + 1] = string.format("Body as written: %s", body and (body:gsub("\n", " \\n ")) or "(not written)")
+end
+
 local function AppendSelection(lines)
 	lines[#lines + 1] = "-- Best-item selection --"
 	lines[#lines + 1] = string.format("bestFoodID: %s", tostring(ns.bestFoodID))
 	lines[#lines + 1] = string.format("bestPetFoodID: %s", tostring(ns.bestPetFoodID))
 
-	--[[
-	    Per-category winners from the last ScanBags pass (ns.bestSelection is
-	    the scanner's live best table). The read-out for "category X didn't
-	    update" reports: it shows exactly what the scanner picked plus the
-	    tiebreak inputs (value/price/count) the comparison ladder ordered on,
-	    and the ranked topIDs for multi-use types, none of which bestFoodID
-	    alone can reveal.
-	]]
+	-- The last scan's winners with their tiebreak inputs and multi-use topIDs, which bestFoodID alone can't show.
 	local selection = ns.bestSelection
 	if next(selection or {}) == nil then
 		lines[#lines + 1] = "No scan has completed yet."
@@ -1625,14 +1641,7 @@ local function AppendSelection(lines)
 	end
 end
 
---[[
-    What the mini-map button shows and its consumable clicks do
-    (Minimap-Button.lua, Minimap-Menu.lua, Macro-Notes.lua). The icon is
-    redrawn at the end of each macro update and settings refresh, from the
-    Food pick or the default food. Current Food needs the pick's link as
-    well, and reads as no suitable food without it. Right-Click ignores the
-    Current Food on this character's list.
-]]
+-- Current Food needs the pick's link too, and reads as no suitable food without it.
 local function AppendMinimap(lines)
 	local profile = ns.db and ns.db.profile
 	if not profile then
@@ -1658,10 +1667,7 @@ local function AppendMinimap(lines)
 		lines[#lines + 1] = "[Class] Macros row: Macro-Notes.lua not loaded (restart the client)"
 		return
 	end
-	--[[
-	    No row while the class has no notes or knows none of their spells; an
-	    item shows under it only once its link has loaded.
-	]]
+	-- An item shows only once its link has loaded.
 	local _, _, blocks = ns.GetClassMacroNotes()
 	local notes, items = {}, {}
 	for _, block in ipairs(blocks or {}) do
@@ -1684,12 +1690,7 @@ local function AppendMinimap(lines)
 	)
 end
 
---[[
-    The ignoreTarget and checkUnique flags each macro's resolver hands
-    ns.GetSmartSpell (Tools-Mages.lua, Tools-Warlocks.lua), so the "casts:"
-    line names what the macro would cast. A list not named here, like the
-    food and water conjures, takes the defaults.
-]]
+-- Copies of the resolvers' ns.GetSmartSpell flags (Tools-Mages.lua, Tools-Warlocks.lua); unlisted ones take the defaults.
 local CONJURE_CAST_FLAGS = {
 	MageCreateTable = { true },
 	MageCreateManaGem = { true, true },
@@ -1715,11 +1716,7 @@ local function AppendSpells(lines)
 		end
 	end
 
-	--[[
-	    Each conjure ladder: how many of its ranks are known, and what the
-	    macros' /cast line would name now. Its target reads wait while Forever
-	    hides the target's identity.
-	]]
+	-- Target reads wait while Forever hides the target's identity.
 	local targetHidden = ns.IsUnitIdentitySecret("target")
 	lines[#lines + 1] = ""
 	lines[#lines + 1] = "-- Conjure ranks --"
@@ -1761,6 +1758,8 @@ function ns:BuildConnoisseurContextReport()
 	lines[#lines + 1] = ""
 	AppendClassAndRace(lines)
 	lines[#lines + 1] = ""
+	AppendFishingLure(lines)
+	lines[#lines + 1] = ""
 	AppendSelection(lines)
 	lines[#lines + 1] = ""
 	AppendMinimap(lines)
@@ -1773,17 +1772,7 @@ end
 -- Item Selection
 --------------------------------------------------------------------------------
 
---[[
-    The "why did it pick that?" read-out. For every category that goes through
-    the scanner's ranking ladder, prints the winner and the runners-up it beat,
-    each tagged with the RANKING_PRIORITY field that decided the pair (see
-    Features/Macros-for-Consumables/Scanner/Scanner-Ranking.lua). Reads only what the last scan left behind;
-    it never rescans, so the report can never disagree with the macros the
-    player is actually looking at. Then every consumable in that scan's bags
-    with the usability gate it meets, read from its cached record against the
-    level, skills and map the scan reads, and the food, drink, potions and
-    bandages there that no macro's data carries.
-]]
+-- Reads only the last scan, never rescans, so it can't disagree with the macros on the bars.
 
 local function DescribeItem(itemID)
 	if not itemID then
@@ -1829,10 +1818,7 @@ local function AppendCategoryLines(lines, typeName, entry, candidates)
 	end
 end
 
---[[
-    The first usability gate a cached record fails, in the scan's order
-    (Scanner-Inventory.lua), or nil when it passes them all.
-]]
+-- Mirrors ns.ScanBags' gates in the scan's order (Scanner-Inventory.lua).
 local function FailedGate(data, inArena)
 	local playerLevel = ns.cachedPlayerLevel or 1
 	if data.requiredLevel > playerLevel then
@@ -1869,13 +1855,7 @@ local function FailedGate(data, inArena)
 	return nil
 end
 
---[[
-    A consumable with no cached record waits on the server's item info and
-    competes nowhere; one that passes every gate names each macro that took it,
-    and each that turned it away (buff food held back, runes not added, no heal
-    value). An ignored item competes nowhere and only counts as carried, for
-    the Readiness Report.
-]]
+-- An ignored item competes nowhere and only counts as carried, for the Readiness Report.
 local function AppendBagGates(lines)
 	local inArena = select(2, IsInInstance()) == "arena"
 	local itemIDs = {}
@@ -1928,13 +1908,7 @@ local function AppendBagGates(lines)
 	end
 end
 
---[[
-    Food, drink, potions and bandages in the last scan's bags that no
-    consumable table in this data folder carries: the scan passes them over,
-    so no macro ever uses one. Told apart by item class (Consumable, with the
-    subclasses for those and Classic's plain Consumable), which every client
-    answers without a server request.
-]]
+-- Items no data table carries, told apart by item class, which needs no server request.
 local MACRO_ITEM_SUBCLASSES = { [0] = true, [1] = true, [5] = true, [7] = true }
 
 local function AppendUnknownConsumables(lines)
@@ -1986,11 +1960,7 @@ function ns:BuildSelectionReport()
 		return table.concat(lines, "\n")
 	end
 
-	--[[
-	    Candidate retention starts when the tools are enabled, so a report run
-	    before the next scan has winners but no runners-up. Say so rather than
-	    letting an empty list read as "nothing else was in the running."
-	]]
+	-- Retention starts with the tools, so a report before the next scan has winners but no runners-up.
 	local retained = false
 	for _, list in pairs(candidates) do
 		if #list > 0 then
@@ -2024,12 +1994,7 @@ function ns:BuildSelectionReport()
 		AppendCategoryLines(lines, typeName, selection[typeName], candidates[typeName])
 	end
 
-	--[[
-	    The custom definitions own their whole update and resolve their item
-	    outside the ladder (the Hunter pet-food scan, the Rogue poison walk),
-	    so they have no candidate list to show. Naming them keeps the report
-	    honest about what it does and does not cover.
-	]]
+	-- Custom definitions resolve outside the ladder, so they are named with no candidates.
 	local customNames = {}
 	for _, definition in ipairs(ns.REGISTERED_CUSTOM_MACRO_DEFINITIONS or {}) do
 		customNames[#customNames + 1] = definition.typeName
@@ -2058,17 +2023,8 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The Readiness Report as it would print right now, without waiting for a
-    ready check. Read-only: it asks the same probes the report asks and prints
-    nothing to chat.
-
-    The report has two silences that look identical from a chat window, "you
-    are ready" and "it never ran", and only one of them is a bug. Rendering it
-    on demand separates them in one button press, and the switch states below
-    say which lines were even eligible to speak.
-
-    Color escapes are stripped: reports are plain text, and a |cff pasted into
-    a bug report is noise.
+    Renders the report on demand, nothing to chat, to tell "you are ready" from
+    "it never ran", which look the same in chat.
 ]]
 local READINESS_SWITCHES = {
 	"readinessFlask",
@@ -2105,13 +2061,7 @@ function ns:BuildReadinessDiagnosticReport()
 		tostring(reports.readinessReportEnabled),
 		YesNo(ns.db.profile)
 	)
-	--[[
-	    The report hears READY_CHECK only while its switch is on
-	    (ns.SyncReadinessReportEvents, at login and from the switch). The
-	    subscription itself is Core's own state, so this reads the event's
-	    standing on this client; the Event Log shows each READY_CHECK that
-	    arrives.
-	]]
+	-- The subscription is Core's own state, so this reads only the event's standing on this client.
 	local isEventValid = C_EventUtils and C_EventUtils.IsEventValid
 	local listed = false
 	for _, event in ipairs(ns.EVENT_NAMES or {}) do
@@ -2165,12 +2115,7 @@ function ns:BuildReadinessDiagnosticReport()
 			end
 		end
 
-		--[[
-		    The gates behind each line besides its own switch
-		    (Readiness-Report.lua): a line whose gate is closed stays silent
-		    even while what it checks is missing. Item lines stay silent before
-		    the first bag scan, and count an ignored item as carried.
-		]]
+		-- A closed gate keeps its line silent even while what it checks is missing.
 		local profile = ns.db.profile
 		local okGates, gates = pcall(function()
 			local mainHandMissing, offHandMissing = ns.GetMissingWeaponBuffs()
@@ -2248,11 +2193,7 @@ function ns:BuildReadinessDiagnosticReport()
 					YesNo(ns.GroupHasSoulstone()),
 					YesNo(ns.SoulstonesOnCooldown())
 				),
-				--[[
-				    A Shaman in your party covers the main hand, except where weapon
-				    enchants stack (Forever), where a hand your class keeps a poison
-				    or imbue on wants two.
-				]]
+				-- A party Shaman covers the main hand, except where enchants stack (Forever).
 				string.format(
 					"Weapon buffs missing: main hand %s, off hand %s // enchants on: main hand %d, off hand %d // enchants stack on this client %s // Shaman in party %s, covers the main hand %s",
 					YesNo(mainHandMissing),
@@ -2337,11 +2278,7 @@ end
 -- Name Lookups
 --------------------------------------------------------------------------------
 
---[[
-    A conjure row's name as the macros' /cast line writes it (Smart-Spell.lua's
-    CastName): a row carrying a rank number adds the client's own rank text, so
-    the name is right in every locale.
-]]
+-- As Smart-Spell.lua's CastName writes it, with the client's own rank text.
 local function ConjureCastName(row)
 	local name = C_Spell.GetSpellName(row[1])
 	if not name then
@@ -2368,13 +2305,9 @@ local function SortedKeys(tbl)
 end
 
 --[[
-    Every record Consumable Macros shows or matches by the name this client gives it,
-    for the Localization tab's Game Names report, each read through the call
-    its feature makes. A record this client's folder doesn't carry has a nil id
-    and gets no row. Spells and items load late, so their rows add request,
-    which the report calls and polls. The Blizzard UI labels are globals, so
-    each one's id is its own name; the reputation standings come in the
-    player's gender, as the Restock List's column shows them.
+    Game Names rows, each read through its feature's own call. Spell and item
+    rows carry request, which the report calls and polls. Standings come in
+    the player's gender, as the Restock List shows them.
 ]]
 local nameLookups = {}
 
@@ -2441,12 +2374,7 @@ for _, listName in ipairs(SortedKeys(ns.CONJURE_SPELLS)) do
 	end
 end
 
---[[
-    The camp items whose line on Camp Benefits' tooltip can block a scroll
-    (Scanner-Auras.lua), each by the name that line starts with, read as the
-    scanner reads it: the data's own name for this locale where the line
-    names the item unlike its spell, otherwise this client's spell name.
-]]
+-- Named as the scanner reads the tooltip: the data's locale name where the line names the item, else the spell name.
 local campSeen = {}
 for _, scrollType in ipairs(SortedKeys(ns.SCROLL_DATA)) do
 	for index, row in ipairs(ns.SCROLL_DATA[scrollType].campBenefits or {}) do
@@ -2461,12 +2389,9 @@ for _, scrollType in ipairs(SortedKeys(ns.SCROLL_DATA)) do
 	end
 end
 
---[[
-    The skill lines the profession gates find in the skill list on Era and TBC
-    (Scanner-Character.lua), First Aid through the accessor the options read.
-]]
+-- Era and TBC find these by name in the skill list (Scanner-Character.lua).
 AddLookup("FIRST_AID_SKILL_LINE_ID", "skillLine", ns.FIRST_AID_SKILL_LINE_ID, ns.GetFirstAidName)
-for _, constant in ipairs({ "ALCHEMY_SKILL_LINE_ID", "ENGINEERING_SKILL_LINE_ID" }) do
+for _, constant in ipairs({ "ALCHEMY_SKILL_LINE_ID", "ENGINEERING_SKILL_LINE_ID", "FISHING_SKILL_LINE_ID" }) do
 	local skillLineID = ns[constant]
 	AddLookup(constant, "skillLine", skillLineID, function()
 		return C_TradeSkillUI.GetTradeSkillDisplayName(skillLineID)
@@ -2487,10 +2412,6 @@ for _, classToken in ipairs({ "DRUID", "HUNTER", "ROGUE" }) do
 	end)
 end
 
---[[
-    The runes the Mana Gem texts name, the pet foods the Pet Food Buffs toggles
-    name, and each poison group by its first item.
-]]
 AddItemLookup("DEMONIC_RUNE_ITEM_ID", ns.DEMONIC_RUNE_ITEM_ID)
 AddItemLookup("DARK_RUNE_ITEM_ID", ns.DARK_RUNE_ITEM_ID)
 for _, itemID in ipairs(SortedKeys(ns.PET_BUFF_FOODS)) do
@@ -2506,15 +2427,7 @@ for _, groupID in ipairs(SortedKeys(ns.POISON_GROUP_BASE_ITEMS)) do
 	)
 end
 
---[[
-    The staples window's rows named by an item rather than a label. Which tier
-    names the row follows the character's level and list, so every tier item of
-    the category's ladder gets a row, each once, and the report checks every name
-    the window can show for any character. A ladder this client carries no tiers
-    for adds nothing. Every other ladder's tiers follow, each item once: the
-    staples tooltip, the upgrade chat lines and the Upgrade Example name them.
-    So does the reminders' Example, by ns.SAMPLE_RESTOCK_ITEM_ID.
-]]
+-- Every tier of every ladder, since which tier names a staples row depends on the character.
 local tierSeen = {}
 for _, category in ipairs(ns.GetStarterCategories()) do
 	if not category.label then
@@ -2547,12 +2460,7 @@ for itemID in pairs(ns.QUESTIONABLE_EQUIPMENT or {}) do
 end
 AddItemLookup(string.format("QUESTIONABLE_EQUIPMENT[%s]", tostring(firstQuestionableID)), firstQuestionableID)
 
---[[
-    Blizzard UI labels the add-on shows (the weapon slots, the scroll stats, the
-    pop-up buttons, the macro tab the macros-ready message names) and the error
-    texts its handlers match a UI_ERROR_MESSAGE against, and UNKNOWNOBJECT,
-    which marks a character name not yet known.
-]]
+-- Blizzard UI labels and the error texts UI_ERROR_MESSAGE handlers match; a global's id is its own name.
 for _, constant in ipairs({
 	"GENERAL_MACROS",
 	"MAINHANDSLOT",
@@ -2590,16 +2498,10 @@ ns.DiagnosticSortedKeys = SortedKeys
 --------------------------------------------------------------------------------
 
 --[[
-    One entry per data file, and one report row per entry on the Data tab
-    (Diagnostics/Options-Diagnostics.lua). Each entry's label is the
-    table-name part of its file name, so ns.DataSourceFileName can name the
-    file this client's folder built. Each source names the static table on ns
-    and its kind: "spell" or "item" for ids the client can look up, "other"
-    for ids no client API reads, which report their row count. Ids are reached
-    through rowId(key, row) over the table's pairs, or through collect(tbl)
-    for a table not keyed by the id it holds, which returns { id, key, row }
-    entries, each id once. Adding a data file adds an entry here, and the
-    panel and the validator pick it up with no second list.
+    One entry per data file; the label is its file name's table part, for
+    ns.DataSourceFileName. Kind "other" is ids no client API reads (row count
+    only). collect(tbl) serves tables not keyed by the id, returning
+    { id, key, row } entries, each id once.
 ]]
 local function KeyIsId(key)
 	return key
@@ -2609,11 +2511,7 @@ local function KeyValue(key)
 	return key
 end
 
---[[
-    A collect function from a walk over the table: walk(tbl, add) calls
-    add(id, key, row) for every id it finds, and an id found twice is kept
-    once.
-]]
+-- walk(tbl, add) calls add(id, key, row) per id found; duplicates are kept once.
 local function Collector(walk)
 	return function(tbl)
 		local entries, seen = {}, {}
@@ -2702,11 +2600,7 @@ local CollectConjureSpells = Collector(function(conjureSpells, add)
 	end
 end)
 
---[[
-    Game-IDs-{Game}.lua's single-id constants hold the id itself rather than a
-    table, so each kind's constants are validated by name through these lists:
-    the collect reads ns[name], and DATA_CONSTANT names the constant on its row.
-]]
+-- Single-id constants hold no table, so they are validated by name through these lists.
 ns.DIAGNOSTIC_SPELL_ID_CONSTANTS = {
 	"BLOODRAGE_SPELL_ID",
 	"CALL_PET_SPELL_ID",
@@ -2742,18 +2636,13 @@ ns.DIAGNOSTIC_ITEM_ID_CONSTANTS = {
 	"SAMPLE_RESTOCK_ITEM_ID",
 }
 
---[[
-    The IDs no lookup kind reads: Game Names checks the skill lines' and the
-    races' names instead, the Imp's creature family is checked there by
-    name too, the Call Pet flyout's is counted only, and
-    SOD_FIRST_SPELL_ID is a threshold, the lowest spell ID the season's
-    abilities use, not one spell.
-]]
+-- No lookup kind reads these; SOD_FIRST_SPELL_ID is a threshold (the season's lowest spell ID), not a spell.
 ns.DIAGNOSTIC_OTHER_ID_CONSTANTS = {
 	"ALCHEMY_SKILL_LINE_ID",
 	"CALL_PET_FLYOUT_ID",
 	"ENGINEERING_SKILL_LINE_ID",
 	"FIRST_AID_SKILL_LINE_ID",
+	"FISHING_SKILL_LINE_ID",
 	"IMP_CREATURE_FAMILY_ID",
 	"NIGHT_ELF_RACE_ID",
 	"SOD_FIRST_SPELL_ID",
@@ -2805,6 +2694,17 @@ ns.AppendDiagnosticRows(ns.DIAGNOSTIC_DATA_SOURCES, {
 		sources = {
 			{ table = "EXPLOSIVES", kind = "item", rowId = KeyIsId },
 			{ table = "EXPLOSIVES", kind = "spell", collect = CollectColumn(4) },
+		},
+	},
+	{
+		label = "Fishing",
+		sources = {
+			{ table = "FISHING_POLES", kind = "item", rowId = KeyIsId },
+			{ table = "FISHING_LURES", kind = "item", rowId = KeyIsId },
+			{ table = "FISHING_GEAR", kind = "item", collect = CollectColumn(1) },
+			{ table = "FISHING_GLOVE_ENCHANT_IDS", kind = "other" },
+			{ table = "FISHING_FOODS", kind = "item", rowId = KeyIsId },
+			{ table = "FISHING_WELL_FED_BUFF_IDS", kind = "spell", rowId = KeyIsId },
 		},
 	},
 	{

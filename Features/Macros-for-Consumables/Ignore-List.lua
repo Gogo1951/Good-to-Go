@@ -4,20 +4,7 @@ local _, ns = ...
 -- Ignore List
 --------------------------------------------------------------------------------
 
---[[
-    Two ignore lists, and ignoring is additive: an item on either one is
-    invisible to every macro's item selection -- food, water, potions, pet food,
-    scrolls, all of it. The character's own list is profile-scoped -- each
-    character has its own AceDB profile (ns.db is created without the
-    shared-Default flag, so a fresh character lands on a profile named for
-    it), so it lives directly in the profile as a flat table. Two characters
-    the player put on one profile share that list with the rest of its
-    settings. The Global list is its mirror in global, shared by every
-    character whatever profile it is on.
-
-    Both are declared in ns.DATABASE_DEFAULTS, so a brand-new character simply
-    starts empty, and both return nil only before the database exists.
-]]
+-- Additive: an item on either the profile's list or the Global list is hidden from every macro.
 function ns.GetIgnoreList()
 	if not ns.db then
 		return nil
@@ -32,11 +19,6 @@ function ns.GetGlobalIgnoreList()
 	return ns.db.global.ignoreList
 end
 
---[[
-    True when either list hides the item. Neither list can override the other:
-    adding an item anywhere hides it, and it stays hidden until it is off both
-    lists.
-]]
 function ns.IsIgnored(itemID)
 	local ignoreList = ns.GetIgnoreList()
 	if ignoreList and ignoreList[itemID] then
@@ -47,11 +29,8 @@ function ns.IsIgnored(itemID)
 end
 
 --[[
-    Every mutation ends here. The lists are a scan input: an item ignored while
-    its macro already names it has to be written out of that body, not just out
-    of the list -- so the macro state is wiped and the rebuild is forced.
-    UpdateMacros defers itself in combat or while the Blizzard Macro UI is
-    open, so forcing here is safe everywhere.
+    Forced: a body that already names a newly ignored item must be rewritten.
+    UpdateMacros defers itself in combat and while the Macro UI is open.
 ]]
 local function RefreshMacros()
 	ns.ResetMacroState()
@@ -59,21 +38,9 @@ local function RefreshMacros()
 end
 
 --[[
-    The mini-map button's Right-Click (ignore the food it is currently offering)
-    and the menu's Clear Ignore List row act on the current character's list only, which is
-    exactly what the mini-map menu's Ignore List section shows -- so both
-    keep meaning what the player just read. The Global list is edited from the
-    Ignore List panel instead, through ns.SetIgnoredInScope below.
-
-    Both end in ns.RefreshSettings, so an Ignore List panel already on screen
-    rebuilds its rows straight off the live lists, and the menu redraws.
-
-    Right-Click only ever adds: in combat or with the Macro UI open the rebuild
-    waits, so the menu still offers the same food, and a second click must not
-    take it back off the list.
-
-    Each returns what it changed, true for an item added or removed and the
-    number of items cleared, so the mini-map can say so in chat.
+    Mini-map edits act on this character's list only, the one its menu shows.
+    Add never toggles: while the rebuild waits (combat, Macro UI open) the
+    button still offers the same food, and a second click must not unignore it.
 ]]
 function ns.IgnoreItem(itemID)
 	if not itemID then
@@ -89,7 +56,6 @@ function ns.IgnoreItem(itemID)
 	return true
 end
 
--- Takes one item off this character's list, from the mini-map menu's Ignore List rows.
 function ns.UnignoreItem(itemID)
 	local ignoreList = ns.GetIgnoreList()
 	if not (itemID and ignoreList and ignoreList[itemID]) then
@@ -101,7 +67,7 @@ function ns.UnignoreItem(itemID)
 	return true
 end
 
--- At once and with no confirmation: the mini-map menu's Clear Ignore List row is a deliberate quick-clear.
+-- No confirmation: the mini-map menu's Clear Ignore List row is a deliberate quick-clear.
 function ns.ClearIgnoreList()
 	local ignoreList = ns.GetIgnoreList()
 	local cleared = 0
@@ -121,17 +87,10 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    One list looked up by the scope key the Ignore List panel uses: the global
-    sentinel (ns.IGNORE_SCOPE_GLOBAL), the profile the player is on right now,
-    or any other AceDB profile on the account.
-
-    The current profile resolves through ns.db.profile rather than the raw saved
-    table, so an edit lands on the very list the scanner reads and applies live.
-    Every other profile is read straight out of ns.db.sv.profiles, because AceDB
-    only materializes the profile you are on -- and it strips default-valued
-    tables at logout, so a character who never added an entry has no stored
-    ignoreList. A read returns nil in that case; a write passes createIfMissing
-    and builds what it needs on the spot.
+    The current profile goes through ns.db.profile so an edit lands on the list
+    the scanner reads. Others come raw from ns.db.sv.profiles: AceDB builds only
+    the current one and strips default-valued tables at logout, so only a write
+    creates what is missing.
 ]]
 function ns.GetIgnoreListForScope(scopeKey, createIfMissing)
 	if not (ns.db and scopeKey) then
@@ -173,16 +132,8 @@ function ns.GetIgnoreListForScope(scopeKey, createIfMissing)
 end
 
 --[[
-    Drop one item from every character's list. Called when the item joins the
-    Global list, which already hides it everywhere: ignoring is additive, so a
-    character's entry for a globally ignored item can no longer change any
-    outcome, and all it does is clutter that character's pane with a row that
-    does nothing. Clearing them is what makes "add to Global" mean the item
-    lives in exactly one place.
-
-    The live table behind ns.db.profile is the same table as its sv.profiles
-    entry, so the loop covers the current character too -- but only once AceDB
-    has materialized that profile, hence the direct pass afterward.
+    A globally ignored item lives in one place only. The direct pass after the
+    loop covers a current profile AceDB has not yet written into sv.profiles.
 ]]
 local function ClearFromAllProfiles(itemID)
 	local profiles = ns.db.sv and ns.db.sv.profiles
@@ -200,16 +151,7 @@ local function ClearFromAllProfiles(itemID)
 	end
 end
 
---[[
-    Add or remove one item in one scope. The macro refresh runs for every scope,
-    not just the current character's: an edit to the Global list changes what
-    this character's macros may pick, and an edit to another character's list
-    is cheap enough that checking which scope it was is not worth the branch.
-
-    Removing from the Global list deliberately does not put the item back on
-    anyone: there is no record of who held it, and re-adding to a list the
-    player did not ask for would be a surprise.
-]]
+-- Removing from Global restores nobody's entry: there is no record of who held it.
 function ns.SetIgnoredInScope(scopeKey, itemID, isIgnored)
 	if not itemID then
 		return
@@ -229,7 +171,6 @@ function ns.SetIgnoredInScope(scopeKey, itemID, isIgnored)
 	RefreshMacros()
 end
 
--- The Ignore List panel's Clear List, which confirms first: empties one scope's list.
 function ns.ClearIgnoreListInScope(scopeKey)
 	local ignoreList = ns.GetIgnoreListForScope(scopeKey)
 	if ignoreList then
@@ -243,15 +184,9 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    On logout, drop entries that can no longer hide anything, so neither list
-    accumulates stale item IDs. Routed from Core's PLAYER_LOGOUT handler.
-
-    Both lists drop only items this client does not know at all. Classic Era
-    and Season of Discovery characters share one saved-variables file, and so
-    the Global list and any profile the player put characters from both on,
-    while their realms build different data folders -- so pruning against one
-    folder's consumable data would erase the other folder's entries. Another
-    character's list is pruned when that character logs out.
+    Drops only IDs the client doesn't know at all: Era and Season of Discovery
+    share the file but build different data folders, so pruning against this
+    folder's data would erase the other's entries.
 ]]
 local function PruneOneList(ignoreList)
 	if not ignoreList then

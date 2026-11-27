@@ -1,16 +1,7 @@
 local _, ns = ...
 local L = ns.L
 
---[[
-	Builds the page's macro list (ns.macros) from the spellbook and the class's spell lists
-	(ns.CLASS_SPELL_LISTS, from the flavor's data folder). The lists hold spell IDs; every name comes from the
-	client, so the page sorts and builds the same in every locale. No frames here: Features/Enhanced-Spellbook/Spellbook-Page.lua
-	draws the page. The options live in Features/Enhanced-Spellbook/Macro-Options.lua, the macro text in Features/Enhanced-Spellbook/Macro-Body.lua,
-	the Duplicate copies in Features/Enhanced-Spellbook/Macro-Copies.lua, and the Dynamic Rank rewrites in Features/Enhanced-Spellbook/Dynamic-Rank.lua.
-	The class lists resolve in Features/Enhanced-Spellbook/Class-Config.lua, the known ranks and learn levels in
-	Features/Enhanced-Spellbook/Spell-Ranks.lua, a group spell's macro handover in Features/Enhanced-Spellbook/Group-Handover.lua,
-	and the folded Shoot macro in Features/Enhanced-Spellbook/Ranged-Attacks.lua.
-]]
+-- The class lists hold spell IDs; every name comes from the client, so the page builds the same in every locale.
 
 local MacroBody = ns.MacroBody
 local StancesOf = ns.StancesOf
@@ -25,17 +16,12 @@ local FoldRangedAttacks = ns.FoldRangedAttacks
 local UNLISTED = math.huge -- the Unlearned section sorts after everything else
 local NO_IDS = {}
 
---[[
-	One macro per learned class spell (and unlearned one, when shown), in page order. Rebuilt by
-	ns.CollectMacros when the page draws, the spells change, or Dynamic Rank finds it empty.
-]]
+-- Rebuilt when the page draws, the spells change, or Dynamic Rank finds it empty.
 ns.macros = {}
 
 --[[
-	The spell's Rank 1 ID, which the macro's saved settings, tag and Duplicates are keyed by (ns.SettingsKey), so
-	they outlast a rank trained and a change of game language: the ID its SPELL_GROUPS group lists it by, else
-	its lowest rank's (ranks.baseID, recorded before replaced ranks are dropped), learned or not, else the one
-	ID it has. An unlearned spell's id is already its Rank 1 (ns.ForEachUnlearnedSpell).
+	Settings, tag and Duplicates are keyed by the Rank 1 ID, so they outlast a rank trained and a change of game
+	language. ranks.baseID is recorded before replaced ranks are dropped.
 ]]
 local function BaseSpellID(name, id, ranks, members)
 	for _, member in ipairs(members or NO_IDS) do
@@ -58,13 +44,8 @@ local function BaseSpellID(name, id, ranks, members)
 end
 
 --[[
-	section is { rank, name, priority }: the spell's spellbook tab, or the Unlearned section. ranks is the
-	spell's ReadSpellbook ranks entry, or nil. grouped holds the spells it is grouped with: groupSpell, its
-	learned group version's name, or soloSpell, a group spell's learned single version's (the spell a
-	right-click casts), rightClickRanks, that spell's known ranks as ReadSpellbook lists them, and
-	groupMembers, its SPELL_GROUPS group as { name, id, learned } in the order they are learned, id each
-	spell's Rank 1 ID; each is nil where there is none. The caller sets replaces after: the spells it replaced
-	in that group (see ReplacedSpells), whose WoW macro it may have taken over.
+	section is { rank, name, priority }. grouped is { groupSpell, soloSpell (what a right-click casts),
+	rightClickRanks, groupMembers ({ name, id, learned } in learn order) }. The caller sets replaces after.
 ]]
 local function MakeMacro(name, icon, unlearned, id, section, ranks, grouped)
 	local config = ClassConfig()
@@ -104,10 +85,6 @@ local function MakeMacro(name, icon, unlearned, id, section, ranks, grouped)
 	return macro
 end
 
---[[
-	A copy of a spell macro made with Duplicate (see ns.DuplicateMacro): the same spell, named with its
-	number, with settings of its own (ns.SettingsKey).
-]]
 local function MakeCopyMacro(macro, number)
 	local copy = {}
 	for key, value in pairs(macro) do
@@ -121,11 +98,7 @@ local function MakeCopyMacro(macro, number)
 	return copy
 end
 
---[[
-	A spell macro's copy for one of its lower known ranks, listed after it when Show All Spell Ranks is on: it
-	always casts that rank (ns.FixedRank), with settings of its own (ns.SettingsKey), named with the rank's
-	number ("Fireball R3"), and casts only its own spell, with no group and no right-click.
-]]
+-- A rank copy casts only its own spell, with no group and no right-click.
 local function MakeRankMacro(macro, rank, rankIndex)
 	local copy = {}
 	for key, value in pairs(macro) do
@@ -141,10 +114,7 @@ local function MakeRankMacro(macro, rank, rankIndex)
 	return copy
 end
 
---[[
-	Whether a later spell of the macro's SPELL_GROUPS group is learned (Cleanse, for Purify), which leaves the
-	macro off the page unless Show Grouped Spells is on. members is the group as { name, id, learned }.
-]]
+-- Cleanse, for Purify
 local function LaterGroupSpellLearned(name, members)
 	local after = false
 	for _, member in ipairs(members or NO_IDS) do
@@ -157,10 +127,8 @@ local function LaterGroupSpellLearned(name, members)
 end
 
 --[[
-	Folds each learned profession specialization (ns.PROFESSION_SPECIALIZATIONS) into its profession: the
-	profession's own macro takes the specialization's name and icon on the page (label, icon, and sortName for
-	the page's alphabetical order) and still casts the profession, and the specialization's macros, a passive
-	that does nothing when cast, go off the page (hidden). Its Duplicates keep their own names.
+	The profession's macro takes the specialization's name and icon but still casts the profession; the
+	specialization, a passive that does nothing when cast, goes off the page. Its Duplicates keep their own names.
 ]]
 local function FoldSpecializations()
 	local own = {}
@@ -190,17 +158,12 @@ local function FoldSpecializations()
 	end
 end
 
---[[
-	Rebuilds ns.macros: the learned spells (from the spellbook), plus the spells not learned yet when
-	ns.ShowsUnlearned().
-]]
 function ns.CollectMacros()
 	wipe(ns.macros)
 	ns.MarkRankBodiesStale()
 	ResolveClassConfig()
 	local taken, seen = {}, {}
 	local ranks, learned = ReadSpellbook()
-	-- learnLevel and learnTalent say when an unlearned spell can be learned, for its note and tooltip
 	local function AddMacro(name, icon, unlearned, id, section, learnLevel, learnTalent)
 		local config = ClassConfig()
 		local groupSpell, soloSpell, members = config.groupSpells[name], config.soloSpells[name], nil
@@ -237,7 +200,7 @@ function ns.CollectMacros()
 				ns.macros[#ns.macros + 1] = copy
 			end
 		end
-		-- the lower ranks known, highest first; the spell's own macro casts the highest
+		-- the spell's own macro casts the highest
 		if not unlearned and ns.ShowsAllRanks() then
 			for i = 2, #(macro.ranks or NO_IDS) do
 				local copy = MakeRankMacro(macro, macro.ranks[i].text, i)
@@ -266,14 +229,10 @@ function ns.CollectMacros()
 			AddMacro(name, icon, true, id, { UNLISTED, L["SECTION_UNLEARNED"], position }, level, talent)
 		end, seen)
 	end
-	-- 0 for the spell's own macro, then one step per lower rank.
 	local function CopyOrder(macro)
 		return macro.rankIndex and (1 + macro.rankIndex) or 0
 	end
-	--[[
-		by section; within one, spellbook (or learn level) order, then by name: the spell's own macro, then its
-		lower-rank copies highest rank first, and each Duplicate copy after those, by number
-	]]
+	-- a spell's own macro, then its rank copies highest first, then its Duplicates by number
 	table.sort(ns.macros, function(a, b)
 		if a.categoryRank ~= b.categoryRank then
 			return a.categoryRank < b.categoryRank

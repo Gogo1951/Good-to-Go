@@ -1,13 +1,8 @@
 local _, ns = ...
 
 --[[
-    The player's own bags and the bank's containers, and the slot scans over them.
-    ns.restockPlayerBags are the places an item may be put: the merchant run's bag
-    budget and the bank run's pulls. ns.restockCountedBags adds the reagent bag,
-    which holds only reagents and so is never a destination, for everything that
-    counts, locks or stashes what the player carries. The bank run's moves are
-    Restocker-Bank-Moves.lua, which reads the bank orderings through
-    ns.GetRestockBankBags and ns.GetRestockBankBagsReversed.
+    The reagent bag holds only reagents, so it is counted (restockCountedBags)
+    but never a destination (restockPlayerBags).
 ]]
 ns.restockPlayerBags = {}
 ns.restockCountedBags = {}
@@ -15,8 +10,8 @@ ns.restockCountedBags = {}
 local BagDefinition = {}
 BagDefinition.__index = BagDefinition
 
-local bankBags = {} -- filled by ns.LoadRestockBankBags
-local bankBagsReversed = {} -- filled by ns.LoadRestockBankBags
+local bankBags = {}
+local bankBagsReversed = {}
 
 -- Defined near the end of this file; forward-declared for the slot scans that call it first.
 local GetRestockContainerItemInfo
@@ -26,10 +21,8 @@ local GetRestockContainerItemInfo
 --------------------------------------------------------------------------------
 
 --[[
-    A container the restocker moves items through. `location` is a label for the debug
-    log only -- every container is filled the same way, by naming an empty slot (see
-    BagDefinition:PutCursorItem). No inventory-slot id is kept: its only use would be
-    PutItemInBag, which this file must never call.
+    `location` labels the trace only. No inventory-slot id is kept: its only use
+    would be PutItemInBag, which must never be called here (see PutCursorItem).
 ]]
 local function NewBagDefinition(location, bagID)
 	local result = {}
@@ -78,14 +71,10 @@ function ns.InitializeRestockBagDefinitions()
 	end
 end
 
---[[
-    Whether a container of this type may hold the item. A free-slot count alone is not
-    enough: a specialty bag (quiver, soul/herb/enchanting bag) reports free slots that a
-    regular item can never occupy.
-]]
+-- A specialty bag (quiver, soul or herb bag) reports free slots a regular item can never take.
 local function BagTypeAccepts(bagType, itemInfo)
 	if not bagType or bagType == 0 then
-		return true -- regular container takes anything
+		return true
 	end
 	if not itemInfo then
 		return false -- unknown item: only trust regular containers
@@ -99,13 +88,7 @@ end
 
 ns.BagTypeAccepts = BagTypeAccepts
 
---[[
-    True if this container has a free slot AND is allowed to hold the given item.
-
-    A shortcut, not a safety net: placement names the slot itself, so a container that
-    refuses the item leaves it on the cursor and the caller simply tries the next one;
-    skipping the bags that were never going to take it just saves the trip.
-]]
+-- A shortcut, not a safety net: a bag that refuses leaves the item on the cursor for the next.
 function BagDefinition:CanAcceptItem(itemInfo)
 	local numberOfFreeSlots, bagType = C_Container.GetContainerNumFreeSlots(self.bagID)
 	if numberOfFreeSlots <= 0 then
@@ -115,18 +98,10 @@ function BagDefinition:CanAcceptItem(itemInfo)
 end
 
 --[[
-    Drop into the first genuinely-empty slot of this container, naming the slot
-    ourselves. Detect empty with GetContainerItemInfo -- it returns nil ONLY when the
-    slot is truly empty, whereas GetContainerItemLink is also nil for a not-yet-cached
-    item, so testing the link would place onto an occupied slot and strand the item.
-
-    EVERY container goes through this, player bags included. The two APIs that let the
-    SERVER pick the slot -- PutItemInBackpack and PutItemInBag(invslot) -- clear the
-    cursor the moment they are called, whether or not the drop is accepted. That makes
-    the caller's "did it land?" test (CursorHasItem) answer "yes" even when the server
-    refused and bounced the item back to its source, so the caller stops early, never
-    tries the remaining bags, and the re-scan finds the item still missing. Naming the
-    slot keeps the item on the cursor on a refusal, which is what makes that test true.
+    Every container names its own empty slot: PutItemInBackpack and PutItemInBag
+    clear the cursor even when the server refuses, so "did it land" would always
+    read yes. Empty is tested by GetContainerItemInfo, since the link is nil for
+    a cold item too.
 ]]
 function BagDefinition:PutCursorItem()
 	for slot = 1, C_Container.GetContainerNumSlots(self.bagID) do
@@ -137,10 +112,7 @@ function BagDefinition:PutCursorItem()
 		end
 	end
 
-	--[[
-	    No empty slot, so nothing was attempted and the cursor still holds the item --
-	    deliberately, so the caller can try the next bag. Never ClearCursor here.
-	]]
+	-- The cursor keeps the item so the caller can try the next bag. Never ClearCursor here.
 	ns.RestockerDebug("TRACE_PUT_CURSOR_NO_SLOT", self.location, self.bagID)
 end
 
@@ -149,13 +121,9 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    True if any slot we care about is still mid-move (locked). A locked slot means the last
-    move hasn't settled on the server yet -- issuing the next one now is exactly what gets a
-    split rejected with "Couldn't split those items".
-
-    `list` narrows "we care about" to the items on the current list. Only OUR items may
-    stall a restock: an unrelated locked item, something
-    the player is equipping or a pending trade, would otherwise hold it up forever.
+    A locked slot means the last move hasn't settled, and the next would be
+    refused ("Couldn't split those items"). Only list items count, so the
+    player's own unrelated lock can't stall the run.
 ]]
 local function AnyRestockItemLocked(bags, list)
 	for _, bag in ipairs(bags) do
@@ -202,13 +170,7 @@ function ns.GetRestockItemsInBags(predicate)
 	return result
 end
 
---[[
-    Every different item in the player's bags, once each, as the Add Item From
-    Bags menu draws them (Restocker-Window-Bag-Menu.lua): the first slot's
-    record for each, which carries the name, link and icon. A slot whose item
-    the client has not resolved has no link to name it by and is left out; it
-    is there the next time the menu opens.
-]]
+-- A slot the client hasn't resolved has no link and is left out until the menu next opens.
 function ns.GetRestockBagItems()
 	local items, seen = {}, {}
 	for _, bag in ipairs(ns.restockCountedBags) do
@@ -248,10 +210,7 @@ end
 
 function GetRestockContainerItemInfo(bagID, slot)
 	local itemInfo = C_Container.GetContainerItemInfo(bagID, slot)
-	--[[
-	    hyperlink can be nil for a not-yet-cached item; skip the slot rather than erroring
-	    on string.match(nil, ...). Matching is done by itemID, so a skipped slot is harmless.
-	]]
+	-- A cold item's hyperlink can be nil; matching is by itemID, so skipping the slot is harmless.
 	if not itemInfo or not itemInfo.hyperlink then
 		return nil
 	end

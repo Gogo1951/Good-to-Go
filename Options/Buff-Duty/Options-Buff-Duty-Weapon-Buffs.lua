@@ -3,30 +3,12 @@ local Data = ns.Data
 local L = ns.L
 local Kit = ns.OptionsKit
 
---[[
-    "Weapon Buffs" panel, under Buff Duty after Self-Buffs: the category's
-    own settings at the top, its one Show timing among them, then, under a
-    gold header each, a grid
-    of checkboxes -- a row per choice, a Main Hand and an Off Hand column. A rogue's poisons, a
-    shaman's imbues and, on WoW Forever, a warlock's Firestone and
-    Spellstone come first, then the oils, stones and lures any class can
-    use, strongest first. Everything is listed, whatever is in your bags (these settings
-    are account-wide); the window offers only what you have and can
-    use. An item name still loading is warmed when its row draws, and the
-    panel repaints as it arrives.
+-- Everything is listed whatever is in your bags, since these settings are account-wide.
 
-    Its Show in Buff Duty switch is twinned on the Buff Duty panel with the
-    window's other rows.
-]]
-
--- Each column's share of the control column, so the two sit where a dropdown would.
+-- The two hand columns share the control column, so they sit where a dropdown would.
 local COLUMN_WIDTH = Kit.CONTROL_WIDTH / 2
 
---[[
-    A poison or weapon item is named by its line's first item, an imbue by
-    its spell. An item the client hasn't cached yet shows its placeholder
-    and is warmed, so the panel repaints once it loads.
-]]
+-- An item not cached yet shows its placeholder and is warmed, so the panel repaints once it loads.
 local function WeaponChoiceName(entry)
 	local id = entry.ids[1]
 	if entry.items then
@@ -47,13 +29,7 @@ local function WeaponChoiceIcon(entry)
 	return C_Spell.GetSpellTexture(entry.ids[1])
 end
 
---[[
-    A group of choices: the column captions, then a row per choice -- its name,
-    whose hover shows the game tooltip (a poison line's best item, an oil's
-    own, or the imbue's spell), and a checkbox per hand -- each a row of its
-    own (Kit.Row) on the page's label and control columns. `hands` is which
-    columns this group has; `handKey(hand)` names the hand's table in `list()`.
-]]
+-- `handKey(hand)` names the hand's table in `list()`.
 local function DefineGrid(args, choices, hands, list, handKey)
 	local has = {}
 	for _, hand in ipairs(hands) do
@@ -105,10 +81,7 @@ local function DefineGrid(args, choices, hands, list, handKey)
 	end
 end
 
---[[
-    A gold header and a spacer, as on Group Buffs, then its rows in a group
-    with no title, which AceConfig draws with no box. Returns the group's args.
-]]
+-- A group with no title, which AceConfig draws with no box.
 local function AddSection(args, key, title, order)
 	args[key .. "Header"] = Kit.Header(title, order - 0.3)
 	args[key .. "Space"] = Kit.Spacer(order - 0.2)
@@ -130,7 +103,6 @@ function ns.BuildBuffDutyWeaponBuffsOptions()
 			spaceIntro = Kit.Spacer(2),
 		},
 	}
-	-- The Weapon Buffs category's own settings, its one Show timing among them, above the choices.
 	ns.AddBuffDutyRowControls(options.args, "weapons", 3)
 
 	local function Picks()
@@ -165,10 +137,7 @@ function ns.BuildBuffDutyWeaponBuffsOptions()
 		boxOrder = boxOrder + 1
 	end
 
-	--[[
-	    Then Oils, Stones and Lures, each strongest first by item level (Solid
-	    Sharpening Stone above Rough), then by name.
-	]]
+	-- Then Oils, Stones and Lures, each strongest first by item level, then by name.
 	local byKind = {}
 	for _, entry in ipairs(ns.BuffDuty.weaponItemEntries) do
 		byKind[entry.kind] = byKind[entry.kind] or {}
@@ -191,7 +160,6 @@ function ns.BuildBuffDutyWeaponBuffsOptions()
 		end
 	end
 
-	-- With Buff Duty on, the line names this page's own switch, on the Buff Duty page, while that is off.
 	ns.AddFeatureOffLine(options.args, "buffWindow.enabled", {
 		isOn = function()
 			return Settings().weaponEnabled

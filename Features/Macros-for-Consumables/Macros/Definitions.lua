@@ -1,109 +1,32 @@
 local _, ns = ...
 
 --[[
-    Definitions -- the definition protocol every consumable macro follows,
-    and the registry Engine.lua's update loop and the scanner read it from.
+    The fields a definition passed to ns.RegisterMacroType may carry:
 
-    Per-macro behavior lives in Features/Macros-for-Consumables/Macros/<Name>.lua files, each of
-    which calls ns.RegisterMacroType with a definition table:
+    Selection (the scanner; one item may feed several definitions)
+      typeName                key into ns.MACRO_CONFIG (required)
+      itemTypes               set of ns.CacheItemData itemType strings claimed
+      accepts(data)           extra gate on the cached item data
+      score(data)             raw value for the ladder; burn-first prefs are ladder steps, not bonuses
+      ranked                  rank every candidate into topIDs (multi-use types)
+      allowBuffFood, buffFoodFirstWhenUnfed, allowConjuredFirst, allowRestockLast
+                              open the matching gated ladder steps
+      preferHybrid            true prefers food/water hybrids (Food), false dedicated items (Water)
+      winnerExtras(w, data, link)  non-comparison fields only; FillRecord fills the rest
 
-      typeName          -- key into ns.MACRO_CONFIG (required)
-
-    Selection fields — how the scanner picks this category's item. A
-    definition with an itemTypes set participates in ScanBags: every usable
-    bag item is dispatched to each definition claiming its cached itemType
-    (more than one may claim the same item — a hybrid potion feeds Health
-    Potion and Mana Potion, a foodwater item feeds Food and Water). The
-    shared tiebreak ladder (RANKING_PRIORITY) stays in Scanner-Ranking.
-
-      itemTypes         -- set of ns.CacheItemData itemType strings this
-                           category consumes, e.g. {potion = true}
-      accepts(data)     -- optional extra gate on the cached item data
-                           (Health Potion: data.healthValue > 0)
-      score(data)       -- the raw restore/damage value fed to the ladder's
-                           value step, e.g. data.healthValue. Burn-first
-                           preferences (conjured, zone-locked, soulbound,
-                           high-stack) are ladder steps, not score bonuses
-      ranked            -- true: collect all candidates and rank into the
-                           winner's topIDs (the multi-use types); otherwise
-                           a single running winner is kept
-      allowBuffFood     -- true: rank buff food by the scanner's live
-                           ns.buffFoodRank, last or with the rest (Food, Water);
-                           absent: the ladder's buff-food steps stay gated off
-      buffFoodFirstWhenUnfed -- true: buff food ranks first while you're
-                           missing Well Fed (ns.buffFoodFirst), ahead of
-                           conjured-first too (Food)
-      allowConjuredFirst -- true: compare with the scanner's live
-                           ns.allowConjuredFirst preference (Food, Water);
-                           absent: the ladder's conjured-first step stays
-                           gated off
-      allowRestockLast  -- true: compare with the scanner's live
-                           ns.allowRestockLast preference (Food, Water);
-                           absent: the ladder's restock-last step stays
-                           gated off
-      preferHybrid      -- direction of the ladder's hybrid step: true
-                           prefers hybrid food/water (Food), false prefers
-                           dedicated items (Water)
-      winnerExtras(winner, data, hyperlink) -- store NON-comparison fields on
-                           the winning record (Food: link, for
-                           ns.bestFoodLink). Everything the ladder compares is
-                           filled by the scanner's FillRecord
-
-    Body hooks — what the written macro looks like.
-
-      conjure()         -- class conjure resolver; returns the info table
-                           documented under Conjure Protocol below, or nil
-                           when this character has no conjure semantics
-                           (Mage Food/Water/Mana Gem, Warlock Healthstone/
-                           Soulstone)
-      modifyItem(id)    -- replace the scanned best item before body assembly
-                           (Food's pet-buff override)
-      buildUseLine(id)  -- custom /use line(s) for the item; nil falls back to
-                           the standard single- or multi-use block (Explosive's
-                           click layout, Food's [@pet] line)
-      getStackIDs(best) -- ranked ids appended below the main block, or the
-                           whole body when there is no main item (Health
-                           Potion's healthstone stacking)
-      stackTypeName     -- the macro type those ids belong to, whose
-                           DruidMacroHelper guards a stack-only body takes
-                           (Health Potion: "Healthstone")
-      outOfCombatTypeName -- the macro type whose scanned best item this body
-                           uses instead while out of combat, behind
-                           potionsUseFoodAndWater (Health Potion: "Food",
-                           Mana Potion: "Water"). The scanned item only: no
-                           scrolls, pet food or conjure clicks. Its stealth
-                           and Cannibalize come along, from that type's
-                           stealthSpell and corpseSpell
-      stealthSpell()    -- (spellName, stateFlag) the definition's macro casts
-                           while eating or drinking, or nil while off: Food's
-                           Stealth Eating, Water's Stealth Drinking. Read by
-                           a potion macro whose outOfCombatTypeName names it
-      corpseSpell(entry) -- a spell name the body tries first on a dead target,
-                           falling through to eating or drinking when it
-                           cannot cast, or nil: Food's and Water's Forsaken
-                           Cannibalize. entry is the scanned pick; the
-                           engine asks only when the body uses that pick, and
-                           a potion macro asks its outOfCombatTypeName's
-      leadSpell(entry)  -- a spell a press out of combat casts in place of the
-                           action, which then stops, or nil: Bandage's Troll
-                           Rapid Regeneration while off cooldown. Asked under
-                           corpseSpell's rule, only when the body uses the
-                           scanned pick
-      combatSpell(entry) -- a spell a press in combat casts in place of the
-                           action, which then stops, or nil: Food's Troll
-                           Rapid Regeneration, since nobody eats in combat.
-                           Asked under corpseSpell's rule
-      stateExtras(parts, id) -- append extra state-key parts (Explosive's
-                           "EX:mode" click layout)
-      appendBlock(id)   -- returns (text, stateFlag) appended after the action
-                           block, given the item the body uses (after
-                           modifyItem; nil when there is none): Water's
-                           Shadowmeld line (flag "SM") and Food's Stealth
-                           Eating line (flag "SE")
-      customUpdate(forced) -- the definition owns its whole update; it is
-                           skipped by the standard loop (Feed Pet, which
-                           routes to the Hunter builder, and Poisons, which
-                           routes to the Rogue builder)
+    Body
+      conjure()               the Conjure Protocol table below, or nil
+      modifyItem(id)          swap the scanned item (Food's pet-buff override)
+      buildUseLine(id)        custom /use line(s); nil falls back to the standard block
+      getStackIDs(best), stackTypeName  ids stacked below the main block, and their type
+      outOfCombatTypeName     the type whose scanned pick this body uses out of combat
+      stealthSpell()          (name, flag) cast while eating or drinking, or nil
+      corpseSpell(entry)      tried first on a dead target, falling through
+      leadSpell(entry)        cast instead out of combat, then stop
+      combatSpell(entry)      cast instead in combat, then stop
+      stateExtras(parts, id)  extra state-key parts
+      appendBlock(id)         (text, flag) appended after the action block
+      customUpdate(forced)    owns its whole update; skipped by the standard loop
 ]]
 
 --------------------------------------------------------------------------------
@@ -113,24 +36,10 @@ local _, ns = ...
 local macroDefinitions = {}
 local customDefinitions = {}
 
---[[
-    The scanner and Engine.lua read the standard definitions' selection
-    fields at scan and update time (the scanner loads before this file, so
-    it cannot see the local directly; every scan happens long after all
-    registrations).
-]]
 ns.REGISTERED_MACRO_DEFINITIONS = macroDefinitions
 
---[[
-    The custom definitions, exposed on the same terms. Engine.lua runs each
-    one's customUpdate after the standard loop; they own their whole update and
-    never reach the scanner's ranking ladder, so the Selection Report names
-    them as resolved elsewhere rather than leaving the reader to wonder why
-    Feed Pet and Poisons are missing from it.
-]]
 ns.REGISTERED_CUSTOM_MACRO_DEFINITIONS = customDefinitions
 
--- Every definition by typeName, so a potion macro can reach its outOfCombatTypeName's hooks.
 local definitionsByType = {}
 
 function ns.MacroDefinitionByType(typeName)
@@ -151,22 +60,9 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    A definition's `conjure` hook is a function returning a table:
-
-      {
-        rightName, rightID,    -- /cast spell on [btn:2] (or nil)
-        middleName, middleID,  -- /cast spell on [btn:3] (or nil)
-        rightMiss,             -- GtGTip key to fire on [btn:2] when right
-                                  is not yet learned (or nil)
-        middleMiss,            -- GtGTip key to fire on [btn:3] when middle
-                                  is not yet learned (or nil)
-        noItemMiss,            -- GtGTip key to fire on left-click when there
-                                  is no item to /use AND the class can learn
-                                  the conjure (replaces the generic no-item
-                                  message). (or nil)
-      }
-
-    Returning nil from the resolver means "no conjure semantics for this
-    macro type for this player" — leave the macro body as plain /use item.
-    Class gating (ns.isMage / ns.isWarlock) lives inside each resolver.
+    A `conjure` hook returns nil (plain /use body) or, every field optional:
+      rightName, rightID      /cast on [btn:2]
+      middleName, middleID    /cast on [btn:3]
+      rightMiss, middleMiss   GtGTip key for that click while its spell is unlearned
+      noItemMiss              GtGTip key replacing the no-item line while the conjure is learnable
 ]]

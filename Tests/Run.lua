@@ -3,11 +3,8 @@
     by .pkgmeta. Run from the add-on root with Lua 5.1, the version WoW embeds:
     lua5.1 Tests/Run.lua
 
-    Event subscriptions: ns.SetModuleEvent asserts on any event missing from
-    ns.EVENT_NAMES in Features/Core.lua, and that assert stops the feature's
-    load at a player's login. This reads every Lua file the TOCs load and fails
-    on any event a feature subscribes to, handles or lists that ns.EVENT_NAMES
-    doesn't name, so the gap shows here instead.
+    An event missing from ns.EVENT_NAMES stops a feature's load at a player's
+    login, so these fail on one here first.
 ]]
 
 local failures = 0
@@ -33,11 +30,7 @@ end
 -- Tokenizer
 --------------------------------------------------------------------------------
 
---[[
-    Just enough of Lua 5.1's lexer to read names, strings and punctuation with
-    their line numbers. Comments are dropped, and escapes are left as written,
-    since an event name never holds one.
-]]
+-- Escapes are left as written, since an event name never holds one.
 
 local function CountNewlines(source, first, last)
 	local _, count = source:sub(first, last):gsub("\n", "")
@@ -122,11 +115,7 @@ local function NamesEvents(name)
 	return name:lower():find("event", 1, true) ~= nil
 end
 
---[[
-    A call that subscribes to an event or attaches its handler: ns.SetModuleEvent and the features' wrappers,
-    ns.SetEventRegistered, ns.SetRankWatchEvent, ns.SetBuffDutyEventHandler, ns.SetRankWatchHandler. The
-    Diagnostics log's own entries (ns:LogEventNow("RESTOCKER_TRACE", ...)) are not events and don't match.
-]]
+-- The Diagnostics log's own entries (ns:LogEventNow("RESTOCKER_TRACE", ...)) are not events and don't match.
 local function SubscribesEvents(name)
 	return name:find("^Set%w*Event") ~= nil or name:find("^Set%w*Handler$") ~= nil
 end
@@ -289,7 +278,6 @@ local function ScanEvents(source)
 	return found
 end
 
--- The events a scan found that aren't in `known`, leaving out the list's own entries.
 local function MissingEvents(found, known, listName)
 	local missing = {}
 	for _, entry in ipairs(found) do
@@ -440,11 +428,8 @@ end
 
 --[[
     Registering COMBAT_LOG_EVENT_UNFILTERED on WoW Forever raises
-    ADDON_ACTION_FORBIDDEN, so Rank Watch's combat-log detection must stay out
-    of Good-to-Go_Camelot.toc. A shared file may still name the event, but only
-    behind a flavor check against "Camelot" (as Features/Core.lua and
-    Buff-Duty-Events.lua do), so a Camelot-listed file that names it without
-    one fails here.
+    ADDON_ACTION_FORBIDDEN, so a Camelot-listed file may name it only behind a
+    flavor check against "Camelot".
 ]]
 do
 	local TOC = "Good-to-Go_Camelot.toc"
@@ -470,11 +455,8 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Features/Core.lua's prune of characters copied in from another game
-    version (Style Guide: SAVED VARIABLES, Other-Client Characters), run in
-    both directions against AceDB-shaped tables. Its functions are lifted out
-    of Core by their source text and run in a sandbox, so nothing else in the
-    file loads.
+    Core's prune is lifted out by its source text and run in a sandbox, so
+    nothing else in the file loads.
 ]]
 local function LoadPrune()
 	local source = ReadFile("Features/Core.lua")
@@ -544,16 +526,12 @@ end
 -- Event Log Noise
 --------------------------------------------------------------------------------
 
---[[
-    Diagnostics/Event-Log.lua's capture filter (Build Reference: Event Log
-    Noise), run in a sandbox against UI_ERROR_MESSAGE, which carries its
-    message id first. ns.IsCorrelatedMessage stands in for Buff Duty's
-    allowlist, correlating only CORRELATED_ID.
-]]
+-- ns.IsCorrelatedMessage stands in for Buff Duty's allowlist, correlating only CORRELATED_ID.
 local CORRELATED_ID = 300
 local NOISE_ID = 51
 
-local function LoadEventLog()
+-- globals stands in for the client's own (_G), for the checks that read its strings.
+local function LoadEventLog(globals)
 	local chunk = assert(loadstring(ReadFile("Diagnostics/Event-Log.lua"), "Event-Log"))
 	local ns = {
 		diagnostics = {},
@@ -578,7 +556,7 @@ local function LoadEventLog()
 		unpack = unpack,
 		string = string,
 		table = table,
-		_G = {},
+		_G = globals or {},
 	})
 	chunk("Good-to-Go", ns)
 	return ns
@@ -616,6 +594,90 @@ do
 		#ns.diagnostics.log == 2 and ns.diagnostics.log[2]:find("UI_ERROR_MESSAGE(no id)", 1, true) ~= nil,
 		ns.diagnostics.log[2]
 	)
+end
+
+-- Currency Replenish reads a mail refusal by its text while a send runs; outside a send it is noise.
+do
+	local MAIL_ERROR_ID = 640
+	local mailError = "Internal mail database error."
+	local ns = LoadEventLog({ ERR_MAIL_DATABASE_ERROR = mailError })
+	ns.CurrencyReplenish = { Mailer = { busy = false } }
+	ns:StartEventLog()
+	ns:LogEvent("UI_ERROR_MESSAGE", MAIL_ERROR_ID, mailError)
+	local countedIdle = #ns.diagnostics.log == 0 and ns.diagnostics.suppressed.UI_ERROR_MESSAGE[MAIL_ERROR_ID] ~= nil
+	ns.CurrencyReplenish.Mailer.busy = true
+	ns:LogEvent("UI_ERROR_MESSAGE", MAIL_ERROR_ID, mailError)
+	Check(
+		"event log keeps a mail refusal during a Currency Replenish send as a full line",
+		countedIdle
+			and #ns.diagnostics.log == 1
+			and ns.diagnostics.log[1]:find("UI_ERROR_MESSAGE(640, Internal mail database error.)", 1, true) ~= nil,
+		ns.diagnostics.log[1]
+	)
+end
+
+--------------------------------------------------------------------------------
+-- Currency Replenish Sums
+--------------------------------------------------------------------------------
+
+local function LoadGoldMath()
+	local chunk = assert(loadstring(ReadFile("Features/Currency-Replenish/Currency-Replenish-Math.lua"), "Gold Math"))
+	local ns = {}
+	setfenv(chunk, { ipairs = ipairs })
+	chunk("Good-to-Go", ns)
+	return ns.GoldMath
+end
+
+do
+	local GoldMath = LoadGoldMath()
+	local G, POSTAGE = 10000, 30
+
+	Check(
+		"excess sends what's over keeps, less postage",
+		GoldMath.Excess(534 * G + 1240, 100, POSTAGE) == 434 * G + 1210
+	)
+	Check("excess is nothing at or under keeps", GoldMath.Excess(100 * G + 10, 100, POSTAGE) == 0)
+	Check("excess is nothing with no keeps set", GoldMath.Excess(500 * G, nil, POSTAGE) == 0)
+
+	Check("short counts gold on its way", GoldMath.Short({ keeps = 100, money = 20 * G, transit = 30 * G }) == 50 * G)
+	Check("short is nothing for a character left out", GoldMath.Short({ money = 0 }) == 0)
+
+	local selwyn = { keeps = 100, money = 20 * G }
+	local tamsin = { keeps = 100, money = 15 * G + 4000 }
+	local vexmore = { keeps = 50, money = 49 * G + 1000 }
+	local full = { keeps = 100, money = 534 * G }
+	local list = { selwyn, tamsin, vexmore, full }
+
+	local sends, total, short = GoldMath.Plan(list, 4210 * G, 1000, POSTAGE, true)
+	Check(
+		"replenish tops up the short ones and skips under 1g",
+		#sends == 2
+			and sends[1].record == selwyn
+			and sends[2].record == tamsin
+			and total == 164 * G + 6000
+			and #short == 0
+	)
+	sends = GoldMath.Plan(list, 4210 * G, 1000, POSTAGE, false)
+	Check("with the switch off, under 1g is sent too", #sends == 3 and sends[3].amount == 9000)
+
+	-- The bank keeps 1,000g and has 1,100g: Selwyn's 80g fits, Tamsin's 84g 60s doesn't, and the run stops there.
+	sends, total, short = GoldMath.Plan(list, 1100 * G, 1000, POSTAGE, false)
+	Check(
+		"a bank that runs out fills in order, then names who was short",
+		#sends == 1 and total == 80 * G and #short == 2 and short[1].record == tamsin and short[2].record == vexmore
+	)
+
+	local alt = { keeps = 100, money = 20 * G }
+	GoldMath.AddTransit(alt, 80 * G)
+	sends = GoldMath.Plan({ alt }, 4210 * G, nil, POSTAGE, true)
+	Check("a second replenish sends nothing more to a topped-up alt", #sends == 0)
+	Check("gold on its way stays until it arrives", not GoldMath.SettleTransit(alt, 50 * G) and alt.transit == 80 * G)
+	Check("gold on its way clears once the money arrives", GoldMath.SettleTransit(alt, 100 * G) and alt.transit == nil)
+
+	GoldMath.SetWaiting(alt, 30 * G, 70 * G)
+	Check("the inbox's waiting gold becomes the gold on its way", alt.transit == 30 * G and alt.transitBase == 70 * G)
+	GoldMath.SetWaiting(alt, 0, 100 * G)
+	Check("an inbox with none waiting clears it", alt.transit == nil)
 end
 
 --------------------------------------------------------------------------------

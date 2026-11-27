@@ -7,17 +7,11 @@ local DESCRIPTIONS, NOTES = ns.MENU_DESCRIPTIONS, ns.MENU_NOTES
 local COMBAT, REPEAT, FIRST, ERRORS = ns.MENU_COMBAT, ns.MENU_REPEAT, ns.MENU_FIRST, ns.MENU_ERRORS
 
 --[[
-	The sections of a page macro's right-click menu (Features/Enhanced-Spellbook/Macro-Menu.lua) from Target to Error Messages,
-	each added to the menu in turn by ns.ShowMacroMenu. Each takes menuState, the menu being built: its root, the macro
-	(which change points at the rebuilt entry), its button and page, and the checkbox, radio, group, section and
-	change helpers ns.ShowMacroMenu makes.
+	Each section takes menuState from ns.ShowMacroMenu: root, macro (change re-points it at the rebuilt entry),
+	button, page, and the checkbox, radio, group, section and change helpers.
 ]]
 
---[[
-	Target: who the macro tries, in turn, as up to three priorities, each a submenu of the units it can
-	pick. A lower priority leaves out the units a higher one took, and Third waits for Second. A pick redraws
-	the menu built afresh, so the places below it follow.
-]]
+-- A pick redraws the whole menu, so the priorities below it follow.
 function ns.MacroMenuTarget(menuState)
 	local section, group, change = menuState.section, menuState.group, menuState.change
 	if ns.OffersTargetPriority(menuState.macro) then
@@ -83,11 +77,7 @@ function ns.MacroMenuTarget(menuState)
 	end
 end
 
---[[
-	The ranks a group's spells or a spell's ranks are, for the Grouped Spells and Rank submenus: the class's
-	What's Next? row for id (or the spell named name) when there is one, so each reads as the tooltip's ranks
-	do (ns.RankState, ns.RankLabel, ns.RankNote); else known, or one the trainer teaches at level.
-]]
+-- The class's What's Next? row when there is one, so each rank reads as the tooltip's ranks do.
 local function MenuRank(known, id, name, level)
 	if known then
 		return { status = "KNOWN", level = level }
@@ -100,7 +90,6 @@ local function MenuRank(known, id, name, level)
 	return { status = reached and "AVAILABLE" or "LATER", source = "TRAINER", level = level }
 end
 
--- Puts a rank's note beside its checkbox or radio, where it has one.
 local function AddRankNote(element, rank)
 	local note = rank.status ~= "KNOWN" and ns.RankNote(rank)
 	if note then
@@ -108,11 +97,7 @@ local function AddRankNote(element, rank)
 	end
 end
 
---[[
-	Grouped Spells: Right-Click for the group (or single) version, and the spells of its SPELL_GROUPS
-	group, each a checkbox in its rank color with its note, as a spell's ranks are (MenuRank), so they can be
-	ticked ahead of learning them
-]]
+-- A group's spells can be ticked ahead of learning them.
 function ns.MacroMenuGroupedSpells(menuState)
 	local section, group, change = menuState.section, menuState.group, menuState.change
 	local rightClick = ns.RightClickSpell(menuState.macro)
@@ -177,11 +162,7 @@ function ns.MacroMenuGroupedSpells(menuState)
 	end
 end
 
---[[
-	Rank: Max Rank, naming the rank it casts now, Dynamic (a friendly spell's Dynamic Rank), or a known rank; the
-	rest disabled, gray and unclickable, each with its note (MenuRank): where to learn it for one the character
-	could have now, its level for one still to come
-]]
+-- Unlearned ranks are listed disabled, each with where or when it is learned.
 function ns.MacroMenuRank(menuState)
 	local section, group, radio = menuState.section, menuState.group, menuState.radio
 	if ns.OffersFixedRank(menuState.macro) or ns.OffersTargetRank(menuState.macro) then
@@ -225,10 +206,7 @@ function ns.MacroMenuRank(menuState)
 				all[#all + 1] = rank
 			end
 		end
-		--[[
-			highest on top, down to Rank 1 at the bottom, known and unlearned ranks interleaved by level; two
-			ranks taught at the same level keep the newer (higher spell ID) above
-		]]
+		-- highest first, known and unlearned interleaved by level; a level tie puts the higher spell ID above
 		table.sort(all, function(a, b)
 			if a.level ~= b.level then
 				return a.level > b.level
@@ -254,10 +232,7 @@ function ns.MacroMenuRank(menuState)
 	end
 end
 
---[[
-	Conditionals: opens the panel docked beside the window (Features/Enhanced-Spellbook/Macro-Builder/Conditionals-Panel.lua), where
-	the rows are set; the value names the one set ("Shift: Frost Nova") or counts them
-]]
+-- The value names the one row set ("Shift: Frost Nova") or counts them.
 function ns.MacroMenuConditionals(menuState)
 	local section, root, page = menuState.section, menuState.root, menuState.page
 	if ns.OffersConditionals(menuState.macro) then
@@ -272,10 +247,7 @@ function ns.MacroMenuConditionals(menuState)
 	end
 end
 
---[[
-	Cast Sequence: opens its panel, docked where the Conditionals panel docks
-	(Features/Enhanced-Spellbook/Macro-Builder/Cast-Sequence-Panel.lua); the value counts the steps, the macro's own included
-]]
+-- The value counts the steps, the macro's own included.
 function ns.MacroMenuCastSequence(menuState)
 	local section, root, page = menuState.section, menuState.root, menuState.page
 	if ns.OffersCastSequence(menuState.macro) then
@@ -296,7 +268,6 @@ function ns.MacroMenuCastSequence(menuState)
 	end
 end
 
--- When: the combat check, how often it casts, and when it does nothing
 function ns.MacroMenuWhen(menuState)
 	local group, radio, checkbox = menuState.group, menuState.radio, menuState.checkbox
 	local whenMenu = group("MENU_GROUP_WHEN", function()
@@ -346,11 +317,7 @@ function ns.MacroMenuWhen(menuState)
 	checkbox(whenMenu, "stopIfStealthed", L["MENU_STOP_IF_STEALTHED"])
 end
 
---[[
-	First: what runs before the cast, the items last, each labeled with its place in the order. The
-	slots are the equipped on-use items, plus any slot already ticked so it can be unticked after a gear
-	swap. True when it added its submenu.
-]]
+-- Lists any slot already ticked, so it can be unticked after a gear swap. True when it added its submenu.
 function ns.MacroMenuFirst(menuState)
 	local group, checkbox, change = menuState.group, menuState.checkbox, menuState.change
 	local slots = {}
@@ -400,10 +367,7 @@ function ns.MacroMenuFirst(menuState)
 					ns.ToggleUseSlot(menuState.macro, slot)
 				end)
 			end)
-			--[[
-				the icon at line height, and the slot's place in the order light yellow on the right in On's place,
-				read each time the menu redraws
-			]]
+			-- the slot's place in the order, in On's place, read on each redraw
 			element:SetLabel(function()
 				local icon = GetInventoryItemTexture("player", slot)
 				return (icon and "|T" .. icon .. ":0|t " or "") .. ns.SlotLabel(slot)
@@ -418,7 +382,7 @@ function ns.MacroMenuFirst(menuState)
 	return firstOffered
 end
 
--- Then: what runs after the cast, less what sits at the top already; true when it added its submenu
+-- Leaves out what sits at the top already; true when it added its submenu.
 function ns.MacroMenuThen(menuState)
 	local group, checkbox, isFeatured = menuState.group, menuState.checkbox, menuState.isFeatured
 	local THEN = ns.MenuThenOptions()

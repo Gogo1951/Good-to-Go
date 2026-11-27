@@ -5,47 +5,24 @@ local GroupHasClass = ns.GroupHasClass
 local PartyHasClass = ns.PartyHasClass
 
 --[[
-    Readiness -- the Readiness Report. When a ready check starts, prints a
-    private list of what still needs fixing. Nothing is ever sent to group chat:
-    every line is a print to the player alone.
-
     SILENCE IS THE DEFAULT OUTPUT. A section with nothing wrong is not printed,
-    and a report with no sections is not printed at all -- there is no all-clear
-    line. That is the whole reason the report can afford to cover this much: a
-    prepared player sees nothing, so the only reports anyone reads are the ones
-    that need reading. Never add a line that fires when something is FINE.
-
-    Shape, one print per line, each dropped when empty:
+    and a clean report not at all: no all-clear line. Never add a line that
+    fires when something is FINE.
 
         Good to Go // Readiness Report
         Good to Go // Missing Buffs : ... . Expiring Soon : ...
         Good to Go // Missing Items : ... . Damaged Gear : ...
         Good to Go // Character : ... . Non-combat Gear Equipped : ...
 
-    Every line goes through ns.PrintMessage, so every line carries the brand --
-    the same shape the Restock List's own reports print in, where a headline is
-    followed by branded detail lines. A report is several prints rather than one
-    message, and a chat window interleaves other add-ons between them, so a body
-    line with no brand on it reads as coming from somewhere else.
-
-    Each category answers to its own account-wide switch, all of them dead while
-    the master switch is off; see Data/Default-Settings.lua for the defaults.
-
-    Inside a PvP Arena the report drops its buff, expiring and missing-item
-    clauses and keeps what the prep room can still fix; see
-    ns.BuildReadinessLines.
+    Every line carries the brand: other add-ons' prints interleave, so an
+    unbranded body line reads as someone else's.
 ]]
 
 --------------------------------------------------------------------------------
 -- Line Assembly
 --------------------------------------------------------------------------------
 
--- Shared with the panel's Example (Readiness-Report-Example.lua), so both read the same.
-
---[[
-    One "Label : a, b, c" clause. ns.ReadinessLine joins clauses with
-    READINESS_CLAUSE_SEPARATOR, so a clause never carries its own trailing stop.
-]]
+-- No trailing stop: ns.ReadinessLine joins clauses with READINESS_CLAUSE_SEPARATOR.
 function ns.ReadinessClause(label, values)
 	if #values == 0 then
 		return nil
@@ -58,11 +35,8 @@ function ns.ReadinessClause(label, values)
 end
 
 --[[
-    A report line from its clauses, or nil when every one of them was empty.
-
-    The clause colors sit INSIDE what ns.PrintMessage wraps in C_TEXT. A |r
-    resets to the default rather than to the enclosing color, which is why each
-    clause re-opens C_TEXT after its label instead of relying on the wrapper's.
+    A |r resets to the default, not the enclosing color, so each clause re-opens
+    TEXT after its label instead of relying on ns.PrintMessage's wrapper.
 ]]
 function ns.ReadinessLine(...)
 	local clauses = {}
@@ -85,16 +59,11 @@ local Line = ns.ReadinessLine
 -- Which Lines Can Show
 --------------------------------------------------------------------------------
 
---[[
-    Whether the report asks about each of these at all, before it looks at the
-    player's buffs or bags. Shared with the panel's Example, so the Example
-    never shows a line the real report would keep quiet about.
-]]
+-- Shared with the panel's Example, so it never shows a line the real report would keep quiet about.
 function ns.ReadinessAsksWellFed(_, reports)
 	return reports.readinessWellFed and true or false
 end
 
--- Only while some scroll type is ticked (scrollTypes), since those are the scrolls you'd read.
 function ns.ReadinessAsksScrolls(settings, reports)
 	if not reports.readinessScrolls then
 		return false
@@ -120,27 +89,13 @@ end
 -- Missing Buffs
 --------------------------------------------------------------------------------
 
---[[
-    A buff with a macro behind it answers to TWO switches: the profile's
-    macro switch saying the character uses the thing at all, and the
-    account-wide report switch saying to mention it. Both must be on, because
-    reporting a buff the character never applies would be noise whatever the
-    report is set to. Flask, Well Fed, scrolls, weapon buffs and the group
-    soulstone have no macro behind them (Buff Duty offers the food and the
-    scrolls), so they answer to their report switch alone; scrolls keep to
-    the scroll types ticked.
-]]
 local function BuildMissingBuffs(settings, reports)
 	local missing = {}
-	-- One walk of your buffs serves the Well Fed and scroll checks below.
 	local snapshot = ns.GetPlayerBuffSnapshot()
 
 	--[[
-	    TBC and later, which is a maintainer decision rather than a data one: Era
-	    and Forever have flasks and elixirs, but they are not what an Era raid
-	    runs on, so the line would be wrong for most of the people it fired at.
-	    The option hides itself on Era and Forever to match
-	    (Options/Readiness-Report/Options-Readiness-Report.lua).
+	    TBC and later, the maintainer's choice: Era and Forever have flasks, but
+	    an Era raid doesn't run on them. The option hides there to match.
 	]]
 	if reports.readinessFlask and ns.EXPANSION >= 2 and not ns.HasFlaskOrElixirs() then
 		missing[#missing + 1] = L["READINESS_FLASK"]
@@ -150,22 +105,14 @@ local function BuildMissingBuffs(settings, reports)
 		missing[#missing + 1] = ns.GetWellFedName()
 	end
 
-	--[[
-	    The same gate the macro uses, so the report can only ask for a buff the
-	    add-on would actually apply -- never from a Hunter too low for the food
-	    to exist, and never for a dead pet, which is a resurrection problem
-	    rather than a feeding one.
-	]]
+	-- The macro's gate: never for a Hunter too low for the food, nor a dead pet.
 	if reports.readinessPetWellFed and ns.ShouldTrackPetFood() and ns.GetPetFoodBuffExpiration() == nil then
 		missing[#missing + 1] = string.format(L["READINESS_PET_FORMAT"], ns.GetWellFedName())
 	end
 
 	--[[
-	    Coverage is settled from the aura snapshot, never from the scrolls in
-	    the bags alone (ns.FindMissingScrolls): someone missing the buffs with
-	    no scrolls to read would read as covered. A type counts as covered by
-	    its own scroll buff or by a conflicting class buff or elixir; a weaker
-	    one with a stronger scroll in the bags still asks.
+	    Never from the bags alone: someone missing the buffs with no scrolls
+	    would read as covered. A weaker buff with a stronger scroll carried still asks.
 	]]
 	if ns.ReadinessAsksScrolls(settings, reports) then
 		local uncovered = false
@@ -182,30 +129,15 @@ local function BuildMissingBuffs(settings, reports)
 		end
 	end
 
-	--[[
-	    The one entry that asks the GROUP rather than the player: is a stone up
-	    on anyone. Only a Warlock who knows Create Soulstone sees it, because
-	    only they can put one up, and only while the stones' cooldown lets them.
-	    Anyone else would be reading a nag they cannot clear.
-	]]
+	-- Asks the group. Only a Warlock who can put a stone up sees it; anyone else couldn't clear it.
 	if ns.ReadinessAsksSoulstone(reports) and not ns.GroupHasSoulstone() and not ns.SoulstonesOnCooldown() then
 		missing[#missing + 1] = L["READINESS_SOULSTONE"]
 	end
 
 	--[[
-	    Any temporary enchant counts -- a stone, an oil, a poison, a shaman
-	    imbue -- without caring which. On WoW Forever, where an imbue sits
-	    beside an oil or stone, a Rogue's hands and a Shaman's main hand want
-	    one of each (ns.GetMissingWeaponBuffs counts them).
-
-	    A SHAMAN IN THE PLAYER'S OWN PARTY SATISFIES THE MAIN HAND, and only the
-	    main hand: that is the slot their totem answers for, and it reaches only
-	    their party, so with one there the line stops being a thing the player
-	    has to act on. The off hand asks the
-	    same question with no such exemption. Not on WoW Forever, where
-	    Windfury Totem is a group buff that leaves the weapon alone. Resolved
-	    once for the pair rather than per slot, so the group walk runs at most
-	    once per report.
+	    A Shaman in the player's own party covers the main hand only: their
+	    totem's slot, reaching only their party. Not on Forever, where Windfury
+	    Totem is a group buff that leaves the weapon alone.
 	]]
 	if reports.readinessMainHandBuff or reports.readinessOffHandBuff then
 		local mainHandMissing, offHandMissing = ns.GetMissingWeaponBuffs()
@@ -221,10 +153,7 @@ local function BuildMissingBuffs(settings, reports)
 	return missing
 end
 
---[[
-    Buffs about to lapse, named with whole minutes left. Under a minute reads as
-    its own phrase rather than "0 min", which would look like a bug.
-]]
+-- Under a minute gets its own phrase: "0 min" would look like a bug.
 local function BuildExpiring(reports)
 	local expiring = {}
 
@@ -250,16 +179,9 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Reads the winners from the last ScanBags pass (ns.bestSelection) rather than
-    rescanning: the scan re-runs on every bag change under its own throttle, so
-    the result is already current. A nil id means nothing usable was found.
-
-    ScanBags fills every category whether or not its macro is enabled -- the
-    enabled check lives in the macro writer, not the scanner -- so these read
-    real bag contents, and a player who turned a macro off still gets a truthful
-    answer about what they are carrying. An item on either Ignore List counts as
-    carried too (ns.scannedIgnoredTypes): the report never names something the
-    player has in their bags.
+    The scan fills every category whether or not its macro is on, so this is
+    true with a macro off. An ignored item counts as carried: the report never
+    names something in the bags.
 ]]
 local function CarryingNone(typeName)
 	local selection = ns.bestSelection
@@ -268,11 +190,8 @@ local function CarryingNone(typeName)
 end
 
 --[[
-    The Mana Gem category can be won by a rune once the player adds runes to
-    that macro, and a rune is not the gem this line asks a Mage to conjure, while
-    enough runes can push a held gem out of the ranked slots. So the line looks
-    for any gem in the last scan's bag counts instead. Silent before the first
-    scan, like every item line.
+    Raw counts, not the category's winner: runes added to that macro can win it
+    or push a held gem out of the ranked slots. Silent before the first scan.
 ]]
 local function CarryingNoManaGem()
 	local selection = ns.bestSelection
@@ -291,15 +210,11 @@ end
 local function BuildMissingItems(reports)
 	local missing = {}
 
-	--[[
-	    The Healthstone carries a Warlock gate on top of its switch: with no Warlock
-	    present to ask, a missing stone is not something the player can act on.
-	]]
+	-- With no Warlock to ask, a missing stone is nothing the player can act on.
 	if reports.readinessHealthstone and CarryingNone("Healthstone") and GroupHasClass("WARLOCK") then
 		missing[#missing + 1] = L["READINESS_HEALTHSTONE"]
 	end
 
-	-- A Mage who can conjure one: anyone else could only ever read "missing".
 	if ns.ReadinessAsksManaGem(reports) and CarryingNoManaGem() then
 		missing[#missing + 1] = L["READINESS_MANA_GEM"]
 	end
@@ -352,22 +267,9 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The report's body lines, or nil when there is nothing to say.
-
-    Split from the printing so Diagnostic Tools can render the same answer on
-    demand, without waiting for a ready check. That is the only way to tell the
-    report's two silences apart -- "you are ready" and "it never ran" look
-    identical in a chat window, which is exactly how long a silent failure can
-    hide.
-
-    Deliberately ignores the master switch: this answers what the report WOULD
-    say, and the caller decides whether it is allowed to say it.
-
-    inArena applies the arena rule. Arenas block potions, buff food and
-    scrolls, and flag every player for PvP. The Missing Buffs, Expiring Soon
-    and Missing Items clauses and the PvP entry drop there; damaged gear, the
-    spec and unspent points, and non-combat gear stay, because the prep room
-    can still fix them.
+    Ignores the master switch and is split from printing, so Diagnostics can
+    tell "you are ready" from "it never ran". Arenas block potions, buff food
+    and scrolls and flag everyone, so inArena keeps only what the prep room can fix.
 ]]
 function ns.BuildReadinessLines(inArena)
 	local reports = ns.db and ns.db.global
@@ -396,23 +298,12 @@ function ns.BuildReadinessLines(inArena)
 		Clause(L["READINESS_QUESTIONABLE_GEAR"], questionable)
 	)
 
-	--[[
-	    Nothing wrong, nothing said. nil rather than an empty table, so a caller
-	    cannot accidentally print a header over no lines -- a prepared player
-	    gets no output at all rather than an all-clear. See the note at the top
-	    of this file before adding one.
-	]]
+	-- Nil, not an empty table, so no caller can print a header over no lines.
 	if not (buffsLine or itemsLine or characterLine) then
 		return nil
 	end
 
-	--[[
-	    Appended one at a time, never gathered with ipairs over a literal holding
-	    all three: any of them can be nil, and ipairs stops dead at the first
-	    hole -- so a report whose Buffs line was empty would return the Items and
-	    Character lines as an EMPTY list, print its header, and say nothing under
-	    it. The guard above already guarantees at least one survives.
-	]]
+	-- One at a time, never ipairs over a literal: any can be nil, and ipairs stops at the first hole.
 	local lines = {}
 	if buffsLine then
 		lines[#lines + 1] = buffsLine
@@ -427,19 +318,9 @@ function ns.BuildReadinessLines(inArena)
 end
 
 --[[
-    Called on READY_CHECK by this file's own event module, below. Owns the master switch, the
-    gate that decides whether the report is allowed to speak at all, and hands
-    ns.BuildReadinessLines the live arena test; what it would say is that
-    function's business.
-
-    THERE IS NO GROUP TEST, deliberately: a ready check cannot be STARTED outside
-    a group, so the event never arrives solo and such a test could never be false
-    here. Every group-dependent entry already gates on the relevant class being
-    present.
-
-    While the client restricts aura data (Forever, typically a ready check
-    fired mid-pull), every aura field comes back secret and comparing one
-    errors, so the report stays silent and the next ready check reports.
+    No group test: a ready check never fires solo. While auras are secret
+    (Forever, typically mid-pull) comparing one errors, so the report stays
+    silent until the next check.
 ]]
 function ns.OnReadyCheck()
 	local reports = ns.db and ns.db.global
@@ -466,15 +347,11 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The report's own event module, so it hears READY_CHECK only while its
-    switch is on and whether or not the Macros feature is. Nothing here waits
-    for combat to end: a ready check routinely fires with the raid already
-    pulling, and the report only reads auras and the last bag scan before
-    printing, so it touches nothing protected.
+    Nothing waits for combat: a ready check often fires mid-pull, and the report
+    only reads auras and the last bag scan, nothing protected.
 ]]
 local MODULE = "ReadinessReport"
 
--- Called at login and by the report's switch (Options/Options-Feature-Switches.lua).
 function ns.SyncReadinessReportEvents()
 	local reports = ns.db and ns.db.global
 	ns.SetModuleEvent(MODULE, "READY_CHECK", reports and reports.readinessReportEnabled and true or false)

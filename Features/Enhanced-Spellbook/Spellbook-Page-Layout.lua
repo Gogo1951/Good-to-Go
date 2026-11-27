@@ -1,26 +1,15 @@
 local _, ns = ...
 
---[[
-	The Spell Book page's flow (Features/Enhanced-Spellbook/Spellbook-Page.lua): a category's runs packed into rows of
-	tiles, the rows filled into columns page by page, and where a form's label shows again over a row.
-]]
-
--- The flow inside a column, as Features/Enhanced-Spellbook/Spellbook-Page.lua sets it.
 local SLOTS, GAP_X = ns.SPELLBOOK_SLOTS, ns.SPELLBOOK_GAP_X
 local TILE_WIDTH = ns.TILE_WIDTH
 local HEADER_HEIGHT, ROW_HEIGHT = ns.SPELLBOOK_HEADER_HEIGHT, ns.SPELLBOOK_ROW_HEIGHT
 
---[[
-	CATEGORY_GAP is the clear space over a category's header, from the tiles of the one before. A header's name
-	sits about 32 above its first tiles (the header's lower half and a row strip), so the gap is about as wide:
-	at least as much air above a header as below it, so each name reads with the spells under it.
-]]
+-- At least as much air above a header as below it, so each name reads with the spells under it.
 local CATEGORY_GAP = 32
 
 --[[
-	A category's runs packed into rows of SLOTS tiles, each { segments }. A run starts in the very next free
-	slot, so two runs can share a row; a run that wraps carries on as a segment marked continued at the start of
-	the next row.
+	A run starts in the very next free slot, so two runs can share a row; a run that wraps carries on as a
+	continued segment.
 ]]
 local function PackRows(groups)
 	local rows, row, used = {}, nil, 0
@@ -44,18 +33,13 @@ local function PackRows(groups)
 	return rows
 end
 
--- The height of a category's header and its rows first to last.
 local function BlockHeight(first, last)
 	return HEADER_HEIGHT + (last - first + 1) * ROW_HEIGHT
 end
 
 --[[
-	Fills columns in order (page 1 left, page 1 right, page 2 left, ...) with category blocks, each
-	{ category, first, last, continued, y }. A category starts right under the one before and takes as many
-	of its rows as the column has room for; the rest carry on at the top of the next column, under its header
-	again, marked continued. It moves whole to the next column only when not even its header and first row fit,
-	so a category never leaves a header alone at a column's foot, and one more row above only pushes the last
-	row on.
+	A category takes the rows the column has room for and carries on, under its header again, in the next. It
+	moves whole only when not even its header and first row fit, so no header sits alone at a column's foot.
 ]]
 local function Paginate(categories, height)
 	local columns = { {} }
@@ -98,12 +82,11 @@ local function Paginate(categories, height)
 	return columns
 end
 
--- The width of a run of n tiles.
 local function RunWidth(n)
 	return n * TILE_WIDTH + (n - 1) * GAP_X
 end
 
--- The segment of a row that holds a slot (0 for the first), or nil past its last tile.
+-- slot counts from 0; nil past the row's last tile
 local function SegmentAt(row, slot)
 	local start = 0
 	for _, segment in ipairs(row.segments) do
@@ -116,10 +99,8 @@ local function SegmentAt(row, slot)
 end
 
 --[[
-	Whether a form's run shows its label at this row, starting at slot: always where the run starts, and where
-	it carries on only when that isn't plain from the tile above its first slot, which belongs to another run
-	or isn't there (the first row of a column, under the header again). So "BASIC ATTACKS" shows again over a
-	row whose first tile sits under a Defensive Stance spell, but not over the next row, under its own.
+	Always where the run starts; where it carries on, only when the tile above its first slot belongs to another
+	run or isn't there (a column's first row).
 ]]
 local function NeedsLabel(segment, above, slot)
 	if not segment.continued or not above then

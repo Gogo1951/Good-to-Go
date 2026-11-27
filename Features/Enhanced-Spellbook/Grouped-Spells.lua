@@ -1,20 +1,15 @@
 local _, ns = ...
 
--- A SPELL_GROUPS spell's macro casting the last spell learned of those ticked in its Grouped Spells menu.
-
 local SpellSettings = ns.SpellSettings
 local SettingsKey = ns.SettingsKey
 local NO_SLOTS = ns.NO_SLOTS
 
---[[
-	A spell in a SPELL_GROUPS group (Demon Skin, Demon Armor) offers the group's spells. Ticked, a spell is one the macro may cast; the macro casts the last one learned of those ticked, so
-	it moves up as the player trains. Every spell of the group is ticked to start with.
-]]
+-- The macro casts the last learned of the ticked spells, so it moves up as the player trains.
 function ns.OffersGroupedSpells(macro)
 	return macro.groupMembers ~= nil
 end
 
--- Every spell of the macro's group, in the group's order: the default ticks.
+-- The default ticks.
 local function GroupNames(macro)
 	local names = {}
 	for i, member in ipairs(macro.groupMembers) do
@@ -23,10 +18,7 @@ local function GroupNames(macro)
 	return names
 end
 
---[[
-	The names ticked in the macro's group, in the group's order, from the Rank 1 IDs saved for them, so the
-	ticks hold in any game language.
-]]
+-- Saved by Rank 1 ID, so the ticks hold in any game language.
 function ns.GroupedSpells(macro)
 	if not ns.OffersGroupedSpells(macro) then
 		return NO_SLOTS
@@ -57,7 +49,7 @@ function ns.IsGroupedSpellOn(macro, name)
 	return false
 end
 
--- Whether the macro's group has any spell ticked but its own, which is when the group changes the macro.
+-- Only a tick besides its own spell changes the macro.
 function ns.IsGrouped(macro)
 	for _, ticked in ipairs(ns.GroupedSpells(macro)) do
 		if ticked ~= macro.name then
@@ -67,10 +59,7 @@ function ns.IsGrouped(macro)
 	return false
 end
 
---[[
-	Ticks or unticks a spell of the macro's group, saved by Rank 1 ID. Unticking the last one ticks the macro's
-	own spell again, and the whole group ticked is stored as nil, the default.
-]]
+-- Unticking the last ticks the macro's own spell again; the whole group ticked is stored as nil.
 function ns.ToggleGroupedSpell(macro, name)
 	local on = not ns.IsGroupedSpellOn(macro, name)
 	local list = {}
@@ -89,11 +78,7 @@ function ns.ToggleGroupedSpell(macro, name)
 	SpellSettings("groupedSpells")[SettingsKey(macro)] = #list < #macro.groupMembers and list or nil
 end
 
---[[
-	The spell the macro casts: the Shoot macro's for the ranged weapon equipped (ns.EquippedRangedAttack, in
-	Features/Enhanced-Spellbook/Ranged-Attacks.lua); else of its group's ticked
-	spells, the last one learned, or its own spell when its group has none of them learned, or it has no group.
-]]
+-- Shoot casts the equipped ranged weapon's attack; else the last learned of the ticked spells, else its own.
 function ns.CastSpellName(macro)
 	if macro.rangedAttacks then
 		return ns.EquippedRangedAttack(macro)

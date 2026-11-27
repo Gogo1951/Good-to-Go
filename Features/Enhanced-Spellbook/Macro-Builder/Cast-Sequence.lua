@@ -4,17 +4,9 @@ local SpellSettings = ns.SpellSettings
 local SettingsKey = ns.SettingsKey
 
 --[[
-	A page macro's Cast Sequence: the macro's own spell as step 1, then the steps added after it, each pressed
-	in turn, as a /castsequence. When the last step has cast, the sequence starts over, or stops on NULL (a
-	spell no one knows, so the line casts nothing more) until a reset starts it over: the target changing,
-	combat ending, Shift, Ctrl or Alt held on a press, or some seconds without a press. A step that fails (out
-	of range, on cooldown) doesn't move the sequence on, so the next press tries it again.
-
-	Three per-spell settings (Features/Enhanced-Spellbook/Macro-Settings.lua) hold it, each flat so a Duplicate copy
-	gets its own (Features/Enhanced-Spellbook/Macro-Copies.lua): "castSequence" the added steps, "castSequenceEnd"
-	"stop" or nil for starting over, and "castSequenceReset" the resets, keys and a number of seconds.
-	Features/Enhanced-Spellbook/Macro-Body.lua writes them into the cast line, and
-	Features/Enhanced-Spellbook/Macro-Builder/Cast-Sequence-Panel.lua is the panel docked beside the Spellbook that sets them.
+	NULL is a spell no one knows, so the line casts nothing more until a reset. Three per-spell settings hold it,
+	each flat so a Duplicate copy gets its own: "castSequence" the added steps, "castSequenceEnd" "stop" or nil,
+	and "castSequenceReset" the reset keys and seconds.
 ]]
 
 local NO_STEPS = {}
@@ -49,17 +41,14 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-	Every spell macro offers a Cast Sequence but a consumable's, which is Consumable Macros', and the Shoot macro's, whose attack follows the
-	weapon worn by a clause per weapon, which a sequence can't take.
+	A consumable's is Consumable Macros'; the Shoot macro's attack follows the weapon worn by a clause per weapon,
+	which a sequence can't take.
 ]]
 function ns.OffersCastSequence(macro)
 	return ns.HasOptions(macro) and not macro.rangedAttacks
 end
 
---[[
-	Why a macro's sequence writes nothing, as the line the panel shows, or nil when it casts. A summon macro
-	casting its pet's ability while the pet is out writes a cast line of its own.
-]]
+-- A summon macro casting its pet's ability while the pet is out writes a cast line of its own.
 function ns.CastSequenceBlockReason(macro)
 	if ns.IsOptionOn(macro, "pet") then
 		return L["CAST_SEQUENCE_PET_BLOCKED"]:format(macro.petAbility)
@@ -68,9 +57,8 @@ function ns.CastSequenceBlockReason(macro)
 end
 
 --[[
-	The steps after the macro's own, in order, each { spellID, fixed }: spellID the rank's own ID, fixed when
-	the step casts that rank rather than the highest known. A step with no spell is waiting for one, and
-	writes nothing. Steps are never changed in place, only replaced: the setters store a fresh list.
+	Each { spellID, fixed }: fixed casts that rank rather than the highest known. Steps are never changed in
+	place, only replaced: the setters store a fresh list.
 ]]
 function ns.CastSequenceSteps(macro)
 	if not ns.OffersCastSequence(macro) then
@@ -80,7 +68,6 @@ function ns.CastSequenceSteps(macro)
 	return type(steps) == "table" and steps or NO_STEPS
 end
 
--- How many steps after the macro's own have a spell.
 function ns.CastSequenceStepCount(macro)
 	local count = 0
 	for _, step in ipairs(ns.CastSequenceSteps(macro)) do
@@ -92,27 +79,24 @@ function ns.CastSequenceStepCount(macro)
 end
 
 --[[
-	Whether the macro casts a sequence: it offers one, nothing blocks it, and a step after its own has a spell or
-	it stops on NULL. The macro's own spell then NULL is a sequence of its own: it casts once, then nothing until
-	a reset, "/castsequence reset=target Rend, NULL".
+	The macro's own spell then NULL is a sequence of its own: it casts once, then nothing until a reset,
+	"/castsequence reset=target Rend, NULL".
 ]]
 function ns.IsCastSequenceOn(macro)
 	return (ns.CastSequenceStepCount(macro) > 0 or ns.CastSequenceStops(macro))
 		and not ns.CastSequenceBlockReason(macro)
 end
 
--- Whether the sequence stops on NULL when its last step has cast, rather than starting over.
 function ns.CastSequenceStops(macro)
 	return ns.OffersCastSequence(macro) and SpellSettings("castSequenceEnd")[SettingsKey(macro)] == "stop"
 end
 
--- The sequence's resets, as stored: keys from CAST_SEQUENCE_RESETS and at most one number of seconds.
+-- Keys from CAST_SEQUENCE_RESETS and at most one number of seconds.
 local function StoredResets(macro)
 	local resets = SpellSettings("castSequenceReset")[SettingsKey(macro)]
 	return type(resets) == "table" and resets or DEFAULT_RESETS
 end
 
--- Whether the sequence starts over on a reset key ("target", "shift").
 function ns.IsCastSequenceReset(macro, key)
 	for _, reset in ipairs(StoredResets(macro)) do
 		if reset == key then
@@ -122,7 +106,6 @@ function ns.IsCastSequenceReset(macro, key)
 	return false
 end
 
--- The seconds without a press after which the sequence starts over, or nil for none.
 function ns.CastSequenceSeconds(macro)
 	for _, reset in ipairs(StoredResets(macro)) do
 		if type(reset) == "number" then
@@ -132,10 +115,7 @@ function ns.CastSequenceSeconds(macro)
 	return nil
 end
 
---[[
-	What reset= writes for the macro, the seconds first then the keys in the menu's order ("5/target/combat"),
-	or nil for none, when the sequence never starts over by itself.
-]]
+-- "5/target/combat": the seconds first, then the keys in the menu's order.
 function ns.CastSequenceResetText(macro)
 	local parts = { ns.CastSequenceSeconds(macro) }
 	for _, reset in ipairs(ns.CAST_SEQUENCE_RESETS) do
@@ -146,7 +126,7 @@ function ns.CastSequenceResetText(macro)
 	return #parts > 0 and table.concat(parts, "/") or nil
 end
 
--- The resets by their labels, for the panel's dropdown and the tile's tooltip: "Target Changes, 5 Seconds".
+-- "Target Changes, 5 Seconds"
 function ns.CastSequenceResetLabels(macro)
 	local labels = {}
 	for _, reset in ipairs(ns.CAST_SEQUENCE_RESETS) do
@@ -161,15 +141,12 @@ function ns.CastSequenceResetLabels(macro)
 	return labels
 end
 
--- What a step casts, as the macro text names it: "Corruption", or "Immolate(Rank 1)" for a step fixed to a rank.
+-- "Corruption", or "Immolate(Rank 1)" for a step fixed to a rank
 local function StepText(step)
 	return step.spellID and ns.ConditionalSpellText(step)
 end
 
---[[
-	What follows the macro's own spell in its sequence: ", Corruption, Curse of Agony", then ", NULL" where it
-	stops. A step whose spell isn't loaded is left out until it is.
-]]
+-- ", Corruption, Curse of Agony, NULL"; a step whose spell isn't loaded is left out until it is.
 function ns.CastSequenceTail(macro)
 	local tail = {}
 	for _, step in ipairs(ns.CastSequenceSteps(macro)) do
@@ -184,10 +161,7 @@ function ns.CastSequenceTail(macro)
 	return table.concat(tail)
 end
 
---[[
-	The sequence in short words, for the menu's value and the tile's tooltip: "Fireball, Frostbolt, Stop", the
-	macro's own spell first.
-]]
+-- "Fireball, Frostbolt, Stop"
 function ns.CastSequenceSummary(macro)
 	local names = { ns.CastSpellName(macro) }
 	for _, step in ipairs(ns.CastSequenceSteps(macro)) do
@@ -206,10 +180,7 @@ end
 -- Changes
 --------------------------------------------------------------------------------
 
---[[
-	The setters below only change the stored settings; the panel then rebuilds the page, which rewrites the
-	macro (ns.RefreshSpellbookPage), as the menu does.
-]]
+-- The setters only change the stored settings; the panel then rebuilds the page, which rewrites the macro.
 
 local function CopySteps(macro)
 	local steps = {}
@@ -223,7 +194,6 @@ local function StoreSteps(macro, steps)
 	SpellSettings("castSequence")[SettingsKey(macro)] = #steps > 0 and steps or nil
 end
 
--- Adds a step at the end with no spell yet.
 function ns.AddCastSequenceStep(macro)
 	local steps = CopySteps(macro)
 	if #steps >= ns.CAST_SEQUENCE_MAX_STEPS then
@@ -239,7 +209,6 @@ function ns.RemoveCastSequenceStep(macro, index)
 	StoreSteps(macro, steps)
 end
 
--- Moves the step at from to the place to, the steps between shifting a place to make room.
 function ns.MoveCastSequenceStep(macro, from, to)
 	local steps = CopySteps(macro)
 	if from == to or not steps[from] or not steps[to] then
@@ -249,7 +218,7 @@ function ns.MoveCastSequenceStep(macro, from, to)
 	StoreSteps(macro, steps)
 end
 
--- Sets the spell a step casts, from a { spellID, fixed } pick (ns.CastSequenceSpellOf).
+-- pick is { spellID, fixed }
 function ns.SetCastSequenceStepSpell(macro, index, pick)
 	local steps = CopySteps(macro)
 	if not steps[index] then
@@ -259,12 +228,11 @@ function ns.SetCastSequenceStepSpell(macro, index, pick)
 	StoreSteps(macro, steps)
 end
 
--- Sets whether the sequence stops on NULL when its last step has cast, or starts over.
 function ns.SetCastSequenceStops(macro, stops)
 	SpellSettings("castSequenceEnd")[SettingsKey(macro)] = stops and "stop" or nil
 end
 
--- Stores the resets, or nil for the default ones.
+-- nil for the default ones
 local function StoreResets(macro, resets)
 	local default = #resets == #DEFAULT_RESETS
 	for i, reset in ipairs(DEFAULT_RESETS) do
@@ -273,7 +241,7 @@ local function StoreResets(macro, resets)
 	SpellSettings("castSequenceReset")[SettingsKey(macro)] = not default and resets or nil
 end
 
--- The stored resets with key turned on or off, the keys in the menu's order and the seconds after.
+-- Stored with the keys in the menu's order and the seconds after.
 function ns.ToggleCastSequenceReset(macro, key)
 	if not RESET_KEYS[key] then
 		return
@@ -290,7 +258,6 @@ function ns.ToggleCastSequenceReset(macro, key)
 	StoreResets(macro, resets)
 end
 
--- Sets the seconds without a press after which the sequence starts over, or nil for none.
 function ns.SetCastSequenceSeconds(macro, seconds)
 	local resets = {}
 	for _, reset in ipairs(ns.CAST_SEQUENCE_RESETS) do
@@ -302,10 +269,7 @@ function ns.SetCastSequenceSeconds(macro, seconds)
 	StoreResets(macro, resets)
 end
 
---[[
-	The spell a page macro gives a step, as { spellID, fixed }, or nil for one that can't be picked: the ones
-	ns.ConditionalSpellOf turns down, and the Shoot macro, whose attack depends on the weapon worn.
-]]
+-- The Shoot macro can't be picked: its attack depends on the weapon worn.
 function ns.CastSequenceSpellOf(macro)
 	local pick = ns.ConditionalSpellOf(macro)
 	return pick and not pick.ranged and pick or nil

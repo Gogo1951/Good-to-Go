@@ -1,12 +1,5 @@
 local _, ns = ...
 
---[[
-    Buff Duty's aura cache: what each player has on, read once per change
-    and kept by GUID, the strength your own casts land with, and the buffs a
-    stronger one refused. Shared with the other Buff Duty files through
-    ns.BuffDuty.
-]]
-
 local BuffDuty = ns.BuffDuty
 local buffs = BuffDuty.buffs
 local selfBuffs = BuffDuty.selfBuffs
@@ -18,13 +11,8 @@ local RankFor = BuffDuty.RankFor
 --------------------------------------------------------------------------------
 
 --[[
-    Each unit's buffs as last read, keyed by GUID so an aura change reported on
-    any of a player's tokens marks the one record: spell id -> expiration time,
-    -> duration, -> strength (see AuraStrength), and -> true for the auras you
-    cast. A record is read again only
-    once its GUID is marked dirty, a MarkAllAurasDirty has passed since its
-    read, or its unit has died, revived or changed connection, so a raid's aura
-    traffic re-reads only the members it touched.
+    Keyed by GUID so a change reported on any of a player's tokens marks the
+    one record, and a raid's aura traffic re-reads only the members it touched.
 ]]
 local auraCache = {}
 local dirtyGUIDs = {}
@@ -37,55 +25,34 @@ end
 -- Read fresh every time: a unit whose GUID can't be read has no record to keep.
 local uncachedRecord = NewRecord()
 
--- The record ReadAuras last selected, which Has reads.
 local auraExpires, auraDurations, auraStrengths, auraMine =
 	uncachedRecord.expires, uncachedRecord.durations, uncachedRecord.strengths, uncachedRecord.mine
 
---[[
-    Whether the record ReadAuras last selected skipped an aura it couldn't
-    read (a secret spell id on WoW Forever). Its buffs can't be told apart,
-    so a missing one there may only be one we can't see.
-]]
+-- A secret spell id skipped: a buff missing from that record may only be one we can't see.
 local auraUnreadable = false
 
---[[
-    Spell id -> the strength your own cast of it landed with, learned from
-    every aura of yours ReadAuras sees, on anyone. Talents raise it (Improved
-    Mark of the Wild), so it is only known once you have cast that rank this
-    session; until then Has falls back to comparing ranks.
-]]
+-- Talents raise strength, so it is known only once seen on an aura of yours; until then Has compares ranks.
 local myStrengths = {}
 
---[[
-    Spell id -> the full duration your own cast of it landed with, learned the
-    same way. Kept across talent changes: they change strength, not time.
-]]
+-- Kept across talent changes: they change strength, not time.
 local myDurations = {}
 
--- Talents and new ranks change what your casts land with, so it is learned again.
 function BuffDuty.ForgetMyStrengths()
 	wipe(myStrengths)
 end
 
 --[[
-    GUID -> buff key -> { aura id -> expiration time }: the versions of a buff
-    the game refused to cast over ("A more powerful spell is already active").
-    Classic Era and TBC Anniversary give no strength for another caster's buff,
-    so a stronger talented one only shows itself this way. Has counts the
-    buff as had while that same version, by its expiration time, is still on
-    them; a refresh or a new one is looked at afresh.
+    GUID -> buff key -> { aura id -> expiration }: versions the game refused to
+    cast over. Classic Era and TBC Anniversary give no strength for another
+    caster's buff, so a stronger talented one only shows itself this way.
 ]]
 local bounced = {}
 
--- The GUID whose record ReadAuras last selected, nil for an uncached one.
 local auraGUID
 
 --[[
-    How strong an aura is: the sum of its effect values (`points`), the armor,
-    stats or attack power it gives, talents included. Every version of a buff
-    -- its ranks, its group and Greater versions -- shares one effect layout,
-    so the sums compare across them. Nil when the client gives no values, or
-    only zeros, or keeps them secret.
+    The sum of `points`: every version of a buff (ranks, group, Greater)
+    shares one effect layout, so the sums compare across them.
 ]]
 local function AuraStrength(points)
 	if not ns.IsPlain(points) or type(points) ~= "table" then
@@ -101,22 +68,13 @@ local function AuraStrength(points)
 	return total > 0 and total or nil
 end
 
---[[
-    Every record goes stale, to be read again on its next use; nothing is dropped,
-    so the bounces a stronger buff caused are still known after a loading screen
-    or a spell change. BuffDuty.PruneAuraCache keeps both tables to the players
-    the window still looks at.
-]]
+-- Nothing is dropped, so bounces are still known after a loading screen or a spell change.
 function BuffDuty.MarkAllAurasDirty()
 	wipe(dirtyGUIDs)
 	generation = generation + 1
 end
 
---[[
-    Drops the records of players the window no longer looks at: anyone outside
-    your group, your target, and their pets. One dropped by mistake is only read
-    again, so this keeps the cache bounded without marking anyone stale.
-]]
+-- One dropped by mistake is only read again.
 function BuffDuty.PruneAuraCache()
 	local keep = {}
 	local function Keep(unit)
@@ -220,12 +178,10 @@ function BuffDuty.ReadAuras(unit)
 	end
 end
 
--- Asked after ReadAuras(unit): whether every aura on the unit could be read.
 function BuffDuty.AurasReadable()
 	return not auraUnreadable
 end
 
--- The longest any version of the buff has lasted when you cast it this session, or nil if you haven't yet.
 function BuffDuty.MyDuration(buff)
 	local longest
 	for id in pairs(buff.auraIds) do
@@ -238,42 +194,12 @@ function BuffDuty.MyDuration(buff)
 end
 
 --[[
-    Asked after ReadAuras(unit) for the same unit. A buff about to run out --
-    under the player's "Refresh Under" time -- counts as missing, so it
-    can be topped up before it drops. A buff with no timer never runs out, and
-    one whose whole duration is no longer than that time only counts once it is
-    gone: otherwise a 10-minute Thorns under a 10-minute setting would read as
-    missing the moment it landed, and never stop.
-
-    Strength comes first, once both sides are known: the version on them
-    against what your cast of the rank you'd use landed with (myStrengths). A
-    stronger one -- another caster's talents, or a rank you don't have -- counts
-    as had however little is left, since the game refuses to cast over it ("A
-    more powerful spell is already active"). A weaker one counts as missing
-    however much is left, so your talented version replaces it. An equal one
-    goes by time, as above.
-
-    With either side unknown, ranks decide instead. A single-target rank lower
-    than the one you would cast on `unit` -- the highest you know that their
-    level can take -- counts as missing, so a stranger's Rank 2 Arcane
-    Intellect doesn't hide your Rank 5, and a higher one counts as had however
-    little is left. Group and Greater versions go by time: they aren't ranked
-    against the single ones.
-
-    A version the game already refused to cast over (BuffDuty.NoteBounce)
-    counts as had, by either rule, for as long as it stays on them. A refusal
-    with no known version on them was caused by a buff this data doesn't list,
-    so the buff counts as had until one of the buffs they carried then ends or
-    is refreshed.
-
-    An exclusive buff (a blessing) also counts as had when the unit carries
-    ANOTHER of yours from the same family, even one running low: you can only
-    have one on them, so casting this one would replace yours rather than add
-    to it. With none of yours on them, every one you turned on is offered.
-
-    When it counts as missing because a version is running low, the second and
-    third returns are that version's expiration time and full duration, which
-    the window draws as the time left on the icon.
+    Asked after ReadAuras(unit). A buff no longer than the refresh time counts
+    only once gone, or a 10-minute Thorns under a 10-minute setting would read
+    as missing the moment it landed. A stronger version counts as had however
+    little is left (the game refuses to cast over it), a weaker one as missing
+    however much is left. Another of your own exclusive family on the unit
+    counts as had: casting would replace yours, not add to it.
 ]]
 local function Has(buff, unit)
 	local now = GetTime()
@@ -336,10 +262,7 @@ local function Has(buff, unit)
 end
 BuffDuty.Has = Has
 
---[[
-    Asked after ReadAuras(unit), like Has: whether the unit carries any
-    version of the buff at all, however little is left or whoever cast it.
-]]
+-- Asked after ReadAuras(unit): any version, however little is left or whoever cast it.
 function BuffDuty.Carries(buff)
 	for id in pairs(buff.auraIds) do
 		if auraExpires[id] then
@@ -350,11 +273,9 @@ function BuffDuty.Carries(buff)
 end
 
 --[[
-    The game refused a cast of the buff with this key on `unit`: record every
-    version of it they carry now, so Has leaves them alone until it changes.
-    With no version of it on them, the stronger buff is one this data doesn't
-    list, so every buff they carry is recorded instead. Read straight off the
-    unit rather than the cache, which may be older.
+    With no version of the buff on them, the stronger buff is one this data
+    doesn't list, so every buff they carry is recorded. Read off the unit, not
+    the cache, which may be older.
 ]]
 function BuffDuty.NoteBounce(unit, buffKey)
 	if ns.AreAurasSecret() then

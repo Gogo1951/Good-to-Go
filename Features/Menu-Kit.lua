@@ -34,7 +34,8 @@ local ADDON_NAME, ns = ...
       separator                           A thin line
       action       left, click            A row to click: blue; on the right what it touches, or its click gray
       toggle       left, on               A switch: On in green, or Off with its name gray
-      choice       left, selected         One of a set: the pick light yellow with a check, the rest white
+      choice       left, selected, right  One of a set: the check on the left (the rest keep its room empty),
+                                          the pick light yellow, the rest white; a list of values on the right
       item         itemID or link, count  An item: its icon, its name in its quality color, the count
       value        left, right            A setting's value: white label, light yellow value (Off gray)
       description  left                   What a feature does, white, wrapped at 320
@@ -85,7 +86,7 @@ local DESCRIPTION_MAX_WIDTH = 320 -- A description gets more room before it wrap
 local EDGE = SPACE.GROUP -- From the plate's edge to the text, on every side
 local ROW_INSET = SPACE.NEAR -- From the plate's edge to a row's highlight
 local TEXT_INSET = EDGE - ROW_INSET -- From a row's edge to its text
-local PANEL_INSET = EDGE - SPACE.LINE -- Above the first row and below the last: a row's own SPACE.LINE makes up EDGE
+local PANEL_INSET = EDGE - SPACE.NEAR -- Above the first row and below the last: a row's own SPACE.NEAR makes up EDGE
 local OPTION_INDENT = SPACE.LINE -- Options sit a little in from the text above them, so a list reads as one
 local RIGHT_GAP = SPACE.GROUP -- From a row's left text to its right side
 local ARROW_GAP = SPACE.LINE -- From a row's right side to the arrow's column
@@ -97,8 +98,7 @@ local HOVER_CLOSE_DELAY = 0.5 -- Forgiving for a cursor that slips off the edge,
 local CLICK_CLOSE_DELAY = 1.0
 local MENU_GAP = 2 -- From the launcher's corner to the menu's
 local MAX_DEPTH = 4 -- The menu and three sub-menus deep
-local SCROLL_ROWS = 20 -- A flyout or dropdown list taller than this many plain rows scrolls with the mouse wheel
-local MAX_HEIGHT = 2 * PANEL_INSET + SCROLL_ROWS * (LINE_HEIGHT + 2 * SPACE.LINE)
+local SCREEN_MARGIN = 64 -- A panel is never taller than the screen less this; past it, it scrolls
 local SCROLL_STEP = 3 -- Rows per notch of the wheel
 local THUMB_WIDTH = 2
 local THUMB_ALPHA = 0.6
@@ -111,9 +111,11 @@ local HEADINGS = { section = true, status = true, submenu = true }
 Kit.MAX_WIDTH = MAX_WIDTH
 Kit.LIST_MAX = LIST_MAX
 
--- The kit's own thin chevron on a row with a submenu (white, at line height), the game's check mark, and the loot window's Pass for a delete.
+-- The kit's own thin chevron on a row with a submenu (white, at line height), the game's check mark, an
+-- empty texture the check's size for a choice not picked, and the loot window's Pass for a delete.
 Kit.SUBMENU_ARROW = "|TInterface\\AddOns\\" .. ADDON_NAME .. "\\Includes\\Images\\Menu-Arrow:0|t"
 Kit.CHECK_MARK = "|TInterface\\Buttons\\UI-CheckBox-Check:0|t"
+Kit.CHECK_BLANK = "|TInterface\\Common\\spacer:0|t"
 Kit.REMOVE_ICON = "|TInterface\\Buttons\\UI-GroupLoot-Pass-Up:0|t"
 
 --[[
@@ -413,9 +415,12 @@ local function Look(entry)
 		leftColor = leftColor or (not entry.on and "MUTED") or "TEXT"
 		rightColor = rightColor or (entry.on and "ON") or "MUTED"
 	elseif kind == "choice" then
+		-- The check sits on the left and every row keeps its room, so names (or values on the right) line up.
 		-- The pick matches the value on the row that opened it; the rest are options, not gray. Off stays gray.
-		right = entry.selected and Kit.CHECK_MARK or nil
-		leftColor = leftColor or (left == TEXT.off and "MUTED") or (entry.selected and "VALUE") or "BODY"
+		local color = ((left == TEXT.off or right == TEXT.off) and "MUTED") or (entry.selected and "VALUE") or "BODY"
+		local mark = entry.selected and Kit.CHECK_MARK or Kit.CHECK_BLANK
+		left = left and (mark .. " " .. left) or mark
+		leftColor, rightColor = leftColor or color, rightColor or color
 	elseif kind == "action" then
 		-- The button's kept click is named on its row, gray, as a gesture is ("Drag").
 		if not right and entry.click then
@@ -650,7 +655,7 @@ end
 
 --[[
     Lays the entries out and sizes the panel to them. Each row is a line plus
-    SPACE.LINE above and below, a spacer SPACE.GROUP, a separator SPACE.NEAR.
+    SPACE.NEAR above and below, a spacer SPACE.GROUP, a separator SPACE.NEAR.
 
     The panel is as wide as its widest row, between MIN_WIDTH and MAX_WIDTH. A
     row's left text wraps within what its right side leaves, and the row grows
@@ -789,17 +794,17 @@ function Panel:Render(source, context)
 				row.left:SetText(text)
 				local textHeight = math.max(lineHeight, math.ceil(row.left:GetStringHeight() or lineHeight))
 				row.left:SetHeight(textHeight)
-				row.height = textHeight + 2 * SPACE.LINE
+				row.height = textHeight + 2 * SPACE.NEAR
 			else
 				row.left:SetHeight(lineHeight)
-				row.height = lineHeight + 2 * SPACE.LINE
+				row.height = lineHeight + 2 * SPACE.NEAR
 			end
 			row.left:ClearAllPoints()
-			row.left:SetPoint("TOPLEFT", TEXT_INSET + size.indent, -SPACE.LINE)
+			row.left:SetPoint("TOPLEFT", TEXT_INSET + size.indent, -SPACE.NEAR)
 			row.arrow:ClearAllPoints()
-			row.arrow:SetPoint("TOPRIGHT", -TEXT_INSET, -SPACE.LINE)
+			row.arrow:SetPoint("TOPRIGHT", -TEXT_INSET, -SPACE.NEAR)
 			row.right:ClearAllPoints()
-			row.right:SetPoint("TOPRIGHT", -(TEXT_INSET + (anyArrow and arrowWidth or 0)), -SPACE.LINE)
+			row.right:SetPoint("TOPRIGHT", -(TEXT_INSET + (anyArrow and arrowWidth or 0)), -SPACE.NEAR)
 		end
 		row:SetHeight(row.height)
 	end
@@ -815,10 +820,10 @@ function Panel:Render(source, context)
 end
 
 --[[
-    Stacks the rows and sets the panel's height. The main menu always grows to
-    fit every row and never scrolls. A flyout or dropdown list (self.scrollable)
-    whose rows run past MAX_HEIGHT (SCROLL_ROWS plain rows, as a long bag list
-    would) stays that tall and shows whole rows from self.scroll on: the mouse
+    Stacks the rows and sets the panel's height. Every panel, the main menu
+    included, grows to fit its rows. Only one whose rows would run off the
+    screen (taller than the screen less SCREEN_MARGIN, as a very long bag list
+    can be) stays that tall and shows whole rows from self.scroll on: the mouse
     wheel moves them SCROLL_STEP at a time, and a thin thumb in the plate's
     right margin shows where the view sits in the list.
 ]]
@@ -828,8 +833,11 @@ function Panel:Layout()
 	for index = 1, count do
 		content = content + rows[index].height
 	end
-	local room = MAX_HEIGHT - 2 * PANEL_INSET
-	local scrolls = self.scrollable and content > room or false
+	-- The screen's height in this panel's own points, whatever the UI scale.
+	local screen = UIParent:GetHeight() * UIParent:GetEffectiveScale() / self:GetEffectiveScale()
+	local maxHeight = math.floor(screen - SCREEN_MARGIN)
+	local room = maxHeight - 2 * PANEL_INSET
+	local scrolls = content > room
 
 	-- The first row shown: never so far down that the view has room left at the bottom.
 	local first = 1
@@ -861,7 +869,7 @@ function Panel:Layout()
 		end
 		row:SetShown(index >= first and not full)
 	end
-	self:SetHeight(scrolls and MAX_HEIGHT or y + PANEL_INSET)
+	self:SetHeight(scrolls and maxHeight or y + PANEL_INSET)
 	self:EnableMouseWheel(scrolls)
 
 	if scrolls and not self.thumb then
@@ -1017,7 +1025,6 @@ function Kit.CreateDropdownMenu(name)
 	})
 	local frame = kitMenu.frame
 	frame:SetFrameStrata("FULLSCREEN_DIALOG") -- In front of the window it drops from
-	frame.scrollable = true -- A long list, as a bag list can be, scrolls past SCROLL_ROWS
 	frame:HookScript("OnHide", function()
 		local onClose = shown.onClose
 		shown.entries, shown.onClose = nil, nil
@@ -1096,7 +1103,6 @@ function Menu:Panel(depth)
 		panel:SetFrameLevel(self.frame:GetFrameLevel() + 20 * (depth - 1))
 		panel.menu = self
 		panel.depth = depth
-		panel.scrollable = true -- A sub-menu scrolls past SCROLL_ROWS; the menu itself never does
 		self.panels[depth] = panel
 	end
 	return panel
@@ -1445,7 +1451,7 @@ end
     separator SPACE.NEAR above the line; size the button to the window's inner
     width and the menu's row height (Kit.ROW_HEIGHT).
 ]]
-Kit.ROW_HEIGHT = LINE_HEIGHT + 2 * SPACE.LINE
+Kit.ROW_HEIGHT = LINE_HEIGHT + 2 * SPACE.NEAR
 function Kit.AddOptionsLine(frame, label, flyout, afterChange)
 	local separator = frame:CreateTexture(nil, "ARTWORK")
 	separator:SetHeight(1)

@@ -8,26 +8,9 @@ local Widgets = ns.PanelWidgets
 local Box, ShowTip = Widgets.Box, Widgets.ShowTip
 
 --[[
-	The Conditionals panel, docked against the Spell Book window's right edge (ns.DockSpellbookPanel, in
-	Features/Enhanced-Spellbook/Spellbook-Window.lua) and opened from a macro's menu (Features/Enhanced-Spellbook/Macro-Menu.lua). It
-	lists the macro's rows (Features/Enhanced-Spellbook/Macro-Builder/Conditionals.lua) top to bottom: a grip to drag a row up or down, one
-	or two condition dropdowns joined by "and", the spell the row casts and its remove button. Under them the
-	macro's own spell as the fixed Otherwise row, the Add Condition button, and the macro text with its length
-	against what a macro holds, which follow every change.
-
-	A row's spell slot takes a spell two ways: a click puts the page in pick mode, where the next spell clicked
-	on the page fills the slot and Escape or a right-click cancels; or a spell dragged from the page (or the
-	game's own spellbook, or an action bar) is dropped on it. A drag from the page picks up the macro, so it can
-	go on an action bar. Add Condition starts pick mode for the new row straight away. The page
-	outlines the tile the panel is open for, and in pick mode dims the ones that can't be picked
-	(Features/Enhanced-Spellbook/Macro-Button.lua asks ns.IsConditionalsPanelFor and ns.IsPickingSpell).
-	The rows are Features/Enhanced-Spellbook/Macro-Builder/Conditionals-Rows.lua and pick mode Features/Enhanced-Spellbook/Macro-Builder/Spell-Pick.lua.
-	The frame, its heading and footer are Features/Enhanced-Spellbook/Macro-Builder/Docked-Panel.lua, shared with the Cast
-	Sequence panel, as are the controls in Features/Enhanced-Spellbook/Macro-Builder/Panel-Widgets.lua.
-
-	Every change rebuilds the page, as the menu's do (ns.RefreshSpellbookPage), which rewrites the macro; the
-	rebuild makes the page's macros afresh, so the panel holds its macro's settings key and finds it again after
-	each refresh (ns.OnSpellbookPageRefreshed).
+	A drag from the page picks up the macro, so it can still go on an action bar. Every change rebuilds the page,
+	which makes its macros afresh, so the panel holds its macro's settings key and finds it again after each
+	refresh.
 ]]
 
 local INNER_WIDTH = Docked.INNER_WIDTH
@@ -44,8 +27,8 @@ local TEXTURE_ARROW = "Interface\\ChatFrame\\ChatFrameExpandArrow"
 local panel
 
 --[[
-	What the panel shares with its rows (Conditionals-Rows.lua), which load after this file and read it as
-	they load; this file reaches the rows and pick mode only once the panel is built.
+	Shared with Conditionals-Rows.lua, which loads after this file and reads it as it loads; this file reaches the
+	rows and pick mode only once the panel is built.
 ]]
 local UI = {}
 ns.ConditionalsUI = UI
@@ -56,27 +39,18 @@ UI.TEXTURE_ARROW = TEXTURE_ARROW
 -- Changes
 --------------------------------------------------------------------------------
 
--- The page macro the panel is open for, found again by its settings key, or nil once it has left the page.
 local function CurrentMacro()
 	return Docked.CurrentMacro(panel, ns.OffersConditionals)
 end
 
---[[
-	Runs a setter on the macro, set(macro), and rebuilds the page, which rewrites the macro and redraws the
-	panel (see ns.OnSpellbookPageRefreshed below).
-]]
 local function Change(set)
 	Docked.Change(panel, ns.OffersConditionals, set)
 end
 
---[[
-	Whether the panel is open for a page macro, so its tile is outlined on the page.
-]]
 function ns.IsConditionalsPanelFor(macro)
 	return panel ~= nil and panel:IsShown() and ns.OffersConditionals(macro) and SettingsKey(macro) == panel.key
 end
 
--- Redraws the page's tiles, for their outline and pick-mode dimming, without rebuilding its macros.
 local function RedrawPage()
 	Docked.RedrawPage(panel)
 end
@@ -87,7 +61,6 @@ UI.CurrentMacro, UI.Change, UI.RedrawPage = CurrentMacro, Change, RedrawPage
 -- Panel
 --------------------------------------------------------------------------------
 
--- The fixed last row, the macro's own spell, cast when no row above matches; drawn muted, with no controls.
 local function CreateOtherwise(parent)
 	local row = CreateFrame("Frame", nil, parent)
 	row:SetSize(INNER_WIDTH, ROW_HEIGHT)
@@ -115,10 +88,7 @@ local function CreateOtherwise(parent)
 	return row
 end
 
---[[
-	Redraws the panel for its macro: the heading, the rows, the Otherwise row and the Add Condition button under
-	the last row, and the footer. Closes it once its macro has left the page.
-]]
+-- Closes the panel once its macro has left the page.
 local function Update()
 	if not panel or not panel:IsShown() then
 		return
@@ -192,7 +162,6 @@ local function CreatePanel(page)
 	panel.footer = Docked.CreateFooter(panel)
 end
 
--- Opens the panel for a page macro (from its menu), or moves it to that macro when it is open for another.
 function ns.ShowConditionalsPanel(macro, page)
 	if not ns.OffersConditionals(macro) then
 		return
@@ -211,18 +180,12 @@ function ns.ShowConditionalsPanel(macro, page)
 	Update()
 end
 
---[[
-	Closes the panel, for the window's switch to a tab other than the Spell Book
-	(Features/Enhanced-Spellbook/Spellbook-Window.lua) and for the Cast Sequence panel opening in its place
-	(Features/Enhanced-Spellbook/Macro-Builder/Cast-Sequence-Panel.lua).
-]]
 function ns.HideConditionalsPanel()
 	if panel then
 		panel:Hide()
 	end
 end
 
--- The page rebuilt its macros: draw the panel again from the new ones.
 ns.OnSpellbookPageRefreshed(function(page)
 	if panel and panel.page == page then
 		Update()

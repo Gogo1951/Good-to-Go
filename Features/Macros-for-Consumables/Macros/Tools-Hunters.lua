@@ -5,35 +5,13 @@ local MACRO_CONFIG = ns.MACRO_CONFIG
 -- Hunter Tools
 --------------------------------------------------------------------------------
 
---[[
-    All hunter-specific logic lives here (organizing rule: see
-    Tools-Mages.lua): pet-spell resolution, dead-pet handling, and the Feed Pet
-    macro. Pet food scanning and the pet-buff-food override resolver, which the
-    bag scan reads as well, live beside it in Tools-Hunters-Pet-Food.lua.
-
-    Feed Pet is Hunter-only and owns its whole update cycle: knowledge tiers
-    (print-only stub for pre-10 hunters, Mend-less cascade at 10-11, full
-    cascade at 12+), pet-spell resolution, dead-pet detection, and its own
-    macro state, all in this file. The definition at the bottom scans pet food
-    for every Hunter, then routes the engine's update to UpdateFeedPetMacro or
-    removes the macro when disabled; for non-Hunters it only deletes the macro
-    while Feed Pet is unticked, since the macro sits in the shared General tab.
-    The scan sits outside that branch because ns.bestPetFoodID is read by the
-    mini-map menu and by Diagnostics whether or not the macro exists.
-]]
+-- Pet food scanning and the pet-buff override, which the bag scan reads too, are in Tools-Hunters-Pet-Food.lua.
 
 --------------------------------------------------------------------------------
 -- Pet Spell Resolution
 --------------------------------------------------------------------------------
 
---[[
-    Resolves each pet spell's name only if the player actually knows the spell.
-    C_Spell.GetSpellName returns a name even for unlearned spells, so a level-8 hunter
-    without Mend Pet would otherwise get a macro referencing a spell they can't
-    cast. The module's dispatcher (Macros-for-Consumables-Core.lua) re-runs
-    this on PLAYER_LEVEL_UP and SPELLS_CHANGED so a
-    newly-learned spell (Mend Pet at 12) starts participating without a /reload.
-]]
+-- C_Spell.GetSpellName names unlearned spells too, which would write casts the hunter can't make.
 local function ResolveIfKnown(spellID)
 	if ns.IsSpellKnown(spellID) or ns.IsPlayerSpell(spellID) then
 		return C_Spell.GetSpellName(spellID)
@@ -57,27 +35,20 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Detect a dead-but-dismissed pet. When Call Pet fails because the pet is
-    dead, the client shows the SPELL_FAILED_TARGETS_DEAD text; we match that
-    text and flip the flag so the macro rebuilds with Revive Pet on the next
-    cycle. Any spell aimed at a dead unit shows the same text, so the error
-    counts only within CALL_PET_ERROR_WINDOW seconds of sending Call Pet
-    (ns.OnHunterSpellcastSent), whatever is targeted or under the cursor. The
-    module's dispatcher (Macros-for-Consumables-Core.lua) routes
-    UI_ERROR_MESSAGE here ahead of its combat-lockdown guard, so this still
-    fires mid-fight.
+    A failed Call Pet on a dead, dismissed pet shows SPELL_FAILED_TARGETS_DEAD,
+    but so does any spell aimed at a dead unit, so the error counts only just
+    after Call Pet was sent.
 ]]
 local CALL_PET_ERROR_WINDOW = 1
 local callPetSentAt
 
--- UNIT_SPELLCAST_SENT, the player's own; a secret spell ID (Forever, while casts are restricted) is never Call Pet.
+-- A secret spell ID (Forever) is treated as not Call Pet.
 function ns.OnHunterSpellcastSent(spellID)
 	if not ns.IsSecretValue(spellID) and spellID == ns.CALL_PET_SPELL_ID then
 		callPetSentAt = GetTime()
 	end
 end
 
--- UNIT_SPELLCAST_SUCCEEDED, the player's own: a pet called or revived is no longer dead.
 function ns.OnHunterSpellcastSucceeded(spellID)
 	if ns.IsSecretValue(spellID) or not ns.petDeadDismissed then
 		return
@@ -110,12 +81,6 @@ end
 -- Pet State Events (Hunter)
 --------------------------------------------------------------------------------
 
---[[
-    UNIT_PET handler routed from Core's dispatcher. When the player's pet
-    appears or changes, clear the dead-dismissed flag so the Feed Pet macro
-    stops offering Revive, then rebuild. The flag reset is Hunter-specific;
-    the rebuild runs for every class the dispatcher forwards.
-]]
 function ns.OnUnitPet(unit)
 	if unit ~= "player" then
 		return
@@ -141,43 +106,14 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Logic flow prioritizes modifier inputs first, then pet state, then combat.
-    Combining conditions into bracket groups (e.g., [btn:2][combat]) keeps the
-    body compact, but the cast cascade still names up to five client-localized
-    spells, so a body that fits in enUS can exceed the 255 macro ceiling in
-    multibyte locales: BuildFeedPetBody trims optional branches to fit (below).
+    Tier A (a pet spell besides Mend missing): tip only. Tier B (no Mend Pet):
+    the cascade plus a tip on [btn:2][combat]. Tier C: the full cascade.
+      [mod:ctrl] Dismiss; [mod:shift][@pet,dead] Revive; [nopet] Call (Revive
+      when dead-dismissed); [btn:2][combat] Mend; else Feed Pet + /use food.
 
-    The macro adapts to which pet spells the hunter actually knows:
-      Tier A (pre-10; any of Feed/Revive/
-              Call/Dismiss Pet missing)  → print-only stub explaining the gap
-      Tier B (10-11, no Mend Pet)        → full cascade minus Mend Pet, plus a
-                                           click-time print on [btn:2][combat]
-      Tier C (12+, every pet spell known) → full cascade as documented below
-
-    Tier C modifier actions:
-      [mod:ctrl]                 → Dismiss Pet
-      [mod:shift] OR [@pet,dead] → Revive Pet
-      [nopet]                    → Call Pet (or Revive Pet when dead-dismissed)
-      [btn:2] OR [combat]        → Mend Pet
-      default                    → Feed Pet + /use food
-]]
-
---[[
-    Trap: the trailing "/use item:" food line is the casualty of an overflow, so
-    a truncated body silently drops the feed. The ceiling is
-    ns.MACRO_BODY_MAX_LENGTH (Data/Data.lua), measured in bytes for the reason
-    kept there. The Tier B/C cast cascade names up to five pet spells, and
-    C_Spell.GetSpellName returns CLIENT-localized names, so a body that fits in enUS
-    (Tier C is ~196 bytes) overflows in multibyte locales: ruRU pet-spell names
-    run roughly double the byte cost and push Tier B/C past 300 bytes.
-
-    Rule: assemble the full body, then while it exceeds the ceiling shed the
-    optional modifier conveniences in priority order, the [mod:ctrl] Dismiss
-    shortcut first and then the [mod:shift]/[@pet,dead] Revive shortcut,
-    rebuilding the matching /stopmacro set each time so it stays consistent with
-    the branches that remain. The [nopet] summon, the [btn:2]/[combat] Mend
-    branch, the default Feed, and the /use food line are never dropped, so the
-    macro's core feed/summon behavior survives in every locale.
+    Trap: overflow cuts the trailing /use food line, silently dropping the
+    feed. Five localized spell names push ruRU past 300 bytes, so Dismiss goes
+    first, then Revive; the summon, Mend, Feed and food line never do.
 ]]
 local function ComposeFeedPetBody(tier, itemID, includeDismiss, includeRevive)
 	local feedName = ns.feedPetSpellName
@@ -186,20 +122,8 @@ local function ComposeFeedPetBody(tier, itemID, includeDismiss, includeRevive)
 	local dismissName = ns.dismissPetSpellName
 	local mendName = ns.mendPetSpellName -- nil in Tier B
 
-	--[[
-	    When we know the pet is dead but dismissed, [nopet] uses Revive Pet
-	    instead of Call Pet so a single click revives without the user
-	    needing to remember the dead state.
-	]]
 	local nopetSpell = (ns.petDeadDismissed and reviveName) or callName
 
-	--[[
-	    Modifier cascade. Tier C includes the Mend Pet branch on
-	    [btn:2][combat]; Tier B omits it (and we print a tip earlier in the
-	    macro to explain why right-click/combat does nothing useful). The
-	    Dismiss and Revive shortcuts are optional and are the first to be
-	    dropped when the body must shrink to fit the 255 ceiling.
-	]]
 	local castClauses = {}
 	if includeDismiss then
 		castClauses[#castClauses + 1] = "[mod:ctrl] " .. dismissName
@@ -216,12 +140,7 @@ local function ComposeFeedPetBody(tier, itemID, includeDismiss, includeRevive)
 	local lines = { "#showtooltip" }
 
 	if tier == "B" then
-		--[[
-		    Tier B: explain the missing Mend Pet on the inputs that would
-		    have used it, then halt before the Feed Pet cascade so we don't
-		    try to /cast Feed Pet in combat (it would fail) or on a
-		    right-click the user expected to mean Mend.
-		]]
+		-- Halt too, or the press would /cast Feed Pet in combat, where it fails.
 		lines[#lines + 1] = '/run GtGTipIf("[btn:2][combat]","noMendPet")'
 		lines[#lines + 1] = "/stopmacro [btn:2][combat]"
 	end
@@ -229,15 +148,9 @@ local function ComposeFeedPetBody(tier, itemID, includeDismiss, includeRevive)
 	lines[#lines + 1] = "/cast " .. table.concat(castClauses, "; ")
 
 	--[[
-	    Halt before /use when /cast dispatched to a non-Feed-Pet branch. Each
-	    guard token is present only while its branch is: [mod:shift][mod:ctrl]
-	    covers both shortcuts, naming each so an Alt-click (which no branch
-	    takes) still falls through to Feed Pet; once a trim drops one, only the
-	    survivor's modifier is named, so the dropped one's click falls through
-	    to Feed Pet and its food; [@pet,dead] the dead-pet auto-revive, and
-	    [btn:2]/[combat] the Mend branch (Tier C). The token order stays fixed:
-	    reordering it would change every written body's text, and so rewrite
-	    every Feed Pet macro, for no change in behavior.
+	    Each token only while its branch exists; modifiers named singly, so an
+	    Alt-click still falls through to Feed Pet. Keep the order: changing it
+	    rewrites every Feed Pet macro for no change in behavior.
 	]]
 	local stopTokens = {}
 	if includeDismiss and includeRevive then
@@ -262,10 +175,6 @@ local function ComposeFeedPetBody(tier, itemID, includeDismiss, includeRevive)
 	if itemID then
 		lines[#lines + 1] = "/use item:" .. itemID
 	else
-		--[[
-		    No useful food in bags: clicking Feed Pet should explain that
-		    rather than silently doing nothing on the food line.
-		]]
 		lines[#lines + 1] = '/run GtGTip("noPetFood")'
 	end
 
@@ -280,12 +189,6 @@ local function BuildFeedPetBody(tier, itemID)
 		}, "\n")
 	end
 
-	--[[
-	    Full body first, then drop the Dismiss shortcut, then the Revive
-	    shortcut, stopping as soon as the body fits (see the note above
-	    ComposeFeedPetBody). #body is the byte length, matching the
-	    macro-length trims in Body-Builder.lua and Integration-Druid-Macro-Helper.lua.
-	]]
 	local body = ComposeFeedPetBody(tier, itemID, true, true)
 	if #body > ns.MACRO_BODY_MAX_LENGTH then
 		body = ComposeFeedPetBody(tier, itemID, false, true)
@@ -311,17 +214,7 @@ local function UpdateFeedPetMacro(forced)
 	end
 	local macroName = config.macro
 
-	--[[
-	    Knowledge tier drives the macro shape. The Tier B/C cast line
-	    concatenates Feed, Revive, Call, AND Dismiss Pet, so a missing name
-	    for any of them — not just Feed Pet — collapses to the print-only
-	    stub (Tier A). The four spells normally arrive together with the
-	    level-10 pet quests, but this also covers a hunter mid-quest-chain
-	    and any transient SPELLS_CHANGED timing where ns.IsSpellKnown hasn't
-	    caught up; the next SPELLS_CHANGED rebuild promotes the tier. Mend
-	    Pet absence is the common transient state for a level-10/11 hunter
-	    who hasn't trained the level-12 spell yet.
-	]]
+	-- The cast line concatenates all four names, so any one missing must fall back to the stub.
 	local tier
 	if not (ns.feedPetSpellName and ns.revivePetSpellName and ns.callPetSpellName and ns.dismissPetSpellName) then
 		tier = "A"
@@ -331,11 +224,6 @@ local function UpdateFeedPetMacro(forced)
 		tier = "C"
 	end
 
-	--[[
-	    Tier A bypasses food entirely — the macro can't act on it without
-	    Feed Pet — so we don't encode itemID into the state. Tiers B and C
-	    both rely on the food line, so we include it.
-	]]
 	local itemID = (tier ~= "A") and ns.bestPetFoodID or nil
 
 	local stateID = tier
@@ -350,7 +238,6 @@ local function UpdateFeedPetMacro(forced)
 
 	local body = BuildFeedPetBody(tier, itemID)
 
-	-- On a failed create, leave the state unset so the next update retries.
 	if not ns.WriteMacroBody(macroName, body) then
 		currentPetFoodState = nil
 		return
@@ -367,21 +254,12 @@ ns.RegisterMacroType({
 	typeName = "Feed Pet",
 
 	customUpdate = function(forced)
-		--[[
-		    On a hunter, the scan runs ahead of the enabled check, because
-		    ns.bestPetFoodID and ns.bestPetFoodLink are published state with
-		    readers that stay live whether or not the macro is built -- the
-		    mini-map menu's pet-food row and two Diagnostics reports. Scanning
-		    only when the macro is on would freeze all three at whatever the last
-		    enabled pass left. It costs nothing extra: the scan reads
-		    ns.scannedItemCounts, which ns.ScanBags refilled earlier in this same
-		    update pass.
-		]]
+		-- Ahead of the enabled check: the mini-map and Diagnostics read the pick with the macro off too.
 		if ns.isHunter then
 			ns.ScanPetFood()
 		end
 
-		-- Unticked, the macro goes on any class: it sits in the General macros every character shares.
+		-- Deleted on any class: it sits in the shared General tab.
 		if not ns.IsMacroEnabled("Feed Pet") then
 			local config = MACRO_CONFIG["Feed Pet"]
 			if config then

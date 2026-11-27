@@ -1,16 +1,5 @@
 local _, ns = ...
 
---[[
-    Scanner-Inventory -- scans the player's bags and selects the best item per
-    macro category, applying scoring, ranking, and usability gates. WHAT each
-    category consumes and HOW it scores is declared by the macro definitions
-    themselves (itemTypes / accepts / score / ranked / ... — see the
-    definition protocol in Features/Macros-for-Consumables/Macros/Definitions.lua); this file owns the
-    usability gates and the scan loop that dispatches each bag item to every
-    matching definition. How two items compare (the RANKING_PRIORITY tiebreak
-    ladder) is Features/Macros-for-Consumables/Scanner/Scanner-Ranking.lua's.
-]]
-
 local Ranking = ns.ScanRanking
 local best, rankedCandidates = Ranking.best, Ranking.rankedCandidates
 local diagnosticCandidates, candidateRecord = Ranking.diagnosticCandidates, Ranking.candidateRecord
@@ -26,20 +15,10 @@ local CaptureDiagnosticCandidates = Ranking.CaptureDiagnosticCandidates
 
 ns.bestFoodID = nil
 ns.bestFoodLink = nil
---[[
-    The buff food the Food macro would eat while it puts buff food first: the
-    best one in the bags by the same ladder, ignored items aside. Buff Duty's
-    Well Fed icon uses it (Features/Buff-Duty/Buff-Duty-Self.lua). nil when
-    the bags hold none, including in an arena, where none can be eaten.
-]]
+-- Buff Duty's Well Fed pick, ranked as the Food macro ranks buff food first.
 ns.bestBuffFoodID = nil
 local bestBuffFood = {}
---[[
-    Every buff food the bags hold that the Food macro could eat, ignored
-    items aside, by item id: the Buff Duty Options flyout lists them so each
-    can be turned off there (buffWindow.buffFoodOff), and bestBuffFoodID
-    passes over the ones turned off. The last scan's, refilled in place.
-]]
+-- Every carried buff food, which Buff Duty's flyout lists so each can be turned off.
 local carriedBuffFoods = {}
 ns.carriedBuffFoods = carriedBuffFoods
 
@@ -52,114 +31,47 @@ local slotItems = {}
 local ignoredTypes = {}
 
 --[[
-    The bag walk, published so a second consumer does not have to repeat it.
-    itemCounts is stack totals by itemID across ns.CARRIED_BAG_IDS; slotItems
-    is one hyperlink per itemID, from the first slot holding it; ignoredTypes
-    names every category a usable item on either Ignore List would have
-    competed in, so the Readiness Report can count it as carried.
-
-    Assigned once here, and wiped-and-refilled in place by every scan, so the
-    reference stays valid while the contents do not: these are the LAST scan's
-    snapshot and are only current inside the update pass that produced them.
-    Read them, never retain them, and never write to them from outside ScanBags.
+    Refilled in place every scan: current only inside the pass that made them.
+    Read, never retain, never write from outside ScanBags. ignoredTypes lets
+    the Readiness Report count an ignored item as carried.
 ]]
 ns.scannedItemCounts = itemCounts
 ns.scannedItemLinks = slotItems
 ns.scannedIgnoredTypes = ignoredTypes
 
 function ns.ScanBags()
-	--[[
-	    Refresh the zone at scan time. A zone change during combat is gated out
-	    by the lockdown guard in the module's dispatcher
-	    (Macros-for-Consumables-Core.lua), so ZONE_CHANGED_NEW_AREA
-	    never updates the cache mid-fight; reading it here keeps zone-restricted
-	    item filtering from running against a stale map after combat drops.
-	]]
+	-- ZONE_CHANGED_NEW_AREA is swallowed in combat, so the map is reread here.
 	ns.cachedMapID = C_Map.GetBestMapForUnit("player")
 
-	--[[
-	    Party/raid-restricted Pet Food Buffs go stale when group composition,
-	    the group checkboxes or the level filter change — those flip whether
-	    the feature is active but have no dedicated UpdateAuraTracking call, so
-	    UNIT_AURA registration would otherwise drift. ScanBags is the single
-	    point every rescan passes through, so reconcile aura tracking here.
-	]]
+	-- Group, checkbox and level changes flip Pet Food Buffs with no call of their own.
 	ns.UpdateAuraTracking()
 
 	local playerLevel = ns.cachedPlayerLevel
 	local currentMap = ns.cachedMapID
-	--[[
-	    Arena-only consumables (e.g. Star's Tears) are gated on the live
-	    instance type instead of a zone-ID list, so every arena is covered with
-	    no map IDs to maintain. IsInInstance is safe on Era (returns "none").
-	    ScanBags re-runs on PLAYER_ENTERING_WORLD and ZONE_CHANGED_NEW_AREA, so
-	    this refreshes on every arena entry and exit.
-	]]
+	-- Live instance type, not a zone list, so every arena is covered.
 	local inArena = select(2, IsInInstance()) == "arena"
-	--[[
-	    On Forever auras can be secret even out of combat (a battleground, for one), so the buff a pet buff
-	    food choice reads can't be seen: the macros keep their plain eat/drink bodies rather than acting on
-	    the last buffs they saw.
-	]]
+	-- Forever hides auras even out of combat (a battleground); the macros then keep plain bodies.
 	local aurasHidden = ns.AreAurasSecret()
 	local firstAidSkill = ns.currentFirstAidSkill or 0
 	local alchemySkill = ns.currentAlchemySkill or 0
 	local engineeringSkill = ns.currentEngineeringSkill or 0
 	local settings = (ns.db and ns.db.profile) or {}
 
-	--[[
-	    Testing aid: targeting yourself forces the Food macro into plain-food
-	    mode — no buff food, just the best non-buff food. Useful for verifying
-	    what the macro picks without re-toggling settings. On Forever the
-	    comparison can come back secret, so C_Secrets is asked first and a
-	    restricted read counts as not targeting yourself.
-	]]
+	-- Testing aid: targeting yourself keeps buff food out. A restricted comparison counts as not.
 	local targetingSelf = ns.CanCompareUnitTokens("target", "player")
 		and UnitExists("target")
 		and UnitIsUnit("target", "player")
 
-	--[[
-	    How the Food and Water ladders treat buff food (RANKING_PRIORITY).
-	    Eating it for the buff is Buff Duty's job (its Well Fed icon), so
-	    while you have Well Fed the macros never put it first: false while Eat
-	    Buff Food When Already Well Fed is on, so it competes on what it
-	    restores, or "last", so plain food wins and buff food is still eaten
-	    when it's all the bags hold. While you don't, ns.buffFoodFirst below
-	    puts buff food first instead.
-	    Targeting yourself is the plain-food testing aid above, so it keeps
-	    buff food out entirely (the Food and Water accepts hooks read
-	    ns.excludeBuffFood). Arenas need nothing here: the usable gate below
-	    already drops food that can't be eaten there, buff food included.
-	]]
+	-- Eating for the buff is Buff Duty's job, so while Well Fed the macros never put buff food first.
 	ns.buffFoodRank = (not settings.useBuffFoodWhenFed) and "last" or false
 	ns.excludeBuffFood = targetingSelf and true or false
 
-	--[[
-	    While you're missing Well Fed the Food macro eats buff food first,
-	    ahead of conjured food too (BuffFoodRank in Scanner-Ranking.lua), so
-	    eating to heal also lands the buff. ns.wellFedState is read at the top
-	    of every scan (ns.UpdateAuraTracking). Hidden auras keep the usual
-	    order rather than acting on the last Well Fed seen; targeting yourself
-	    and arenas already keep buff food out of the macro.
-	]]
+	-- So eating to heal also lands the buff. Hidden auras keep the usual order.
 	ns.buffFoodFirst = not ns.wellFedState and not aurasHidden
 
-	--[[
-	    Use Conjured Food & Water First: the setting and its When to Use
-	    checkboxes and level filter (the default level is "leveling", below
-	    max level). Group reads join the group signature and
-	    a level-up rebuilds every macro, so a When to Use flipping always rescans. It needs no arena or self-target exception: an arena already
-	    leaves only conjured food and water and the arena drinks, and
-	    targeting yourself is the buff-food testing aid.
-	]]
 	ns.allowConjuredFirst = settings.useConjuredFirst and ns.IsUseWhenActive(settings, "conjuredFirst")
 
-	--[[
-	    Use Restock List Food & Water Last: no When to Use, on whenever ticked. The
-	    current list is captured here for FillRecord; every list edit redraws
-	    through ns.UpdateRestockList, which requests a rescan while it is on
-	    and the list's items have changed.
-	]]
+	-- A list edit requests its own rescan through ns.UpdateRestockList.
 	ns.allowRestockLast = settings.useRestockLast
 	local restockSettings = ns.restockSettings
 	Ranking.SetScanRestockList(
@@ -180,11 +92,7 @@ function ns.ScanBags()
 		wipe(list)
 	end
 
-	--[[
-	    Wiped unconditionally, not just while diagnostics are enabled, so
-	    turning the panel off leaves no stale candidate list behind for the
-	    next report to present as current.
-	]]
+	-- Wiped even while Diagnostics is off, so a later report never shows a stale list as current.
 	for _, list in pairs(diagnosticCandidates) do
 		wipe(list)
 	end
@@ -207,35 +115,20 @@ function ns.ScanBags()
 		end
 	end
 
-	--[[
-	    The pet buff override is checked before the standard consumable scan.
-	    Skipped in a PvP Arena, where pet buff food can't be used, and while
-	    auras are hidden (aurasHidden above), where the buff it keys on can't
-	    be read: it stays nil and the Food macro keeps its plain food/conjure
-	    form.
-	]]
 	if inArena or aurasHidden then
 		ns.petBuffOverrideID = nil
 	else
 		ns.petBuffOverrideID = ns.FindPetBuffOverride(itemCounts)
 	end
 
-	--[[
-	    Both halves of the Ignore List hide an item from every macro's selection.
-	    An ignored item is still resolved like any other, but where it would
-	    compete it only marks its categories in ignoredTypes.
-	]]
+	-- An ignored item still resolves, but only marks the categories it would have competed in.
 	local characterIgnoreList = ns.GetIgnoreList() or {}
 	local globalIgnoreList = ns.GetGlobalIgnoreList() or {}
 
 	for id, hyperlink in pairs(slotItems) do
 		local ignored = characterIgnoreList[id] or globalIgnoreList[id]
-		--[[
-		    Scroll items skip normal consumable processing: scrolls are Buff
-		    Duty's (Buff-Duty-Self.lua).
-		]]
+		-- Scrolls are Buff Duty's.
 		if not (ns.SCROLL_ITEM_LOOKUP and ns.SCROLL_ITEM_LOOKUP[id]) then
-			-- The session's record, built here the first time the scan meets the item (Item-Cache.lua).
 			local data = ns.CacheItemData(id)
 
 			if not data then
@@ -263,15 +156,7 @@ function ns.ScanBags()
 					usable = false
 				end
 
-				--[[
-				    Engineering specialization gate (Global Thermal Sapper
-				    Charge requires Goblin Engineer). Checked live rather
-				    than cached at login because the specialization can be
-				    learned mid-session; SPELLS_CHANGED triggers the rescan.
-				    Same ns.IsSpellKnown + ns.IsPlayerSpell pair as
-				    GetSmartSpell — profession passives can live on either
-				    surface depending on client.
-				]]
+				-- Live, not cached: a specialization can be learned mid-session. Passives sit on either API by client.
 				if usable and data.requiredSpellID then
 					local spellID = data.requiredSpellID
 					if not (ns.IsSpellKnown(spellID) or ns.IsPlayerSpell(spellID)) then
@@ -287,15 +172,7 @@ function ns.ScanBags()
 					usable = false
 				end
 
-				--[[
-				    A PvP Arena blocks potions and regular food and drink: of
-				    the food and drink, only conjured food/water and the
-				    arena-only drinks (Star's Tears/Lament) can be consumed.
-				    Healthstones, Mana Gems, bandages and explosives still work.
-				    Gate the blocked ones out so the macro never selects an item
-				    that fails on press in the arena. Ranking within what
-				    survives is unchanged (RANKING_PRIORITY).
-				]]
+				-- An arena blocks potions and all food and drink but conjured and arena-only.
 				if usable and inArena then
 					local itemType = data.itemType
 					local isFoodOrWater = (itemType == "food" or itemType == "water" or itemType == "foodwater")
@@ -307,11 +184,6 @@ function ns.ScanBags()
 				if usable then
 					local totalCount = itemCounts[id]
 
-					--[[
-					    The best buff food for Buff Duty, ranked as the Food
-					    macro ranks it while putting buff food first, of the
-					    ones the Options flyout leaves on.
-					]]
 					local isBuffFood = data.isBuffFood
 						and not ignored
 						and (data.itemType == "food" or data.itemType == "foodwater")
@@ -336,15 +208,7 @@ function ns.ScanBags()
 						FillRecord(bestBuffFood, data, totalCount, data.price, data.healthValue)
 					end
 
-					--[[
-					    Dispatch the item to every registered definition
-					    whose itemTypes set claims its cached itemType.
-					    Deliberately not first-match-wins: more than one
-					    category may consume the same item — a potion
-					    with both health and mana values feeds Health
-					    Potion and Mana Potion, and a foodwater hybrid
-					    feeds Food and Water.
-					]]
+					-- Not first-match-wins: a hybrid potion feeds both potion macros, foodwater both Food and Water.
 					for _, definition in ipairs(ns.REGISTERED_MACRO_DEFINITIONS) do
 						if
 							definition.itemTypes
@@ -358,13 +222,6 @@ function ns.ScanBags()
 								AddRankedCandidate(definition.typeName, data, score, totalCount)
 							else
 								local entry = best[definition.typeName]
-								--[[
-								    buffFood, allowConjuredFirst and
-								    allowRestockLast defs track the live
-								    scan preferences;
-								    everyone else compares with those
-								    steps gated off.
-								]]
 								local buffFood = BuffFoodRank(definition)
 								local allowConjuredFirst = definition.allowConjuredFirst and ns.allowConjuredFirst
 								local allowRestockLast = definition.allowRestockLast and ns.allowRestockLast
@@ -415,10 +272,7 @@ function ns.ScanBags()
 		ns.RequestBuffDutyRefresh()
 	end
 
-	--[[
-	    Watch Well Fed coming and going only while the bags hold buff food,
-	    the one time it changes what the Food macro eats.
-	]]
+	-- Well Fed changes what the Food macro eats only while the bags hold buff food.
 	local carriesBuffFood = next(carriedBuffFoods) ~= nil
 	if carriesBuffFood ~= ns.carriesBuffFood then
 		ns.carriesBuffFood = carriesBuffFood

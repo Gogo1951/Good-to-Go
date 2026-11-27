@@ -7,10 +7,9 @@ local BagTypeAccepts = ns.BagTypeAccepts
 --------------------------------------------------------------------------------
 
 --[[
-    The room a merchant run can spend, read once when the run starts: each player bag's
-    free slots and type, plus the room left in partial stacks of each item bought so far.
-    A purchase only lands on BAG_UPDATE, after the whole run has been sent, so the live
-    counts never move mid-run; ns.ClaimBagSpace spends this copy down instead.
+    Read once when the run starts: a purchase lands only on BAG_UPDATE, after the
+    whole run is sent, so the live counts never move mid-run and ns.ClaimBagSpace
+    spends this copy down instead.
 ]]
 function ns.NewBagSpace(bags)
 	local space = { bags = {}, partialRoom = {} }
@@ -51,11 +50,9 @@ local function FindFreeBag(space, itemInfo)
 end
 
 --[[
-    Spends the room one purchase of `count` units takes, `count` never exceeding a stack.
-    The game tops up partial stacks of the item first, and only the overflow takes a free
-    slot, which then becomes a partial stack of its own. False when nothing can take it.
-    An item with no cached record has no stack size to go on, so each purchase of it takes
-    a whole slot.
+    One purchase of at most a stack. The game tops up partial stacks first and
+    only the overflow takes a free slot. False when nothing can take it. An
+    uncached item has no stack size, so each purchase of it takes a whole slot.
 ]]
 function ns.ClaimBagSpace(space, itemInfo, count)
 	local itemID = itemInfo and itemInfo.itemID

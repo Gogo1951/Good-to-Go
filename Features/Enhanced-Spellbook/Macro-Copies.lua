@@ -8,10 +8,8 @@ local CopySettingsKey = ns.CopySettingsKey
 local NO_COPIES = {}
 
 --[[
-	Duplicate lists a spell macro again as "Drain Soul 2", "Drain Soul 3" and so on: a copy casting the same
-	spell, with options of its own and a WoW macro of its own. ns.db.profile.macroCopies holds each spell's
-	copy numbers, by its spell key (ns.MacroSpellKey, its Rank 1 ID), in the order made; a number removed is never reused while a later one stands,
-	so a copy keeps its name. A copy offers every option its spell does.
+	ns.db.profile.macroCopies holds each spell key's copy numbers ("Drain Soul 2"). A removed number is never
+	reused while a later one stands, so a copy keeps its name.
 ]]
 local COPIED_SETTINGS = {
 	"pet",
@@ -29,10 +27,7 @@ for _, key in ipairs(ns.DEFAULTABLE_OPTIONS) do
 	COPIED_SETTINGS[#COPIED_SETTINGS + 1] = key
 end
 
---[[
-	Where the macro's WoW macro is kept (see Features/Enhanced-Spellbook/Macro-Tab.lua): copied, moved and
-	dropped with the options, but kept by the middle-click reset, which leaves the WoW macro where it is.
-]]
+-- Kept by the middle-click reset, which leaves the WoW macro where it is.
 local KEPT_SETTINGS = { "macroTab" }
 local OWN_SETTINGS = {}
 for _, key in ipairs(COPIED_SETTINGS) do
@@ -42,17 +37,16 @@ for _, key in ipairs(KEPT_SETTINGS) do
 	OWN_SETTINGS[#OWN_SETTINGS + 1] = key
 end
 
--- The copy numbers made of a spell's macro, by its spell key, lowest first. Don't modify it.
+-- Lowest first. Don't modify it.
 function ns.MacroCopies(spellKey)
 	return ns.db.profile.macroCopies[spellKey] or NO_COPIES
 end
 
--- Whether a macro can be duplicated: a learned spell's own macro or one of its copies, not a rank's.
+-- A learned spell's own macro or one of its copies, never a rank's.
 function ns.OffersDuplicate(macro)
 	return not macro.unlearned and not macro.rank
 end
 
--- Adds the next copy of the macro's spell, starting with the settings the macro has now.
 function ns.DuplicateMacro(macro)
 	local copies, spellKey = ns.db.profile.macroCopies, MacroSpellKey(macro)
 	local list = copies[spellKey] or {}
@@ -73,10 +67,7 @@ function ns.DuplicateMacro(macro)
 	end
 end
 
---[[
-	Drops every setting of the macro's own, so it follows its kind's defaults again, as the menu's Delete
-	does: a spell's under its settings key.
-]]
+-- The menu's Delete.
 function ns.ResetMacroOptions(macro)
 	local key = SettingsKey(macro)
 	for _, setting in ipairs(OWN_SETTINGS) do
@@ -84,10 +75,7 @@ function ns.ResetMacroOptions(macro)
 	end
 end
 
---[[
-	Drops the options the macro set for itself, so it follows its kind's defaults again: the middle-click reset
-	on a tile or a category's gear.
-]]
+-- The middle-click reset on a tile, and a category's reset.
 function ns.ResetMacroSettings(macro)
 	local key = SettingsKey(macro)
 	for _, setting in ipairs(COPIED_SETTINGS) do
@@ -95,7 +83,7 @@ function ns.ResetMacroSettings(macro)
 	end
 end
 
--- Moves each listed setting from one settings key to another where the second has none, and drops the first's.
+-- Only where the second key has none; the first's are dropped either way.
 local function MoveSettings(keys, from, to)
 	for _, key in ipairs(keys) do
 		local settings = SpellSettings(key)
@@ -107,10 +95,8 @@ local function MoveSettings(keys, from, to)
 end
 
 --[[
-	Hands a spell's settings to the spell that replaced it in its group (see ns.HandOverMacro), setting by
-	setting where the new spell has none of its own, and drops the old spell's. Its Duplicates go with
-	it, each Duplicate keeping its number and its own settings, unless the new spell has
-	Duplicates of its own. fromID and toID are the spells' Rank 1 IDs.
+	Duplicates go too, each keeping its number and settings, unless the new spell has Duplicates of its own.
+	fromID and toID are Rank 1 IDs.
 ]]
 function ns.MoveSpellSettings(fromID, toID)
 	local from, to = MacroSpellKey({ baseID = fromID }), MacroSpellKey({ baseID = toID })
@@ -124,7 +110,6 @@ function ns.MoveSpellSettings(fromID, toID)
 	end
 end
 
--- Takes a copy off the page and drops its settings.
 function ns.RemoveMacroCopy(macro)
 	local copies, spellKey = ns.db.profile.macroCopies, MacroSpellKey(macro)
 	local list = copies[spellKey] or {}

@@ -14,12 +14,6 @@ local SpellDescription = ns.OptionsSpellDescription
 -- Active-State Predicates
 --------------------------------------------------------------------------------
 
---[[
-    Every setting here lives on the AceDB profile, which is the character's own
-    unless the player put it on another, and reads the settings table that
-    InitializeDatabase in Features/Core.lua guarantees.
-]]
-
 local GetSettings = ns.OptionsProfileSettings
 
 local function DruidMacroHelperActive()
@@ -27,7 +21,6 @@ local function DruidMacroHelperActive()
 	return settings and settings.enableDruidMacroHelper
 end
 
--- A flavor whose data folder has no pet buff food shows no Pet Food Buffs rows.
 local function NoPetBuffFoods()
 	return next(ns.PET_BUFF_FOODS) == nil
 end
@@ -37,10 +30,9 @@ local function PetBuffActive()
 	return not NoPetBuffFoods() and settings and settings.usePetBuffFood
 end
 
--- No Poisons skill on this flavor (Mists), so no Poisons macro for these rows to set up.
+-- Mists has no Poisons skill, so no Poisons macro.
 local NO_POISONS = ns.POISONS_SPELL_ID == nil
 
--- The Poisons macro is switched off on Consumable Macros, so its rows have nothing to set up.
 local function PoisonsMacroOff()
 	return not ns.IsMacroEnabled("Poisons")
 end
@@ -53,14 +45,7 @@ end
 -- Shared Widget Factories
 --------------------------------------------------------------------------------
 
---[[
-    Poison-group dropdown shared by the Main Hand and Off Hand rows. Values
-    resolve through ns.GetPoisonGroupName each time the dialog renders, and any
-    base item still uncached is warmed so the panel repaints with the client's
-    own names. The order and the values both come from
-    ns.POISON_GROUP_BASE_ITEMS, so a group the loaded data folder has no base
-    item for is never offered.
-]]
+-- Built from ns.POISON_GROUP_BASE_ITEMS, so a group with no base item in this data folder is never offered.
 local function PoisonHandDropdown(description, settingKey)
 	local sorting = {}
 	for groupID in pairs(ns.POISON_GROUP_BASE_ITEMS) do
@@ -94,13 +79,6 @@ local function PoisonHandDropdown(description, settingKey)
 	}
 end
 
---[[
-    One pet food toggle per row of the flavor folder's ns.PET_BUFF_FOODS, best
-    rank first. Each stands for an item, so it wears the item's icon on the
-    icon checkbox (Options-Widgets.lua) and names it in its quality color,
-    as the Which Macros to Create rows do. A name still uncached shows as loading text
-    and is warmed so the panel repaints.
-]]
 local function PetBuffTypeToggles()
 	local foods = {}
 	for itemID, row in pairs(ns.PET_BUFF_FOODS) do
@@ -148,29 +126,15 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The macro options that belong to one class, nested under Consumable
-    Macros (Options/Options.lua): Druid (DruidMacroHelper on the potion and
-    Healthstone macros), Hunter (Pet Food Buffs in the Food macro), and Rogue
-    (the Poisons macro's hands). When a food buff counts as worn off is on Food
-    & Drinks.
-    The Feed Pet, Soulstone and Poisons macros themselves are switched on and
-    off on Consumable Macros; Stealth Eating is with the food, on Food &
-    Drinks. Every section shows on every character, the maintainer's choice;
-    the only gates are flavor ones (no pet buff food, no Poisons skill), and
-    the Rogue section's rows, which hide while the Poisons macro is off,
-    leaving its header and a line saying so.
-
-    Order values are spaced blocks so a section can be reordered or extended
-    without renumbering its neighbors. Registered as this builder function
-    rather than a built table (see Options/Options.lua), so AceConfig
-    re-invokes it on every open and every NotifyChange.
+    Every class section shows on every character (the maintainer's choice). The
+    only gates are the flavor's (no pet buff food, no Poisons skill) and the
+    Rogue rows, which hide while the Poisons macro is off.
 ]]
 function ns.BuildClassMacrosOptions()
 	local args = {
 		descIntro = Desc(L["OPTIONS_CLASS_MACROS_DESCRIPTION"], 1),
 		spaceIntro = Spacer(2),
 
-		-- Druids, with a spacer above as every class section has; the return form sits beside the switch.
 		spaceDruid0 = Spacer(9),
 		headerDruid = Header(L["OPTIONS_CLASS_HEADER_FORMAT"]:format(LOCALIZED_CLASS_NAMES_MALE.DRUID), 10),
 		spaceDruid1 = Spacer(11),
@@ -205,11 +169,6 @@ function ns.BuildClassMacrosOptions()
 			},
 		}),
 
-		--[[
-		    Hunters -- Pet Food Buffs: pet buff food in the Food macro while the
-		    pet lacks the buff, with its When to Use and the food types. Hidden
-		    where the flavor has no pet buff food.
-		]]
 		spaceHunter0 = Spacer(20, NoPetBuffFoods),
 		headerHunter = Header(
 			L["OPTIONS_CLASS_HEADER_FORMAT"]:format(LOCALIZED_CLASS_NAMES_MALE.HUNTER),
@@ -255,14 +214,6 @@ function ns.BuildClassMacrosOptions()
 			args = PetBuffTypeToggles(),
 		},
 
-		--[[
-		    Rogues -- the Poisons macro's poison group per weapon hand. Group
-		    names come from the client's own item names
-		    (ns.GetPoisonGroupName), so the dropdown labels localize for free.
-		    Where the flavor has no Poisons skill (Mists) there is no Poisons
-		    macro, so the section hides. While the Poisons macro is off, its
-		    rows hide and a line under the header says where to switch it on.
-		]]
 		spaceRogue0 = Spacer(40, NO_POISONS),
 		headerRogue = Header(L["OPTIONS_CLASS_HEADER_FORMAT"]:format(LOCALIZED_CLASS_NAMES_MALE.ROGUE), 41, NO_POISONS),
 		spaceRogue1 = Spacer(42, NO_POISONS),
@@ -274,7 +225,6 @@ function ns.BuildClassMacrosOptions()
 		end, 42.5),
 		descPoisons = Desc(GetColor("BODY") .. L["OPTIONS_POISONS_DESCRIPTION"] .. "|r", 43, PoisonRowsHidden),
 		spaceRogue2 = Spacer(44, PoisonRowsHidden),
-		-- Label-beside-control rows: the caption, then the unlabeled dropdown, one row wide together.
 		mainHandPoison = Kit.LabelRow(
 			45,
 			PoisonRowsHidden,
@@ -290,7 +240,6 @@ function ns.BuildClassMacrosOptions()
 		),
 	}
 
-	-- Pet Food Buffs' group context checkboxes, under its level filter.
 	MacroOptions.UseWhenGroups(args, "petBuffFood", PetBuffActive, 24.5)
 
 	return MacroOptions.Page(L["TAB_CLASS_MACROS"], args)

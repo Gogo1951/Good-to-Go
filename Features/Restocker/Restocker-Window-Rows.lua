@@ -1,18 +1,7 @@
 local _, ns = ...
 local L = ns.L
 
---[[
-    The controls that fill the Restock List grid: the Keep box, the remove
-    button and the Undo that takes its place on a removed row, and the pooled
-    rows holding them. The toggle cells
-    and the reputation cell are Restocker-Window-Cells.lua, which loads first.
-
-    The grid itself -- column definitions, widths and shared colors -- is
-    Restocker-Window-Columns.lua, which loads first, and its header
-    Restocker-Window-Column-Header.lua. The reputation and column
-    menus are Restocker-Window-Menus.lua, and the render loop that lays these rows
-    out is Restocker-Window-Render.lua.
-]]
+-- Loads after Restocker-Window-Columns.lua and Restocker-Window-Cells.lua.
 local COLUMNS = ns.RESTOCK_COLUMNS
 local REMOVE_ICON_SIZE = ns.RESTOCK_REMOVE_ICON_SIZE
 local ROW_INSET = ns.RESTOCK_ROW_INSET
@@ -30,39 +19,24 @@ local SetReputationCell = ns.SetRestockReputationCell
 local CreateGlyphCell = ns.CreateRestockGlyphCell
 local CreateReputationCell = ns.CreateRestockReputationCell
 
---[[
-    Zebra stripe alpha. Deliberately faint: the row already carries quality-colored
-    item names and gold check glyphs, and a stripe strong enough to notice on its own
-    competes with both. It only has to make the eye's path across seven cells hold
-    its line.
-]]
+-- Faint on purpose: a stronger stripe competes with the quality colors and gold glyphs.
 local ROW_STRIPE_ALPHA = 0.045
 local UNDO_HEIGHT = 16
 local KEEP_BOX_HEIGHT = 16 -- on the Spacing Scale, shorter than the row so it centers in it
 local MUTED = ns.COLORS_RGB.MUTED
 
 --[[
-    An item carried onto a row is being dropped on the list, not aimed at the
-    control under it, so every control on a row hands the cursor to the add path
-    (ns.AddRestockItemFromCursor in Restocker-Window-Widgets.lua) and acts as itself only
-    when the cursor holds no item. This is the drag-release half; each click
-    handler makes the same call first.
+    An item carried onto any row control is dropped on the list, not aimed at
+    the control. This is the drag-release half; click handlers make the same
+    call first.
 ]]
 local function TakeCursorItem()
 	ns.AddRestockItemFromCursor()
 end
 
--- The cells' drop handler too (Restocker-Window-Cells.lua).
 ns.TakeRestockCursorItem = TakeCursorItem
 
---[[
-    A Keep amount is yellow while the bags hold fewer: the grocery list's line
-    not yet crossed off. ns.IsRestockItemShort (Restocker-Shortfall.lua) is the
-    test, so the mark goes by the same bag count the merchant restock and the
-    orders under the list do -- and by nothing else: a row with Buy off, which
-    the bank is meant to fill, is just as short until it has been. The orders
-    count under the list is drawn in the same yellow (Restocker-Window-Footer.lua).
-]]
+-- Yellow while the bags hold fewer, by the merchant's own bag count; a Buy-off row is short too.
 local function PaintKeep(editBox, item)
 	local tone = ns.IsRestockItemShort(item) and KEEP_SHORT or WHITE
 	editBox:SetTextColor(tone.r, tone.g, tone.b)
@@ -70,33 +44,22 @@ end
 
 ns.PaintRestockKeep = PaintKeep
 
---[[
-    The Keep box: how many of this item the list keeps in the bags. The caller
-    places it and sets its width, since the row lays its controls out from the
-    right edge inward and this one hangs off the leftmost column.
-]]
+-- The caller places and sizes it.
 local function CreateAmountEditBox(frame)
 	local editBox = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
 
 	editBox:SetHeight(KEEP_BOX_HEIGHT)
 	editBox:SetAutoFocus(false)
-	--[[
-	    Digits only, and every read still falls back to 0: item.amount is compared
-	    against bag counts by the bank restock loop, where a nil target throws and
-	    aborts the whole run.
-	]]
+	-- Every read still falls back to 0: a nil amount would kill the bank run.
 	editBox:SetNumeric(true)
 	editBox:SetMaxLetters(ns.RESTOCK_KEEP_MAX_DIGITS)
 	--[[
-	    Both handlers read self.item, rebound by ns.UpdateRestockListRow like every
-	    other row control -- never GetParent().item, which can point at another
-	    item once the row is reused, and removal then fails silently.
-	]]
-	--[[
-	    An emptied box is a slip, not a 0: leaving it (Enter, a click away,
-	    Escape) puts back the amount it held when it took focus, saved and
-	    painted as usual. Typing 0 still means store all of it at the bank.
-	    Hooked, not set, so the template's own focus handling still runs.
+	    Handlers read self.item, never GetParent().item, which can name another
+	    item once the row is reused.
+
+	    An emptied box is a slip, not a 0: leaving it puts back the amount it had.
+	    Typing 0 still means store it all. Hooked, so the template's focus
+	    handling still runs.
 	]]
 	editBox:HookScript("OnEditFocusGained", function(self)
 		self.amountBefore = self.item and self.item.amount
@@ -129,13 +92,7 @@ local function CreateAmountEditBox(frame)
 	end)
 	editBox:SetScript("OnKeyUp", function(self)
 		if self.item then
-			--[[
-			    Saved as the player types, so closing the window without
-			    pressing Enter keeps what the box holds. An empty box saves
-			    nothing: leaving it puts the old amount back (above). The
-			    amount is live from here, so its mark and the count under the
-			    list follow it.
-			]]
+			-- Saved per keystroke, so closing without Enter keeps it. An empty box saves nothing.
 			if self:GetText() == "" then
 				return
 			end
@@ -144,11 +101,7 @@ local function CreateAmountEditBox(frame)
 			ns.UpdateRestockStatus()
 		end
 	end)
-	--[[
-	    An item carried onto the box joins the list, like one dropped anywhere
-	    else on the window. The click that dropped it also focused the box, and
-	    the redraw may have handed the box a different row, so the focus goes.
-	]]
+	-- The drop's click focused the box, and the redraw may give it another row, so focus goes.
 	local function TakeDroppedItem(self)
 		if ns.AddRestockItemFromCursor() then
 			self:ClearFocus()
@@ -163,17 +116,11 @@ local function CreateAmountEditBox(frame)
 	return editBox
 end
 
---[[
-    A remove redraws the list at once, so by a double-click's second click the
-    pooled button under the cursor belongs to the next row. A remove this soon
-    after the last one is that second click, and is ignored.
-]]
+-- A remove redraws at once, so a double-click's second click would hit the next row's button.
 local DOUBLE_CLICK_GUARD_SECONDS = 0.4
 local lastRemoveTime = -math.huge
 
--- Reads self.item, which UpdateRestockListRow rebinds like every other row control, never GetParent().item.
 local function OnDeleteButtonClick(self)
-	-- An item carried onto the button is being dropped on the list, not aimed at this row.
 	if ns.AddRestockItemFromCursor() then
 		return
 	end
@@ -183,21 +130,15 @@ local function OnDeleteButtonClick(self)
 		return
 	end
 
-	-- The list write and its undo live with the other list edits (ns.RemoveRestockItem in Restocker-List.lua).
 	if ns.RemoveRestockItem(self.item) then
 		lastRemoveTime = now
 	end
 end
 
 --[[
-    The group-loot pass mark is the game's own "get rid of this" icon, and the
-    same texture the options panels' item lists (Kit.ItemList, Options/Options-Kit.lua)
-    use for their remove column -- so removal looks the same everywhere. Never a
-    UIPanelCloseButton: its red X reads as "close the window" on a row, and its
-    30px frame is mostly transparent padding.
-
-    The highlight is the normal texture blended additively rather than a separate
-    file, which glows on hover without depending on a second art path.
+    The group-loot pass, as the options panels' item lists use, so removal looks
+    the same everywhere. Never UIPanelCloseButton: its red X reads as "close the
+    window", and its frame is mostly padding.
 ]]
 local REMOVE_ICON = "Interface\\Buttons\\UI-GroupLoot-Pass-Up"
 local REMOVE_ICON_DOWN = "Interface\\Buttons\\UI-GroupLoot-Pass-Down"
@@ -216,11 +157,6 @@ local function CreateDeleteButton(frame)
 	return button
 end
 
---[[
-    Undo, on a removed row where its remove button was (ns.UndoRestockRemove in
-    Restocker-List.lua). A panel button, as everything a click acts on in this
-    window is.
-]]
 local function CreateUndoButton(frame)
 	local undo = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
 	undo:SetPoint("RIGHT", frame, "RIGHT", -ROW_INSET, 0)
@@ -232,39 +168,28 @@ local function CreateUndoButton(frame)
 		ns.UndoRestockRemove()
 	end)
 	ns.SetupRestockerTooltip(undo, L["RESTOCKER_UNDO_TOOLTIP"])
-	-- Dressed by ElvUI as the window's other buttons are, each as its row is made.
 	ns.ApplyRestockerElvUISkin(nil, { undo })
 	undo:Hide()
 	return undo
 end
 
 function ns.CreateRestockListRow(item)
-	--[[
-	    Born parented to the hidden frame and positioned by ns.UpdateRestockList, which
-	    places every row by absolute index rather than chaining them to each other.
-	]]
 	local frame = CreateFrame("Frame", nil, ns.restockHiddenFrame)
 	frame:SetSize(ns.restockWindow.scrollChild:GetWidth(), ns.restockRowHeight)
 	frame.item = item
 
-	--[[
-	    The stripe belongs to the POSITION, not the item: rows come from a pool and
-	    are reused at whatever index the next render puts them at, so every row owns
-	    a stripe and ns.UpdateRestockList decides which ones show.
-	]]
+	-- The stripe belongs to the position, not the item, so the render decides which show.
 	local stripe = frame:CreateTexture(nil, "BACKGROUND")
 	stripe:SetAllPoints(frame)
 	stripe:SetColorTexture(WHITE.r, WHITE.g, WHITE.b, ROW_STRIPE_ALPHA)
 	frame.stripe = stripe
 
-	-- ICON, with an invisible button over it that shows the item tooltip on hover
 	local icon = frame:CreateTexture(nil, "ARTWORK")
 	icon:SetSize(ICON_SIZE, ICON_SIZE)
 	icon:SetPoint("LEFT", frame, "LEFT", ROW_INSET, 0)
 	icon:SetTexCoord(0.07, 0.93, 0.07, 0.93) -- trim the default icon border
 	frame.icon = icon
 
-	-- RIGHT EDGE: the remove control, then the columns walking left from it.
 	frame.removeButton = CreateDeleteButton(frame)
 	frame.undoButton = CreateUndoButton(frame)
 	frame.cells, frame.firstCell = LayoutColumns(frame.removeButton, function(column)
@@ -274,15 +199,11 @@ function ns.CreateRestockListRow(item)
 		return CreateGlyphCell(frame, column)
 	end)
 
-	-- The Keep box hangs off the leftmost column, beside the name it belongs to.
 	frame.amountBox = CreateAmountEditBox(frame)
 	frame.amountBox:SetPoint("RIGHT", frame.firstCell, "LEFT", -KEEP_GAP, 0)
 	frame.amountBox:SetWidth(ns.restockAmountWidth)
 
-	--[[
-	    ITEM NAME fills whatever the controls leave. Anchored on both sides with no
-	    word wrap, so a long name truncates instead of running under the Keep box.
-	]]
+	-- No wrap, so a long name truncates before the Keep box.
 	local text = frame:CreateFontString(nil, "OVERLAY", nil)
 	text:SetFontObject("GameFontHighlight")
 	text:SetJustifyH("LEFT")
@@ -290,12 +211,7 @@ function ns.CreateRestockListRow(item)
 	text:SetPoint("LEFT", icon, "RIGHT", ICON_TEXT_GAP, 0)
 	frame.text = text
 
-	--[[
-	    The icon and the name together are the row's tooltip target: a FontString
-	    takes no mouse, so an invisible button covers both. It shows the item
-	    tooltip, and takes an item dropped on it like the rest of the window does;
-	    there is nothing else for a row click to open.
-	]]
+	-- A FontString takes no mouse, so an invisible button over icon and name carries the tooltip.
 	local nameButton = CreateFrame("Button", nil, frame)
 	nameButton:SetPoint("TOPLEFT", icon, "TOPLEFT", 0, 0)
 	nameButton:SetPoint("BOTTOMRIGHT", text, "BOTTOMRIGHT", 0, 0)
@@ -307,7 +223,6 @@ function ns.CreateRestockListRow(item)
 			return
 		end
 		ns.SetTooltipOwner(button)
-		-- Prefer the cached colored link; fall back to a bare item: link (always valid)
 		local info = ns.GetItemData(rowItem.itemID)
 		GameTooltip:SetHyperlink((info and info.itemLink) or ("item:" .. rowItem.itemID))
 		GameTooltip:Show()
@@ -321,11 +236,7 @@ function ns.CreateRestockListRow(item)
 	return frame
 end
 
---[[
-    The client's name for the item whenever it has one, written onto the row so the
-    filter and the sort read it too. Returns the client's item data, or nil while
-    it loads, when the row shows the loading placeholder instead.
-]]
+-- Written onto the row so the filter and sort read it too; nil while the item loads.
 local function RefreshItemName(item)
 	local info = ns.GetItemData(item.itemID)
 	if info and info.itemName and info.itemName ~= "" then
@@ -338,20 +249,13 @@ ns.RefreshRestockItemName = RefreshItemName
 
 function ns.UpdateRestockListRow(row, item)
 	row.item = item
-	-- Every control carries its own item rather than resolving through a parent.
 	row.removeButton.item = item
 	row.amountBox.item = item
 	for _, cell in pairs(row.cells) do
 		cell.item = item
 	end
 
-	--[[
-	    Column widths can resolve after a row was built (see
-	    ns.RefreshRestockColumnHeader), so re-read them here rather than only at
-	    creation -- the Keep box's too, since the item name stops at its left
-	    edge. Guarded on a serial, which makes this seven SetWidth calls once and
-	    a single comparison thereafter.
-	]]
+	-- Widths can resolve after the row was built; the serial makes this one comparison after.
 	if row.columnSerial ~= ns.restockColumnWidthSerial then
 		row.columnSerial = ns.restockColumnWidthSerial
 		row.amountBox:SetWidth(ns.restockAmountWidth)
@@ -365,11 +269,6 @@ function ns.UpdateRestockListRow(row, item)
 	end
 	SetReputationCell(row.cells.reputation, item)
 
-	--[[
-	    A removed row (ns.restockLastRemoved): grayed, its cells, Keep box and
-	    remove button replaced by "Removed [Item]." and an Undo where the remove
-	    button was. Any other row puts them back.
-	]]
 	local removed = ns.restockLastRemoved
 	local isRemoved = removed ~= nil and removed.item == item
 	for _, cell in pairs(row.cells) do
@@ -382,14 +281,13 @@ function ns.UpdateRestockListRow(row, item)
 	row.text:ClearAllPoints()
 	row.text:SetPoint("LEFT", row.icon, "RIGHT", ICON_TEXT_GAP, 0)
 	if isRemoved then
-		-- Sized here: a font not yet resolved at login measures as nothing when built.
+		-- A font unresolved at build time measures as nothing.
 		ns.FitRestockButton(row.undoButton)
 		row.text:SetPoint("RIGHT", row.undoButton, "LEFT", -NAME_COLUMN_GAP, 0)
 	else
 		row.text:SetPoint("RIGHT", row.amountBox, "LEFT", -NAME_COLUMN_GAP, 0)
 	end
 
-	-- Icon + quality-colored name from the item cache, or the loading placeholder until it is known
 	local info = RefreshItemName(item)
 	if info then
 		row.icon:SetTexture(info.itemTexture)

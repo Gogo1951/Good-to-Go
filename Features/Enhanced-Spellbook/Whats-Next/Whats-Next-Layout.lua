@@ -2,16 +2,6 @@ local _, ns = ...
 local L = ns.L
 local NameBefore = ns.SpellNameBefore
 
---[[
-	How the What's Next? pages (Whats-Next-Page.lua) order their rows and lay them out: the rows that pass a
-	page's filters as sections, under each status or each learn level (ns.WhatsNextSections), and those sections
-	filled into columns, two to a page (ns.WhatsNextPaginate).
-]]
-
---[[
-	A section's header, the space under it and the space over the next one; then each spell's row. The page
-	draws its headers and rows at these sizes (ns.WHATS_NEXT_METRICS).
-]]
 local HEADER_HEIGHT, HEADER_GAP, SECTION_GAP = 16, 8, 16
 local ROW_HEIGHT = 32
 ns.WHATS_NEXT_METRICS = { HEADER_HEIGHT = HEADER_HEIGHT, HEADER_GAP = HEADER_GAP, ROW_HEIGHT = ROW_HEIGHT }
@@ -20,7 +10,6 @@ ns.WHATS_NEXT_METRICS = { HEADER_HEIGHT = HEADER_HEIGHT, HEADER_GAP = HEADER_GAP
 -- Order
 --------------------------------------------------------------------------------
 
--- Whether a row passes the filters: its name holds the filter text, it's from the picked source, and it's shown.
 local function PassesFilters(page, model, row)
 	local text = page.filterText
 	if text and text ~= "" and not ns.FilterLower(row.name):find(ns.FilterLower(text), 1, true) then
@@ -44,11 +33,7 @@ local function ByName(a, b)
 	return a.id < b.id
 end
 
---[[
-	page's filtered rows as sections, each { name, status, rows }: under each status in model's order, by
-	level then name within it; or, sorted by level, under each learn level, by status then name. status is
-	the section's own status, for its header's ink, or nil under a level.
-]]
+-- Each { name, status, rows }; status is for the header's ink, nil under a level.
 function ns.WhatsNextSections(page, model)
 	local STATUS_RANK = {}
 	for rank, status in ipairs(model.statuses) do
@@ -102,10 +87,8 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-	Fills columns in order (page 1 left, page 1 right, page 2 left, ...) with section blocks, each
-	{ section, first, last, continued, y }. A section takes as many rows as the column has room for under
-	its header; the rest carry on at the top of the next column under its header again, marked continued.
-	It moves whole to the next column when not even its header and one row fit.
+	Blocks are { section, first, last, continued, y }. A section that overflows carries on under its header again,
+	marked continued; it moves whole when not even its header and one row fit.
 ]]
 function ns.WhatsNextPaginate(sections, height)
 	local columns, column, y = {}, nil, 0

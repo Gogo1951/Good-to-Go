@@ -4,18 +4,10 @@ local L = ns.L
 local SetTip, OptionTip = ns.MenuSetTip, ns.MenuOptionTip
 local AutoShotLabel = ns.MenuAutoShotLabel
 
---[[
-	The helpers of a page macro's right-click menu (Features/Enhanced-Spellbook/Macro-Menu.lua and its sections in
-	Features/Enhanced-Spellbook/Macro-Menu-Sections.lua).
-]]
-
 -- the classes whose enemy spells offer Start Pet Attack at the top, since their pet is always out
 local PET_CLASSES = { HUNTER = true, WARLOCK = true }
 
---[[
-	What is on in a group, its value: "In Combat" for one, "2 Options" for more, nil for none, so a group left
-	alone says nothing.
-]]
+-- "In Combat", "2 Options", or nil, so a group left alone says nothing.
 local function GroupValue(on)
 	if #on == 0 then
 		return nil
@@ -23,10 +15,7 @@ local function GroupValue(on)
 	return #on == 1 and on[1] or L["MENU_OPTIONS_COUNT"]:format(#on)
 end
 
---[[
-	The macro text's lines, for the Macro Text submenu, with pipes escaped so the text shows as written. The
-	tag line is left out, though the length counts it.
-]]
+-- Pipes escaped so the text shows as written; the tag line is left out, though the length counts it.
 local function BodyLines(macro)
 	local lines = {}
 	for line in (ns.UntaggedBody(macro.body) .. "\n"):gmatch("([^\n]*)\n") do
@@ -35,11 +24,7 @@ local function BodyLines(macro)
 	return lines
 end
 
---[[
-	The options a macro's kind is for, shown at the top as checkboxes, as { key, label }: Cast At Cursor
-	(who it casts on is the Target submenu's), the spell's own extras (pet ability, stance, Never Turn Off) and, on an enemy spell,
-	the wand or Auto Shot and, for a class with a pet, Start Pet Attack.
-]]
+-- { key, label } pairs shown at the top as checkboxes.
 local function FeaturedOptions(macro)
 	local featured = {}
 	local function add(key, label)
@@ -77,10 +62,7 @@ local function FeaturedTip(element, macro, key, label)
 	end
 end
 
---[[
-	The page's macro for the one a menu was opened on, after a rebuild has replaced every entry in ns.macros:
-	the same settings key. The old entry where the rebuild dropped it.
-]]
+-- Found by settings key after a rebuild replaced every entry; the old entry where the rebuild dropped it.
 local function RebuiltMacro(old)
 	local key = ns.SettingsKey(old)
 	for _, macro in ipairs(ns.macros) do

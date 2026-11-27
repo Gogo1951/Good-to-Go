@@ -3,20 +3,11 @@ local Refresh = ns.RefreshSpellbookPage
 local UpdateMacroCount = ns.UpdateSpellbookMacroCount
 local pages = ns.spellbookPages
 
---[[
-	Redraws the Spell Book page, and rewrites its macros, as the game changes around it: spells learned, gear
-	worn, spell data arriving, actions placed and macros made. Features/Enhanced-Spellbook/Spellbook-Page.lua builds the
-	page, and lists every page built in ns.spellbookPages.
-]]
-
 --------------------------------------------------------------------------------
 -- Refresh
 --------------------------------------------------------------------------------
 
---[[
-	Redraws whichever page is open, after a change made outside it (the options panel, a profile change).
-	Returns whether a page was open.
-]]
+-- Returns whether a page was open.
 function ns:RefreshOpenPages()
 	local refreshed = false
 	for _, page in ipairs(pages) do
@@ -28,11 +19,7 @@ function ns:RefreshOpenPages()
 	return refreshed
 end
 
---[[
-	Brings the macros the add-on made in step with a change made outside the page, whether or not a page is
-	open. In combat the rewrite waits for combat to end (ns.SyncAllMacros). With the Spellbook off it does
-	nothing, whoever asks (the Macro UI's OnHide hook included), so the macros stay as they last were.
-]]
+-- With the Spellbook off it does nothing, whoever asks, so the macros stay as they last were.
 function ns:RefreshMacros()
 	if not ns.IsSpellbookEnabled() then
 		return
@@ -49,11 +36,9 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-	A learned spell or the gear worn changes the page's list; redraw the open page, once per burst, since
-	SPELLS_CHANGED fires several times in a row. With no page open, the list is dropped, so the targetRank
-	macros rebuild it, new ranks and all, before their next rewrite; but a spell learned that takes over a
-	replaced spell's macro (ns.HandOverDue) or that a grouped macro moves up to (ns.GroupSpellLearned)
-	rebuilds and rewrites now, so that macro works straight away.
+	SPELLS_CHANGED fires several times in a row, so it redraws once per burst. With no page open the list is
+	dropped for a lazy rebuild, unless a learned spell takes over a macro or moves a grouped one up, which
+	rewrites now. What's Next redraws last: it maps each spell to its page from the new list.
 ]]
 local spellsPending = false
 -- the learned professions the last refresh read (OnSpellbookSkillLinesChanged, below)
@@ -64,15 +49,15 @@ local function RefreshForSpells()
 	spellsPending = false
 	lastProfessionsKey = CurrentProfessionsKey()
 	ns.InvalidateSpellRankRows()
-	if ns.RefreshWhatsNext then
-		ns.RefreshWhatsNext()
-	end
 	local groupChanged = ns.GroupSpellLearned()
 	if not ns:RefreshOpenPages() then
 		wipe(ns.macros)
 		if ns.db and (groupChanged or ns.HandOverDue()) then
 			ns:RefreshMacros()
 		end
+	end
+	if ns.RefreshWhatsNext then
+		ns.RefreshWhatsNext()
 	end
 end
 
@@ -84,11 +69,9 @@ function ns:OnSpellsChanged()
 end
 
 --[[
-	The Retail engine's book reads professions through GetProfessions (Class-Spells.lua), and a profession
-	learned or dropped reaches that list only by SKILL_LINES_CHANGED, after SPELLS_CHANGED has already redrawn
-	the page without it. That event also fires on every weapon skill-up, so the page redraws only when the
-	learned professions, or the spells each holds, differ from the last read. The Classic engine keeps
-	professions in its spell tabs, which SPELLS_CHANGED covers.
+	On the Retail engine a profession learned or dropped arrives only by SKILL_LINES_CHANGED, after
+	SPELLS_CHANGED has redrawn without it. It also fires on every weapon skill-up, so the page redraws only when
+	the professions or their spells differ from the last read.
 ]]
 local function ProfessionsKey(...)
 	local key = ""
@@ -122,10 +105,7 @@ function ns:OnSpellbookSkillLinesChanged()
 	end
 end
 
---[[
-	The gear worn changes the Use Items choices, and which ranged attack the Shoot macro casts, so rebuild and
-	rewrite the macros, page open or not, once per burst: a gear set swap fires once per slot.
-]]
+-- Gear changes Use Items and the Shoot macro, page open or not; a gear set swap fires once per slot.
 local gearPending = false
 
 function ns:OnPlayerEquipmentChanged()
@@ -147,10 +127,7 @@ function ns:OnPlayerEquipmentChanged()
 	end)
 end
 
---[[
-	Unlearned spells and unlearned ranks whose names weren't loaded were skipped; redraw once a burst of them
-	arrives. Only the spells this add-on asked for count, not every load another add-on or a tooltip causes.
-]]
+-- Only the spells this add-on asked for count, not every load another add-on or a tooltip causes.
 local refreshPending = false
 
 function ns:OnSpellDataLoadResult(spellID)
@@ -178,10 +155,7 @@ function ns:OnSpellDataLoadResult(spellID)
 	end)
 end
 
---[[
-	A level gained moves spells from Coming Soon to Available Now on the What's Next? tab. UnitLevel still
-	reports the old level while the event fires, so the tab reads its statuses against the event's.
-]]
+-- UnitLevel still reports the old level while the event fires, so the tab reads statuses against the event's.
 function ns:OnPlayerLevelUp(level)
 	if ns.RefreshWhatsNext then
 		ns.RefreshWhatsNext(level)
@@ -189,11 +163,8 @@ function ns:OnPlayerLevelUp(level)
 end
 
 --[[
-	The pet called, dismissed or swapped (UNIT_PET), its level (UNIT_LEVEL), the abilities it knows
-	(PET_BAR_UPDATE) or a grimoire bought or used (BAG_UPDATE_DELAYED) change the pet tabs; redraw the open tab
-	once per burst, since PET_BAR_UPDATE fires several times in a row. Only the player's and the pet's own
-	events count. One handler per event, each named for the Spellbook (ns.OnUnitPet is the Feed Pet macro's).
-	A new pet or pet level, and only those, also rewrites the Dynamic Rank macros that try the pet.
+	PET_BAR_UPDATE fires several times in a row, so the pet tabs redraw once per burst. Handlers are named for
+	the Spellbook, since ns.OnUnitPet is the Feed Pet macro's.
 ]]
 local petPending = false
 
@@ -265,19 +236,13 @@ function ns:OnActionbarSlotChanged(slot)
 	end
 end
 
---[[
-	Just before combat locks the macros: the Dynamic Rank macros are written for the units there now, and a
-	Conditionals pick in progress ends, since its slot can't be filled until combat is over.
-]]
+-- A pick in progress ends, since its slot can't be filled until combat is over.
 function ns:OnPlayerRegenDisabled()
 	ns.RewriteRanksBeforeCombat()
 	ns.CancelSpellPick()
 end
 
---[[
-	A macro made, renamed or deleted, here or in the macro window, changes the slot counts and the glows;
-	redraw the open page's tiles once per burst, since syncing fires one per macro.
-]]
+-- Syncing fires one per macro, so the tiles redraw once per burst.
 local macrosPending = false
 
 local function RedrawButtons()

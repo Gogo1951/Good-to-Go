@@ -5,75 +5,21 @@ local _, ns = ...
 --------------------------------------------------------------------------------
 
 --[[
-    The single AceDB-3.0 defaults table. Features/Core.lua passes this to
-    AceDB:New, which applies the defaults itself -- there is no hand-rolled
-    merge. Scalar and table defaults are physically copied into the saved
-    table (copyDefaults via rawset) when a scope is first accessed; only
-    */** wildcard defaults resolve through a metatable. An explicit user
-    value, including false, is never overridden either way.
+    AceDB copies scalar and table defaults into the saved table (rawset) when
+    a scope is first accessed; only */** wildcards resolve through a
+    metatable. An explicit value, false included, is never overridden.
 
-    The consumable settings live under `profile`, so they are per-character:
-    each character gets a profile of its own, named as AceDB names the
-    character (its first name and surname on WoW Forever, "Name - Realm" on
-    Era and TBC), and can run a different set of consumables. That is the
-    point -- a level-15 alt and a raiding 60 want different buff food, scrolls
-    differ by class, and two Rogues want their own poison pairs. The stock
-    Profiles panel (Options/Options-Profiles.lua) is therefore meaningful:
-    switching, copying, or resetting a profile moves real settings, and two
-    characters share a setup only when the player puts both on one profile.
-
-    What stays under `global` (account-wide), each for a concrete reason rather
-    than convenience:
-      * showWelcome    -- one login greeting per account, not per character,
-                          shared by every feature.
-      * showMacroNames -- a client-wide action-bar appearance tweak.
-      * macrosEnabled  -- the Macros master switch, account-wide for the same
-                          reason as enabledMacros: the macros it freezes are
-                          shared by every character.
-      * restockerEnabled -- the Restocker master switch, kept with the Restock
-                          Lists it governs, which are account-wide too.
-      * readinessReportEnabled -- a behavior preference (does the Readiness
-                          Report speak up on a ready check?) rather than a consumable choice.
-      * enabledMacros  -- the macros themselves are account-wide: they live in
-                          the shared General macro tab, so which ones exist has
-                          to be one choice for the whole account. Keeping the
-                          setting here means the two agree -- a character switch
-                          never adds or removes a macro, it only rewrites the
-                          shared bodies to that character's best items.
-      * minimap        -- LibDBIcon reads this subtable directly and owns its
-                          contents (position etc.), so keeping it off the
-                          profile means switching, resetting, or deleting a
-                          profile never moves the minimap button.
-      * ignoreList     -- the Global half of the Ignore List, hiding an
-                          item from every character's macros at once; the
-                          character's half keeps the same key on the profile,
-                          and Features/Macros-for-Consumables/Ignore-List.lua reads both.
-      * readiness*     -- the per-category switches under
-                          readinessReportEnabled, each answered once for the
-                          account like the master toggle above it. Their own
-                          reasons are on the keys.
-      * restocker      -- the Restock Lists and the Restocker's settings,
-                          shared by the account; a profile only picks which
-                          list it uses. Its reason is on the key itself.
-      * inventoryReport, inventory -- the item-tooltip counts and the
-                          per-character snapshots behind them. Their reasons
-                          are on the keys.
-
-    No profile names a Restock List: which list a character uses is kept by
-    character, in restocker.listChoices below, and
-    ns.InitializeCharacterRestockList
-    (Features/Restocker/Restocker-Saved-Lists.lua) gives a character without
-    one a list named for its class.
+    `profile` is per-character: a level-15 alt and a raiding 60 want
+    different buff food, scrolls differ by class, and two Rogues want their
+    own poison pairs. `global` holds only what has a concrete reason to be
+    account-wide, given on each key; showWelcome and showMacroNames are
+    client-wide preferences.
 ]]
 --[[
-    Which scroll types start ticked: the ones the character's class gets use
-    from, by each type's classes in Data/{Game}/Scrolls-{Game}.lua ("ALL" or
-    class tokens). Stamina and Protection suit everyone; the rest go by class,
-    never by spec. Read once at load, so the defaults are the logged-in
-    character's: a profile only stores the types its player changed, and every
-    other type follows the class of whoever is playing it. Every type in
-    ns.SCROLL_CHECK_ORDER gets a key, so an untouched off type reads false
-    rather than nil.
+    The types the class gets use from, never by spec. Read once at load, so
+    the defaults follow whoever is playing: a profile stores only the types
+    its player changed. Every type gets a key, so an untouched off type reads
+    false, not nil.
 ]]
 local function DefaultScrollTypes()
 	local _, classToken = UnitClass("player")
@@ -88,73 +34,36 @@ end
 
 ns.DATABASE_DEFAULTS = {
 	profile = {
-		--[[
-		    The character's own half of the Ignore List, itemID to true: the
-		    items hidden from the macros of whoever is on this profile. The
-		    Global half keeps the same key on `global`, and
-		    Features/Macros-for-Consumables/Ignore-List.lua reads both.
-		]]
+		-- The character's half of the Ignore List; the Global half keeps the same key on `global`.
 		ignoreList = {},
 		--[[
-		    Use Conjured Food & Water First: the Food and Water macros rank
-		    conjured items above anything that restores more. On by default, in every group context but only while
-		    leveling (level filter "leveling", below max level): leveling is
-		    when free conjured food matters, solo or in a dungeon with a Mage
-		    friend, while at max level a raider wants the best. Per-character
-		    like the other consumable choices.
+		    Use Conjured Food & Water First: on, but only while leveling, when free
+		    conjured food matters; at max level a raider wants the best.
 
-		    Every consumable's When to Use is a pair: <prefix>In, ticked per
-		    group context (ns.GROUP_CONTEXTS), and <prefix>Level, one of
-		    ns.LEVEL_FILTER_ORDER. ns.IsUseWhenActive reads both.
+		    Every consumable's When to Use is a pair: <prefix>In, ticked per group
+		    context, and <prefix>Level, one of ns.LEVEL_FILTER_ORDER.
 		]]
 		useConjuredFirst = true,
 		conjuredFirstIn = { solo = true, party = true, raid = true, battleground = true },
 		conjuredFirstLevel = "leveling",
-		--[[
-		    Use Restock List Food & Water Last: between two items that restore
-		    the same amount, the Food and Water macros pick the one not on the
-		    current Restock List, whatever its Keep amount. Off by default.
-		]]
 		useRestockLast = false,
-		--[[
-		    Use Food & Water in Potion Macros Out of Combat: the Health Potion
-		    macro eats the Food macro's pick and the Mana Potion macro drinks
-		    the Water macro's pick while the player is out of combat. Off by
-		    default.
-		]]
 		potionsUseFoodAndWater = false,
 		combineHealthstones = false,
 		includeManaRunes = false,
-		--[[
-		    Early re-application (Refresh Food Buffs Under, on Food & Drinks):
-		    with earlyReapply on, Well Fed, a pet food buff or a scroll buff
-		    whose remaining time is under earlyReapplyThreshold (seconds) counts
-		    as already expired, so the macros offer a fresh one before a pull.
-		    See BuffCountsAsActive in Scanner-Auras.lua. On by default at three
-		    minutes, so a buff can't lapse mid-fight unseen.
-		]]
+		-- Refresh Food Buffs Under: on at three minutes (seconds), so a buff can't lapse mid-fight unseen.
 		earlyReapply = true,
 		earlyReapplyThreshold = 180,
 		--[[
-		    Eat Buff Food When Already Well Fed: buff food counts as ordinary
-		    food, so the Food and Water macros eat whatever restores the most;
-		    off, they keep it for last. Eating it for the buff is Buff Duty's
-		    (its Well Fed icon), never the macros'. On by default on WoW Forever, where
-		    buff food is cheap and nearly all anyone carries; off elsewhere,
-		    where it's worth saving for the buff.
+		    Eat Buff Food When Already Well Fed: on for WoW Forever, where buff food
+		    is cheap and nearly all anyone carries; off elsewhere, where it's worth
+		    saving for the buff.
 		]]
 		useBuffFoodWhenFed = ns.FLAVOR == "Camelot",
-		--[[
-		    The scroll types Buff Duty's window offers (and the Readiness
-		    Report asks about): the ones the class can use (DefaultScrollTypes
-		    above).
-		]]
 		scrollTypes = DefaultScrollTypes(),
 		--[[
-		    Off by default. Pet buff food
-		    is a min-maxer's tool -- it needs level 55+, a live pet, and a
-		    steady supply of Kibler's Bits or Sporeling Snacks -- so a new user
-		    should never meet it uninvited. Leave this false.
+		    Pet buff food is a min-maxer's tool (level 55+, a live pet, a steady
+		    supply of Kibler's Bits or Sporeling Snacks), so a new user should never
+		    meet it uninvited. Leave this false.
 		]]
 		usePetBuffFood = false,
 		petBuffFoodIn = { solo = true, party = true, raid = true, battleground = true },
@@ -163,90 +72,59 @@ ns.DATABASE_DEFAULTS = {
 			KiblersBits = true,
 			SporelingSnacks = true,
 		},
-		--[[
-		    Explosive macro click layout: "atplayer" fires [@player] on
-		    left-click and the standard toss on right-click; "toss" swaps
-		    the buttons. See BuildExplosiveUseLine in Features/Macros-for-Consumables/Macros/Explosive.lua.
-		]]
+		-- "atplayer" fires [@player] on left-click and the toss on right-click; "toss" swaps them.
 		explosivesClickMode = "atplayer",
 		enableDruidMacroHelper = false,
 		druidReturnForm = "bear",
 		enableShadowmeldDrinking = false,
 		--[[
-		    Stealth Eating appends the character's stealth ability to the Food
-		    macro -- Stealth for Rogues, Shadowmeld for other Night Elves. One
-		    key serves both; the class/race gate lives in Food.lua's appendBlock.
-		    Per-character, so a Night Elf Druid enabling it never switches it
+		    Stealth Eating: one key for Stealth (Rogues) and Shadowmeld (other Night
+		    Elves). Per-character, so a Night Elf Druid enabling it never switches it
 		    on for the account's Rogues.
 		]]
 		enableStealthEating = false,
-		--[[
-		    Forsaken: the Food and Water macros try Cannibalize first while the
-		    target is a Humanoid or Undead and the spell is off cooldown, and
-		    eat or drink when it cannot cast (Features/Macros-for-Consumables/Macros/Tools-Forsaken.lua). Drinking only takes effect
-		    where Cannibalize restores mana (ns.CANNIBALIZE_RESTORES_MANA).
-		]]
+		-- Drinking only takes effect where Cannibalize restores mana (ns.CANNIBALIZE_RESTORES_MANA).
 		enableCannibalizeEating = false,
 		enableCannibalizeDrinking = false,
-		--[[
-		    Troll Rapid Regeneration
-		    (Features/Macros-for-Consumables/Macros/Tools-Troll.lua): the Food
-		    macro casts it in combat, where eating can't happen, and the
-		    Bandage macro casts it out of combat while it is off cooldown.
-		    Only WoW Forever has the spell (ns.RAPID_REGENERATION_SPELL_ID).
-		]]
+		-- Troll Rapid Regeneration: only WoW Forever has the spell.
 		enableRapidRegenerationEating = false,
 		enableRapidRegenerationBandage = false,
-		--[[
-		    Rogue poison groups per weapon slot, keyed by ns.POISON_GROUP_BASE_ITEMS
-		    group IDs (4 = Instant Poison). See ns.POISON_GROUPS in Data/Data.lua.
-		]]
+		-- ns.POISON_GROUP_BASE_ITEMS group IDs (4 = Instant Poison).
 		mainHandPoisonGroup = 4,
 		offHandPoisonGroup = 4,
+		-- Fishing Lure steps: the gear waits until ticked; fishing food and a lure are ticked from the start.
+		fishingEquipPole = false,
+		fishingEquipPants = false,
+		fishingEquipHat = false,
+		fishingEquipBoots = false,
+		fishingEquipGloves = false,
+		fishingUseFood = true,
+		fishingUseLure = true,
 	},
 	global = {
 		showWelcome = true,
-		--[[
-		    The features' master switches, in the root panel's Features section
-		    and atop each feature's own panel, all account-wide. Off, macrosEnabled
-		    leaves every macro as it last was: nothing is created, rewritten or
-		    deleted until it is back on. Off, restockerEnabled stops every part
-		    of the Restocker, its window, /restock and the mini-map click
-		    included; the lists stay saved. Off, spellbookEnabled hides the
-		    Spellbook and its tab in the game's spellbook and stops keeping its
-		    macros current; the macros it made stay as they last were.
-		]]
+		-- Master switches, account-wide like the shared macros and lists they govern.
 		macrosEnabled = true,
 		restockerEnabled = true,
 		spellbookEnabled = true,
 		--[[
-		    The Restock List subsystem. `lists` are the player's own named
-		    shopping lists, shared by every character, and the stock Reset
-		    Profile control must never reach them. Putting them on global is
-		    what guarantees that -- a profile switch or reset cannot empty a
-		    hand-built list or re-offer the Starter List to a character that
-		    already answered it. `listChoices` is which list each character
-		    uses, keyed by the character's name as profileKeys holds it. It is
-		    kept here and not on a profile, so two characters sharing a profile
-		    still shop from lists of their own, and switching one never moves
-		    the other.
+		    `lists` live on global so a profile switch or Reset Profile can never
+		    empty a hand-built list or re-offer the Starter List. `listChoices` is
+		    keyed by profileKeys name and kept off the profile, so two characters
+		    sharing a profile still shop from lists of their own.
 
-		    All three reminders ship Simple, one line each: a reminder is a
-		    nudge. Verbose stays one dropdown away. restockLowThreshold is the
-		    share of a row's amount below which the reminders call it low
-		    (ns.RESTOCK_LOW_THRESHOLDS); rows at or above it are not mentioned.
+		    Reminders ship Simple: a reminder is a nudge. restockLowThreshold is the
+		    percent of a row's amount below which it counts as low.
 
-		    The Gold Reserve ships on at 1 gold, a floor low enough that nobody
-		    notices it until a merchant run would otherwise leave them broke. It
-		    sits here with the lists, outside every profile: one floor for every
-		    character, so a reserve set on one also holds back an alt with less.
-		    goldReserveAmount is whole gold, one of ns.GOLD_RESERVE_AMOUNTS.
+		    The Gold Reserve ships on at 1 gold, low enough that nobody notices it
+		    until a merchant run would leave them broke; one floor for every
+		    character. goldReserveAmount is whole gold.
 		]]
 		restocker = {
 			lists = {},
 			listChoices = {},
 			framePosition = {},
-			staplesPosition = {}, -- where the Staples window was dragged to, account-wide like the Restock List's
+			staplesPosition = {},
 			restockReminderChat = true,
 			restockReminderSound = true,
 			restockReminderMode = "simple",
@@ -261,62 +139,38 @@ ns.DATABASE_DEFAULTS = {
 			goldReserveAmount = 1,
 		},
 		--[[
-		    The Inventory Report in item tooltips (Features/Inventory-Report/Inventory-Report-Tooltip.lua).
-		    Ships ON: it only ever adds lines to a
-		    tooltip the player asked for, and never acts. The switch exists
-		    because most auction add-ons print their own counts under the same
-		    items, and a player running one wants a single set. A display
-		    preference for the account, like showMacroNames.
+		    The Inventory Report ships ON: it only adds lines to a tooltip the player
+		    asked for. The switch exists because most auction add-ons print their own
+		    counts, and a player running one wants a single set. A display preference
+		    for the account.
 		]]
 		inventoryReport = true,
 		--[[
-		    Every character's last-known bags and bank, keyed by character (the
-		    Restocker's "Name-Realm" key), each place packed into one line of
-		    "itemID:count" pairs by Features/Inventory-Report/Inventory-Report-Recording.lua. Account-wide
-		    because its whole point is showing one character what the others
-		    hold, and never a profile: switching or resetting one must not wipe
-		    what an alt was carrying. Each record also holds the character's
-		    name, realm and class, and the Restock List reads the class to color
-		    the characters on a list.
+		    Every character's last-known bags and bank, by ns.GetCharacterKey(), each
+		    place packed as "itemID:count" pairs. Account-wide: its point is showing
+		    one character what the others hold, and a profile reset must not wipe it.
 		]]
 		inventory = {},
 		--[[
-		    The Global half of the Ignore List, itemID to true: items hidden
-		    from every character's macros, whatever profile the character is on.
-		    Outside the profiles so that it reaches all of them, and so that
-		    resetting one character's profile never empties it.
+		    The Global half of the Ignore List, outside the profiles so it reaches
+		    all of them and no profile reset empties it.
 		]]
 		ignoreList = {},
 		--[[
-		    Macro-name text on the default action bars. Off by default so the
-		    add-on hides the names Blizzard began showing again; the
-		    "Enable Macro Names on Buttons" toggle reads it directly, so checked
-		    means the names show (see Features/Macros-for-Consumables/Action-Button-Text.lua).
+		    Off, so the add-on hides the macro names Blizzard began showing again on
+		    the action bars.
 		]]
 		showMacroNames = false,
 		--[[
-		    The Readiness Report: on a ready check, a private report naming what
-		    still needs fixing. A behavior preference -- whether you want
-		    the report speaking up at all -- rather than a consumable choice, so
-		    it is answered once for the account rather than per character, and so
-		    is every category switch under it.
+		    A behavior preference, not a consumable choice, so it and every category
+		    under it are answered once for the account. Silence is the normal output,
+		    so a switch here should only ever ADD a line about something broken.
 
-		    Silence is the report's normal output: a category with nothing wrong
-		    prints nothing, and a clean character prints nothing at all. That is
-		    what lets it cover this much without becoming noise, so a switch here
-		    should only ever be able to ADD a line about something broken.
-
-		    The report ships ON: it speaks only at a ready check, privately, and
-		    only about something broken. The key is deliberately a NEW one rather
-		    than the retired readinessReport, whose saved values belong to its
-		    old meaning.
+		    Ships ON: it speaks only at a ready check, privately. Deliberately a NEW
+		    key: the retired readinessReport's saved values belong to its old meaning.
 		]]
 		readinessReportEnabled = true,
 		--[[
-		    Which categories the report covers. Each is answered once for the
-		    account, like the master toggle above, and every one of them is dead
-		    while readinessReportEnabled is off.
-
 		    Ships ON: the things a player can fix in the few seconds a ready
 		    check gives them, or fix before the pull. Well Fed, the weapon buffs
 		    and buffs about to lapse are their own to fix. A Warlock can hand
@@ -339,12 +193,9 @@ ns.DATABASE_DEFAULTS = {
 		readinessMainHandBuff = true,
 		readinessOffHandBuff = true,
 		--[[
-		    Buffs about to lapse, in seconds. Distinct from the Consumable Macros panel's
-		    Buff Re-Application threshold, which decides when the MACROS treat a
-		    buff as spent: this one only decides when the report mentions one,
-		    and covers every aura on the character rather than the tracked ones.
-		    Both ship at three minutes, so the report and the macros agree on
-		    what counts as expiring until the player sets them apart.
+		    Seconds. Apart from the macros' earlyReapplyThreshold, and covering every
+		    aura; both ship at three minutes, so the two agree until the player sets
+		    them apart.
 		]]
 		readinessExpiring = true,
 		readinessExpiringThreshold = 180,
@@ -368,19 +219,16 @@ ns.DATABASE_DEFAULTS = {
 		readinessPvP = false,
 		readinessQuestionableGear = false,
 		--[[
-		    Which macros Consumable Macros maintains. Account-wide because the macros
-		    are: they live in the shared General macro tab, so unchecking one
-		    removes the shared macro for every character. Feed Pet and Poisons
-		    are class-gated on top of this toggle and build only for Hunters and
-		    Rogues; the conjure-capable macros (Healthstone, Mana Gem,
-		    Soulstone) are built for every class, with only their conjure clicks
-		    class-gated. Poisons starts off, since Buff Duty offers poisons too
-		    (Features/Core.lua keeps it on for accounts that had it).
+		    Account-wide because the macros live in the shared General tab: a
+		    character switch only rewrites their bodies. Poisons starts off, since
+		    Buff Duty offers poisons too; Fishing Lure starts off: it's for players
+		    who fish.
 		]]
 		enabledMacros = {
 			["Bandage"] = true,
 			["Explosive"] = true,
 			["Feed Pet"] = true,
+			["Fishing Lure"] = false,
 			["Food"] = true,
 			["Health Potion"] = true,
 			["Healthstone"] = true,
@@ -390,15 +238,28 @@ ns.DATABASE_DEFAULTS = {
 			["Soulstone"] = true,
 			["Water"] = true,
 		},
-		--[[
-		    The main mini-map button's visibility. LibDBIcon reads `hide` from this subtable,
-		    so it stays the single source of truth -- the "Enable Mini-map Button"
-		    toggle is its inverse (hide = false means shown). LibDBIcon owns the
-		    rest of the subtable (position, etc.); living under `global`, it is
-		    untouched by profile switches and resets.
-		]]
+		-- LibDBIcon owns this subtable; on `global`, so no profile switch or reset moves the button.
 		minimap = {
 			hide = false,
+		},
+		--[[
+		    Account-wide: one character sees and mails the others, and no profile
+		    reset can forget an alt's gold.
+		      enabled    the feature's switch. Ships ON: it only adds a tab to
+		                 the mailbox, and never mails anything unless clicked.
+		      skipSmall  Skip Under 1g: Replenish leaves out a character short
+		                 by less than 1g, which isn't worth a mail's postage.
+		      characters each character's record by ns.GetCharacterKey(): name,
+		                 realm, class, faction, money and when it was seen, what
+		                 it keeps, and gold the bank mailed it that's on its way.
+		      banks      the bank's key for each realm and faction, as
+		                 "Realm|Faction": mail can't cross either.
+		]]
+		currencyReplenish = {
+			enabled = true,
+			skipSmall = true,
+			characters = {},
+			banks = {},
 		},
 	},
 }
@@ -426,10 +287,9 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-	Per-Character model: the recorded trainer spells differ from character to character, and the macro options
-	ride the profile with them, since which spells a page lists is per class. Which macros the add-on made is a
-	fact about the account's and the character's macro lists, not a setting, so it lives in global and char,
-	where no profile change or reset can lose it.
+    Trainer spells and macro options ride the profile, since which spells a
+    page lists is per class. Which macros the add-on made is a fact, not a
+    setting, so it lives in global and char, where no profile reset can lose it.
 ]]
 local SPELLBOOK_DEFAULTS = {
 	global = {
@@ -437,13 +297,9 @@ local SPELLBOOK_DEFAULTS = {
 		-- each WoW macro's tag line ID (see ns.MacroTag), by what the macro is for, and how many were handed out
 		macroTags = {},
 		macroTagCount = 0,
-		--[[
-			the What's Next ranks under the game's own spell tooltips (Features/Enhanced-Spellbook/Spell-Ranks-Tooltip.lua):
-			a display preference for the account, like inventoryReport. Enhanced Spellbook's own window shows its
-			ranks either way.
-		]]
+		-- What's Next ranks under the game's own spell tooltips: a display preference for the account.
 		abilityTooltipRanks = true,
-		windowPosition = {}, -- where the Spellbook window was dragged to, one spot for every character
+		windowPosition = {}, -- one spot for every character
 	},
 	profile = {
 		showAllRanks = false,
@@ -460,9 +316,9 @@ local SPELLBOOK_DEFAULTS = {
 		whatsNextPetShowOtherFamilies = false,
 		markedPlaced = {}, -- macros marked placed from the page's settings menu, by macro identity
 		--[[
-			the options each kind of macro starts with (see ns.MACRO_KINDS), as kind -> option -> true or
-			false. Buffs start on Dynamic Rank, since a buff's rank can't land on a player too far below its level,
-			and on Right-Click For the group (or single) version.
+		    kind -> option -> boolean. Buffs start on Dynamic Rank, since a buff's
+		    rank can't land on a player too far below its level, and on Right-Click
+		    For the group (or single) version.
 		]]
 		kindDefaults = {
 			enemy = {},
@@ -522,31 +378,21 @@ AddDefaults("char", SPELLBOOK_DEFAULTS.char)
 -- Buff Duty Defaults
 --------------------------------------------------------------------------------
 
---[[
-    Buff Duty's settings, account-wide: none of them is about one character,
-    so every character buffs the same way.
-]]
+-- Account-wide: none of these is about one character, so every character buffs the same way.
 AddDefaults("global", {
 	--[[
-		    Buff Duty: the click-to-cast list of group members missing a buff
-		    you can give. On by default: it is self-only, and it
-		    only appears when there is something you can fix. `audience` holds who
-		    each buff is offered to (Data.BUFF_AUDIENCE), keyed by the row's first
-		    single-target id, and seeds from the row defaults in this client's
-		    Buff-Duty-Spells file. `point` is nil until the window is first
-		    dragged, and until then its top-right corner sits a little right of
-		    and above the middle of the screen.
-		]]
+	    On by default: it is self-only, and appears only when there is something
+	    you can fix. `audience` (Data.BUFF_AUDIENCE) is keyed by the row's first
+	    single-target id and seeds from this client's Buff-Duty-Spells defaults.
+	    `point` is nil until the window is first dragged.
+	]]
 	buffWindow = {
 		enabled = true,
 		--[[
-			    When to Show: whether the window shows in each group context
-			    (ns.GROUP_CONTEXTS), where it shows in the first three (one of
-			    Data.BUFF_DUTY_WHERE; a battleground is always an instance),
-			    and which of your classes it shows on, keyed by class token.
-			    An unset class reads as ticked. Paladins start off: most of
-			    them run Pally Power for their blessings.
-			]]
+		    showWhere covers the first three contexts (a battleground is always an
+		    instance). An unset class reads as ticked. Paladins start off: most of
+		    them run Pally Power for their blessings.
+		]]
 		showIn = { solo = true, party = true, raid = true, battleground = true },
 		showWhere = { solo = "ALWAYS", party = "ALWAYS", raid = "INSTANCE" },
 		showClasses = {
@@ -554,23 +400,15 @@ AddDefaults("global", {
 		},
 		locked = false,
 		hideInCombat = true,
-		--[[
-			    How solid the window's background is, in percent: one of
-			    Data.BUFF_DUTY_OPACITY_CHOICES. The text stays as it is. 80
-			    is the menus' own plate.
-			]]
+		-- Background only, in percent; 80 is the menus' own plate.
 		windowOpacity = 80,
-		--[[
-			    Minutes left under which a buff counts as missing; one of
-			    Data.BUFF_DUTY_REFRESH_CHOICES.
-			]]
+		-- Minutes left under which a buff counts as missing.
 		refreshMinutes = 3,
 		--[[
-			    When each class, and pets (Data.TANK_WHEN_PET), take Tanks buffs
-			    (Thorns) without a role of their own: one of Data.TANK_WHEN, keyed
-			    by class token. A class with no entry is NEVER; the classes that
-			    can fight in melee, and pets, start SOLO.
-			]]
+		    When each class takes Tanks buffs (Thorns) without a role of its own. A
+		    class with no entry is NEVER; classes that can fight in melee, and pets,
+		    start SOLO.
+		]]
 		tankWhen = {
 			DEATHKNIGHT = "SOLO",
 			DRUID = "SOLO",
@@ -581,33 +419,15 @@ AddDefaults("global", {
 			WARRIOR = "SOLO",
 			PET = "SOLO",
 		},
-		--[[
-			    The Self Buffs row's master switch, and whether each self buff,
-			    the Soulstone and each Other Buffs consumable is on (any of
-			    Data.SELF_REFRESH_CHOICES but OFF), keyed by the row's first rank
-			    id and seeded from this client's BUFF_DUTY_SELF_SPELLS defaults.
-			]]
+		-- selfRefresh is keyed by the row's first rank id, seeded from this client's BUFF_DUTY_SELF_SPELLS.
 		selfEnabled = true,
 		selfRefresh = {},
-		--[[
-			    Whether each poison or imbue is ticked for each hand, keyed
-			    "ROGUE_MAIN" and so on, then by the BUFF_DUTY_WEAPON_ENCHANTS
-			    row's first id. Unset reads as ticked.
-			]]
+		-- Keyed "ROGUE_MAIN" and so on, then the row's first id. Unset reads as ticked.
 		weaponPicks = {},
-		--[[
-			    The Weapon Buffs switch, and whether each oil, stone or
-			    lure is ticked for each hand ("MAIN" or "OFF", then the item
-			    id; unset reads as ticked).
-			]]
+		-- weaponItems: "MAIN" or "OFF", then the item id. Unset reads as ticked.
 		weaponEnabled = true,
 		weaponItems = {},
-		--[[
-			    Each category's When to Use (one of Data.BUFF_DUTY_ROW_WHEN),
-			    Always for every one, and whether the Cast Next Buff key uses
-			    its icons, keyed by Data.BUFF_DUTY_ROWS. Elixirs and Other
-			    Buffs are a click only until turned on.
-			]]
+		-- rowKey: whether the Cast Next Buff key uses a category; Elixirs and Other Buffs are a click only until turned on.
 		rowWhen = {
 			self = "ALWAYS",
 			food = "ALWAYS",
@@ -618,63 +438,31 @@ AddDefaults("global", {
 		},
 		rowKey = { self = true, food = true, weapons = true, scrolls = true, elixirs = false, other = false },
 		--[[
-			    Each category's Show in Buff Duty switch, keyed by
-			    Data.BUFF_DUTY_ROWS. Self-Buffs and Weapon Buffs keep theirs
-			    in selfEnabled and weaponEnabled above. Well Fed, Scrolls and
-			    Flasks or Elixirs have no default here: each is seeded once
-			    from the switch it had before it became a category's
-			    (selfRefresh's wellFed, scrolls and elixirs keys), so each
-			    flavor's own default carries over.
-			]]
+		    Self-Buffs and Weapon Buffs keep theirs in selfEnabled and weaponEnabled.
+		    Well Fed, Scrolls and Flasks or Elixirs have no default here: each is
+		    seeded once from selfRefresh's wellFed, scrolls and elixirs keys, so each
+		    flavor's own default carries over.
+		]]
 		rowOn = { other = true },
-		--[[
-			    Each category's Show timing, for everything in it: one of
-			    Data.BUFF_DUTY_ROW_SHOW_CHOICES (0 for When Missing).
-			]]
+		-- 0 is When Missing.
 		rowShow = { self = 3, food = 3, weapons = 3, scrolls = 3, elixirs = 3, other = 3 },
-		--[[
-			    Each category's Show Missing Inventory: a red line once the
-			    buff is gone and nothing in your bags gives it. Self-Buffs
-			    has none: spells need no bags.
-			]]
+		-- Show Missing Inventory. Self-Buffs has none: spells need no bags.
 		rowOut = { food = false, weapons = false, scrolls = false, elixirs = false, other = false },
 		favorEnabled = true,
-		-- One of Data.BUFF_DUTY_FAVOR_CHOICES.
 		favorSeconds = 40,
 		targetEnabled = true,
 		-- Whether the Target row also lists a friendly NPC you can buff.
 		targetNPCs = true,
-		--[[
-			    Whether a targeted player outside your group gets an Ask row
-			    of the buffs of theirs you're missing (Buff-Duty-Asks.lua).
-			    Its whisper's own text, askTargetMessage, has no default here,
-			    like askMessage below.
-			]]
+		-- askTargetMessage has no default here, like askMessage below.
 		askTarget = true,
-		--[[
-			    Whether buffs still go out to PvP-flagged players while you aren't
-			    flagged; off holds them back, since buffing them flags you
-			    (BuffDuty.PvPFlaggedTarget).
-			]]
+		-- Off holds buffs back from PvP-flagged players while you aren't flagged, since buffing them flags you.
 		buffPvPFlagged = false,
-		--[[
-			    Buff food the Options flyout turned off, by item id: Well Fed's
-			    icon passes over them for the next best in your bags. Unset
-			    reads as on, so food you pick up later is offered.
-			]]
+		-- By item id. Unset reads as on, so food picked up later is offered.
 		buffFoodOff = {},
-		--[[
-			    Elixirs and flasks, and scrolls, a category menu turned off, by
-			    item id: the window passes over them. Unset reads as on.
-			]]
+		-- By item id. Unset reads as on.
 		elixirOff = {},
 		scrollOff = {},
-		--[[
-			    The Party-Buffs raid buffs, and the asks its clicks send. The
-			    whispered ask's own text, askMessage, has no default here: unset,
-			    it goes out in the Send Messages In language's default
-			    (Data/Message-Languages.lua).
-			]]
+		-- askMessage has no default here: unset, it goes out in the chosen language's default.
 		askOtherClasses = true,
 		audience = {},
 	},
@@ -685,15 +473,14 @@ AddDefaults("global", {
 --------------------------------------------------------------------------------
 
 --[[
-    Account-wide, like Buff Duty: whether to watch the group's ranks and how to speak up is a
-    behavior preference, not a choice about one character, and the casts already reported are a fact about the
-    other players, shared with every character who might group with them again. Off until the player turns it on.
+    Account-wide: a behavior preference, and the casts already reported are a
+    fact about the other players. Off until the player turns it on.
 
-    untracked holds the player's own choices on the Reported Ranks panel, by spell ID: true for a rank they
-    unticked, false for one the data starts off (Rank 1 Scorch and the like) that they ticked. A rank they never
-    touched follows the data, so a rank added later starts at its default with no seeding. announced keys a reported cast as
-    "<caster GUID>-<caster level>-<spell ID>", the shape the standalone Rank Sentinel add-on records and sends
-    with NOTIFY, so the two never report the same cast twice; it is forgotten whenever announcedVersion stops
+    untracked, by spell ID: true for a rank unticked, false for a default-off
+    rank ticked; an untouched rank follows the data, so a new rank needs no
+    seeding. announced keys "<caster GUID>-<caster level>-<spell ID>", the
+    shape standalone Rank Sentinel records and sends with NOTIFY, so the two
+    never report one cast twice; forgotten when announcedVersion stops
     matching ns.Version.
 ]]
 AddDefaults("global", {
@@ -706,16 +493,12 @@ AddDefaults("global", {
 		untracked = {},
 		ignoredPlayers = {}, -- caster GUID -> name, never reported
 		ignoredClasses = {}, -- caster GUID -> class token, to draw the Ignored Players list in class colors
-		--[[
-		    The whispers' own text -- tipMessage, tipMessagePet, tipMessageDemon, optOutMessage and
-		    optOutDoneMessage -- has no default here: unset, each goes out in the Send Messages In language's
-		    default (Data/Message-Languages.lua).
-		]]
+		-- The whispers' own text has no default here: unset, each goes out in the chosen language's default.
 		announced = {},
 		announcedVersion = "",
 		--[[
-		    Ability Alerts While Leveling (Features/Rank-Watch/Rank-Watch-Level-Up.lua): its own switch, not
-		    Rank Watch's, and on from the start, since it only ever talks to the player and only on a ding.
+		    Ability Alerts While Leveling: its own switch, on from the start, since it
+		    only ever talks to the player and only on a ding.
 		]]
 		levelUpAlerts = true, -- on a ding, print the trainer spells the new level opened
 		levelUpAlertsPast = true, -- and the ones from earlier levels not learned yet
@@ -729,12 +512,7 @@ AddDefaults("global", {
 -- Message Language Defaults
 --------------------------------------------------------------------------------
 
---[[
-    The language Buff Duty's and Rank Watch's whispers go out in, a locale code
-    from Data.MESSAGE_LANGUAGES. Account-wide, like the whisper settings of
-    both features, and one setting for both: the players you talk to read one
-    language, whichever feature is talking.
-]]
+-- One setting for both features: the players you talk to read one language, whichever feature is talking.
 AddDefaults("global", {
 	messageLanguage = ns.Data.DEFAULT_MESSAGE_LANGUAGE,
 })

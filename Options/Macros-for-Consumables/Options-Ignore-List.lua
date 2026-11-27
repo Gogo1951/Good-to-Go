@@ -7,38 +7,12 @@ local Kit = ns.OptionsKit
 --------------------------------------------------------------------------------
 
 --[[
-    Every ignore list on the account, one scope per list. childGroups = "tree"
-    splits the panel in two: the tree on the left is the scope list (the
-    account-wide Global list, then the characters), and the pane on the right is
-    the selected scope's items. Each scope group closes over its own scope key,
-    so the add box and the row buttons in a pane always act on the list the
-    player is looking at, including another character's.
-
-    Registered as a builder function rather than a built table (see
-    Options/Options.lua): the rows here are the ignore lists themselves, so
-    AceConfig re-invokes this on every open and every NotifyChange and the panel
-    is always current.
-
-    The rows come from Kit.ItemList, the shared builder every player-managed
-    item list renders through, so a list adds and removes the same way here as
-    in any other panel. A pane spends ns.OPTIONS_TREE_ROW_WIDTH rather than the
-    full row width, because the tree sidebar takes its share of the panel
-    first.
-
-    There is no drop target. The game closes the bags and the bank when the
-    options interface opens, so there is no way to have an item on the cursor
-    and this panel in front of you at the same time. Add from Bags stands in
-    for the drag, and the add box takes a typed or shift-clicked id.
+    Each scope group closes over its own scope key, so a pane always acts on the
+    list shown. No drop target: the game closes the bags when options open, so
+    Add from Bags stands in for a drag.
 ]]
 
---[[
-    Promote, not copy. Only the account-wide add is issued here:
-    ns.SetIgnoredInScope clears a newly globalized item off every character's
-    list itself, so the row leaves this pane, leaves any other character who
-    happened to hold the same item, and turns up under Global instead. An item
-    only ever ends up more ignored doing it this way, because the global list
-    already covers everyone it just left.
-]]
+-- Promote, not copy: ns.SetIgnoredInScope clears a newly global item off every character's list.
 local function PromoteColumn()
 	return {
 		type = "execute",
@@ -69,12 +43,7 @@ local function BuildScopeArgs(scopeKey)
 		end,
 		onClear = function()
 			ns.ClearIgnoreListInScope(scopeKey)
-			--[[
-			    Clearing another character's list drops that character from the
-			    tree, since an empty list is left out of it, so the tree is
-			    pointed back at the character being played rather than a pane
-			    that no longer exists.
-			]]
+			-- An emptied list leaves the tree, so point it back at the character playing.
 			if not isGlobalScope and scopeKey ~= ns.db:GetCurrentProfile() then
 				local status = LibStub("AceConfigDialog-3.0"):GetStatusTable(ns.OPTIONS_REGISTRY.IgnoreList)
 				status.groups = status.groups or {}
@@ -94,10 +63,7 @@ local function BuildScopeArgs(scopeKey)
 			clearDesc = L["OPTIONS_IGNORE_CLEAR_DESCRIPTION"],
 			clearConfirm = L["OPTIONS_IGNORE_CLEAR_CONFIRM"],
 		},
-		--[[
-		    The Global pane has nowhere to promote to, so its item cell absorbs
-		    that column and the remove icon stays put as scopes are picked.
-		]]
+		-- Global has nowhere to promote to; its item cell absorbs the column so the remove icon stays put.
 		actionColumn = (not isGlobalScope) and PromoteColumn() or nil,
 	})
 
@@ -116,30 +82,17 @@ local function ScopeGroup(name, order, scopeKey)
 end
 
 function ns.BuildIgnoreListOptions()
-	--[[
-	    The description lives on the root group, not in the scope panes: a
-	    tree group renders its own non-group args once, full width, between
-	    the panel title and the tree, so the copy reads once instead of
-	    repeating in every pane.
-	]]
+	-- On the root, a tree group renders its non-group args once above the tree, not in every pane.
 	local args = {
 		descIntro = Kit.Desc(L["OPTIONS_IGNORE_LIST_DESCRIPTION"], 1),
 		spacerIntro = Kit.Spacer(2),
 	}
 	ns.AddFeatureOffLine(args, "macrosEnabled")
 
-	--[[
-	    Keyed by scope, not by position: the tree remembers the selected node by
-	    its arg key, so a key that moved when a profile appeared or dropped out of
-	    the list would silently reselect a different character.
-	]]
+	-- Keyed by scope, not position: the tree remembers its selection by arg key.
 	args[ns.IGNORE_SCOPE_GLOBAL] = ScopeGroup(L["OPTIONS_IGNORE_GLOBAL"], 3, ns.IGNORE_SCOPE_GLOBAL)
 
-	--[[
-	    A blank, unclickable row between Global and the characters, as Magic
-	    Eraser's lists have. Disabled tree rows take no mouse input, so it can
-	    never be selected.
-	]]
+	-- A blank row, as Magic Eraser's lists have; disabled tree rows take no mouse input.
 	args.spacerCharacters = {
 		type = "group",
 		name = " ",
@@ -159,16 +112,7 @@ function ns.BuildIgnoreListOptions()
 		local order = 10
 
 		for _, profileName in ipairs(profiles) do
-			--[[
-			    A character with nothing ignored is noise in the tree, so it is
-			    left out -- except for the character playing right now, whose
-			    list has to be reachable to put a first item in it. A profile is
-			    named for its character ("Name - Realm", or the first name and
-			    surname on WoW Forever) unless the player typed the name, and
-			    neither is ever localized, so they are shown as-is, in the
-			    character's class color once the add-on has recorded it, and
-			    sorted as plain strings.
-			]]
+			-- Empty lists are left out, except the character playing, so a first item can go in.
 			local ignoreList = ns.GetIgnoreListForScope(profileName)
 			if profileName == currentProfile or (ignoreList and next(ignoreList) ~= nil) then
 				local classColor = ns.GetClassColor(classes[profileName])

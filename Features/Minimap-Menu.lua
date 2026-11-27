@@ -9,30 +9,9 @@ local format = string.format
 --------------------------------------------------------------------------------
 
 --[[
-    The mini-map button's menu, drawn on the shared Menu Kit
-    (Features/Menu-Kit.lua): the add-on's name, then Current Food, then a block
-    for each thing a player flips mid-session (Buff Duty, the Restocker, the
-    Enhanced Spellbook), each a gold title with where it stands on the right, a line
-    saying what it does and a blue Toggle row. Then the class's macro notes
-    behind a [Class] Macros flyout with the class's live items under it, this
-    character's Ignore List, the More Features flyout, and Options last.
-
-    Hovering the button opens it; it closes a moment after the cursor leaves
-    the button, the menu and the flyout. A Left-Click holds it open, and a
-    second Left-Click closes it. Every row is a plain click, so a controller's
-    cursor reaches all of it. The button keeps one click of its own,
-    Right-Click to ignore the current food, named in gray on the Ignore row's
-    right side (Button Clicks, below). Every click, row or button, ends in
-    ns.RefreshSettings, which redraws the open menu, every open options panel
-    and the button's icon.
-
-    The rules every add-on's menu follows (Style Guide → MINIMAP MENU):
-      - Only what this character can use shows: a warrior gets no [Class]
-        Macros row. The options panel still lists everything.
-      - A Toggle row's tooltip is its Enable option's caption and description;
-        a More Features row's is its switch's, and it asks before turning off
-        wherever the switch does.
-      - A list shows at most LIST_MAX rows, then a note saying how many more.
+    Every row is a plain click, so a controller's cursor reaches all of it.
+    Only what this character can use shows (Style Guide → MINIMAP MENU); the
+    options panel still lists everything.
 ]]
 
 -- The kit's own timing (Menu-Kit.lua): this menu keeps its own state on the kit's panels, so it keeps a copy.
@@ -47,10 +26,8 @@ local menu = Kit.CreatePanel(ADDON_NAME .. "Menu", UIParent)
 local flyout = Kit.CreatePanel(nil, menu)
 flyout:SetFrameLevel(menu:GetFrameLevel() + 20)
 
--- Escape closes it, as it does any game menu.
 table.insert(UISpecialFrames, menu:GetName())
 
--- Every string the kit draws, localized, handed over once (Menu-Kit.lua → Text).
 Kit.SetText({
 	on = L["MENU_ON"],
 	off = L["MENU_OFF"],
@@ -79,7 +56,6 @@ local state = {
 -- Helpers
 --------------------------------------------------------------------------------
 
--- An option's caption and tooltip, drawn the way the options panel draws them.
 local function OptionTooltip(name, desc)
 	return function(tooltip)
 		tooltip:SetText(name, 1, 0.82, 0, 1, true)
@@ -89,17 +65,10 @@ local function OptionTooltip(name, desc)
 	end
 end
 
---[[
-    An item row: the kit draws the icon and the name in its quality color, 4 in
-    under its heading, with the count after the name when there is one, and
-    shows the item's own tooltip on hover. right is its value or slot, which
-    the kit draws light yellow unless rightColor says otherwise.
-]]
 local function ItemRow(itemID, right, count, rightColor)
 	return { kind = "item", itemID = itemID, count = count, right = right, rightColor = rightColor }
 end
 
--- The right side of a feature's title: On in green, Off in gray.
 local function OnOff(enabled)
 	if enabled then
 		return L["MENU_ON"], "ON"
@@ -107,17 +76,14 @@ local function OnOff(enabled)
 	return L["MENU_OFF"], "MUTED"
 end
 
--- A feature switch's saved value, through the options kit, which reads a dotted path ("buffWindow.enabled").
 local function IsFeatureOn(feature)
 	return ns.OptionsKit.Get(feature.store, feature.setting)() and true or false
 end
 
--- Every row click and button click ends here: the menu, any open options page and the button's icon redraw.
 local function AfterChange()
 	ns.RefreshSettings()
 end
 
--- A feature switch flipped from the menu, the same way its options switch flips it.
 local function SetFeature(feature, value)
 	if not feature.apply then
 		ns.OptionsKit.Set(feature.store, feature.setting)(nil, value) -- Writes it, then refreshes
@@ -127,7 +93,7 @@ local function SetFeature(feature, value)
 	AfterChange()
 end
 
--- A More Features switch whose options toggle asks before turning off asks the same here, in the same words.
+-- Asks before turning off wherever the options switch does, in the same words.
 StaticPopupDialogs.GOODTOGO_MENU_FEATURE_OFF = {
 	text = "%s",
 	button1 = YES,
@@ -141,7 +107,6 @@ StaticPopupDialogs.GOODTOGO_MENU_FEATURE_OFF = {
 	preferredIndex = 3,
 }
 
--- A feature switch flipped from the menu, More Features' rows and the Enhanced Spellbook's Toggle alike; on is where it stands now.
 local function FlipFeature(feature, on)
 	if on and feature.confirm then
 		StaticPopup_Show("GOODTOGO_MENU_FEATURE_OFF", L[feature.confirm], nil, feature)
@@ -154,15 +119,12 @@ end
 -- Actions
 --------------------------------------------------------------------------------
 
---[[
-    Buff Duty on the class you're playing, the same per-class switch as the
-    window's close button, so turning it off on a rogue leaves it up on a druid.
-]]
+-- The per-class switch, so turning it off on a rogue leaves it up on a druid.
 local function ToggleBuffDuty()
 	ns.SetBuffDutyForClass(not ns.IsBuffDutyOnForClass())
 end
 
--- Every Ignore List edit changes what the macros use, so each says what it did in chat; none asks first.
+-- Each Ignore List edit changes what the macros use, so it says so in chat; none asks first.
 local function IgnoreCurrentFood()
 	local foodID = ns.bestFoodID
 	if foodID and ns.IgnoreItem(foodID) then
@@ -185,7 +147,6 @@ local function ClearIgnoreList()
 	end
 end
 
--- What the Enhanced Spellbook's key binding does; opening a window closes the menu.
 local function OpenSpellbook()
 	ns.HideMenu()
 	GoodToGo_ToggleSpellbook()
@@ -205,12 +166,7 @@ end
 -- Rows
 --------------------------------------------------------------------------------
 
---[[
-    An action row: blue. click is the button's kept click that does the same
-    job ("RightButton"): the kit names it in gray on the row's right side, and
-    ns.RunButtonClick runs the row it's on. Without one, its right side is
-    empty.
-]]
+-- click is the button's kept click that does the same job ("RightButton"); ns.RunButtonClick runs it.
 local function ActionRow(label, run, tooltip, click)
 	return {
 		kind = "action",
@@ -225,7 +181,6 @@ local function ActionRow(label, run, tooltip, click)
 	}
 end
 
--- A Toggle row: the feature's switch, with no button click of its own.
 local function ToggleRow(flip, tooltip)
 	return {
 		kind = "action",
@@ -239,7 +194,6 @@ local function ToggleRow(flip, tooltip)
 	}
 end
 
--- The first LIST_MAX rows, then a note saying how many more there are.
 local function AddList(entries, rows)
 	for index = 1, math.min(#rows, LIST_MAX) do
 		entries[#entries + 1] = rows[index]
@@ -260,13 +214,8 @@ local FLYOUTS = {}
 local BUFF_DUTY_WINDOW = "buffDutyWindow"
 
 --[[
-    The class's macro notes, one section per macro: what each click does on
-    the left, as a verb, and the click on the right in light yellow, as a
-    value row draws it. These are clicks on the macro, not on this menu, so
-    they sit here rather than in the main menu, as value rows with nothing to
-    click. A block's how-to note stays off the menu
-    (MINIMAP MENU: no how-to notes); its options page and the macro's Spellbook
-    tooltip say it.
+    Clicks on the macro, not on this menu, so they sit here as value rows with
+    nothing to click. How-to notes stay off the menu (MINIMAP MENU).
 ]]
 function FLYOUTS.macros()
 	local entries = {}
@@ -282,14 +231,7 @@ function FLYOUTS.macros()
 	return entries
 end
 
---[[
-    More Features: every feature on the options' main page that isn't a block
-    in the main menu, one On/Off row each, in the main page's order, with its
-    switch's caption and description as the tooltip (ns.FEATURES,
-    Options/Options-Feature-Switches.lua). The Enhanced Spellbook has a block
-    in the main menu too, though its record isn't marked as one. A feature
-    that gates on the character shows only where it applies.
-]]
+-- The Enhanced Spellbook has a block of its own, though its record isn't marked as one.
 local function MoreFeatures()
 	local features = {}
 	for _, feature in ipairs(ns.FEATURES or {}) do
@@ -322,11 +264,7 @@ end
 -- Main Menu
 --------------------------------------------------------------------------------
 
---[[
-    Current Food leads, since the button's icon shows it: the food the Food
-    macro eats, or the "no suitable food" line while nothing resolves (or the
-    item cache is still cold), and Ignore while there is a food to ignore.
-]]
+-- Leads, since the button's icon shows it.
 local function AddCurrentFood(entries)
 	entries[#entries + 1] = { kind = "status", left = L["MINIMAP_BEST_FOOD"] }
 	local foodID, foodLink = ns.bestFoodID, ns.bestFoodLink
@@ -344,12 +282,8 @@ local function AddCurrentFood(entries)
 end
 
 --[[
-    Buff Duty reads On or Off for the class you're playing, the same switch its
-    Toggle flips. While it's on, its title opens the window's own Options
-    flyout, as every feature's title opens its flyout, so the window's
-    switches are reachable even while it has hidden itself with nothing to
-    show; while it's off the title is a plain heading. Its Toggle's tooltip is
-    the feature's Enable option, with a line saying it's this class's switch.
+    While on, its title opens the window's own Options flyout, so the window's
+    switches are reachable even while it has hidden itself with nothing to show.
 ]]
 local function AddBuffDuty(entries)
 	local feature = ns.FindFeature("buffWindow.enabled")
@@ -380,14 +314,8 @@ local function AddBuffDuty(entries)
 end
 
 --[[
-    The Restocker's orders, inside its own block while it's on: what the
-    reminders would mention (ns.BuildRestockReminderLists), the out rows and
-    then the low rows, so the menu and the entering-town reminder can never
-    disagree. Each is the item and have/wanted, its name read even while the
-    item cache is cold (ns.GetItemLabel). With nothing short at all it
-    says so in green; with rows short but none under the threshold, or a list
-    with no rows, a gray note says which. Returns whether any item was still
-    loading.
+    The same lists as the reminders, so the menu and the entering-town
+    reminder can never disagree. Returns whether any item was still loading.
 ]]
 local function AddRestockOrders(entries)
 	if ns.IsRestockListEmpty() then
@@ -414,11 +342,6 @@ local function AddRestockOrders(entries)
 	return isLoading
 end
 
---[[
-    The Restocker, titled with the feature's name as the root panel's switch
-    names it. Its Toggle row is the feature switch, with no click of its own;
-    Open, while it's on, opens the Restock List window.
-]]
 local function AddRestocker(entries)
 	local feature = ns.FindFeature("restockerEnabled")
 	local enabled = ns.IsRestockerEnabled() and true or false
@@ -444,12 +367,6 @@ local function AddRestocker(entries)
 	return isLoading
 end
 
---[[
-    The Enhanced Spellbook: its name with On or Off on the right, a line saying
-    what it's for, and its Toggle row, the feature switch, which asks before
-    turning off as More Features' rows and its options switch do. While it's
-    on, Open opens its window, as its key binding does.
-]]
 local function AddSpellbook(entries)
 	local feature = ns.FindFeature(SPELLBOOK_SETTING)
 	local enabled = ns.IsSpellbookEnabled() and true or false
@@ -465,12 +382,7 @@ local function AddSpellbook(entries)
 	end
 end
 
---[[
-    [Class] Macros, in the class color, opens the flyout of the class's macro
-    notes; under it, the items the class's own macros will use, each with what
-    it is for on the right. A class with no notes, or a character who knows
-    none of their spells yet, gets neither.
-]]
+-- A class with no notes, or a character who knows none of their spells yet, gets neither.
 local function AddClassMacros(entries)
 	local className, classToken, blocks = ns.GetClassMacroNotes()
 	if not blocks then
@@ -497,13 +409,8 @@ local function AddClassMacros(entries)
 end
 
 --[[
-    This character's own Ignore List, the one Right-Click adds to and Clear
-    Ignore List empties; the Global list lives in the Ignore List panel.
-    Sorted by name, each item in its quality color, and only while it holds
-    something. A click on an item takes it off the list (MINIMAP MENU →
-    Editable list), the delete icon showing on the right while it's hovered
-    and its tooltip saying so under the item's own lines.
-    Returns whether any item was still loading.
+    This character's list only; the Global list lives in the Ignore List
+    panel. Returns whether any item was still loading.
 ]]
 local function AddIgnoreList(entries)
 	local ignoreList = ns.GetIgnoreList()
@@ -551,7 +458,6 @@ local function AddIgnoreList(entries)
 	return isLoading
 end
 
--- More Features, last before Options: its right side counts the flyout's switches, the On count green.
 local function AddMoreFeatures(entries)
 	local features = MoreFeatures()
 	if #features == 0 then
@@ -601,13 +507,8 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The button's one kept click runs the main menu row whose `click` names it,
-    the way the kit's own menus route a click (Menu-Kit.lua → HandleClick), so
-    the click and its row can't disagree: Right-Click runs Ignore, while
-    there's a food to ignore. Left-Click has no row: it falls through to
-    ns.ShowMenu, which opens, holds or closes the menu (Minimap-Button.lua).
-    Middle-Click and the Shift clicks have no job. True when the click did
-    something.
+    Runs the main menu row whose `click` names the button, so a click and its
+    row can't disagree. True when the click did something.
 ]]
 function ns.RunButtonClick(button)
 	if not ns.db then
@@ -627,10 +528,7 @@ end
 -- Drawing & Placement
 --------------------------------------------------------------------------------
 
---[[
-    The flyout beside its title, its first row level with the title, on the
-    side the menu opened toward. The title keeps its highlight while it's open.
-]]
+-- On the side the menu opened toward; the title keeps its highlight while it's open.
 local function PositionFlyout(row)
 	flyout:ClearAllPoints()
 	if state.openLeft then
@@ -664,7 +562,7 @@ end
 
 local Render
 
--- An item not yet in the client's cache draws as a placeholder; one redraw once it has had a moment to arrive.
+-- Cold items draw as placeholders; one redraw once they have had a moment to arrive.
 local function RetryLoading()
 	state.retryPending = false
 	Render()
@@ -690,16 +588,11 @@ function ns.OpenFlyout(key)
 	end
 end
 
--- Entering a title opens its flyout, and any other row closes it, the way any game submenu behaves.
 menu.onEnterRow = function(_, entry)
 	ns.OpenFlyout(entry and entry.submenu or nil)
 end
 
---[[
-    Hangs off the button's corner, away from the screen's edges: left of the
-    button on the right half of the screen, below it on the top half. Decided
-    once as the menu opens, so it never jumps while open.
-]]
+-- Decided once as the menu opens, so it never jumps while open.
 local function PositionMenu(anchor)
 	local x, y = anchor:GetCenter()
 	local scale = anchor:GetEffectiveScale() / UIParent:GetEffectiveScale()
@@ -756,12 +649,9 @@ end)
 --------------------------------------------------------------------------------
 
 --[[
-    Opens the menu from a launcher: the mini-map button or any LDB display's
-    frame. how is "hover" or "click"; a click keeps it open a little longer
-    once the cursor leaves, and a click on a launcher whose click already
-    holds the menu closes it, as the kit's own menus do (Menu-Kit.lua →
-    HandleClick). flyoutKey opens that title's flyout at once. A launcher
-    already showing the menu keeps its place and its open flyout.
+    how is "hover" or "click": a click holds it longer, and a click on the
+    launcher a click already holds it on closes it. A launcher already showing
+    the menu keeps its place and open flyout.
 ]]
 function ns.ShowMenu(anchor, flyoutKey, how)
 	if not ns.db or not anchor then
@@ -795,7 +685,6 @@ function ns.HideMenu()
 	menu:Hide()
 end
 
--- Redraws the menu in place while it is open; a no-op otherwise.
 function ns.RefreshMenu()
 	Render()
 end
@@ -804,7 +693,6 @@ function ns.IsMenuShown()
 	return menu:IsShown()
 end
 
--- True for the menu, its flyout, and anything inside them.
 function ns.IsMenuFrame(frame)
 	return frame ~= nil and Kit.IsInside(frame, menu)
 end

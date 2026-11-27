@@ -3,17 +3,9 @@ local BODY = ns.COLORS_RGB.BODY
 local HideTooltip = ns.HideTooltip
 
 --[[
-	The page's launcher tab on the Retail-engine spellbook (Blizzard_PlayerSpells), for
-	Features/Enhanced-Spellbook/Spellbook-Host-Modern.lua: a tab that runs its onClick and lights while isSelected says so.
-
-	Placement: side tabs in the Classic style, stacked down the window's right edge from the height of the native
-	skill line tabs, skipping over tab-sized frames from other add-ons that sit on that edge. Only frames that
-	overlap the next free slot push it along, so an add-on that places itself after these tabs can't make them
-	leapfrog each other.
-
-	Every frame here is parented to UIParent and only anchored over the book: a frame parented to a Blizzard
-	panel stays protected, and in combat could no longer be shown, moved or scaled. Nothing Blizzard owns is
-	written to.
+	Only frames that overlap the next free slot push it along, so an add-on that places itself after these tabs
+	can't make them leapfrog each other. Every frame is parented to UIParent and only anchored over the book: one
+	parented to a Blizzard panel stays protected, and in combat can't be shown, moved or scaled.
 ]]
 
 local TAB_WIDTH, TAB_HEIGHT, GAP = 32, 32, 17 -- the Classic book's skill line tab size and spacing
@@ -55,10 +47,9 @@ local function SelectTab(button, selected)
 end
 
 --[[
-	left, bottom, right, top in screen pixels, so frames with different scales compare. Nothing for an unplaced
-	frame, one whose rect is secret on Forever (the game's own aura container), or one anchored to a restricted
-	region (the ping system's PingPin, shown in controller mode): the game refuses to measure those and raises
-	an error, so they're skipped before asking and the ask itself is guarded.
+	Screen pixels, so frames with different scales compare. The game errors on a secret rect (Forever's aura
+	container) or one anchored to a restricted region (PingPin, in controller mode), so those are skipped and the
+	ask itself is guarded.
 ]]
 local function ScreenRect(frame)
 	if frame.IsAnchoringRestricted and frame:IsAnchoringRestricted() then
@@ -111,10 +102,7 @@ local function CollectObstacles(tabScreenWidth, tabScreenHeight)
 	return rects
 end
 
---[[
-	Frames Blizzard keeps under a key on the spells frame or the book (the book itself, the talents page, the
-	close, minimize and settings buttons), so they're never taken for another add-on's launcher.
-]]
+-- Blizzard's own buttons and pages, so they're never taken for another add-on's launcher.
 local function BlizzardFrames()
 	local set = {}
 	for _, parent in ipairs({ PlayerSpellsFrame, SpellbookTabs.book }) do
@@ -160,10 +148,7 @@ function SpellbookTabs:Layout(reuse)
 	local obstacles = fresh and CollectObstacles(width, height) or self.obstacles
 	self.obstacles = obstacles
 
-	--[[
-		other add-ons' launchers sit where these tabs go, down the window's right edge; a reused look has the same
-		obstacles, already hooked, so only a full look walks Blizzard's frames and hooks again
-	]]
+	-- a reused look's obstacles are already hooked
 	if fresh then
 		local blizzard = BlizzardFrames()
 		for _, rect in ipairs(obstacles) do
@@ -299,12 +284,7 @@ function SpellbookTabs:Attach()
 	self:RequestSync()
 end
 
---[[
-	info is { name (the tab's tooltip title, gold with "GtG" on its right), description (a white line under it),
-	hint ({ key, action }, a click line under that: the action in blue, the key in gray), icon (texture path or
-	fileID), onClick() (what a click runs), isSelected() (when to light it) }; description, hint and isSelected
-	are optional.
-]]
+-- info is { name, description?, hint? ({ key, action }), icon, onClick(), isSelected()? }.
 function SpellbookTabs:RegisterTab(id, info)
 	if self.byId[id] then
 		return self.byId[id]
@@ -327,11 +307,7 @@ function SpellbookTabs:RegisterTab(id, info)
 	return tab
 end
 
---[[
-	The game's book (Blizzard_PlayerSpells) loads on demand, often only when it first opens, so the tab attaches
-	when it loads, through the Spellbook's dispatcher (Spellbook-Core.lua), or at once if it already has.
-	Attached, nothing else here needs ADDON_LOADED, so it is dropped.
-]]
+-- The book loads on demand, often only when it first opens; once attached, ADDON_LOADED is dropped.
 function ns:OnAddonLoaded(addonName)
 	if addonName == "Blizzard_PlayerSpells" then
 		SpellbookTabs:Attach()

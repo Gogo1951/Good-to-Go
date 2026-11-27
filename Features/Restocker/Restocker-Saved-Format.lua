@@ -4,30 +4,19 @@ local _, ns = ...
 -- Saved Item Format
 --------------------------------------------------------------------------------
 
--- Keep a saved item's itemID synced to its key.
 local function CleanItem(item, itemID)
 	item.itemID = itemID
 	return item
 end
 
 --[[
-    One-line saved format. Each item is stored as a single comma-separated string
-    so the SavedVariables file has exactly one physical line per item (a real Lua
-    table would be expanded across many lines by WoW's serializer).
+    One string per item, so the SavedVariables file holds one line per item (a
+    table would expand across many). The key is the itemID; the name is a label
+    never read back. No version stamp: data starts at the first numeric field,
+    and a missing trailing field reads as its flag's default, so a new field is
+    appended.
     Field order: itemName, amount, stashToBank, restockFromBank, buyFromMerchant,
                  reaction, upgrade, buyExtra.  Booleans are 1 / 0.
-    Every trailing field is always written. A new one can be appended without a
-    version bump because the parser treats a missing trailing field as absent, and
-    absent reads as each flag's own default: a line written before buyExtra
-    existed reads Extra off, which is what a row that never asked for it means.
-    No item type is stored: the window reads it from the client by itemID
-    (ns.GetRestockItemTypeName), which answers even for an item not cached yet.
-    The itemID is NOT stored -- the table key IS the itemID (single source of truth).
-    The name is written for whoever reads the file and is never read back: what
-    shows an item asks the client for its name by itemID, and shows the loading
-    placeholder until it answers (GAME NAMES). A comma inside the name only splits
-    the label, which nothing reads. There is no version stamp, and none is needed:
-    the data starts at the first numeric field.
     MIGRATION (remove after 2026-12-08): so a line saved with a type ahead of the name still reads, and the next save rewrites it in the current form.
 ]]
 
@@ -37,16 +26,14 @@ local function ItemToString(item)
 	parts[#parts + 1] = item.amount or 0
 	parts[#parts + 1] = item.stashToBank and 1 or 0
 	parts[#parts + 1] = item.restockFromBank and 1 or 0
-	-- buyFromMerchant defaults to true (nil), so only false is "off"
+	-- buyFromMerchant and upgrade default on (nil), so only false writes 0.
 	parts[#parts + 1] = (item.buyFromMerchant == false) and 0 or 1
 	--[[
 	    Both trailing fields go out every time. Upgrade sits behind reaction, so
 	    writing reaction only when set would shift upgrade into its position.
 	]]
 	parts[#parts + 1] = (item.reaction and item.reaction > 0) and item.reaction or 0
-	-- upgrade defaults to true (nil), so only false is "off"
 	parts[#parts + 1] = (item.upgrade == false) and 0 or 1
-	-- buyExtra defaults to false (nil), so only true is "on"
 	parts[#parts + 1] = item.buyExtra and 1 or 0
 	return table.concat(parts, ", ")
 end
@@ -81,11 +68,8 @@ local function ItemFromString(line, key)
 	local extra = tonumber(fields[dataStart + 6])
 
 	--[[
-	    Flags that default to ON are stored as nil, so only an explicit 0 means off.
-
-	    Never fold these into "x and false or nil". false is falsy, so the `or`
-	    takes over and the expression yields nil for EVERY input -- the off state
-	    is silently unstorable, and the setting comes back on at the next login.
+	    Never fold these into "x and false or nil": it yields nil for every input,
+	    so the off state never saves.
 	]]
 	local buyFromMerchant = nil
 	if buy == 0 then
@@ -105,21 +89,15 @@ local function ItemFromString(line, key)
 		buyFromMerchant = buyFromMerchant,
 		reaction = reaction > 0 and reaction or nil,
 		upgrade = upgrade,
-		--[[
-		    Inverted default: Extra is off unless a 1 says otherwise, so a line from
-		    before this field existed reads as off rather than switching itself on.
-		]]
+		-- Off unless a 1 says so, so a line from before this field reads as off.
 		buyExtra = (extra == 1) or nil,
 	}
 end
 
 --[[
-    Convert every saved item to its in-memory table form (called on login). Tolerates
-    tables left behind by a crash/reload and hand-edited entries; keeps itemID synced
-    to the table key. Idempotent. The saved name is left behind: it goes stale
-    after a language switch or a rename, so the live row's itemName stays nil
-    until the client names the item (ns.RefreshRestockItemName), the window as it
-    draws a row and the shortfall list as it sorts.
+    Tolerates tables a crash left behind. The saved name is dropped: it goes
+    stale after a language switch or a rename, so itemName stays nil until
+    ns.RefreshRestockItemName asks the client.
 ]]
 function ns.InflateSavedRestockItems(db)
 	for _, list in pairs(db.lists or {}) do
@@ -134,10 +112,6 @@ function ns.InflateSavedRestockItems(db)
 	end
 end
 
---[[
-    Convert every in-memory item table to its one-line saved string (called on logout
-    so WoW writes the compact format to disk). Idempotent.
-]]
 local function DeflateSavedItems(db)
 	for _, list in pairs(db.lists or {}) do
 		for key, item in pairs(list) do
@@ -148,11 +122,6 @@ local function DeflateSavedItems(db)
 	end
 end
 
---[[
-    Pack all in-memory item tables back into the one-line saved strings. Called from
-    ns.OnRestockerLogout right before WoW writes the SavedVariables file. On the
-    namespace rather than file-local, because the only caller is in another file.
-]]
 function ns.DeflateRestockItemsForSave()
 	DeflateSavedItems(ns.restockSettings)
 end

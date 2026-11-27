@@ -36,6 +36,7 @@ L["OPTIONS_LEVEL_UP_THANKS"] = "感谢你选择 Good to Go！"
 L["MACRO_BANDAGE"] = "- 绷带"
 L["MACRO_EXPLOSIVES"] = "- 爆炸物"
 L["MACRO_FEED_PET"] = "- 喂养宠物"
+L["MACRO_FISHING_LURE"] = "- 钓鱼鱼饵"
 L["MACRO_FOOD"] = "- 食物"
 L["MACRO_HEALTH_POTION"] = "- 治疗药水"
 L["MACRO_HEALTHSTONE"] = "- 治疗石"
@@ -272,7 +273,7 @@ L["MENU_RESTOCKER_OPEN_OFF_DESCRIPTION"] = "打开你的补货清单。开启 Re
 
 -- Buff Duty's block in the menu while its close button has hidden it: the word on its right, and the note under it.
 L["MENU_BUFF_DUTY_PAUSED"] = "已暂停"
-L["MENU_BUFF_DUTY_PAUSED_NOTE"] = "隐藏中，直到你加入队伍、重新登录或重载界面。"
+L["MENU_BUFF_DUTY_PAUSED_NOTE"] = "休息中，直到你加入队伍、重新登录或重载界面。"
 
 --------------------------------------------------------------------------------
 -- Class Notes
@@ -302,6 +303,7 @@ L["NOTE_MACRO_HEALTHSTONE"] = "治疗石宏"
 L["NOTE_MACRO_SOULSTONE"] = "灵魂石宏"
 L["NOTE_MACRO_POISONS"] = "毒药宏"
 L["NOTE_MACRO_EXPLOSIVES"] = "爆炸物宏"
+L["NOTE_MACRO_FISHING_LURE"] = "钓鱼鱼饵宏"
 
 -- Hunter. NOTE_PET_MEND_CLICK is the click that casts Mend Pet: a Right-Click, or any click during combat.
 L["NOTE_PET_CALL_FEED_REVIVE"] = "召唤、喂养或复活"
@@ -733,6 +735,37 @@ L["EXPLOSIVES_MODE_ATPLAYER"] = "左键点击 @player"
 L["EXPLOSIVES_MODE_TOSS"] = "左键点击投掷"
 
 --[[
+    Fishing Lure (Options-Fishing-Lure.lua): TAB_FISHING_LURE is its label in the settings tree and the end of
+    its title.
+]]
+L["TAB_FISHING_LURE"] = "钓鱼鱼饵"
+L["OPTIONS_FISHING_LURE_DESCRIPTION"] = "缺少鱼饵和食物时使用它们。"
+-- The page's three section headers.
+L["OPTIONS_FISHING_HEADER_GEAR"] = "装备"
+L["OPTIONS_FISHING_HEADER_FOOD"] = "食物"
+L["OPTIONS_FISHING_HEADER_LURES"] = "鱼饵"
+L["OPTIONS_FISHING_EQUIP_POLE"] = "装备鱼竿"
+L["OPTIONS_FISHING_EQUIP_POLE_DESCRIPTION"] =
+	"当背包中你的钓鱼技能允许的最佳鱼竿优于手中的鱼竿时，装备它。"
+L["OPTIONS_FISHING_EQUIP_PANTS"] = "装备裤子"
+L["OPTIONS_FISHING_EQUIP_PANTS_DESCRIPTION"] =
+	"从背包中装备你可用的最佳钓鱼裤子，仅在比身上的更好时更换。"
+L["OPTIONS_FISHING_EQUIP_HAT"] = "装备帽子"
+L["OPTIONS_FISHING_EQUIP_HAT_DESCRIPTION"] =
+	"从背包中装备你可用的最佳钓鱼帽子，仅在比头上的更好时更换。"
+L["OPTIONS_FISHING_EQUIP_BOOTS"] = "装备靴子"
+L["OPTIONS_FISHING_EQUIP_BOOTS_DESCRIPTION"] =
+	"从背包中装备你可用的最佳钓鱼靴子，仅在比脚上的更好时更换。"
+L["OPTIONS_FISHING_EQUIP_GLOVES"] = "装备手套"
+L["OPTIONS_FISHING_EQUIP_GLOVES_DESCRIPTION"] = "从背包中装备带有钓鱼附魔的手套。"
+L["OPTIONS_FISHING_USE_FOOD"] = "缺少钓鱼技能进食充分加成时使用食物"
+L["OPTIONS_FISHING_USE_FOOD_DESCRIPTION"] =
+	"当你没有其钓鱼技能进食充分加成时，食用背包中最好的钓鱼食物。"
+L["OPTIONS_FISHING_USE_LURE"] = "使用最佳鱼饵"
+L["OPTIONS_FISHING_USE_LURE_DESCRIPTION"] =
+	"鱼竿上没有鱼饵时，为其装上你的钓鱼技能允许的最佳鱼饵。"
+
+--[[
     Class Macros panel (Options-Class-Macros.lua), nested under Consumable Macros. TAB_CLASS_MACROS
     is its label in the settings tree and the end of its title; OPTIONS_CLASS_MACROS_DESCRIPTION is the
     intro beneath it. The class and race headers below also head Food & Drinks' racial sections.
@@ -921,6 +954,7 @@ L["INVENTORY_REPORT_FORGET_CHARACTER_CONFIRM"] =
 
 -- Readiness Report
 L["TAB_READINESS_REPORT"] = "就绪报告"
+L["TAB_CURRENCY_REPLENISH"] = "货币补充"
 --[[
     Says what the report does AND that it stays quiet, because the quiet is the
     feature: a player who turns this on and sees nothing for three pulls has to
@@ -1290,7 +1324,7 @@ L["RESTOCKER_STILL_OUT_AND_LOW_MANY"] = "仍有 %d 种物品已经用完，%d �
     sum rather than the old amount moved across.
 ]]
 L["RESTOCKER_UPGRADED"] = "你的补货清单已升级。"
-L["RESTOCKER_UPGRADED_ITEM"] = "%sx%d 升级为 %sx%d。"
+L["RESTOCKER_UPGRADED_ITEM"] = "%s x%d 升级为 %s x%d。"
 
 --[[
     Verbose follow-up line, one per item the headline counted, out first and
@@ -1761,8 +1795,7 @@ L["BUFF_DUTY_NO_BUFFS"] =
 L["BUFF_DUTY_WHEN_HEADER"] = "显示时机"
 L["BUFF_DUTY_WHEN_DESCRIPTION"] = "选择窗口何时可以出现。"
 L["BUFF_DUTY_WHEN_NONE"] = "没有勾选任何项，因此窗口永远不会出现。"
-L["BUFF_DUTY_AURAS_HIDDEN"] =
-	"增益值班在此处隐藏。游戏不允许插件在这个区域查看增益，因此无法判断谁缺少增益。"
+L["BUFF_DUTY_AURAS_HIDDEN"] = "增益值班在此处看不到增益。游戏在这个区域对插件隐藏了增益。"
 L["BUFF_DUTY_WHERE_DESCRIPTION"] =
 	"设置窗口在哪里显示：任何地方，或仅在副本内，例如地下城或团队副本。"
 L["BUFF_DUTY_WHERE_ALWAYS"] = "任何地方"
@@ -1785,7 +1818,7 @@ L["BUFF_DUTY_FAVOR_ENABLE_DESCRIPTION"] =
 	"列出最近为你施放增益的陌生人，以及你可以回赠他们的增益。右键点击图标可将某人从列表中移除。"
 L["BUFF_DUTY_BUFF_PVP_FLAGGED"] = "为已开启 PvP 的玩家施放增益"
 L["BUFF_DUTY_BUFF_PVP_FLAGGED_DESCRIPTION"] =
-	"让增益值班为已开启 PvP 的玩家施放增益，这也会让你开启 PvP。此项关闭且你未开启 PvP 时，增益值班会跳过他们以及会波及他们的小队增益，并在聊天中提示你。"
+	"让增益值班为已开启 PvP 的玩家施放增益，这也会让你开启 PvP。关闭时，在你未开启 PvP 期间，会跳过他们以及会波及他们的小队增益，并在聊天中提示你。"
 L["BUFF_DUTY_FAVOR_SECONDS_DESCRIPTION"] = "设置陌生人在最后一次施放增益后保留在列表中的时间。"
 L["BUFF_DUTY_TARGET_ENABLE"] = "你的目标"
 L["BUFF_DUTY_TARGET_ENABLE_DESCRIPTION"] =
@@ -1870,7 +1903,7 @@ L["BUFF_DUTY_SELF_REFRESH_UNDER"] = "剩余不足%s"
     client's name), Weapon Buffs and Scrolls: elixirs, then consumables with
     a setting of their own.
 ]]
-L["BUFF_DUTY_ROW_ELIXIRS"] = "合剂或药剂"
+L["BUFF_DUTY_ROW_ELIXIRS"] = "合剂和药剂"
 L["BUFF_DUTY_ROW_OTHER"] = "其他增益"
 -- Each category's page opens with When to Use, a dropdown of when the window shows that category.
 L["BUFF_DUTY_ROW_WHEN"] = "使用时机"
@@ -1881,8 +1914,7 @@ L["BUFF_DUTY_ROW_WHEN_GROUP"] = "小队或团队中"
 L["BUFF_DUTY_ROW_WHEN_RAID"] = "团队中"
 -- Then a checkbox for whether the key uses the category's icons. %s is the key's name, BUFF_KEY.
 L["BUFF_DUTY_ROW_KEY"] = "用于%s"
-L["BUFF_DUTY_ROW_KEY_DESCRIPTION"] =
-	"你的%s按键也会使用这些图标。关闭时，只能在窗口中点击使用。"
+L["BUFF_DUTY_ROW_KEY_DESCRIPTION"] = "你的%s按键也会施放这些。关闭时，只能在窗口中点击使用。"
 -- The Well Fed page's description.
 L["BUFF_DUTY_FOOD_PAGE_DESCRIPTION"] = "你携带的增益食物，在你缺少其增益时显示在窗口中。"
 --[[
@@ -1898,9 +1930,9 @@ L["BUFF_DUTY_SCROLL_TYPES"] = "卷轴类型"
 L["BUFF_DUTY_SCROLLS_PAGE_DESCRIPTION"] = "你携带的卷轴，在你缺少其增益时显示在窗口中。"
 L["BUFF_DUTY_SCROLLS_DESCRIPTION"] =
 	"对于你缺少的每种卷轴增益，只要身上带有该卷轴，就显示一个卷轴。在窗口中点击即可阅读。监视的卷轴类型为下方勾选的那些。"
--- The Flasks or Elixirs page's description, and its Elixirs row: one icon per elixir in your bags whose buff you're missing.
+-- The Flasks & Elixirs page's description, and its Elixirs row: one icon per elixir in your bags whose buff you're missing.
 L["BUFF_DUTY_ELIXIRS_PAGE_DESCRIPTION"] =
-	'你携带的药剂，在你缺少其增益时显示在窗口中。要排除某个药剂，请在窗口选项的"合剂或药剂"下将它关闭。'
+	'你携带的药剂，在你缺少其增益时显示在窗口中。要排除某个药剂，请在窗口选项的"合剂和药剂"下将它关闭。'
 L["BUFF_DUTY_ELIXIRS"] = "药剂"
 L["BUFF_DUTY_ELIXIRS_DESCRIPTION"] =
 	"为背包中每个你缺少其增益的药剂显示一个图标，除非你身上已有的增益占据了它的位置。在窗口中点击即可饮用。"
@@ -1932,11 +1964,11 @@ L["BUFF_DUTY_WEAPON_ENABLE_DESCRIPTION"] =
 -- A buff icon's tooltip, a line per click: the job on the left, the click (TOOLTIP_KEY_CLICK, TOOLTIP_KEY_RIGHT_CLICK)
 -- on the right. %s is who the cast lands on; TAKE_OFF is a Return the Favor icon's right-click.
 L["BUFF_DUTY_TOOLTIP_CAST"] = "对 %s 施放"
-L["BUFF_DUTY_TOOLTIP_TAKE_OFF"] = "从此列表中移除"
+L["BUFF_DUTY_TOOLTIP_TAKE_OFF"] = "从列表中移除"
 -- %s is the client's "Main Hand" or "Off Hand".
 L["BUFF_DUTY_TOOLTIP_WEAPON"] = "施加到你的%s武器。"
-L["BUFF_DUTY_TOOLTIP_USE"] = "你的队伍中没有人有灵魂石。对 %s 使用一块。"
-L["BUFF_DUTY_TOOLTIP_CREATE"] = "你的队伍中没有人有灵魂石。制造一块。"
+L["BUFF_DUTY_TOOLTIP_USE"] = "你的队伍中还没有人有灵魂石。对 %s 使用一块。"
+L["BUFF_DUTY_TOOLTIP_CREATE"] = "你的队伍中还没有人有灵魂石。制造一块。"
 -- A Firestone or Spellstone icon with none in the bags conjures one.
 L["BUFF_DUTY_TOOLTIP_CREATE_WEAPON"] = "你的背包里没有。制造一块。"
 -- A Self-Buffs consumable's icon (Winterfall Firewater).
@@ -1953,8 +1985,7 @@ L["BUFF_DUTY_MENU_ALL_SETTINGS_DESCRIPTION"] =
 	"打开增益值班设置，其中包含窗口可显示的每个时机、职业和增益。"
 -- The Options menu's Window Opacity row, and its flyout of 0% to 100%. %d is the percent.
 L["BUFF_DUTY_MENU_OPACITY"] = "窗口不透明度"
-L["BUFF_DUTY_MENU_OPACITY_DESCRIPTION"] =
-	"设置增益值班窗口背景的不透明度。文字和图标保持不变。"
+L["BUFF_DUTY_MENU_OPACITY_DESCRIPTION"] = "设置窗口背景的不透明度。文字和图标始终清晰。"
 L["BUFF_DUTY_MENU_OPACITY_PERCENT"] = "%d%%"
 --[[
     The window's category menus, each opened by its category line's arrow:
@@ -1969,7 +2000,7 @@ L["BUFF_DUTY_MISSING_INVENTORY"] = "缺少物品！"
 L["BUFF_DUTY_MENU_SHOW_IN_BUFF_DUTY"] = "在增益值班中显示"
 L["BUFF_DUTY_MENU_SHOW_IN_BUFF_DUTY_DESCRIPTION"] = "在增益值班窗口中显示此类别。"
 L["BUFF_DUTY_MENU_SHOW"] = "显示"
-L["BUFF_DUTY_ROW_SHOW_DESCRIPTION"] = "设置这些增益何时显示：消失后，或剩余时间少于此值时。"
+L["BUFF_DUTY_ROW_SHOW_DESCRIPTION"] = "在这些增益消失或剩余时间达到此值时显示。"
 L["BUFF_DUTY_MENU_SHOW_MISSING_INVENTORY"] = "显示缺少物品"
 L["BUFF_DUTY_ROW_OUT_DESCRIPTION"] =
 	'当你没有该增益且背包中没有能提供它的物品时，在窗口中显示"缺少物品！"。'
@@ -1988,10 +2019,10 @@ L["BUFF_DUTY_TOOLTIP_GROUP"] = "对 %s 及其小队施放。"
 L["BUFF_DUTY_TOOLTIP_NEEDS"] = "需要的人：%s。"
 -- The Ask row under Target: its label (%s is the target's name in their class color), and its icons' tooltip: who the whisper goes to, or, once asked, who and the whole minutes until they can be asked again.
 L["BUFF_DUTY_ASK_TARGET_ROW"] = "请求 %s"
-L["BUFF_DUTY_TOOLTIP_ASK_TARGET"] = "密语 %s 请求该增益。"
-L["BUFF_DUTY_TOOLTIP_ASKED"] = "已请求 %s。%d 分钟后可再次请求。"
+L["BUFF_DUTY_TOOLTIP_ASK_TARGET"] = "友好地密语 %s 请求该增益。"
+L["BUFF_DUTY_TOOLTIP_ASKED"] = "已经请求过 %s。%d 分钟后可再次请求。"
 -- An Ask for Buffs icon's menu, its ask rows: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it: %s is one or two names (LIST_PAIR_FORMAT), or BUFF_DUTY_OTHERS_ASK_PEOPLE past two.
-L["BUFF_DUTY_OTHERS_HINT_ASK"] = "在%s中请求增益"
+L["BUFF_DUTY_OTHERS_HINT_ASK"] = "在%s中请求"
 L["BUFF_DUTY_OTHERS_HINT_WHISPER"] = "密语%s"
 L["BUFF_DUTY_OTHERS_SHORTCUT_LEFT"] = "快捷方式：左键点击该增益的图标。"
 L["BUFF_DUTY_OTHERS_SHORTCUT_RIGHT"] = "快捷方式：右键点击该增益的图标。"
@@ -1999,14 +2030,14 @@ L["BUFF_DUTY_OTHERS_SHORTCUT_RIGHT"] = "快捷方式：右键点击该增益的�
 L["BUFF_DUTY_OTHERS_MINUTES"] = "%d 分钟"
 L["BUFF_DUTY_OTHERS_MISSING"] = "缺少"
 --[[
-    The ask either click sends, signed off like every sent message ({star} ... // GtG), so it
-    ends as a statement, not a question. Up to five missing players are named (ONE for one,
+    The ask either click sends, signed off like every sent message ({star} ... // GtG), and it
+    asks, so it ends in a question mark. Up to five missing players are named (ONE for one,
     NAMES for two to five, joined with LIST_PAIR_FORMAT or LIST_LAST_FORMAT), then the buff's link;
     past five, COUNT gives how many, then the link.
 ]]
-L["BUFF_DUTY_OTHERS_ASK_ONE"] = "%s缺少%s。"
-L["BUFF_DUTY_OTHERS_ASK_NAMES"] = "%s缺少%s。"
-L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "%d名玩家缺少%s增益。"
+L["BUFF_DUTY_OTHERS_ASK_ONE"] = "麻烦谁能给%s加个%s吗？"
+L["BUFF_DUTY_OTHERS_ASK_NAMES"] = "麻烦谁能给%s加个%s吗？"
+L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "麻烦谁能给%d名玩家加个%s吗？"
 -- The whispered ask's {names} past five missing players, when the player has written their own whisper, and the Ask for Buffs menu's whisper row past two players. %d is how many.
 L["BUFF_DUTY_OTHERS_ASK_PEOPLE"] = "%d 名玩家"
 --[[
@@ -2014,23 +2045,23 @@ L["BUFF_DUTY_OTHERS_ASK_PEOPLE"] = "%d 名玩家"
     checkbox, the When to Show header, then the options command.
 ]]
 L["BUFF_DUTY_CLOSED"] =
-	'增益值班已隐藏，直到你加入队伍、下次登录或重载界面。要立即恢复，请在小地图菜单的"增益值班"下点击"切换"。要为%1$s职业保持关闭，请在 %4$s 的"%3$s"下取消勾选"%2$s"。'
+	'增益值班先休息一下，直到你加入队伍、下次登录或重载界面。想早点恢复？请在小地图菜单的"增益值班"下点击"切换"。要在你的%1$s角色上保持关闭，请在 %4$s 的"%3$s"下取消勾选"%2$s"。'
 
 -- The Cast Next Buff key: its name in the game's Key Bindings list and the root panel's Key Bindings section, then the notices a press shows.
 L["BUFF_KEY"] = "施放下一个增益"
 -- %s is a player's name.
 L["BUFF_KEY_WAITING"] = "正在等待 %s 进入范围。"
-L["BUFF_KEY_DONE"] = "没有需要施放的增益了。"
+L["BUFF_KEY_DONE"] = "大家都有增益了。Good to Go！"
 -- Printed when Buff Duty or the key skips a PvP-flagged player. %s is the player's name.
 L["BUFF_DUTY_PVP_FLAGGED"] =
-	'%s 已开启 PvP，因此增益值班跳过了该玩家。开启"为已开启 PvP 的玩家施放增益"即可仍为其施放增益。'
+	'已跳过 %s，该玩家已开启 PvP。要仍为其施放增益，请开启"为已开启 PvP 的玩家施放增益"。'
 L["BUFF_KEY_OFF"] = "增益值班已关闭。"
 --[[
     The Buff Duty window's last line, under Options, while the Cast Next Buff key has none: the options
     command (OPTIONS_COMMAND), then the key's name (BUFF_KEY). Kept to about three lines at the window's
     narrowest, with the command near the start so a line never breaks inside it.
 ]]
-L["BUFF_DUTY_KEY_TIP"] = "在 %s 中为 %s 绑定按键，即可一键施放这些增益。"
+L["BUFF_DUTY_KEY_TIP"] = "提示：在 %s 中为 %s 绑定按键，即可一键施放全部增益。"
 
 --------------------------------------------------------------------------------
 -- Spellbook
@@ -2623,3 +2654,56 @@ L["CHAT_MACRO_TOO_LONG"] =
 	'"%s"宏在开启选项后为 %d 字节，超过了宏能容纳的 %d 字节。关闭一个选项来缩短它。'
 L["CHAT_CONSUMABLE_MACRO_TOO_LONG"] =
 	'"%s"宏有 %d 字节，超过了宏能容纳的 %d 字节，因此最后一行被截断。'
+
+--[[
+    Currency Replenish: the coins tab on the mailbox and its window
+    (Features/Currency-Replenish/). The tab's menu opens the window; the
+    window's title is CURRENCY_REPLENISH // ADDON_SHORT_NAME.
+]]
+L["CURRENCY_REPLENISH"] = "货币补充"
+L["CURRENCY_REPLENISH_OPEN"] = "打开货币补充"
+L["CURRENCY_REPLENISH_OPTIONS"] = "选项"
+L["CURRENCY_REPLENISH_ALL_SETTINGS"] = "货币补充全部设置"
+
+-- The window's Bank line and its column heads. RECORDED_AGO is Current Amount's tooltip; %s is how long ago.
+L["CURRENCY_REPLENISH_BANK"] = "银行"
+L["CURRENCY_REPLENISH_NO_BANK"] = "无"
+L["CURRENCY_REPLENISH_CHARACTER"] = "角色"
+L["CURRENCY_REPLENISH_GOLD_NOW"] = "当前金额"
+L["CURRENCY_REPLENISH_KEEPS"] = "目标金额"
+L["CURRENCY_REPLENISH_RECORDED_AGO"] = "%s前记录"
+
+-- The Target Amount list's last row, its popup (%s is the character's name), and the Skip Under 1g switch.
+L["CURRENCY_REPLENISH_OTHER_AMOUNT"] = "其他金额"
+L["CURRENCY_REPLENISH_REMOVE_CHARACTER"] = "移除角色"
+L["CURRENCY_REPLENISH_KEEPS_FOR"] = "%s的目标金额"
+L["CURRENCY_REPLENISH_SKIP_SMALL"] = "跳过不足1金"
+L["CURRENCY_REPLENISH_SKIP_SMALL_DESCRIPTION"] =
+	"补充时跳过缺口不足1金的角色，不值得为此寄一封信。"
+
+-- The window's red button, Replenish on the bank and Send Excess to Bank anywhere else. The reasons show under it while it can't be pressed; in AT_KEEPS, %s is what the character keeps.
+L["CURRENCY_REPLENISH_REPLENISH"] = "补充"
+L["CURRENCY_REPLENISH_SEND_EXCESS"] = "将多余部分寄给银行"
+L["CURRENCY_REPLENISH_REASON_SENDING"] = "正在发送……"
+L["CURRENCY_REPLENISH_REASON_NO_BANK"] = "请先选择银行。"
+L["CURRENCY_REPLENISH_REASON_NO_KEEPS"] = "请先设置你的目标金额。"
+L["CURRENCY_REPLENISH_REASON_AT_KEEPS"] = "不超过%s。"
+L["CURRENCY_REPLENISH_REASON_FULL"] = "大家都已满。"
+L["CURRENCY_REPLENISH_REASON_NO_GOLD"] = "金币不足。"
+
+-- Chat after a send. %s is gold and %s a character, except where %d counts characters. OUT_OF_GOLD's %s is a list of SHORT_BY lines.
+L["CURRENCY_REPLENISH_SENT"] = "已将%1$s寄给%2$s。"
+L["CURRENCY_REPLENISH_REPLENISHED"] = "已为%d个角色补充%s。"
+L["CURRENCY_REPLENISH_REPLENISHED_ONE"] = "已为%d个角色补充%s。"
+L["CURRENCY_REPLENISH_SHORT_BY"] = "%s缺%s"
+L["CURRENCY_REPLENISH_OUT_OF_GOLD"] = "金币用完了。%s。"
+L["CURRENCY_REPLENISH_STOPPED_FAILED"] = "在%s处停止：邮件未能寄出。"
+L["CURRENCY_REPLENISH_STOPPED_MAILBOX"] = "在%s处停止：邮箱已关闭。"
+L["CURRENCY_REPLENISH_STOPPED_GOLD"] = "在%s处停止：金币不够支付邮资。"
+
+-- The feature's switch, and the description at the top of its options page.
+L["SWITCH_CURRENCY_REPLENISH"] = "启用货币补充"
+L["SWITCH_CURRENCY_REPLENISH_DESCRIPTION"] =
+	"在邮箱上添加一个硬币标签。你的角色会把超出保留部分的金币寄给银行角色，银行再把他们补回到该数额。关闭会移除该标签；银行和目标金额仍会保存。"
+L["OPTIONS_CURRENCY_REPLENISH_DESCRIPTION"] =
+	"在邮箱的硬币标签中选择一个银行角色，并设置每个角色保留多少金币。其他角色会把超出目标金额的金币寄给银行，银行再把他们补回到目标金额。"

@@ -6,37 +6,17 @@ local FramePool = ns.SpellbookFramePool
 local CreateGearButton = ns.CreateSpellbookGearButton
 local SpellbookPageCategories = ns.SpellbookPageCategories
 
---[[
-	Lays ns.macros (built by Features/Enhanced-Spellbook/Macro-Builder/Macro-Builder.lua) out in the page's window (Features/Enhanced-Spellbook/Spellbook-Window.lua):
-	the parchment with two columns and the page strip, between the controls along its top and the legend and macro
-	slot counts along its bottom, which Features/Enhanced-Spellbook/Spellbook-Controls.lua builds. Each category is a block under its header; its spells flow two to a row into the
-	very next free slot, a form's run labeled above its own tiles. Features/Enhanced-Spellbook/Macro-Button.lua owns each tile,
-	Features/Enhanced-Spellbook/Macro-Menu.lua the right-click menu, Features/Enhanced-Spellbook/Category-Menu.lua the category menu, and Features/Enhanced-Spellbook/Spellbook-Paging.lua the page strip.
-	Features/Enhanced-Spellbook/Spellbook-Events.lua redraws the page as the game changes. Features/Enhanced-Spellbook/Spellbook-Page-Parchment.lua
-	draws the parchment, Features/Enhanced-Spellbook/Spellbook-Page-Layout.lua packs the rows and fills the columns,
-	and Features/Enhanced-Spellbook/Spellbook-Page-Order.lua puts the macros in page order.
-]]
-
 -- The window's bands, in UI units from its edges, inside the portrait frame's border.
 local TITLE_HEIGHT, CONTROLS_HEIGHT = 24, 32
 local FOOTER_HEIGHT, FRAME_BORDER = 32, 4
 local PARCHMENT_SIDE = 8
 local PAGER_HEIGHT = 32
---[[
-	Each column's padding inside the parchment. A page is half the paper (the window's width less its borders);
-	at 1056 wide that leaves about 52 beside each 464-wide column, split so the column has room at the fold as
-	well as at the page's outer edge (with the spine shift: about 15 at the fold, 37 at the edge).
-]]
+-- Split so each column has room at the fold as well as at the page's outer edge, after the spine shift.
 local COLUMN_TOP, COLUMN_SIDE = 16, 32
 
--- The flow inside a column (see PackRows and Paginate, in Features/Enhanced-Spellbook/Spellbook-Page-Layout.lua).
 local SLOTS, GAP_X = 2, 16
 local TILE_WIDTH, TILE_HEIGHT = ns.TILE_WIDTH, ns.TILE_HEIGHT
---[[
-	The strip above each row of tiles: 8 clear, then a form's label, then 8 to the tiles it names. The strip is
-	sized so the space between one row's icons and the next is one icon tall (a 32 tile holds a 32 icon), rows
-	stepping 64 apart.
-]]
+-- Sized so the space between one row's icons and the next is one icon tall.
 local ROW_STRIP_HEIGHT = 32
 local LABEL_HEIGHT, LABEL_GAP = 16, 8
 local LABEL_TOP_GAP = ROW_STRIP_HEIGHT - LABEL_HEIGHT - LABEL_GAP
@@ -44,11 +24,7 @@ local HEADER_HEIGHT = 16
 local CONTINUED_GAP = 8 -- a header's name to its "(Continued)"
 local COLUMN_WIDTH = SLOTS * TILE_WIDTH + (SLOTS - 1) * GAP_X
 
---[[
-	Every row is the same height: a label strip over its tiles, holding a form's label where the row has one and
-	left empty otherwise, so rows step down evenly whether or not they're labeled. The strip is also the space
-	between rows and under the header.
-]]
+-- Every row carries the label strip, labeled or not, so rows step down evenly.
 local ROW_HEIGHT = LABEL_TOP_GAP + LABEL_HEIGHT + LABEL_GAP + TILE_HEIGHT
 
 -- The ink on the parchment: oxblood for the headers and form labels, set apart from the spell names' near-black.
@@ -58,10 +34,6 @@ local CONTINUED_INK = ns.FADED_INK_COLOR
 local RULE_COLOR = ns.HexToColorList("9C7F55")
 local DIVIDER_COLOR = ns.HexToColorList("A68B60")
 
---[[
-	A category's header: its name in dark ink, "(Continued)" in lighter ink where it carries on from the
-	column before, and the gear that opens the category's menu. Layout sets the text and what the gear acts on.
-]]
 local function CreateHeader(page)
 	local header = CreateFrame("Frame", nil, page.parchment.paper)
 	header:SetSize(COLUMN_WIDTH, HEADER_HEIGHT)
@@ -90,7 +62,6 @@ local function CreateHeader(page)
 	return header
 end
 
--- A form's label over its own tiles: its name in capitals, then a rule to the run's right edge, ending in a tick.
 local function CreateSubLabel(page)
 	local label = CreateFrame("Frame", nil, page.parchment.paper)
 	label:SetHeight(LABEL_HEIGHT)
@@ -107,7 +78,7 @@ local function CreateSubLabel(page)
 	return label
 end
 
--- Draws one column's blocks, x and y its top left inside the paper.
+-- x, y: the column's top left inside the paper
 local function DrawColumn(page, column, x, y, bars)
 	for _, block in ipairs(column) do
 		local category = block.category
@@ -156,7 +127,6 @@ local function DrawColumn(page, column, x, y, bars)
 	end
 end
 
--- Draws the current page: two columns of blocks, or the empty note when nothing is listed.
 local function Layout(page)
 	page.headers:ReleaseAll()
 	page.subheaders:ReleaseAll()
@@ -203,16 +173,11 @@ end
 
 local refreshListeners = {}
 
---[[
-	Calls fn(page) after each refresh, so the Conditionals and Cast Sequence panels docked beside the window
-	(Features/Enhanced-Spellbook/Macro-Builder/Conditionals-Panel.lua, Cast-Sequence-Panel.lua) follow the macros the
-	refresh rebuilt.
-]]
+-- The docked panels follow the macros each refresh rebuilt.
 function ns.OnSpellbookPageRefreshed(fn)
 	refreshListeners[#refreshListeners + 1] = fn
 end
 
--- Rebuilds the list from the spellbook and the class lists, updates changed macros, then redraws.
 local function Refresh(page)
 	ns.CollectMacros()
 	ns.SyncAllMacros()
@@ -231,7 +196,7 @@ local function Refresh(page)
 end
 
 local pages = {} -- every page built, so a settings change can redraw the open one
-ns.spellbookPages = pages -- read by Features/Enhanced-Spellbook/Spellbook-Events.lua
+ns.spellbookPages = pages -- captured at load by Spellbook-Events.lua
 
 local function BuildPage(page)
 	pages[#pages + 1] = page
@@ -270,10 +235,9 @@ local function BuildPage(page)
 	page.empty:SetWidth(COLUMN_WIDTH)
 	page.empty:SetWordWrap(true)
 
-	-- the controls row along the top and the footer along the bottom (Features/Enhanced-Spellbook/Spellbook-Controls.lua)
 	ns.BuildSpellbookControls(page)
 
-	-- the page strip along the parchment's bottom; the wheel turns the page anywhere on the parchment
+	-- the wheel turns the page anywhere on the parchment
 	local controls = ns.CreatePagingControls(page, parchment.paper)
 	page.pagingControls = controls
 	controls:SetPoint("BOTTOMLEFT", parchment.paper, "BOTTOMLEFT", 16, 0)
@@ -290,10 +254,8 @@ local function BuildPage(page)
 end
 
 --[[
-	Which page of the book each spell's tile is on, by the spell's name (a What's Next row may name another rank),
-	as the book now stands: its filter and settings, so a spell the filter hides has no page. Paginated as Layout
-	does, once for every spell, so a What's Next page reads it once per draw. The macro list is collected first when
-	the book has not been opened yet this session.
+	By name, since a What's Next row may name another rank; a spell the filter hides has no page. Paginated once
+	for every spell, so a What's Next page reads it once per draw.
 ]]
 function ns.SpellbookPagesBySpellName()
 	local found = {}
@@ -341,7 +303,7 @@ ns.BuildSpellbookPage = BuildPage
 ns.RefreshSpellbookPage = Refresh
 ns.LayoutSpellbookPage = Layout
 
--- The window's bands, which Features/Enhanced-Spellbook/Spellbook-Controls.lua builds the controls row and the footer in.
+-- the bands Spellbook-Controls.lua builds the controls row and the footer in
 ns.SPELLBOOK_TITLE_HEIGHT, ns.SPELLBOOK_CONTROLS_HEIGHT = TITLE_HEIGHT, CONTROLS_HEIGHT
 ns.SPELLBOOK_FOOTER_HEIGHT, ns.SPELLBOOK_FRAME_BORDER = FOOTER_HEIGHT, FRAME_BORDER
 -- the parchment's place in the window, and the padding and page strip inside it
@@ -349,6 +311,6 @@ ns.SPELLBOOK_PARCHMENT_SIDE, ns.SPELLBOOK_PAGER_HEIGHT = PARCHMENT_SIDE, PAGER_H
 ns.SPELLBOOK_COLUMN_TOP, ns.SPELLBOOK_COLUMN_SIDE = COLUMN_TOP, COLUMN_SIDE
 ns.SPELLBOOK_HEADER_INK = HEADER_INK
 ns.SPELLBOOK_CONTINUED_INK, ns.SPELLBOOK_DIVIDER_COLOR = CONTINUED_INK, DIVIDER_COLOR
--- the flow inside a column, which Features/Enhanced-Spellbook/Spellbook-Page-Layout.lua packs and paginates by
+-- for Spellbook-Page-Layout.lua's packing and pagination
 ns.SPELLBOOK_SLOTS, ns.SPELLBOOK_GAP_X = SLOTS, GAP_X
 ns.SPELLBOOK_HEADER_HEIGHT, ns.SPELLBOOK_ROW_HEIGHT = HEADER_HEIGHT, ROW_HEIGHT

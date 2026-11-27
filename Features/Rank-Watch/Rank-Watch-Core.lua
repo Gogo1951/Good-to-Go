@@ -9,22 +9,12 @@ local RANK_WATCH = Data.RANK_WATCH
 --------------------------------------------------------------------------------
 
 --[[
-    Rank Watch, the standalone Rank Sentinel add-on brought home (MIT, Copyright (c) 2021 Gogo1951; GogoWatch before
-    that): it watches the group for a spell cast at a rank lower than the caster could have, and lets them know a
-    higher rank is waiting at their trainer. Off until the player turns it on.
+    The standalone Rank Sentinel add-on brought home (MIT, Copyright (c) 2021
+    Gogo1951; GogoWatch before that).
 
-    The files, in load order:
-      Rank-Watch-Core.lua        Settings, the event module and its subscriptions, the standalone add-on
-      Rank-Watch-Lookups.lua     ns.RANK_WATCH_ABILITIES as ladders, joined by ns.SPELL_GROUPS
-      Rank-Watch-Check.lua       Whether a cast was low, and the whisper or print that says so
-      Rank-Watch-Cluster.lua     The RANKSENTINEL add-on messages that pick one whisperer per group
-      Rank-Watch-Level-Up.lua    Ability Alerts While Leveling: on a ding, the trainer spells it opened
-      Rank-Watch-Detection-Combat-Log.lua   Casts from the combat log, in the Vanilla and TBC TOCs
-      Rank-Watch-Detection-Forever.lua      Casts on WoW Forever: the player's own, auras and the damage meter
-
-    Each file hands its event handlers to this one through ns.SetRankWatchHandler, the pattern Buff Duty uses,
-    so one module subscribes everything and one switch releases it. Rank-Watch-Level-Up.lua is the exception:
-    it runs its own module and its own switch.
+    Each file hands its handlers here through ns.SetRankWatchHandler, so one
+    module subscribes everything and one switch releases it.
+    Rank-Watch-Level-Up.lua runs its own module and switch.
 ]]
 
 local MODULE = "RankWatch"
@@ -34,7 +24,7 @@ function ns.SetRankWatchHandler(event, handler)
 	handlers[event] = handler
 end
 
--- Subscribes or releases one of Rank Watch's events; unit arguments after `enabled` filter it.
+-- Unit arguments after `enabled` filter it.
 function ns.SetRankWatchEvent(event, enabled, ...)
 	ns.SetModuleEvent(MODULE, event, enabled, ...)
 end
@@ -60,10 +50,9 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Two copies watching one group would report every low rank twice, so while the standalone Rank Sentinel runs,
-    Good to Go's stays quiet, and says so once a session when the player has it turned on. Good to Go replaces it,
-    so Features/Replaced-Addons.lua turns it off at login (ns.REPLACED_ADDONS) and offers a reload; it runs on until
-    then, and Rank Watch is switched on to take over after it (TakeOverFromStandalone).
+    Two copies watching one group would report every low rank twice, so
+    while the standalone add-on runs (until the offered reload), Good to Go's
+    stays quiet.
 ]]
 local standaloneTitle
 
@@ -76,7 +65,6 @@ local function FindStandalone()
 	return nil
 end
 
--- The standalone add-on's title while it runs, else nil.
 function ns.RankWatchStandaloneTitle()
 	return standaloneTitle
 end
@@ -127,10 +115,9 @@ local function ImportStandaloneSettings(settings)
 end
 
 --[[
-    Rank Watch takes over the watching: in every session where the standalone add-on runs, which is a session
-    where Features/Replaced-Addons.lua turns it off (ns.REPLACED_ADDONS), Rank Watch is switched on, so a player who ran it isn't left with
-    nothing watching after the reload. A player who had switched Rank Sentinel off keeps Rank Watch as it was.
-    This runs every such login, not once, so a player who turns Rank Sentinel back on is moved over again.
+    Every login the standalone add-on runs, not once, so a player who turns
+    it back on is moved over again; one who had switched it off keeps Rank
+    Watch as it was.
 ]]
 local function TakeOverFromStandalone(settings)
 	if not standaloneTitle then
@@ -147,13 +134,13 @@ end
 -- On and Off
 --------------------------------------------------------------------------------
 
--- Whether Rank Watch is watching right now: on, and the standalone add-on not running.
+-- On, and the standalone add-on not running.
 function ns.IsRankWatchActive()
 	local settings = ns.RankWatchSettings()
 	return settings ~= nil and settings.enabled and not standaloneTitle
 end
 
--- The events every flavor needs; the detection file its TOC lists subscribes its own (ns.SyncRankWatchDetection).
+-- The detection file the TOC lists subscribes its own (ns.SyncRankWatchDetection).
 local EVENTS = {
 	"CHAT_MSG_ADDON",
 	"GROUP_ROSTER_UPDATE",
@@ -192,7 +179,6 @@ end
 -- Ignored Players
 --------------------------------------------------------------------------------
 
--- A unit's GUID, full name and class token when it is another player who can be ignored, else nil.
 function ns.RankWatchIgnorableUnit(unit)
 	if not UnitExists(unit) then
 		return nil
@@ -211,7 +197,7 @@ end
 
 local POINTED_UNITS = { "target", "focus", "mouseover" }
 
--- The unit a typed name belongs to, ignoring case: a group member first, then the target, focus or mouseover.
+-- Ignoring case: a group member first, then the target, focus or mouseover.
 local function FindNamedUnit(typed)
 	local wanted = typed:lower()
 	local function Matches(unit)
@@ -236,8 +222,8 @@ local function FindNamedUnit(typed)
 end
 
 --[[
-    /gtg ignore Name adds that player to Ignored Players, and /gtg ignore alone adds the target. The list is
-    keyed by GUID, so a typed name resolves only to someone the client can see: a group member or a pointed unit.
+    Keyed by GUID, so a typed name resolves only to someone the client can
+    see: a group member or a pointed unit.
 ]]
 function ns.IgnoreRankWatchPlayer(typed)
 	local settings = ns.RankWatchSettings()
@@ -274,7 +260,7 @@ end
 -- Login
 --------------------------------------------------------------------------------
 
--- Reported casts are forgotten on a new version, as the standalone add-on forgets them, so fixed data reports again.
+-- As the standalone add-on does, so fixed data reports again.
 local function ForgetOnNewVersion(settings)
 	if settings.announcedVersion ~= ns.Version then
 		wipe(settings.announced)
@@ -283,12 +269,10 @@ local function ForgetOnNewVersion(settings)
 end
 
 --[[
-    Reset Profile on the Profiles panel puts Rank Watch back to its defaults too: switched off, both messages on,
-    the default grace periods, every rank on Reported Ranks following the data again, and every Ability Alerts
-    While Leveling choice back on. Rank Watch's settings
-    are account-wide, so AceDB's reset, which clears the profile alone, never reaches them by itself. Kept: the
-    Ignored Players list (a list the player built, one name at a time), the casts already reported, and the
-    migration's own bookkeeping.
+    Reset Profile reaches these too (a README-Notes exception): they are
+    account-wide, so AceDB's profile reset never would. Kept: Ignored Players
+    (built one name at a time), the casts already reported, and the
+    migration's bookkeeping.
 ]]
 local RESET_KEYS = {
 	"enabled",

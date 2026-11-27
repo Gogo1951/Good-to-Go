@@ -2,8 +2,6 @@ local _, ns = ...
 local Data = ns.Data
 local L = ns.L
 
--- Your weapons' rows in the Buff Duty window's Weapon Buffs section: the poisons, imbues, oils and stones to put on each hand, and which picks each hand is offered.
-
 local BuffDuty = ns.BuffDuty
 local weaponBuffs = BuffDuty.weaponBuffs
 local weaponByEnchant = BuffDuty.weaponByEnchant
@@ -14,7 +12,6 @@ local KnownRanks = BuffDuty.KnownRanks
 local IMBUE, TEMPORARY = Data.WEAPON_LAYERS.IMBUE, Data.WEAPON_LAYERS.TEMPORARY
 local MAIN_SLOT, OFF_SLOT = Data.WEAPON_HAND_SLOTS.MAIN, Data.WEAPON_HAND_SLOTS.OFF
 
--- The client's own "Main Hand" and "Off Hand", for the tooltip and the options panel.
 ns.WEAPON_HAND_LABELS = { MAIN = INVTYPE_WEAPONMAINHAND, OFF = INVTYPE_WEAPONOFFHAND }
 
 local GetItemCount = C_Item.GetItemCount
@@ -26,10 +23,7 @@ local GetItemCount = C_Item.GetItemCount
 local WEAPON_CLASS = Enum.ItemClass and Enum.ItemClass.Weapon or 2
 local FISHING_POLE = Enum.ItemWeaponSubclass and Enum.ItemWeaponSubclass.Fishingpole or 20
 
---[[
-    The weapon subclass in a hand, or nil when it holds no weapon: an off hand
-    holding a shield or a book, or nothing, has nothing to ask for.
-]]
+-- Nil for an off hand holding a shield or a book: it has nothing to ask for.
 local function WeaponSubclass(slot)
 	local itemID = GetInventoryItemID("player", slot)
 	if not ns.IsPlain(itemID) or not itemID then
@@ -44,12 +38,7 @@ local function HoldsWeapon(slot)
 	return subclass ~= nil and subclass ~= FISHING_POLE
 end
 
---[[
-    Whether a pick takes on a hand's weapon. A weapon item names the weapon
-    types its spell takes (a subclass mask): a sharpening stone wants an edge,
-    a weightstone a blunt weapon, a lure a fishing pole. A poison, an imbue,
-    or an item naming none takes any weapon but a fishing pole.
-]]
+-- A pick naming no subclass mask takes any weapon but a fishing pole.
 local function PickFits(pick, subclass)
 	if not pick.types or pick.types == 0 then
 		return subclass ~= FISHING_POLE
@@ -57,11 +46,7 @@ local function PickFits(pick, subclass)
 	return bit.band(pick.types, bit.lshift(1, subclass)) ~= 0
 end
 
---[[
-    The layer an enchant on a weapon is in: the layer of the row that puts it
-    on, else, for one no row names, the client's own word for it. All one
-    layer where a weapon holds a single temporary enchant.
-]]
+-- An enchant no row names goes by the client's own word for it.
 local function WornLayer(enchant, enchantType)
 	if not ns.WEAPON_ENCHANTS_STACK then
 		return TEMPORARY
@@ -75,9 +60,8 @@ local function WornLayer(enchant, enchantType)
 end
 
 --[[
-    Each hand's temporary enchants, by slot: a list of { seconds left,
-    enchant id (nil where the client names none), layer }. Empty for a bare
-    weapon. Diagnostics reads it too.
+    Slot -> list of { seconds left, enchant id (nil where the client names
+    none), layer }. The Readiness Report and Diagnostics read this shape too.
 ]]
 function BuffDuty.ReadWeaponEnchants()
 	local worn = { [MAIN_SLOT] = {}, [OFF_SLOT] = {} }
@@ -96,22 +80,15 @@ function BuffDuty.ReadWeaponEnchants()
 end
 
 --[[
-    Whether a pick on the weapon has time enough left by its own setting.
-    One whose whole duration (the row's, from the data) is no longer than
-    that time only needs offering once it's gone, as in Has, so a 5-minute
-    Classic Era imbue under "Under 5 Minutes" isn't asked for the moment it
-    lands.
+    A pick no longer than the Show time counts only once gone, as in Has, so
+    a 5-minute imbue under "Under 5 Minutes" isn't asked for as it lands.
 ]]
 local function PickHolds(pick, seconds)
 	local threshold = pick.refreshSeconds
 	return (pick.durationSeconds and pick.durationSeconds <= threshold) or seconds >= threshold
 end
 
---[[
-    Whether a hand's layer is covered: it carries one of the hand's picks in
-    that layer with time enough left. A client that names no enchant lets
-    any enchant count, held to the most lenient pick.
-]]
+-- A client that names no enchant lets any enchant count, held to the most lenient pick.
 local function LayerHolds(picks, layer, on)
 	for _, worn in ipairs(on) do
 		if worn.layer == layer then
@@ -129,14 +106,7 @@ local function LayerHolds(picks, layer, on)
 	return false
 end
 
---[[
-    The picks a hand needs offered, layer by layer. None of a layer while
-    the weapon carries one of its picks with time enough left; every pick of
-    it otherwise (nothing in that layer, one running low, or one not
-    picked), so the player chooses -- a rogue topping up Instant Poison can
-    switch to Deadly. On WoW Forever a poison on the weapon still leaves its
-    stones offered, and a stone its poisons.
-]]
+-- Every pick of an uncovered layer, so a rogue topping up Instant Poison can switch to Deadly.
 local function PicksToOffer(hand, worn)
 	local on, held, offer = worn[hand.slot], {}, {}
 	for _, pick in ipairs(hand.picks) do
@@ -161,12 +131,10 @@ local function Carries(worn, slot, layer)
 end
 
 --[[
-    The hand a shaman's next imbue goes on. The spell picks for itself and
-    can't be pointed at a weapon: the main hand, unless it already has an
-    imbue and a bare off-hand weapon is waiting. So only that hand's imbue
-    is offered, and an off hand running low waits until it's gone -- casting
-    then would land on the main hand and replace what's there. Where layers
-    stack, only the imbue layer counts: a stone doesn't send it elsewhere.
+    An imbue can't be pointed at a weapon: it lands on the main hand unless
+    that has one and a bare off hand waits. So only that hand is offered, and
+    a low off hand waits until gone, or the cast would replace the main
+    hand's. Where layers stack, only the imbue layer counts.
 ]]
 local function ImbueLandsOn(worn)
 	local layer = ns.WEAPON_ENCHANTS_STACK and IMBUE or TEMPORARY
@@ -177,12 +145,7 @@ local function ImbueLandsOn(worn)
 end
 BuffDuty.ImbueLandsOn = ImbueLandsOn
 
---[[
-    Whether you're somewhere a weapon item works, for one that only works in
-    certain places: an instance it names, by the map ID GetInstanceInfo
-    reports, or an outdoor zone it names, by C_Map.GetBestMapForUnit's map.
-    Asked at every refresh, so the backstop catches a zone change.
-]]
+-- Asked at every refresh, so the backstop catches a zone change.
 local function InItemZones(zones)
 	local instanceId = select(8, GetInstanceInfo())
 	if ns.IsPlain(instanceId) and tContains(zones.instances or {}, instanceId) then
@@ -192,7 +155,6 @@ local function InItemZones(zones)
 	return ns.IsPlain(uiMapId) and uiMapId ~= nil and tContains(zones.uiMaps or {}, uiMapId)
 end
 
--- The best item of a pick in your bags that your level can use, { id, level, itemLevel? }, or nil.
 local function BestItem(items)
 	local level = UnitLevel("player")
 	for _, item in ipairs(items) do
@@ -204,14 +166,9 @@ local function BestItem(items)
 end
 
 --[[
-    An item's button (a poison, oil, stone or lure) names its hand by
-    target-slot: using the item leaves the cursor waiting on a weapon, and the
-    secure template picks that slot. An imbue never asks -- see ImbueLandsOn
-    -- so its button just casts. Either way the game's "replace your
-    enchant?" question is answered for you (confirmReplace): the click was
-    the answer, for the Buff Key's press too (weapon). `level`
-    ranks what it uses, for SortWeaponIcons: an oil's, stone's or lure's item
-    level, a poison's required level, or an imbue rank's learn level.
+    An item names its hand by target-slot, which the template uses once the
+    cursor waits on a weapon; an imbue just casts. Either way the click is the
+    answer to "replace your enchant?" (confirmReplace).
 ]]
 local function WeaponIcon(hand, pick)
 	if pick.zones and not InItemZones(pick.zones) then
@@ -228,11 +185,7 @@ local function WeaponIcon(hand, pick)
 	}
 	if pick.items then
 		local item = BestItem(pick.items)
-		--[[
-		    No stone of a warlock's line in the bags: the button conjures one
-		    instead, by the bare name, which fires the best rank known (as
-		    Create Soulstone does). The next refresh offers the stone itself.
-		]]
+		-- Conjured by bare name, which fires the best rank known: each tier is its own spell.
 		if not item and pick.create then
 			spec.spellId = pick.create.id
 			spec.spellName = pick.create.name
@@ -261,14 +214,7 @@ local function WeaponIcon(hand, pick)
 	return spec
 end
 
---[[
-    A hand's icons left to right: your class's poisons, imbues or warlock
-    stones, then the items in the imbue layer (a Scroll of Imbue), then the
-    oils, stones and lures,
-    each by the level of what it uses, highest first -- Instant Poison IV
-    (44) before Deadly Poison II (38), Solid Sharpening Stone before Rough.
-    Each hand's row is its own grid, so the icons' order is their columns.
-]]
+-- Each hand's row is its own grid, so the icons' order is their columns.
 local function SortWeaponIcons(specs)
 	table.sort(specs, function(a, b)
 		if (a.classPick or false) ~= (b.classPick or false) then
@@ -287,10 +233,6 @@ local function SortWeaponIcons(specs)
 	end
 end
 
---[[
-    A hand's row label: the equipped weapon's icon, then the client's "Main
-    Hand" or "Off Hand", so the row says which weapon its icons go on.
-]]
 local function WeaponRowLabel(hand)
 	local name = ns.WEAPON_HAND_LABELS[hand.hand]
 	local texture = GetInventoryItemTexture("player", hand.slot)
@@ -300,23 +242,16 @@ local function WeaponRowLabel(hand)
 	return ("|T%s:%d:%d|t %s"):format(texture, Data.BUFF_DUTY_LABEL_ICON_SIZE, Data.BUFF_DUTY_LABEL_ICON_SIZE, name)
 end
 
---[[
-    Putting a poison or imbue over the one a weapon already has makes the game
-    ask first (REPLACE_ENCHANT). A click on a weapon icon was the answer, so
-    the question is accepted when it comes within a moment of one.
-]]
+-- A click on a weapon icon is the answer to REPLACE_ENCHANT, so one within this many seconds is accepted.
 local REPLACE_WINDOW = 2
 local replaceClickedAt
 
--- Called by a weapon icon's PreClick.
+-- PreClick, never PostClick: the secure click raises REPLACE_ENCHANT before PostClick runs.
 function ns.ExpectReplaceEnchant()
 	replaceClickedAt = GetTime()
 end
 
---[[
-    The game's own popup may open before or after this runs, so it is closed
-    on the next frame too.
-]]
+-- The game's popup may open before or after this runs, so it is closed on the next frame too.
 local function OnReplaceEnchant()
 	if not replaceClickedAt or GetTime() - replaceClickedAt > REPLACE_WINDOW then
 		return
@@ -331,12 +266,7 @@ end
 
 ns.SetBuffDutyEventHandler("REPLACE_ENCHANT", OnReplaceEnchant)
 
---[[
-    A hand's Missing Inventory!: the weapon carries nothing at all, a pick
-    of an item kind would fit it, and none is in your bags (no icon came of
-    it). An imbue is a spell, never missing; a warlock stone with no stone
-    in the bags is conjured, so its icon shows instead.
-]]
+-- An imbue is a spell, never missing; a warlock stone with none in the bags is conjured instead.
 local function HandMissing(hand, worn, subclass)
 	if worn[hand.slot][1] then
 		return false
@@ -349,11 +279,6 @@ local function HandMissing(hand, worn, subclass)
 	return false
 end
 
---[[
-    One row per hand holding a weapon, with the picks it can still take, for
-    the Weapon Buffs section (BuffDuty.AddSelfSection). Nothing while the weapons' switch is off, which
-    leaves weaponBuffs empty.
-]]
 function BuffDuty.AddWeaponRows(rows)
 	if #weaponBuffs == 0 then
 		return
@@ -397,15 +322,7 @@ end
 -- Castable
 --------------------------------------------------------------------------------
 
---[[
-    One per hand with anything ticked, each its own row in the Weapon Buffs section:
-    the picks, all on Weapon Buffs' one Show timing -- your class's poisons or
-    imbues (classPick), and the oils, stones and lures any class can use.
-    The row orders its icons as it draws them, by the item or rank each
-    one uses (SortWeaponIcons). An imbue needs a known rank; an item
-    is looked for in your bags at each refresh, since that changes without
-    SPELLS_CHANGED. Nothing while Weapon Buffs is off.
-]]
+-- Items are looked for in your bags at each refresh, since bags change without SPELLS_CHANGED.
 function BuffDuty.BuildWeaponBuffs(playerClass)
 	wipe(weaponBuffs)
 	local settings = ns.db.global.buffWindow
@@ -421,7 +338,6 @@ function BuffDuty.BuildWeaponBuffs(playerClass)
 				key = entry.key,
 				ranks = ranks,
 				items = entry.items,
-				-- A warlock stone's best known Create rank, or nil before one is learned.
 				create = entry.create and KnownRanks({ ranks = entry.create })[1],
 				enchants = entry.enchants,
 				types = entry.types,

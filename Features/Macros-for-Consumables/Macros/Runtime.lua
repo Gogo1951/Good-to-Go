@@ -5,42 +5,11 @@ local L = ns.L
 -- Macro Runtime Globals
 --------------------------------------------------------------------------------
 
---[[
-    Macro-callback globals.
+-- Global on purpose: /run cannot see the add-on namespace. "GtG" is short because every byte counts.
 
-    These are intentionally GLOBAL — macro bodies invoke them through `/run`,
-    which executes in the global environment and cannot see the add-on
-    namespace. The names a written macro body reaches through /run are among
-    the globals the house rules allow; each carries the add-on's "GtG"
-    prefix, short because every byte counts against the macro-body ceiling.
-
-    They are the runtime half of the macro system: the macro builders emit
-    `/run GtGFire / GtGTip / GtGTipIf /
-    GtGNoItem / GtGReplace` lines, and these functions run when the player presses
-    the macro. This file loads after Announcements (GtGTip and
-    GtGNoItem call ns.PrintMessage) and after Data (reads
-    ns.TIP_MESSAGES, ns.MISSING_SPELL_MESSAGE_IDS, ns.MACRO_CONFIG).
-]]
-
---[[
-    Transport between the /run snippet in consumable macros and
-    ns.OnMacroUiErrorMessage below, which the module's dispatcher
-    (Macros-for-Consumables-Core.lua) routes UI_ERROR_MESSAGE to. The
-    macro writes lastID and lastTime so a zone-restriction error can be
-    correlated back to its triggering item.
-]]
 local macroFireState = {}
 
---[[
-    Records the firing item with `/run GtGFire(itemID)` instead of inlining a
-    longer snippet: every standard body with an item in bags carries the call, so the
-    saved bytes count against the 255 macro-body ceiling in every consumable macro.
-
-    A potion body that eats or drinks out of combat (Body-Builder's
-    OutOfCombatBlock) passes that food or water as outOfCombatID, and the same
-    [combat] test the body's own lines use picks which of the two the press
-    fires. With no potion in bags the body passes the food alone.
-]]
+-- The same [combat] test the body's own lines use picks which item the press fired.
 function GtGFire(itemID, outOfCombatID)
 	if outOfCombatID and not UnitAffectingCombat("player") then
 		itemID = outOfCombatID
@@ -49,14 +18,7 @@ function GtGFire(itemID, outOfCombatID)
 	macroFireState.lastTime = GetTime()
 end
 
---[[
-    Consumer half of the macroFireState transport: when a consumable macro
-    fires, GtGFire() above stamps lastID/lastTime. If ERR_ITEM_WRONG_ZONE
-    arrives within one second, we know which item to blame and print a bug
-    report naming it. The module's dispatcher (Macros-for-Consumables-Core.lua)
-    routes UI_ERROR_MESSAGE here ahead of its combat-lockdown guard, since a
-    zone-locked potion is usually pressed mid-fight.
-]]
+-- A wrong-zone error within a second of a press names the item in a bug report.
 function ns.OnMacroUiErrorMessage(message)
 	if not (macroFireState.lastTime and (GetTime() - macroFireState.lastTime) < 1.0) then
 		return
@@ -79,14 +41,7 @@ function ns.OnMacroUiErrorMessage(message)
 	macroFireState.lastTime = 0
 end
 
---[[
-    Resolves a GtGTip key to its display text. Static messages come from
-    ns.TIP_MESSAGES; "you don't know <spell>" keys come from
-    ns.MISSING_SPELL_MESSAGE_IDS and are rendered with the localized spell name via
-    C_Spell.GetSpellName at print time, as is noPetSkills from the four pet spells it
-    names. A spell that doesn't exist on the current client returns nil here so
-    GtGTip silently skips rather than naming a spell the player will never see.
-]]
+-- A spell this client lacks resolves to nil, so GtGTip stays silent rather than name it.
 local PET_SKILL_SPELL_IDS = {
 	ns.CALL_PET_SPELL_ID,
 	ns.DISMISS_PET_SPELL_ID,
@@ -130,16 +85,7 @@ function GtGTip(key)
 	end
 end
 
---[[
-    Conditional sibling of GtGTip — fires the tip only when the macro
-    conditional `condition` matches. The conjure block uses it for a click whose
-    spell is not learned yet, the Poisons macro for a hand with no poison, and
-    the Feed Pet macro for level-10/11 hunters who don't know Mend Pet yet, so
-    those clicks print an explanation instead of silently doing nothing useful. We append a
-    sentinel " 1" so SecureCmdOptionParse returns "1" on match and nil on miss —
-    clean truthy/falsy semantics regardless of how the API treats an empty
-    action body.
-]]
+-- The " 1" sentinel makes SecureCmdOptionParse return "1" or nil, whatever it does with an empty action.
 function GtGTipIf(condition, key)
 	if SecureCmdOptionParse(condition .. " 1") then
 		GtGTip(key)
@@ -147,19 +93,8 @@ function GtGTipIf(condition, key)
 end
 
 --[[
-    Prints the standardized "no suitable <type> found" chat line. Macro bodies
-    call this with the internal type key (`/run GtGNoItem("Food")`). The key
-    stays English inside the macro body (keeps bodies and state keys
-    locale-independent) and resolves to the localized LABEL_* string via
-    ns.MACRO_CONFIG at print time. Unknown keys fall back to the raw key so a stale
-    macro body from an older version still prints something sensible.
-
-    canMake is set when the character knows the spell that makes the item (the
-    body writes it only for a Mage's Food, Water and Mana Gem and a Warlock's
-    Healthstone and Soulstone), so the line names the Right-Click that makes
-    more instead. Mages conjure and warlocks create, the verbs their spells use.
-    ns.BuildNoItemLine builds the line; the Consumable Macros panel's Example
-    draws it too.
+    The body passes the English type key, keeping bodies and state keys
+    locale-free; an unknown key prints raw so a stale body still says something.
 ]]
 function ns.BuildNoItemLine(typeName, canMake)
 	local config = ns.MACRO_CONFIG[typeName]
@@ -175,11 +110,7 @@ function GtGNoItem(typeName, canMake)
 	ns:PrintMessage(ns.BuildNoItemLine(typeName, canMake))
 end
 
---[[
-    Confirms the client's "replace your current enchant/poison" popup for the
-    Poisons macro (`/run GtGReplace()`), and only that popup: a Delete Item or
-    any other confirmation that happens to be open is left alone.
-]]
+-- Only this popup: a Delete Item or any other open confirmation is left alone.
 function GtGReplace()
 	if StaticPopup_Visible("REPLACE_ENCHANT") then
 		C_Item.ReplaceEnchant()

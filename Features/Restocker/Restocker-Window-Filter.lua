@@ -6,21 +6,14 @@ local L = ns.L
 --------------------------------------------------------------------------------
 
 --[[
-    Which items the window draws, in what order, under which category heading.
-    Pure data: nothing here touches a frame.
-
-    Both walks below take a `view` built once per redraw by ns.BuildRestockView --
-    each item's group resolved a single time, and the filter text folded a single
-    time. That matters because the sort comparator asks for a group on every
-    comparison: resolving it there would cost O(n log n) item-cache lookups per
-    keystroke in the filter box, on a path that already runs on every keystroke.
+    Both walks take a view built once per redraw (ns.BuildRestockView): the sort
+    comparator asks for a group on every comparison, which would otherwise cost
+    item lookups on every filter keystroke.
 ]]
 
 --[[
-    Case folding for the filter. string.lower folds ASCII only, so the capital
-    letters of the supported Latin and Cyrillic locales (2-byte UTF-8: U+00C0 to
-    U+00DE, U+0401 and U+0410 to U+042F) are mapped to their lowercase forms here.
-    Built once; gsub leaves any sequence the table doesn't name as it is.
+    string.lower folds ASCII only, so the Latin and Cyrillic capitals (2-byte
+    UTF-8: U+00C0 to U+00DE, U+0401, U+0410 to U+042F) are mapped here.
 ]]
 local FOLD_UPPER = {}
 for code = 0xC0, 0xDE do
@@ -40,16 +33,11 @@ local function Fold(text)
 	return (text:lower():gsub("[\195\208][\128-\191]", FOLD_UPPER))
 end
 
--- Was this item added during the current viewing of the window? See ns.restockNewItems.
 local function IsNewItem(item)
 	return (item.itemID ~= nil) and (ns.restockNewItems[item.itemID] == true)
 end
 
---[[
-    The client's name for an item's class ("Consumable", "Trade Goods"), read by
-    itemID from C_Item.GetItemInfoInstant, which answers without the item cache,
-    so a cold row files under its real group. Nil for an ID the client has no item for.
-]]
+-- GetItemInfoInstant answers without the item cache, so a cold row files under its real group.
 function ns.GetRestockItemTypeName(itemID)
 	if not itemID then
 		return nil
@@ -62,16 +50,13 @@ function ns.GetRestockItemTypeName(itemID)
 end
 
 --[[
-    A group is keyed by the item's classID, or by one of the two sentinels below,
-    never by a name: a translated "New" or "Other" can equal a client class name in
-    some language, and keyed by name the two groups would merge. The label is
-    looked up only to show or sort it.
+    Groups are keyed by classID or a sentinel, never a name: a translated "New"
+    or "Other" can equal a client class name, and the two groups would merge.
 ]]
 local GROUP_NEW = "NEW"
 local GROUP_OTHER = "OTHER"
 ns.RESTOCK_GROUP_NEW = GROUP_NEW
 
--- The client's name for each classID seen, at most one per item class.
 local classLabels = {}
 
 function ns.GetRestockGroupLabel(group)
@@ -81,11 +66,7 @@ function ns.GetRestockGroupLabel(group)
 	return classLabels[group] or L["RESTOCKER_GROUP_OTHER"]
 end
 
---[[
-    The item-type group used for sorting and the category pane: the item's
-    classID, or Other for an ID the client has no item for. Just-added items
-    report the New group instead, until the window closes.
-]]
+-- Just-added items report the New group until the window closes.
 local function ItemGroupOf(item)
 	if IsNewItem(item) then
 		return GROUP_NEW
@@ -105,12 +86,7 @@ local function CharacterCount(text)
 	return select(2, text:gsub("[^\128-\191]", ""))
 end
 
---[[
-    One pass over the list, resolving per item what both walks below would
-    otherwise resolve repeatedly. Rebuilt on every redraw rather than cached
-    across them, because an item's group moves the moment its data arrives or it
-    leaves the "New" set.
-]]
+-- Rebuilt every redraw, never cached: an item's group moves when its data arrives or it leaves New.
 function ns.BuildRestockView(items)
 	local filter = ns.restockListFilter
 	local view = {
@@ -123,10 +99,7 @@ function ns.BuildRestockView(items)
 	return view
 end
 
---[[
-    Does this item pass the text filter? Empty and one-character filters pass
-    everything, and so does a New item: a row must never vanish the moment it is added.
-]]
+-- A New item always passes: a row must never vanish the moment it is added.
 local function PassesTextFilter(view, item)
 	if not view.filter or view.groups[item] == GROUP_NEW then
 		return true
@@ -137,17 +110,8 @@ local function PassesTextFilter(view, item)
 end
 
 --[[
-    The category pane's contents: every group present in the list, with how many
-    items each holds, plus the total.
-
-    Counts are taken AFTER the text filter, so typing in the filter box narrows the
-    categories along with the list and a category that no longer matches anything
-    disappears rather than promising items it cannot show. The counts are the whole
-    reason the pane earns its width, so they have to agree with what clicking one
-    actually produces.
-
-    New sorts ahead of everything else here: it is where the item just added went,
-    and it is the one group that must never be filed alphabetically.
+    Counted after the text filter, so a count always matches what clicking it
+    shows. New sorts first: it is where the item just added went.
 ]]
 function ns.BuildRestockGroupList(items, view)
 	local counts, order = {}, {}
@@ -178,10 +142,6 @@ function ns.BuildRestockGroupList(items, view)
 	return groups, total
 end
 
---[[
-    Apply the text filter and the selected category, then sort into a flat list of
-    the items to draw. The category pane names the groups, so it holds nothing but items.
-]]
 function ns.BuildRestockRenderList(items, view)
 	local selected = ns.restockSelectedGroup
 	local kept = {}
@@ -191,15 +151,7 @@ function ns.BuildRestockRenderList(items, view)
 		end
 	end
 
-	--[[
-	    Grouped by item type, name-sorted within each group -- except New, which is
-	    ranked ahead of every other group rather than sorted with them. Sorting on
-	    the group label alone would file "New" alphabetically, landing it somewhere
-	    in the middle of the list, which is the one place it must not be.
-
-	    The type sort matters when no category is selected, because "All items" is
-	    the default view and is the one that has to stay legible without headers.
-	]]
+	-- New ranks ahead of every group; sorting it by label would file it mid-list.
 	local groups = view.groups
 	table.sort(kept, function(a, b)
 		local groupA, groupB = groups[a], groups[b]

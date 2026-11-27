@@ -12,7 +12,7 @@ ns.HAS_SPELL_RANKS = ns.EXPANSION ~= nil and ns.EXPANSION <= 3
 -- Colors
 --------------------------------------------------------------------------------
 
--- A hex color ("D8C399") as the { r, g, b } list the texture calls unpack.
+-- "D8C399" as an { r, g, b } list for unpack
 function ns.HexToColorList(hex)
 	local rgb = ns.HexToRGB(hex)
 	return { rgb.r, rgb.g, rgb.b }
@@ -22,13 +22,10 @@ end
 -- Spell Names
 --------------------------------------------------------------------------------
 
---[[
-	Spell ids asked for once, so an id that never loads can't keep the page redrawing: true while the answer
-	is outstanding, "answered" once SPELL_DATA_LOAD_RESULT has brought it.
-]]
+-- Each id is asked for once, so one that never loads can't keep the page redrawing.
 local requested = {}
 
--- A spell's name, or nil while its data isn't loaded (it is then requested); every Spellbook file shares it.
+-- nil while its data isn't loaded, which requests it
 function ns.SpellName(id)
 	local name = C_Spell.GetSpellName(id)
 	if not name and not requested[id] then
@@ -39,9 +36,8 @@ function ns.SpellName(id)
 end
 
 --[[
-	A spell's subtext ("Rank 3"), or nil or "" while its data isn't loaded (it is then requested, once). The name
-	is in the client's own tables from the start, but the subtext comes with the spell's data, so a row can have
-	its name and still wait on its rank.
+	nil or "" while its data isn't loaded. The name is in the client's tables from the start, but the subtext
+	comes with the spell's data, so a row can have its name and still wait on its rank.
 ]]
 function ns.SpellSubtext(id)
 	local subtext = C_Spell.GetSpellSubtext(id)
@@ -54,7 +50,7 @@ function ns.SpellSubtext(id)
 	return subtext
 end
 
--- Whether id is a spell ns.SpellName asked the client for and is still waiting on; marks it answered.
+-- Marks it answered.
 function ns.TakeRequestedSpell(id)
 	if requested[id] == true then
 		requested[id] = "answered"
@@ -82,7 +78,6 @@ local function LowerCyrillic(second)
 	return "\209" .. string.char(byte - 32)
 end
 
--- text in lower case for the pages' filter boxes, Cyrillic included.
 function ns.FilterLower(text)
 	return (text:lower():gsub("\208([\129\144-\175])", LowerCyrillic))
 end
@@ -97,19 +92,17 @@ function ns.HideTooltip(owner)
 	end
 end
 
--- The heading of a block of ours in GameTooltip: title in gold, "GtG" in gray on its right ("Immolate Macro … GtG").
 function ns.AddSpellbookTooltipTitle(title)
 	GameTooltip:AddDoubleLine(GetColor("TITLE") .. title .. "|r", GetColor("MUTED") .. ns.L["ADDON_SHORT_NAME"] .. "|r")
 end
 
--- One click's line in GameTooltip: the job in blue on the left, the click in gray on the right.
 function ns.AddSpellbookClickLine(job, click)
 	GameTooltip:AddDoubleLine(GetColor("INFO") .. job .. "|r", GetColor("MUTED") .. click .. "|r")
 end
 
 --[[
-	Pins region inside parent, offset UI units in from every edge, snapped to whole screen pixels and never
-	less than offset pixels, so a 1-unit edge drawn around it stays one pixel at any UI scale.
+	Snapped to whole screen pixels and never less than offset pixels, so a 1-unit edge drawn around it stays one
+	pixel at any UI scale.
 ]]
 function ns.PixelInset(region, parent, offset)
 	region:ClearAllPoints()
@@ -122,10 +115,7 @@ function ns.PixelInset(region, parent, offset)
 	end
 end
 
---[[
-	A pool of frames made by create, shared by the Spell Book and What's Next? pages: Acquire hands out pooled
-	frames in order; ReleaseAll hides the ones from the last layout.
-]]
+-- Acquire hands out pooled frames in order; ReleaseAll hides the last layout's.
 function ns.SpellbookFramePool(create)
 	local pool = { used = 0 }
 	function pool:Acquire()
@@ -145,11 +135,9 @@ function ns.SpellbookFramePool(create)
 	return pool
 end
 
--- the small dark buttons that hold the gold gear
 local GEAR_FILL = ns.HexToColorList("2A2520")
 local GEAR_EDGE = ns.HexToColorList("8C7A52")
 
--- A small dark square button with the gold gear: a category's settings, or a page's.
 function ns.CreateSpellbookGearButton(parent, size)
 	local button = CreateFrame("Button", nil, parent)
 	button:SetSize(size, size)
@@ -184,10 +172,7 @@ end
 -- Macro Names
 --------------------------------------------------------------------------------
 
---[[
-	A WoW macro name cut to at most maxBytes (default ns.MACRO_NAME_MAX_LENGTH), backing up to the start of
-	any UTF-8 character the cut would split, so a Russian, Korean or Chinese name never ends in a broken byte.
-]]
+-- Backs up to the start of any UTF-8 character the cut would split, so a name never ends in a broken byte.
 function ns.TrimMacroName(name, maxBytes)
 	maxBytes = maxBytes or ns.MACRO_NAME_MAX_LENGTH
 	local cut = maxBytes + 1

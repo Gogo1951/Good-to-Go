@@ -5,10 +5,7 @@ local _, ns = ...
 --------------------------------------------------------------------------------
 
 --[[
-    The manifest tables the framework reads. Each feature's
-    Diagnostics/Manifests-<Feature>.lua appends its own rows, so every report
-    covers the whole add-on and a feature's rows sit beside the probes that
-    describe it:
+    Each feature's Diagnostics/Manifests-<Feature>.lua appends its own rows:
 
       ns.DIAGNOSTIC_API_CHECKS     { label, check } per API the add-on calls or guards
       ns.DIAGNOSTIC_SPELLS         the spells the context probes report on
@@ -24,10 +21,7 @@ ns.DIAGNOSTIC_SPELLS = {}
 ns.DIAGNOSTIC_NAME_LOOKUPS = {}
 ns.DIAGNOSTIC_DATA_SOURCES = {}
 
---[[
-    An API check another feature's file already added under the same label is
-    skipped, so a function two features both call prints once.
-]]
+-- An API check already added under the same label is skipped, so a function two features call prints once.
 local function IsRepeatedApiCheck(target, row)
 	if type(row) ~= "table" or type(row[1]) ~= "string" or type(row[2]) ~= "function" then
 		return false

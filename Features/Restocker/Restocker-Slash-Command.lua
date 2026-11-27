@@ -7,9 +7,8 @@ local GetColor = ns.GetColor
 --------------------------------------------------------------------------------
 
 --[[
-    One slash-help line: the command in C_INFO, then the localized description
-    (TEXT restored for the tail, since ns.PrintMessage wraps the whole body in TEXT).
-    The subcommand words stay English, since they are what the parser below matches.
+    TEXT is restored for the tail, since ns.PrintMessage wraps the whole body in
+    TEXT. Subcommand words stay English: they are what the parser matches.
 ]]
 local function SlashHelpLine(subcommand, description)
 	return GetColor("INFO")
@@ -40,10 +39,7 @@ local RESTOCKER_COMMANDS = {
 local COMMAND_ORDER = { "show", "config", "profile" }
 local PROFILE_SUBCOMMAND_ORDER = { "add", "delete", "rename", "copy", "use" }
 
---[[
-    The help opens with its title line. withinHelp is true when PrintHelp prints
-    the profile lines under its own title, so the title prints once.
-]]
+-- withinHelp: PrintHelp has already printed the title, so it prints once.
 local function PrintProfileHelp(withinHelp)
 	if not withinHelp then
 		ns:PrintMessage(L["RESTOCKER_HELP_TITLE"])
@@ -68,7 +64,6 @@ end
 -- Slash Commands
 --------------------------------------------------------------------------------
 
--- The subcommands that name an existing list, which say so when the name matches none.
 local NAMES_EXISTING_LIST = { delete = true, copy = true, use = true }
 
 function ns.HandleRestockerCommand(args)
@@ -92,10 +87,7 @@ function ns.HandleRestockerCommand(args)
 		local subcommand, name = rest:match("^(%S*)%s*(.-)$")
 		subcommand = subcommand:lower()
 
-		--[[
-		    Every /restock profile subcommand needs a name; print its usage line instead of
-		    erroring on a nil table key when the name is missing.
-		]]
+		-- A missing name prints the usage line rather than erroring on a nil table key.
 		if name == "" and RESTOCKER_COMMANDS.profile[subcommand] then
 			ns:PrintMessage(RESTOCKER_COMMANDS.profile[subcommand])
 			return
@@ -129,7 +121,7 @@ function ns.HandleRestockerCommand(args)
 		ns:OpenOptionsPanel("Restocker")
 		return
 	elseif command == "" then
-		-- Only a bare /restock opens the window. Opening redraws by itself (OnShow); the profile subcommands redraw on their own.
+		-- Opening redraws by itself (OnShow).
 		ns.ToggleRestockWindow()
 	else
 		-- A word it doesn't know says so and lists the commands, rather than guessing and opening the window.

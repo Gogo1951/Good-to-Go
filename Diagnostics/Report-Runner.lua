@@ -92,6 +92,13 @@ ns.DIAGNOSTIC_REPORTS = {
 			return ns:BuildRestockerContextReport()
 		end,
 	},
+	currencyReplenish = {
+		title = D.CURRENCY_REPLENISH_TITLE,
+		description = D.CURRENCY_REPLENISH_DESCRIPTION,
+		build = function()
+			return ns:BuildCurrencyReplenishContextReport()
+		end,
+	},
 	readiness = {
 		title = D.READINESS_TITLE,
 		description = D.READINESS_DESCRIPTION,
@@ -237,6 +244,7 @@ ns.DIAGNOSTIC_SECTIONS = {
 			"context",
 			"selection",
 			"restocker",
+			"currencyReplenish",
 			"readiness",
 			"buffDuty",
 			"page",

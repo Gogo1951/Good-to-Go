@@ -13,106 +13,50 @@ local GridSlots = Layout.GridSlots
 local PlaceLines = Layout.PlaceLines
 
 --[[
-    The Buff Duty window's frames: draws the sections Features/Buff-Duty/Buff-Duty.lua builds
-    as a click-to-cast list. Every list icon is a SecureActionButtonTemplate button,
-    because casting a spell from a click is protected -- and that one fact shapes
-    this file. A secure button's attributes, position and visibility can only
-    change out of combat, so everything that lays the window out refuses to run
-    in combat, and the caller redraws once combat ends. Mid-fight only alpha
-    (the range fade), which the client allows on a protected frame, and the
-    cooldown swipes, plain children of the buttons, still change.
-
-    The Party-Buffs icons and their hover menu are
-    Buff-Duty-Party-Buffs.lua; the list icons' pool and scripts are
-    Buff-Duty-Icons.lua; the signature, grid and line placing are
-    Buff-Duty-Layout.lua; the icons' cooldown swipes and range fade are
-    Buff-Duty-Icon-State.lua; the icons' secure attributes are
-    Buff-Duty-Button-Attributes.lua; the window's saved position is
-    Buff-Duty-Position.lua.
+    Every list icon is a secure button, so nothing here lays the window out
+    in combat; the caller redraws once it ends. Mid-fight only alpha (the
+    range fade) and the cooldown swipes change.
 
     Two frames stack so combat visibility and our own never fight: the anchor
-    belongs to a secure state driver (Hide in Combat), and the content inside it
-    is shown and hidden by this file, out of combat only. The content carries a
-    title bar whose close button hides Buff Duty until the next login or
-    reload, or until you join a group, saving nothing (ns.CloseBuffDuty).
+    belongs to a secure state driver (Hide in Combat), and the content inside
+    it is shown and hidden here, out of combat only.
 ]]
 
 --------------------------------------------------------------------------------
 -- Layout
 --------------------------------------------------------------------------------
 
---[[
-    Also how tall every line's content stands, a bare header included: the
-    window's top and bottom edges are measured from it, so a line keeps its
-    room whether or not a buff icon is showing, and the window holds still as
-    icons come and go.
-]]
+-- Also every line's height, a bare header included, so the window holds still as icons come and go.
 local ICON_SIZE = Data.BUFF_DUTY_ICON_SIZE
 local ICON_GAP = Layout.ICON_GAP
---[[
-    The name column fits the longest name on the list, between these bounds:
-    never narrower than a short name needs to look tidy, and never so wide that a
-    long title-and-realm string pushes the icons off across the screen.
-]]
+-- The max keeps a long title-and-realm name from pushing the icons across the screen.
 local MIN_NAME_WIDTH = 64
 local MAX_NAME_WIDTH = 256
---[[
-    The name column grows in whole steps of this, not to the pixel, so a
-    slightly longer name doesn't nudge the window wider.
-]]
+-- Whole steps, so a slightly longer name doesn't nudge the window wider.
 local NAME_STEP = 16
 local NAME_GAP = Layout.NAME_GAP
 local MAIN_GRID = Layout.MAIN_GRID
 local SECTION_SPACE = Layout.SECTION_SPACE
 local FOLD_INDENT = Layout.FOLD_INDENT
--- A member's role icon lines up with the header above it.
 local MEMBER_INDENT = 0
---[[
-    Parties sit two to a row, reading across -- 1 2, then 3 4 -- and the
-    columns stand this far apart.
-]]
 local PARTIES_PER_ROW = 2
 local COLUMN_GAP = 16
--- A pet sits one step further in, under its owner.
 local PET_INDENT = 16
---[[
-    From the plate's edge to the title, names and icons on every side: the
-    Spacing Scale's 16, so nothing crowds the angled corners.
-]]
+-- The one margin on every side, so nothing crowds the angled corners.
 local PADDING = 16
---[[
-    The title bar, the Menu Kit's window header (Kit.AddWindowHeader): one
-    16-point row holding the title and a 16-point close button, the button's
-    top PADDING from the plate's edge like everything else; then a 16-point
-    gap, so the title doesn't read as one of the sections.
-]]
+-- TITLE_GAP keeps the title from reading as one of the sections.
 local CLOSE_SIZE = Kit.WINDOW_HEADER_HEIGHT
 local TITLE_HEIGHT = Kit.WINDOW_HEADER_HEIGHT
 local TITLE_GAP = 16
 --[[
-    The window's width and height each round up to a multiple of this, as
-    the Spacing Scale asks of anything bigger than 128. The height's extra
-    goes into the gap above the Options divider, so the foot keeps its PADDING
-    like the other edges.
+    The Spacing Scale rounds anything bigger than 128 to this. The height's
+    extra goes above the Options divider, so the foot keeps its PADDING.
 ]]
 local WINDOW_STEP = 16
---[[
-    No window is narrower than this, so solo, party and weapon windows share
-    one width and the window holds still on screen as its contents change,
-    growing only for a long name or a long row of icons.
-]]
+-- Solo, party and weapon windows share one width, so the window holds still as its contents change.
 local MIN_WINDOW_WIDTH = 208
--- Room between the end of the title and the close button.
 local TITLE_CLOSE_GAP = 8
---[[
-    The Options line at the foot of the window, the Menu Kit's
-    (Kit.AddOptionsLine): one menu row high with PADDING alone under it,
-    under a thin divider on the Spacing Scale: 16 from the last line's
-    content to the divider (more, from the height's rounding), 8 from the
-    divider to the Options row. The row reaches FOOTER_INSET past the text
-    on each side, the kit's own inset from a row's edge to its text, so its
-    text and arrow line up with the window's PADDING.
-]]
+-- The Options row reaches FOOTER_INSET past its text, so its text and arrow line up with PADDING.
 local FOOTER_HEIGHT = Kit.ROW_HEIGHT
 local FOOTER_INSET = Kit.WINDOW_EDGE - Kit.FLYOUT_OVERLAP
 local DIVIDER_ABOVE = 16
@@ -127,11 +71,9 @@ local anchor, content, title, keyHint, footer, footerDivider
 -- Set when a drag is let go in combat, so ns.ApplyBuffDutySettings stops and saves it once combat ends.
 local stopPending = false
 local labels, usedLabels = {}, 0
--- The list's icons, shared with the cooldown and range passes (Buff-Duty-Icon-State.lua).
 local pool = ns.buffDutyIconPool
 local icons = pool.buttons
 local lastSignature
--- What the window holds on to while it stays up for the same group (Buff-Duty-Layout.lua).
 local held = Layout.held
 
 local function ForgetHeldLayout()
@@ -166,10 +108,7 @@ end
 -- Render
 --------------------------------------------------------------------------------
 
---[[
-    A width of 0 lets the text run unconstrained, so the measure is the whole
-    name rather than whatever fit the last layout's column.
-]]
+-- Width 0 measures the whole name, not what fit the last layout's column.
 local function MeasureLabel(text, indent)
 	local label = AcquireLabel()
 	label:SetWidth(0)
@@ -191,26 +130,13 @@ local function ReleaseAll()
 	Layout.ReleaseMenuButtons()
 end
 
---[[
-    `otherBuffs` is the Party-Buffs section's icons: the raid buffs your group
-    is missing (Buff-Duty-Other-Classes.lua). Not a section of its own in
-    `sections`, since the Buff Key never casts them and their icons aren't
-    secure buttons, but drawn like one, under Self-Buffs.
-]]
+-- Party-Buffs isn't in `sections`: the Buff Key never casts them and their icons aren't secure.
 local PARTY_BUFFS_GRID = "partyBuffs"
 
---[[
-    The sections whose rows line up in cast order instead of by column: the
-    next cast leftmost, the rest closing up behind it as each one goes out,
-    the row against the right edge (Buff-Duty-Layout.lua's packed lines).
-]]
+-- Rows in cast order instead of by column: the next cast leftmost.
 local CAST_ORDER_KINDS = { self = true, target = true, favor = true }
 
---[[
-    Each of those sections' icons' place in the Buff Key's order
-    (BuffDuty.CastOrder). An icon the key never casts (Winterfall Firewater)
-    goes after the rest, in the row's own order.
-]]
+-- An icon the key never casts (Winterfall Firewater) has no rank and goes after the rest.
 local function CastRanks(sections)
 	local ordered = {}
 	for _, section in ipairs(sections) do
@@ -241,12 +167,7 @@ local function InCastOrder(specs, ranks)
 	return sorted
 end
 
---[[
-    The window's last line while Cast Next Buff has no key: a section's space
-    under the Options line, then a tip naming the key and where to bind it. It wraps
-    to the window's width rather than widening it, and goes away once a key is
-    bound (UPDATE_BINDINGS asks for a redraw, Features/Key-Bindings.lua).
-]]
+-- Shown while Cast Next Buff has no key; it wraps to the window's width rather than widening it.
 local function KeyHintText()
 	local info = GetColor("INFO")
 	local help = GetColor("HELP")
@@ -278,19 +199,15 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 		ReleaseAll()
 
 		--[[
-		    Two passes: every label is measured before any is placed, because the
-		    icon column starts where the longest name ends. The sections before
-		    the parties (Self-Buffs, Party-Buffs, Target, Return the Favor) run down the top;
-		    the parties go under them PARTIES_PER_ROW to a row, so a full raid's
-		    eight groups stand four rows high instead of running off the screen.
+		    Two passes: every label is measured before any is placed, because
+		    the icon column starts where the longest name ends.
 		]]
 		local top, partyRows = {}, {}
 		local parties = 0
 		local nameWidth = MIN_NAME_WIDTH
-		-- Set once any line opens a category's menu: every line then leaves room for the arrow column.
+		-- Once any line has a menu, every line leaves room for the arrow column.
 		local anyMenu = false
 		local partyBuffsPlaced = #otherBuffs == 0
-		-- Worked out the first time a cast-order row needs them.
 		local castRanks
 		local function AddPartyBuffs()
 			partyBuffsPlaced = true
@@ -356,7 +273,7 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 			for _, row in ipairs(section.rows) do
 				TagSection(row.icons, not section.party and section.label or nil)
 			end
-			-- A raid group's name sits past its fold glyph (Buff-Duty-Layout.lua's fold buttons).
+			-- A raid group's name sits past its fold glyph.
 			local head = Measure(
 				GetColor("TITLE") .. section.label .. "|r",
 				section.foldable and FOLD_INDENT or 0,
@@ -387,14 +304,13 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 		nameWidth = math.max(math.min(SnapUp(nameWidth, NAME_STEP), MAX_NAME_WIDTH), held.nameWidth)
 		held.nameWidth = nameWidth
 
-		-- A window column: the names, then as many icons as its grid keeps.
 		local offsetsByGrid, iconWidths = GridSlots(sections)
 		held.partyBuffs = math.max(held.partyBuffs, #otherBuffs)
 		iconWidths[PARTY_BUFFS_GRID] = held.partyBuffs * (ICON_SIZE + ICON_GAP) - ICON_GAP
 		local function ColumnWidth(grid)
 			return nameWidth + NAME_GAP + math.max(iconWidths[grid] or 0, ICON_SIZE)
 		end
-		-- A line's Missing Inventory! sits after its icons, so it widens the line by its own width.
+		-- A line's Missing Inventory! sits after its icons and widens the line.
 		local function ContentWidth()
 			local width = 0
 			for _, line in ipairs(top) do
@@ -409,13 +325,7 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 			return width
 		end
 
-		--[[
-		    The close button sits at the far right (see CreateBuffDutyFrame),
-		    so the window is never narrower than the title plus the button. The
-		    minimum width below already clears it at the usual font sizes; a
-		    larger font that doesn't widens the name column to make up the
-		    difference.
-		]]
+		-- Never narrower than the title plus the close button; a large font widens the name column to fit.
 		local arrowSpace = anyMenu and Layout.ARROW_SPACE or 0
 		local minWidth = math.ceil(title:GetStringWidth()) + TITLE_CLOSE_GAP + CLOSE_SIZE - arrowSpace
 		local width = ContentWidth()
@@ -424,11 +334,10 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 			width = ContentWidth()
 		end
 		--[[
-		    The window's width rounds up to WINDOW_STEP, and to at least
-		    MIN_WINDOW_WIDTH. With one window column
-		    the extra goes to the names; with parties side by side it widens the gap between them,
-		    since widening the names would widen each party by it. held.nameWidth
-		    keeps the width from before, so the rounding never builds on itself.
+		    With one column the rounding's extra goes to the names; with parties
+		    side by side it widens the gap, since wider names would widen each
+		    party. held.nameWidth is set before this, so rounding never builds on
+		    itself.
 		]]
 		local windowWidth = math.max(SnapUp(PADDING * 2 + width + arrowSpace, WINDOW_STEP), MIN_WINDOW_WIDTH)
 		if math.min(parties, PARTIES_PER_ROW) <= 1 then
@@ -436,21 +345,8 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 			width = ContentWidth()
 		end
 
-		--[[
-		    Rows sit ROW_HEIGHT apart, middle to middle, but the first and last
-		    are measured by what they show: TITLE_GAP under the title bar to the
-		    top of the first line's content, and PADDING from the bottom of the
-		    lowest's to the window's edge, the same as the sides. Sections stand SECTION_SPACE apart,
-		    edge to edge. The parties in a row start level, and the next row
-		    starts under the taller of them.
-		]]
 		local firstMiddle = -(PADDING + TITLE_HEIGHT + TITLE_GAP + ICON_SIZE / 2)
-		--[[
-		    The arrow column, while any line has a menu, is the last
-		    ARROW_SPACE inside the right padding: every line's icons end
-		    before it, so they still line up down the window, and each
-		    arrow ends where the Options line's does.
-		]]
+		-- Every line's icons end before the arrow column, so they line up and each arrow ends where Options' does.
 		local right = windowWidth - PADDING - arrowSpace
 		local arrowRight = anyMenu and windowWidth - PADDING or nil
 		local y, bottom = PlaceLines(top, PADDING, right, firstMiddle, nameWidth, offsetsByGrid, iconWidths, arrowRight)
@@ -468,11 +364,7 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 			y = nextY
 		end
 
-		--[[
-		    A gap, the Options line, then the tip (a section's space under it)
-		    last of all. The footer's height is measured first, so the height's
-		    rounding can widen the gap above it instead of padding the foot.
-		]]
+		-- The footer is measured first, so the height's rounding widens the gap above it, not the foot.
 		local footerHeight = FOOTER_HEIGHT
 		local footerWidth = width + arrowSpace
 		if showKeyHint then
@@ -511,10 +403,8 @@ function ns.RenderBuffDuty(sections, otherBuffs)
 end
 
 --[[
-    Your target changed: every icon that casts at "target" or "targetpet" now
-    aims at someone the window never looked at, so each is stripped and hidden
-    before the redraw. If the redraw then fails, no button is left behind to
-    cast an NPC's buff on the player you targeted next.
+    Stripped before the redraw, so if it fails no button is left to cast an
+    NPC's buff on the player you targeted next.
 ]]
 function ns.DropBuffDutyTargetIcons()
 	if InCombatLockdown() or not content then
@@ -548,16 +438,12 @@ end
 -- Settings
 --------------------------------------------------------------------------------
 
---[[
-    Applies Hide in Combat and the saved position. Returns false when combat
-    blocks it -- the state driver and the anchor are both protected then -- so
-    the caller can apply it again once combat ends.
-]]
+-- False when combat blocks it (the state driver and anchor are protected), so the caller retries after.
 function ns.ApplyBuffDutySettings()
 	if InCombatLockdown() or not anchor then
 		return false
 	end
-	-- A drag let go in combat (OnDragStop below) ends here, where the anchor may move again.
+	-- A drag let go in combat ends here, where the anchor may move again.
 	if stopPending then
 		stopPending = false
 		anchor:StopMovingOrSizing()
@@ -576,12 +462,7 @@ function ns.ApplyBuffDutySettings()
 	return true
 end
 
---[[
-    The background alone takes Window Opacity: the plate fades, the text and
-    icons on it don't. The plate is no secure frame, so this works in combat.
-    preview, a percent, shows that one without saving it (a hovered choice);
-    without it, the saved one.
-]]
+-- Only the plate fades, and it isn't secure, so this works in combat. preview shows a percent unsaved.
 function ns.ApplyBuffDutyOpacity(preview)
 	local plate = content and content.menuKitPlate
 	if plate then
@@ -604,12 +485,11 @@ function ns.CreateBuffDutyFrame()
 	content = CreateFrame("Frame", nil, anchor)
 	pool.content = content
 	content:SetAllPoints(anchor)
-	-- The menus' dark plate with angled corners, so the window reads as one of them.
 	Kit.AddPlate(content)
 	ns.ApplyBuffDutyOpacity()
 	content:EnableMouse(true)
 	content:RegisterForDrag("LeftButton")
-	-- Set only while a drag really moves the window, so a drag of a locked one saves no position.
+	-- So a drag of a locked window saves no position.
 	local moving = false
 	content:SetScript("OnDragStart", function()
 		if not ns.db.global.buffWindow.locked and not InCombatLockdown() then
@@ -618,11 +498,9 @@ function ns.CreateBuffDutyFrame()
 		end
 	end)
 	--[[
-	    StopMovingOrSizing re-anchors the frame to whichever screen point is
-	    nearest (often CENTER), so a resize after a drag would grow from the
-	    middle. Re-applying the saved top-right keeps the close button fixed. The
-	    anchor holds the secure icons, so a drag let go once combat has begun
-	    stops, saves and re-anchors once it ends (ns.ApplyBuffDutySettings).
+	    StopMovingOrSizing re-anchors to the nearest screen point (often
+	    CENTER), so a resize would grow from the middle; re-applying the saved
+	    top-right keeps the close button fixed.
 	]]
 	content:SetScript("OnDragStop", function()
 		if not moving then
@@ -640,16 +518,11 @@ function ns.CreateBuffDutyFrame()
 	end)
 
 	--[[
-	    Titled like the other windows, the add-on's name last: "Buff Duty //
-	    GtG" (Kit.WindowTitle), with the close button on the right. Closing
-	    hides the window for the session (ns.CloseBuffDuty) through the
-	    redraw's own gate, so the next roster or aura change can't reopen it.
-	    The template's own click hides its parent, which is protected (it holds
-	    the secure icons), so the kit replaces the script outright.
+	    Closing goes through the redraw's own gate, so the next roster or aura
+	    change can't reopen it.
 	]]
 	title = Kit.AddWindowHeader(content, L["TAB_BUFF_DUTY"], ns.CloseBuffDuty)
 
-	-- The Cast Next Buff tip under the list (KeyHintText); placed and shown by RenderBuffDuty.
 	keyHint = content:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	keyHint:SetJustifyH("LEFT")
 	keyHint:SetJustifyV("TOP")
@@ -657,14 +530,8 @@ function ns.CreateBuffDutyFrame()
 	keyHint:Hide()
 
 	--[[
-	    The divider and the Options line (Kit.AddOptionsLine), placed by
-	    RenderBuffDuty: blue, with the kit's sub-menu arrow, and hovering it
-	    opens the window's switches beside it (Buff-Duty-Options-Menu.lua); a
-	    click does too. That one menu also opens from the mini-map menu's Buff
-	    Duty row and holds the category flyouts, so the line opens it in place
-	    of the kit's own menu, which is left unused. A plain button, not a
-	    secure one, so it works in combat too, where a change waits for the
-	    redraw combat holds back.
+	    The line opens Buff Duty's own options menu in place of the kit's,
+	    which is left unused: that one menu also opens from the mini-map.
 	]]
 	footer, footerDivider = Kit.AddOptionsLine(content, L["BUFF_DUTY_MENU_OPTIONS"], function()
 		return {}

@@ -12,18 +12,9 @@ local Spacer = Kit.Spacer
 --------------------------------------------------------------------------------
 
 --[[
-    Each row shows the key the player bound, or a muted Not Bound, and a Set Key
-    button that opens the game's Key Bindings list through ns:OpenKeyBindings
-    (Features/Key-Bindings.lua), so the key is set where the game's own are.
-    The binding name is Bindings.xml's name attribute; the caption is the same
-    string the Key Bindings list prints. OnUpdateBindings (Features/Key-Bindings.lua)
-    repaints this panel
-    when the player changes a key.
-
-    The descKey line says what the key does. Cast Next Buff's then has the
-    macro line that presses the same key in a box of its own, a spacer
-    above and below, to click and copy. It is passed in as the line's %s too,
-    for a translation still written around it.
+    Set Key opens the game's own Key Bindings list, so the key is set where the
+    game's are. Cast Next Buff's macro line gets its own copy box, and is also
+    passed as the description's %s, for a translation still written around it.
 ]]
 local function KeyBindings()
 	return {
@@ -33,10 +24,7 @@ local function KeyBindings()
 	}
 end
 
---[[
-    The caption takes the grid's label width, so the key lines up with every
-    other row's control, and the key and Set Key share the control column.
-]]
+-- The key and Set Key share the control column, so the key lines up with every other row's control.
 local KEY_STATUS_WIDTH = 0.75
 local KEY_BUTTON_WIDTH = 0.55
 
@@ -57,7 +45,6 @@ local function KeyBindingDescription(descKey, argument)
 	return GetColor("HELP") .. text .. "|r"
 end
 
--- Each binding is its row (caption, key, Set Key), then its description under it.
 local function AddKeyBindingRows(args, startOrder)
 	local order = startOrder
 
@@ -119,14 +106,8 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The root page, in the Style Guide's Main Page Layout order: intro, Welcome
-    Message, Mini-map Button, Features (every feature's on/off switch, two to a
-    line), Key Bindings and /Commands. Every toggle on this page is account-wide
-    (ns.db.global). Each Features switch is the same toggle that heads its
-    feature's own panel (Kit.FeatureSwitch, from ns.FEATURES).
-
-    Order values are grouped in spaced blocks so sections can be reordered or
-    extended without renumbering their neighbors.
+    The root page, in the Style Guide's Main Page Layout order. Order values sit
+    in spaced blocks so a section can grow without renumbering its neighbors.
 ]]
 function ns.BuildGeneralOptions()
 	local args = {

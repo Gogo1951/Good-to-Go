@@ -9,10 +9,8 @@ local PREFIX = RANK_WATCH.COMM_PREFIX
 --------------------------------------------------------------------------------
 
 --[[
-    One whisperer per group. Every Rank Watch and every standalone Rank Sentinel in a group talks over the
-    standalone add-on's own prefix (RANKSENTINEL) and its own messages, so the two elect one leader between
-    them, and only the leader whispers; everyone else prints. The standalone add-on sends through AceComm, which
-    sends a short message as it is, so plain add-on messages read and write the same lines:
+        One whisperer per group, elected over the standalone add-on's own prefix and messages so the two share one
+        leader. AceComm sends a short message as it is, so plain add-on messages read and write the same lines:
 
       JOIN|<name>,<release>    Sent to the group on joining it or reloading: who whispers here? A leader
                                turning off sends one too, handing the lead back.
@@ -62,7 +60,6 @@ function ns.BroadcastRankWatchNotify(key)
 	Broadcast("NOTIFY", key)
 end
 
--- The group unit holding a short name, or nil when nobody in the group has it.
 local function GroupUnitOf(name)
 	local prefix, count = "party", GetNumSubgroupMembers()
 	if IsInRaid() then
@@ -83,9 +80,8 @@ local function IsInMyGroup(name)
 end
 
 --[[
-    Who speaks for the group: "self" when this client whispers, the leader's name when another Rank Watch or
-    Rank Sentinel does, or nil when this client leads with whispers off and nobody whispers. A leader who has
-    gone offline can't whisper, so this client takes the lead back from them.
+    "self", the leader's name, or nil when this client leads with whispers off. A leader gone offline can't
+    whisper, so this client takes the lead back.
 ]]
 function ns.RankWatchWhisperer()
 	local me = MyName()
@@ -103,7 +99,6 @@ function ns.RankWatchWhisperer()
 	return lead
 end
 
--- The leader's name for the options panel.
 function ns.RankWatchLeadName()
 	return lead or MyName()
 end
@@ -164,11 +159,7 @@ local function OnChatMsgAddon(prefix, text, _, sender)
 end
 ns.SetRankWatchHandler("CHAT_MSG_ADDON", OnChatMsgAddon)
 
---[[
-    Joining a group asks who leads; a leader who leaves hands the lead back to every copy left, each of which
-    takes it until the next LEAD arrives, as the standalone add-on does. When two copies both hold it, the lower
-    name keeps it (the LEAD branch above).
-]]
+-- A leader who leaves hands the lead to every copy left, each holding it until the next LEAD arrives.
 local function OnGroupRosterUpdate()
 	local inGroup = IsInGroup()
 	if inGroup and not wasInGroup then
@@ -187,10 +178,7 @@ local function OnGroupRosterUpdate()
 end
 ns.SetRankWatchHandler("GROUP_ROSTER_UPDATE", OnGroupRosterUpdate)
 
---[[
-    Turning on in a group asks who leads, as a reload does. Turning off forgets the leader; a leader turning
-    off sends one JOIN first, so every copy left takes the lead back (the JOIN branch above) and re-elects.
-]]
+-- A leader turning off sends one JOIN first, so every copy left takes the lead back and re-elects.
 function ns.SyncRankWatchCluster(active)
 	C_ChatInfo.RegisterAddonMessagePrefix(PREFIX)
 	if not active and IsInGroup() and lead == MyName() then

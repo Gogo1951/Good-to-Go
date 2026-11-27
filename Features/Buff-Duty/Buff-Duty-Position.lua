@@ -1,16 +1,9 @@
 local _, ns = ...
 
---[[
-    Where the Buff Duty window stands: restoring its saved corner onto the anchor
-    frame Buff-Duty-Frame.lua creates, saving it after a drag, and moving a
-    position saved the old way.
-]]
-
 --------------------------------------------------------------------------------
 -- Position
 --------------------------------------------------------------------------------
 
--- Where the window's top-right corner sits until it is first dragged: a little right of and above the middle of the screen.
 local DEFAULT_X, DEFAULT_Y = 192, 160
 
 local TOP_RIGHT = "TOPRIGHT"
@@ -29,24 +22,16 @@ local function RestorePosition(anchor)
 end
 ns.RestoreBuffDutyPosition = RestorePosition
 
---[[
-    Saved as the top-right corner, so a window that grows or shrinks with the
-    list keeps its title bar's close button where the player put it: the
-    window grows left and down from it.
-]]
+-- The top-right corner, so the window grows left and down and its close button stays where the player put it.
 function ns.SaveBuffDutyPosition(anchor)
 	ns.db.global.buffWindow.point = { anchor:GetRight(), anchor:GetTop(), corner = TOP_RIGHT }
 end
 
---[[
-    Reset Position (Options-Buff-Duty.lua): forgets the saved corner and puts the
-    window back where it first appears. Out of combat only, since the anchor is
-    protected then; the panel grays the button in combat.
-]]
 function ns.HasSavedBuffDutyPosition()
 	return ns.db ~= nil and ns.db.global.buffWindow.point ~= nil
 end
 
+-- Out of combat only: the anchor is protected in combat.
 function ns.ResetBuffDutyPosition()
 	if InCombatLockdown() then
 		return

@@ -1,28 +1,11 @@
 local _, ns = ...
 local L = ns.L
 
---[[
-    The Restock List's two menus: the standings menu a row's reputation cell
-    opens, and the menu a toggle column's heading opens to set that column on
-    every row shown. The cells that open them are Restocker-Window-Cells.lua,
-    the headings Restocker-Window-Column-Header.lua.
-
-    Both are the one kit dropdown every Restock List menu shares (the list
-    bar's, Manage Lists' and the Staples window's stack sizes too): its own
-    frames, never the game's shared dropdown frames, so nothing here taints
-    them. It closes after the cursor
-    leaves it and what opened it (the kit's delay: a second when a click opened
-    it, half that for a hover), on Escape, on a pick, when the window hides,
-    and on ns.UpdateRestockList.
-]]
+-- One kit menu serves every Restock List menu: its own frames, never the game's shared dropdowns, which taint.
 
 --[[
-    The dropdown on the kit's own menu (Kit.CreateMenu), with the shape every
-    Restock List control calls: menu:Open(anchor, entries, onClose, upward, how)
-    shows entries under anchor, or over it when upward (a click on the open
-    anchor again closes it), how being "click" or "hover", the way it was
-    opened; menu:Close(); and menu:IsOpenFor(anchor). A row's click closes the
-    menu first, unless the entry sets keepOpen. onClose runs whenever it hides.
+    menu:Open(anchor, entries, onClose, upward, how): a click on the open anchor
+    closes it, and a row's click closes the menu unless the entry sets keepOpen.
 ]]
 -- The kit's MENU_GAP (Features/Menu-Kit.lua), which the kit keeps to itself: a menu opens 2 points off its control.
 local MENU_GAP_POINTS = 2
@@ -76,10 +59,7 @@ local function CreateDropdownMenu(name)
 		end
 		shown.entries, shown.onClose = list, onClose
 		kitMenu:Show(anchor, how or "hover")
-		--[[
-		    A dropdown's list hangs straight under its field, or over it, not off
-		    a corner, MENU_GAP_POINTS clear of it as every kit menu opens.
-		]]
+		-- Straight under or over its field, not off a corner.
 		frame:ClearAllPoints()
 		if upward then
 			frame:SetPoint("BOTTOMLEFT", anchor, "TOPLEFT", 0, MENU_GAP_POINTS)
@@ -93,25 +73,8 @@ end
 
 ns.RestockMenu = CreateDropdownMenu("GoodToGoRestockMenu")
 
---[[
-    A dropdown's choice: the kit's choice row, the pick light yellow with a
-    check and the rest white. One with something to say beside it (a
-    reputation's discount, a list's characters) is a value row dressed the same
-    way, since a choice row's right side holds only the check: the pick's name
-    light yellow, the rest white, the words on the right light yellow with the
-    check after them once picked.
-]]
 function ns.RestockChoiceRow(left, right, selected, onClick)
-	if not right then
-		return { kind = "choice", left = left, selected = selected, onClick = onClick }
-	end
-	return {
-		kind = "value",
-		left = left,
-		leftColor = selected and "VALUE" or nil,
-		right = right .. (selected and " " .. ns.MenuKit.CHECK_MARK or ""),
-		onClick = onClick,
-	}
+	return { kind = "choice", left = left, right = right, selected = selected, onClick = onClick }
 end
 local RestockMenu = ns.RestockMenu
 local REPUTATION_STANDINGS = ns.REPUTATION_STANDINGS
@@ -124,12 +87,9 @@ local CELL_NOT_APPLICABLE = ns.RESTOCK_CELL_NOT_APPLICABLE
 --------------------------------------------------------------------------------
 
 --[[
-    Update closing it is the load-bearing close. Rows come from a pool, so any
-    redraw can put a different item under an open menu -- and the menu has to
-    be gone before that row is rebound, or a pick lands on an item the player
-    never opened. The pick is pinned to the item the menu was opened for as a
-    second guard, so a close that is ever missed writes nothing rather than
-    writing to whatever row drifted underneath.
+    Pooled rows rebind on a redraw, so ns.UpdateRestockList closing this first
+    is load-bearing. The pick is also pinned to the item it opened for, so a
+    missed close writes nothing.
 ]]
 local function CloseReputationMenu()
 	RestockMenu:Close()
@@ -143,7 +103,6 @@ local function OpenReputationMenu(cell, row)
 		RestockMenu:Close()
 		return
 	end
-	-- One menu at a time.
 	ns.CloseRestockMenus()
 
 	local openedForItem = cell.item
@@ -161,7 +120,7 @@ local function OpenReputationMenu(cell, row)
 			(openedForItem.reaction or 0) == standing.value,
 			function()
 				if cell.item == openedForItem then
-					-- Store nil for "Any" so nothing is persisted; otherwise the standing code.
+					-- "Any" saves nil.
 					openedForItem.reaction = (standing.value > 0) and standing.value or nil
 					ns.UpdateRestockListRow(row, openedForItem)
 				end
@@ -179,12 +138,7 @@ ns.OpenRestockReputationMenu = OpenReputationMenu
 -- Column Menus
 --------------------------------------------------------------------------------
 
---[[
-    Writing one flag outright, for the column menus, which set a whole column
-    rather than flipping each row. Always an explicit boolean: the nil defaults
-    COLUMN_STATE reads (Restocker-Window-Cells.lua) mean "unset", and a column
-    the player just set is not unset.
-]]
+-- Always an explicit boolean: nil means unset, and a column the player just set is not.
 local COLUMN_SET = {
 	withdraw = function(item, isOn)
 		item.restockFromBank = isOn
@@ -203,26 +157,13 @@ local COLUMN_SET = {
 	end,
 }
 
---[[
-    A toggle column's heading opens this: switch the column on, or off, for every
-    row shown. With a category picked or the filter typed in, that is "stop
-    buying every quest item" in two clicks rather than one per row.
-
-    Rows where the column cannot apply are left alone and left out of the count,
-    so the number on the menu is the number of rows it will change the state of
-    or confirm: an item with no upgrade ladder has nothing to switch, and Extra
-    rides on Buy.
-
-    Each row names its count on the right in light yellow; with nothing to set,
-    both rows are the kit's disabled rows, gray, and do nothing.
-]]
 local function CloseColumnMenu()
 	RestockMenu:Close()
 end
 
 ns.CloseRestockColumnMenu = CloseColumnMenu
 
--- How many of the rows shown this column can be set on.
+-- Rows where the column can't apply are left out, so the count is the rows it will set.
 local function CountSettableRows(key)
 	local count = 0
 	for _, item in ipairs(ns.GetRestockShownItems()) do
@@ -233,11 +174,7 @@ local function CountSettableRows(key)
 	return count
 end
 
---[[
-    Set one column on every row shown. Each column writes only its own flag, and
-    whether it applies is read from the row as it stands before the write: Extra
-    applies only where Buy is already on.
-]]
+-- Whether a row applies is read before the write: Extra applies only where Buy is already on.
 local function SetColumnOnShownRows(key, isOn)
 	for _, item in ipairs(ns.GetRestockShownItems()) do
 		if COLUMN_STATE[key](item) ~= CELL_NOT_APPLICABLE then

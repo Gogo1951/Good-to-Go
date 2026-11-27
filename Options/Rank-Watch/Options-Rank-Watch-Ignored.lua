@@ -10,11 +10,8 @@ local Spacer = Kit.Spacer
 --------------------------------------------------------------------------------
 
 --[[
-    "Ignored Players", under Rank Watch: the players it never reports, added from the current target and removed
-    one by one. Account-wide, like every Rank Watch setting, and keyed by GUID so a renamed player stays ignored.
-    Not hidden behind the Rank Watch switch: a choice worth making before turning it on, and the page opens
-    with a line saying so while it's off (ns.AddFeatureOffLine). Registered as a
-    function, so the list and the Ignore Target button follow the target on every redraw.
+    Keyed by GUID, so a renamed player stays ignored. Not hidden behind the Rank Watch switch: a choice worth
+    making before turning it on.
 ]]
 
 local function Ignored()
@@ -26,9 +23,8 @@ local function IgnoredClasses()
 end
 
 --[[
-    A row's class: the one stored when the player was ignored, else the client's own record of that GUID, which
-    it holds for anyone seen this session (entries made before classes were stored, or imported from the
-    standalone add-on). A class found that way is kept, so the color survives the next login.
+    Falls back to the client's record of the GUID (for anyone seen this session), and keeps what it finds so
+    the color survives the next login.
 ]]
 local function ClassOf(guid)
 	local classes = IgnoredClasses()
@@ -43,7 +39,6 @@ local function ClassOf(guid)
 	return nil
 end
 
--- The target, when it is another player who can be ignored.
 local function IgnorableTarget()
 	return ns.RankWatchIgnorableUnit("target")
 end
@@ -64,7 +59,7 @@ local function AddIgnoredRows(args, startOrder)
 	for index, entry in ipairs(sorted) do
 		local order = startOrder + index * 0.01
 		local color = ns.GetClassColor(ClassOf(entry.guid)) or ns.GetColor("TEXT")
-		-- one row each, so the remove icon (the item lists' own) sits at the row's end, as on the Inventory Report
+		-- One row each, so the remove icon sits at the row's end, as on the Inventory Report.
 		args["ignored" .. index] = Kit.Row(order, nil, {
 			{
 				type = "description",
@@ -80,7 +75,7 @@ local function AddIgnoredRows(args, startOrder)
 				imageWidth = 16,
 				imageHeight = 16,
 				width = ns.OPTIONS_REMOVE_ICON_WIDTH,
-				-- Says so in chat, in the class color, as /gtg ignore says it added someone.
+				-- Says so in chat, as /gtg ignore does.
 				func = function()
 					local class = ClassOf(entry.guid)
 					ignored[entry.guid] = nil
@@ -100,7 +95,6 @@ function ns.BuildRankWatchIgnoredOptions()
 		args = {
 			description = Desc(L["RANK_WATCH_IGNORED_DESCRIPTION"], 1),
 			space0 = Spacer(2),
-			-- In the control column under a Your Target caption, as Rank Watch's other rows are captioned.
 			ignoreTarget = Kit.ButtonRow(3, nil, {
 				type = "execute",
 				name = L["RANK_WATCH_IGNORE_TARGET"],

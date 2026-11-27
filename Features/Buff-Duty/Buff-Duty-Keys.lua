@@ -2,45 +2,20 @@ local _, ns = ...
 local L = ns.L
 
 --[[
-    The Buff Key: a key binding that casts the next buff on Buff Duty's list,
-    one press at a time, the way Pally Power's auto-buff keys do. A
-    resurrection on your dead target, then on your group's dead, then your
-    target, Return the Favor, your self-buffs, and your group -- your
-    target's party first. A cast on someone else goes straight at them, as
-    a click on their window icon does, except Return the Favor, whose macro
-    targets the stranger. A press can also whisper your target an ask for a buff of
-    theirs you're missing (Buff-Duty-Asks.lua), in the same press as the
-    buff it casts on them. For each buff a party is missing, the key casts the group
-    version when it costs less mana than buffing everyone it would reach one
-    at a time, and the single one otherwise (AddParty, in
-    Buff-Duty-Key-Picker.lua, which makes the pick).
-
-    The key is a hidden SecureActionButtonTemplate button bound by
-    Bindings.xml ("CLICK <button>:LeftButton"), and a macro reaches the same
-    button with "/click GtGBuffKey" -- the way Pally Power's macros
-    click its buttons. The name is case-sensitive. A slash command of our own
-    can't do it: the game only lets its own secure code cast, and an add-on's
-    command never is. Casting from a key press is
-    protected, so the pick happens in PreClick: it reads the group fresh,
-    builds the same sections the window draws (ns.BuffDuty.BuildSections),
-    writes the first castable icon's attributes onto the button, and the
-    secure template casts it. PostClick clears them again. All of it needs
-    combat to be over -- a secure button's attributes are locked in combat
-    -- so a press mid-fight does nothing, except the buff a Bloodrage-first
-    press left on the button (OnKeyPostClick), which it then casts. So does a press while you're eating
-    or drinking, casting or channeling (Busy): it would start the meal over,
-    stand you up, or cut the cast short.
+    A hidden secure button, since an add-on's slash command can't cast.
+    PreClick picks and writes the attributes, the template casts, PostClick
+    clears them. Attributes are locked in combat, so a press mid-fight casts
+    only what a Bloodrage-first press left on the button.
 ]]
 
 local BuffDuty = ns.BuffDuty
 
--- The button's global name, which a macro's /click types.
+-- A macro's /click finds the button by this exact, case-sensitive name.
 local KEY_BUTTON = "GtGBuffKey"
 
--- The binding command, as Bindings.xml names it; the options panel binds keys to it.
+-- As Bindings.xml names it.
 ns.BUFF_KEY_COMMAND = "CLICK " .. KEY_BUTTON .. ":LeftButton"
 
--- The macro line, shown under the binding on the options panel.
 ns.BUFF_KEY_MACRO = "/click " .. KEY_BUTTON
 
 --[[
@@ -55,29 +30,18 @@ ns.BUFF_KEY_MACRO = "/click " .. KEY_BUTTON
 local OLD_KEY_BUTTON = "TFTBBuffIndividual"
 local OLD_KEY_COMMAND = "CLICK " .. OLD_KEY_BUTTON .. ":LeftButton"
 
--- The name the game's Key Bindings list shows (the add-on's header is set in Features/Key-Bindings.lua).
 _G["BINDING_NAME_" .. ns.BUFF_KEY_COMMAND] = L["BUFF_KEY"]
 
 --------------------------------------------------------------------------------
 -- State
 --------------------------------------------------------------------------------
 
---[[
-    How long a cast the key just made keeps it off that player and buff.
-    A buff only needs to bridge the moment before its aura shows up; a
-    resurrection waits out the minute its target has to accept it.
-]]
+-- Bridges the moment before the aura shows up.
 local BUFF_SKIP_SECONDS = 3
 local RESURRECTION_SKIP_SECONDS = 60
---[[
-    A Return the Favor icon targets the stranger by name, and simply fails
-    when they've moved off. The key moves past them for this long after a
-    press, so one stranger out of reach doesn't stall the list; a cast that
-    does go off is then held for BUFF_SKIP_SECONDS like any other
-    (ns.OnBuffKeyCastSucceeded).
-]]
+-- A favor's by-name cast simply fails once they've moved off, so the key moves past them and one stranger doesn't stall the list.
 local FAVOR_RETRY_SECONDS = 30
--- How long a press waits to hear its cast went off; a Resurrection takes 10 seconds.
+-- A Resurrection takes 10 seconds to cast.
 local PENDING_SECONDS = 15
 
 local recent = {} -- "<GUID or party>:<spell name>" -> GetTime() it stops being skipped
@@ -87,12 +51,7 @@ local pending -- { key, ids, seconds, expires }: the last press, until its cast 
 -- Skipping
 --------------------------------------------------------------------------------
 
---[[
-    What a press remembers a cast by: who it went on (a party, for a group
-    buff) and the spell's name. An item the key uses on you (a scroll, buff
-    food, a poison) by the item and the weapon slot it went on, so a scroll
-    read a moment ago isn't read again before its aura shows.
-]]
+-- An item goes by item and weapon slot, so a scroll read a moment ago isn't read again before its aura shows.
 local function SkipKey(spec)
 	local name = spec.spellName
 	if not name then
@@ -104,11 +63,7 @@ local function SkipKey(spec)
 	if spec.subgroup then
 		return "party" .. spec.subgroup .. ":" .. name
 	end
-	--[[
-	    Its own key: the favor's macro targets the stranger, and if the cast
-	    then fails (a press inside the global cooldown) the Target section's
-	    icon for them shouldn't wait out the favor's retry.
-	]]
+	-- Its own key, so a failed favor cast doesn't make the Target row's icon for them wait out the retry.
 	if spec.favorGUID then
 		return "favor:" .. spec.favorGUID .. ":" .. name
 	end
@@ -119,7 +74,6 @@ local function SkipKey(spec)
 	return nil
 end
 
--- Whether a press a moment ago already cast this, and the key waits on its aura; the picker asks it too.
 local function Skipped(spec, now)
 	local key = SkipKey(spec)
 	return key and recent[key] and recent[key] > now
@@ -164,12 +118,7 @@ local function Remember(spec)
 	}
 end
 
---[[
-    Called from Buff-Duty-Events.lua's UNIT_SPELLCAST_SUCCEEDED handler. The
-    cast is matched by spell ID against every rank the press could go off as:
-    a group buff's castIds list every group rank, and a resurrection's list
-    every rank of it, whichever one its rank text casts.
-]]
+-- Matched against every rank the press could go off as (castIds).
 function ns.OnBuffKeyCastSucceeded(unit, spellID)
 	if not pending or not ns.IsPlain(unit) or unit ~= "player" or not ns.IsPlain(spellID) then
 		return
@@ -190,18 +139,10 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    A key press reaches the button twice, down and up, while a macro's
-    /click sends a single up. The button sets useOnKeyDown to false (below),
-    so the secure template acts on the up half for both, whatever
-    ActionButtonUseKeyDown says -- otherwise a key-down player's /click
-    would cast nothing. Both halves write the attributes, so a client that
-    acted on the other half would still cast; only the up half remembers
-    the cast and shows a message.
-
-    A pick reads the whole group, so a press picks once: the up half reuses
-    the down half's pick, nothing having been cast in between, unless the key
-    was held longer than PRESS_REUSE_SECONDS. A /click's lone up picks for
-    itself.
+    A key press sends down and up; a macro's /click a lone up. useOnKeyDown
+    false makes the template act on the up half for both, or a key-down
+    player's /click casts nothing. Both halves write attributes; only the up
+    half remembers and notifies. The up half reuses the down half's pick.
 ]]
 local PRESS_REUSE_SECONDS = 1
 local downPick -- { at, spec, waitingOn, flagged, askSpec }: the down half's pick, until its up half
@@ -221,9 +162,8 @@ local function PickForPress(down)
 end
 
 --[[
-    Eating or drinking, casting, channeling, or the cursor waiting on a
-    target (a poison used from your bags, waiting on a weapon). A cast or
-    channel that can't be read counts as one, so a doubtful press stays quiet.
+    A press would restart a meal, stand you up or cut a cast. An unreadable
+    cast or channel counts, so a doubtful press stays quiet.
 ]]
 local function Busy()
 	if SpellIsTargeting() then
@@ -243,15 +183,11 @@ end
 local function OnKeyPreClick(self, _, down)
 	local acting = not down
 	if InCombatLockdown() then
-		--[[
-		    Silent, like a busy press below. The button is locked as it was left:
-		    empty, but for a Bloodrage-first press's buff (OnKeyPostClick).
-		]]
+		-- Silent; the locked button keeps only a Bloodrage-first press's buff.
 		downPick = nil
 		return
 	end
 	if Busy() then
-		-- Nothing on the button, so the template casts nothing, and no message.
 		downPick = nil
 		ns.SetBuffButtonAttributes(self, nil)
 		self.lastSpec = nil
@@ -263,10 +199,8 @@ local function OnKeyPreClick(self, _, down)
 	if not acting then
 		return
 	end
-	-- The ask's whisper goes out here, and the same press casts the buff picked alongside it.
 	local asked = askSpec and ns.AskTargetForBuffs(askSpec)
 	if spec then
-		-- A weapon buff's "replace your enchant?" is answered, as for a click on its icon.
 		if spec.confirmReplace then
 			ns.ExpectReplaceEnchant()
 		end
@@ -276,7 +210,6 @@ local function OnKeyPreClick(self, _, down)
 		-- The whisper was the press: nothing left to cast, and no notice over it.
 		return
 	elseif flagged then
-		-- Only a cast held back from a PvP-flagged player is left (BuffDuty.PvPFlaggedTarget).
 		ns:PrintMessage(L["BUFF_DUTY_PVP_FLAGGED"]:format(flagged))
 	elseif waitingOn then
 		ns.ShowUINotice(L["BUFF_KEY_WAITING"]:format(waitingOn))
@@ -296,9 +229,8 @@ local function OnKeyPostClick(self, _, down)
 	end
 	local spec = not down and self.lastSpec
 	--[[
-	    A Bloodrage-first press (rageFirst, Buff-Duty-Self.lua) leaves its
-	    buff's own cast on the button: Bloodrage can start combat, which locks
-	    the button, and the next press then casts the buff.
+	    A Bloodrage-first press leaves the buff's own cast on the button:
+	    Bloodrage can start combat and lock it, and the next press casts the buff.
 	]]
 	if spec and spec.rageFirst then
 		ns.SetBuffButtonAttributes(self, { spellName = spec.spellName, castSpell = spec.castSpell, unit = spec.unit })
@@ -308,7 +240,7 @@ local function OnKeyPostClick(self, _, down)
 end
 
 local keyButton = CreateFrame("Button", KEY_BUTTON, UIParent, "SecureActionButtonTemplate")
--- Both halves, as the window's own buttons do; see OnKeyPreClick.
+-- Both halves, or the button is dead for players who cast on key down.
 keyButton:RegisterForClicks("AnyUp", "AnyDown")
 keyButton:SetAttribute("useOnKeyDown", false)
 keyButton:SetScript("PreClick", OnKeyPreClick)
@@ -317,12 +249,7 @@ keyButton:Hide()
 -- MIGRATION (remove after 2026-12-03)
 _G[OLD_KEY_BUTTON] = keyButton
 
---[[
-    Run from Buff Duty's setup at login. A key still bound to this button's
-    command under its old name now presses this button. Once moved, nothing
-    is left to move. Bindings are locked in combat, so a /reload mid-fight
-    tries again next login.
-]]
+-- Bindings are locked in combat, so a /reload mid-fight tries again next login.
 function ns.MigrateBuffKeys()
 	if InCombatLockdown() then
 		return

@@ -10,17 +10,13 @@ local ShownText = ns.DiagnosticShownText
 -- The longest name a character or a hunter's pet can have, in letters.
 local NAME_MAX_LETTERS = 12
 
--- A rank as a whisper names it, unlinked: the client's spell name and rank text, in bytes.
+-- Unlinked, in bytes.
 local function RankBytes(row)
 	local name = C_Spell.GetSpellName(row.id) or tostring(row.id)
 	return #name + #ns.RankWatchRankText(row)
 end
 
---[[
-    The rank with the longest name in this locale among the ladders given, as the cast a whisper names, with its
-    ladder's top rank as the better one. Only a rank with one above it is ever reported, so a ladder's top rank is
-    never the cast.
-]]
+-- A ladder's top rank is never reported, so it is never the cast; it is the better one.
 local function LongestCast(byClass, owner)
 	local castRow, betterRow, longest
 	for class, list in pairs(byClass) do
@@ -38,14 +34,7 @@ local function LongestCast(byClass, owner)
 	return castRow, betterRow
 end
 
---[[
-    Every whisper Rank Watch sends, built through its own ns.BuildRankWatchWhisper with the player's saved text
-    (or the Send Messages In language's default), the rank whose name runs longest in this locale and a 12-letter
-    pet name, each with its byte length against the chat limit, OVER past it. The builder links the spell, names
-    it unlinked when the link won't fit, and sends the default text when neither does; the line says which spell
-    form it took. Then the opt-out offer and its answer. A whisper the player emptied sends nothing, and says so.
-    It builds strings only: nothing is sent.
-]]
+-- Built through the real builders with the longest rank name in this locale; nothing is sent.
 function ns:BuildRankWatchMessageLengthReport()
 	local lines = { GetClientHeader(), "" }
 	if not ns.BuildRankWatchWhisper then
@@ -87,10 +76,6 @@ function ns:BuildRankWatchMessageLengthReport()
 			lines[#lines + 1] = string.format("%s: no ability with two ranks on this client.", whisper.label)
 		end
 	end
-	--[[
-	    The opt-out offer and its answer, each built as Rank-Watch-Check.lua sends it, in the player's saved
-	    text or the language's default.
-	]]
 	for _, whisper in ipairs({
 		{ label = "Rank Watch opt-out offer", text = ns.BuildRankWatchOptOutWhisper() },
 		{

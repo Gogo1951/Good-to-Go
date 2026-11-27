@@ -14,12 +14,6 @@ local SpellDescription = ns.OptionsSpellDescription
 -- Active-State Predicates
 --------------------------------------------------------------------------------
 
---[[
-    Every setting here lives on the AceDB profile, which is the character's own
-    unless the player put it on another, and reads the settings table that
-    InitializeDatabase in Features/Core.lua guarantees.
-]]
-
 local GetSettings = ns.OptionsProfileSettings
 
 local function ConjuredFirstActive()
@@ -32,12 +26,12 @@ local function ReapplyActive()
 	return settings and settings.earlyReapply
 end
 
--- Cannibalize restores health only on Classic Era and TBC Anniversary, so drinking is offered where it restores mana.
+-- Cannibalize restores health only on Classic Era and TBC Anniversary.
 local function NoCannibalizeDrinking()
 	return not ns.CANNIBALIZE_RESTORES_MANA
 end
 
--- Rapid Regeneration exists only on WoW Forever, so the Troll section shows only there.
+-- Rapid Regeneration exists only on WoW Forever.
 local function NoRapidRegeneration()
 	return not ns.RAPID_REGENERATION_SPELL_ID
 end
@@ -62,31 +56,13 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Everything that decides what the Food and Water macros eat and drink, on a
-    page of its own under Consumable Macros:
-
-      Which Food Comes First -- conjured food and water first, Restock List
-        food and water last, and buff food with the rest or kept for last.
-      Refresh Food Buffs Under -- when Well Fed, a pet's food buff and scroll
-        buffs count as worn off, on every flavor.
-      Stealth and racial eating -- Rogue and Night Elf Stealth Eating,
-        Night Elf Stealth Drinking, Forsaken Cannibalize, Troll Rapid
-        Regeneration (in the Food and Bandage macros), each under its
-        class's or race's header.
-
-    Buff food for the buff and scrolls are Buff Duty's (its Self-Buffs page);
-    the Food macro only eats. Every section shows on every character; the
-    only gates are flavor ones. Opens with the off line while Consumable
-    Macros is off; the settings stay editable so they can be set up first.
-    Order values are spaced blocks so a row can be added without renumbering
-    its neighbors. Registered as this builder function, so AceConfig rebuilds
-    it on every open and NotifyChange.
+    Every section shows on every character; only the flavor gates one. Settings
+    stay editable while Consumable Macros is off, so they can be set up first.
 ]]
 function ns.BuildFoodDrinksOptions()
 	local args = {
 		descIntro = Desc(L["OPTIONS_FOOD_DRINKS_DESCRIPTION"], 1),
 
-		-- Which Food Comes First
 		spaceOrder0 = Spacer(10),
 		headerOrder = Header(L["OPTIONS_FOOD_ORDER_HEADER"], 11),
 		spaceOrder1 = Spacer(12),
@@ -103,7 +79,6 @@ function ns.BuildFoodDrinksOptions()
 				ns.ToggleMacroSetting("useConjuredFirst", value)
 			end,
 		}),
-		-- Its level filter on a row of its own under the switch, then the group checkboxes under that.
 		modeConjuredFirst = MacroOptions.ModeSubRow(
 			"conjuredFirst",
 			L["OPTIONS_CONJURED_FIRST_MODE_DESCRIPTION"],
@@ -125,7 +100,6 @@ function ns.BuildFoodDrinksOptions()
 			25
 		),
 		spaceReapply = Spacer(26),
-		-- Its dropdown keys are the threshold in seconds, stored directly in earlyReapplyThreshold.
 		toggleReapply = Kit.ToggleRow(27, {
 			type = "toggle",
 			name = L["OPTIONS_REAPPLY"],
@@ -154,11 +128,8 @@ function ns.BuildFoodDrinksOptions()
 		}),
 
 		--[[
-		    Rogues: Stealth Eating. Its Night Elf twin below writes the same
-		    setting, read as Stealth or Shadowmeld. Eating or drinking after
-		    you stealth breaks it, so Stealth Eating and Shadowmeld Drinking
-		    are a pair only one of which can be on: checking either unchecks
-		    the other, here and below.
+		    The Night Elf twin below writes the same setting. Eating or drinking after
+		    stealthing breaks it, so Stealth Eating and Shadowmeld Drinking exclude each other.
 		]]
 		spaceRogue0 = Spacer(30),
 		headerRogue = Header(L["OPTIONS_CLASS_HEADER_FORMAT"]:format(LOCALIZED_CLASS_NAMES_MALE.ROGUE), 31),
@@ -174,11 +145,7 @@ function ns.BuildFoodDrinksOptions()
 			"enableShadowmeldDrinking"
 		),
 
-		--[[
-		    Forsaken -- Cannibalize in the Food macro, and in the Water macro
-		    where it restores mana. Headed with the client's name for the race,
-		    which is Undead.
-		]]
+		-- The client names the race Undead, not Forsaken.
 		spaceForsaken0 = Spacer(40),
 		headerForsaken = Header(
 			L["OPTIONS_RACE_HEADER_FORMAT"]:format(C_CreatureInfo.GetRaceInfo(ns.UNDEAD_RACE_ID).raceName),
@@ -206,7 +173,7 @@ function ns.BuildFoodDrinksOptions()
 			NoCannibalizeDrinking
 		),
 
-		-- Night Elves: the section and its pick-one summary are added below, at 50.
+		-- The Night Elf header and pick-one summary are added below, at 50.
 		toggleShadowmeldDrinking = MacroOptions.Toggle(
 			"enableShadowmeldDrinking",
 			L["OPTIONS_STEALTH_DRINKING"],
@@ -225,7 +192,6 @@ function ns.BuildFoodDrinksOptions()
 			"enableShadowmeldDrinking"
 		),
 
-		-- Trolls -- Rapid Regeneration in the Food and Bandage macros, on WoW Forever only.
 		spaceTroll0 = Spacer(60, NoRapidRegeneration),
 		headerTroll = Header(
 			L["OPTIONS_RACE_HEADER_FORMAT"]:format(C_CreatureInfo.GetRaceInfo(ns.TROLL_RACE_ID).raceName),
@@ -264,7 +230,6 @@ function ns.BuildFoodDrinksOptions()
 		L["OPTIONS_STEALTH_PICK_ONE"]
 	)
 
-	-- Conjured first's group context checkboxes, under its level filter.
 	MacroOptions.UseWhenGroups(args, "conjuredFirst", ConjuredFirstActive, 21)
 
 	return MacroOptions.Page(L["OPTIONS_FOOD_WATER_HEADER"], args)

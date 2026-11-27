@@ -7,27 +7,15 @@ local GetClientHeader = ns.GetDiagnosticClientHeader
 --------------------------------------------------------------------------------
 
 --[[
-    The add-on sends no chat, so Message Length is the macros alone, against
-    ns.MACRO_BODY_MAX_LENGTH in bytes. First every macro as it stands in the
-    General tab now. Then each standard macro built through
-    ns.BuildStandardBody at its longest, nothing written: the longest item ID
-    this data folder holds in every /use line, every ranked and stacked line,
-    each shape its conjure clicks can take, and the stealth, Cannibalize and
-    out-of-combat food or water lines, all with this client's spell names, and
-    again with none of the item in bags, whose tip line can outgrow one /use
-    line. The
-    longest of three characters wins: a Mage or Warlock (conjures), a Rogue
-    (Stealth) and a Night Elf (Shadowmeld), the first two Forsaken
-    (Cannibalize), with a Night Elf Mage a fourth from Cataclysm on. The
-    builder trims its own body, so a length over the ceiling is one the trim
-    could not fit, and every line it shed is counted.
-    Feed Pet, Poisons and the Druid Macro Helper bodies come from builders that
-    read the character's own state, so they show only as written.
+    Each standard macro is built at its longest (longest item ID, every line,
+    each conjure shape, with and without the item) and the bags-empty tip can
+    outgrow a /use line. The builder trims its own body, so a length over the
+    ceiling is one the trim could not fit. Feed Pet, Poisons, Fishing Lure and
+    Druid Macro Helper bodies read live state, so they show only as written.
 ]]
 local ConjureCastName = ns.DiagnosticConjureCastName
 local SortedKeys = ns.DiagnosticSortedKeys
 
--- Each macro's conjure clicks: the right- and middle-click ladders and their not-yet-learned tips.
 local CONJURE_SHAPES = {
 	["Food"] = {
 		right = "MageCreateFood",
@@ -74,7 +62,6 @@ if ns.EXPANSION >= 4 then
 		{ label = "Night Elf Mage", conjure = true, stealth = "SHADOWMELD_SPELL_ID" }
 end
 
--- The item ID with the most digits among every item the data folder holds.
 local function LongestItemID()
 	local longest
 	local function Consider(id)
@@ -177,12 +164,7 @@ local function CountUseLines(body)
 	return count
 end
 
---[[
-    One macro's longest body for one character, as (body, shed): shed counts
-    the /use lines the trim dropped, plus one when it dropped Cannibalize.
-    Every conjure shape is built with the item in bags and with none, where
-    the out-of-combat food or water still is.
-]]
+-- shed counts the /use lines the trim dropped, plus one when it dropped Cannibalize.
 local function LongestBodyFor(definition, character, itemID)
 	local typeName = definition.typeName
 	local useIDs = ns.MULTI_USE_MACRO_TYPES[typeName] and Repeat(itemID, ns.MULTI_USE_MAX_ITEMS) or nil
@@ -307,6 +289,6 @@ function ns:BuildConnoisseurMessageLengthReport()
 
 	lines[#lines + 1] = ""
 	lines[#lines + 1] =
-		"Feed Pet, Poisons and Druid Macro Helper bodies read this character's state; see them as written above."
+		"Feed Pet, Poisons, Fishing Lure and Druid Macro Helper bodies read this character's state; see them as written above."
 	return table.concat(lines, "\n")
 end

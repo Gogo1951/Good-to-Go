@@ -1,26 +1,16 @@
 local _, ns = ...
 
---[[
-	The spellbook read: ns.ForEachClassSpell, every learned, castable spell the page builds its macros from
-	(Features/Enhanced-Spellbook/Macro-Builder/Macro-Builder.lua) and the ranks are read from (Features/Enhanced-Spellbook/Spell-Ranks.lua).
-]]
-
---[[
-	A spell's name as the page uses it: the spell's own, read by ID, since the book shows some spells under a
-	name /cast can't use, such as Call Pet as "Call" plus the current pet's name.
-]]
+-- By ID: the book shows some spells under a name /cast can't use (Call Pet as "Call" plus the pet's name).
 local function CastName(id, bookName)
 	return id and C_Spell.GetSpellName(id) or bookName
 end
 
 --[[
-	MoP Classic's book holds Call Pet as a flyout, and also holds the flyout's five spells as entries of their
-	own, Call Pet 5 among them in the spec tabs whether or not a pet is in that slot. /cast Call Pet works, so
-	the flyout is one macro under its book name and its five spells are left out. Era and TBC list Call Pet as
-	one spell, with no flyout, so they're unchanged.
+	MoP Classic's book holds Call Pet as a flyout plus its five spells as entries of their own, pet or not.
+	/cast Call Pet works, so the flyout is one macro under its book name and the five are left out.
 ]]
 
--- the Call Pet flyout's spell IDs, and the first one known (for the macro's icon and tooltip), or nil when the book has no such flyout
+-- the flyout's spell IDs and the first one known (for the icon and tooltip), or nil without the flyout
 local function CallPetFlyout()
 	local found
 	for line = 1, GetNumSpellTabs() do
@@ -51,8 +41,7 @@ end
 
 --[[
 	Classic Era shares its client with Season of Discovery, and its book can list SoD's rune abilities
-	(Metamorphosis : Demon Charge) though Era can't cast them. Their IDs are SoD's range, 300000 and up, the
-	same cut the Vanilla data tables make.
+	(Metamorphosis : Demon Charge) though Era can't cast them.
 ]]
 local HIDES_SOD_SPELLS = ns.FLAVOR == "Vanilla" and not ns.IS_DISCOVERY
 
@@ -61,10 +50,8 @@ local function IsOtherSeasonSpell(id)
 end
 
 --[[
-	The Retail engine's book keeps professions out of its skill lines: each learned profession (the two
-	primaries, Archaeology, Fishing, Cooking) holds its spells at its own offset in the player's book, read
-	through GetProfessions and GetProfessionInfo. They're read after the skill lines, as one more line named
-	Professions. GetProfessions returns nil for a slot with nothing learned, so its values are walked by count.
+	The Retail engine keeps professions out of the skill lines, so they're read after them as one more line.
+	GetProfessions returns nil for a slot with nothing learned, so its values are walked by count.
 ]]
 local function ForEachProfessionSlot(fn, ...)
 	if not GetProfessionInfo then
@@ -82,10 +69,8 @@ local function ForEachProfessionSlot(fn, ...)
 end
 
 --[[
-	Calls fn(name, icon, spellId, skillLineName, skillLineIndex, subName) for every learned, castable spell
-	in skill line order, General (Attack, Shoot, Throw, racials) included; subName is the book's text under the
-	name, such as "Rank 3", or nil. The Retail engine (Forever, Retail) reads the book through C_SpellBook; the
-	Classic engine (Classic Era, TBC, MoP Classic) through the spell tab globals. Resolved once at load.
+	fn(name, icon, spellId, skillLineName, skillLineIndex, subName) for every learned, castable spell, in skill
+	line order; subName is the book's "Rank 3" or nil.
 ]]
 if C_SpellBook.GetNumSpellBookSkillLines then
 	function ns.ForEachClassSpell(fn)

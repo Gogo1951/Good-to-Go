@@ -1,29 +1,19 @@
 local _, ns = ...
 
---[[
-	The ranged weapon attacks (Throw, Shoot Bow, Shoot Gun, Shoot Crossbow) folded into one Shoot macro that
-	casts the one for the weapon worn.
-]]
-
 local MacroBody = ns.MacroBody
 local SpellName = ns.SpellName
 
 local WEAPON_CLASS = 2 -- Enum.ItemClass.Weapon
 local RANGED_SLOT = 18
 
---[[
-	The name a [worn:] macro condition takes for a ranged attack's weapon (ns.RANGED_ATTACKS): the client's own
-	for its item subclass ("Bows"), which the condition matches in every locale, or nil when the client can't
-	name it.
-]]
+-- The client's own subclass name ("Bows"), which [worn:] matches in every locale; nil when it can't name it.
 function ns.RangedWornName(attack)
 	return (C_Item.GetItemSubClassInfo(WEAPON_CLASS, attack.subclass))
 end
 
 --[[
-	The Shoot macro's spell for the weapon in the ranged slot now, where the player knows it, else the macro's
-	own (the carrier, see FoldRangedAttacks): its icon, its tooltip and the spell #showtooltip names. The cast line
-	itself tries each by the weapon worn, so it never waits on this.
+	For the icon, tooltip and #showtooltip only: the cast line tries each attack by the weapon worn, so it never
+	waits on this.
 ]]
 local function EquippedRangedAttack(macro)
 	local link = GetInventoryItemLink("player", RANGED_SLOT)
@@ -39,11 +29,7 @@ end
 
 ns.EquippedRangedAttack = EquippedRangedAttack
 
---[[
-	Each ranged attack the player knows, in ns.RANGED_ATTACKS order, as { name, the [worn:] condition's weapon
-	name }. A weapon the client can't name is left out, rather than given an English condition that never
-	matches.
-]]
+-- A weapon the client can't name is left out, rather than given an English condition that never matches.
 function ns.KnownRangedAttacks()
 	local known = {}
 	for _, attack in ipairs(ns.RANGED_ATTACKS) do
@@ -73,13 +59,8 @@ function ns.WornRangedAttackID()
 end
 
 --[[
-	Folds the ranged weapon attacks (ns.RANGED_ATTACKS: Throw, Shoot Bow, Shoot Gun, Shoot Crossbow) into one
-	Shoot macro when more than one is learned: only the one for the weapon worn works, so the one macro tries
-	each by the weapon worn ("[worn:Bows] Shoot Bow", see CastBody in Features/Enhanced-Spellbook/Macro-Body.lua), and shows the
-	one equipped (ns.CastSpellName), redrawn when the gear changes. The first of them (in ns.RANGED_ATTACKS
-	order) that already has a WoW macro carries it, else the first of them learned, with its settings, copies
-	and WoW macro, so those stay put whatever is equipped or learned next; the others go off the page
-	(hidden), their WoW macros still kept up to date where the player placed them.
+	Only the attack for the weapon worn works, so one Shoot macro tries each by [worn:]. The carrier keeps its
+	settings, copies and WoW macro whatever is equipped or learned next; the others are hidden but still synced.
 ]]
 local function FoldRangedAttacks()
 	local own = {}

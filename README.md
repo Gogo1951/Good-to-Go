@@ -15,9 +15,11 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 
 > Sample Messages
 
-> **Ask Your Group, Party:** Katz and Aero are missing [Arcane Intellect] // GtG
+> **Ask Your Group, Party:** Could someone give Katz and Aero [Arcane Intellect], please? // GtG
 
-> **Whisper Who Can Cast It, Message To Portalrico:** 7 people are missing the [Arcane Intellect] buff // GtG
+> **Whisper Who Can Cast It, Message To Portalrico:** Could you give 7 people [Arcane Intellect], please? // GtG
+
+> **Ask Your Target, Message To Katz:** Hey Mate, any chance I could snag a [Power Word: Fortitude]? Pretty please? // GtG
 
 ### Restocker
 
@@ -52,6 +54,7 @@ Auto-updating macros for your best food, water, potions, and healthstones, a Res
 | `- Soulstone` | Best Soulstone |
 | `- Bandage` | Best bandage your First Aid skill allows |
 | `- Explosives` | Hardest-hitting bomb, grenade, or sapper your Engineering skill allows |
+| `- Fishing Lure` | Your lure and fishing food, plus your fishing gear if you like |
 | `- Feed Pet` | Call, feed, or revive your pet, or cast Mend Pet (Hunters only) |
 | `- Poisons` | Poisons for both weapons from one button (Rogues only) |
 
@@ -104,6 +107,7 @@ The menu shows the food your Food macro will eat, what your Restock List is stil
 
 * **Readiness Report** // When a ready check starts, get a private list of anything you still need to fix, like a missing buff, potion, or damaged gear. Silent when you're ready.
 * **Inventory Report** // Item tooltips show how many you have in your bags, your bank, and on your other characters on the same realm.
+* **Currency Replenish** // Pick a bank character, and one click at the mailbox tops up your alts' gold or sends the extra to the bank.
 * **Druids** // Add DruidMacroHelper, and your potion buttons work from any form.
 * **Forsaken, Night Elves and Trolls** // Forsaken can Cannibalize instead of eating, Night Elves can Shadowmeld before they eat or drink, and Trolls on WoW Forever can use Rapid Regeneration, even in combat.
 

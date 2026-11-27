@@ -1,11 +1,6 @@
 local _, ns = ...
 local L = ns.L
 
---[[
-	The Spell Book tab's page order (Features/Enhanced-Spellbook/Spellbook-Page.lua lays it out): the macros sorted
-	by school or by category, the filters applied, grouped into the categories the page draws under their headers.
-]]
-
 -- Whether one spell name sorts before another, ignoring case and accents where the client can compare UTF-8.
 local function NameBefore(a, b)
 	if strcmputf8i then
@@ -14,11 +9,7 @@ local function NameBefore(a, b)
 	return a < b
 end
 
---[[
-	Whether a macro passes the page's filters: its name holds the filter box's text (filter, folded once by
-	PageOrder, or nil for none), and it is in the school the filter dropdown picked under Sort By Category, or in
-	the category it picked under Sort By School.
-]]
+-- filter is folded once by PageOrder, or nil for none.
 local function PassesFilters(page, filter, macro)
 	if filter and not ns.FilterLower(macro.label or macro.name):find(filter, 1, true) then
 		return false
@@ -36,15 +27,9 @@ end
 local CONSUMABLES_RANK = 1000000
 
 --[[
-	The macros in page order as { macro, header, sub } entries. Sorted by school, that is ns.macros under its
-	spellbook tabs. Sorted by category, the spell macros go under their page category (ns.PageCategory), in
-	ns.PAGE_CATEGORIES' order and alphabetically within each, any macro without a page category after them
-	under its own section, then Consumable Macros (Consumable Macros' macros, see ns.ConsumablePageMacros), and the
-	Unlearned section last, those keeping ns.macros' order; a Duplicate or
-	rank copy still follows its spell. Within a page category, the spells needing a form (sub, from
-	ns.PageSubCategory) follow its own, a run for each form, the forms alphabetically, then the basic attacks. A macro the page hides (a
-	grouped spell a later one replaced, see ns.ShowsGroupedSpells) or that the page's filters leave out
-	(PassesFilters) is left out.
+	{ macro, header, sub } entries. By category: ns.PAGE_CATEGORIES order, then macros with no page category,
+	then Consumable Macros, then Unlearned. A Duplicate or rank copy follows its spell; within a category, each
+	form's run follows its own spells, then the basic attacks.
 ]]
 local function PageOrder(page)
 	local entries = {}
@@ -124,10 +109,7 @@ local function PageOrder(page)
 	return entries
 end
 
---[[
-	The page order as categories, each { name, macros, groups }: its macros in order, and its runs as groups of
-	{ sub, macros }, sub the form's name, or nil for the category's own spells.
-]]
+-- Each { name, macros, groups }; a group is { sub, macros }, sub nil for the category's own spells.
 local function Categories(entries)
 	local categories, category, group = {}, nil, nil
 	for _, entry in ipairs(entries) do
@@ -146,10 +128,9 @@ local function Categories(entries)
 	return categories
 end
 
--- The page's macros in page order, as categories (see PageOrder and Categories).
 function ns.SpellbookPageCategories(page)
 	return Categories(PageOrder(page))
 end
 
--- the What's Next? tab's row order (Features/Enhanced-Spellbook/Whats-Next/Whats-Next-Layout.lua) shares the name order
+-- shared with the What's Next? rows
 ns.SpellNameBefore = NameBefore

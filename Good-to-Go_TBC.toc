@@ -74,6 +74,7 @@ Data/TBC/Elixirs-TBC.lua
 Data/TBC/Questionable-Equipment-TBC.lua
 Data/TBC/Game-IDs-TBC.lua
 Data/TBC/Macro-Default-Items-TBC.lua
+Data/TBC/Fishing-TBC.lua
 Data/TBC/Conjure-Spells-TBC.lua
 Data/TBC/Well-Fed-Buffs-TBC.lua
 Data/TBC/Buff-Duty-Spells-TBC.lua
@@ -133,6 +134,7 @@ Features/Macros-for-Consumables/Macros/Tools-Forsaken.lua
 Features/Macros-for-Consumables/Macros/Tools-Troll.lua
 Features/Macros-for-Consumables/Macros/Bandage.lua
 Features/Macros-for-Consumables/Macros/Explosive.lua
+Features/Macros-for-Consumables/Macros/Fishing-Lure.lua
 Features/Macros-for-Consumables/Macros/Food.lua
 Features/Macros-for-Consumables/Macros/Health-Potion.lua
 Features/Macros-for-Consumables/Macros/Healthstone.lua
@@ -196,6 +198,12 @@ Features/Restocker/Restocker-Slash-Command.lua
 # Inventory Report
 Features/Inventory-Report/Inventory-Report-Recording.lua
 Features/Inventory-Report/Inventory-Report-Tooltip.lua
+Features/Currency-Replenish/Currency-Replenish-Math.lua
+Features/Currency-Replenish/Currency-Replenish-Records.lua
+Features/Currency-Replenish/Currency-Replenish-Mailer.lua
+Features/Currency-Replenish/Currency-Replenish-Tab.lua
+Features/Currency-Replenish/Currency-Replenish-Window-Menus.lua
+Features/Currency-Replenish/Currency-Replenish-Window.lua
 
 # Rank Watch
 Features/Rank-Watch/Rank-Watch-Core.lua
@@ -224,6 +232,9 @@ Features/Buff-Duty/Buff-Duty-Pets.lua
 Features/Buff-Duty/Buff-Duty-NPCs.lua
 Features/Buff-Duty/Buff-Duty-Weapons.lua
 Features/Buff-Duty/Buff-Duty-Elixirs.lua
+Features/Buff-Duty/Buff-Duty-Well-Fed.lua
+Features/Buff-Duty/Buff-Duty-Scrolls.lua
+Features/Buff-Duty/Buff-Duty-Rage.lua
 Features/Buff-Duty/Buff-Duty-Self.lua
 Features/Buff-Duty/Buff-Duty-Favors.lua
 Features/Buff-Duty/Buff-Duty-Asks.lua
@@ -315,6 +326,7 @@ Diagnostics/Diagnostics-Core.lua
 Diagnostics/Manifests.lua
 Diagnostics/Manifests-Macros-for-Consumables.lua
 Diagnostics/Manifests-Restocker.lua
+Diagnostics/Manifests-Currency-Replenish.lua
 Diagnostics/Manifests-Buff-Duty.lua
 Diagnostics/Manifests-Enhanced-Spellbook.lua
 Diagnostics/Manifests-Rank-Watch.lua
@@ -343,9 +355,11 @@ Options/Macros-for-Consumables/Options-Potions-Mana-Gems.lua
 Options/Macros-for-Consumables/Options-Bandages.lua
 Options/Macros-for-Consumables/Options-Healthstone.lua
 Options/Macros-for-Consumables/Options-Explosives.lua
+Options/Macros-for-Consumables/Options-Fishing-Lure.lua
 Options/Macros-for-Consumables/Options-Class-Macros.lua
 Options/Macros-for-Consumables/Options-Ignore-List.lua
 Options/Readiness-Report/Options-Readiness-Report.lua
+Options/Currency-Replenish/Options-Currency-Replenish.lua
 Options/Rank-Watch/Options-Rank-Watch.lua
 Options/Rank-Watch/Options-Rank-Watch-Tracked.lua
 Options/Rank-Watch/Options-Rank-Watch-Ignored.lua

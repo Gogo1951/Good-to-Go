@@ -9,9 +9,6 @@ local RANK_WATCH = Data.RANK_WATCH
 --------------------------------------------------------------------------------
 
 --[[
-    One cast, seen by a Rank-Watch-Detection file, judged here: was it a rank lower than the caster could have
-    cast, and if so, who hears about it.
-
     A cast is low when its ladder has a higher rank learned at or under its ceiling, the lowest of:
       - the caster's level, less the grace period: Grace Period at Max Level for an owner at the cap (0 by
         default), Grace Period While Leveling below it (4), so a rank the caster only just reached waits for
@@ -43,7 +40,7 @@ function ns.ResetRankWatchSession()
 	wipe(session.offered)
 end
 
--- Drops the whispers held back, so none goes out after Rank Watch is switched off and on again.
+-- So no held whisper goes out after Rank Watch is switched off and on again.
 function ns.ClearRankWatchQueue()
 	wipe(session.queue)
 end
@@ -60,10 +57,7 @@ end
 
 local RankLink = ns.RankWatchSpellText
 
---[[
-    A pet as its owner's messages name it: { name, isDemon }. A hunter pet by its own name ("your pet Fluffy"),
-    a demon by its kind ("your Imp"), since a warlock rarely knows their demon's name.
-]]
+-- A demon by its kind ("your Imp"), since a warlock rarely knows their demon's name.
 function ns.RankWatchPetInfo(ladder, petUnit)
 	local isDemon = ladder.class == "WARLOCK"
 	local name = isDemon and UnitCreatureFamily(petUnit) or UnitName(petUnit)
@@ -76,21 +70,16 @@ function ns.RankWatchPetInfo(ladder, petUnit)
 	return { name = name, isDemon = isDemon }
 end
 
--- The key for a message, its pet form when a pet cast: RANK_WATCH_PRINT_SELF, _PET or _DEMON.
 local function MessageKey(key, pet)
 	return pet and (key .. (pet.isDemon and "_DEMON" or "_PET")) or key
 end
 
--- The tip's form for a cast: nil for the caster's own, "pet" or "demon" for a pet's (ns:BuildRankWatchTipWhisper).
+-- nil for the caster's own, "pet" or "demon" for a pet's.
 function ns.RankWatchTipForm(pet)
 	return pet and (pet.isDemon and "demon" or "pet") or nil
 end
 
---[[
-    The whisper for a cast, in the player's own words for its form (or the chosen language's default), led by
-    the marker and never over the chat ceiling: ns:BuildRankWatchTipWhisper links the cast, then names it alone,
-    then falls back to the default text. Nil when the player emptied the form's text.
-]]
+-- Nil when the player emptied the form's text.
 function ns.BuildRankWatchWhisper(castRow, betterRow, pet)
 	local form = ns.RankWatchTipForm(pet)
 	return ns:BuildRankWatchTipWhisper(
@@ -130,14 +119,13 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    Whispers wait while the player is in combat or dead, and while their target is in combat, as the standalone
-    add-on's did; a whisper mid-pull is noise the reader can't act on. They go out through the add-on's shared
-    whisper queue, a beat apart from every other whisper, so a burst never trips the server's chat squelch.
-    A whisper also waits for the client's text for the rank it names (ns.RankWatchHasRankText), and is built
-    only then: the data's number can disagree with the reader's spellbook. After RANK_TEXT_TRIES seconds of
-    waiting, timed from the first check rather than the cast so combat doesn't use it up, it is dropped rather than sent with that number. Every held whisper is checked again when it would
-    go: one for a player since ignored, or held while Whisper went off or another copy took the lead, is
-    dropped.
+    Held in combat, while dead, or while the recipient fights: a whisper
+    mid-pull is noise the reader can't act on. Built only once the client's
+    rank text is in, since the data's number can disagree with the reader's
+    spellbook; after RANK_TEXT_TRIES (timed from the first check, so combat
+    doesn't use it up) it is dropped rather than sent with that number. Each
+    is checked again as it would go: ignored since, Whisper off, or another
+    copy leading drops it.
 ]]
 local RANK_TEXT_RETRY = 1
 local RANK_TEXT_TRIES = 10
@@ -145,22 +133,17 @@ local RANK_TEXT_TRIES = 10
 local retryArmed = false
 
 --[[
-    A player's second reminder in a session comes with the opt-out offer, as a whisper of its own right after it:
-    whisper "Opt Out" back and they go on Ignored Players. Never with the first, so a player told once isn't asked
-    to do anything about it, and once a session per player (session.offered).
-
-    Only a whisper of those words alone counts, in any case and with spaces around them trimmed, and only from
-    someone in your group now: the reminders only ever go to group members, so a stranger in Trade or General has
-    nothing to opt out of. The reply confirms it, so they know it took.
+    The offer follows a player's second reminder, never the first, so a
+    player told once isn't asked to do anything. Only a group member's
+    whisper counts: a stranger in Trade has nothing to opt out of.
 ]]
 local OPT_OUT_WORDS = "opt out"
 
--- The opt-out offer in the player's own words; nil when they emptied it.
+-- Nil when the player emptied it.
 function ns.BuildRankWatchOptOutWhisper()
 	return ns:BuildOptOutOfferWhisper(ns.GetMessageText("rankWatchOptOut"))
 end
 
--- Counts a reminder sent, and follows a player's second this session with the offer. An emptied offer sends nothing.
 local function AfterReminder(guid, target)
 	local count = (session.reminders[guid] or 0) + 1
 	session.reminders[guid] = count
@@ -174,7 +157,7 @@ local function AfterReminder(guid, target)
 	end
 end
 
--- Whether a whisper is the words alone: "Opt Out", "opt out", " OPT OUT ", never "opt out please".
+-- "Opt Out", "opt out", " OPT OUT ", never "opt out please".
 local function SaysOptOut(text)
 	return text:match("^%s*(.-)%s*$"):lower() == OPT_OUT_WORDS
 end
@@ -191,7 +174,7 @@ local function OnChatMsgWhisper(text, sender, ...)
 	if settings.ignoredPlayers[guid] or not ns.IsPlayerGUID(guid) or not SaysOptOut(text) then
 		return
 	end
-	-- In your group now: a party or raid unit, not someone you only have targeted, focused or under the mouse.
+	-- A party or raid unit, not someone only targeted, focused or under the mouse.
 	local unit = ns.GetUnitByGUID(guid)
 	if not unit or not (unit:find("^party") or unit:find("^raid")) then
 		return
@@ -287,7 +270,7 @@ ns.SetRankWatchHandler("PLAYER_UNGHOST", OnPlayerUnghost)
 -- The Check
 --------------------------------------------------------------------------------
 
--- The name a whisper reaches: the whole name on WoW Forever, Name-Realm across realms elsewhere.
+-- The whole name on WoW Forever, Name-Realm across realms elsewhere.
 local function WhisperName(unit, guid)
 	local name = GetUnitName(unit, true)
 	if ns.IsPlain(name) and name and name ~= "" then
@@ -312,7 +295,7 @@ local function Ceiling(guid, casterLevel, recipientLevel, grace)
 	return ceiling
 end
 
--- A unit's level, or nil when it can't be read; the detection files read recipients' levels through it too.
+-- Nil when it can't be read.
 function ns.RankWatchUnitLevel(unit)
 	if not unit or ns.IsUnitIdentitySecret(unit) then
 		return nil
@@ -325,11 +308,9 @@ function ns.RankWatchUnitLevel(unit)
 end
 
 --[[
-    cast = { guid, unit, spellID, recipientLevel, petUnit, petGUID }: the caster's GUID and a unit token holding
-    them now, the spell cast, and the level of the friendly player it landed on when that was someone else (nil
-    otherwise). A pet's cast names its owner as the caster, with the pet's own unit and GUID beside: the pet's
-    level is the ceiling, since a hunter pet can trail its hunter, and the owner is the one ignored, whose level
-    picks the grace period, and told.
+    cast = { guid, unit, spellID, recipientLevel, petUnit, petGUID }; recipientLevel only for a cast on
+    someone else. A pet's cast names its owner: the pet's level is the ceiling, since a hunter pet can trail
+    its hunter, while the owner picks the grace period, is ignored, and is told.
 ]]
 function ns.CheckRankWatchCast(cast)
 	local settings = ns.RankWatchSettings()

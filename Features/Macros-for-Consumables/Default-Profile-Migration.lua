@@ -20,67 +20,21 @@ local _, ns = ...
 ]]
 
 --[[
-    Every character has a profile of its own, named as AceDB names the
-    character (the maintainer's ruling): scrolls, buff food
-    and the rest of the Consumable Macros panel differ from one character to the next.
-    Three things a release saved have to be carried into that shape.
-
-    Characters on the shared Default profile. Releases before 2026-07-25 put
-    every character there, and AceDB remembers a character's profile for good,
-    so those characters never left it. Each of them gets its own profile now,
-    starting as a copy of Default, so nothing a character was using changes on
-    the day it moves. They all move in the first login, the logged-out ones
-    too: AceDB keeps every character's name in profileKeys, and a character's
-    profile is named exactly that. Default is deleted once nobody is left on
-    it. On Forever an older AceDB's first-name key ("Gogodruid - PvE") can
-    still point at Default, and stays (see Forever's Older Names), which keeps
-    Default for the namesake who takes its copy at its own login. A profile the player named, and every character on it, is left as it
-    is.
-
-    The list each character uses. The Restock Lists are shared by the account,
-    and each character picks the one it uses (global.restocker.listChoices).
-    Earlier builds of this add-on kept that choice on the profile
-    (profile.restockList), which moved every character on a shared profile
-    whenever one of them switched; releases through 2026.09.24.A kept it by
-    character in global.restocker.listsByCharacter. Every character
-    profileKeys names takes its choice from the profile it is on, then from
-    its listsByCharacter entry. A listsByCharacter entry nobody can be matched
-    to waits for its character to log in and claim it, and the table goes when
-    its last entry does.
-
-    A WoW Forever character's settings. An AceDB before minor 39 named one by
-    its first name and the realm's rule set ("Gogodruid - PvE"), and releases
-    through 2026.09.24.A kept its settings and Ignore List on the profile that
-    name points at. The character playing takes a copy onto its own profile.
-
-    Nothing here is for the builds between two releases that put every
-    character on Default on purpose: no player ever had one. Their characters
-    are on Default all the same, so the first of these moves them too.
-
-    Called from InitializeDatabase in Features/Core.lua before the
-    profile callbacks are wired, so the switch fires no handler halfway through
-    login, and after ns.RekeyCharactersByFullName, so this Forever character's
-    list choice is already under its whole name. Once it has run no character
-    is on Default but an older Forever name, no entry is left for this
-    character, every named character holds a list choice or had none to carry,
-    and this character's profile holds settings, so a second login changes
-    nothing.
-
-    A player who makes a profile called Default inside the window and puts a
-    character on it is moved off it again at the next login, onto a copy.
+    Every character gets its own profile, named as AceDB names it (the
+    maintainer's ruling: consumable choices differ per character). Characters
+    on Default move to a copy of it, logged-out ones too; list choices move
+    from profile.restockList and listsByCharacter into listChoices; a Forever
+    character takes its older-name profile's settings. Runs before the profile
+    callbacks are wired, so the switches fire no handler mid-login.
 ]]
 
 local DEFAULT_PROFILE = "Default"
 
---[[
-    Whether a profile holds anything the player set. ns.RetireSavedItemCache (Item-Cache.lua) clears the derived
-    item cache from every profile before this migration runs, so whatever is left is theirs.
-]]
+-- Any key counts: ns.RetireSavedItemCache has already cleared the derived item cache from every profile.
 local function HoldsSettings(profile)
 	return type(profile) == "table" and next(profile) ~= nil
 end
 
--- Everything the player set, the profile's Ignore List included.
 local function CopySettings(profile)
 	local copy = {}
 	for key, value in pairs(profile or {}) do
@@ -89,7 +43,6 @@ local function CopySettings(profile)
 	return copy
 end
 
--- A saved table under one key, made when there is none.
 local function SubTable(parent, key)
 	if type(parent[key]) ~= "table" then
 		parent[key] = {}
@@ -101,23 +54,12 @@ end
 -- Characters
 --------------------------------------------------------------------------------
 
---[[
-    This character's name in profileKeys. AceDB's own reading of it is wrong in
-    a session where the library loaded before the client had named the
-    character, so the client is asked again first.
-]]
+-- AceDB's own key is wrong when it loaded before the client named the character, so ask the client first.
 local function OwnProfileKey()
 	return ns.GetCharacterProfileName() or ns.db.keys.char
 end
 
---[[
-    The entry that belongs to a logged-out character in a table keyed the
-    add-on's way (ns.GetCharacterKey: the whole name, then "-Realm" with the
-    realm's spaces closed up), found from the character's name in profileKeys.
-    An Era or TBC character's key is built from its name and realm. A Forever
-    character's name is unique across the region and profileKeys holds no
-    realm for it, so its entry is the one that begins with the whole name.
-]]
+-- A Forever profile key holds no realm, but the whole name is unique across the region, so a prefix match is safe.
 local function FindCharacterEntry(keyed, profileKey)
 	local name, realm = ns.SplitCharacterProfileName(profileKey)
 	if not name then
@@ -138,11 +80,8 @@ local function FindCharacterEntry(keyed, profileKey)
 end
 
 --[[
-    Entries in profileKeys that name no character: the one AceDB writes when
-    the client has not named the character yet ("Unknown", or "Unknown -
-    Realm"). Nobody logs in as it, and one left pointing at Default would stop
-    Default being deleted below. On Forever a first name and rule set names a
-    character to an older AceDB, and stays (see below).
+    AceDB's "Unknown" placeholder keys: left pointing at Default they would stop
+    Default being deleted. Older Forever "First - RuleSet" keys stay.
 ]]
 local function DropUnnamedCharacters(profileKeys, ownProfileKey)
 	for profileKey in pairs(profileKeys) do
@@ -164,24 +103,15 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    An AceDB before minor 39 named a WoW Forever character by its first name
-    and the realm's rule set ("Gogodruid - PvE"). The vendored copy still reads
-    the rule set that way (ns.db.keys.realm), so this character's older name is
-    rebuilt exactly, and the profile it points at holds the settings and Ignore
-    List the character used through 2026.09.24.A. The character's own profile
-    takes a copy while it holds no settings. Nothing has read that profile yet,
-    or its defaults would count as settings, so AceDB reads the copy.
-
-    The older name and its profile both stay: characters sharing a first name
-    on one rule set shared the name, and each takes its copy at its own login.
-    No logged-out character is carried, because its whole name reaches
-    profileKeys only at its own login. The login's prune of other clients'
-    characters (Features/Core.lua) runs first and would read the name's
-    " - " as a realm client's, so it passes these names over by rule set.
+    An AceDB before minor 39 keyed a Forever character "First - RuleSet";
+    ns.db.keys.realm still reads the rule set, so the key rebuilds exactly. The
+    older name and profile stay: namesakes on one rule set shared it, and each
+    takes its copy at its own login. Nothing has read the own profile yet, so
+    defaults don't count as settings.
 ]]
 local function CarryOlderForeverSettings(profiles, profileKeys, ownProfileKey)
 	local firstName = UnitName("player")
-	-- Era and TBC characters have the one name, which AceDB has always written the same way.
+	-- Era and TBC have one name, which AceDB has always keyed the same way.
 	if not firstName or ns.GetPlayerFullName() == firstName then
 		return
 	end
@@ -200,7 +130,7 @@ end
 local function MoveCharactersOffDefault(profiles, profileKeys, ownProfileKey)
 	local default = profiles[DEFAULT_PROFILE]
 
-	-- Collected before anything moves, because a table cannot take new keys while it is being walked.
+	-- Collected first: a table cannot take new keys while it is being walked.
 	local moving = {}
 	for profileKey, profileName in pairs(profileKeys) do
 		if profileName == DEFAULT_PROFILE and ns.SplitCharacterProfileName(profileKey) then
@@ -209,7 +139,6 @@ local function MoveCharactersOffDefault(profiles, profileKeys, ownProfileKey)
 	end
 
 	for _, profileKey in ipairs(moving) do
-		-- A profile already saved under the character's name keeps what it holds.
 		if not HoldsSettings(profiles[profileKey]) then
 			profiles[profileKey] = CopySettings(default)
 		end
@@ -221,10 +150,8 @@ local function MoveCharactersOffDefault(profiles, profileKeys, ownProfileKey)
 	end
 
 	--[[
-	    Default goes once nobody is on it, when this emptied it or it held
-	    nothing a player set. One the player emptied by hand, with settings
-	    still in it, is theirs to keep. Read again, because the switch above
-	    makes AceDB build a Default that was not in the file.
+	    A Default the player emptied by hand, settings still in it, is theirs to
+	    keep. Read again: the switch above makes AceDB build a Default.
 	]]
 	default = profiles[DEFAULT_PROFILE]
 	if type(default) ~= "table" or not (#moving > 0 or not HoldsSettings(default)) then
@@ -243,17 +170,9 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    A character that already holds a choice keeps it; the rest take the
-    profile's, the newer of the two places, before any listsByCharacter entry.
-    Characters sharing a profile each take its list, so nobody's list changes
-    on the day it moves, and from then on switching one leaves the others
-    where they are.
-
-    The character playing is read through ns.db.profile, because in a session
-    where AceDB could not name it, its own name reaches profileKeys only at
-    logout (Features/Core.lua). Keys that name no character -- the client's
-    placeholder, or an older Forever first name -- are passed over; the
-    profiles' own restockList goes afterwards (RetireProfileRestockLists).
+    The profile's choice is newer than listsByCharacter, so it goes first. The
+    character playing is read through ns.db.profile: when AceDB could not name
+    it, its key reaches profileKeys only at logout.
 ]]
 local function CarryListChoices(profiles, profileKeys, ownProfileKey)
 	local restocker = ns.db.global.restocker
@@ -302,16 +221,15 @@ local function CarryListChoices(profiles, profileKeys, ownProfileKey)
 end
 
 --[[
-    A profile's restockList, once carried, is a retired key, and Profiles → Copy From would copy it on for good,
-    so it goes once every character on the profile holds its list choice. It stays where a key that names no
-    character still points (an older Forever first name, which hands its copy, choice included, to a namesake
-    not yet logged in), and where it's the profile's only key, which would otherwise read as holding no settings
-    and take the older Forever profile's copy again at the next login.
+    Left in place, Profiles → Copy From would carry restockList on for good.
+    It stays where an older Forever key still points (a namesake's copy not yet
+    taken), and where it's the only key, which would otherwise read as no
+    settings and take the older Forever copy again next login.
 ]]
 local function RetireProfileRestockLists(profiles, profileKeys, ownProfileKey)
 	local listChoices = ns.db.global.restocker.listChoices or {}
 	local keep, retire = {}, {}
-	-- the character playing may reach profileKeys only at logout (see CarryListChoices)
+	-- The character playing may reach profileKeys only at logout.
 	local current = ns.db:GetCurrentProfile()
 	if listChoices[ownProfileKey] ~= nil then
 		retire[current] = true

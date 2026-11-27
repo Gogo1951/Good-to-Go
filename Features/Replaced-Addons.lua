@@ -1,26 +1,16 @@
 local _, ns = ...
 local L = ns.L
 
---[[
-    Turning off the add-ons Good to Go replaces (ns.REPLACED_ADDONS) when one
-    is running at login, and the reload offered afterward. Features/Core.lua
-    calls ns.TurnOffReplacedAddons at login and ns.OfferReplacedReload once the
-    player is in the world.
-]]
-
 --------------------------------------------------------------------------------
 -- Replaced Add-ons
 --------------------------------------------------------------------------------
 
 --[[
-    An add-on Good to Go replaces (ns.REPLACED_ADDONS) that runs alongside it
-    rewrites the same macros, each undoing the other. So whenever one is
-    running at login, it is turned off for every character and the player is
-    offered a reload, since the old copy runs on until then. This outlives the
-    settings import (Features/Legacy-Migration.lua): a player can install Good
-    to Go, or turn the old add-on back on, long after the import is gone.
+    A replaced add-on running alongside rewrites the same macros, so one
+    loaded at login is turned off and a reload offered. Not a migration: a
+    player can turn the old add-on back on long after the import is gone.
 ]]
--- Titles of the old add-ons turned off this session.
+
 local turnedOff = {}
 -- The legacy import adds the rest it turns off (Features/Legacy-Migration.lua).
 ns.turnedOffAddOnTitles = turnedOff

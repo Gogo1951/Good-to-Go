@@ -7,13 +7,9 @@ local _, ns = ...
 local frame = CreateFrame("Frame")
 
 --[[
-    Two-flag throttle. isUpdatePending means "a rescan/rebuild is wanted but
-    hasn't been applied yet"; isTickScheduled means "the OnUpdate throttle is
-    currently armed." Keeping them separate is what makes the throttle
-    self-healing: RequestUpdate re-arms whenever the tick is disarmed, so a
-    pending update can never get stranded with no OnUpdate attached — even if a
-    combat-exit (PLAYER_REGEN_ENABLED) clear is ever missed, the next
-    out-of-combat request re-arms the tick instead of being swallowed.
+    Two flags, not one: RequestUpdate re-arms whenever the tick is disarmed, so
+    a pending update can never be stranded with no OnUpdate attached, even if a
+    combat-exit replay is missed.
 ]]
 local isUpdatePending = false
 local isTickScheduled = false
@@ -26,15 +22,11 @@ local UPDATE_THROTTLE = 0.5
 
 local sessionConstantsInitialized = false
 
---[[
-    Login-time setup, once Features/Core.lua has opened the database. Session
-    constants are set up once.
-]]
 local function InitializeConsumableMacros()
 	if not sessionConstantsInitialized then
 		sessionConstantsInitialized = true
 		ns.InitializeCharacterConstants()
-		-- Only a conjure, Cannibalize or Rapid Regeneration can change a macro (ns.SpellCastChangesMacros), so only those characters listen.
+		-- Only a conjure, Cannibalize or Rapid Regeneration cast can change a macro.
 		if ns.isMage or ns.isWarlock or ns.isForsaken or (ns.isTroll and ns.rapidRegenerationSpellName) then
 			ns.SetEventRegistered("UNIT_SPELLCAST_SUCCEEDED", true, "player")
 		end
@@ -46,40 +38,19 @@ local function InitializeConsumableMacros()
 	end
 end
 
---[[
-    Switching, copying, or resetting a profile swaps the consumable settings,
-    so the macro bodies and aura tracking must rebuild. Which macros exist, and
-    whether their names show, does NOT change: enabledMacros and showMacroNames
-    are account-wide, like the macros themselves. Features/Core.lua calls this
-    and then redraws every open panel.
-]]
+-- Bodies only: which macros exist (enabledMacros) is account-wide, like the macros themselves.
 function ns.ApplyConsumableMacrosProfile()
 	ns.ResetMacroState()
 	ns.UpdateAuraTracking()
 	ns.RequestUpdate()
 end
 
---[[
-    Per-arrival state: refreshed at login AND on every later loading screen,
-    because the cached level and zone move as the player levels and travels.
-
-    Kept apart from InitializeConsumableMacros, which runs at PLAYER_LOGIN only.
-    Nothing here touches the database.
-
-    Order matters on the login path: this runs AFTER InitializeConsumableMacros, because
-    ns.InitializeCharacterConstants is what resolves ns.isHunter for the registration
-    below.
-]]
+-- Must run after InitializeConsumableMacros, which resolves ns.isHunter.
 local function RefreshArrivalState()
 	ns.cachedPlayerLevel = UnitLevel("player") or 1
 	ns.cachedMapID = C_Map.GetBestMapForUnit("player")
 
-	--[[
-	    QUEST_LOG_UPDATE fires very frequently, and the only consumer of quest
-	    data is Hunter pet-food quest-objective skipping (ScanPetFood via
-	    BuildActiveQuestSet). Register it only for hunters so everyone else
-	    doesn't pay for a quest-log walk on every firing. Idempotent, so registration follows ns.isHunter on every arrival.
-	]]
+	-- Busy event; only hunter pet-food quest skipping reads it.
 	ns.SetEventRegistered("QUEST_LOG_UPDATE", ns.isHunter)
 end
 
@@ -89,11 +60,7 @@ end
 
 local function OnUpdateHandler(_, elapsed)
 	if InCombatLockdown() then
-		--[[
-		    Macros can't be written in combat. Disarm the tick but leave the
-		    work pending (isUpdatePending stays true); PLAYER_REGEN_ENABLED, or
-		    any later out-of-combat request, re-arms it.
-		]]
+		-- The work stays pending; PLAYER_REGEN_ENABLED re-arms the tick.
 		frame:SetScript("OnUpdate", nil)
 		isTickScheduled = false
 		return
@@ -111,22 +78,14 @@ end
 function ns.RequestUpdate()
 	isUpdatePending = true
 
-	--[[
-	    In combat, leave the work pending without arming the tick — macro
-	    writes are blocked until combat drops, and PLAYER_REGEN_ENABLED
-	    re-requests then.
-	]]
 	if InCombatLockdown() then
 		return
 	end
 
 	--[[
-	    Out of combat, ensure the throttled tick is armed. Gating on
-	    isTickScheduled (not isUpdatePending) means a request always re-arms a
-	    disarmed tick, so a stranded isUpdatePending can never swallow updates
-	    until a /reload. updateTimer is reset only when arming a fresh tick, so
-	    the throttle still fires ~UPDATE_THROTTLE after the first request in a
-	    burst rather than debouncing to the last.
+	    Gate on isTickScheduled, not isUpdatePending, or a stranded pending flag
+	    swallows every update until a /reload. The timer resets only on a fresh
+	    arm, so a burst fires after its first request, not its last.
 	]]
 	if not isTickScheduled then
 		isTickScheduled = true
@@ -135,7 +94,7 @@ function ns.RequestUpdate()
 	end
 end
 
--- Leaves the work pending without arming the tick, for a deferral something else is sure to replay.
+-- For a deferral something else is sure to replay.
 function ns.MarkUpdatePending()
 	isUpdatePending = true
 end
@@ -145,33 +104,18 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The consumable macros' dispatcher. Features/Core.lua hands it every event
-    it subscribed to below, after Core's own handling: by PLAYER_LOGIN the
-    database exists.
+    Events above the combat guard touch nothing protected and must not wait
+    for combat to end; RequestUpdate still defers the macro write itself.
 ]]
 local function OnEvent(event, ...)
-	--[[
-	    Handled ahead of the lockdown guard below, and nothing here touches a
-	    protected function, so the feature starts even when the player enters
-	    the world already in combat (e.g. zoning into an in-progress
-	    battleground) -- a case the guard would otherwise swallow, leaving it
-	    uninitialized until combat dropped.
-	]]
+	-- A login straight into combat (a battleground in progress) must still initialize.
 	if event == "PLAYER_LOGIN" then
 		InitializeConsumableMacros()
 		RefreshArrivalState()
 		return
 	end
 
-	--[[
-	    UI_ERROR_MESSAGE is also handled ahead of the lockdown guard: both
-	    of its consumers must work mid-combat and neither touches protected
-	    functions. The wrong-zone report mostly fires when a zone-locked
-	    potion is pressed mid-fight — exactly when the guard below would
-	    swallow it — and the dead-pet branch only flips a flag plus
-	    RequestUpdate, whose OnUpdate handler already defers macro writes
-	    until combat drops.
-	]]
+	-- The wrong-zone error mostly fires when a zone-locked potion is pressed mid-fight.
 	if event == "UI_ERROR_MESSAGE" then
 		local _, message = ...
 
@@ -181,30 +125,16 @@ local function OnEvent(event, ...)
 		return
 	end
 
-	--[[
-	    UNIT_PET is handled ahead of the guard as well: a pet revived or called
-	    mid-fight must clear the dead-pet flag then, not when combat ends, and the
-	    handler only flips that flag and calls RequestUpdate, which defers the
-	    rebuild itself.
-	]]
+	-- A pet revived mid-fight must clear the dead-pet flag then.
 	if event == "UNIT_PET" then
 		ns.OnUnitPet(...)
 		return
 	end
 
 	--[[
-	    Leveling changes which items, scrolls, and spells qualify, so a
-	    level-up forces a full rebuild of every macro. Refresh the cached level
-	    and hunter spell names here, above the combat lockdown guard, because a
-	    ding from a killing blow fires PLAYER_LEVEL_UP in combat, and the
-	    event's own level / C_Spell.GetSpellName are safe combat reads. Wiping the
-	    macro state forces every macro to rewrite; the write itself still
-	    defers to the post-combat tick via the throttled update.
-
-	    The level comes off the event rather than from UnitLevel("player"),
-	    which still reads the OLD level while this event is being handled --
-	    caching that would rebuild every macro one level behind and leave it
-	    there until some later event happened to rebuild them again.
+	    A killing-blow ding fires in combat. The level comes off the event:
+	    UnitLevel("player") still reads the old level here, which would leave
+	    every macro built one level behind.
 	]]
 	if event == "PLAYER_LEVEL_UP" then
 		local newLevel = ...
@@ -217,27 +147,16 @@ local function OnEvent(event, ...)
 		return
 	end
 
-	--[[
-	    PLAYER_LOGOUT runs ahead of the lockdown guard too: a /reload issued
-	    mid-combat still fires it, and the guard below would swallow the prune
-	    and leave stale entries on the Ignore List. Pruning only reads and
-	    rewrites SavedVariables, so it touches nothing protected.
-	]]
+	-- A /reload mid-combat still fires it, and the prune must still run.
 	if event == "PLAYER_LOGOUT" then
 		ns.OnIgnoreListPlayerLogout()
 		return
 	end
 
 	--[[
-	    Target and group changes are recorded ahead of the lockdown guard too.
-	    Behind it, a change made mid-fight would leave the remembered signature at
-	    its pre-fight reading, so changing back after combat would read as no
-	    change and leave the macros built for the fight. Both only read unit
-	    state, the target only while C_Secrets allows it (Forever can hide it
-	    mid-fight; PLAYER_REGEN_ENABLED then takes the reading it put off), and
-	    ns.RequestUpdate leaves the rebuild pending until combat drops.
-	    Request only on a real change; see Target and Group Tracking in
-	    Features/Macros-for-Consumables/Macros/Signatures.lua.
+	    Behind the guard, a mid-fight change would leave the signature at its
+	    pre-fight reading, and changing back after combat would read as no
+	    change, leaving the macros built for the fight.
 	]]
 	if event == "PLAYER_TARGET_CHANGED" then
 		if ns.TargetSignatureChanged() then
@@ -253,12 +172,7 @@ local function OnEvent(event, ...)
 		return
 	end
 
-	--[[
-	    A cast is sorted ahead of the lockdown guard as well, which would
-	    otherwise take every cast in a fight as a reason to rebuild. Only the
-	    casts ns.SpellCastChangesMacros names change what the macros hold, and
-	    ns.RequestUpdate leaves that rebuild pending until combat drops.
-	]]
+	-- Behind the guard, every cast in a fight would mark a rebuild pending.
 	if event == "UNIT_SPELLCAST_SENT" then
 		local _, _, _, spellID = ...
 		ns.OnHunterSpellcastSent(spellID)
@@ -270,11 +184,7 @@ local function OnEvent(event, ...)
 		if ns.isHunter then
 			ns.OnHunterSpellcastSucceeded(spellID)
 		end
-		--[[
-		    A secret spellID (Forever, while casts are restricted) errors as a
-		    table key, so it can't be told apart; the macros rebuild once combat
-		    drops in case it was one that changes them.
-		]]
+		-- A secret spellID (Forever) errors as a table key, so rebuild in case it mattered.
 		if ns.IsSecretValue(spellID) then
 			ns.RequestUpdate()
 			return
@@ -285,13 +195,7 @@ local function OnEvent(event, ...)
 		return
 	end
 
-	--[[
-	    Skill ranks are handled ahead of the guard: a bandage in a fight raises
-	    First Aid there. In combat the read is only put off, since the macros
-	    can't change until it ends and PLAYER_REGEN_ENABLED reads the skills
-	    again; this event fires on every weapon skill-up too, and only a
-	    profession rank the macros read changes one.
-	]]
+	-- A bandage mid-fight raises First Aid; in combat the read is put off to PLAYER_REGEN_ENABLED.
 	if event == "SKILL_LINES_CHANGED" then
 		if InCombatLockdown() then
 			ns.DeferProfessionSkillsRead()
@@ -301,7 +205,7 @@ local function OnEvent(event, ...)
 		return
 	end
 
-	-- Hiding macro names only sets font-string alpha, which combat allows, so a mid-fight login still applies it.
+	-- Font-string alpha is allowed in combat, so a mid-fight login still hides macro names.
 	if event == "PLAYER_ENTERING_WORLD" then
 		ns.ApplyMacroNameVisibility()
 	end
@@ -342,13 +246,6 @@ local function OnEvent(event, ...)
 		ns.cachedMapID = C_Map.GetBestMapForUnit("player")
 		ns.RequestUpdate()
 	elseif event == "SPELLS_CHANGED" then
-		--[[
-		    Hunter spell-name cache refreshes here so a level-up training
-		    visit (e.g. Mend Pet at 12) starts participating in the macro
-		    immediately. Mages/warlocks don't have a name cache, but their
-		    macro bodies still depend on KnowsAny / GetSmartSpell results,
-		    so we trigger a generic rebuild for everyone.
-		]]
 		if ns.isHunter then
 			ns.ResolveHunterSpells()
 		end
@@ -357,25 +254,24 @@ local function OnEvent(event, ...)
 		RefreshArrivalState()
 		ns.UpdateAuraTracking()
 		ns.RequestUpdate()
-		-- again shortly after: catches item info and auras that arrive late after a loading screen
+		-- Item info and auras can arrive late after a loading screen.
 		C_Timer.After(3, function()
 			ns.RequestUpdate()
 		end)
 	elseif event == "UNIT_AURA" then
 		ns.OnUnitAura(...)
+	elseif event == "PLAYER_EQUIPMENT_CHANGED" or event == "UNIT_INVENTORY_CHANGED" then
+		-- Subscribed only while the Fishing Lure macro is on (Macros/Fishing-Lure.lua).
+		if ns.FishingGearChanged() then
+			ns.RequestUpdate()
+		end
 	end
 end
 
 local MODULE = "ConsumableMacros"
 ns.RegisterEventModule(MODULE, OnEvent)
 
---[[
-    An item's info arriving (Features/Item-Info.lua hands every answer here
-    while any feature waits on one, not only the bag scan). Only a
-    consumable's answer can change a macro:
-    ns.CacheItemData, which covers the consumable tables alone, is the one macro
-    input that reads item info. Any other answer rebuilds nothing.
-]]
+-- Every feature's item-info answer arrives here; only a consumable's can change a macro.
 function ns.OnConsumableItemInfoReceived(itemID)
 	if ns.HasRawData(itemID) then
 		ns.RequestUpdate()
@@ -386,16 +282,7 @@ end
 -- Events
 --------------------------------------------------------------------------------
 
---[[
-    Every event the consumable macros handle. The plain ones subscribe at
-    load; UNIT_PET for the player alone; UNIT_SPELLCAST_SUCCEEDED for the
-    player alone, and only for mages, warlocks, Forsaken, Trolls with Rapid
-    Regeneration and hunters (at login), and UNIT_SPELLCAST_SENT for hunters
-    alone; the
-    on-demand ones only while needed (UNIT_AURA via ns.UpdateAuraTracking,
-    QUEST_LOG_UPDATE for hunters in RefreshArrivalState), each through
-    ns.SetEventRegistered. Item info arrives through Features/Item-Info.lua.
-]]
+-- DEFERRED_EVENTS subscribe only while needed, each from its own feature file.
 local EVENTS = {
 	"BAG_UPDATE_DELAYED",
 	"ITEM_PUSH",
@@ -417,6 +304,8 @@ local EVENTS = {
 	"UNIT_SPELLCAST_SUCCEEDED",
 	"UNIT_AURA",
 	"QUEST_LOG_UPDATE",
+	"PLAYER_EQUIPMENT_CHANGED",
+	"UNIT_INVENTORY_CHANGED",
 }
 
 local DEFERRED_EVENTS = {
@@ -425,13 +314,11 @@ local DEFERRED_EVENTS = {
 	UNIT_SPELLCAST_SUCCEEDED = true,
 	UNIT_AURA = true,
 	QUEST_LOG_UPDATE = true,
+	PLAYER_EQUIPMENT_CHANGED = true,
+	UNIT_INVENTORY_CHANGED = true,
 }
 
---[[
-    How a feature file subscribes to or releases one of its on-demand events,
-    through Core's dispatcher. Unit arguments after `enabled` make the
-    subscription unit-filtered.
-]]
+-- Unit arguments after `enabled` make the subscription unit-filtered.
 function ns.SetEventRegistered(event, enabled, ...)
 	ns.SetModuleEvent(MODULE, event, enabled, ...)
 end

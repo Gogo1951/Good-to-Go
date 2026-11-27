@@ -7,18 +7,9 @@ local Kit = ns.OptionsKit
 --------------------------------------------------------------------------------
 
 --[[
-    "Reported Ranks", under Rank Watch: every ability it watches, class by class down the tree on the left
-    (alphabetical), and under each ability a checkbox for each of its ranks. Unticking a rank
-    means a cast of that rank is never reported, so a player who lowers a spell on purpose can say so. The ranks
-    the data marks off (Rank 1 Scorch and the like) start unticked; see ns.IsRankWatchRankTracked.
-
-    Every ability the class has is listed, one-rank spells and talents too; those Rank Sentinel never watched
-    (heals, Shadowform, utility) start with every rank unticked. A ladder's top rank is listed grayed: nothing is
-    higher, so it is never reported, but it shows how many ranks the ability has. Spells joined by ns.SPELL_GROUPS
-    share one box, the Enhanced Spellbook's own groups, and their ranks carry the spell's name too.
-
-    Not hidden behind the Rank Watch switch, like the Group Buffs panel under Buff Duty: these are choices worth
-    making before turning it on, and the page opens with a line saying so while it's off (ns.AddFeatureOffLine). Registered as a function, so names the client loads later fill in on reopen.
+    Every ability the class has is listed, one-rank spells and talents too, so a player can see each one;
+    those Rank Sentinel never watched start unticked. Not hidden behind the Rank Watch switch: these are
+    choices worth making before turning it on. A builder, so names the client loads later fill in on reopen.
 ]]
 
 local function SpellName(spellID)
@@ -29,7 +20,6 @@ local function SpellName(spellID)
 	return name or L["TRACKED_SPELL_PENDING"]:format(spellID)
 end
 
--- The ability's box title: its icon, then each distinct spell name on the ladder, joined.
 local function LadderTitle(ladder)
 	local names, seen = {}, {}
 	for _, row in ipairs(ladder.rows) do
@@ -47,7 +37,7 @@ local function LadderTitle(ladder)
 	return title
 end
 
--- "Rank 3 (Level 20)", with the spell's name first in a joined group, where ranks of two spells sit side by side.
+-- "Rank 3 (Level 20)", with the spell's name first in a joined group.
 local GetSpellLevelLearned = C_Spell.GetSpellLevelLearned
 
 local function RankLabel(ladder, row)
@@ -69,9 +59,8 @@ local function SetLadder(ladder, tracked)
 end
 
 --[[
-    The top rank's row is grayed, since nothing above it can be reported, and checked while any rank below it is:
-    it reads as the ability being watched. A one-rank ability, or one whose ranks all start off (heals, talents,
-    everything Rank Sentinel never watched), shows it unchecked.
+    The top rank can never be reported, so its grayed box reads as the ability being watched: checked while
+    any rank below it is.
 ]]
 local function LadderWatched(ladder)
 	for i = 1, #ladder.rows - 1 do
@@ -82,7 +71,7 @@ local function LadderWatched(ladder)
 	return false
 end
 
--- Whether any rank below a page's tops reads as `tracked`: true means Check All (or Uncheck All) has something to change.
+-- True means Check All (or Uncheck All) has something to change.
 local function AnyRankIs(sorted, tracked)
 	for _, entry in ipairs(sorted) do
 		local rows = entry.ladder.rows
@@ -122,14 +111,7 @@ local function AbilityGroup(ladder, order)
 	return { type = "group", name = LadderTitle(ladder), inline = true, order = order, args = args }
 end
 
---[[
-    One page of the tree: Check All and Uncheck All, then one box per ability, alphabetical. A class's page, and
-    right after Hunter and Warlock a Hunter Pets or Warlock Pets page for their pets' and demons', the owner's to
-    fix and so listed beside the owner's class, where the flavor's pets have ranks at all. Check All on either page
-    sets that page's abilities only, asks first with the page's plain name (plainName) filled in, and grays out
-    while every box it would tick is ticked already; Uncheck All likewise.
-]]
--- The title as read, for sorting: no icon, no color codes, case folded.
+-- No icon, no color codes, case folded.
 local function SortKey(title)
 	return (title:gsub("|T.-|t", ""):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""):gsub("^%s+", ""):lower())
 end
@@ -146,7 +128,7 @@ local function AbilityPage(name, plainName, list, order)
 		end
 		return a.ladder.id < b.ladder.id
 	end)
-	-- Check All in the pane's label column and Uncheck All in its control column, one row, not two lone buttons.
+	-- One row, not two lone buttons.
 	local args = {
 		buttons = Kit.Row(1, nil, {
 			{
@@ -193,7 +175,7 @@ local function AbilityPage(name, plainName, list, order)
 	return { type = "group", name = name, order = order, args = args }
 end
 
--- "Hunter Pets", plain for the Check All question, and in the class color for the tree, like the class's own entry above it.
+-- Plain for the Check All question; class-colored for the tree.
 local function PlainPetsName(class)
 	return L["RANK_WATCH_PETS"]:format(LOCALIZED_CLASS_NAMES_MALE[class] or class)
 end

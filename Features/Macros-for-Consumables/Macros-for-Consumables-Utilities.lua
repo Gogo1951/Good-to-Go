@@ -1,22 +1,13 @@
 local _, ns = ...
 
---[[
-    The consumable macros' own helpers, used by several of their files: game
-    names their strings mention, and the small game-state predicates the macros
-    test.
-]]
-
 --------------------------------------------------------------------------------
 -- Game Names
 --------------------------------------------------------------------------------
-
--- The client's names for game records our strings mention, read by ID (Style Guide → GAME NAMES).
 
 function ns.GetWellFedName()
 	return C_Spell.GetSpellName(ns.WELL_FED_SPELL_ID) or ""
 end
 
--- The First Aid skill line's name, as the skill list shows it.
 function ns.GetFirstAidName()
 	return C_TradeSkillUI.GetTradeSkillDisplayName(ns.FIRST_AID_SKILL_LINE_ID) or ""
 end
@@ -25,30 +16,16 @@ end
 -- Game-State Predicates
 --------------------------------------------------------------------------------
 
---[[
-    The level cap on this client, which the Leveling and Max Level filters
-    compare against: the smaller of the expansion's cap and the player's own,
-    the rule Blizzard's GameRulesUtil.GetEffectiveMaxLevelForPlayer applies on
-    all three clients, which ship both readers. Consumable Macros Context prints
-    what each answers.
-]]
+-- Blizzard's own rule (GameRulesUtil.GetEffectiveMaxLevelForPlayer): the smaller of the two caps.
 function ns.GetMaxPlayerLevel()
 	return math.min(GetMaxLevelForPlayerExpansion(), GetMaxPlayerLevel())
 end
 
 --[[
-    The When to Use test behind Pet Food Buffs and Use Conjured Food & Water
-    First, named by its settings' prefix (petBuffFood, conjuredFirst): the
-    profile's <prefix>In checkboxes, one per group context
-    (ns.IsGroupContextOn), then its <prefix>Level filter. Every group read
-    here must stay inside the group signature (ns.GroupSignatureChanged), or
-    a join, leave or battleground never rescans. The level filter needs no
-    signature: PLAYER_LEVEL_UP already refreshes ns.cachedPlayerLevel and
-    rebuilds every macro, and leveling means below the client's own max level
-    (ns.GetMaxPlayerLevel), never a hard-coded one. An unknown level counts as
-    any.
+    Every group read here must stay inside ns.GroupSignatureChanged, or a join,
+    leave or battleground never rescans. Keys are built once per prefix: this
+    runs on every pet aura change and bag scan.
 ]]
--- Each prefix's two setting keys, built once: this runs on every pet aura change and bag scan.
 local useWhenKeys = {}
 
 function ns.IsUseWhenActive(settings, prefix)
@@ -83,9 +60,7 @@ function ns.KnowsAny(spellList)
 	return false
 end
 
--- The racial cooldown Cannibalize (Tools-Forsaken.lua) and Rapid Regeneration (Tools-Troll.lua) share.
-
--- When each spell's pending rebuild timer fires, so a second read of the same cooldown never stacks another.
+-- Keyed by spell so a second read of the same cooldown never stacks another timer.
 local rebuildAt = {}
 
 local function RebuildWhenReady(spellID, readyAt)
@@ -101,13 +76,7 @@ local function RebuildWhenReady(spellID, readyAt)
 	end)
 end
 
---[[
-    True when a racial a macro casts in place of eating, drinking or
-    bandaging (Cannibalize, Rapid Regeneration) is off cooldown. While it is on one, a
-    rebuild is timed for the moment it comes off, which is when the body
-    should gain the cast again. A hidden reading, asked of C_Secrets before
-    the read, counts as on cooldown: the usual body is always safe.
-]]
+-- A hidden cooldown counts as on cooldown: the body without the racial is always safe.
 function ns.RacialSpellReady(spellID)
 	if ns.IsSpellCooldownSecret(spellID) then
 		return false
@@ -117,7 +86,7 @@ function ns.RacialSpellReady(spellID)
 		return true
 	end
 	local startTime, duration = cooldown.startTime, cooldown.duration
-	-- A global-cooldown reading counts as on cooldown, which only times the line for when the GCD ends: ready within one GCD is close enough.
+	-- A GCD reading counts as on cooldown and times the rebuild for its end.
 	if not duration or duration <= 0 then
 		return true
 	end

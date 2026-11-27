@@ -10,32 +10,15 @@ local OfferedSections = ns.StarterOfferedSections
 --------------------------------------------------------------------------------
 
 --[[
-    The window that opens after login when a level-6+ character has nothing on
-    their Restock List, and from the Restock List's Pick Staples button,
-    offering the staples -- foods, water, class reagents, ammo -- as one-tick
-    suggestions, a few of them pre-ticked for the class. The categories are
-    rows in Restocker-Starter-Categories.lua (ns.STARTER_LIST_CATEGORIES); the trigger, the
-    defaults and what every tick does live in Restocker-Starter-List.lua. This
-    file draws them, and clears the Restock List's New flags when it closes.
-    Which sections and stack counts it offers is Restocker-Starter-Sections.lua.
-
-    It wears the Restock List's frame (Restocker-Window-Frame.lua): the bag
-    portrait and the title (the title bar's X closes it), the staples in the
-    inset straight under it, with no controls row, and in the footer a Done
-    button and, on the login route, the way back to the list. There is no don't-show-again: the window only adds what is
-    ticked, and a player who wants none of it turns the Restocker off.
-    Nothing here is protected.
+    No don't-show-again: the window adds only what is ticked, and a player who
+    wants none of it turns the Restocker off.
 ]]
 
 local BANDS = ns.RESTOCK_WINDOW_BANDS
 
 --[[
-    The width holds two staples side by side with the scroll bar showing. The
-    height is drawn in to what this character is offered, up to the cap: the
-    sections are decided by class and level the moment the window opens, and
-    how tall the intro comes out depends on the locale's wording. Only a build
-    taller than the cap keeps it and scrolls -- a level-60 rogue's, with
-    poisons, ammo and reagents under the food.
+    Two staples side by side with the scroll bar showing. The height fits what
+    is offered, which class, level and the locale's intro decide, up to the cap.
 ]]
 local WINDOW_WIDTH = 688
 local WINDOW_MAX_HEIGHT = 640
@@ -50,33 +33,25 @@ local HEADER_GAP = 8 -- a section's name to its first row
 local ROW_HEIGHT = 32
 local COLUMN_GAP = 32
 
--- One staple's cell, left to right: the box, the item's icon, its name, and the stacks dropdown at the cell's end.
 local CHECKBOX_SIZE = 16
 local ICON_SIZE = 20
 local ICON_GAP = 4
 local NAME_GAP = 8
 local DROPDOWN_WIDTH = 128
 local DROPDOWN_GAP = 8
--- The window's height is drawn in to a whole number of these.
+-- The height snaps to whole steps.
 local HEIGHT_STEP = 16
 
--- The key the window's cold items wait under (ns.WarmItemCache).
 local WARM_KEY = "StaplesWindow"
 
 local window
 local openedFromLogin = false
 
--- Stands in for text built from an item the client has not resolved yet, until the window repaints.
 local function LoadingText(itemID)
 	return GetColor("MUTED") .. string.format(L["LOADING_ITEM"], itemID) .. "|r"
 end
 
---[[
-    Every item an offered staple needs that the client has not resolved yet --
-    the one a tick adds, for its stack size, and the one the row is named for
-    -- handed to ns.WarmItemCache once as the window opens. It repaints as the
-    answers land, once a frame however many land in it, rather than once per item.
-]]
+-- Repaints once a frame however many item answers land in it, not once per item.
 local layoutPending = false
 
 local function LayoutNextFrame()
@@ -144,13 +119,8 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    A plain button that names the current choice and opens the stack sizes on
-    the kit's own menu plate (ns.RestockMenu, the Restock List's kit
-    dropdown), never the game's WowStyle1DropdownTemplate or its context
-    menu: the maintainer has chosen the kit's menu for every menu the add-on
-    opens. The picked size is light yellow with a check, the rest white. Live
-    either way round: picked first, it decides what a later tick adds; changed
-    after, it rewrites the listed entry's amount on the spot.
+    On the kit's menu, never WowStyle1DropdownTemplate or the game's context
+    menu: the maintainer's choice for every menu the add-on opens.
 ]]
 local function StacksEntries(category)
 	local entries = {}
@@ -158,7 +128,7 @@ local function StacksEntries(category)
 		local selected = ns.GetStarterCategoryStacks(category) == stacks
 		entries[#entries + 1] = ns.RestockChoiceRow(StackLabel(category, stacks), nil, selected, function()
 			ns.SetStarterCategoryStacks(category, stacks)
-			-- picking a count can tick the box opposite (see ns.SetStarterCategoryStacks)
+			-- Picking a count can tick the box opposite.
 			if window and window:IsShown() then
 				window:Layout()
 			end
@@ -178,7 +148,7 @@ local function CreateStacksDropdown(parent)
 		GameTooltip:Hide()
 		ns.RestockMenu:Open(self, StacksEntries(self.category), nil, nil, "click")
 	end)
-	-- hooked, so the template's own hover highlight survives
+	-- Hooked, so the template's hover highlight survives.
 	dropdown:HookScript("OnEnter", function(self)
 		local category = self.category
 		local text
@@ -206,16 +176,7 @@ end
 -- Rows
 --------------------------------------------------------------------------------
 
---[[
-    One staple: the checkbox, the item's icon, its name, and the stacks
-    dropdown at the cell's right end. Ticking adds the item --
-    Restocker-Starter-List.lua picks the tier for the character's level -- and
-    unticking removes it, whichever tier the list is holding by then. The icon
-    shows which item a food row, named for its kind, is today; it comes off the
-    client's own item table, so it never waits on the server as a name can.
-    Hovering the name or the icon names the exact item and count a tick adds
-    right now. A fixed-amount staple (a totem) has no dropdown.
-]]
+-- The icon shows which item a kind-named row (Bread) is today, and never waits on the server.
 local function CreateStapleCell(content)
 	local cell = CreateFrame("Frame", nil, content)
 	cell:SetHeight(ROW_HEIGHT)
@@ -241,11 +202,7 @@ local function CreateStapleCell(content)
 	dropdown:SetPoint("RIGHT", cell, "RIGHT", 0, 0)
 	cell.dropdown = dropdown
 
-	--[[
-	    The name takes the room between the icon and the dropdown, truncating
-	    rather than running under it. A button only so it can be hovered and
-	    clicked: a click on the name ticks the box, as a checkbox label does.
-	]]
+	-- A button only so a click on the name ticks the box, as a checkbox label does.
 	local label = CreateFrame("Button", nil, cell)
 	label:SetPoint("LEFT", icon, "LEFT", 0, 0)
 	label:SetHeight(ROW_HEIGHT)
@@ -258,7 +215,6 @@ local function CreateStapleCell(content)
 	label:SetScript("OnClick", function()
 		checkbox:Click()
 	end)
-	-- the item's name as the gold title, and what a tick adds in white under it
 	label:SetScript("OnEnter", function(self)
 		local category = cell.category
 		local title, body = ns.DescribeStarterCategory(category)
@@ -302,7 +258,7 @@ local function FillStapleCell(cell, category, width)
 	end
 end
 
--- A section's name in gold, set off by space rather than a line.
+-- Set off by space rather than a line.
 local function CreateSectionHeader(content)
 	local header = CreateFrame("Frame", nil, content)
 	header:SetHeight(HEADER_HEIGHT)
@@ -324,11 +280,8 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The intro: a paragraph saying why the window opened and what a check does.
-    The opening sentence answers to how the window was reached, because both
-    routes are real: the login trigger only fires over an empty list, and
-    writes the class's pre-ticked staples onto it just before the window
-    opens, while Pick Staples opens it over whatever the player already has.
+    By route: login fires only over an empty list and pre-ticks it, while Pick
+    Staples opens over whatever the list already has.
 ]]
 local function IntroText()
 	local introKey = "STARTER_POPUP_INTRO_STOCKED"
@@ -340,11 +293,7 @@ local function IntroText()
 	return GetColor("BODY") .. L[introKey] .. " " .. L["STARTER_POPUP_INTRO_HOW"] .. "|r"
 end
 
---[[
-    Lays the whole body out from the top, then draws the window in to it, up to
-    the cap. Run on every open, on every tick (a tick can change which item a
-    row names), and as item names arrive.
-]]
+-- Also run on every tick, since a tick can change which item a row names.
 local function Layout(frame)
 	local content = frame.content
 	frame.headers.Release()
@@ -368,7 +317,7 @@ local function Layout(frame)
 
 	Paragraph(IntroText())
 
-	-- A section exists only with staples in it, so none means nothing to offer yet: say so, rather than an empty box.
+	-- No sections means nothing to offer yet: said, rather than an empty box.
 	local sections = OfferedSections()
 	if #sections == 0 then
 		y = y + SECTION_GAP - PARAGRAPH_GAP
@@ -413,11 +362,8 @@ end
 --------------------------------------------------------------------------------
 
 --[[
-    The footer. On every route, a Done button at its right end closes the
-    window as its X does, so a player who has picked knows how to finish. On
-    the login route only, Done then opens the Restock List, and a hint fills
-    the room to its left: the command is how they get the list back once it is
-    closed. From the Pick Staples button they already found their own way to it.
+    On the login route only, Done opens the Restock List and the hint names the
+    command to get it back; from Pick Staples the player already knows the way.
 ]]
 local FOOTER_GAP = 16 -- between the hint's end and the Done button
 
@@ -443,10 +389,6 @@ local function CreateFooter(frame)
 	frame.footerHint = hint
 end
 
---[[
-    Where the window stands: the spot it was last dragged to, saved account-wide
-    as the Restock List's is, or the middle of the screen until then.
-]]
 local function PlaceWindow(frame)
 	local position = ns.restockSettings.staplesPosition
 	frame:ClearAllPoints()
@@ -469,7 +411,6 @@ function ns.HasSavedStaplesPosition()
 	return position ~= nil and position.point ~= nil
 end
 
--- Reset Position (Options-Restocker.lua): forgets the spot and moves an open window back to the middle.
 function ns.ResetStaplesPosition()
 	ns.restockSettings.staplesPosition = {}
 	if window then
@@ -519,13 +460,9 @@ local function CreateWindow()
 	frame.Layout = Layout
 
 	--[[
-	    Closing this window retires its "New" flags: the group is a note about
-	    items just added here, and once the window is gone the note is stale --
-	    the same rule as the Restock List's own OnHide, and as true with that
-	    window still open behind this one, where the repaint below files the new
-	    rows under their own types. It also hands Escape back to the list, a
-	    frame later: Escape hides this window from inside CloseSpecialWindows,
-	    which is still walking UISpecialFrames and would close the list too.
+	    Escape goes back to the list a frame later: this hide runs inside
+	    CloseSpecialWindows, still walking UISpecialFrames, which would close the
+	    list too.
 	]]
 	frame:SetScript("OnHide", function()
 		openedFromLogin = false
@@ -541,7 +478,6 @@ local function CreateWindow()
 	return frame
 end
 
--- fromLogin: true only from the login trigger.
 function ns.ShowStarterListPopup(fromLogin)
 	window = window or CreateWindow()
 	openedFromLogin = fromLogin == true
@@ -553,7 +489,7 @@ function ns.ShowStarterListPopup(fromLogin)
 				)
 			or ""
 	)
-	-- Measured again here: a font not yet loaded when the button was made measures as nothing.
+	-- A font not loaded when the button was made measures as nothing.
 	ns.FitRestockerHeaderButton(window.doneButton)
 	-- A removed row's Undo would sit behind this window, so it goes now.
 	ns.ForgetRestockRemoval()

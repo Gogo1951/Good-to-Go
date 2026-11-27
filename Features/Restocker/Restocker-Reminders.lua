@@ -2,15 +2,9 @@ local _, ns = ...
 local L = ns.L
 
 --[[
-    What the reminders report, split out of the shortfall list
-    (ns.BuildRestockShortfallList, every short row, Buy on or off): out is every row the bags hold none of, low every row they hold some of but
-    less than the threshold's share of its amount (restockLowThreshold, one of
-    ns.RESTOCK_LOW_THRESHOLDS). A row at or above the line is in neither, so it
-    is never mentioned -- topping off is the merchant restock's job, not a nag.
-
-    Whole numbers only: under 80% of 20 is have * 100 < 20 * 80, so 15 is low
-    and 16 is not, with no rounding to argue about. Both lists keep the
-    shortfall list's order, by name.
+    A row at or above the threshold is in neither list: topping off is the
+    merchant's job, not a nag. Whole-number math (15 of 20 is under 80%, 16 is
+    not), so there is no rounding.
 ]]
 function ns.SplitRestockShortfall(groceries, threshold)
 	threshold = threshold or 80
@@ -25,19 +19,15 @@ function ns.SplitRestockShortfall(groceries, threshold)
 	return out, low
 end
 
--- The split for the reminders, at the account's threshold.
 function ns.BuildRestockReminderLists()
 	local settings = ns.restockSettings
 	return ns.SplitRestockShortfall(ns.BuildRestockShortfallList(), settings and settings.restockLowThreshold)
 end
 
 --[[
-    The counts sentence every reminder's headline is built on: "You're out of 4
-    items, and low on 3." Out leads, because an empty slot is the one that bites
-    first. The merchant and bank reminders print the "still" form on its own,
-    since you have just shopped; the in-town reminder puts the plain form after
-    RESTOCKER_TOWN_REMINDER. Only the out count carries a noun when both are
-    present, so there are two of those strings, not four.
+    "You're out of 4 items, and low on 3." Out leads, as an empty slot bites
+    first. Only the out count carries a noun when both are present, so there are
+    two "both" strings, not four.
 ]]
 local COUNT_KEYS = {
 	[false] = {
@@ -72,22 +62,16 @@ function ns.RestockReminderCounts(outCount, lowCount, still)
 	return lowCount == 1 and L[keys.lowOne] or string.format(L[keys.lowMany], lowCount)
 end
 
--- The in-town reminder's headline: the nudge, then the counts.
 function ns.RestockTownHeadline(outCount, lowCount)
 	return string.format(L["RESTOCKER_TOWN_REMINDER"], ns.RestockReminderCounts(outCount, lowCount, false))
 end
 
--- The merchant and bank reminders' headline, printed as you leave.
+-- The merchant and bank reminders print the "still" form, since you have just shopped.
 function ns.RestockClosingHeadline(outCount, lowCount)
 	return ns.RestockReminderCounts(outCount, lowCount, true)
 end
 
---[[
-    A reminder's print bodies: the headline, then in verbose mode a line per
-    item it counted, out first and then low -- the same rows the headline
-    counts, so the two never disagree. The options panel's Examples draw
-    through it too.
-]]
+-- Verbose lists the same rows the headline counts, so the two never disagree.
 function ns.BuildRestockShortfallLines(headline, mode, out, low)
 	local lines = { headline }
 	if mode == ns.REMINDER_VERBOSE then
@@ -105,7 +89,6 @@ function ns.BuildRestockShortfallLines(headline, mode, out, low)
 	return lines
 end
 
--- Print a reminder. Callers pass the lists they already split, so nothing is counted twice.
 function ns.PrintRestockShortfall(headline, mode, out, low)
 	for _, line in ipairs(ns.BuildRestockShortfallLines(headline, mode, out, low)) do
 		ns:PrintMessage(line)
@@ -113,12 +96,9 @@ function ns.PrintRestockShortfall(headline, mode, out, low)
 end
 
 --[[
-    The Restock window's status line (Restocker-Window-Footer.lua): how many
-    rows are short, Buy on or off, and how many of those a merchant would be
-    asked for ("Short on 3 items, 2 to buy."), or, with none to buy, that the
-    rest come from the bank. The counts are of rows, not of missing units.
-    Every short row counts here, whatever the reminders' threshold: the window
-    is the full picture, the reminders the nudge.
+    The window's status line counts rows, not units, and every short row
+    whatever the reminders' threshold: the window is the full picture, the
+    reminders the nudge.
 ]]
 function ns.RestockShortfallHeadline(short, buy)
 	if buy == 0 then

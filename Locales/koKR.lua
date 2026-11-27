@@ -36,6 +36,7 @@ L["OPTIONS_LEVEL_UP_THANKS"] = "Good to Go를 선택해 주셔서 감사합니�
 L["MACRO_BANDAGE"] = "- 붕대"
 L["MACRO_EXPLOSIVES"] = "- 폭발물"
 L["MACRO_FEED_PET"] = "- 먹이 주기"
+L["MACRO_FISHING_LURE"] = "- 낚시 미끼"
 L["MACRO_FOOD"] = "- 음식"
 L["MACRO_HEALTH_POTION"] = "- 치유 물약"
 L["MACRO_HEALTHSTONE"] = "- 생명석"
@@ -273,7 +274,7 @@ L["MENU_RESTOCKER_OPEN_OFF_DESCRIPTION"] = "보충 목록을 엽니다. 사용�
 -- Buff Duty's block in the menu while its close button has hidden it: the word on its right, and the note under it.
 L["MENU_BUFF_DUTY_PAUSED"] = "일시 중지"
 L["MENU_BUFF_DUTY_PAUSED_NOTE"] =
-	"파티에 참여하거나, 다시 접속하거나, UI를 다시 불러올 때까지 숨겨집니다."
+	"파티에 참여하거나, 다시 접속하거나, UI를 다시 불러올 때까지 잠시 쉽니다."
 
 --------------------------------------------------------------------------------
 -- Class Notes
@@ -303,6 +304,7 @@ L["NOTE_MACRO_HEALTHSTONE"] = "생명석 매크로"
 L["NOTE_MACRO_SOULSTONE"] = "영혼석 매크로"
 L["NOTE_MACRO_POISONS"] = "독 매크로"
 L["NOTE_MACRO_EXPLOSIVES"] = "폭발물 매크로"
+L["NOTE_MACRO_FISHING_LURE"] = "낚시 미끼 매크로"
 
 -- Hunter. NOTE_PET_MEND_CLICK is the click that casts Mend Pet: a Right-Click, or any click during combat.
 L["NOTE_PET_CALL_FEED_REVIVE"] = "부르기, 먹이 주기 또는 되살리기"
@@ -742,6 +744,38 @@ L["EXPLOSIVES_MODE_ATPLAYER"] = "좌클릭 @player"
 L["EXPLOSIVES_MODE_TOSS"] = "좌클릭 던지기"
 
 --[[
+    Fishing Lure (Options-Fishing-Lure.lua): TAB_FISHING_LURE is its label in the settings tree and the end of
+    its title.
+]]
+L["TAB_FISHING_LURE"] = "낚시 미끼"
+L["OPTIONS_FISHING_LURE_DESCRIPTION"] = "미끼와 음식이 없으면 사용합니다."
+-- The page's three section headers.
+L["OPTIONS_FISHING_HEADER_GEAR"] = "장비"
+L["OPTIONS_FISHING_HEADER_FOOD"] = "음식"
+L["OPTIONS_FISHING_HEADER_LURES"] = "미끼"
+L["OPTIONS_FISHING_EQUIP_POLE"] = "낚싯대 착용"
+L["OPTIONS_FISHING_EQUIP_POLE_DESCRIPTION"] =
+	"낚시 숙련도로 쓸 수 있는 가방 속 가장 좋은 낚싯대가 손에 든 것보다 나으면 착용합니다."
+L["OPTIONS_FISHING_EQUIP_PANTS"] = "바지 착용"
+L["OPTIONS_FISHING_EQUIP_PANTS_DESCRIPTION"] =
+	"가방에 있는 사용 가능한 낚시 바지 중 가장 좋은 것을 착용합니다. 지금 입은 바지보다 좋을 때만 바꿉니다."
+L["OPTIONS_FISHING_EQUIP_HAT"] = "모자 착용"
+L["OPTIONS_FISHING_EQUIP_HAT_DESCRIPTION"] =
+	"가방에 있는 사용 가능한 낚시 모자 중 가장 좋은 것을 착용합니다. 지금 쓴 모자보다 좋을 때만 바꿉니다."
+L["OPTIONS_FISHING_EQUIP_BOOTS"] = "신발 착용"
+L["OPTIONS_FISHING_EQUIP_BOOTS_DESCRIPTION"] =
+	"가방에 있는 사용 가능한 낚시 신발 중 가장 좋은 것을 착용합니다. 지금 신은 신발보다 좋을 때만 바꿉니다."
+L["OPTIONS_FISHING_EQUIP_GLOVES"] = "장갑 착용"
+L["OPTIONS_FISHING_EQUIP_GLOVES_DESCRIPTION"] =
+	"낚시 마법부여가 된 장갑을 가방에서 꺼내 착용합니다."
+L["OPTIONS_FISHING_USE_FOOD"] = "낚시 포만감 보너스가 없을 때 음식 사용"
+L["OPTIONS_FISHING_USE_FOOD_DESCRIPTION"] =
+	"음식의 낚시 포만감 보너스가 없을 때 가방 속 가장 좋은 낚시 음식을 먹습니다."
+L["OPTIONS_FISHING_USE_LURE"] = "가장 좋은 미끼 사용"
+L["OPTIONS_FISHING_USE_LURE_DESCRIPTION"] =
+	"낚싯대에 미끼가 없으면 낚시 숙련도로 쓸 수 있는 가장 좋은 미끼를 바릅니다."
+
+--[[
     Class Macros panel (Options-Class-Macros.lua), nested under Consumable Macros. TAB_CLASS_MACROS
     is its label in the settings tree and the end of its title; OPTIONS_CLASS_MACROS_DESCRIPTION is the
     intro beneath it. The class and race headers below also head Food & Drinks' racial sections.
@@ -942,6 +976,7 @@ L["INVENTORY_REPORT_FORGET_CHARACTER_CONFIRM"] =
 
 -- Readiness Report
 L["TAB_READINESS_REPORT"] = "준비 보고서"
+L["TAB_CURRENCY_REPLENISH"] = "골드 보충"
 --[[
     Says what the report does AND that it stays quiet, because the quiet is the
     feature: a player who turns this on and sees nothing for three pulls has to
@@ -1326,7 +1361,7 @@ L["RESTOCKER_STILL_OUT_AND_LOW_MANY"] = "아직 아이템 %d종이 다 떨어졌
     sum rather than the old amount moved across.
 ]]
 L["RESTOCKER_UPGRADED"] = "보충 목록이 업그레이드되었습니다."
-L["RESTOCKER_UPGRADED_ITEM"] = "%sx%d에서 %sx%d(으)로 업그레이드되었습니다."
+L["RESTOCKER_UPGRADED_ITEM"] = "%s x%d에서 %s x%d(으)로 업그레이드되었습니다."
 
 --[[
     Verbose follow-up line, one per item the headline counted, out first and
@@ -1813,7 +1848,7 @@ L["BUFF_DUTY_WHEN_HEADER"] = "표시 조건"
 L["BUFF_DUTY_WHEN_DESCRIPTION"] = "창이 나타날 때를 선택합니다."
 L["BUFF_DUTY_WHEN_NONE"] = "아무것도 체크되지 않아 창이 표시되지 않습니다."
 L["BUFF_DUTY_AURAS_HIDDEN"] =
-	"이곳에서는 버프 당번이 숨겨집니다. 이 지역에서는 게임이 애드온에 버프를 보여 주지 않아 누구에게 버프가 없는지 알 수 없습니다."
+	"버프 당번은 이곳에서 버프를 볼 수 없습니다. 이 지역에서는 게임이 애드온에게 버프를 숨깁니다."
 L["BUFF_DUTY_WHERE_DESCRIPTION"] =
 	"창을 표시할 곳을 정합니다: 어디서나, 또는 던전이나 공격대 같은 인스턴스 안에서만."
 L["BUFF_DUTY_WHERE_ALWAYS"] = "어디서나"
@@ -1838,7 +1873,7 @@ L["BUFF_DUTY_FAVOR_ENABLE_DESCRIPTION"] =
 	"최근 당신에게 버프를 준 낯선 사람과 그들에게 돌려줄 수 있는 버프를 보여 줍니다. 아이콘을 우클릭하면 해당 플레이어를 목록에서 제외합니다."
 L["BUFF_DUTY_BUFF_PVP_FLAGGED"] = "PvP 활성 플레이어 버프"
 L["BUFF_DUTY_BUFF_PVP_FLAGGED_DESCRIPTION"] =
-	"버프 당번이 PvP가 활성화된 플레이어에게 버프를 걸 수 있게 하며, 이 경우 당신도 PvP가 활성화됩니다. 이 옵션이 꺼져 있고 당신의 PvP가 꺼져 있는 동안 버프 당번은 그들과 그들에게 닿는 파티 버프를 건너뛰고 대화창으로 알려 줍니다."
+	"버프 당번이 PvP가 활성화된 플레이어에게 버프를 걸 수 있게 하며, 이 경우 당신도 PvP가 활성화됩니다. 끄면 당신의 PvP가 꺼져 있는 동안 그들과 그들에게 닿는 파티 버프를 건너뛰고 대화창으로 알려 줍니다."
 L["BUFF_DUTY_FAVOR_SECONDS_DESCRIPTION"] =
 	"낯선 사람이 마지막 버프 후 목록에 남아 있는 시간을 설정합니다."
 L["BUFF_DUTY_TARGET_ENABLE"] = "내 대상"
@@ -1924,7 +1959,7 @@ L["BUFF_DUTY_SELF_REFRESH_UNDER"] = "%s 미만"
     client's name), Weapon Buffs and Scrolls: elixirs, then consumables with
     a setting of their own.
 ]]
-L["BUFF_DUTY_ROW_ELIXIRS"] = "영약 또는 비약"
+L["BUFF_DUTY_ROW_ELIXIRS"] = "영약 및 비약"
 L["BUFF_DUTY_ROW_OTHER"] = "기타 버프"
 -- Each category's page opens with When to Use, a dropdown of when the window shows that category.
 L["BUFF_DUTY_ROW_WHEN"] = "사용 시기"
@@ -1936,7 +1971,7 @@ L["BUFF_DUTY_ROW_WHEN_RAID"] = "공격대"
 -- Then a checkbox for whether the key uses the category's icons. %s is the key's name, BUFF_KEY.
 L["BUFF_DUTY_ROW_KEY"] = "%s에 사용"
 L["BUFF_DUTY_ROW_KEY_DESCRIPTION"] =
-	"%s 키도 이 아이콘들을 사용합니다. 끄면 창에서 클릭할 때만 사용합니다."
+	"%s 키로도 이것들을 시전합니다. 끄면 창에서 클릭할 때만 사용합니다."
 -- The Well Fed page's description.
 L["BUFF_DUTY_FOOD_PAGE_DESCRIPTION"] = "가지고 있는 버프 음식을 버프가 없을 때 창에 표시합니다."
 --[[
@@ -1953,9 +1988,9 @@ L["BUFF_DUTY_SCROLLS_PAGE_DESCRIPTION"] =
 	"가지고 있는 두루마리를 버프가 없을 때 창에 표시합니다."
 L["BUFF_DUTY_SCROLLS_DESCRIPTION"] =
 	"없는 두루마리 버프마다, 해당 두루마리를 가지고 있는 동안 두루마리를 하나씩 표시합니다. 창에서 클릭하면 읽습니다. 감시하는 두루마리 유형은 아래에서 체크한 것입니다."
--- The Flasks or Elixirs page's description, and its Elixirs row: one icon per elixir in your bags whose buff you're missing.
+-- The Flasks & Elixirs page's description, and its Elixirs row: one icon per elixir in your bags whose buff you're missing.
 L["BUFF_DUTY_ELIXIRS_PAGE_DESCRIPTION"] =
-	"가지고 있는 비약을 버프가 없을 때 창에 표시합니다. 빼고 싶은 비약은 창의 설정에서 영약 또는 비약 아래에서 끄세요."
+	"가지고 있는 비약을 버프가 없을 때 창에 표시합니다. 빼고 싶은 비약은 창의 설정에서 영약 및 비약 아래에서 끄세요."
 L["BUFF_DUTY_ELIXIRS"] = "비약"
 L["BUFF_DUTY_ELIXIRS_DESCRIPTION"] =
 	"가방에 있는 비약 중 버프가 없는 것을 하나씩 표시합니다. 이미 걸린 버프가 그 자리를 차지하면 표시하지 않습니다. 창에서 클릭하면 마십니다."
@@ -1987,12 +2022,13 @@ L["BUFF_DUTY_WEAPON_ENABLE_DESCRIPTION"] =
 -- A buff icon's tooltip, a line per click: the job on the left, the click (TOOLTIP_KEY_CLICK, TOOLTIP_KEY_RIGHT_CLICK)
 -- on the right. %s is who the cast lands on; TAKE_OFF is a Return the Favor icon's right-click.
 L["BUFF_DUTY_TOOLTIP_CAST"] = "%s에게 시전"
-L["BUFF_DUTY_TOOLTIP_TAKE_OFF"] = "이 목록에서 빼기"
+L["BUFF_DUTY_TOOLTIP_TAKE_OFF"] = "목록에서 제거"
 -- %s is the client's "Main Hand" or "Off Hand".
 L["BUFF_DUTY_TOOLTIP_WEAPON"] = "%s 무기에 적용합니다."
 L["BUFF_DUTY_TOOLTIP_USE"] =
-	"파티에 영혼석을 지닌 사람이 없습니다. %s에게 영혼석을 사용합니다."
-L["BUFF_DUTY_TOOLTIP_CREATE"] = "파티에 영혼석을 지닌 사람이 없습니다. 영혼석을 만듭니다."
+	"아직 파티에 영혼석을 지닌 사람이 없습니다. %s에게 영혼석을 사용합니다."
+L["BUFF_DUTY_TOOLTIP_CREATE"] =
+	"아직 파티에 영혼석을 지닌 사람이 없습니다. 영혼석을 만듭니다."
 -- A Firestone or Spellstone icon with none in the bags conjures one.
 L["BUFF_DUTY_TOOLTIP_CREATE_WEAPON"] = "가방에 없습니다. 하나 만듭니다."
 -- A Self-Buffs consumable's icon (Winterfall Firewater).
@@ -2010,7 +2046,7 @@ L["BUFF_DUTY_MENU_ALL_SETTINGS_DESCRIPTION"] =
 -- The Options menu's Window Opacity row, and its flyout of 0% to 100%. %d is the percent.
 L["BUFF_DUTY_MENU_OPACITY"] = "창 불투명도"
 L["BUFF_DUTY_MENU_OPACITY_DESCRIPTION"] =
-	"버프 당번 창 배경의 불투명도를 설정합니다. 글자와 아이콘은 그대로 유지됩니다."
+	"창 배경의 불투명도를 설정합니다. 글자와 아이콘은 항상 선명하게 유지됩니다."
 L["BUFF_DUTY_MENU_OPACITY_PERCENT"] = "%d%%"
 --[[
     The window's category menus, each opened by its category line's arrow:
@@ -2026,7 +2062,7 @@ L["BUFF_DUTY_MENU_SHOW_IN_BUFF_DUTY"] = "버프 당번에 표시"
 L["BUFF_DUTY_MENU_SHOW_IN_BUFF_DUTY_DESCRIPTION"] = "이 분류를 버프 당번 창에 표시합니다."
 L["BUFF_DUTY_MENU_SHOW"] = "표시"
 L["BUFF_DUTY_ROW_SHOW_DESCRIPTION"] =
-	"이 버프들이 표시될 때를 정합니다: 사라진 뒤, 또는 남은 시간이 이보다 적을 때."
+	"이 버프들이 사라지거나 남은 시간이 이만큼일 때 표시합니다."
 L["BUFF_DUTY_MENU_SHOW_MISSING_INVENTORY"] = "소지품 없음 표시"
 L["BUFF_DUTY_ROW_OUT_DESCRIPTION"] =
 	'버프가 없고 가방에 그 버프를 주는 것이 없을 때 창에 "소지품 없음!"을 표시합니다.'
@@ -2047,10 +2083,10 @@ L["BUFF_DUTY_TOOLTIP_GROUP"] = "%s와(과) 그 파티에게 시전합니다."
 L["BUFF_DUTY_TOOLTIP_NEEDS"] = "필요한 사람: %s."
 -- The Ask row under Target: its label (%s is the target's name in their class color), and its icons' tooltip: who the whisper goes to, or, once asked, who and the whole minutes until they can be asked again.
 L["BUFF_DUTY_ASK_TARGET_ROW"] = "%s 님에게 요청"
-L["BUFF_DUTY_TOOLTIP_ASK_TARGET"] = "%s 님에게 귓속말로 요청합니다."
-L["BUFF_DUTY_TOOLTIP_ASKED"] = "%s 님에게 요청함. %d분 후 다시 요청할 수 있습니다."
+L["BUFF_DUTY_TOOLTIP_ASK_TARGET"] = "%s 님에게 정중하게 귓속말로 요청합니다."
+L["BUFF_DUTY_TOOLTIP_ASKED"] = "이미 %s 님에게 요청했습니다. %d분 후 다시 요청할 수 있습니다."
 -- An Ask for Buffs icon's menu, its ask rows: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it: %s is one or two names (LIST_PAIR_FORMAT), or BUFF_DUTY_OTHERS_ASK_PEOPLE past two.
-L["BUFF_DUTY_OTHERS_HINT_ASK"] = "%s에 버프 요청"
+L["BUFF_DUTY_OTHERS_HINT_ASK"] = "%s에 요청"
 L["BUFF_DUTY_OTHERS_HINT_WHISPER"] = "%s에게 귓속말"
 L["BUFF_DUTY_OTHERS_SHORTCUT_LEFT"] = "단축키: 버프 아이콘을 좌클릭하세요."
 L["BUFF_DUTY_OTHERS_SHORTCUT_RIGHT"] = "단축키: 버프 아이콘을 우클릭하세요."
@@ -2058,14 +2094,14 @@ L["BUFF_DUTY_OTHERS_SHORTCUT_RIGHT"] = "단축키: 버프 아이콘을 우클릭
 L["BUFF_DUTY_OTHERS_MINUTES"] = "%d분"
 L["BUFF_DUTY_OTHERS_MISSING"] = "없음"
 --[[
-    The ask either click sends, signed off like every sent message ({star} ... // GtG), so it
-    ends as a statement, not a question. Up to five missing players are named (ONE for one,
+    The ask either click sends, signed off like every sent message ({star} ... // GtG), and it
+    asks, so it ends in a question mark. Up to five missing players are named (ONE for one,
     NAMES for two to five, joined with LIST_PAIR_FORMAT or LIST_LAST_FORMAT), then the buff's link;
     past five, COUNT gives how many, then the link.
 ]]
-L["BUFF_DUTY_OTHERS_ASK_ONE"] = "%s 님에게 %s 버프가 없습니다."
-L["BUFF_DUTY_OTHERS_ASK_NAMES"] = "%s 님에게 %s 버프가 없습니다."
-L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "%d명에게 %s 버프가 없습니다."
+L["BUFF_DUTY_OTHERS_ASK_ONE"] = "%s 님에게 %s 버프를 걸어 주실 분 있나요?"
+L["BUFF_DUTY_OTHERS_ASK_NAMES"] = "%s 님에게 %s 버프를 걸어 주실 분 있나요?"
+L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "%d명에게 %s 버프를 걸어 주실 분 있나요?"
 -- The whispered ask's {names} past five missing players, when the player has written their own whisper, and the Ask for Buffs menu's whisper row past two players. %d is how many.
 L["BUFF_DUTY_OTHERS_ASK_PEOPLE"] = "%d명"
 --[[
@@ -2073,23 +2109,23 @@ L["BUFF_DUTY_OTHERS_ASK_PEOPLE"] = "%d명"
     checkbox, the When to Show header, then the options command.
 ]]
 L["BUFF_DUTY_CLOSED"] =
-	"버프 당번이 파티에 참여하거나 다음 접속 또는 재시작 전까지 숨겨졌습니다. 지금 다시 보려면 미니맵 메뉴의 버프 당번 아래에서 켜기/끄기를 클릭하세요. %1$s 직업에서 계속 꺼 두려면 %4$s 설정의 %3$s에서 %2$s의 체크를 해제하세요."
+	"버프 당번이 파티에 참여하거나 다음 접속 또는 재시작 전까지 잠시 쉽니다. 더 빨리 보고 싶나요? 미니맵 메뉴의 버프 당번 아래에서 켜기/끄기를 클릭하세요. %1$s 캐릭터에서 계속 꺼 두려면 %4$s 설정의 %3$s에서 %2$s의 체크를 해제하세요."
 
 -- The Cast Next Buff key: its name in the game's Key Bindings list and the root panel's Key Bindings section, then the notices a press shows.
 L["BUFF_KEY"] = "다음 버프 시전"
 -- %s is a player's name.
 L["BUFF_KEY_WAITING"] = "%s님이 사거리 안에 들어오기를 기다리는 중입니다."
-L["BUFF_KEY_DONE"] = "더 걸 버프가 없습니다."
+L["BUFF_KEY_DONE"] = "모두 버프를 받았습니다. Good to Go!"
 -- Printed when Buff Duty or the key skips a PvP-flagged player. %s is the player's name.
 L["BUFF_DUTY_PVP_FLAGGED"] =
-	"%s님은 PvP가 활성화되어 있어 버프 당번이 건너뛰었습니다. 그래도 버프를 걸려면 PvP 활성 플레이어 버프를 켜세요."
+	"%s님은 PvP가 활성화되어 있어 건너뛰었습니다. 그래도 버프를 걸려면 PvP 활성 플레이어 버프를 켜세요."
 L["BUFF_KEY_OFF"] = "버프 당번이 꺼져 있습니다."
 --[[
     The Buff Duty window's last line, under Options, while the Cast Next Buff key has none: the options
     command (OPTIONS_COMMAND), then the key's name (BUFF_KEY). Kept to about three lines at the window's
     narrowest, with the command near the start so a line never breaks inside it.
 ]]
-L["BUFF_DUTY_KEY_TIP"] = "%s에서 %s 키를 지정하면 이 버프들을 키 하나로 시전할 수 있습니다."
+L["BUFF_DUTY_KEY_TIP"] = "팁: %s에서 %s 키를 지정하면 이 모두를 키 하나로 시전할 수 있습니다."
 
 --------------------------------------------------------------------------------
 -- Spellbook
@@ -2717,3 +2753,56 @@ L["CHAT_MACRO_TOO_LONG"] =
 	'"%s" 매크로는 옵션을 켠 상태로 %d바이트라서 매크로 최대 길이인 %d바이트를 넘습니다. 옵션을 하나 꺼서 줄이세요.'
 L["CHAT_CONSUMABLE_MACRO_TOO_LONG"] =
 	'"%s" 매크로는 %d바이트로 매크로 최대 길이인 %d바이트를 넘으므로 마지막 줄이 잘립니다.'
+
+--[[
+    Currency Replenish: the coins tab on the mailbox and its window
+    (Features/Currency-Replenish/). The tab's menu opens the window; the
+    window's title is CURRENCY_REPLENISH // ADDON_SHORT_NAME.
+]]
+L["CURRENCY_REPLENISH"] = "골드 보충"
+L["CURRENCY_REPLENISH_OPEN"] = "골드 보충 열기"
+L["CURRENCY_REPLENISH_OPTIONS"] = "설정"
+L["CURRENCY_REPLENISH_ALL_SETTINGS"] = "골드 보충 전체 설정"
+
+-- The window's Bank line and its column heads. RECORDED_AGO is Current Amount's tooltip; %s is how long ago.
+L["CURRENCY_REPLENISH_BANK"] = "은행"
+L["CURRENCY_REPLENISH_NO_BANK"] = "없음"
+L["CURRENCY_REPLENISH_CHARACTER"] = "캐릭터"
+L["CURRENCY_REPLENISH_GOLD_NOW"] = "현재 금액"
+L["CURRENCY_REPLENISH_KEEPS"] = "목표 금액"
+L["CURRENCY_REPLENISH_RECORDED_AGO"] = "%s 전에 기록됨"
+
+-- The Target Amount list's last row, its popup (%s is the character's name), and the Skip Under 1g switch.
+L["CURRENCY_REPLENISH_OTHER_AMOUNT"] = "다른 금액"
+L["CURRENCY_REPLENISH_REMOVE_CHARACTER"] = "캐릭터 제거"
+L["CURRENCY_REPLENISH_KEEPS_FOR"] = "%s의 목표 금액"
+L["CURRENCY_REPLENISH_SKIP_SMALL"] = "1골드 미만 건너뛰기"
+L["CURRENCY_REPLENISH_SKIP_SMALL_DESCRIPTION"] =
+	"부족분이 1골드 미만인 캐릭터는 우편을 보낼 만하지 않으므로 보충에서 제외합니다."
+
+-- The window's red button, Replenish on the bank and Send Excess to Bank anywhere else. The reasons show under it while it can't be pressed; in AT_KEEPS, %s is what the character keeps.
+L["CURRENCY_REPLENISH_REPLENISH"] = "보충"
+L["CURRENCY_REPLENISH_SEND_EXCESS"] = "초과분을 은행으로 보내기"
+L["CURRENCY_REPLENISH_REASON_SENDING"] = "보내는 중..."
+L["CURRENCY_REPLENISH_REASON_NO_BANK"] = "먼저 은행을 고르세요."
+L["CURRENCY_REPLENISH_REASON_NO_KEEPS"] = "먼저 목표 금액을 정하세요."
+L["CURRENCY_REPLENISH_REASON_AT_KEEPS"] = "%s 이하."
+L["CURRENCY_REPLENISH_REASON_FULL"] = "모두 충분합니다."
+L["CURRENCY_REPLENISH_REASON_NO_GOLD"] = "골드가 부족합니다."
+
+-- Chat after a send. %s is gold and %s a character, except where %d counts characters. OUT_OF_GOLD's %s is a list of SHORT_BY lines.
+L["CURRENCY_REPLENISH_SENT"] = "%2$s에게 %1$s을 보냈습니다."
+L["CURRENCY_REPLENISH_REPLENISHED"] = "캐릭터 %d명을 %s으로 보충했습니다."
+L["CURRENCY_REPLENISH_REPLENISHED_ONE"] = "캐릭터 %d명을 %s으로 보충했습니다."
+L["CURRENCY_REPLENISH_SHORT_BY"] = "%s: %s 부족"
+L["CURRENCY_REPLENISH_OUT_OF_GOLD"] = "골드가 떨어졌습니다. %s."
+L["CURRENCY_REPLENISH_STOPPED_FAILED"] = "%s에서 멈춤: 우편이 발송되지 않았습니다."
+L["CURRENCY_REPLENISH_STOPPED_MAILBOX"] = "%s에서 멈춤: 우체통이 닫혔습니다."
+L["CURRENCY_REPLENISH_STOPPED_GOLD"] = "%s에서 멈춤: 우편을 보낼 골드가 부족합니다."
+
+-- The feature's switch, and the description at the top of its options page.
+L["SWITCH_CURRENCY_REPLENISH"] = "골드 보충 활성화"
+L["SWITCH_CURRENCY_REPLENISH_DESCRIPTION"] =
+	"우체통에 동전 탭을 추가합니다. 캐릭터들은 남겨 둘 골드를 넘는 만큼을 은행 캐릭터에게 보내고, 은행은 다시 그만큼 채워 줍니다. 끄면 탭이 사라지며, 은행과 목표 금액은 저장된 채로 남습니다."
+L["OPTIONS_CURRENCY_REPLENISH_DESCRIPTION"] =
+	"우체통의 동전 탭에서 은행 캐릭터와 각 캐릭터의 보유 골드를 정하세요. 다른 캐릭터들은 목표 금액을 넘는 골드를 은행에 보내고, 은행은 다시 목표 금액까지 채워 줍니다."

@@ -6,32 +6,19 @@ local Box = Widgets.Box
 
 local FIELD_FILL = Widgets.COLORS.FIELD_FILL
 
---[[
-	Pick mode, which fills a docked panel's slot, a Conditionals row's or a Cast Sequence step's, from the page.
-	What a slot casts and the pick a page macro or a dragged spell gives it are Slot-Spells.lua.
-]]
-
 --------------------------------------------------------------------------------
 -- Pick Mode
 --------------------------------------------------------------------------------
 
 --[[
-	Pick mode, for the panels docked beside the Spell Book: a slot waiting for the next spell clicked on the page,
-	or a spell dropped on it from the cursor. The Conditionals panel (Features/Enhanced-Spellbook/Macro-Builder/Conditionals-Panel.lua)
-	and the Cast Sequence panel (Features/Enhanced-Spellbook/Macro-Builder/Cast-Sequence-Panel.lua) each start it for a slot of theirs,
-	as an owner: { panel, the frame that takes the keyboard and whose page shows the overlay; pickOf(macro), the
-	pick a page macro gives a slot, or nil for one it can't; actionKey, the locale key of a tile's Click line;
-	cannotPickKey, the locale key of the error line for one it can't; apply(index, pick), which fills the slot; redraw() and update(), which draw the page and the
-	panel again }.
+	An owner is { panel (takes the keyboard; its page shows the overlay), pickOf(macro) (nil for one it can't
+	take), actionKey, cannotPickKey (locale keys), apply(index, pick), redraw(), update() }.
 ]]
 
-local picking -- the index of the slot waiting for a spell, while the page is in pick mode
-local owner -- the panel's owner whose slot it is
+local picking -- the slot index waiting for a spell
+local owner
 
---[[
-	The page's look in pick mode: a blue edge around the parchment and a banner across its top saying what a
-	click does. It takes no clicks, so they reach the tiles under it. Each panel keeps its own.
-]]
+-- It takes no clicks, so they reach the tiles under it.
 local function PickOverlay(who)
 	local panel = who.panel
 	if panel.overlay then
@@ -68,7 +55,6 @@ local function PickOverlay(who)
 	return overlay
 end
 
--- Shows or hides an owner's pick mode look: the overlay, and the keyboard its panel takes.
 local function ShowPicking(who, on)
 	if who and who.panel then
 		PickOverlay(who):SetShown(on)
@@ -77,9 +63,8 @@ local function ShowPicking(who, on)
 end
 
 --[[
-	Starts or ends pick mode for an owner's slot (index, or nil to end it). While it is on, the owner's panel
-	takes the keyboard so Escape ends it rather than closing the window; it never starts in combat, where a
-	frame can't take the keyboard, and combat ends it. Starting it for one panel ends it for the other.
+	The panel takes the keyboard so Escape ends pick mode rather than closing the window; it never starts in
+	combat, where a frame can't take the keyboard, and combat ends it.
 ]]
 local function SetPicking(index, who)
 	if owner and owner ~= who then
@@ -105,12 +90,10 @@ function ns.CancelSpellPick()
 	end
 end
 
--- Whether pick mode is on for an owner's slot at index.
 function ns.IsPickingSpellFor(who, index)
 	return picking ~= nil and owner == who and picking == index
 end
 
--- Starts pick mode for an owner's slot, or says it can't in combat.
 function ns.StartSpellPick(who, index)
 	if InCombatLockdown() then
 		ns.ShowUIError(ERR_NOT_IN_COMBAT)
@@ -119,25 +102,19 @@ function ns.StartSpellPick(who, index)
 	SetPicking(index, who)
 end
 
--- The pick a page macro gives the slot waiting in pick mode, or nil, for a tile that can't fill it.
 function ns.PickSpellOf(macro)
 	return owner and owner.pickOf(macro) or nil
 end
 
--- A tile's tooltip in pick mode, in the words of the panel whose slot is waiting: what a click does with it.
 function ns.PickActionText()
 	return L[owner and owner.actionKey or "CONDITIONALS_ACTION_USE"]
 end
 
--- And why a tile can't fill the slot.
 function ns.CannotPickText()
 	return L[owner and owner.cannotPickKey or "CONDITIONALS_CANNOT_PICK"]
 end
 
---[[
-	A page tile clicked in pick mode (Features/Enhanced-Spellbook/Macro-Button.lua): its spell fills the slot waiting for
-	one. A tile that can't be picked leaves pick mode on, with the game's error line saying why.
-]]
+-- A tile that can't be picked leaves pick mode on, with the game's error line saying why.
 function ns.PickSpell(macro)
 	local index, who = picking, owner
 	local pick = who and who.pickOf(macro)
@@ -149,11 +126,7 @@ function ns.PickSpell(macro)
 	who.apply(index, pick)
 end
 
---[[
-	The spell on the cursor as a slot's pick, or nil: a page macro dragged from its tile gives pickOf(macro),
-	another macro the spell it would cast now, a spell from a spellbook or an action bar its own ID, at the rank
-	dragged (ns.ConditionalPickOfSpell).
-]]
+-- Another add-on's or the player's macro gives the spell it would cast now.
 local function SpellFromCursor(pickOf)
 	local kind, id, _, spellID = GetCursorInfo()
 	if kind == "macro" then
@@ -175,7 +148,7 @@ local function SpellFromCursor(pickOf)
 	return nil
 end
 
--- Fills an owner's slot from the cursor and clears it; returns whether the cursor held a spell it takes.
+-- Returns whether the cursor held a spell the slot takes.
 function ns.DropSpellOnSlot(who, index)
 	local pick = SpellFromCursor(who.pickOf)
 	if not pick then

@@ -36,6 +36,7 @@ L["OPTIONS_LEVEL_UP_THANKS"] = "Obrigado por escolher o Good to Go!"
 L["MACRO_BANDAGE"] = "- Bandagem"
 L["MACRO_EXPLOSIVES"] = "- Explosivos"
 L["MACRO_FEED_PET"] = "- Alim. Ajudante"
+L["MACRO_FISHING_LURE"] = "- Isca de pesca"
 L["MACRO_FOOD"] = "- Comida"
 L["MACRO_HEALTH_POTION"] = "- Poção de Cura"
 L["MACRO_HEALTHSTONE"] = "- Pedra de Vida"
@@ -272,7 +273,8 @@ L["MENU_RESTOCKER_OPEN_OFF_DESCRIPTION"] = "Abre sua Lista de reabastecimento. A
 
 -- Buff Duty's block in the menu while its close button has hidden it: the word on its right, and the note under it.
 L["MENU_BUFF_DUTY_PAUSED"] = "Pausado"
-L["MENU_BUFF_DUTY_PAUSED_NOTE"] = "Oculto até você entrar em um grupo, fazer login de novo ou recarregar a interface."
+L["MENU_BUFF_DUTY_PAUSED_NOTE"] =
+	"Dando um tempo até você entrar em um grupo, fazer login de novo ou recarregar a interface."
 
 --------------------------------------------------------------------------------
 -- Class Notes
@@ -302,6 +304,7 @@ L["NOTE_MACRO_HEALTHSTONE"] = "Macro de Pedra de Vida"
 L["NOTE_MACRO_SOULSTONE"] = "Macro de Pedra de Alma"
 L["NOTE_MACRO_POISONS"] = "Macro de Venenos"
 L["NOTE_MACRO_EXPLOSIVES"] = "Macro de Explosivos"
+L["NOTE_MACRO_FISHING_LURE"] = "Macro de Isca de pesca"
 
 -- Hunter. NOTE_PET_MEND_CLICK is the click that casts Mend Pet: a Right-Click, or any click during combat.
 L["NOTE_PET_CALL_FEED_REVIVE"] = "Chamar, alimentar ou reviver"
@@ -741,6 +744,37 @@ L["EXPLOSIVES_MODE_ATPLAYER"] = "Clique esquerdo @player"
 L["EXPLOSIVES_MODE_TOSS"] = "Clique esquerdo arremessar"
 
 --[[
+    Fishing Lure (Options-Fishing-Lure.lua): TAB_FISHING_LURE is its label in the settings tree and the end of
+    its title.
+]]
+L["TAB_FISHING_LURE"] = "Isca de pesca"
+L["OPTIONS_FISHING_LURE_DESCRIPTION"] = "Aplica iscas e comida se estiverem faltando."
+-- The page's three section headers.
+L["OPTIONS_FISHING_HEADER_GEAR"] = "Equipamento"
+L["OPTIONS_FISHING_HEADER_FOOD"] = "Comida"
+L["OPTIONS_FISHING_HEADER_LURES"] = "Iscas"
+L["OPTIONS_FISHING_EQUIP_POLE"] = "Equipar vara de pescar"
+L["OPTIONS_FISHING_EQUIP_POLE_DESCRIPTION"] =
+	"Equipa a melhor vara de pescar das suas bolsas que sua perícia em Pesca permite, se for melhor que a da sua mão."
+L["OPTIONS_FISHING_EQUIP_PANTS"] = "Equipar calças"
+L["OPTIONS_FISHING_EQUIP_PANTS_DESCRIPTION"] =
+	"Equipa as melhores calças de pesca das suas bolsas que você pode usar, quando superam as que você está usando."
+L["OPTIONS_FISHING_EQUIP_HAT"] = "Equipar chapéu"
+L["OPTIONS_FISHING_EQUIP_HAT_DESCRIPTION"] =
+	"Equipa o melhor chapéu de pesca das suas bolsas que você pode usar, quando supera o que você está usando."
+L["OPTIONS_FISHING_EQUIP_BOOTS"] = "Equipar botas"
+L["OPTIONS_FISHING_EQUIP_BOOTS_DESCRIPTION"] =
+	"Equipa as melhores botas de pesca das suas bolsas que você pode usar, quando superam as que você está usando."
+L["OPTIONS_FISHING_EQUIP_GLOVES"] = "Equipar luvas"
+L["OPTIONS_FISHING_EQUIP_GLOVES_DESCRIPTION"] = "Equipa luvas das suas bolsas que tenham um encantamento de Pesca."
+L["OPTIONS_FISHING_USE_FOOD"] = "Usar comida se faltar o bônus de Pesca de Bem Alimentado"
+L["OPTIONS_FISHING_USE_FOOD_DESCRIPTION"] =
+	"Come a melhor comida de pesca das suas bolsas quando você não tem o bônus de Pesca de Bem Alimentado dela."
+L["OPTIONS_FISHING_USE_LURE"] = "Usar a melhor isca"
+L["OPTIONS_FISHING_USE_LURE_DESCRIPTION"] =
+	"Coloca na sua vara de pescar a melhor isca que sua perícia em Pesca permite quando ela não tem nenhuma."
+
+--[[
     Class Macros panel (Options-Class-Macros.lua), nested under Consumable Macros. TAB_CLASS_MACROS
     is its label in the settings tree and the end of its title; OPTIONS_CLASS_MACROS_DESCRIPTION is the
     intro beneath it. The class and race headers below also head Food & Drinks' racial sections.
@@ -937,6 +971,7 @@ L["INVENTORY_REPORT_FORGET_CHARACTER_CONFIRM"] =
 
 -- Readiness Report
 L["TAB_READINESS_REPORT"] = "Relatório de Prontidão"
+L["TAB_CURRENCY_REPLENISH"] = "Reabastecer Moeda"
 --[[
     Says what the report does AND that it stays quiet, because the quiet is the
     feature: a player who turns this on and sees nothing for three pulls has to
@@ -1314,7 +1349,7 @@ L["RESTOCKER_STILL_OUT_AND_LOW_MANY"] = "Você ainda está sem %d itens, e com p
     sum rather than the old amount moved across.
 ]]
 L["RESTOCKER_UPGRADED"] = "Sua lista de reabastecimento recebeu melhorias."
-L["RESTOCKER_UPGRADED_ITEM"] = "%sx%d passa a %sx%d."
+L["RESTOCKER_UPGRADED_ITEM"] = "%s x%d passa a %s x%d."
 
 --[[
     Verbose follow-up line, one per item the headline counted, out first and
@@ -1791,7 +1826,7 @@ L["BUFF_DUTY_WHEN_HEADER"] = "Quando mostrar"
 L["BUFF_DUTY_WHEN_DESCRIPTION"] = "Escolha quando a janela pode aparecer."
 L["BUFF_DUTY_WHEN_NONE"] = "Nada está marcado, então a janela nunca aparece."
 L["BUFF_DUTY_AURAS_HIDDEN"] =
-	"O Plantão de buffs está oculto aqui. O jogo não deixa os addons verem buffs nesta área, então ele não sabe quem está sem um."
+	"O Plantão de buffs não consegue ver buffs aqui. O jogo os esconde dos addons nesta área."
 L["BUFF_DUTY_WHERE_DESCRIPTION"] =
 	"Define onde a janela aparece: em qualquer lugar, ou só dentro de uma instância, como uma masmorra ou raide."
 L["BUFF_DUTY_WHERE_ALWAYS"] = "Em qualquer lugar"
@@ -1814,7 +1849,7 @@ L["BUFF_DUTY_FAVOR_ENABLE_DESCRIPTION"] =
 	"Lista os estranhos que buffaram você recentemente, com os buffs que você pode devolver a eles. Clique com o botão direito em um ícone para tirar alguém da lista."
 L["BUFF_DUTY_BUFF_PVP_FLAGGED"] = "Buffar jogadores com JxJ ativado"
 L["BUFF_DUTY_BUFF_PVP_FLAGGED_DESCRIPTION"] =
-	"Deixa o Plantão de buffs buffar jogadores com JxJ ativado, o que também ativa o seu. Enquanto estiver desligado e seu JxJ não estiver ativado, o Plantão de buffs os pula, assim como qualquer buff de grupo que os alcance, e avisa você no chat."
+	"Deixa o Plantão de buffs buffar jogadores com JxJ ativado, o que também ativa o seu. Desligado, enquanto seu JxJ não estiver ativado, ele os pula, assim como qualquer buff de grupo que os alcance, e avisa você no chat."
 L["BUFF_DUTY_FAVOR_SECONDS_DESCRIPTION"] =
 	"Define por quanto tempo um estranho fica na lista após o último buff dele."
 L["BUFF_DUTY_TARGET_ENABLE"] = "Seu alvo"
@@ -1900,7 +1935,7 @@ L["BUFF_DUTY_SELF_REFRESH_UNDER"] = "Menos de %s"
     client's name), Weapon Buffs and Scrolls: elixirs, then consumables with
     a setting of their own.
 ]]
-L["BUFF_DUTY_ROW_ELIXIRS"] = "Frascos ou elixires"
+L["BUFF_DUTY_ROW_ELIXIRS"] = "Frascos e elixires"
 L["BUFF_DUTY_ROW_OTHER"] = "Outros buffs"
 -- Each category's page opens with When to Use, a dropdown of when the window shows that category.
 L["BUFF_DUTY_ROW_WHEN"] = "Quando usar"
@@ -1911,8 +1946,7 @@ L["BUFF_DUTY_ROW_WHEN_GROUP"] = "Em grupo ou raide"
 L["BUFF_DUTY_ROW_WHEN_RAID"] = "Em raide"
 -- Then a checkbox for whether the key uses the category's icons. %s is the key's name, BUFF_KEY.
 L["BUFF_DUTY_ROW_KEY"] = "Usar com %s"
-L["BUFF_DUTY_ROW_KEY_DESCRIPTION"] =
-	"Sua tecla %s também usa estes ícones. Desligado, eles são só um clique na janela."
+L["BUFF_DUTY_ROW_KEY_DESCRIPTION"] = "Sua tecla %s também os lança. Desligado, eles são só um clique na janela."
 -- The Well Fed page's description.
 L["BUFF_DUTY_FOOD_PAGE_DESCRIPTION"] =
 	"Comida com buff que você carrega, oferecida na janela quando falta o buff dela."
@@ -1930,9 +1964,9 @@ L["BUFF_DUTY_SCROLLS_PAGE_DESCRIPTION"] =
 	"Pergaminhos que você carrega, oferecidos na janela quando falta o buff deles."
 L["BUFF_DUTY_SCROLLS_DESCRIPTION"] =
 	"Mostra um pergaminho para cada buff de pergaminho que estiver faltando enquanto você carregar esse pergaminho. Clique em um na janela para lê-lo. Os tipos de pergaminho observados são os marcados abaixo."
--- The Flasks or Elixirs page's description, and its Elixirs row: one icon per elixir in your bags whose buff you're missing.
+-- The Flasks & Elixirs page's description, and its Elixirs row: one icon per elixir in your bags whose buff you're missing.
 L["BUFF_DUTY_ELIXIRS_PAGE_DESCRIPTION"] =
-	"Elixires que você carrega, oferecidos na janela quando falta o buff deles. Para deixar um de fora, desative-o em Frascos ou elixires, nas Opções da janela."
+	"Elixires que você carrega, oferecidos na janela quando falta o buff deles. Para deixar um de fora, desative-o em Frascos e elixires, nas Opções da janela."
 L["BUFF_DUTY_ELIXIRS"] = "Elixires"
 L["BUFF_DUTY_ELIXIRS_DESCRIPTION"] =
 	"Mostra cada elixir nas suas bolsas cujo buff está faltando, a menos que um buff que você já tem ocupe o lugar dele. Clique em um na janela para bebê-lo."
@@ -1964,11 +1998,11 @@ L["BUFF_DUTY_WEAPON_ENABLE_DESCRIPTION"] =
 -- A buff icon's tooltip, a line per click: the job on the left, the click (TOOLTIP_KEY_CLICK, TOOLTIP_KEY_RIGHT_CLICK)
 -- on the right. %s is who the cast lands on; TAKE_OFF is a Return the Favor icon's right-click.
 L["BUFF_DUTY_TOOLTIP_CAST"] = "Lançar em %s"
-L["BUFF_DUTY_TOOLTIP_TAKE_OFF"] = "Tirar desta lista"
+L["BUFF_DUTY_TOOLTIP_TAKE_OFF"] = "Remover da lista"
 -- %s is the client's "Main Hand" or "Off Hand".
 L["BUFF_DUTY_TOOLTIP_WEAPON"] = "Aplica na sua arma (%s)."
-L["BUFF_DUTY_TOOLTIP_USE"] = "Ninguém no seu grupo tem uma Pedra da Alma. Usa uma em %s."
-L["BUFF_DUTY_TOOLTIP_CREATE"] = "Ninguém no seu grupo tem uma Pedra da Alma. Cria uma."
+L["BUFF_DUTY_TOOLTIP_USE"] = "Ninguém no seu grupo tem uma Pedra da Alma ainda. Usa uma em %s."
+L["BUFF_DUTY_TOOLTIP_CREATE"] = "Ninguém no seu grupo tem uma Pedra da Alma ainda. Cria uma."
 -- A Firestone or Spellstone icon with none in the bags conjures one.
 L["BUFF_DUTY_TOOLTIP_CREATE_WEAPON"] = "Nenhuma nas suas bolsas. Cria uma."
 -- A Self-Buffs consumable's icon (Winterfall Firewater).
@@ -1986,7 +2020,7 @@ L["BUFF_DUTY_MENU_ALL_SETTINGS_DESCRIPTION"] =
 -- The Options menu's Window Opacity row, and its flyout of 0% to 100%. %d is the percent.
 L["BUFF_DUTY_MENU_OPACITY"] = "Opacidade da janela"
 L["BUFF_DUTY_MENU_OPACITY_DESCRIPTION"] =
-	"Define o quanto o fundo da janela do Plantão de buffs é opaco. O texto e os ícones não mudam."
+	"Define o quanto o fundo da janela é opaco. O texto e os ícones sempre ficam nítidos."
 L["BUFF_DUTY_MENU_OPACITY_PERCENT"] = "%d%%"
 --[[
     The window's category menus, each opened by its category line's arrow:
@@ -2001,8 +2035,7 @@ L["BUFF_DUTY_MISSING_INVENTORY"] = "Inventário em falta!"
 L["BUFF_DUTY_MENU_SHOW_IN_BUFF_DUTY"] = "Mostrar no Plantão de buffs"
 L["BUFF_DUTY_MENU_SHOW_IN_BUFF_DUTY_DESCRIPTION"] = "Mostra esta categoria na janela do Plantão de buffs."
 L["BUFF_DUTY_MENU_SHOW"] = "Mostrar"
-L["BUFF_DUTY_ROW_SHOW_DESCRIPTION"] =
-	"Define quando estes buffs aparecem: quando um acaba, ou quando resta menos que este tempo."
+L["BUFF_DUTY_ROW_SHOW_DESCRIPTION"] = "Mostra estes buffs quando acabam, ou quando resta este tempo."
 L["BUFF_DUTY_MENU_SHOW_MISSING_INVENTORY"] = "Mostrar inventário em falta"
 L["BUFF_DUTY_ROW_OUT_DESCRIPTION"] =
 	'Mostra "Inventário em falta!" na janela quando você está sem o buff e nada nas suas bolsas o dá.'
@@ -2019,13 +2052,13 @@ L["BUFF_DUTY_MENU_BUFF_FOOD"] = "Comida com buff"
 L["BUFF_DUTY_TOOLTIP_EAT"] = "Come uma das suas bolsas. Fique sentado até ficar Bem Alimentado."
 L["BUFF_DUTY_TOOLTIP_GROUP"] = "Lança em %s e no grupo dele."
 -- A raid group icon's tooltip, the line under its title: the members who need it (%s, joined with LIST_PAIR_FORMAT or LIST_LAST_FORMAT).
-L["BUFF_DUTY_TOOLTIP_NEEDS"] = "Precisam: %s."
+L["BUFF_DUTY_TOOLTIP_NEEDS"] = "Necessário para %s."
 -- The Ask row under Target: its label (%s is the target's name in their class color), and its icons' tooltip: who the whisper goes to, or, once asked, who and the whole minutes until they can be asked again.
 L["BUFF_DUTY_ASK_TARGET_ROW"] = "Pedir a %s"
-L["BUFF_DUTY_TOOLTIP_ASK_TARGET"] = "Sussurra para %s pedindo o buff."
-L["BUFF_DUTY_TOOLTIP_ASKED"] = "Pedido a %s. Você pode pedir de novo em %d min."
+L["BUFF_DUTY_TOOLTIP_ASK_TARGET"] = "Sussurra um pedido gentil para %s."
+L["BUFF_DUTY_TOOLTIP_ASKED"] = "Já pediu a %s. Você pode pedir de novo em %d min."
 -- An Ask for Buffs icon's menu, its ask rows: a click asks the group for the buff (PARTY, RAID, BATTLEGROUND or INSTANCE, the client's own word), a right-click whispers the players who can cast it: %s is one or two names (LIST_PAIR_FORMAT), or BUFF_DUTY_OTHERS_ASK_PEOPLE past two.
-L["BUFF_DUTY_OTHERS_HINT_ASK"] = "Pedir buff (%s)"
+L["BUFF_DUTY_OTHERS_HINT_ASK"] = "Pedir (%s)"
 L["BUFF_DUTY_OTHERS_HINT_WHISPER"] = "Sussurrar para %s"
 L["BUFF_DUTY_OTHERS_SHORTCUT_LEFT"] = "Atalho: clique esquerdo no ícone do buff."
 L["BUFF_DUTY_OTHERS_SHORTCUT_RIGHT"] = "Atalho: clique direito no ícone do buff."
@@ -2033,14 +2066,14 @@ L["BUFF_DUTY_OTHERS_SHORTCUT_RIGHT"] = "Atalho: clique direito no ícone do buff
 L["BUFF_DUTY_OTHERS_MINUTES"] = "%d min"
 L["BUFF_DUTY_OTHERS_MISSING"] = "Faltando"
 --[[
-    The ask either click sends, signed off like every sent message ({star} ... // GtG), so it
-    ends as a statement, not a question. Up to five missing players are named (ONE for one,
+    The ask either click sends, signed off like every sent message ({star} ... // GtG), and it
+    asks, so it ends in a question mark. Up to five missing players are named (ONE for one,
     NAMES for two to five, joined with LIST_PAIR_FORMAT or LIST_LAST_FORMAT), then the buff's link;
     past five, COUNT gives how many, then the link.
 ]]
-L["BUFF_DUTY_OTHERS_ASK_ONE"] = "%s está sem %s."
-L["BUFF_DUTY_OTHERS_ASK_NAMES"] = "%s estão sem %s."
-L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "%d pessoas estão sem o buff %s."
+L["BUFF_DUTY_OTHERS_ASK_ONE"] = "Alguém pode ajudar %s com %s, por favor?"
+L["BUFF_DUTY_OTHERS_ASK_NAMES"] = "Alguém pode ajudar %s com %s, por favor?"
+L["BUFF_DUTY_OTHERS_ASK_COUNT"] = "Alguém pode ajudar %d pessoas com %s, por favor?"
 -- The whispered ask's {names} past five missing players, when the player has written their own whisper, and the Ask for Buffs menu's whisper row past two players. %d is how many.
 L["BUFF_DUTY_OTHERS_ASK_PEOPLE"] = "%d pessoas"
 --[[
@@ -2048,23 +2081,23 @@ L["BUFF_DUTY_OTHERS_ASK_PEOPLE"] = "%d pessoas"
     checkbox, the When to Show header, then the options command.
 ]]
 L["BUFF_DUTY_CLOSED"] =
-	"O Plantão de buffs está oculto até você entrar em um grupo, entrar de novo ou recarregar. Para trazê-lo de volta agora, clique em Alternar, abaixo de Plantão de buffs, no menu do minimapa. Para mantê-lo desativado para a classe %s, desmarque %s em %s, dentro de %s."
+	"O Plantão de buffs está dando um tempo até você entrar em um grupo, entrar de novo ou recarregar. Quer de volta antes? Clique em Alternar, abaixo de Plantão de buffs, no menu do minimapa. Para mantê-lo desativado nos seus personagens da classe %s, desmarque %s em %s, dentro de %s."
 
 -- The Cast Next Buff key: its name in the game's Key Bindings list and the root panel's Key Bindings section, then the notices a press shows.
 L["BUFF_KEY"] = "Lançar próximo buff"
 -- %s is a player's name.
 L["BUFF_KEY_WAITING"] = "Esperando %s chegar ao alcance."
-L["BUFF_KEY_DONE"] = "Nada mais para buffar."
+L["BUFF_KEY_DONE"] = "Todo mundo buffado. Good to Go!"
 -- Printed when Buff Duty or the key skips a PvP-flagged player. %s is the player's name.
 L["BUFF_DUTY_PVP_FLAGGED"] =
-	"%s está com JxJ ativado, então o Plantão de buffs o pulou. Ative Buffar jogadores com JxJ ativado para buffá-lo mesmo assim."
+	"%s foi pulado por estar com JxJ ativado. Para buffá-lo mesmo assim, ative Buffar jogadores com JxJ ativado."
 L["BUFF_KEY_OFF"] = "O Plantão de buffs está desativado."
 --[[
     The Buff Duty window's last line, under Options, while the Cast Next Buff key has none: the options
     command (OPTIONS_COMMAND), then the key's name (BUFF_KEY). Kept to about three lines at the window's
     narrowest, with the command near the start so a line never breaks inside it.
 ]]
-L["BUFF_DUTY_KEY_TIP"] = "Em %s, associe uma tecla a %s para lançar estes buffs com uma tecla."
+L["BUFF_DUTY_KEY_TIP"] = "Dica: em %s, associe uma tecla a %s para lançar todos eles com uma tecla."
 
 --------------------------------------------------------------------------------
 -- Spellbook
@@ -2674,3 +2707,56 @@ L["CHAT_MACRO_TOO_LONG"] =
 	'A macro "%s" tem %d bytes com as opções ativadas, acima dos %d que cabem em uma macro. Desative uma opção para encurtá-la.'
 L["CHAT_CONSUMABLE_MACRO_TOO_LONG"] =
 	'A macro "%s" tem %d bytes, acima dos %d que cabem em uma macro, então a última linha dela é cortada.'
+
+--[[
+    Currency Replenish: the coins tab on the mailbox and its window
+    (Features/Currency-Replenish/). The tab's menu opens the window; the
+    window's title is CURRENCY_REPLENISH // ADDON_SHORT_NAME.
+]]
+L["CURRENCY_REPLENISH"] = "Reabastecer Moeda"
+L["CURRENCY_REPLENISH_OPEN"] = "Abrir Reabastecer Moeda"
+L["CURRENCY_REPLENISH_OPTIONS"] = "Opções"
+L["CURRENCY_REPLENISH_ALL_SETTINGS"] = "Todas as configurações de Reabastecer Moeda"
+
+-- The window's Bank line and its column heads. RECORDED_AGO is Current Amount's tooltip; %s is how long ago.
+L["CURRENCY_REPLENISH_BANK"] = "Banco"
+L["CURRENCY_REPLENISH_NO_BANK"] = "Nenhum"
+L["CURRENCY_REPLENISH_CHARACTER"] = "Personagem"
+L["CURRENCY_REPLENISH_GOLD_NOW"] = "Valor atual"
+L["CURRENCY_REPLENISH_KEEPS"] = "Valor-alvo"
+L["CURRENCY_REPLENISH_RECORDED_AGO"] = "Registrado há %s"
+
+-- The Target Amount list's last row, its popup (%s is the character's name), and the Skip Under 1g switch.
+L["CURRENCY_REPLENISH_OTHER_AMOUNT"] = "Outro valor"
+L["CURRENCY_REPLENISH_REMOVE_CHARACTER"] = "Remover personagem"
+L["CURRENCY_REPLENISH_KEEPS_FOR"] = "Valor-alvo de %s"
+L["CURRENCY_REPLENISH_SKIP_SMALL"] = "Pular menos de 1o"
+L["CURRENCY_REPLENISH_SKIP_SMALL_DESCRIPTION"] =
+	"O reabastecimento deixa de fora um personagem a quem falta menos de 1o, que não vale uma correspondência."
+
+-- The window's red button, Replenish on the bank and Send Excess to Bank anywhere else. The reasons show under it while it can't be pressed; in AT_KEEPS, %s is what the character keeps.
+L["CURRENCY_REPLENISH_REPLENISH"] = "Reabastecer"
+L["CURRENCY_REPLENISH_SEND_EXCESS"] = "Enviar o excedente ao banco"
+L["CURRENCY_REPLENISH_REASON_SENDING"] = "Enviando..."
+L["CURRENCY_REPLENISH_REASON_NO_BANK"] = "Escolha um banco primeiro."
+L["CURRENCY_REPLENISH_REASON_NO_KEEPS"] = "Defina primeiro seu Valor-alvo."
+L["CURRENCY_REPLENISH_REASON_AT_KEEPS"] = "Em %s ou menos."
+L["CURRENCY_REPLENISH_REASON_FULL"] = "Todos estão cheios."
+L["CURRENCY_REPLENISH_REASON_NO_GOLD"] = "Ouro insuficiente."
+
+-- Chat after a send. %s is gold and %s a character, except where %d counts characters. OUT_OF_GOLD's %s is a list of SHORT_BY lines.
+L["CURRENCY_REPLENISH_SENT"] = "%s enviado para %s."
+L["CURRENCY_REPLENISH_REPLENISHED"] = "%d personagens reabastecidos com %s."
+L["CURRENCY_REPLENISH_REPLENISHED_ONE"] = "%d personagem reabastecido com %s."
+L["CURRENCY_REPLENISH_SHORT_BY"] = "Faltam %2$s para %1$s"
+L["CURRENCY_REPLENISH_OUT_OF_GOLD"] = "Sem ouro. %s."
+L["CURRENCY_REPLENISH_STOPPED_FAILED"] = "Parado em %s: a correspondência não foi enviada."
+L["CURRENCY_REPLENISH_STOPPED_MAILBOX"] = "Parado em %s: a caixa de correio fechou."
+L["CURRENCY_REPLENISH_STOPPED_GOLD"] = "Parado em %s: ouro insuficiente para a correspondência."
+
+-- The feature's switch, and the description at the top of its options page.
+L["SWITCH_CURRENCY_REPLENISH"] = "Ativar Reabastecer Moeda"
+L["SWITCH_CURRENCY_REPLENISH_DESCRIPTION"] =
+	"Adiciona uma aba de moedas à caixa de correio. Seus personagens enviam ao personagem banco o ouro acima do que mantêm, e o banco os reabastece até esse valor. Desativado remove a aba; seu banco e seus valores-alvo continuam salvos."
+L["OPTIONS_CURRENCY_REPLENISH_DESCRIPTION"] =
+	"Escolha um personagem banco e quanto ouro cada personagem mantém, pela aba de moedas da caixa de correio. Seus outros personagens enviam ao banco o que têm acima do Valor-alvo, e o banco os reabastece até esse valor."

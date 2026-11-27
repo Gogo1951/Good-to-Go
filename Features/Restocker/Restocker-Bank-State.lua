@@ -1,24 +1,13 @@
 local _, ns = ...
 local L = ns.L
 
---[[
-    Restocker-Bank-State -- what a bank restock run knows: whether a bank
-    window is open, the run's state (the list it works to, and the bags and
-    bank as this step scanned them), the work still owed and why a stuck run
-    stopped, and the bank window's open and close. The moves and the timer
-    that paces them are Restocker-Bank-Visit.lua; the tidy phase's stack
-    helpers are Restocker-Bank-Tidy.lua.
-]]
-
 -- Read across files as the "a bank window is open" gate.
 ns.bankIsOpen = false
 
 --[[
-    After this many consecutive steps where the outstanding work is unchanged (a move that
-    keeps being rejected, or an item stuck locked; work that grew counts as a change), stop
-    and report what's still short --
-    instead of retrying forever. Retrying a handful of times first rides out transient
-    "Couldn't split those items" races without ever bothering the user.
+    Steps with the remaining work unchanged (growth counts as change) before the
+    run stops and reports. A few retries ride out "Couldn't split those items"
+    races unseen.
 ]]
 local MAX_STUCK_STEPS = 5
 ns.RESTOCK_MAX_STUCK_STEPS = MAX_STUCK_STEPS
@@ -57,14 +46,9 @@ function ns.NewRestockState()
 end
 
 --[[
-    The Keep amount this run works to, read once per row: as the run starts, or
-    when a row added since first turns up. The Keep box saves every keystroke,
-    so a live read would act on a number half typed (clearing the box reads 0,
-    which stores the whole stack); Enter restarts the run with the new number
-    (Restocker-Window-Rows.lua).
-
-    A hand-edited save can leave amount nil; comparing that against a count
-    throws inside the coroutine and kills the whole run, so it reads as 0.
+    Read once per row per run: the Keep box saves every keystroke, so a live read
+    would act on a half-typed number; Enter restarts the run. A hand-edited nil
+    reads as 0, since comparing nil would kill the coroutine.
 ]]
 function RestockState:Wanted(itemID, eachItem)
 	local wanted = self.amounts[itemID]
@@ -76,14 +60,9 @@ function RestockState:Wanted(itemID, eachItem)
 end
 
 --[[
-    Whether the cursor is clear enough to snapshot over, clearing it where that is ours to do.
-
-    An item on the cursor is uncounted, so a scan taken across one reads short and moves
-    things that are already fine. Only OUR strays are cleared outright: every move a restock run
-    issues is of a maintained item, so a cursor holding anything else belongs to the player --
-    picked up to move it by hand -- and clearing it would snap their drag back within a tick.
-    A foreign item is waited out for the same MAX_STUCK_STEPS budget the watchdog spends, then
-    cleared anyway, so a parked cursor can never hold a run open forever.
+    A scan across an item on the cursor reads short. Only list items are cleared
+    at once; anything else is the player's drag, waited out for MAX_STUCK_STEPS
+    and then cleared, so a parked cursor can't hold the run open.
 ]]
 function RestockState:ClearCursorForScan()
 	if not CursorHasItem() then
@@ -109,19 +88,9 @@ function RestockState:ClearCursorForScan()
 end
 
 --[[
-    Refresh the list and re-scan bags + bank. Called at the START OF EVERY restock step,
-    so the plan is always derived from what is actually in the containers right now. That way
-    a move the server rejected or only partially placed shows up as "still short" on the
-    next step and gets retried, instead of being assumed done. Never
-    deduct from a plan optimistically: a move that does not fully land leaves the item short
-    in silence. Recomputing every step is safe only because the watchdog in RunRestockLogic
-    stops the run once it stops making progress; without that guard it spins on "Couldn't
-    split those items" forever.
-
-    Returns false when the cursor made this step unsafe to read, which is the caller's cue to
-    do nothing this tick. The list is resolved before that test, because deciding whose
-    item is on the cursor needs it -- and it leaves the inventories from the previous scan
-    untouched rather than half-updated.
+    Every step rescans, so a rejected or partial move shows as still short and is
+    retried, never deducted optimistically; the watchdog ends a run that stops
+    progressing. The list resolves before the cursor test, which needs it.
 ]]
 function RestockState:Rescan()
 	local settings = ns.restockSettings
@@ -135,11 +104,7 @@ function RestockState:Rescan()
 	return true
 end
 
---[[
-    How much moving is still owed: shortfalls the bank can supply, plus excesses to stash.
-    Zero means done -- either everything is at target, or the only gaps left are items the
-    bank has none of (nothing more we can do).
-]]
+-- Zero when everything is at target or the only gaps are items the bank has none of.
 function RestockState:RemainingWork()
 	local work = 0
 	for itemID, eachItem in pairs(self.currentList) do
@@ -150,10 +115,7 @@ function RestockState:RemainingWork()
 		if eachItem.restockFromBank and wanted > haveInBag and haveInBank > 0 then
 			work = work + math.min(wanted - haveInBag, haveInBank)
 		end
-		--[[
-		    Overshoot excess counts as stash work even without stashToBank: the add-on created it
-		    (whole-stack fallback pull), so the add-on returns it.
-		]]
+		-- An overshoot goes back even without Store: the add-on made it.
 		if (eachItem.stashToBank or self.overshotItems[itemID]) and haveInBag > wanted then
 			work = work + (haveInBag - wanted)
 		end
@@ -161,10 +123,7 @@ function RestockState:RemainingWork()
 	return work
 end
 
---[[
-    Bag+bank total for each maintained item, from this step's scan. Used by the in-flight
-    gate in RunRestockLogic: a DROP versus the last accepted scan means an item is mid-move.
-]]
+-- For the in-flight gate: a drop against the last accepted scan means an item is mid-move.
 function RestockState:ComputeTotals()
 	local totals = {}
 	for itemID in pairs(self.currentList) do
@@ -173,10 +132,7 @@ function RestockState:ComputeTotals()
 	return totals
 end
 
---[[
-    Whether the player's bags have a free slot that can take any of these items: a free
-    slot in a soul bag or quiver is no room for water.
-]]
+-- A free slot in a soul bag or quiver is no room for water.
 local function BagsHaveRoomFor(itemIDs)
 	for _, bag in ipairs(ns.restockPlayerBags) do
 		local numberOfFreeSlots, bagType = C_Container.GetContainerNumFreeSlots(bag.bagID)
@@ -191,12 +147,7 @@ local function BagsHaveRoomFor(itemIDs)
 	return false
 end
 
---[[
-    A user-facing message for why we stopped when work still remains. Blames a full
-    bag or bank only for a direction that has a stuck row (a withdrawal needs bag
-    room that can take one of the stuck items, a deposit needs bank room); otherwise
-    lists exactly what we couldn't move.
-]]
+-- Blames a full bag or bank only for a direction with a stuck row; otherwise names what couldn't move.
 function RestockState:StuckMessage()
 	local parts = {}
 	local withdrawStuck, depositStuck = {}, false
@@ -236,11 +187,7 @@ function RestockState:StuckMessage()
 	return string.format(L["RESTOCKER_STOPPED_COULD_NOT_MOVE"], table.concat(parts, L["LIST_SEPARATOR"]))
 end
 
---[[
-    Is this bag/bank item one we maintain? Lists are keyed by itemID, so this is
-    an O(1) lookup. A file-level upvalue, so UpdateInventory, which runs on every
-    restock step, builds no closure.
-]]
+-- A file-level upvalue, so UpdateInventory, run every step, builds no closure.
 local maintainedList
 
 local function IsMaintainedItem(itemID)
@@ -259,10 +206,7 @@ end
 -- Bank Window
 --------------------------------------------------------------------------------
 
---[[
-    One bank visit: a Shift held as the bank opens skips its run for the whole
-    visit, and the close reminder follows only a visit whose run started.
-]]
+-- Shift as the bank opens skips the whole visit; the close reminder follows only a run that started.
 local bankRestockSkipped = false
 local bankRestockStarted = false
 
@@ -273,17 +217,14 @@ function ns.OnRestockerBankFrameOpened()
 	ns.StartRestockBankRun()
 end
 
--- Starts or restarts the bank run: at the bank's opening, and while it is open whenever the list in use or a Keep amount changes.
+-- Also restarts while the bank is open, whenever the list in use or a Keep amount changes.
 function ns.StartRestockBankRun()
 	ns.LoadRestockBankBags()
 
 	local settings = ns.restockSettings
 	local list = settings.lists[settings.currentList]
 
-	--[[
-	    An empty list has nothing to move, so the run would only announce a restock
-	    that never happened. A run already going on the list before stops here too.
-	]]
+	-- An empty list would only announce a restock that never happened; a run already going stops.
 	if bankRestockSkipped or list == nil or next(list) == nil then
 		if bankRestockStarted then
 			ns.StopBankRestock()

@@ -4,10 +4,7 @@ local _, ns = ...
 -- Profile Changes
 --------------------------------------------------------------------------------
 
---[[
-	A profile switch, reset or copy changes every macro option and the What's Next? sort, so the page, the
-	macros it made and an open What's Next? tab follow it.
-]]
+-- A profile switch, reset or copy changes every macro option and the What's Next? sort.
 function ns.ApplySpellbookProfile()
 	if ns.IsSpellbookEnabled() then
 		ns.InvalidateSpellRankRows()
@@ -20,22 +17,18 @@ end
 -- Master Switch
 --------------------------------------------------------------------------------
 
-local SubscribeSpellbookEvents -- defined with the events below
+local SubscribeSpellbookEvents
 
 function ns.IsSpellbookEnabled()
 	return ns.db ~= nil and ns.db.global.spellbookEnabled
 end
 
---[[
-	Off closes the window and hides its tab in the game's spellbook, and the events below are dropped, so
-	nothing rewrites its macros: they stay as they last were. On brings the macros up to date at once,
-	as the events missed while off would have.
-]]
+-- Off drops the events, so the macros freeze as last written; on catches up at once.
 function ns.SetSpellbookEnabled(value)
 	ns.db.global.spellbookEnabled = value
 	SubscribeSpellbookEvents(value)
 	if value then
-		-- the gear worn, and the spells known, may have changed while their events went unheard
+		-- gear and known spells may have changed while their events went unheard
 		ns:InvalidateUsableSlots()
 		ns.InvalidateSpellRankRows()
 		ns:RefreshMacros()
@@ -51,12 +44,7 @@ end
 -- Events
 --------------------------------------------------------------------------------
 
---[[
-	The Spellbook's events. Each event's handler is ns:On<Event>, resolved by name when the event fires, so
-	feature files loaded after this one supply their own. The trainer events belong to Trainer-Recording.lua,
-	so they subscribe only once login shows it loaded; ADDON_LOADED belongs to Spellbook-Tabs.lua, which loads
-	only where the Retail-engine spellbook does and subscribes it itself.
-]]
+-- Handler names resolve on ns when the event fires, so files loaded after this one supply them.
 local EVENT_HANDLERS = {
 	ADDON_LOADED = "OnAddonLoaded",
 	SPELLS_CHANGED = "OnSpellsChanged",
@@ -83,16 +71,15 @@ if ns.FLAVOR ~= "Vanilla" then
 	EVENT_HANDLERS.PLAYER_FOCUS_CHANGED = "OnPlayerFocusChanged"
 end
 
+-- Trainer-Recording.lua's events subscribe only once login shows its handlers loaded.
 local LOGIN_REGISTERED_EVENTS = { TRAINER_SHOW = true, TRAINER_UPDATE = true }
+-- Spellbook-Tabs.lua subscribes ADDON_LOADED itself, only where it loads.
 local OWNER_REGISTERED_EVENTS = { ADDON_LOADED = true }
 
--- Heard with the Spellbook off: the spellbook tab attaches whenever the game's book loads, so switching on later finds it there.
+-- Heard with the Spellbook off, so the tab is attached when switching on later.
 local WHILE_OFF_EVENTS = { ADDON_LOADED = true }
 
---[[
-	Unit events the page only ever needs for these units: the player's pet, the player's or the pet's level, and
-	whom the target targets (for Dynamic Rank's target-of-target).
-]]
+-- UNIT_TARGET on "target" feeds Dynamic Rank's target-of-target.
 local EVENT_UNITS = {
 	UNIT_PET = { "player" },
 	UNIT_LEVEL = { "player", "pet" },
@@ -101,10 +88,6 @@ local EVENT_UNITS = {
 
 local MODULE = "Spellbook"
 
---[[
-	Subscribes the page's events while the Spellbook is on and drops them while it is off, all but the ones
-	heard either way. The trainer events wait for login to show Trainer-Recording.lua loaded.
-]]
 function SubscribeSpellbookEvents(on)
 	for event in pairs(EVENT_HANDLERS) do
 		local owned = OWNER_REGISTERED_EVENTS[event] or WHILE_OFF_EVENTS[event]
